@@ -3,6 +3,11 @@
 <project default="build" name="Create .zip file for core">
   <property environment="env" />
 
+  <!-- path to the main processing repo --> 
+  <property name="processing.dir" value="../../processing" />
+
+  <property name="core.jar.path" value="../android-core.zip" />
+
   <!-- oh ant, you're so cute and convoluted -->
   <target name="build" depends="sdk_chatter,actual_build" />
 
@@ -20,7 +25,7 @@
   <target name="actual_build" if="env.ANDROID_SDK">
     <taskdef name="methods" 
 	     classname="PAppletMethods" 
-	     classpath="../../core/methods/methods.jar" />
+	     classpath="${processing.dir}/core/methods/methods.jar" />
     <methods dir="${basedir}/src/processing/core" recorder="false" />
 
     <mkdir dir="bin" />
@@ -39,12 +44,12 @@
       </fileset>
     </copy>
 	   
-    <jar basedir="bin" destfile="../android-core.zip" />
+    <jar basedir="bin" destfile="${core.jar.path}" />
   </target>
 
   <target name="clean" 
 	  description="Clean out the build directories">
     <delete dir="bin" />
-    <delete file="../android-core.zip" />
+    <delete file="${core.jar.path}" />
   </target>
 </project>

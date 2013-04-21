@@ -1,4 +1,8 @@
-.DS_Store
+bin
+android-core.zip
+release
+
 .AppleDouble
 ._*
 *~
+.DS_Store

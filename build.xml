@@ -3,7 +3,7 @@
 <project name="Android Mode for Processing" default="build">
 
   <!-- path to the main processing repo --> 
-  <property name="processing.dir" value=".." />
+  <property name="processing.dir" value="../processing" />
 
   <property name="core.jar.path" value="android-core.zip" />
   <property name="mode.jar.path" value="mode/AndroidMode.jar" />
