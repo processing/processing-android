@@ -74,8 +74,7 @@
 -->
 
 
-  <target name="dist" 
-	  depends="build" 
+  <target name="dist" depends="build" 
 	  description="Create AndroidMode.zip and AndroidMode.txt">
     <mkdir dir="release" />
 
@@ -83,12 +82,10 @@
       <zipfileset dir="." prefix="AndroidMode">
 	<include name="android-core.zip" />
 	<include name="mode.properties" />
+	<include name="mode/**" />
 	<include name="examples/**" />
 	<include name="icons/**" />
 	<include name="theme/**" />
-<!-- no extra keywords file
-	<include name="keywords.txt" />
--->
 	<exclude name="**/._*" />
       </zipfileset>
     </zip>
@@ -99,6 +96,9 @@
 
 
   <target name="upload" depends="dist" description="Upload to processing.org">
+
+    <!-- Technically more cross-platform compatible, but requires 
+	 extra jars in the ant libsfolder. Which is... not. -->
 <!--
     <scp todir="${user}@processing.org:/var/www/web/download/">
       <fileset dir="release">
@@ -107,6 +107,7 @@
       </fileset>
     </scp>
 -->
+
     <exec executable="scp">
       <arg value="release/AndroidMode.txt" />
       <arg value="${user.name}@processing.org:/var/www/android/" />
@@ -116,6 +117,5 @@
       <arg value="${user.name}@processing.org:/var/www/android/" />
     </exec>
   </target>
-
 
 </project>
