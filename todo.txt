@@ -8,7 +8,10 @@ X   change build script to use ../processing instead of .. as path
 X   make sure the download of the mode works properly 
 X   remove the rest from the main repo
 X   get things checked in
+X   Android mode was reporting 'no mode found'
 
+
+_ figure out how to build from Eclipse JDI so we can remove tools.jar and javac
 
 _ requires deleting the app before reinstalling
 _   just fix this like the others
