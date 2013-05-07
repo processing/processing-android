@@ -704,26 +704,26 @@ public class PGL {
 
 
   protected Texture wrapBackTexture() {
-    Texture tex = new Texture(pg.parent);
+    Texture tex = new Texture();
     tex.init(pg.width, pg.height,
              glColorTex.get(backTex), TEXTURE_2D, RGBA,
              fboWidth, fboHeight, NEAREST, NEAREST,
              CLAMP_TO_EDGE, CLAMP_TO_EDGE);
     tex.invertedY(true);
-    tex.colorBufferOf(pg);
+    tex.colorBuffer(true);
     pg.setCache(pg, tex);
     return tex;
   }
 
 
   protected Texture wrapFrontTexture() {
-    Texture tex = new Texture(pg.parent);
+    Texture tex = new Texture();
     tex.init(pg.width, pg.height,
              glColorTex.get(frontTex), TEXTURE_2D, RGBA,
              fboWidth, fboHeight, NEAREST, NEAREST,
              CLAMP_TO_EDGE, CLAMP_TO_EDGE);
     tex.invertedY(true);
-    tex.colorBufferOf(pg);
+    tex.colorBuffer(true);
     return tex;
   }
 
@@ -2260,6 +2260,16 @@ public class PGL {
   }
 
 
+  protected boolean hasFBOs() {
+    return true;
+  }
+
+
+  protected boolean hasShaders() {
+    return true;
+  }
+
+
   protected static ByteBuffer allocateDirectByteBuffer(int size) {
     int bytes = PApplet.max(MIN_DIRECT_BUFFER_SIZE, size) * SIZEOF_BYTE;
     return ByteBuffer.allocateDirect(bytes).order(ByteOrder.nativeOrder());
@@ -2658,6 +2668,13 @@ public class PGL {
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {
       gl = igl;
       context = ((EGL10)EGLContext.getEGL()).eglGetCurrentContext();
+
+      if (!hasFBOs()) {
+        throw new RuntimeException("Framebuffer objects are not supported by this hardware (or driver)");
+      }
+      if (!hasShaders()) {
+        throw new RuntimeException("GLSL shaders are not supported by this hardware (or driver)");
+      }
     }
   }
 
