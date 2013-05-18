@@ -1,22 +1,5 @@
-0217 android
-X split Android mode from the rest of the project
-X   build core when building the mode itself
-X   where should core files be stored?
-o     maybe even straight from github
-X     nope, means 4 MB files for each repo update
-X   change build script to use ../processing instead of .. as path
-X   make sure the download of the mode works properly 
-X   remove the rest from the main repo
-X   get things checked in
-X   Android mode was reporting 'no mode found'
-X implement Android version of command line tools (by pif)
-X   http://code.google.com/p/processing/issues/detail?id=1323
-X   https://github.com/processing/processing/issues/1361
-X incorporate changes to processing.data package
-X several additional updates to bring things in line with the mode as well
-
-
 0218 android
+
 
 _ figure out how to build from Eclipse JDI so we can remove tools.jar and javac
 
