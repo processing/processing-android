@@ -42,6 +42,7 @@ import processing.core.PApplet;
  * representing a single node of an XML tree.
  *
  * @webref data:composite
+ * @see PApplet#createXML(String)
  * @see PApplet#loadXML(String)
  * @see PApplet#parseXML(String)
  * @see PApplet#saveXML(XML, String)
@@ -79,7 +80,7 @@ public class XML implements Serializable {
 
 
   /**
-   * @param file description TBD
+   * Advanced users only; see loadXML() in PApplet.
    */
   public XML(File file) throws IOException, ParserConfigurationException, SAXException {
     this(file, null);
@@ -87,27 +88,40 @@ public class XML implements Serializable {
 
 
   /**
-   * @param options description TBD
+   * Advanced users only; see loadXML() in PApplet.
    */
   public XML(File file, String options) throws IOException, ParserConfigurationException, SAXException {
     this(PApplet.createReader(file), options);
   }
 
 
-  /**
-   * @param input description TBD
-   */
   public XML(InputStream input) throws IOException, ParserConfigurationException, SAXException {
     this(input, null);
   }
 
 
+  /**
+   * Shouldn't be part of main p5 reference, this is for advanced users.
+   * Note that while it doesn't accept anything but UTF-8, this is preserved
+   * so that we have some chance of implementing that in the future.
+   */
   public XML(InputStream input, String options) throws IOException, ParserConfigurationException, SAXException {
     this(PApplet.createReader(input), options);
   }
 
 
-  protected XML(Reader reader, String options) throws IOException, ParserConfigurationException, SAXException {
+  /**
+   * Advanced users only; see loadXML() in PApplet.
+   */
+  public XML(Reader reader) throws IOException, ParserConfigurationException, SAXException {
+    this(reader, null);
+  }
+
+
+  /**
+   * Advanced users only; see loadXML() in PApplet.
+   */
+  public XML(Reader reader, String options) throws IOException, ParserConfigurationException, SAXException {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
     // Prevent 503 errors from www.w3.org
@@ -153,14 +167,18 @@ public class XML implements Serializable {
   /**
    * @param name description TBD
    */
-  // TODO is there a more efficient way of doing this? wow.
-  public XML(String name) throws ParserConfigurationException {
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder builder = factory.newDocumentBuilder();
-    Document document = builder.newDocument();
-    node = document.createElement(name);
-//      this.name = name;
-    this.parent = null;
+  public XML(String name) {
+    try {
+      // TODO is there a more efficient way of doing this? wow.
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      Document document = builder.newDocument();
+      node = document.createElement(name);
+      this.parent = null;
+
+    } catch (ParserConfigurationException pce) {
+      throw new RuntimeException(pce);
+    }
   }
 
 
@@ -190,17 +208,21 @@ public class XML implements Serializable {
   }
 
 
-  protected boolean save(OutputStream output) {
-    return save(PApplet.createWriter(output));
-  }
+//  protected boolean save(OutputStream output) {
+//    return write(PApplet.createWriter(output));
+//  }
 
 
   public boolean save(File file, String options) {
-    return save(PApplet.createWriter(file));
+    PrintWriter writer = PApplet.createWriter(file);
+    boolean result = write(writer);
+    writer.flush();
+    writer.close();
+    return result;
   }
 
 
-  public boolean save(PrintWriter output) {
+  public boolean write(PrintWriter output) {
     output.print(format(2));
     output.flush();
     return true;

@@ -819,7 +819,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
       setEGLContextClientVersion(2);
 
       // The renderer can be set only once.
-      setRenderer(g3.pgl.getRenderer());
+      setRenderer(PGraphicsOpenGL.pgl.getRenderer());
       setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
       // assign this g to the PApplet
@@ -4150,6 +4150,31 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
   //////////////////////////////////////////////////////////////
 
+  // EXTENSIONS
+
+
+  /**
+   * Get the compression-free extension for this filename.
+   * @param filename The filename to check
+   * @return an extension, skipping past .gz if it's present
+   */
+  static public String checkExtension(String filename) {
+    // Don't consider the .gz as part of the name, createInput()
+    // and createOuput() will take care of fixing that up.
+    if (filename.toLowerCase().endsWith(".gz")) {
+      filename = filename.substring(0, filename.length() - 3);
+    }
+    int dotIndex = filename.lastIndexOf('.');
+    if (dotIndex != -1) {
+      return filename.substring(dotIndex + 1).toLowerCase();
+    }
+    return null;
+  }
+
+
+
+  //////////////////////////////////////////////////////////////
+
   // DATA I/O
 
 
@@ -4264,16 +4289,6 @@ public class PApplet extends Activity implements PConstants, Runnable {
     }
     return false;
   }
-
-
-  protected String checkExtension(String filename) {
-    int index = filename.lastIndexOf('.');
-    if (index == -1) {
-      return null;
-    }
-    return filename.substring(index + 1).toLowerCase();
-  }
-
 
 
 
@@ -4881,6 +4896,38 @@ public class PApplet extends Activity implements PConstants, Runnable {
   }
 
 
+  static public String[] loadStrings(BufferedReader reader) {
+    try {
+      String lines[] = new String[100];
+      int lineCount = 0;
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        if (lineCount == lines.length) {
+          String temp[] = new String[lineCount << 1];
+          System.arraycopy(lines, 0, temp, 0, lineCount);
+          lines = temp;
+        }
+        lines[lineCount++] = line;
+      }
+      reader.close();
+
+      if (lineCount == lines.length) {
+        return lines;
+      }
+
+      // resize array to appropriate amount for these lines
+      String output[] = new String[lineCount];
+      System.arraycopy(lines, 0, output, 0, lineCount);
+      return output;
+
+    } catch (IOException e) {
+      e.printStackTrace();
+      //throw new RuntimeException("Error inside loadStrings()");
+    }
+    return null;
+  }
+
+
   /**
    * Load data from a file and shove it into a String array.
    * <P>
@@ -4985,19 +5032,19 @@ public class PApplet extends Activity implements PConstants, Runnable {
   }
 
 
-//  static public OutputStream createOutput(File file) {
-//    try {
-//      FileOutputStream fos = new FileOutputStream(file);
-//      if (file.getName().toLowerCase().endsWith(".gz")) {
-//        return new GZIPOutputStream(fos);
-//      }
-//      return fos;
-//
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-//    return null;
-//  }
+  static public OutputStream createOutput(File file) {
+    try {
+      FileOutputStream fos = new FileOutputStream(file);
+      if (file.getName().toLowerCase().endsWith(".gz")) {
+        return new GZIPOutputStream(fos);
+      }
+      return fos;
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
 
 
   /**
