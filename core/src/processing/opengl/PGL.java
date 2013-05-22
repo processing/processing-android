@@ -111,6 +111,10 @@ public class PGL {
   /** Minimum array size to use arrayCopy method(). **/
   protected static final int MIN_ARRAYCOPY_SIZE = 2;
 
+  /** Factor used to displace the stroke vertices towards the camera in
+   * order to make sure the lines are always on top of the fill geometry **/
+  protected static final float STROKE_DISPLACEMENT = 0.999f;
+
   protected static final int SIZEOF_SHORT = Short.SIZE / 8;
   protected static final int SIZEOF_INT = Integer.SIZE / 8;
   protected static final int SIZEOF_FLOAT = Float.SIZE / 8;
@@ -450,7 +454,7 @@ public class PGL {
   }
 
 
-  protected void setFrameRate(float framerate) {
+  protected void setFps(float framerate) {
   }
 
 
