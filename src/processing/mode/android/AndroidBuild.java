@@ -570,7 +570,7 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
-
+  static final String ICON_96 = "icon-96.png";
   static final String ICON_72 = "icon-72.png";
   static final String ICON_48 = "icon-48.png";
   static final String ICON_36 = "icon-36.png";
@@ -586,16 +586,19 @@ class AndroidBuild extends JavaBuild {
     File localIcon36 = new File(sketchFolder, ICON_36);
     File localIcon48 = new File(sketchFolder, ICON_48);
     File localIcon72 = new File(sketchFolder, ICON_72);
+    File localIcon96 = new File(sketchFolder, ICON_96);
 
 //    File drawableFolder = new File(resFolder, "drawable");
 //    drawableFolder.mkdirs()
     File buildIcon48 = new File(resFolder, "drawable/icon.png");
     File buildIcon36 = new File(resFolder, "drawable-ldpi/icon.png");
     File buildIcon72 = new File(resFolder, "drawable-hdpi/icon.png");
+    File buildIcon96 = new File(resFolder, "drawable-xhdpi/icon.png");
 
     if (!localIcon36.exists() &&
         !localIcon48.exists() &&
-        !localIcon72.exists()) {
+        !localIcon72.exists() &&
+        !localIcon96.exists()) {
       try {
         // if no icons are in the sketch folder, then copy all the defaults
         if (buildIcon36.getParentFile().mkdirs()) {
@@ -612,6 +615,11 @@ class AndroidBuild extends JavaBuild {
           Base.copyFile(mode.getContentFile("icons/" + ICON_72), buildIcon72);
         } else {
           System.err.println("Could not create \"drawable-hdpi\" folder.");
+        }
+        if (buildIcon96.getParentFile().mkdirs()) {
+          Base.copyFile(mode.getContentFile("icons/" + ICON_96), buildIcon96);
+        } else {
+          System.err.println("Could not create \"drawable-xhdpi\" folder.");
         }
       } catch (IOException e) {
         e.printStackTrace();
@@ -633,6 +641,11 @@ class AndroidBuild extends JavaBuild {
         if (localIcon72.exists()) {
           if (new File(resFolder, "drawable-hdpi").mkdirs()) {
             Base.copyFile(localIcon72, buildIcon72);
+          }
+        }
+        if (localIcon96.exists()) {
+          if (new File(resFolder, "drawable-xhdpi").mkdirs()) {
+            Base.copyFile(localIcon96, buildIcon96);
           }
         }
       } catch (IOException e) {
