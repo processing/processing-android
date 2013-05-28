@@ -2237,6 +2237,9 @@ public class PGL {
   public static final int MAX_TEXTURE_IMAGE_UNITS          = GLES20.GL_MAX_TEXTURE_IMAGE_UNITS;
   public static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS = GLES20.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS;
 
+  public static final int NUM_COMPRESSED_TEXTURE_FORMATS = GLES20.GL_NUM_COMPRESSED_TEXTURE_FORMATS;
+  public static final int COMPRESSED_TEXTURE_FORMATS     = GLES20.GL_COMPRESSED_TEXTURE_FORMATS;
+
   public static final int NEAREST               = GLES20.GL_NEAREST;
   public static final int LINEAR                = GLES20.GL_LINEAR;
   public static final int LINEAR_MIPMAP_NEAREST = GLES20.GL_LINEAR_MIPMAP_NEAREST;
