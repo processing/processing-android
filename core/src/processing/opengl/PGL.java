@@ -72,15 +72,20 @@ public class PGL {
 
   // Parameters
 
-  protected static boolean FORCE_SCREEN_FBO             = false;
   // The use of indirect buffers creates problems with glBufferSubData because
   // the buffer position is ignored:
   // http://stackoverflow.com/questions/3380489/glbuffersubdata-with-an-offset-into-buffer-without-causing-garbage
   // http://code.google.com/p/android/issues/detail?id=12245
   // This doesn't happen with direct buffers.
-  protected static final boolean USE_DIRECT_BUFFERS     = true;
-  protected static final int MIN_DIRECT_BUFFER_SIZE     = 1;
-  protected static final boolean SAVE_SURFACE_TO_PIXELS = false;
+  protected static final boolean USE_DIRECT_BUFFERS = true;
+  protected static final int MIN_DIRECT_BUFFER_SIZE = 1;
+
+  /** This flag enables/disables a hack to make sure that anything drawn
+   * in setup will be maintained even a renderer restart (e.g.: smooth change).
+   * See the code and comments involving this constant in
+   * PGraphicsOpenGL.endDraw().
+   */
+  protected static final boolean SAVE_SURFACE_TO_PIXELS_HACK = false;
 
   /** Enables/disables mipmap use. **/
   protected static final boolean MIPMAPS_ENABLED     = false;
@@ -110,7 +115,7 @@ public class PGL {
    */
   protected static final int FLUSH_VERTEX_COUNT = MAX_VERTEX_INDEX1;
 
-  /** Minimum/maximum dimensions of a texture used to hold font data. **/
+  /** Minimum/maximum dimensions of a texture used to hold font data. */
   protected static final int MIN_FONT_TEX_SIZE = 128;
   protected static final int MAX_FONT_TEX_SIZE = 512;
 
@@ -124,13 +129,19 @@ public class PGL {
    */
   protected static final int MAX_CAPS_JOINS_LENGTH = 1000;
 
-  /** Minimum array size to use arrayCopy method(). **/
+  /** Minimum array size to use arrayCopy method(). */
   protected static final int MIN_ARRAYCOPY_SIZE = 2;
 
   /** Factor used to displace the stroke vertices towards the camera in
-   * order to make sure the lines are always on top of the fill geometry **/
+   * order to make sure the lines are always on top of the fill geometry */
   protected static final float STROKE_DISPLACEMENT = 0.999f;
 
+  /** Triggers the creation of the FBO layer for the main drawing surface
+   * upon initialization.
+   */
+  protected static boolean USE_FBOLAYER_BY_DEFAULT = false;
+
+  /** Size of different types in bytes */
   protected static final int SIZEOF_SHORT = Short.SIZE / 8;
   protected static final int SIZEOF_INT = Integer.SIZE / 8;
   protected static final int SIZEOF_FLOAT = Float.SIZE / 8;
@@ -138,11 +149,7 @@ public class PGL {
   protected static final int SIZEOF_INDEX = SIZEOF_SHORT;
   protected static final int INDEX_TYPE = GLES20.GL_UNSIGNED_SHORT;
 
-  /** Error string from framebuffer errors **/
-  protected static final String FRAMEBUFFER_ERROR_MESSAGE =
-    "Framebuffer error (%1$s), rendering will probably not work as expected";
-
-  /** Machine Epsilon for float precision. **/
+  /** Machine Epsilon for float precision. */
   protected static float FLOAT_EPS = Float.MIN_VALUE;
   // Calculation of the Machine Epsilon for float precision. From:
   // http://en.wikipedia.org/wiki/Machine_epsilon#Approximation_using_Java
@@ -186,14 +193,16 @@ public class PGL {
   /** Which texturing targets are enabled */
   protected static boolean[] texturingTargets = { false };
 
-  /** Which textures are bound to each target */
-  protected static int[] boundTextures = { 0 };
+  /** Used to keep track of which textures are bound to each target */
+  protected static int maxTexUnits;
+  protected static int activeTexUnit = 0;
+  protected static int[] boundTextures;
 
   ///////////////////////////////////////////////////////////
 
   // FBO layer
 
-  protected static boolean fboLayerByDefault = FORCE_SCREEN_FBO;
+  protected static boolean fboLayerRequested = false;
   protected static boolean fboLayerCreated = false;
   protected static boolean fboLayerInUse = false;
   protected static boolean firstFrame = true;
@@ -262,6 +271,9 @@ public class PGL {
 
   // Error messages
 
+  protected static final String FRAMEBUFFER_ERROR =
+    "Framebuffer error (%1$s), rendering will probably not work as expected";
+
   protected static final String MISSING_FBO_ERROR =
     "Framebuffer objects are not supported by this hardware (or driver)";
 
@@ -270,6 +282,9 @@ public class PGL {
 
   protected static final String MISSING_GLFUNC_ERROR =
     "GL function %1$s is not available on this hardware (or driver)";
+
+  protected static final String TEXUNIT_ERROR =
+    "Number of texture units not supported by this hardware (or driver)";
 
 
   ///////////////////////////////////////////////////////////
@@ -308,6 +323,7 @@ public class PGL {
   protected void initSurface(int antialias) {
     glview = (GLSurfaceView)pg.parent.getSurfaceView();
     reqNumSamples = qualityToSamples(antialias);
+    fboLayerRequested = USE_FBOLAYER_BY_DEFAULT;
     fboLayerCreated = false;
     fboLayerInUse = false;
     firstFrame = true;
@@ -331,7 +347,166 @@ public class PGL {
   }
 
 
-  protected void update() {
+  protected int getReadFramebuffer() {
+    if (fboLayerInUse) {
+      return glColorFbo.get(0);
+    } else {
+      return 0;
+    }
+  }
+
+
+  protected int getDrawFramebuffer() {
+    if (fboLayerInUse) {
+      return glColorFbo.get(0);
+    } else {
+      return 0;
+    }
+  }
+
+
+  protected int getDefaultDrawBuffer() {
+    if (fboLayerInUse) {
+      return COLOR_ATTACHMENT0;
+    } else {
+      return BACK;
+    }
+  }
+
+
+  protected int getDefaultReadBuffer() {
+    if (fboLayerInUse) {
+      return COLOR_ATTACHMENT0;
+    } else {
+      return FRONT;
+    }
+  }
+
+
+  protected boolean isFBOBacked() {
+    return fboLayerInUse;
+  }
+
+
+  protected void requestFBOLayer() {
+    fboLayerRequested = true;
+  }
+
+
+  protected boolean isMultisampled() {
+    return false;
+  }
+
+
+  protected int getDepthBits() {
+    intBuffer.rewind();
+    getIntegerv(DEPTH_BITS, intBuffer);
+    return intBuffer.get(0);
+  }
+
+
+  protected int getStencilBits() {
+    intBuffer.rewind();
+    getIntegerv(STENCIL_BITS, intBuffer);
+    return intBuffer.get(0);
+  }
+
+
+  protected boolean getDepthTest() {
+    intBuffer.rewind();
+    getBooleanv(DEPTH_TEST, intBuffer);
+    return intBuffer.get(0) == 0 ? false : true;
+  }
+
+
+  protected boolean getDepthWriteMask() {
+    intBuffer.rewind();
+    getBooleanv(DEPTH_WRITEMASK, intBuffer);
+    return intBuffer.get(0) == 0 ? false : true;
+  }
+
+
+  protected Texture wrapBackTexture() {
+    Texture tex = new Texture();
+    tex.init(pg.width, pg.height,
+             glColorTex.get(backTex), TEXTURE_2D, RGBA,
+             fboWidth, fboHeight, NEAREST, NEAREST,
+             CLAMP_TO_EDGE, CLAMP_TO_EDGE);
+    tex.invertedY(true);
+    tex.colorBuffer(true);
+    pg.setCache(pg, tex);
+    return tex;
+  }
+
+
+  protected Texture wrapFrontTexture() {
+    Texture tex = new Texture();
+    tex.init(pg.width, pg.height,
+             glColorTex.get(frontTex), TEXTURE_2D, RGBA,
+             fboWidth, fboHeight, NEAREST, NEAREST,
+             CLAMP_TO_EDGE, CLAMP_TO_EDGE);
+    tex.invertedY(true);
+    tex.colorBuffer(true);
+    return tex;
+  }
+
+
+  int getBackTextureName() {
+    return glColorTex.get(backTex);
+  }
+
+
+  int getFrontTextureName() {
+    return glColorTex.get(frontTex);
+  }
+
+
+  protected void bindFrontTexture() {
+    if (!texturingIsEnabled(TEXTURE_2D)) {
+      enableTexturing(TEXTURE_2D);
+    }
+    bindTexture(TEXTURE_2D, glColorTex.get(frontTex));
+  }
+
+
+  protected void unbindFrontTexture() {
+    if (textureIsBound(TEXTURE_2D, glColorTex.get(frontTex))) {
+      // We don't want to unbind another texture
+      // that might be bound instead of this one.
+      if (!texturingIsEnabled(TEXTURE_2D)) {
+        enableTexturing(TEXTURE_2D);
+        bindTexture(TEXTURE_2D, 0);
+        disableTexturing(TEXTURE_2D);
+      } else {
+        bindTexture(TEXTURE_2D, 0);
+      }
+    }
+  }
+
+
+  protected void syncBackTexture() {
+    if (1 < numSamples) {
+      bindFramebuffer(READ_FRAMEBUFFER, glMultiFbo.get(0));
+      bindFramebuffer(DRAW_FRAMEBUFFER, glColorFbo.get(0));
+      blitFramebuffer(0, 0, fboWidth, fboHeight,
+                      0, 0, fboWidth, fboHeight,
+                      COLOR_BUFFER_BIT, NEAREST);
+    }
+  }
+
+
+  protected int qualityToSamples(int quality) {
+    if (quality <= 1) {
+      return 1;
+    } else {
+      // Number of samples is always an even number:
+      int n = 2 * (quality / 2);
+      return n;
+    }
+  }
+
+
+  protected void createFBOLayer() {
     if (!fboLayerCreated) {
       String ext = getString(EXTENSIONS);
       if (-1 < ext.indexOf("texture_non_power_of_two")) {
@@ -475,172 +650,15 @@ public class PGL {
   }
 
 
-  protected int getReadFramebuffer() {
-    if (fboLayerInUse) {
-      return glColorFbo.get(0);
-    } else {
-      return 0;
-    }
-  }
-
-
-  protected int getDrawFramebuffer() {
-    if (fboLayerInUse) {
-      return glColorFbo.get(0);
-    } else {
-      return 0;
-    }
-  }
-
-
-  protected int getDefaultDrawBuffer() {
-    if (fboLayerInUse) {
-      return COLOR_ATTACHMENT0;
-    } else {
-      return BACK;
-    }
-  }
-
-
-  protected int getDefaultReadBuffer() {
-    if (fboLayerInUse) {
-      return COLOR_ATTACHMENT0;
-    } else {
-      return FRONT;
-    }
-  }
-
-
-  protected boolean isFBOBacked() {
-    return fboLayerInUse;
-  }
-
-
-  protected void needFBOLayer() {
-    FORCE_SCREEN_FBO = true;
-  }
-
-
-  protected boolean isMultisampled() {
-    return false;
-  }
-
-
-  protected int getDepthBits() {
-    intBuffer.rewind();
-    getIntegerv(DEPTH_BITS, intBuffer);
-    return intBuffer.get(0);
-  }
-
-
-  protected int getStencilBits() {
-    intBuffer.rewind();
-    getIntegerv(STENCIL_BITS, intBuffer);
-    return intBuffer.get(0);
-  }
-
-
-  protected boolean getDepthTest() {
-    intBuffer.rewind();
-    getBooleanv(DEPTH_TEST, intBuffer);
-    return intBuffer.get(0) == 0 ? false : true;
-  }
-
-
-  protected boolean getDepthWriteMask() {
-    intBuffer.rewind();
-    getBooleanv(DEPTH_WRITEMASK, intBuffer);
-    return intBuffer.get(0) == 0 ? false : true;
-  }
-
-
-  protected Texture wrapBackTexture() {
-    Texture tex = new Texture();
-    tex.init(pg.width, pg.height,
-             glColorTex.get(backTex), TEXTURE_2D, RGBA,
-             fboWidth, fboHeight, NEAREST, NEAREST,
-             CLAMP_TO_EDGE, CLAMP_TO_EDGE);
-    tex.invertedY(true);
-    tex.colorBuffer(true);
-    pg.setCache(pg, tex);
-    return tex;
-  }
-
-
-  protected Texture wrapFrontTexture() {
-    Texture tex = new Texture();
-    tex.init(pg.width, pg.height,
-             glColorTex.get(frontTex), TEXTURE_2D, RGBA,
-             fboWidth, fboHeight, NEAREST, NEAREST,
-             CLAMP_TO_EDGE, CLAMP_TO_EDGE);
-    tex.invertedY(true);
-    tex.colorBuffer(true);
-    return tex;
-  }
-
-
-  int getBackTextureName() {
-    return glColorTex.get(backTex);
-  }
-
-
-  int getFrontTextureName() {
-    return glColorTex.get(frontTex);
-  }
-
-
-  protected void bindFrontTexture() {
-    if (!texturingIsEnabled(TEXTURE_2D)) {
-      enableTexturing(TEXTURE_2D);
-    }
-    bindTexture(TEXTURE_2D, glColorTex.get(frontTex));
-  }
-
-
-  protected void unbindFrontTexture() {
-    if (textureIsBound(TEXTURE_2D, glColorTex.get(frontTex))) {
-      // We don't want to unbind another texture
-      // that might be bound instead of this one.
-      if (!texturingIsEnabled(TEXTURE_2D)) {
-        enableTexturing(TEXTURE_2D);
-        bindTexture(TEXTURE_2D, 0);
-        disableTexturing(TEXTURE_2D);
-      } else {
-        bindTexture(TEXTURE_2D, 0);
-      }
-    }
-  }
-
-
-  protected void syncBackTexture() {
-    if (1 < numSamples) {
-      bindFramebuffer(READ_FRAMEBUFFER, glMultiFbo.get(0));
-      bindFramebuffer(DRAW_FRAMEBUFFER, glColorFbo.get(0));
-      blitFramebuffer(0, 0, fboWidth, fboHeight,
-                      0, 0, fboWidth, fboHeight,
-                      COLOR_BUFFER_BIT, NEAREST);
-    }
-  }
-
-
-  protected int qualityToSamples(int quality) {
-    if (quality <= 1) {
-      return 1;
-    } else {
-      // Number of samples is always an even number:
-      int n = 2 * (quality / 2);
-      return n;
-    }
-  }
-
-
   ///////////////////////////////////////////////////////////
 
   // Frame rendering
 
 
   protected void beginDraw(boolean clear0) {
-    if (fboLayerInUse(clear0)) {
+    if (needFBOLayer(clear0)) {
+      if (!fboLayerCreated) createFBOLayer();
+
       bindFramebuffer(FRAMEBUFFER, glColorFbo.get(0));
       framebufferTexture2D(FRAMEBUFFER, COLOR_ATTACHMENT0,
                            TEXTURE_2D, glColorTex.get(backTex), 0);
@@ -662,7 +680,8 @@ public class PGL {
         // Render previous back texture (now is the front) as background,
         // because no background() is being used ("incremental drawing")
         drawTexture(TEXTURE_2D, glColorTex.get(frontTex),
-                    fboWidth, fboHeight, 0, 0, pg.width, pg.height,
+                    fboWidth, fboHeight, pg.width, pg.height,
+                                         0, 0, pg.width, pg.height,
                                          0, 0, pg.width, pg.height);
       }
 
@@ -675,12 +694,13 @@ public class PGL {
       firstFrame = false;
     }
 
-    if (!fboLayerByDefault) {
+    if (!USE_FBOLAYER_BY_DEFAULT) {
       // The result of this assignment is the following: if the user requested
       // at some point the use of the FBO layer, but subsequently didn't
-      // request it again, then the rendering won't use the FBO layer if not
-      // needed, since it is slower than simple on-screen rendering.
-      FORCE_SCREEN_FBO = false;
+      // request it again, then the rendering won't render to the FBO layer if
+      // not needed by the condif, since it is slower than simple onscreen
+      // rendering.
+      fboLayerRequested = false;
     }
   }
 
@@ -699,15 +719,15 @@ public class PGL {
       // Render current back texture to screen, without blending.
       disable(BLEND);
       drawTexture(TEXTURE_2D, glColorTex.get(backTex),
-                  fboWidth, fboHeight, 0, 0, pg.width, pg.height,
-                                       0, 0, pg.width, pg.height);
+                  fboWidth, fboHeight,
+                  pg.width, pg.height,
+                  0, 0, pg.width, pg.height, 0, 0, pg.width, pg.height);
 
       // Swapping front and back textures.
       int temp = frontTex;
       frontTex = backTex;
       backTex = temp;
     }
-    flush();
   }
 
 
@@ -728,8 +748,8 @@ public class PGL {
   }
 
 
-  protected boolean fboLayerInUse(boolean clear0) {
-    boolean cond = !clear0 || FORCE_SCREEN_FBO || 1 < numSamples;
+  protected boolean needFBOLayer(boolean clear0) {
+    boolean cond = !clear0 || fboLayerRequested || 1 < numSamples;
     return cond && glColorFbo.get(0) != 0;
   }
 
@@ -740,7 +760,6 @@ public class PGL {
 
   protected void endGL() {
   }
-
 
 
 
@@ -889,8 +908,10 @@ public class PGL {
 
 
   protected boolean textureIsBound(int target, int id) {
+    if (boundTextures == null) return false;
+
     if (target == TEXTURE_2D) {
-      return boundTextures[0] == id;
+      return boundTextures[activeTexUnit] == id;
     } else {
       return false;
     }
@@ -941,11 +962,13 @@ public class PGL {
 
   protected void drawTexture(int target, int id, int width, int height,
                              int X0, int Y0, int X1, int Y1) {
-    drawTexture(target, id, width, height, X0, Y0, X1, Y1, X0, Y0, X1, Y1);
+    drawTexture(target, id, width, height, width, height,
+                X0, Y0, X1, Y1, X0, Y0, X1, Y1);
   }
 
 
-  protected void drawTexture(int target, int id, int width, int height,
+  protected void drawTexture(int target, int id,
+                             int texW, int texH, int scrW, int scrH,
                              int texX0, int texY0, int texX1, int texY1,
                              int scrX0, int scrY0, int scrX1, int scrY1) {
     if (!loadedTexShader ||
@@ -987,25 +1010,25 @@ public class PGL {
       // Vertex coordinates of the textured quad are specified
       // in normalized screen space (-1, 1):
       // Corner 1
-      texCoords[ 0] = 2 * (float)scrX0 / pg.width - 1;
-      texCoords[ 1] = 2 * (float)scrY0 / pg.height - 1;
-      texCoords[ 2] = (float)texX0 / width;
-      texCoords[ 3] = (float)texY0 / height;
+      texCoords[ 0] = 2 * (float)scrX0 / scrW - 1;
+      texCoords[ 1] = 2 * (float)scrY0 / scrH - 1;
+      texCoords[ 2] = (float)texX0 / texW;
+      texCoords[ 3] = (float)texY0 / texH;
       // Corner 2
-      texCoords[ 4] = 2 * (float)scrX1 / pg.width - 1;
-      texCoords[ 5] = 2 * (float)scrY0 / pg.height - 1;
-      texCoords[ 6] = (float)texX1 / width;
-      texCoords[ 7] = (float)texY0 / height;
+      texCoords[ 4] = 2 * (float)scrX1 / scrW - 1;
+      texCoords[ 5] = 2 * (float)scrY0 / scrH - 1;
+      texCoords[ 6] = (float)texX1 / texW;
+      texCoords[ 7] = (float)texY0 / texH;
       // Corner 3
-      texCoords[ 8] = 2 * (float)scrX0 / pg.width - 1;
-      texCoords[ 9] = 2 * (float)scrY1 / pg.height - 1;
-      texCoords[10] = (float)texX0 / width;
-      texCoords[11] = (float)texY1 / height;
+      texCoords[ 8] = 2 * (float)scrX0 / scrW - 1;
+      texCoords[ 9] = 2 * (float)scrY1 / scrH - 1;
+      texCoords[10] = (float)texX0 / texW;
+      texCoords[11] = (float)texY1 / texH;
       // Corner 4
-      texCoords[12] = 2 * (float)scrX1 / pg.width - 1;
-      texCoords[13] = 2 * (float)scrY1 / pg.height - 1;
-      texCoords[14] = (float)texX1 / width;
-      texCoords[15] = (float)texY1 / height;
+      texCoords[12] = 2 * (float)scrX1 / scrW - 1;
+      texCoords[13] = 2 * (float)scrY1 / scrH - 1;
+      texCoords[14] = (float)texX1 / texW;
+      texCoords[15] = (float)texY1 / texH;
 
       texData.rewind();
       texData.put(texCoords);
@@ -1430,22 +1453,22 @@ public class PGL {
     if (status == FRAMEBUFFER_COMPLETE) {
       return true;
     } else if (status == FRAMEBUFFER_INCOMPLETE_ATTACHMENT) {
-      System.err.println(String.format(FRAMEBUFFER_ERROR_MESSAGE,
+      System.err.println(String.format(FRAMEBUFFER_ERROR,
                                        "incomplete attachment"));
     } else if (status == FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) {
-      System.err.println(String.format(FRAMEBUFFER_ERROR_MESSAGE,
+      System.err.println(String.format(FRAMEBUFFER_ERROR,
                                        "incomplete missing attachment"));
     } else if (status == FRAMEBUFFER_INCOMPLETE_DIMENSIONS) {
-      System.err.println(String.format(FRAMEBUFFER_ERROR_MESSAGE,
+      System.err.println(String.format(FRAMEBUFFER_ERROR,
                                        "incomplete dimensions"));
     } else if (status == FRAMEBUFFER_INCOMPLETE_FORMATS) {
-      System.err.println(String.format(FRAMEBUFFER_ERROR_MESSAGE,
+      System.err.println(String.format(FRAMEBUFFER_ERROR,
                                        "incomplete formats"));
     } else if (status == FRAMEBUFFER_UNSUPPORTED) {
-      System.err.println(String.format(FRAMEBUFFER_ERROR_MESSAGE,
+      System.err.println(String.format(FRAMEBUFFER_ERROR,
                                        "framebuffer unsupported"));
     } else {
-      System.err.println(String.format(FRAMEBUFFER_ERROR_MESSAGE,
+      System.err.println(String.format(FRAMEBUFFER_ERROR,
                                        "unknown error"));
     }
     return false;
@@ -1486,6 +1509,12 @@ public class PGL {
 
   protected boolean hasShaders() {
     return true;
+  }
+
+
+  protected int getMaxTexUnits() {
+    getIntegerv(MAX_TEXTURE_IMAGE_UNITS, intBuffer);
+    return intBuffer.get(0);
   }
 
 
@@ -2204,8 +2233,9 @@ public class PGL {
   public static final int TEXTURE_MAX_ANISOTROPY     = 0x84FE;
   public static final int MAX_TEXTURE_MAX_ANISOTROPY = 0x84FF;
 
-  public static final int MAX_VERTEX_TEXTURE_IMAGE_UNITS = GLES20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS;
-  public static final int MAX_TEXTURE_IMAGE_UNITS        = GLES20.GL_MAX_TEXTURE_IMAGE_UNITS;
+  public static final int MAX_VERTEX_TEXTURE_IMAGE_UNITS   = GLES20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS;
+  public static final int MAX_TEXTURE_IMAGE_UNITS          = GLES20.GL_MAX_TEXTURE_IMAGE_UNITS;
+  public static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS = GLES20.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS;
 
   public static final int NEAREST               = GLES20.GL_NEAREST;
   public static final int LINEAR                = GLES20.GL_LINEAR;
@@ -2517,6 +2547,14 @@ public class PGL {
   // Reading Pixels
 
   public void readPixels(int x, int y, int width, int height, int format, int type, Buffer buffer) {
+    // The beginPixelsOp/endPixelsOp calls are needed to properly setup the
+    // framebuffers to read from.
+    PGraphicsOpenGL.pgCurrent.beginPixelsOp(PGraphicsOpenGL.OP_READ);
+    readPixels(x, y, width, height, format, type, buffer);
+    PGraphicsOpenGL.pgCurrent.endPixelsOp();
+  }
+
+  public void readPixelsImpl(int x, int y, int width, int height, int format, int type, Buffer buffer) {
     GLES20.glReadPixels(x, y, width, height, format, type, buffer);
   }
 
@@ -2666,10 +2704,18 @@ public class PGL {
 
   public void bindTexture(int target, int texture) {
     GLES20.glBindTexture(target, texture);
+
+    if (boundTextures == null) {
+      maxTexUnits = getMaxTexUnits();
+      boundTextures = new int[maxTexUnits];
+    }
+
+    if (maxTexUnits <= activeTexUnit) {
+      throw new RuntimeException(TEXUNIT_ERROR);
+    }
+
     if (target == TEXTURE_2D) {
-      boundTextures[0] = texture;
-    } else if (target == TEXTURE_RECTANGLE) {
-      boundTextures[1] = texture;
+      boundTextures[activeTexUnit] = texture;
     }
   }
 
