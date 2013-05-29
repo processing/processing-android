@@ -876,6 +876,52 @@ public class PGL {
 
   ///////////////////////////////////////////////////////////
 
+  // FontOutline interface
+
+
+  protected final static boolean SHAPE_TEXT_SUPPORTED = false;
+
+  protected final static int SEG_MOVETO  = 0;
+  protected final static int SEG_LINETO  = 1;
+  protected final static int SEG_QUADTO  = 2;
+  protected final static int SEG_CUBICTO = 3;
+  protected final static int SEG_CLOSE   = 4;
+
+  protected FontOutline createFontOutline(char ch, Object font) {
+    return new FontOutline(ch, font);
+  }
+
+  // TODO: find analogous implementation for Android
+  protected class FontOutline {
+    //PathIterator iter;
+
+    public FontOutline(char ch, Object font) {
+//      char textArray[] = new char[] { ch };
+//      Graphics2D graphics = (Graphics2D) pg.parent.getGraphics();
+//      FontRenderContext frc = graphics.getFontRenderContext();
+//      GlyphVector gv = ((Font)font).createGlyphVector(frc, textArray);
+//      Shape shp = gv.getOutline();
+//      iter = shp.getPathIterator(null);
+    }
+
+    public boolean isDone() {
+//      return iter.isDone();
+      return true;
+    }
+
+    public int currentSegment(float coords[]) {
+//      return iter.currentSegment(coords);
+      return -1;
+    }
+
+    public void next() {
+//      iter.next();
+    }
+  }
+
+
+  ///////////////////////////////////////////////////////////
+
   // Utility functions
 
 

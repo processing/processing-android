@@ -3241,7 +3241,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected boolean textModeCheck(int mode) {
-    return mode == MODEL;
+    return mode == MODEL || (mode == SHAPE && PGL.SHAPE_TEXT_SUPPORTED);
   }
 
   // public void textSize(float size)
@@ -3267,54 +3267,58 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   protected void textLineImpl(char buffer[], int start, int stop,
                               float x, float y) {
-    textTex = pgPrimary.getFontTexture(textFont);
+    if (textMode == MODEL) {
+      textTex = pgPrimary.getFontTexture(textFont);
 
-    if (textTex == null || textTex.contextIsOutdated()) {
-      textTex = new FontTexture(pgPrimary, textFont, is3D());
-      pgPrimary.setFontTexture(textFont, textTex);
+      if (textTex == null || textTex.contextIsOutdated()) {
+        textTex = new FontTexture(pgPrimary, textFont, is3D());
+        pgPrimary.setFontTexture(textFont, textTex);
+      }
+
+      textTex.begin();
+
+      // Saving style parameters modified by text rendering.
+      int savedTextureMode = textureMode;
+      boolean savedStroke = stroke;
+      float savedNormalX = normalX;
+      float savedNormalY = normalY;
+      float savedNormalZ = normalZ;
+      boolean savedTint = tint;
+      int savedTintColor = tintColor;
+      int savedBlendMode = blendMode;
+
+      // Setting style used in text rendering.
+      textureMode = NORMAL;
+      stroke = false;
+      normalX = 0;
+      normalY = 0;
+      normalZ = 1;
+      tint = true;
+      tintColor = fillColor;
+
+      blendMode(BLEND);
+
+      super.textLineImpl(buffer, start, stop, x, y);
+
+      // Restoring original style.
+      textureMode  = savedTextureMode;
+      stroke = savedStroke;
+      normalX = savedNormalX;
+      normalY = savedNormalY;
+      normalZ = savedNormalZ;
+      tint = savedTint;
+      tintColor = savedTintColor;
+
+      // Note that if the user is using a blending mode different from
+      // BLEND, and has a bunch of continuous text rendering, the performance
+      // won't be optimal because at the end of each text() call the geometry
+      // will be flushed when restoring the user's blend.
+      blendMode(savedBlendMode);
+
+      textTex.end();
+    } else if (textMode == SHAPE) {
+      super.textLineImpl(buffer, start, stop, x, y);
     }
-
-    textTex.begin();
-
-    // Saving style parameters modified by text rendering.
-    int savedTextureMode = textureMode;
-    boolean savedStroke = stroke;
-    float savedNormalX = normalX;
-    float savedNormalY = normalY;
-    float savedNormalZ = normalZ;
-    boolean savedTint = tint;
-    int savedTintColor = tintColor;
-    int savedBlendMode = blendMode;
-
-    // Setting style used in text rendering.
-    textureMode = NORMAL;
-    stroke = false;
-    normalX = 0;
-    normalY = 0;
-    normalZ = 1;
-    tint = true;
-    tintColor = fillColor;
-
-    blendMode(BLEND);
-
-    super.textLineImpl(buffer, start, stop, x, y);
-
-    // Restoring original style.
-    textureMode  = savedTextureMode;
-    stroke = savedStroke;
-    normalX = savedNormalX;
-    normalY = savedNormalY;
-    normalZ = savedNormalZ;
-    tint = savedTint;
-    tintColor = savedTintColor;
-
-    // Note that if the user is using a blending mode different from
-    // BLEND, and has a bunch of continuous text rendering, the performance
-    // won't be optimal because at the end of each text() call the geometry
-    // will be flushed when restoring the user's blend.
-    blendMode(savedBlendMode);
-
-    textTex.end();
   }
 
 
@@ -3323,14 +3327,14 @@ public class PGraphicsOpenGL extends PGraphics {
     PFont.Glyph glyph = textFont.getGlyph(ch);
 
     if (glyph != null) {
-      FontTexture.TextureInfo tinfo = textTex.getTexInfo(glyph);
-
-      if (tinfo == null) {
-        // Adding new glyph to the font texture.
-        tinfo = textTex.addToTexture(pgPrimary, glyph);
-      }
-
       if (textMode == MODEL) {
+        FontTexture.TextureInfo tinfo = textTex.getTexInfo(glyph);
+
+        if (tinfo == null) {
+          // Adding new glyph to the font texture.
+          tinfo = textTex.addToTexture(pgPrimary, glyph);
+        }
+
         float high    = glyph.height     / (float) textFont.getSize();
         float bwidth  = glyph.width      / (float) textFont.getSize();
         float lextent = glyph.leftExtent / (float) textFont.getSize();
@@ -3342,6 +3346,8 @@ public class PGraphicsOpenGL extends PGraphics {
         float y2 = y1 + high * textSize;
 
         textCharModelImpl(tinfo, x1, y1, x2, y2);
+      } else if (textMode == SHAPE) {
+        textCharShapeImpl(ch, x, y);
       }
     }
   }
@@ -3362,6 +3368,100 @@ public class PGraphicsOpenGL extends PGraphics {
     vertex(x1, y1, info.u1, info.v1);
     vertex(x0, y1, info.u0, info.v1);
     endShape();
+  }
+
+
+  /**
+   * Ported from the implementation of textCharShapeImpl() in 1.5.1
+   *
+   * <EM>No attempt has been made to optimize this code</EM>
+   * <p/>
+   * TODO: Implement a FontShape class where each glyph is tessellated and
+   * stored inside a larger PShapeOpenGL object (which needs to be expanded as
+   * new glyphs are added and exceed the initial capacity in a similar way as
+   * the textures in FontTexture work). When a string of text is to be rendered
+   * in shape mode, then the correct sequences of vertex indices are computed
+   * (akin to the texcoords in the texture case) and used to draw only those
+   * parts of the PShape object that are required for the text.
+   * <p/>
+   *
+   * Some issues of the original implementation probably remain, so they are
+   * reproduced below:
+   * <p/>
+   * Also a problem where some fonts seem to be a bit slight, as if the
+   * control points aren't being mapped quite correctly. Probably doing
+   * something dumb that the control points don't map to P5's control
+   * points. Perhaps it's returning b-spline data from the TrueType font?
+   * Though it seems like that would make a lot of garbage rather than
+   * just a little flattening.
+   * <p/>
+   * There also seems to be a bug that is causing a line (but not a filled
+   * triangle) back to the origin on some letters (i.e. a capital L when
+   * tested with Akzidenz Grotesk Light). But this won't be visible
+   * with the stroke shut off, so tabling that bug for now.
+   */
+  protected void textCharShapeImpl(char ch, float x, float y) {
+    // save the current stroke because it needs to be disabled
+    // while the text is being drawn
+    boolean strokeSaved = stroke;
+    stroke = false;
+
+    PGL.FontOutline outline = pgl.createFontOutline(ch, textFont.getNative());
+
+    // six element array received from the Java2D path iterator
+    float textPoints[] = new float[6];
+    float lastX = 0;
+    float lastY = 0;
+
+    beginShape();
+    while (!outline.isDone()) {
+      int type = outline.currentSegment(textPoints);
+      switch (type) {
+      case PGL.SEG_MOVETO:   // 1 point (2 vars) in textPoints
+      case PGL.SEG_LINETO:   // 1 point
+        if (type == PGL.SEG_MOVETO) {
+          beginContour();
+        }
+        vertex(x + textPoints[0], y + textPoints[1]);
+        lastX = textPoints[0];
+        lastY = textPoints[1];
+        break;
+      case PGL.SEG_QUADTO:   // 2 points
+        for (int i = 1; i < bezierDetail; i++) {
+          float t = (float)i / (float)bezierDetail;
+          vertex(x + bezierPoint(lastX,
+                            lastX + (float) ((textPoints[0] - lastX) * 2/3.0),
+                            textPoints[2] + (float) ((textPoints[0] - textPoints[2]) * 2/3.0),
+                            textPoints[2], t),
+                 y + bezierPoint(lastY,
+                            lastY + (float) ((textPoints[1] - lastY) * 2/3.0),
+                            textPoints[3] + (float) ((textPoints[1] - textPoints[3]) * 2/3.0),
+                            textPoints[3], t));
+        }
+        lastX = textPoints[2];
+        lastY = textPoints[3];
+        break;
+      case PGL.SEG_CUBICTO:  // 3 points
+        for (int i = 1; i < bezierDetail; i++) {
+          float t = (float)i / (float)bezierDetail;
+          vertex(x + bezierPoint(lastX, textPoints[0],
+                                 textPoints[2], textPoints[4], t),
+                 y + bezierPoint(lastY, textPoints[1],
+                                 textPoints[3], textPoints[5], t));
+        }
+        lastX = textPoints[4];
+        lastY = textPoints[5];
+        break;
+      case PGL.SEG_CLOSE:
+        endContour();
+        break;
+      }
+      outline.next();
+    }
+    endShape();
+
+    // re-enable stroke if it was in use before
+    stroke = strokeSaved;
   }
 
 
