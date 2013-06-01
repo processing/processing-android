@@ -1,4 +1,6 @@
 0218 android
+X add support for icon-96 for xhdpi icons
+X   https://github.com/processing/processing-android/issues/37
 
 
 _ figure out how to build from Eclipse JDI so we can remove tools.jar and javac

@@ -127,7 +127,11 @@ public class AndroidEditor extends JavaEditor {
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         File file = androidMode.getSDK().getAndroidTool();
-        PApplet.exec(new String[] { file.getAbsolutePath(), "sdk" });
+        try {
+          Runtime.getRuntime().exec(new String[] { file.getAbsolutePath(), "sdk" });
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        }
       }
     });
     menu.add(item);
