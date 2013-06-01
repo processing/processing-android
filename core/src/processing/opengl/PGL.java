@@ -749,8 +749,7 @@ public class PGL {
 
 
   protected boolean needFBOLayer(boolean clear0) {
-    boolean cond = !clear0 || fboLayerRequested || 1 < numSamples;
-    return cond && glColorFbo.get(0) != 0;
+    return !clear0 || fboLayerRequested || 1 < numSamples;
   }
 
 
