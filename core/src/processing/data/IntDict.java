@@ -9,6 +9,10 @@ import processing.core.PApplet;
 
 /**
  * A simple class to use a String as a lookup for an int value.
+ *
+ * @webref data:composite
+ * @see FloatDict
+ * @see StringDict
  */
 public class IntDict {
 
@@ -98,13 +102,23 @@ public class IntDict {
     }
   }
 
-
+  /**
+   * Returns the number of key/value pairs
+   *
+   * @webref intdict:method
+   * @brief Returns the number of key/value pairs
+   */
   public int size() {
     return count;
   }
 
 
-  /** Remove all entries. */
+  /**
+   * Remove all entries.
+   *
+   * @webref intdict:method
+   * @brief Remove all entries
+   */
   public void clear() {
     count = 0;
     indices = new HashMap<String, Integer>();
@@ -116,22 +130,25 @@ public class IntDict {
   }
 
 
-  private void crop() {
-    if (count != keys.length) {
-      keys = PApplet.subset(keys, 0, count);
-      values = PApplet.subset(values, 0, count);
-    }
-  }
+//  private void crop() {
+//    if (count != keys.length) {
+//      keys = PApplet.subset(keys, 0, count);
+//      values = PApplet.subset(values, 0, count);
+//    }
+//  }
 
 
   /**
    * Return the internal array being used to store the keys. Allocated but
    * unused entries will be removed. This array should not be modified.
+   *
+   * @webref intdict:method
+   * @brief Return the internal array being used to store the keys
    */
-  public String[] keys() {
-    crop();
-    return keys;
-  }
+//  public String[] keys() {
+//    crop();
+//    return keys;
+//  }
 
 
 //  public Iterable<String> keys() {
@@ -139,6 +156,53 @@ public class IntDict {
 //
 //      @Override
 //      public Iterator<String> iterator() {
+//        return new Iterator<String>() {
+//          int index = -1;
+//
+//          public void remove() {
+//            removeIndex(index);
+//          }
+//
+//          public String next() {
+//            return key(++index);
+//          }
+//
+//          public boolean hasNext() {
+//            return index+1 < size();
+//          }
+//        };
+//      }
+//    };
+//  }
+
+
+  // Use this with 'for' loops
+  public Iterable<String> keys() {
+    return new Iterable<String>() {
+
+      public Iterator<String> iterator() {
+        return keyIterator();
+//        return new Iterator<String>() {
+//          int index = -1;
+//
+//          public void remove() {
+//            removeIndex(index);
+//          }
+//
+//          public String next() {
+//            return key(++index);
+//          }
+//
+//          public boolean hasNext() {
+//            return index+1 < size();
+//          }
+//        };
+      }
+    };
+  }
+
+
+  // Use this to iterate when you want to be able to remove elements along the way
   public Iterator<String> keyIterator() {
     return new Iterator<String>() {
       int index = -1;
@@ -155,13 +219,14 @@ public class IntDict {
         return index+1 < size();
       }
     };
-//      }
-//    };
   }
 
 
   /**
    * Return a copy of the internal keys array. This array can be modified.
+   *
+   * @webref intdict:method
+   * @brief Return a copy of the internal keys array
    */
   public String[] keyArray() {
     return keyArray(null);
@@ -182,25 +247,34 @@ public class IntDict {
   }
 
 
+  /**
+   * @webref intdict:method
+   * @brief Return the internal array being used to store the keys
+   */
   public Iterable<Integer> values() {
     return new Iterable<Integer>() {
 
       public Iterator<Integer> iterator() {
-        return new Iterator<Integer>() {
-          int index = -1;
+        return valueIterator();
+      }
+    };
+  }
 
-          public void remove() {
-            removeIndex(index);
-          }
 
-          public Integer next() {
-            return value(++index);
-          }
+  public Iterator<Integer> valueIterator() {
+    return new Iterator<Integer>() {
+      int index = -1;
 
-          public boolean hasNext() {
-            return index+1 < size();
-          }
-        };
+      public void remove() {
+        removeIndex(index);
+      }
+
+      public Integer next() {
+        return value(++index);
+      }
+
+      public boolean hasNext() {
+        return index+1 < size();
       }
     };
   }
@@ -208,6 +282,9 @@ public class IntDict {
 
   /**
    * Create a new array and copy each of the values into it.
+   *
+   * @webref intdict:method
+   * @brief Create a new array and copy each of the values into it
    */
   public int[] valueArray() {
     return valueArray(null);
@@ -218,6 +295,8 @@ public class IntDict {
    * Fill an already-allocated array with the values (more efficient than
    * creating a new array each time). If 'array' is null, or not the same
    * size as the number of values, a new array will be allocated and returned.
+   *
+   * @param array values to copy into the array
    */
   public int[] valueArray(int[] array) {
     if (array == null || array.length != size()) {
@@ -230,6 +309,9 @@ public class IntDict {
 
   /**
    * Return a value for the specified key.
+   *
+   * @webref intdict:method
+   * @brief Return a value for the specified key
    */
   public int get(String key) {
     int index = index(key);
@@ -237,7 +319,12 @@ public class IntDict {
     return values[index];
   }
 
-
+  /**
+   * Create a new key/value pair or change the value of one.
+   *
+   * @webref intdict:method
+   * @brief Create a new key/value pair or change the value of one
+   */
   public void set(String key, int amount) {
     int index = index(key);
     if (index == -1) {
@@ -247,18 +334,30 @@ public class IntDict {
     }
   }
 
-
+  /**
+   * @webref intdict:method
+   * @brief Check if a key is a part of the data structure
+   */
   public boolean hasKey(String key) {
     return index(key) != -1;
   }
 
 
-  /** Increase the value of a specific key by 1. */
+  /**
+   * Increase the value associated with a specific key by 1.
+   *
+   * @webref intdict:method
+   * @brief Increase the value of a specific key value by 1
+   */
   public void increment(String key) {
     add(key, 1);
   }
 
 
+  /**
+   * @webref intdict:method
+   * @brief Add to a value
+   */
   public void add(String key, int amount) {
     int index = index(key);
     if (index == -1) {
@@ -269,11 +368,19 @@ public class IntDict {
   }
 
 
+  /**
+   * @webref intdict:method
+   * @brief Subtract from a value
+   */
   public void sub(String key, int amount) {
     add(key, -amount);
   }
 
 
+  /**
+   * @webref intdict:method
+   * @brief Multiply a value
+   */
   public void mult(String key, int amount) {
     int index = index(key);
     if (index != -1) {
@@ -282,11 +389,83 @@ public class IntDict {
   }
 
 
+  /**
+   * @webref intdict:method
+   * @brief Divide a value
+   */
   public void div(String key, int amount) {
     int index = index(key);
     if (index != -1) {
       values[index] /= amount;
     }
+  }
+
+
+  private void checkMinMax(String functionName) {
+    if (count == 0) {
+      String msg =
+        String.format("Cannot use %s() on an empty %s.",
+                      functionName, getClass().getSimpleName());
+      throw new RuntimeException(msg);
+    }
+  }
+
+
+  // return the index of the minimum value
+  public int minIndex() {
+    checkMinMax("minIndex");
+    int index = 0;
+    int value = values[0];
+    for (int i = 1; i < count; i++) {
+      if (values[i] < value) {
+        index = i;
+        value = values[i];
+      }
+    }
+    return index;
+  }
+
+
+  // return the minimum value
+  public int minValue() {
+    checkMinMax("minValue");
+    return values[minIndex()];
+  }
+
+
+  // return the key for the minimum value
+  public String minKey() {
+    checkMinMax("minKey");
+    return keys[minIndex()];
+  }
+
+
+  // return the index of the max value
+  public int maxIndex() {
+    checkMinMax("maxIndex");
+    int index = 0;
+    int value = values[0];
+    for (int i = 1; i < count; i++) {
+      if (values[i] > value) {
+        index = i;
+        value = values[i];
+      }
+    }
+    return index;
+  }
+
+
+  // return the maximum value
+  public int maxValue() {
+    checkMinMax("maxValue");
+    return values[maxIndex()];
+  }
+
+
+  // return the key for the maximum value
+  public String maxKey() {
+    checkMinMax("maxKey");
+    return keys[maxIndex()];
   }
 
 
@@ -307,14 +486,22 @@ public class IntDict {
     count++;
   }
 
-
-  public void remove(String key) {
-    removeIndex(index(key));
+  /**
+   * @webref intdict:method
+   * @brief Remove a key/value pair
+   */
+  public int remove(String key) {
+    int index = index(key);
+    if (index != -1) {
+      removeIndex(index);
+    }
+    return index;
   }
 
 
-  public void removeIndex(int index) {
+  public String removeIndex(int index) {
     //System.out.println("index is " + which + " and " + keys[which]);
+    String key = keys[index];
     indices.remove(keys[index]);
     for (int i = index; i < count-1; i++) {
       keys[i] = keys[i+1];
@@ -324,6 +511,7 @@ public class IntDict {
     count--;
     keys[count] = null;
     values[count] = 0;
+    return key;
   }
 
 
@@ -343,25 +531,47 @@ public class IntDict {
   /**
    * Sort the keys alphabetically (ignoring case). Uses the value as a
    * tie-breaker (only really possible with a key that has a case change).
+   *
+   * @webref intdict:method
+   * @brief Sort the keys alphabetically
    */
   public void sortKeys() {
     sortImpl(true, false);
   }
 
-
+  /**
+   * Sort the keys alphabetically in reverse (ignoring case). Uses the value as a
+   * tie-breaker (only really possible with a key that has a case change).
+   *
+   * @webref intdict:method
+   * @brief Sort the keys alphabetially in reverse
+   */
   public void sortKeysReverse() {
     sortImpl(true, true);
   }
 
 
   /**
+<<<<<<< HEAD
    * Sort by values in descending order (largest value will be at [0]).
+   *
+=======
+   * Sort by values in ascending order. The smallest value will be at [0].
+   *
+>>>>>>> cd467dc12a42d588638aaab06746bebdfb333cc4
+   * @webref intdict:method
+   * @brief Sort by values in ascending order
    */
   public void sortValues() {
     sortImpl(false, false);
   }
 
-
+  /**
+   * Sort by values in descending order. The largest value will be at [0].
+   *
+   * @webref intdict:method
+   * @brief Sort by values in descending order
+   */
   public void sortValuesReverse() {
     sortImpl(false, true);
   }
