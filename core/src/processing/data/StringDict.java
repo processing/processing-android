@@ -9,6 +9,10 @@ import processing.core.PApplet;
 
 /**
  * A simple table class to use a String as a lookup for another String value.
+ *
+ * @webref data:composite
+ * @see IntDict
+ * @see FloatDict
  */
 public class StringDict {
 
@@ -73,13 +77,21 @@ public class StringDict {
     }
   }
 
-
+  /**
+   * @webref stringdict:method
+   * @brief Returns the number of key/value pairs
+   */
   public int size() {
     return count;
   }
 
 
-  /** Remove all entries. */
+  /**
+   * Remove all entries.
+   *
+   * @webref stringdict:method
+   * @brief Remove all entries
+   */
   public void clear() {
     count = 0;
     indices = new HashMap<String, Integer>();
@@ -108,7 +120,10 @@ public class StringDict {
 //    return keys;
 //  }
 
-
+  /**
+   * @webref stringdict:method
+   * @brief Return the internal array being used to store the keys
+   */
   public Iterable<String> keys() {
     return new Iterable<String>() {
 
@@ -135,6 +150,9 @@ public class StringDict {
 
   /**
    * Return a copy of the internal keys array. This array can be modified.
+   *
+   * @webref stringdict:method
+   * @brief Return a copy of the internal keys array
    */
   public String[] keyArray() {
     return keyArray(null);
@@ -154,7 +172,10 @@ public class StringDict {
     return values[index];
   }
 
-
+  /**
+   * @webref stringdict:method
+   * @brief Return the internal array being used to store the values
+   */
   public Iterable<String> values() {
     return new Iterable<String>() {
 
@@ -181,8 +202,11 @@ public class StringDict {
 
   /**
    * Create a new array and copy each of the values into it.
+   *
+   * @webref stringdict:method
+   * @brief Create a new array and copy each of the values into it
    */
-  public int[] valueArray() {
+  public String[] valueArray() {
     return valueArray(null);
   }
 
@@ -192,9 +216,9 @@ public class StringDict {
    * creating a new array each time). If 'array' is null, or not the same
    * size as the number of values, a new array will be allocated and returned.
    */
-  public int[] valueArray(int[] array) {
+  public String[] valueArray(String[] array) {
     if (array == null || array.length != size()) {
-      array = new int[count];
+      array = new String[count];
     }
     System.arraycopy(values, 0, array, 0, count);
     return array;
@@ -203,6 +227,9 @@ public class StringDict {
 
   /**
    * Return a value for the specified key.
+   *
+   * @webref stringdict:method
+   * @brief Return a value for the specified key
    */
   public String get(String key) {
     int index = index(key);
@@ -210,7 +237,10 @@ public class StringDict {
     return values[index];
   }
 
-
+  /**
+   * @webref stringdict:method
+   * @brief Create a new key/value pair or change the value of one
+   */
   public void set(String key, String amount) {
     int index = index(key);
     if (index == -1) {
@@ -226,7 +256,10 @@ public class StringDict {
     return (found == null) ? -1 : found.intValue();
   }
 
-
+  /**
+   * @webref stringdict:method
+   * @brief Check if a key is a part of the data structure
+   */
   public boolean hasKey(String key) {
     return index(key) != -1;
   }
@@ -243,15 +276,23 @@ public class StringDict {
     count++;
   }
 
-
-  public void remove(String key) {
-    removeIndex(index(key));
+  /**
+   * @webref stringdict:method
+   * @brief Remove a key/value pair
+   */
+  public int remove(String key) {
+    int index = index(key);
+    if (index != -1) {
+      removeIndex(index);
+    }
+    return index;
   }
 
 
-  public void removeIndex(int index) {
+  public String removeIndex(int index) {
     //System.out.println("index is " + which + " and " + keys[which]);
-    indices.remove(keys[index]);
+    String key = keys[index];
+    indices.remove(key);
     for (int i = index; i < count-1; i++) {
       keys[i] = keys[i+1];
       values[i] = values[i+1];
@@ -260,6 +301,7 @@ public class StringDict {
     count--;
     keys[count] = null;
     values[count] = null;
+    return key;
   }
 
 
@@ -279,12 +321,18 @@ public class StringDict {
   /**
    * Sort the keys alphabetically (ignoring case). Uses the value as a
    * tie-breaker (only really possible with a key that has a case change).
+   *
+   * @webref stringdict:method
+   * @brief Sort the keys alphabetically
    */
   public void sortKeys() {
     sortImpl(true, false);
   }
 
-
+  /**
+   * @webref stringdict:method
+   * @brief Sort the keys alphabetially in reverse
+   */
   public void sortKeysReverse() {
     sortImpl(true, true);
   }
@@ -292,12 +340,19 @@ public class StringDict {
 
   /**
    * Sort by values in descending order (largest value will be at [0]).
+   *
+   * @webref stringdict:method
+   * @brief Sort by values in ascending order
    */
   public void sortValues() {
     sortImpl(false, false);
   }
 
 
+  /**
+   * @webref stringdict:method
+   * @brief Sort by values in descending order
+   */
   public void sortValuesReverse() {
     sortImpl(false, true);
   }

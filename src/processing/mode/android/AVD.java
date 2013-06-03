@@ -46,7 +46,7 @@ public class AVD {
 
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
-    new AVD("Processing-0" + Base.REVISION,
+    new AVD("Processing-0" + Base.getRevision(),
             "android-" + AndroidBuild.sdkVersion);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
