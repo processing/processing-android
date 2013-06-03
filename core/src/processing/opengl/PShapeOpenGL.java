@@ -1446,7 +1446,15 @@ public class PShapeOpenGL extends PShape {
 
   @Override
   public int getVertexCount() {
-    return family == GROUP ? 0 : inGeo.vertexCount;
+    if (family == GROUP) return 0; // Group shapes don't have vertices
+    else {
+      if (family == PRIMITIVE || family == PATH) {
+        // the input geometry of primitive and path shapes is built during
+        // tessellation
+        updateTessellation();
+      }
+      return inGeo.vertexCount;
+    }
   }
 
 

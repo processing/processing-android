@@ -426,38 +426,36 @@ public class PGL {
   }
 
 
-  protected Texture wrapBackTexture() {
-    Texture tex = new Texture();
-    tex.init(pg.width, pg.height,
-             glColorTex.get(backTex), TEXTURE_2D, RGBA,
-             fboWidth, fboHeight, NEAREST, NEAREST,
-             CLAMP_TO_EDGE, CLAMP_TO_EDGE);
-    tex.invertedY(true);
-    tex.colorBuffer(true);
-    pg.setCache(pg, tex);
-    return tex;
+  protected Texture wrapBackTexture(Texture texture) {
+    if (texture == null) {
+      texture = new Texture();
+      texture.init(pg.width, pg.height,
+                   glColorTex.get(backTex), TEXTURE_2D, RGBA,
+                   fboWidth, fboHeight, NEAREST, NEAREST,
+                   CLAMP_TO_EDGE, CLAMP_TO_EDGE);
+      texture.invertedY(true);
+      texture.colorBuffer(true);
+      pg.setCache(pg, texture);
+    } else {
+      texture.glName = glColorTex.get(backTex);
+    }
+    return texture;
   }
 
 
-  protected Texture wrapFrontTexture() {
-    Texture tex = new Texture();
-    tex.init(pg.width, pg.height,
-             glColorTex.get(frontTex), TEXTURE_2D, RGBA,
-             fboWidth, fboHeight, NEAREST, NEAREST,
-             CLAMP_TO_EDGE, CLAMP_TO_EDGE);
-    tex.invertedY(true);
-    tex.colorBuffer(true);
-    return tex;
-  }
-
-
-  int getBackTextureName() {
-    return glColorTex.get(backTex);
-  }
-
-
-  int getFrontTextureName() {
-    return glColorTex.get(frontTex);
+  protected Texture wrapFrontTexture(Texture texture) {
+    if (texture == null) {
+      texture = new Texture();
+      texture.init(pg.width, pg.height,
+                   glColorTex.get(frontTex), TEXTURE_2D, RGBA,
+                   fboWidth, fboHeight, NEAREST, NEAREST,
+                   CLAMP_TO_EDGE, CLAMP_TO_EDGE);
+      texture.invertedY(true);
+      texture.colorBuffer(true);
+    } else {
+      texture.glName = glColorTex.get(frontTex);
+    }
+    return texture;
   }
 
 
@@ -731,6 +729,10 @@ public class PGL {
   }
 
 
+  protected void requestFocus() {
+  }
+
+
   protected boolean canDraw() {
     return true;
   }
@@ -745,6 +747,10 @@ public class PGL {
 
   protected boolean threadIsCurrent() {
     return Thread.currentThread() == glThread;
+  }
+
+
+  protected void swapBuffers() {
   }
 
 
