@@ -773,6 +773,14 @@ public class PGraphics extends PImage implements PConstants {
 
 
   /**
+   * Handle grabbing the focus from the parent applet. Other renderers can
+   * override this if handling needs to be different.
+   */
+  public void requestFocus() {  // ignore
+  }
+
+
+  /**
    * Some renderers have requirements re: when they are ready to draw.
    */
   public boolean canDraw() {  // ignore
@@ -2790,11 +2798,6 @@ public class PGraphics extends PImage implements PConstants {
     fillG = savedFillG;
     fillB = savedFillB;
     fillA = savedFillA;
-  }
-
-
-  public Object initCache(PImage img) { // ignore
-    return null;
   }
 
 
