@@ -260,9 +260,10 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     final String exceptionClass = m.group(1);
-    if (Runner.handleCommonErrors(exceptionClass, exceptionLine, listener)) {
-      return;
-    }
+//    if (Runner.handleCommonErrors(exceptionClass, exceptionLine, listener)) {
+//      return;
+//    }
+    Runner.handleCommonErrors(exceptionClass, exceptionLine, listener);
 
     while (frames.hasNext()) {
       final String line = frames.next();

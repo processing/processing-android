@@ -1904,9 +1904,14 @@ public class PShape implements PConstants {
     if (vec == null) {
       vec = new PVector();
     }
-    vec.x = vertices[index][X];
-    vec.y = vertices[index][Y];
-    vec.z = vertices[index][Z];
+    float[] vert = vertices[index];
+    vec.x = vert[X];
+    vec.y = vert[Y];
+    if (vert.length > 2) {
+      vec.z = vert[Z];
+    } else {
+      vec.z = 0;  // in case this isn't a new vector
+    }
     return vec;
   }
 

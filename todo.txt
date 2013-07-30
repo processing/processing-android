@@ -6,6 +6,10 @@ X   https://github.com/processing/processing-android/issues/37
 _ figure out how to build from Eclipse JDI so we can remove tools.jar and javac
 _   https://github.com/processing/processing/issues/1840
 
+_ temporary files (for sketches and logs) are not deleted
+o   http://code.google.com/p/processing/issues/detail?id=562
+_   https://github.com/processing/processing-android/issues/33
+
 _ requires deleting the app before reinstalling
 _   just fix this like the others
 debug:
