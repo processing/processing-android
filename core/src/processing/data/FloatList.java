@@ -16,6 +16,8 @@ import processing.core.PApplet;
  * a sorted copy, use list.copy().sort().
  *
  * @webref data:composite
+ * @see IntList
+ * @see StringList
  */
 public class FloatList implements Iterable<Float> {
   int count;
@@ -26,19 +28,25 @@ public class FloatList implements Iterable<Float> {
     data = new float[10];
   }
 
-
+  /**
+   * @nowebref
+   */
   public FloatList(int length) {
     data = new float[length];
   }
 
-
+  /**
+   * @nowebref
+   */
   public FloatList(float[] list) {
     count = list.length;
     data = new float[count];
     System.arraycopy(list, 0, data, 0, count);
   }
 
-
+  /**
+   * @nowebref
+   */
   public FloatList(Iterable<Float> iter) {
     this(10);
     for (float v : iter) {
@@ -133,6 +141,9 @@ public class FloatList implements Iterable<Float> {
    * @brief Remove an element from the specified index
    */
   public float remove(int index) {
+    if (index < 0 || index >= count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
     float entry = data[index];
 //    int[] outgoing = new int[count - 1];
 //    System.arraycopy(data, 0, outgoing, 0, index);
@@ -290,7 +301,7 @@ public class FloatList implements Iterable<Float> {
     if (index < 0) {
       throw new IllegalArgumentException("insert() index cannot be negative: it was " + index);
     }
-    if (index >= values.length) {
+    if (index >= data.length) {
       throw new IllegalArgumentException("insert() index " + index + " is past the end of this list");
     }
 
@@ -522,6 +533,15 @@ public class FloatList implements Iterable<Float> {
   }
 
 
+  public float sum() {
+    double outgoing = 0;
+    for (int i = 0; i < count; i++) {
+      outgoing += data[i];
+    }
+    return (float) outgoing;
+  }
+
+
   /**
    * Sorts the array in place.
    *
@@ -566,17 +586,18 @@ public class FloatList implements Iterable<Float> {
 //  }
 
 
-  public void subset(int start) {
-    subset(start, count - start);
-  }
+//  public void subset(int start) {
+//    subset(start, count - start);
+//  }
 
 
-  public void subset(int start, int num) {
-    for (int i = 0; i < num; i++) {
-      data[i] = data[i+start];
-    }
-    count = num;
-  }
+//  public void subset(int start, int num) {
+//    for (int i = 0; i < num; i++) {
+//      data[i] = data[i+start];
+//    }
+//    count = num;
+//  }
+
 
   /**
    * @webref floatlist:method
@@ -692,6 +713,52 @@ public class FloatList implements Iterable<Float> {
     }
     System.arraycopy(data, 0, array, 0, count);
     return array;
+  }
+
+
+  /**
+   * Returns a normalized version of this array. Called getPercent() for
+   * consistency with the Dict classes. It's a getter method because it needs
+   * to returns a new list (because IntList/Dict can't do percentages or
+   * normalization in place on int values).
+   */
+  public FloatList getPercent() {
+    double sum = 0;
+    for (float value : array()) {
+      sum += value;
+    }
+    FloatList outgoing = new FloatList(count);
+    for (int i = 0; i < count; i++) {
+      double percent = data[i] / sum;
+      outgoing.set(i, (float) percent);
+    }
+    return outgoing;
+  }
+
+
+  public FloatList getSubset(int start) {
+    return getSubset(start, count - start);
+  }
+
+
+  public FloatList getSubset(int start, int num) {
+    float[] subset = new float[num];
+    System.arraycopy(data, start, subset, 0, num);
+    return new FloatList(subset);
+  }
+
+
+  public String join(String separator) {
+    if (count == 0) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append(data[0]);
+    for (int i = 1; i < count; i++) {
+      sb.append(separator);
+      sb.append(data[i]);
+    }
+    return sb.toString();
   }
 
 

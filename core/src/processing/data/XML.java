@@ -179,9 +179,8 @@ public class XML implements Serializable {
 
 
   /**
-   * @param name description TBD
+   * @param name creates a node with this name
    *
-   * @nowebref
    */
   public XML(String name) {
     try {
@@ -243,6 +242,8 @@ public class XML implements Serializable {
   }
 
 
+  // Sends this object and its kids to a Writer with an indent of 2 spaces,
+  // including the declaration at the top so that the output will be valid XML.
   public boolean write(PrintWriter output) {
     output.print(format(2));
     output.flush();
@@ -809,6 +810,12 @@ public class XML implements Serializable {
   }
 
 
+  public String getContent(String defaultValue) {
+    String s = node.getTextContent();
+    return (s != null) ? s : defaultValue;
+  }
+
+
   /**
    * @webref xml:method
    * @brief Gets the content of an element as an int
@@ -1008,6 +1015,15 @@ public class XML implements Serializable {
         return singleLine;
       }
 
+      // Might just be whitespace, which won't be valid XML for parsing below.
+      // https://github.com/processing/processing/issues/1796
+      // Since indent is not -1, that means they want valid XML,
+      // so we'll give them the single line plus the decl... Lame? sure.
+      if (singleLine.trim().length() == 0) {
+        // You want whitespace? I've got your whitespace right here.
+        return decl + sep + singleLine;
+      }
+
       // Since the indent is not -1, bring back the XML declaration
       //transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 
@@ -1016,8 +1032,14 @@ public class XML implements Serializable {
 //      DOMSource source = new DOMSource(node);
       Source source = new StreamSource(new StringReader(singleLine));
       transformer.transform(source, xmlOutput);
-      return decl + sep + stringWriter.toString();
-//      return xmlOutput.getWriter().toString();
+      String outgoing = stringWriter.toString();
+
+      // Add the XML declaration to the top if it's not there already
+      if (!outgoing.startsWith(decl)) {
+        return decl + sep + outgoing;
+      } else {
+        return outgoing;
+      }
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -1038,6 +1060,7 @@ public class XML implements Serializable {
    */
   @Override
   public String toString() {
-    return format(2);
+    //return format(2);
+    return format(-1);
   }
 }

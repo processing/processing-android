@@ -149,11 +149,10 @@ public class PVector implements Serializable {
     this.z = 0;
   }
 
-
   /**
    * ( begin auto-generated from PVector_set.xml )
    *
-   * Sets the x, y, and z component of the vector using three separate
+   * Sets the x, y, and z component of the vector using two or three separate
    * variables, the data from a PVector, or the values from a float array.
    *
    * ( end auto-generated )
@@ -170,6 +169,17 @@ public class PVector implements Serializable {
     this.z = z;
   }
 
+  /**
+   *
+   * @webref pvector:method
+   * @param x the x component of the vector
+   * @param y the y component of the vector
+   * @brief Set the x, y components of the vector
+   */
+  public void set(float x, float y) {
+    this.x = x;
+    this.y = y;
+  }
 
   /**
    * @param v any variable of type PVector
@@ -207,6 +217,7 @@ public class PVector implements Serializable {
    * @usage web_application
    * @return the random PVector
    * @brief Make a new 2D unit vector with a random direction.
+   * @see PVector#random3D()
    */
   static public PVector random2D() {
     return random2D(null,null);
@@ -233,8 +244,6 @@ public class PVector implements Serializable {
 
   /**
    * Make a new 2D unit vector with a random direction
-   * @param parent current PApplet instance
-   * @param target the target vector (if null, a new vector will be created)
    * @return the random PVector
    */
   static public PVector random2D(PVector target, PApplet parent) {
@@ -253,6 +262,7 @@ public class PVector implements Serializable {
    * @usage web_application
    * @return the random PVector
    * @brief Make a new 3D unit vector with a random direction.
+   * @see PVector#random2D()
    */
   static public PVector random3D() {
     return random3D(null,null);
@@ -279,8 +289,6 @@ public class PVector implements Serializable {
 
   /**
    * Make a new 3D unit vector with a random direction
-   * @param target the target vector (if null, a new vector will be created)
-   * @param parent current PApplet instance
    * @return the random PVector
    */
   static public PVector random3D(PVector target, PApplet parent) {
@@ -324,7 +332,7 @@ public class PVector implements Serializable {
 
   /**
    * Make a new 2D unit vector from an angle
-   * @param angle the angle
+   *
    * @param target the target vector (if null, a new vector will be created)
    * @return the PVector
    */
@@ -382,6 +390,7 @@ public class PVector implements Serializable {
    * @usage web_application
    * @brief Calculate the magnitude of the vector
    * @return magnitude (length) of the vector
+   * @see PVector#magSq()
    */
   public float mag() {
     return (float) Math.sqrt(x*x + y*y + z*z);
@@ -399,9 +408,9 @@ public class PVector implements Serializable {
    *
    * @webref pvector:method
    * @usage web_application
-   * @brief Calculate the magnitude of the vector
+   * @brief Calculate the magnitude of the vector, squared
    * @return squared magnitude of the vector
-   *
+   * @see PVector#mag()
    */
   public float magSq() {
     return (x*x + y*y + z*z);
@@ -512,7 +521,7 @@ public class PVector implements Serializable {
    * Subtract one vector from another and store in another vector
    * @param v1 the x, y, and z components of a PVector object
    * @param v2 the x, y, and z components of a PVector object
-   * @param target PVector to store the result
+   * @param target PVector in which to store the result
    */
   static public PVector sub(PVector v1, PVector v2, PVector target) {
     if (target == null) {
@@ -533,8 +542,8 @@ public class PVector implements Serializable {
    *
    * @webref pvector:method
    * @usage web_application
+   * @brief Multiply a vector by a scalar
    * @param n the number to multiply with the vector
-   * @brief Multiply a vector by a scalar or one vector by another
    */
   public void mult(float n) {
     x *= n;
@@ -553,7 +562,7 @@ public class PVector implements Serializable {
 
   /**
    * Multiply a vector by a scalar, and write the result into a target PVector.
-   * @param target PVector to store the result
+   * @param target PVector in which to store the result
    */
   static public PVector mult(PVector v, float n, PVector target) {
     if (target == null) {
@@ -564,30 +573,6 @@ public class PVector implements Serializable {
     return target;
   }
 
-  public void mult(PVector v) {
-    x *= v.x;
-    y *= v.y;
-    z *= v.z;
-  }
-
-
-  /**
-   * @param v1 the x, y, and z components of a PVector
-   * @param v2 the x, y, and z components of a PVector
-   */
-  static public PVector mult(PVector v1, PVector v2) {
-    return mult(v1, v2, null);
-  }
-
-
-  static public PVector mult(PVector v1, PVector v2, PVector target) {
-    if (target == null) {
-      target = new PVector(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
-    } else {
-      target.set(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
-    }
-    return target;
-  }
 
 
   /**
@@ -599,8 +584,8 @@ public class PVector implements Serializable {
    *
    * @webref pvector:method
    * @usage web_application
-   * @param n the value to divide by
-   * @brief Divide a vector by a scalar or one vector by another
+   * @brief Divide a vector by a scalar
+   * @param n the number by which to divide the vector
    */
   public void div(float n) {
     x /= n;
@@ -611,8 +596,7 @@ public class PVector implements Serializable {
 
   /**
    * Divide a vector by a scalar and return the result in a new vector.
-   * @param v any variable of type PVector
-   * @param n the number to divide with the vector
+   * @param v the vector to divide by the scalar
    * @return a new vector that is v1 / n
    */
   static public PVector div(PVector v, float n) {
@@ -621,43 +605,13 @@ public class PVector implements Serializable {
 
   /**
    * Divide a vector by a scalar and store the result in another vector.
-   * @param v any variable of type PVector
-   * @param n the number to divide with the vector
-   * @param target PVector to store the result
+   * @param target PVector in which to store the result
    */
   static public PVector div(PVector v, float n, PVector target) {
     if (target == null) {
       target = new PVector(v.x/n, v.y/n, v.z/n);
     } else {
       target.set(v.x/n, v.y/n, v.z/n);
-    }
-    return target;
-  }
-
-
-  /**
-   * Divide each element of one vector by the elements of another vector.
-   */
-  public void div(PVector v) {
-    x /= v.x;
-    y /= v.y;
-    z /= v.z;
-  }
-
-
-  /**
-   * Divide each element of one vector by the individual elements of another
-   * vector, and return the result as a new PVector.
-   */
-  static public PVector div(PVector v1, PVector v2) {
-    return div(v1, v2, null);
-  }
-
-  static public PVector div(PVector v1, PVector v2, PVector target) {
-    if (target == null) {
-      target = new PVector(v1.x/v2.x, v1.y/v2.y, v1.z/v2.z);
-    } else {
-      target.set(v1.x/v2.x, v1.y/v2.y, v1.z/v2.z);
     }
     return target;
   }
@@ -880,7 +834,7 @@ public class PVector implements Serializable {
    * @webref pvector:method
    * @usage web_application
    * @return the angle of rotation
-   * @brief SCalculate the angle of rotation for this vector
+   * @brief Calculate the angle of rotation for this vector
    */
   public float heading() {
     float angle = (float) Math.atan2(-y, x);
@@ -925,8 +879,7 @@ public class PVector implements Serializable {
    * @usage web_application
    * @brief Linear interpolate the vector to another vector
    * @param v the vector to lerp to
-   * @param amt  The amt parameter is the amount to interpolate between the two vectors where 1.0 equal to the new vector
-   * 0.1 is very near the new vector, 0.5 is half-way in between.
+   * @param amt  The amount of interpolation; some value between 0.0 (old vector) and 1.0 (new vector). 0.1 is very near the new vector. 0.5 is halfway in between.
    */
   public void lerp(PVector v, float amt) {
     x = PApplet.lerp(x,v.x,amt);
@@ -936,11 +889,8 @@ public class PVector implements Serializable {
 
   /**
    * Linear interpolate between two vectors (returns a new PVector object)
-   * @param v1 the vector
+   * @param v1 the vector to start from
    * @param v2 the vector to lerp to
-   * @param amt  The amt parameter is the amount to interpolate between the two vectors where 1.0 equal to the new vector
-   * 0.1 is very near the new vector, 0.5 is half-way in between.
-   * @return the resulting lerped PVector
    */
   public static PVector lerp(PVector v1, PVector v2, float amt) {
     PVector v = v1.get();
@@ -953,8 +903,6 @@ public class PVector implements Serializable {
    * @param x the x component to lerp to
    * @param y the y component to lerp to
    * @param z the z component to lerp to
-   * @param amt  The amt parameter is the amount to interpolate between the two vectors where 1.0 equal to the new vector
-   * 0.1 is very near the new vector, 0.5 is half-way in between.
    */
   public void lerp(float x, float y, float z, float amt) {
     this.x = PApplet.lerp(this.x,x,amt);
@@ -976,6 +924,12 @@ public class PVector implements Serializable {
    * @brief Calculate and return the angle between two vectors
    */
   static public float angleBetween(PVector v1, PVector v2) {
+
+    // We get NaN if we pass in a zero vector which can cause problems
+    // Zero seems like a reasonable angle between a (0,0) vector and something else
+    if (v1.x == 0 && v1.y == 0) return 0.0f;
+    if (v2.x == 0 && v2.y == 0) return 0.0f;
+
     double dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
     double v1mag = Math.sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
     double v2mag = Math.sqrt(v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);

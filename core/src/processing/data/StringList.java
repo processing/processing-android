@@ -15,6 +15,8 @@ import processing.core.PApplet;
  * a sorted copy, use list.copy().sort().
  *
  * @webref data:composite
+ * @see IntList
+ * @see FloatList
  */
 public class StringList implements Iterable<String> {
   int count;
@@ -25,12 +27,16 @@ public class StringList implements Iterable<String> {
     this(10);
   }
 
-
+  /**
+   * @nowebref
+   */
   public StringList(int length) {
     data = new String[length];
   }
 
-
+  /**
+   * @nowebref
+   */
   public StringList(String[] list) {
     count = list.length;
     data = new String[count];
@@ -38,8 +44,12 @@ public class StringList implements Iterable<String> {
   }
 
 
-  // Create from something iterable, for instance:
-  // StringList list = new StringList(hashMap.keySet());
+  /**
+   * Create from something iterable, for instance:
+   * StringList list = new StringList(hashMap.keySet());
+   *
+   * @nowebref
+   */
   public StringList(Iterable<String> iter) {
     this(10);
     for (String s : iter) {
@@ -134,6 +144,9 @@ public class StringList implements Iterable<String> {
    * @brief Remove an element from the specified index
    */
   public String remove(int index) {
+    if (index < 0 || index >= count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
     String entry = data[index];
 //    int[] outgoing = new int[count - 1];
 //    System.arraycopy(data, 0, outgoing, 0, index);
@@ -634,11 +647,9 @@ public class StringList implements Iterable<String> {
 
 
   public StringList getSubset(int start, int num) {
-    StringList outgoing = new StringList(num);
-    for (int i = 0; i < num; i++) {
-      System.arraycopy(data, start, outgoing.data, 0, num);
-    }
-    return outgoing;
+    String[] subset = new String[num];
+    System.arraycopy(data, start, subset, 0, num);
+    return new StringList(subset);
   }
 
 
@@ -673,6 +684,26 @@ public class StringList implements Iterable<String> {
 //      System.out.println("[" + i + "] " + data[i]);
 //    }
 //    System.out.flush();
+//  }
+
+
+  public String join(String separator) {
+    if (count == 0) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append(data[0]);
+    for (int i = 1; i < count; i++) {
+      sb.append(separator);
+      sb.append(data[i]);
+    }
+    return sb.toString();
+  }
+
+
+//  static public StringList split(String value, char delim) {
+//    String[] array = PApplet.split(value, delim);
+//    return new StringList(array);
 //  }
 
 

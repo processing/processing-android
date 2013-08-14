@@ -36,6 +36,8 @@ public class FloatDict {
   /**
    * Create a new lookup with a specific size. This is more efficient than not
    * specifying a size. Use it when you know the rough size of the thing you're creating.
+   *
+   * @nowebref
    */
   public FloatDict(int length) {
     count = 0;
@@ -47,6 +49,8 @@ public class FloatDict {
   /**
    * Read a set of entries from a Reader that has each key/value pair on
    * a single line, separated by a tab.
+   *
+   * @nowebref
    */
   public FloatDict(BufferedReader reader) {
 //  public FloatHash(PApplet parent, String filename) {
@@ -66,7 +70,9 @@ public class FloatDict {
     }
   }
 
-
+  /**
+   * @nowebref
+   */
   public FloatDict(String[] keys, float[] values) {
     if (keys.length != values.length) {
       throw new IllegalArgumentException("key and value arrays must be the same length");
@@ -419,6 +425,7 @@ public class FloatDict {
    * @webref floatlist:method
    * @brief Return the largest value
    */
+  // The index of the entry that has the max value. Reference above is incorrect.
   public int maxIndex() {
     checkMinMax("maxIndex");
     // Will still return NaN if there is 1 or more entries, and they're all NaN
@@ -445,12 +452,14 @@ public class FloatDict {
   }
 
 
+  /** The key for a max value. */
   public String maxKey() {
     checkMinMax("maxKey");
     return keys[maxIndex()];
   }
 
 
+  /** The max value. */
   public float maxValue() {
     checkMinMax("maxValue");
     return values[maxIndex()];
@@ -489,6 +498,9 @@ public class FloatDict {
 
 
   public String removeIndex(int index) {
+    if (index < 0 || index >= count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
     String key = keys[index];
     //System.out.println("index is " + which + " and " + keys[which]);
     indices.remove(keys[index]);
@@ -666,6 +678,25 @@ public class FloatDict {
       }
     };
     s.run();
+  }
+
+
+  /**
+   * Sum all of the values in this dictionary, then return a new FloatDict of
+   * each key, divided by the total sum. The total for all values will be ~1.0.
+   * @return a Dict with the original keys, mapped to their pct of the total
+   */
+  public FloatDict getPercent() {
+    double sum = 0;
+    for (float value : valueArray()) {
+      sum += value;
+    }
+    FloatDict outgoing = new FloatDict();
+    for (int i = 0; i < size(); i++) {
+      double percent = value(i) / sum;
+      outgoing.set(key(i), (float) percent);
+    }
+    return outgoing;
   }
 
 

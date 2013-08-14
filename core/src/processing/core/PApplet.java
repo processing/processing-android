@@ -2742,11 +2742,12 @@ public class PApplet extends Activity implements PConstants, Runnable {
     handleMethods("keyEvent", new Object[] { event });
   }
 
-  // overriding android default (which exits the activity) so we can handle exiting ourselves.
-  // Processing users who want something else to happen should override this.
+
+  @Override
   public void onBackPressed() {
 	  exit();
   }
+
 
   protected void nativeKeyEvent(android.view.KeyEvent event) {
     // event.isPrintingKey() returns false for whitespace and others,
