@@ -5,6 +5,9 @@ X switch to onBackPressed() for back button handling
 X   developer.android.com/reference/android/app/Activity.html#onBackPressed()
 X   https://github.com/processing/processing-android/pull/52
 X   https://github.com/processing/processing-android/issues/50
+X sync PVector plus the processing.data package
+X   https://github.com/processing/processing-android/issues/47
+X   https://github.com/processing/processing-android/pull/42
 
 
 _ figure out how to build from Eclipse JDI so we can remove tools.jar and javac
