@@ -23,7 +23,6 @@
 package processing.opengl;
 
 import processing.core.*;
-
 import java.net.URL;
 import java.nio.*;
 import java.util.*;
@@ -78,8 +77,8 @@ public class PGraphicsOpenGL extends PGraphics {
     "Unsupported shape format";
   static final String INVALID_FILTER_SHADER_ERROR =
     "Your shader needs to be of TEXTURE type to be used as a filter";
-  static final String INVALID_PROCESSING_SHADER_ERROR =
-    "The GLSL code doesn't seem to contain a valid shader to use in Processing";
+  static final String INCONSISTENT_SHADER_TYPES =
+    "The vertex and fragment shaders have different types";
   static final String WRONG_SHADER_TYPE_ERROR =
     "shader() called with a wrong shader";
   static final String UNKNOWN_SHADER_KIND_ERROR =
@@ -390,12 +389,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
   // ........................................................
 
-  // Blending:
-
-  protected int blendMode;
-
-  // ........................................................
-
   // Clipping
 
   protected boolean clip = false;
@@ -477,6 +470,10 @@ public class PGraphicsOpenGL extends PGraphics {
   protected int smoothCallCount = 0;
   protected int lastSmoothCall = -10;
 
+  /** Used to avoid flushing the geometry when blendMode() is called with the
+   * same blend mode as the last */
+  protected int lastBlendMode = -1;
+
   /** Type of pixels operation. */
   static protected final int OP_NONE  = 0;
   static protected final int OP_READ  = 1;
@@ -504,15 +501,17 @@ public class PGraphicsOpenGL extends PGraphics {
   /** Used in round point and ellipse tessellation. The
    * number of subdivisions per round point or ellipse is
    * calculated with the following formula:
-   * n = max(N, (TWO_PI * size / F))
+   * n = min(M, max(N, (TWO_PI * size / F)))
    * where size is a measure of the dimensions of the circle
    * when projected on screen coordinates. F just sets the
    * minimum number of subdivisions, while a smaller F
    * would allow to have more detailed circles.
    * N = MIN_POINT_ACCURACY
+   * M = MAX_POINT_ACCURACY
    * F = POINT_ACCURACY_FACTOR
    */
   final static protected int   MIN_POINT_ACCURACY    = 20;
+  final static protected int   MAX_POINT_ACCURACY    = 200;
   final static protected float POINT_ACCURACY_FACTOR = 10.0f;
 
   /** Used in quad point tessellation. */
@@ -530,7 +529,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   public PGraphicsOpenGL() {
     if (pgl == null) {
-      pgl = new PGL(this);
+      pgl = createPGL(this);
     }
 
     if (tessellator == null) {
@@ -1581,7 +1580,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public void requestFocus() {  // ignore
-    //pgl.requestFocus();
+    pgl.requestFocus();
   }
 
 
@@ -1645,7 +1644,8 @@ public class PGraphicsOpenGL extends PGraphics {
     } else {
       beginOffscreenDraw();
     }
-    setDrawDefaults();
+    setDrawDefaults(); // TODO: look at using checkSettings() instead...
+
 
     pgCurrent = this;
     drawing = true;
@@ -1696,6 +1696,12 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
+  // Factory method
+  protected PGL createPGL(PGraphicsOpenGL pg) {
+    return new PGLES(pg);
+  }
+
+
   @Override
   public PGL beginPGL() {
     flush();
@@ -1723,7 +1729,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected void restoreGL() {
-    setBlendMode(blendMode);
+    blendMode(blendMode);  // this should be set by reapplySettings...
 
     if (hints[DISABLE_DEPTH_TEST]) {
       pgl.disable(PGL.DEPTH_TEST);
@@ -1765,6 +1771,13 @@ public class PGraphicsOpenGL extends PGraphics {
     pgl.drawBuffer(currentFramebuffer.getDefaultDrawBuffer());
   }
 
+  public void beginReadPixels() {
+    pgCurrent.beginPixelsOp(OP_READ);
+  }
+
+  public void endReadPixels() {
+    pgCurrent.endPixelsOp();
+  }
 
   protected void beginPixelsOp(int op) {
     FrameBuffer pixfb = null;
@@ -2385,6 +2398,10 @@ public class PGraphicsOpenGL extends PGraphics {
                                   4 * voffset * PGL.SIZEOF_FLOAT);
         shader.setColorAttribute(glPolyColor, 4, PGL.UNSIGNED_BYTE, 0,
                                  4 * voffset * PGL.SIZEOF_BYTE);
+        shader.setNormalAttribute(glPolyNormal, 3, PGL.FLOAT, 0,
+                                  3 * voffset * PGL.SIZEOF_FLOAT);
+        shader.setTexcoordAttribute(glPolyTexcoord, 2, PGL.FLOAT, 0,
+                                    2 * voffset * PGL.SIZEOF_FLOAT);
 
         if (lights) {
           shader.setNormalAttribute(glPolyNormal, 3, PGL.FLOAT, 0,
@@ -2400,10 +2417,6 @@ public class PGraphicsOpenGL extends PGraphics {
         }
 
         if (tex != null) {
-          shader.setNormalAttribute(glPolyNormal, 3, PGL.FLOAT, 0,
-                                    3 * voffset * PGL.SIZEOF_FLOAT);
-          shader.setTexcoordAttribute(glPolyTexcoord, 2, PGL.FLOAT, 0,
-                                      2 * voffset * PGL.SIZEOF_FLOAT);
           shader.setTexture(tex);
         }
 
@@ -2683,8 +2696,8 @@ public class PGraphicsOpenGL extends PGraphics {
         int perim;
         if (0 < size) { // round point
           weight = +size / 0.5f;
-          perim = PApplet.max(MIN_POINT_ACCURACY,
-                           (int) (TWO_PI * weight / POINT_ACCURACY_FACTOR)) + 1;
+          perim = PApplet.min(MAX_POINT_ACCURACY, PApplet.max(MIN_POINT_ACCURACY,
+                              (int) (TWO_PI * weight / POINT_ACCURACY_FACTOR))) + 1;
         } else {        // Square point
           weight = -size / 0.5f;
           perim = 5;
@@ -2905,42 +2918,6 @@ public class PGraphicsOpenGL extends PGraphics {
     endShape();
   }
 
-  //////////////////////////////////////////////////////////////
-
-  // RECT
-
-  // public void rectMode(int mode)
-
-  @Override
-  public void rect(float a, float b, float c, float d) {
-    beginShape(QUADS);
-    defaultEdges = false;
-    normalMode = NORMAL_MODE_SHAPE;
-    inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
-                      ambientColor, specularColor, emissiveColor, shininess);
-    inGeo.setNormal(normalX, normalY, normalZ);
-    inGeo.addRect(a, b, c, d,
-                  fill, stroke, rectMode);
-    endShape();
-  }
-
-
-  @Override
-  public void rect(float a, float b, float c, float d,
-                   float tl, float tr, float br, float bl) {
-    beginShape(POLYGON);
-    defaultEdges = false;
-    normalMode = NORMAL_MODE_SHAPE;
-    inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
-                      ambientColor, specularColor, emissiveColor, shininess);
-    inGeo.setNormal(normalX, normalY, normalZ);
-    inGeo.addRect(a, b, c, d,
-                  tl, tr, br, bl,
-                  fill, stroke, bezierDetail, rectMode);
-    endShape(CLOSE);
-  }
-
-  // protected void rectImpl(float x1, float y1, float x2, float y2)
 
   //////////////////////////////////////////////////////////////
 
@@ -2950,14 +2927,14 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
-  public void ellipse(float a, float b, float c, float d) {
+  public void ellipseImpl(float a, float b, float c, float d) {
      beginShape(TRIANGLE_FAN);
      defaultEdges = false;
      normalMode = NORMAL_MODE_SHAPE;
      inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
                        ambientColor, specularColor, emissiveColor, shininess);
      inGeo.setNormal(normalX, normalY, normalZ);
-     inGeo.addEllipse(a, b, c, d, fill, stroke, ellipseMode);
+     inGeo.addEllipse(a, b, c, d, fill, stroke);
      endShape();
   }
 
@@ -3272,8 +3249,37 @@ public class PGraphicsOpenGL extends PGraphics {
   // TEXT IMPL
 
 
-  // protected void textLineAlignImpl(char buffer[], int start, int stop,
-  // float x, float y)
+  @Override
+  public float textAscent() {
+    if (textFont == null) defaultFontOrDeath("textAscent");
+    Object font = textFont.getNative();
+    float ascent = 0;
+    if (font != null) ascent = pgl.getFontAscent(font);
+    if (ascent == 0) ascent = super.textAscent();
+    return ascent;
+  }
+
+
+  @Override
+  public float textDescent() {
+    if (textFont == null) defaultFontOrDeath("textAscent");
+    Object font = textFont.getNative();
+    float descent = 0;
+    if (font != null) descent = pgl.getFontDescent(font);
+    if (descent == 0) descent = super.textDescent();
+    return descent;
+  }
+
+
+  @Override
+  protected float textWidthImpl(char buffer[], int start, int stop) {
+    Object font = textFont.getNative();
+    float twidth = 0;
+    if (font != null) twidth = pgl.getTextWidth(font, buffer, start, stop);
+    if (twidth == 0) twidth = super.textWidthImpl(buffer, start, stop);
+    return twidth;
+  }
+
 
   /**
    * Implementation of actual drawing for a line of text.
@@ -3339,7 +3345,6 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   protected void textCharImpl(char ch, float x, float y) {
     PFont.Glyph glyph = textFont.getGlyph(ch);
-
     if (glyph != null) {
       if (textMode == MODEL) {
         FontTexture.TextureInfo tinfo = textTex.getTexInfo(glyph);
@@ -3373,10 +3378,8 @@ public class PGraphicsOpenGL extends PGraphics {
     if (textTex.currentTex != info.texIndex) {
       textTex.setTexture(info.texIndex);
     }
-    PImage tex = textTex.getCurrentTexture();
-
     beginShape(QUADS);
-    texture(tex);
+    texture(textTex.getCurrentTexture());
     vertex(x0, y0, info.u0, info.v0);
     vertex(x1, y0, info.u1, info.v0);
     vertex(x1, y1, info.u1, info.v1);
@@ -3430,17 +3433,13 @@ public class PGraphicsOpenGL extends PGraphics {
     beginShape();
     while (!outline.isDone()) {
       int type = outline.currentSegment(textPoints);
-      switch (type) {
-      case PGL.SEG_MOVETO:   // 1 point (2 vars) in textPoints
-      case PGL.SEG_LINETO:   // 1 point
-        if (type == PGL.SEG_MOVETO) {
-          beginContour();
-        }
+      if (type == PGL.SEG_MOVETO) {         // 1 point (2 vars) in textPoints
+      } else if (type == PGL.SEG_LINETO) {  // 1 point
+        if (type == PGL.SEG_MOVETO) beginContour();
         vertex(x + textPoints[0], y + textPoints[1]);
         lastX = textPoints[0];
         lastY = textPoints[1];
-        break;
-      case PGL.SEG_QUADTO:   // 2 points
+      } else if (type == PGL.SEG_QUADTO) {   // 2 points
         for (int i = 1; i < bezierDetail; i++) {
           float t = (float)i / (float)bezierDetail;
           vertex(x + bezierPoint(lastX,
@@ -3454,8 +3453,7 @@ public class PGraphicsOpenGL extends PGraphics {
         }
         lastX = textPoints[2];
         lastY = textPoints[3];
-        break;
-      case PGL.SEG_CUBICTO:  // 3 points
+      } else if (type == PGL.SEG_CUBICTO) {  // 3 points
         for (int i = 1; i < bezierDetail; i++) {
           float t = (float)i / (float)bezierDetail;
           vertex(x + bezierPoint(lastX, textPoints[0],
@@ -3465,10 +3463,8 @@ public class PGraphicsOpenGL extends PGraphics {
         }
         lastX = textPoints[4];
         lastY = textPoints[5];
-        break;
-      case PGL.SEG_CLOSE:
+      } else if (type == PGL.SEG_CLOSE) {
         endContour();
-        break;
       }
       outline.next();
     }
@@ -4241,10 +4237,10 @@ public class PGraphicsOpenGL extends PGraphics {
   public void ortho(float left, float right,
                     float bottom, float top,
                     float near, float far) {
-    left   -= width/2;
-    right  -= width/2;
-    bottom -= height/2;
-    top    -= height/2;
+    left   -= width/2f;
+    right  -= width/2f;
+    bottom -= height/2f;
+    top    -= height/2f;
 
     // Flushing geometry with a different perspective configuration.
     flush();
@@ -4703,6 +4699,9 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public void lights() {
     enableLighting();
+
+    // reset number of lights
+    lightCount = 0;
 
     // need to make sure colorMode is RGB 255 here
     int colorModeSaved = colorMode;
@@ -5302,8 +5301,8 @@ public class PGraphicsOpenGL extends PGraphics {
   // LOAD/UPDATE TEXTURE
 
 
-  // Copies the contents of the color buffer into the pixels
-  // array, and then the pixels array into the screen texture.
+  // Loads the current contents of the renderer's drawing surface into the
+  // its texture.
   public void loadTexture() {
     boolean needEndDraw = false;
     if (!drawing) {
@@ -5340,12 +5339,10 @@ public class PGraphicsOpenGL extends PGraphics {
 
         texture.setNative(nativePixelBuffer, 0, 0, width, height);
       }
-    } else {
-      // We need to copy the contents of the multisampled buffer to the
-      // color buffer, so the later is up-to-date with the last drawing.
-      if (offscreenMultisample) {
-        multisampleFramebuffer.copy(offscreenFramebuffer, currentFramebuffer);
-      }
+    } else if (offscreenMultisample) {
+       // We need to copy the contents of the multisampled buffer to the color
+       // buffer, so the later is up-to-date with the last drawing.
+       multisampleFramebuffer.copy(offscreenFramebuffer, currentFramebuffer);
     }
 
     if (needEndDraw) {
@@ -5581,52 +5578,54 @@ public class PGraphicsOpenGL extends PGraphics {
 
   //////////////////////////////////////////////////////////////
 
-  /**
-   * Extremely slow and not optimized, should use GL methods instead. Currently
-   * calls a beginPixels() on the whole canvas, then does the copy, then it
-   * calls endPixels().
-   */
-  // public void copy(int sx1, int sy1, int sx2, int sy2,
-  // int dx1, int dy1, int dx2, int dy2)
+  // COPY
 
-  // public void copy(PImage src,
-  // int sx1, int sy1, int sx2, int sy2,
-  // int dx1, int dy1, int dx2, int dy2)
+
+  @Override
+  public void copy(int sx, int sy, int sw, int sh,
+                   int dx, int dy, int dw, int dh) {
+    if (primarySurface) pgl.requestFBOLayer();
+    loadTexture();
+    if (filterTexture == null || filterTexture.contextIsOutdated()) {
+      filterTexture = new Texture(texture.width, texture.height,
+                                  texture.getParameters());
+      filterTexture.invertedY(true);
+      filterImage = wrapTexture(filterTexture);
+    }
+    filterTexture.put(texture, sx, height - (sy + sh), sw, height - sy);
+    copy(filterImage, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
+
+  @Override
+  public void copy(PImage src,
+                   int sx, int sy, int sw, int sh,
+                   int dx, int dy, int dw, int dh) {
+    boolean needEndDraw = false;
+    if (!drawing) {
+      beginDraw();
+      needEndDraw = true;
+    }
+
+    flush(); // make sure that the screen contents are up to date.
+
+    Texture tex = getTexture(src);
+    pgl.drawTexture(tex.glTarget, tex.glName,
+                    tex.glWidth, tex.glHeight, width, height,
+                    sx, tex.height - (sy + sh),
+                    sx + sw, tex.height - sy,
+                    dx, height - (dy + dh),
+                    dx + dw, height - dy);
+
+    if (needEndDraw) {
+      endDraw();
+    }
+  }
 
 
   //////////////////////////////////////////////////////////////
 
   // BLEND
-
-  // static public int blendColor(int c1, int c2, int mode)
-
-  // public void blend(PImage src,
-  // int sx, int sy, int dx, int dy, int mode) {
-  // set(dx, dy, PImage.blendColor(src.get(sx, sy), get(dx, dy), mode));
-  // }
-
-
-  /**
-   * Extremely slow and not optimized, should use GL methods instead. Currently
-   * calls a beginPixels() on the whole canvas, then does the copy, then it
-   * calls endPixels(). Please help fix: <A
-   * HREF="http://dev.processing.org/bugs/show_bug.cgi?id=941">Bug 941</A>, <A
-   * HREF="http://dev.processing.org/bugs/show_bug.cgi?id=942">Bug 942</A>.
-   */
-  // public void blend(int sx1, int sy1, int sx2, int sy2,
-  // int dx1, int dy1, int dx2, int dy2, int mode) {
-  // loadPixels();
-  // super.blend(sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2, mode);
-  // updatePixels();
-  // }
-
-  // public void blend(PImage src,
-  // int sx1, int sy1, int sx2, int sy2,
-  // int dx1, int dy1, int dx2, int dy2, int mode) {
-  // loadPixels();
-  // super.blend(src, sx1, sy1, sx2, sy2, dx1, dy1, dx2, dy2, mode);
-  // updatePixels();
-  // }
 
 
   /**
@@ -5638,44 +5637,39 @@ public class PGraphicsOpenGL extends PGraphics {
    * conditional blending and non-linear blending equations.
    */
   @Override
-  public void blendMode(int mode) {
-    if (blendMode != mode) {
+  protected void blendModeImpl() {
+    if (blendMode != lastBlendMode) {
       // Flush any geometry that uses a different blending mode.
       flush();
-      setBlendMode(mode);
     }
-  }
 
-
-  protected void setBlendMode(int mode) {
-    blendMode = mode;
     pgl.enable(PGL.BLEND);
 
-    if (mode == REPLACE) {
+    if (blendMode == REPLACE) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.ONE, PGL.ZERO);
 
-    } else if (mode == BLEND) {
+    } else if (blendMode == BLEND) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.SRC_ALPHA, PGL.ONE_MINUS_SRC_ALPHA);
 
-    } else if (mode == ADD) {
+    } else if (blendMode == ADD) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.SRC_ALPHA, PGL.ONE);
 
-    } else if (mode == SUBTRACT) {
+    } else if (blendMode == SUBTRACT) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.ONE_MINUS_DST_COLOR, PGL.ZERO);
 
-    } else if (mode == LIGHTEST) {
+    } else if (blendMode == LIGHTEST) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_MAX);
         pgl.blendFunc(PGL.SRC_ALPHA, PGL.DST_ALPHA);
@@ -5683,7 +5677,7 @@ public class PGraphicsOpenGL extends PGraphics {
         PGraphics.showWarning(BLEND_DRIVER_ERROR, "LIGHTEST");
       }
 
-    } else if (mode == DARKEST) {
+    } else if (blendMode == DARKEST) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_MIN);
         pgl.blendFunc(PGL.SRC_ALPHA, PGL.DST_ALPHA);
@@ -5691,7 +5685,7 @@ public class PGraphicsOpenGL extends PGraphics {
         PGraphics.showWarning(BLEND_DRIVER_ERROR, "DARKEST");
       }
 
-    } else if (mode == DIFFERENCE) {
+    } else if (blendMode == DIFFERENCE) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_REVERSE_SUBTRACT);
         pgl.blendFunc(PGL.ONE, PGL.ONE);
@@ -5699,39 +5693,40 @@ public class PGraphicsOpenGL extends PGraphics {
         PGraphics.showWarning(BLEND_DRIVER_ERROR, "DIFFERENCE");
       }
 
-    } else if (mode == EXCLUSION) {
+    } else if (blendMode == EXCLUSION) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.ONE_MINUS_DST_COLOR, PGL.ONE_MINUS_SRC_COLOR);
 
-    } else if (mode == MULTIPLY) {
+    } else if (blendMode == MULTIPLY) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.DST_COLOR, PGL.SRC_COLOR);
 
-    } else if (mode == SCREEN) {
+    } else if (blendMode == SCREEN) {
       if (blendEqSupported) {
         pgl.blendEquation(PGL.FUNC_ADD);
       }
       pgl.blendFunc(PGL.ONE_MINUS_DST_COLOR, PGL.ONE);
 
-    } else if (mode == OVERLAY) {
+    } else if (blendMode == OVERLAY) {
       PGraphics.showWarning(BLEND_RENDERER_ERROR, "OVERLAY");
 
-    } else if (mode == HARD_LIGHT) {
+    } else if (blendMode == HARD_LIGHT) {
       PGraphics.showWarning(BLEND_RENDERER_ERROR, "HARD_LIGHT");
 
-    } else if (mode == SOFT_LIGHT) {
+    } else if (blendMode == SOFT_LIGHT) {
       PGraphics.showWarning(BLEND_RENDERER_ERROR, "SOFT_LIGHT");
 
-    } else if (mode == DODGE) {
+    } else if (blendMode == DODGE) {
       PGraphics.showWarning(BLEND_RENDERER_ERROR, "DODGE");
 
-    } else if (mode == BURN) {
+    } else if (blendMode == BURN) {
       PGraphics.showWarning(BLEND_RENDERER_ERROR, "BURN");
     }
+    lastBlendMode = blendMode;
   }
 
 
@@ -5748,23 +5743,25 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   /**
+   * Not an approved function, this will change or be removed in the future.
    * This utility method returns the texture associated to the renderer's.
    * drawing surface, making sure is updated to reflect the current contents
    * off the screen (or offscreen drawing surface).
    */
-  protected Texture getTexture() {
+  public Texture getTexture() {
     loadTexture();
     return texture;
   }
 
 
   /**
+   * Not an approved function, this will change or be removed in the future.
    * This utility method returns the texture associated to the image.
    * creating and/or updating it if needed.
    *
    * @param img the image to have a texture metadata associated to it
    */
-  protected Texture getTexture(PImage img) {
+  public Texture getTexture(PImage img) {
     Texture tex = (Texture)initCache(img);
     if (tex == null) return null;
 
@@ -6088,11 +6085,8 @@ public class PGraphicsOpenGL extends PGraphics {
     // Each frame starts with textures disabled.
     super.noTexture();
 
-    // Screen blend is needed for alpha (i.e. fonts) to work.
-    // Using setBlendMode() instead of blendMode() because
-    // the latter will set the blend mode only if it is different
-    // from current.
-    setBlendMode(BLEND);
+    // Making sure that OpenGL is using the last blend mode set by the user.
+    blendModeImpl();
 
     // this is necessary for 3D drawing
     if (hints[DISABLE_DEPTH_TEST]) {
@@ -6254,10 +6248,7 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public PShader loadShader(String fragFilename) {
     int shaderType = getShaderType(fragFilename);
-    if (shaderType == -1) {
-      PGraphics.showWarning(INVALID_PROCESSING_SHADER_ERROR);
-      return null;
-    }
+    if (shaderType == -1) shaderType = PShader.COLOR;
     PShader shader = null;
     if (shaderType == PShader.POINT) {
       shader = new PointShader(parent);
@@ -6285,12 +6276,20 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public PShader loadShader(String fragFilename, String vertFilename) {
-    int shaderType = getShaderType(vertFilename);
-    if (shaderType == -1) {
-      shaderType = getShaderType(fragFilename);
-    }
-    if (shaderType == -1) {
-      PGraphics.showWarning(INVALID_PROCESSING_SHADER_ERROR);
+    int vertType = getShaderType(vertFilename);
+    int fragType = getShaderType(fragFilename);
+
+    int shaderType = -1;
+    if (vertType == -1 && fragType == -1) {
+      shaderType = PShader.COLOR;
+    } else if (vertType == -1) {
+      shaderType = fragType;
+    } else if (fragType == -1) {
+      shaderType = vertType;
+    } else if (fragType == vertType)  {
+      shaderType = vertType;
+    } else {
+      PGraphics.showWarning(INCONSISTENT_SHADER_TYPES);
       return null;
     }
 
@@ -6348,14 +6347,14 @@ public class PGraphicsOpenGL extends PGraphics {
     flush(); // Flushing geometry drawn with a different shader.
 
     if (kind == TRIANGLES || kind == QUADS || kind == POLYGON) {
-      if (shader instanceof TextureShader) {
-        textureShader = (TextureShader) shader;
-      } else if (shader instanceof ColorShader) {
-        colorShader = (ColorShader) shader;
-      } else if (shader instanceof TexlightShader) {
+      if (shader instanceof TexlightShader) {
         texlightShader = (TexlightShader) shader;
+      } else if (shader instanceof TextureShader) {
+        textureShader = (TextureShader) shader;
       } else if (shader instanceof LightShader) {
         lightShader = (LightShader) shader;
+      } else if (shader instanceof ColorShader) {
+        colorShader = (ColorShader) shader;
       } else {
         PGraphics.showWarning(WRONG_SHADER_TYPE_ERROR);
       }
@@ -6683,6 +6682,9 @@ public class PGraphicsOpenGL extends PGraphics {
   protected class ColorShader extends BaseShader {
     protected int vertexLoc;
     protected int colorLoc;
+    protected int normalLoc;
+    protected int texCoordLoc;
+    protected int normalMatrixLoc;
 
     public ColorShader(PApplet parent) {
       super(parent);
@@ -6701,11 +6703,15 @@ public class PGraphicsOpenGL extends PGraphics {
     public void loadAttributes() {
       vertexLoc = getAttributeLoc("vertex");
       colorLoc = getAttributeLoc("color");
+      texCoordLoc = getAttributeLoc("texCoord");
+      normalLoc = getAttributeLoc("normal");
     }
 
     @Override
     public void loadUniforms() {
       super.loadUniforms();
+
+      normalMatrixLoc = getUniformLoc("normalMatrix");
     }
 
     @Override
@@ -6721,6 +6727,18 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     @Override
+    public void setNormalAttribute(int vboId, int size, int type,
+                                   int stride, int offset) {
+      setAttributeVBO(normalLoc, vboId, size, type, false, stride, offset);
+    }
+
+    @Override
+    public void setTexcoordAttribute(int vboId, int size, int type,
+                                     int stride, int offset) {
+      setAttributeVBO(texCoordLoc, vboId, size, type, false, stride, offset);
+    }
+
+    @Override
     public void bind() {
       super.bind();
       if (pgCurrent == null) {
@@ -6728,26 +6746,32 @@ public class PGraphicsOpenGL extends PGraphics {
         loadAttributes();
         loadUniforms();
       }
+      setCommonUniforms();
 
       if (-1 < vertexLoc) pgl.enableVertexAttribArray(vertexLoc);
       if (-1 < colorLoc) pgl.enableVertexAttribArray(colorLoc);
+      if (-1 < texCoordLoc) pgl.enableVertexAttribArray(texCoordLoc);
+      if (-1 < normalLoc) pgl.enableVertexAttribArray(normalLoc);
 
-      setCommonUniforms();
+      if (-1 < normalMatrixLoc) {
+        pgCurrent.updateGLNormal();
+        setUniformMatrix(normalMatrixLoc, pgCurrent.glNormal);
+      }
     }
 
     @Override
     public void unbind() {
       if (-1 < vertexLoc) pgl.disableVertexAttribArray(vertexLoc);
       if (-1 < colorLoc) pgl.disableVertexAttribArray(colorLoc);
+      if (-1 < texCoordLoc) pgl.disableVertexAttribArray(texCoordLoc);
+      if (-1 < normalLoc) pgl.disableVertexAttribArray(normalLoc);
 
       super.unbind();
     }
   }
 
 
-  protected class LightShader extends BaseShader {
-    protected int normalMatrixLoc;
-
+  protected class LightShader extends ColorShader {
     protected int lightCountLoc;
     protected int lightPositionLoc;
     protected int lightNormalLoc;
@@ -6756,10 +6780,6 @@ public class PGraphicsOpenGL extends PGraphics {
     protected int lightSpecularLoc;
     protected int lightFalloffLoc;
     protected int lightSpotLoc;
-
-    protected int vertexLoc;
-    protected int colorLoc;
-    protected int normalLoc;
 
     protected int ambientLoc;
     protected int specularLoc;
@@ -6781,10 +6801,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
     @Override
     public void loadAttributes() {
-      vertexLoc = getAttributeLoc("vertex");
-      colorLoc = getAttributeLoc("color");
-      normalLoc = getAttributeLoc("normal");
-
+      super.loadAttributes();
       ambientLoc = getAttributeLoc("ambient");
       specularLoc = getAttributeLoc("specular");
       emissiveLoc = getAttributeLoc("emissive");
@@ -6795,8 +6812,6 @@ public class PGraphicsOpenGL extends PGraphics {
     public void loadUniforms() {
       super.loadUniforms();
 
-      normalMatrixLoc = getUniformLoc("normalMatrix");
-
       lightCountLoc = getUniformLoc("lightCount");
       lightPositionLoc = getUniformLoc("lightPosition");
       lightNormalLoc = getUniformLoc("lightNormal");
@@ -6805,24 +6820,6 @@ public class PGraphicsOpenGL extends PGraphics {
       lightSpecularLoc = getUniformLoc("lightSpecular");
       lightFalloffLoc = getUniformLoc("lightFalloff");
       lightSpotLoc = getUniformLoc("lightSpot");
-    }
-
-    @Override
-    public void setVertexAttribute(int vboId, int size, int type,
-                                   int stride, int offset) {
-      setAttributeVBO(vertexLoc, vboId, size, type, false, stride, offset);
-    }
-
-    @Override
-    public void setColorAttribute(int vboId, int size, int type,
-                                  int stride, int offset) {
-      setAttributeVBO(colorLoc, vboId, size, type, true, stride, offset);
-    }
-
-    @Override
-    public void setNormalAttribute(int vboId, int size, int type,
-                                   int stride, int offset) {
-      setAttributeVBO(normalLoc, vboId, size, type, false, stride, offset);
     }
 
     @Override
@@ -6852,25 +6849,11 @@ public class PGraphicsOpenGL extends PGraphics {
     @Override
     public void bind() {
       super.bind();
-      if (pgCurrent == null) {
-        setRenderer(PGraphicsOpenGL.pgCurrent);
-        loadAttributes();
-        loadUniforms();
-      }
-
-      if (-1 < vertexLoc) pgl.enableVertexAttribArray(vertexLoc);
-      if (-1 < colorLoc) pgl.enableVertexAttribArray(colorLoc);
-      if (-1 < normalLoc) pgl.enableVertexAttribArray(normalLoc);
 
       if (-1 < ambientLoc) pgl.enableVertexAttribArray(ambientLoc);
       if (-1 < specularLoc) pgl.enableVertexAttribArray(specularLoc);
       if (-1 < emissiveLoc) pgl.enableVertexAttribArray(emissiveLoc);
       if (-1 < shininessLoc) pgl.enableVertexAttribArray(shininessLoc);
-
-      if (-1 < normalMatrixLoc) {
-        pgCurrent.updateGLNormal();
-        setUniformMatrix(normalMatrixLoc, pgCurrent.glNormal);
-      }
 
       int count = pgCurrent.lightCount;
       setUniformValue(lightCountLoc, count);
@@ -6882,16 +6865,10 @@ public class PGraphicsOpenGL extends PGraphics {
       setUniformVector(lightFalloffLoc, pgCurrent.lightFalloffCoefficients,
                        3, count);
       setUniformVector(lightSpotLoc, pgCurrent.lightSpotParameters, 2, count);
-
-      setCommonUniforms();
     }
 
     @Override
     public void unbind() {
-      if (-1 < vertexLoc) pgl.disableVertexAttribArray(vertexLoc);
-      if (-1 < colorLoc) pgl.disableVertexAttribArray(colorLoc);
-      if (-1 < normalLoc) pgl.disableVertexAttribArray(normalLoc);
-
       if (-1 < ambientLoc) pgl.disableVertexAttribArray(ambientLoc);
       if (-1 < specularLoc) pgl.disableVertexAttribArray(specularLoc);
       if (-1 < emissiveLoc) pgl.disableVertexAttribArray(emissiveLoc);
@@ -6905,14 +6882,10 @@ public class PGraphicsOpenGL extends PGraphics {
   protected class TextureShader extends ColorShader {
     protected Texture texture;
     protected int texUnit;
-    protected int texCoordLoc;
 
     protected int textureLoc;
     protected int texMatrixLoc;
     protected int texOffsetLoc;
-
-    protected int normalMatrixLoc;
-    protected int normalLoc;
 
     protected float[] tcmat;
 
@@ -6936,29 +6909,6 @@ public class PGraphicsOpenGL extends PGraphics {
       textureLoc = getUniformLoc("texture");
       texMatrixLoc = getUniformLoc("texMatrix");
       texOffsetLoc = getUniformLoc("texOffset");
-
-      normalMatrixLoc = getUniformLoc("normalMatrix");
-    }
-
-    @Override
-    public void loadAttributes() {
-      super.loadAttributes();
-
-      texCoordLoc = getAttributeLoc("texCoord");
-
-      normalLoc = getAttributeLoc("normal");
-    }
-
-    @Override
-    public void setNormalAttribute(int vboId, int size, int type,
-                                   int stride, int offset) {
-      setAttributeVBO(normalLoc, vboId, size, type, false, stride, offset);
-    }
-
-    @Override
-    public void setTexcoordAttribute(int vboId, int size, int type,
-                                     int stride, int offset) {
-      setAttributeVBO(texCoordLoc, vboId, size, type, false, stride, offset);
     }
 
     @Override
@@ -7011,23 +6961,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     @Override
-    public void bind() {
-      super.bind();
-
-      if (-1 < texCoordLoc) pgl.enableVertexAttribArray(texCoordLoc);
-
-      if (-1 < normalLoc) pgl.enableVertexAttribArray(normalLoc);
-      if (-1 < normalMatrixLoc) {
-        pgCurrent.updateGLNormal();
-        setUniformMatrix(normalMatrixLoc, pgCurrent.glNormal);
-      }
-    }
-
-    @Override
     public void unbind() {
-      if (-1 < texCoordLoc) pgl.disableVertexAttribArray(texCoordLoc);
-      if (-1 < normalLoc) pgl.disableVertexAttribArray(normalLoc);
-
       if (-1 < textureLoc && texture != null) {
         pgl.activeTexture(PGL.TEXTURE0 + texUnit);
         texture.unbind();
@@ -7043,7 +6977,6 @@ public class PGraphicsOpenGL extends PGraphics {
   protected class TexlightShader extends LightShader {
     protected Texture texture;
     protected int texUnit;
-    protected int texCoordLoc;
 
     protected int textureLoc;
     protected int texMatrixLoc;
@@ -7071,19 +7004,6 @@ public class PGraphicsOpenGL extends PGraphics {
       textureLoc = getUniformLoc("texture");
       texMatrixLoc = getUniformLoc("texMatrix");
       texOffsetLoc = getUniformLoc("texOffset");
-    }
-
-    @Override
-    public void loadAttributes() {
-      super.loadAttributes();
-
-      texCoordLoc = getAttributeLoc("texCoord");
-    }
-
-    @Override
-    public void setTexcoordAttribute(int vboId, int size, int type,
-                                     int stride, int offset) {
-      setAttributeVBO(texCoordLoc, vboId, size, type, false, stride, offset);
     }
 
     @Override
@@ -7136,16 +7056,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     @Override
-    public void bind() {
-      super.bind();
-
-      if (-1 < texCoordLoc) pgl.enableVertexAttribArray(texCoordLoc);
-    }
-
-    @Override
     public void unbind() {
-      if (-1 < texCoordLoc) pgl.disableVertexAttribArray(texCoordLoc);
-
       if (-1 < textureLoc && texture != null) {
         pgl.activeTexture(PGL.TEXTURE0 + texUnit);
         texture.unbind();
@@ -8601,39 +8512,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     void addRect(float a, float b, float c, float d,
-                 boolean fill, boolean stroke, int rectMode) {
-      float hradius, vradius;
-      switch (rectMode) {
-      case CORNERS:
-        break;
-      case CORNER:
-        c += a; d += b;
-        break;
-      case RADIUS:
-        hradius = c;
-        vradius = d;
-        c = a + hradius;
-        d = b + vradius;
-        a -= hradius;
-        b -= vradius;
-        break;
-      case CENTER:
-        hradius = c / 2.0f;
-        vradius = d / 2.0f;
-        c = a + hradius;
-        d = b + vradius;
-        a -= hradius;
-        b -= vradius;
-      }
-
-      if (a > c) {
-        float temp = a; a = c; c = temp;
-      }
-
-      if (b > d) {
-        float temp = b; b = d; d = temp;
-      }
-
+                 boolean fill, boolean stroke) {
       addQuad(a, b, 0,
               c, b, 0,
               c, d, 0,
@@ -8643,45 +8522,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
     void addRect(float a, float b, float c, float d,
                  float tl, float tr, float br, float bl,
-                 boolean fill, boolean stroke, int detail, int rectMode) {
-      float hradius, vradius;
-      switch (rectMode) {
-      case CORNERS:
-        break;
-      case CORNER:
-        c += a; d += b;
-        break;
-      case RADIUS:
-        hradius = c;
-        vradius = d;
-        c = a + hradius;
-        d = b + vradius;
-        a -= hradius;
-        b -= vradius;
-        break;
-      case CENTER:
-        hradius = c / 2.0f;
-        vradius = d / 2.0f;
-        c = a + hradius;
-        d = b + vradius;
-        a -= hradius;
-        b -= vradius;
-      }
-
-      if (a > c) {
-        float temp = a; a = c; c = temp;
-      }
-
-      if (b > d) {
-        float temp = b; b = d; d = temp;
-      }
-
-      float maxRounding = PApplet.min((c - a) / 2, (d - b) / 2);
-      if (tl > maxRounding) tl = maxRounding;
-      if (tr > maxRounding) tr = maxRounding;
-      if (br > maxRounding) br = maxRounding;
-      if (bl > maxRounding) bl = maxRounding;
-
+                 boolean fill, boolean stroke, int detail) {
       if (nonZero(tr)) {
         addVertex(c-tr, b, VERTEX);
         addQuadraticVertex(c, b, 0, c, b+tr, 0,
@@ -8714,38 +8555,8 @@ public class PGraphicsOpenGL extends PGraphics {
       if (stroke) addPolygonEdges(true);
     }
 
-    void addEllipse(float a, float b, float c, float d,
-                    boolean fill, boolean stroke, int ellipseMode) {
-      float x = a;
-      float y = b;
-      float w = c;
-      float h = d;
-
-      if (ellipseMode == CORNERS) {
-        w = c - a;
-        h = d - b;
-
-      } else if (ellipseMode == RADIUS) {
-        x = a - c;
-        y = b - d;
-        w = c * 2;
-        h = d * 2;
-
-      } else if (ellipseMode == DIAMETER) {
-        x = a - c/2f;
-        y = b - d/2f;
-      }
-
-      if (w < 0) {  // undo negative width
-        x += w;
-        w = -w;
-      }
-
-      if (h < 0) {  // undo negative height
-        y += h;
-        h = -h;
-      }
-
+    void addEllipse(float x, float y, float w, float h,
+                    boolean fill, boolean stroke) {
       float radiusH = w / 2;
       float radiusV = h / 2;
 
@@ -8759,9 +8570,9 @@ public class PGraphicsOpenGL extends PGraphics {
       float sy2 = pgCurrent.screenY(x + w, y + h);
 
       int accuracy =
-        PApplet.max(MIN_POINT_ACCURACY,
+        PApplet.min(MAX_POINT_ACCURACY, PApplet.max(MIN_POINT_ACCURACY,
                     (int) (TWO_PI * PApplet.dist(sx1, sy1, sx2, sy2) /
-                    POINT_ACCURACY_FACTOR));
+                    POINT_ACCURACY_FACTOR)));
       float inc = (float) SINCOS_LENGTH / accuracy;
 
       if (fill) {
@@ -10595,9 +10406,9 @@ public class PGraphicsOpenGL extends PGraphics {
         // The number of triangles of each fan depends on the
         // stroke weight of the point.
         int nPtVert =
-          PApplet.max(MIN_POINT_ACCURACY,
+          PApplet.min(MAX_POINT_ACCURACY, PApplet.max(MIN_POINT_ACCURACY,
                       (int) (TWO_PI * strokeWeight /
-                      POINT_ACCURACY_FACTOR)) + 1;
+                      POINT_ACCURACY_FACTOR))) + 1;
         if (PGL.MAX_VERTEX_INDEX1 <= nPtVert) {
           throw new RuntimeException("Error in point tessellation.");
         }
@@ -12214,17 +12025,9 @@ public class PGraphicsOpenGL extends PGraphics {
         vertFirst = cache.vertexCount[cacheIndex];
         vertCount = 0;
 
-        switch (type) {
-        case PGL.TRIANGLE_FAN:
-          primitive = TRIANGLE_FAN;
-          break;
-        case PGL.TRIANGLE_STRIP:
-          primitive = TRIANGLE_STRIP;
-          break;
-        case PGL.TRIANGLES:
-          primitive = TRIANGLES;
-          break;
-        }
+        if (type == PGL.TRIANGLE_FAN) primitive = TRIANGLE_FAN;
+        else if (type == PGL.TRIANGLE_STRIP) primitive = TRIANGLE_STRIP;
+        else if (type == PGL.TRIANGLES) primitive = TRIANGLES;
       }
 
       public void end() {

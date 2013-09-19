@@ -447,6 +447,11 @@ public class PGraphics extends PImage implements PConstants {
   protected float backgroundR, backgroundG, backgroundB, backgroundA;
   protected int backgroundRi, backgroundGi, backgroundBi, backgroundAi;
 
+
+  /** The current blending mode. */
+  protected int blendMode;
+
+
   // ........................................................
 
   /**
@@ -886,6 +891,8 @@ public class PGraphics extends PImage implements PConstants {
       background(backgroundColor);
     }
 
+    blendMode(BLEND);
+
     settingsInited = true;
     // defaultSettings() overlaps reapplySettings(), don't do both
     //reapplySettings = false;
@@ -954,6 +961,8 @@ public class PGraphics extends PImage implements PConstants {
     textMode(textMode);
     textAlign(textAlign, textAlignY);
     background(backgroundColor);
+
+    blendMode(blendMode);
 
     //reapplySettings = false;
   }
@@ -1434,7 +1443,15 @@ public class PGraphics extends PImage implements PConstants {
 
 
   public void blendMode(int mode) {
-    showMissingWarning("blendMode");
+    this.blendMode = mode;
+    blendModeImpl();
+  }
+
+
+  protected void blendModeImpl() {
+    if (blendMode != BLEND) {
+      showMissingWarning("blendMode");
+    }
   }
 
 

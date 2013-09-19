@@ -156,7 +156,7 @@ public class PGraphics2D extends PGraphicsOpenGL {
 
   @Override
   protected void defaultCamera() {
-    super.camera(width/2, height/2);
+    super.camera(width/2f, height/2f);
   }
 
 
@@ -307,35 +307,6 @@ public class PGraphics2D extends PGraphicsOpenGL {
     } else if (type == PShape.GEOMETRY) {
       shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
     }
-
-    /*
-    if (type == POINTS) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(POINTS);
-    } else if (type == LINES) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(LINES);
-    } else if (type == TRIANGLE || type == TRIANGLES) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(TRIANGLES);
-    } else if (type == TRIANGLE_FAN) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(TRIANGLE_FAN);
-    } else if (type == TRIANGLE_STRIP) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(TRIANGLE_STRIP);
-    } else if (type == QUAD || type == QUADS) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(QUADS);
-    } else if (type == QUAD_STRIP) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(QUAD_STRIP);
-    } else if (type == POLYGON) {
-      shape = new PShapeOpenGL(parent, PShape.GEOMETRY);
-      shape.setKind(POLYGON);
-    }
-    */
-
     shape.is3D(false);
     return shape;
   }
@@ -375,14 +346,14 @@ public class PGraphics2D extends PGraphicsOpenGL {
       shape = new PShapeOpenGL(parent, PShape.PRIMITIVE);
       shape.setKind(QUAD);
     } else if (kind == RECT) {
-      if (len != 4 && len != 5 && len != 8) {
+      if (len != 4 && len != 5 && len != 8 && len != 9) {
         showWarning("Wrong number of parameters");
         return null;
       }
       shape = new PShapeOpenGL(parent, PShape.PRIMITIVE);
       shape.setKind(RECT);
     } else if (kind == ELLIPSE) {
-      if (len != 4) {
+      if (len != 4 && len != 5) {
         showWarning("Wrong number of parameters");
         return null;
       }

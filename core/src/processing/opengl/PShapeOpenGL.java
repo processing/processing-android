@@ -162,12 +162,9 @@ public class PShapeOpenGL extends PShape {
 
   protected boolean tessellated;
   protected boolean needBufferInit = false;
-//  protected boolean polyBuffersCreated = false;
-//  protected boolean lineBuffersCreated = false;
-//  protected boolean pointBuffersCreated = false;
 
-  protected boolean isSolid;
-  protected boolean isClosed;
+  // Flag to indicate if the shape can have holes or not.
+  protected boolean solid;
 
   protected boolean breakShape = false;
   protected boolean shapeCreated = false;
@@ -261,6 +258,30 @@ public class PShapeOpenGL extends PShape {
   protected int firstModifiedPointAttribute;
   protected int lastModifiedPointAttribute;
 
+  // ........................................................
+
+  // Saved style variables to style can be re-enabled after disableStyle,
+  // although it won't work if properties are defined on a per-vertex basis.
+
+  protected boolean savedStroke;
+  protected int savedStrokeColor;
+  protected float savedStrokeWeight;
+  protected int savedStrokeCap;
+  protected int savedStrokeJoin;
+
+  protected boolean savedFill;
+  protected int savedFillColor;
+
+  protected boolean savedTint;
+  protected int savedTintColor;
+
+  protected int savedAmbientColor;
+  protected int savedSpecularColor;
+  protected int savedEmissiveColor;
+  protected float savedShininess;
+
+  protected int savedTextureMode;
+
 
   PShapeOpenGL() {
   }
@@ -329,6 +350,12 @@ public class PShapeOpenGL extends PShape {
     specularColor = pg.specularColor;
     emissiveColor = pg.emissiveColor;
     shininess = pg.shininess;
+
+    sphereDetailU = pg.sphereDetailU;
+    sphereDetailV = pg.sphereDetailV;
+
+    rectMode = pg.rectMode;
+    ellipseMode = pg.ellipseMode;
 
     normalX = normalY = 0;
     normalZ = 1;
@@ -948,7 +975,7 @@ public class PShapeOpenGL extends PShape {
         child.solid(solid);
       }
     } else {
-      isSolid = solid;
+      this.solid = solid;
     }
   }
 
@@ -1087,7 +1114,7 @@ public class PShapeOpenGL extends PShape {
     // size, which might lead to arrays larger than the vertex counts.
     inGeo.trim();
 
-    isClosed = mode == CLOSE;
+    close = mode == CLOSE;
     markForTessellation();
     shapeCreated = true;
   }
@@ -2528,8 +2555,8 @@ public class PShapeOpenGL extends PShape {
             if (normalMode == NORMAL_MODE_AUTO) inGeo.calcQuadStripNormals();
             tessellator.tessellateQuadStrip();
           } else if (kind == POLYGON) {
-            if (stroke) inGeo.addPolygonEdges(isClosed);
-            tessellator.tessellatePolygon(isSolid, isClosed,
+            if (stroke) inGeo.addPolygonEdges(close);
+            tessellator.tessellatePolygon(solid, close,
                                           normalMode == NORMAL_MODE_AUTO);
           }
         } else if (family == PRIMITIVE) {
@@ -2686,20 +2713,18 @@ public class PShapeOpenGL extends PShape {
     float a = 0, b = 0, c = 0, d = 0;
     float tl = 0, tr = 0, br = 0, bl = 0;
     boolean rounded = false;
-    if (params.length == 4) {
+    int mode = rectMode;
+
+    if (params.length == 4 || params.length == 5) {
+      a = params[0];
+      b = params[1];
+      c = params[2];
+      d = params[3];
+      if (params.length == 5) {
+        mode = (int)(params[4]);
+      }
       rounded = false;
-      a = params[0];
-      b = params[1];
-      c = params[2];
-      d = params[3];
-    } else if (params.length == 5) {
-      a = params[0];
-      b = params[1];
-      c = params[2];
-      d = params[3];
-      tl = tr = br = bl = params[4];
-      rounded = true;
-    } else if (params.length == 8) {
+    } else if (params.length == 8 || params.length == 9) {
       a = params[0];
       b = params[1];
       c = params[2];
@@ -2708,20 +2733,59 @@ public class PShapeOpenGL extends PShape {
       tr = params[5];
       br = params[6];
       bl = params[7];
+      if (params.length == 9) {
+        mode = (int)(params[8]);
+      }
       rounded = true;
     }
+
+    float hradius, vradius;
+    switch (mode) {
+    case CORNERS:
+      break;
+    case CORNER:
+      c += a; d += b;
+      break;
+    case RADIUS:
+      hradius = c;
+      vradius = d;
+      c = a + hradius;
+      d = b + vradius;
+      a -= hradius;
+      b -= vradius;
+      break;
+    case CENTER:
+      hradius = c / 2.0f;
+      vradius = d / 2.0f;
+      c = a + hradius;
+      d = b + vradius;
+      a -= hradius;
+      b -= vradius;
+    }
+
+    if (a > c) {
+      float temp = a; a = c; c = temp;
+    }
+
+    if (b > d) {
+      float temp = b; b = d; d = temp;
+    }
+
+    float maxRounding = PApplet.min((c - a) / 2, (d - b) / 2);
+    if (tl > maxRounding) tl = maxRounding;
+    if (tr > maxRounding) tr = maxRounding;
+    if (br > maxRounding) br = maxRounding;
+    if (bl > maxRounding) bl = maxRounding;
 
     inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
                       ambientColor, specularColor, emissiveColor, shininess);
     inGeo.setNormal(normalX, normalY, normalZ);
     if (rounded) {
-      inGeo.addRect(a, b, c, d,
-                    tl, tr, br, bl,
-                    fill, stroke, bezierDetail, CORNER);
+      inGeo.addRect(a, b, c, d, tl, tr, br, bl,
+                    fill, stroke, bezierDetail);
       tessellator.tessellatePolygon(false, true, true);
     } else {
-      inGeo.addRect(a, b, c, d,
-                   fill, stroke, CORNER);
+      inGeo.addRect(a, b, c, d, fill, stroke);
       tessellator.tessellateQuads();
     }
   }
@@ -2729,17 +2793,52 @@ public class PShapeOpenGL extends PShape {
 
   protected void tessellateEllipse() {
     float a = 0, b = 0, c = 0, d = 0;
-    if (params.length == 4) {
+    int mode = ellipseMode;
+
+    if (4 <= params.length) {
       a = params[0];
       b = params[1];
       c = params[2];
       d = params[3];
+      if (params.length == 5) {
+        mode = (int)(params[4]);
+      }
+    }
+
+    float x = a;
+    float y = b;
+    float w = c;
+    float h = d;
+
+    if (mode == CORNERS) {
+      w = c - a;
+      h = d - b;
+
+    } else if (mode == RADIUS) {
+      x = a - c;
+      y = b - d;
+      w = c * 2;
+      h = d * 2;
+
+    } else if (mode == DIAMETER) {
+      x = a - c/2f;
+      y = b - d/2f;
+    }
+
+    if (w < 0) {  // undo negative width
+      x += w;
+      w = -w;
+    }
+
+    if (h < 0) {  // undo negative height
+      y += h;
+      h = -h;
     }
 
     inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
                       ambientColor, specularColor, emissiveColor, shininess);
     inGeo.setNormal(normalX, normalY, normalZ);
-    inGeo.addEllipse(a, b, c, d, fill, stroke, CORNER);
+    inGeo.addEllipse(x, y, w, h, fill, stroke);
     tessellator.tessellateTriangleFan();
   }
 
@@ -2747,25 +2846,61 @@ public class PShapeOpenGL extends PShape {
   protected void tessellateArc() {
     float a = 0, b = 0, c = 0, d = 0;
     float start = 0, stop = 0;
-//    int mode = 0;
-    if (params.length == 6 || params.length == 7) {
+    int mode = ellipseMode;
+
+    if (6 <= params.length) {
       a = params[0];
       b = params[1];
       c = params[2];
       d = params[3];
       start = params[4];
       stop = params[5];
-      // Not using arc mode since PShape only uses CORNER
-//      if (params.length == 7) {
-//        mode = (int)(params[6]);
-//      }
+      if (params.length == 7) {
+        mode = (int)(params[6]);
+      }
     }
 
-    inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
-                      ambientColor, specularColor, emissiveColor, shininess);
-    inGeo.setNormal(normalX, normalY, normalZ);
-    inGeo.addArc(a, b, c, d, start, stop, fill, stroke, CORNER);
-    tessellator.tessellateTriangleFan();
+    float x = a;
+    float y = b;
+    float w = c;
+    float h = d;
+
+    if (mode == CORNERS) {
+      w = c - a;
+      h = d - b;
+
+    } else if (mode == RADIUS) {
+      x = a - c;
+      y = b - d;
+      w = c * 2;
+      h = d * 2;
+
+    } else if (mode == CENTER) {
+      x = a - c/2f;
+      y = b - d/2f;
+    }
+
+    // make sure the loop will exit before starting while
+    if (!Float.isInfinite(start) && !Float.isInfinite(stop)) {
+      // ignore equal and degenerate cases
+      if (stop > start) {
+        // make sure that we're starting at a useful point
+        while (start < 0) {
+          start += TWO_PI;
+          stop += TWO_PI;
+        }
+
+        if (stop - start > TWO_PI) {
+          start = 0;
+          stop = TWO_PI;
+        }
+        inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
+                          ambientColor, specularColor, emissiveColor, shininess);
+        inGeo.setNormal(normalX, normalY, normalZ);
+        inGeo.addArc(x, y, w, h, start, stop, fill, stroke, mode);
+        tessellator.tessellateTriangleFan();
+      }
+    }
   }
 
 
@@ -2787,12 +2922,17 @@ public class PShapeOpenGL extends PShape {
 
 
   protected void tessellateSphere() {
-    // Getting sphere detail from renderer. Is this correct?
-    int nu = pg.sphereDetailU;
-    int nv = pg.sphereDetailV;
     float r = 0;
-    if (params.length == 1) {
+    int nu = sphereDetailU;
+    int nv = sphereDetailV;
+    if (1 <= params.length) {
       r = params[0];
+      if (params.length == 2) {
+        nu = nv = (int)params[1];
+      } else if (params.length == 3) {
+        nu = (int)params[1];
+        nv = (int)params[2];
+      }
     }
 
     inGeo.setMaterial(fillColor, strokeColor, strokeWeight,
@@ -2916,8 +3056,8 @@ public class PShapeOpenGL extends PShape {
       }
     }
 
-    if (stroke) inGeo.addPolygonEdges(isClosed);
-    tessellator.tessellatePolygon(false, isClosed, true);
+    if (stroke) inGeo.addPolygonEdges(close);
+    tessellator.tessellatePolygon(false, close, true);
   }
 
 
@@ -4047,7 +4187,60 @@ public class PShapeOpenGL extends PShape {
       return;
     }
 
+    // Saving the current values to use if the style is re-enabled later
+    savedStroke = stroke;
+    savedStrokeColor = strokeColor;
+    savedStrokeWeight = strokeWeight;
+    savedStrokeCap = strokeCap;
+    savedStrokeJoin = strokeJoin;
+    savedFill = fill;
+    savedFillColor = fillColor;
+    savedTint = tint;
+    savedTintColor = tintColor;
+    savedAmbientColor = ambientColor;
+    savedSpecularColor = specularColor;
+    savedEmissiveColor = emissiveColor;
+    savedShininess = shininess;
+    savedTextureMode = textureMode;
+
     super.disableStyle();
+  }
+
+
+  @Override
+  public void enableStyle() {
+    if (savedStroke) {
+      setStroke(true);
+      setStroke(savedStrokeColor);
+      setStrokeWeight(savedStrokeWeight);
+      setStrokeCap(savedStrokeCap);
+      setStrokeJoin(savedStrokeJoin);
+    } else {
+      setStroke(false);
+    }
+
+    if (savedFill) {
+      setFill(true);
+      setFill(savedFillColor);
+    } else {
+      setFill(false);
+    }
+
+    if (savedTint) {
+      setTint(true);
+      setTint(savedTintColor);
+    }
+
+    setAmbient(savedAmbientColor);
+    setSpecular(savedSpecularColor);
+    setEmissive(savedEmissiveColor);
+    setShininess(savedShininess);
+
+    if (image != null) {
+      setTextureMode(savedTextureMode);
+    }
+
+    super.enableStyle();
   }
 
 
@@ -4270,6 +4463,10 @@ public class PShapeOpenGL extends PShape {
                                 0, 4 * voffset * PGL.SIZEOF_FLOAT);
       shader.setColorAttribute(root.glPolyColor, 4, PGL.UNSIGNED_BYTE,
                                0, 4 * voffset * PGL.SIZEOF_BYTE);
+      shader.setNormalAttribute(root.glPolyNormal, 3, PGL.FLOAT,
+                                0, 3 * voffset * PGL.SIZEOF_FLOAT);
+      shader.setTexcoordAttribute(root.glPolyTexcoord, 2, PGL.FLOAT,
+                                  0, 2 * voffset * PGL.SIZEOF_FLOAT);
 
       if (g.lights) {
         shader.setNormalAttribute(root.glPolyNormal, 3, PGL.FLOAT,
@@ -4285,10 +4482,6 @@ public class PShapeOpenGL extends PShape {
       }
 
       if (tex != null) {
-        shader.setNormalAttribute(root.glPolyNormal, 3, PGL.FLOAT,
-                                  0, 3 * voffset * PGL.SIZEOF_FLOAT);
-        shader.setTexcoordAttribute(root.glPolyTexcoord, 2, PGL.FLOAT,
-                                    0, 2 * voffset * PGL.SIZEOF_FLOAT);
         shader.setTexture(tex);
       }
 
@@ -4552,9 +4745,10 @@ public class PShapeOpenGL extends PShape {
         int perim;
         if (0 < size) { // round point
           weight = +size / 0.5f;
-          perim = PApplet.max(PGraphicsOpenGL.MIN_POINT_ACCURACY,
+          perim = PApplet.min(PGraphicsOpenGL.MAX_POINT_ACCURACY,
+                  PApplet.max(PGraphicsOpenGL.MIN_POINT_ACCURACY,
                               (int) (TWO_PI * weight /
-                              PGraphicsOpenGL.POINT_ACCURACY_FACTOR)) + 1;
+                              PGraphicsOpenGL.POINT_ACCURACY_FACTOR))) + 1;
         } else {        // Square point
           weight = -size / 0.5f;
           perim = 5;
