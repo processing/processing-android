@@ -106,6 +106,10 @@ public class PGLES extends PGL {
 
 
   @Override
+  protected void reinitSurface() { }
+
+
+  @Override
   protected void registerListeners() { }
 
 
@@ -711,6 +715,7 @@ public class PGLES extends PGL {
     SRC_ALPHA_SATURATE       = GLES20.GL_SRC_ALPHA_SATURATE;
 
     SCISSOR_TEST    = GLES20.GL_SCISSOR_TEST;
+    STENCIL_TEST    = GLES20.GL_STENCIL_TEST;
     DEPTH_TEST      = GLES20.GL_DEPTH_TEST;
     DEPTH_WRITEMASK = GLES20.GL_DEPTH_WRITEMASK;
     ALPHA_TEST      = 0x0BC0;

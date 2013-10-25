@@ -24,7 +24,10 @@
 package processing.opengl;
 
 import processing.core.PApplet;
+import processing.core.PGraphics;
 
+import java.io.IOException;
+import java.net.URL;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -157,8 +160,10 @@ public abstract class PGL {
   protected static int tex2DVertShader;
   protected static int tex2DFragShader;
   protected static int tex2DShaderContext;
+  protected static int texGeoVBO;
   protected static int tex2DVertLoc;
   protected static int tex2DTCoordLoc;
+  protected static int tex2DSamplerLoc;
 
   protected static boolean loadedTexRectShader = false;
   protected static int texRectShaderProgram;
@@ -167,6 +172,7 @@ public abstract class PGL {
   protected static int texRectShaderContext;
   protected static int texRectVertLoc;
   protected static int texRectTCoordLoc;
+  protected static int texRectSamplerLoc;
 
   protected static float[] texCoords = {
     //  X,     Y,    U,    V
@@ -183,30 +189,33 @@ public abstract class PGL {
     "precision mediump int;\n" +
     "#endif\n";
 
-  protected static String texVertShaderSource =
-    "attribute vec2 inVertex;" +
-    "attribute vec2 inTexcoord;" +
-    "varying vec2 vertTexcoord;" +
-    "void main() {" +
-    "  gl_Position = vec4(inVertex, 0, 1);" +
-    "  vertTexcoord = inTexcoord;" +
-    "}";
+  protected static String[] texVertShaderSource = {
+    "attribute vec2 position;",
+    "attribute vec2 texCoord;",
+    "varying vec2 vertTexCoord;",
+    "void main() {",
+    "  gl_Position = vec4(position, 0, 1);",
+    "  vertTexCoord = texCoord;",
+    "}"
+  };
 
-  protected static String tex2DFragShaderSource =
-    SHADER_PREPROCESSOR_DIRECTIVE +
-    "uniform sampler2D textureSampler;" +
-    "varying vec2 vertTexcoord;" +
-    "void main() {" +
-    "  gl_FragColor = texture2D(textureSampler, vertTexcoord.st);" +
-    "}";
+  protected static String[] tex2DFragShaderSource = {
+    SHADER_PREPROCESSOR_DIRECTIVE,
+    "uniform sampler2D texSampler;",
+    "varying vec2 vertTexCoord;",
+    "void main() {",
+   "  gl_FragColor = texture2D(texSampler, vertTexCoord.st);",
+    "}"
+  };
 
-  protected static String texRectFragShaderSource =
-    SHADER_PREPROCESSOR_DIRECTIVE +
-    "uniform sampler2DRect textureSampler;" +
-    "varying vec2 vertTexcoord;" +
-    "void main() {" +
-    "  gl_FragColor = texture2DRect(textureSampler, vertTexcoord.st);" +
-    "}";
+  protected static String[] texRectFragShaderSource = {
+    SHADER_PREPROCESSOR_DIRECTIVE,
+    "uniform sampler2DRect texSampler;",
+    "varying vec2 vertTexCoord;",
+    "void main() {",
+    "  gl_FragColor = texture2DRect(texSampler, vertTexCoord.st);",
+    "}"
+  };
 
   /** Which texturing targets are enabled */
   protected static boolean[] texturingTargets = { false, false };
@@ -254,6 +263,9 @@ public abstract class PGL {
 
   protected static final String MISSING_GLFUNC_ERROR =
     "GL function %1$s is not available on this hardware (or driver)" + WIKI;
+
+  protected static final String UNSUPPORTED_GLPROF_ERROR =
+    "Unsupported OpenGL profile.";
 
   protected static final String TEXUNIT_ERROR =
     "Number of texture units not supported by this hardware (or driver)" + WIKI;
@@ -326,6 +338,9 @@ public abstract class PGL {
 
 
   protected abstract void initSurface(int antialias);
+
+
+  protected abstract void reinitSurface();
 
 
   protected abstract void registerListeners();
@@ -512,8 +527,8 @@ public abstract class PGL {
     boolean multisample = 1 < numSamples;
 
     boolean packed = ext.indexOf("packed_depth_stencil") != -1;
-    int depthBits = getDepthBits();
-    int stencilBits = getStencilBits();
+    int depthBits = PApplet.min(REQUESTED_DEPTH_BITS, getDepthBits());
+    int stencilBits = PApplet.min(REQUESTED_STENCIL_BITS, getStencilBits());
 
     genTextures(2, glColorTex);
     for (int i = 0; i < 2; i++) {
@@ -880,26 +895,39 @@ public abstract class PGL {
   }
 
 
-  protected void drawTexture2D(int id, int texW, int texH, int scrW, int scrH,
-                               int texX0, int texY0, int texX1, int texY1,
-                               int scrX0, int scrY0, int scrX1, int scrY1) {
+  protected void initTex2DShader() {
     if (!loadedTex2DShader || tex2DShaderContext != glContext) {
-      tex2DVertShader = createShader(VERTEX_SHADER, texVertShaderSource);
-      tex2DFragShader = createShader(FRAGMENT_SHADER, tex2DFragShaderSource);
+      String vertSource = PApplet.join(texVertShaderSource, "\n");
+      String fragSource = PApplet.join(tex2DFragShaderSource, "\n");
+      tex2DVertShader = createShader(VERTEX_SHADER, vertSource);
+      tex2DFragShader = createShader(FRAGMENT_SHADER, fragSource);
       if (0 < tex2DVertShader && 0 < tex2DFragShader) {
         tex2DShaderProgram = createProgram(tex2DVertShader, tex2DFragShader);
       }
       if (0 < tex2DShaderProgram) {
-        tex2DVertLoc = getAttribLocation(tex2DShaderProgram, "inVertex");
-        tex2DTCoordLoc = getAttribLocation(tex2DShaderProgram, "inTexcoord");
+        tex2DVertLoc = getAttribLocation(tex2DShaderProgram, "position");
+        tex2DTCoordLoc = getAttribLocation(tex2DShaderProgram, "texCoord");
+        tex2DSamplerLoc = getUniformLocation(tex2DShaderProgram, "texSampler");
       }
       loadedTex2DShader = true;
       tex2DShaderContext = glContext;
+
+      genBuffers(1, intBuffer);
+      texGeoVBO = intBuffer.get(0);
+      bindBuffer(ARRAY_BUFFER, texGeoVBO);
+      bufferData(ARRAY_BUFFER, 16 * SIZEOF_FLOAT, null, STATIC_DRAW);
     }
 
     if (texData == null) {
       texData = allocateDirectFloatBuffer(texCoords.length);
     }
+  }
+
+
+  protected void drawTexture2D(int id, int texW, int texH, int scrW, int scrH,
+                               int texX0, int texY0, int texX1, int texY1,
+                               int scrX0, int scrY0, int scrX1, int scrY1) {
+    initTex2DShader();
 
     if (0 < tex2DShaderProgram) {
       // The texture overwrites anything drawn earlier.
@@ -956,17 +984,18 @@ public abstract class PGL {
         enabledTex = true;
       }
       bindTexture(TEXTURE_2D, id);
-
-      bindBuffer(ARRAY_BUFFER, 0); // Making sure that no VBO is bound at this point.
+      uniform1i(tex2DSamplerLoc, 0);
 
       texData.position(0);
-      vertexAttribPointer(tex2DVertLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT,
-                          texData);
-      texData.position(2);
-      vertexAttribPointer(tex2DTCoordLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT,
-                          texData);
+      bindBuffer(PGL.ARRAY_BUFFER, texGeoVBO);
+      bufferData(PGL.ARRAY_BUFFER, 16 * SIZEOF_FLOAT, texData, PGL.STATIC_DRAW);
+
+      vertexAttribPointer(tex2DVertLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT, 0);
+      vertexAttribPointer(tex2DTCoordLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT, 2 * SIZEOF_FLOAT);
 
       drawArrays(TRIANGLE_STRIP, 0, 4);
+
+      bindBuffer(ARRAY_BUFFER, 0); // Making sure that no VBO is bound at this point.
 
       bindTexture(TEXTURE_2D, 0);
       if (enabledTex) {
@@ -991,23 +1020,36 @@ public abstract class PGL {
   }
 
 
-  protected void drawTextureRect(int id, int texW, int texH, int scrW, int scrH,
-                                 int texX0, int texY0, int texX1, int texY1,
-                                 int scrX0, int scrY0, int scrX1, int scrY1) {
+  protected void initTexRectShader() {
     if (!loadedTexRectShader || texRectShaderContext != glContext) {
-      texRectVertShader = createShader(VERTEX_SHADER, texVertShaderSource);
-      texRectFragShader = createShader(FRAGMENT_SHADER, texRectFragShaderSource);
+      String vertSource = PApplet.join(texVertShaderSource, "\n");
+      String fragSource = PApplet.join(texRectFragShaderSource, "\n");
+      texRectVertShader = createShader(VERTEX_SHADER, vertSource);
+      texRectFragShader = createShader(FRAGMENT_SHADER, fragSource);
       if (0 < texRectVertShader && 0 < texRectFragShader) {
         texRectShaderProgram = createProgram(texRectVertShader,
                                              texRectFragShader);
       }
       if (0 < texRectShaderProgram) {
-        texRectVertLoc = getAttribLocation(texRectShaderProgram, "inVertex");
-        texRectTCoordLoc = getAttribLocation(texRectShaderProgram, "inTexcoord");
+        texRectVertLoc = getAttribLocation(texRectShaderProgram, "position");
+        texRectTCoordLoc = getAttribLocation(texRectShaderProgram, "texCoord");
+        texRectSamplerLoc = getUniformLocation(texRectShaderProgram, "texSampler");
       }
       loadedTexRectShader = true;
       texRectShaderContext = glContext;
+
+      genBuffers(1, intBuffer);
+      texGeoVBO = intBuffer.get(0);
+      bindBuffer(ARRAY_BUFFER, texGeoVBO);
+      bufferData(ARRAY_BUFFER, 16 * SIZEOF_FLOAT, null, STATIC_DRAW);
     }
+  }
+
+
+  protected void drawTextureRect(int id, int texW, int texH, int scrW, int scrH,
+                                 int texX0, int texY0, int texX1, int texY1,
+                                 int scrX0, int scrY0, int scrX1, int scrY1) {
+    initTexRectShader();
 
     if (texData == null) {
       texData = allocateDirectFloatBuffer(texCoords.length);
@@ -1068,17 +1110,18 @@ public abstract class PGL {
         enabledTex = true;
       }
       bindTexture(TEXTURE_RECTANGLE, id);
-
-      bindBuffer(ARRAY_BUFFER, 0); // Making sure that no VBO is bound at this point.
+      uniform1i(texRectSamplerLoc, 0);
 
       texData.position(0);
-      vertexAttribPointer(texRectVertLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT,
-                          texData);
-      texData.position(2);
-      vertexAttribPointer(texRectTCoordLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT,
-                          texData);
+      bindBuffer(PGL.ARRAY_BUFFER, texGeoVBO);
+      bufferData(PGL.ARRAY_BUFFER, 16 * SIZEOF_FLOAT, texData, PGL.STATIC_DRAW);
+
+      vertexAttribPointer(texRectVertLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT, 0);
+      vertexAttribPointer(texRectTCoordLoc, 2, FLOAT, false, 4 * SIZEOF_FLOAT, 2 * SIZEOF_FLOAT);
 
       drawArrays(TRIANGLE_STRIP, 0, 4);
+
+      bindBuffer(ARRAY_BUFFER, 0); // Making sure that no VBO is bound at this point.
 
       bindTexture(TEXTURE_RECTANGLE, 0);
       if (enabledTex) {
@@ -1382,6 +1425,68 @@ public abstract class PGL {
   }
 
 
+  protected String[] loadVertexShader(String filename) {
+    return pg.parent.loadStrings(filename);
+  }
+
+
+  protected String[] loadFragmentShader(String filename) {
+    return pg.parent.loadStrings(filename);
+  }
+
+
+  protected String[] loadFragmentShader(URL url) {
+    try {
+      return PApplet.loadStrings(url.openStream());
+    } catch (IOException e) {
+      PGraphics.showException("Cannot load fragment shader " + url.getFile());
+    }
+    return null;
+  }
+
+
+  protected String[] loadVertexShader(URL url) {
+    try {
+      return PApplet.loadStrings(url.openStream());
+    } catch (IOException e) {
+      PGraphics.showException("Cannot load vertex shader " + url.getFile());
+    }
+    return null;
+  }
+
+
+  protected String[] loadVertexShader(String filename, int version) {
+    return loadVertexShader(filename);
+  }
+
+
+  protected String[] loadFragmentShader(String filename, int version) {
+    return loadFragmentShader(filename);
+  }
+
+
+  protected String[] loadFragmentShader(URL url, int version) {
+    return loadFragmentShader(url);
+  }
+
+
+  protected String[] loadVertexShader(URL url, int version) {
+    return loadVertexShader(url);
+  }
+
+
+  protected String[] convertFragmentSource(String[] fragSrc0,
+                                           int version0, int version1) {
+    return fragSrc0;
+  }
+
+
+  protected String[] convertVertexSource(String[] vertSrc0,
+                                         int version0, int version1) {
+    return vertSrc0;
+  }
+
+
   protected int createShader(int shaderType, String source) {
     int shader = createShader(shaderType);
     if (shader != 0) {
@@ -1509,6 +1614,61 @@ public abstract class PGL {
              ext.indexOf("_vertex_shader")    != -1 &&
              ext.indexOf("_shader_objects")   != -1 &&
              ext.indexOf("_shading_language") != -1;
+    } else {
+      return true;
+    }
+  }
+
+
+  protected boolean hasNpotTexSupport() {
+    int major = getGLVersion()[0];
+    if (major < 3) {
+      String ext = getString(EXTENSIONS);
+      return -1 < ext.indexOf("_texture_non_power_of_two");
+    } else {
+      return true;
+    }
+  }
+
+
+  protected boolean hasAutoMipmapGenSupport() {
+    int major = getGLVersion()[0];
+    if (major < 3) {
+      String ext = getString(EXTENSIONS);
+      return -1 < ext.indexOf("_generate_mipmap");
+    } else {
+      return true;
+    }
+  }
+
+
+  protected boolean hasFboMultisampleSupport() {
+    int major = getGLVersion()[0];
+    if (major < 3) {
+      String ext = getString(EXTENSIONS);
+      return -1 < ext.indexOf("_framebuffer_multisample");
+    } else {
+      return true;
+    }
+  }
+
+
+  protected boolean hasPackedDepthStencilSupport() {
+    int major = getGLVersion()[0];
+    if (major < 3) {
+      String ext = getString(EXTENSIONS);
+      return -1 < ext.indexOf("_packed_depth_stencil");
+    } else {
+      return true;
+    }
+  }
+
+
+  protected boolean hasAnisoSamplingSupport() {
+    int major = getGLVersion()[0];
+    if (major < 3) {
+      String ext = getString(EXTENSIONS);
+      return -1 < ext.indexOf("_texture_filter_anisotropic");
     } else {
       return true;
     }
@@ -1900,6 +2060,11 @@ public abstract class PGL {
   }
 
 
+  protected Object getDerivedFont(Object font, float size) {
+    return null;
+  }
+
+
   ///////////////////////////////////////////////////////////
 
   // Tessellator interface
@@ -2016,6 +2181,9 @@ public abstract class PGL {
   public static int RGBA4;
   public static int RGB5_A1;
   public static int RGB565;
+  public static int RGB8;
+  public static int RGBA8;
+  public static int ALPHA8;
 
   public static int READ_ONLY;
   public static int WRITE_ONLY;
@@ -2210,6 +2378,7 @@ public abstract class PGL {
   public static int SRC_ALPHA_SATURATE;
 
   public static int SCISSOR_TEST;
+  public static int STENCIL_TEST;
   public static int DEPTH_TEST;
   public static int DEPTH_WRITEMASK;
   public static int ALPHA_TEST;
@@ -2229,7 +2398,6 @@ public abstract class PGL {
   public static int READ_FRAMEBUFFER;
   public static int DRAW_FRAMEBUFFER;
 
-  public static int RGBA8;
   public static int DEPTH24_STENCIL8;
 
   public static int DEPTH_COMPONENT;

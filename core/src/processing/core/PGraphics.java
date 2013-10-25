@@ -526,7 +526,7 @@ public class PGraphics extends PImage implements PConstants {
   // ........................................................
 
   protected boolean curveInited = false;
-  protected int curveDetail = 20;
+  public int curveDetail = 20;
   public float curveTightness = 0;
   // catmull-rom basis matrix, perhaps with optional s parameter
   protected PMatrix3D curveBasisMatrix;
