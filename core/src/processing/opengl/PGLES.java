@@ -521,6 +521,9 @@ public class PGLES extends PGL {
     RGBA4   = GLES20.GL_RGBA4;
     RGB5_A1 = GLES20.GL_RGB5_A1;
     RGB565  = GLES20.GL_RGB565;
+    RGB8   = 0x8051;
+    RGBA8  = 0x8058;
+    ALPHA8 = -1;
 
     READ_ONLY  = -1;
     WRITE_ONLY = 0x88B9;
@@ -735,7 +738,6 @@ public class PGLES extends PGL {
     READ_FRAMEBUFFER   = -1;
     DRAW_FRAMEBUFFER   = -1;
 
-    RGBA8            = 0x8058;
     DEPTH24_STENCIL8 = 0x88F0;
 
     DEPTH_COMPONENT   = GLES20.GL_DEPTH_COMPONENT;
