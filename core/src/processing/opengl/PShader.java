@@ -579,6 +579,14 @@ public class PShader implements PConstants {
   }
 
 
+  protected void draw(int idxId, int count, int offset) {
+    pgl.bindBuffer(PGL.ELEMENT_ARRAY_BUFFER, idxId);
+    pgl.drawElements(PGL.TRIANGLES, count, PGL.INDEX_TYPE,
+                     offset * PGL.SIZEOF_INDEX);
+    pgl.bindBuffer(PGL.ELEMENT_ARRAY_BUFFER, 0);
+  }
+
+
   /**
    * Returns the ID location of the attribute parameter given its name.
    *
@@ -1149,7 +1157,7 @@ public class PShader implements PConstants {
 
     textureLoc = getUniformLoc("texture");
     if (textureLoc == -1) {
-      textureLoc = getUniformLoc("texSampler");
+      textureLoc = getUniformLoc("texMap");
     }
 
     texMatrixLoc = getUniformLoc("texMatrix");
