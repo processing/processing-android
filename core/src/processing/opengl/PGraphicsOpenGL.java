@@ -56,10 +56,6 @@ public class PGraphicsOpenGL extends PGraphics {
     "blendMode(%1$s) is not supported by this hardware (or driver)";
   static final String BLEND_RENDERER_ERROR =
     "blendMode(%1$s) is not supported by this renderer";
-  static final String ALREADY_DRAWING_ERROR =
-    "Already called beginDraw()";
-  static final String NO_BEGIN_DRAW_ERROR =
-  "Cannot call endDraw() before beginDraw()";
   static final String NESTED_DRAW_ERROR =
     "Already called drawing on another PGraphicsOpenGL object";
   static final String ALREADY_BEGAN_CONTOUR_ERROR =
@@ -79,7 +75,7 @@ public class PGraphicsOpenGL extends PGraphics {
   static final String MISSING_UV_TEXCOORDS_ERROR =
     "No uv texture coordinates supplied with vertex() call";
   static final String INVALID_FILTER_SHADER_ERROR =
-    "Your shader needs to be of TEXTURE type to be used as a filter";
+    "Your shader cannot be used as a filter because is of type POINT or LINES";
   static final String INCONSISTENT_SHADER_TYPES =
     "The vertex and fragment shaders have different types";
   static final String WRONG_SHADER_TYPE_ERROR =
@@ -487,7 +483,6 @@ public class PGraphicsOpenGL extends PGraphics {
   protected boolean openContour = false;
   protected boolean breakShape = false;
   protected boolean defaultEdges = false;
-  protected PImage textureImage0;
 
   static protected final int EDGE_MIDDLE = 0;
   static protected final int EDGE_START  = 1;
@@ -654,10 +649,17 @@ public class PGraphicsOpenGL extends PGraphics {
 
     deleteFinalizedGLResources();
 
-    if (primarySurface) pgl.deleteSurface();
+    if (primarySurface) {
+      pgl.deleteSurface();
+
+      // This next line is critical to release many static allocations.
+      // This is important in the context of, say, a unit test suite, which
+      // runs more than one OpenGL sketch within the same classloader
+      // (as in the case of processing.py). Please don't remove it!
+      pgl = null;
+    }
   }
 
-//  @Override
   @Override
   protected void finalize() throws Throwable {
     try {
@@ -1612,7 +1614,6 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     if (drawing) {
-      PGraphics.showWarning(ALREADY_DRAWING_ERROR);
       return;
     }
 
@@ -1655,7 +1656,6 @@ public class PGraphicsOpenGL extends PGraphics {
     report("top endDraw()");
 
     if (!drawing) {
-      PGraphics.showWarning(NO_BEGIN_DRAW_ERROR);
       return;
     }
 
@@ -2049,7 +2049,6 @@ public class PGraphicsOpenGL extends PGraphics {
     breakShape = false;
     defaultEdges = true;
 
-    textureImage0 = textureImage;
     // The superclass method is called to avoid an early flush.
     super.noTexture();
 
@@ -2226,7 +2225,7 @@ public class PGraphicsOpenGL extends PGraphics {
     tessellator.setInGeometry(inGeo);
     tessellator.setTessGeometry(tessGeo);
     tessellator.setFill(fill || textureImage != null);
-    tessellator.setTexCache(texCache, textureImage0, textureImage);
+    tessellator.setTexCache(texCache, textureImage);
     tessellator.setStroke(stroke);
     tessellator.setStrokeColor(strokeColor);
     tessellator.setStrokeWeight(strokeWeight);
@@ -2280,7 +2279,7 @@ public class PGraphicsOpenGL extends PGraphics {
     tessellator.setStrokeWeight(strokeWeight);
     tessellator.setStrokeCap(strokeCap);
     tessellator.setStrokeJoin(strokeJoin);
-    tessellator.setTexCache(texCache, textureImage0, textureImage);
+    tessellator.setTexCache(texCache, textureImage);
     tessellator.setTransform(modelview);
     tessellator.set3D(is3D());
 
@@ -2429,16 +2428,218 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
+  class Triangle {
+    int i0, i1, i2;
+    PImage tex;
+    float dist;
+    Triangle(int i0, int i1, int i2, PImage tex, float dist) {
+      this.i0 = i0;
+      this.i1 = i1;
+      this.i2 = i2;
+      this.tex = tex;
+      this.dist = dist;
+    }
+  }
+  // Adapted from Ben Van Citters code:
+  // http://openprocessing.org/sketch/100912
+  Triangle[] sortedPolyTriangles = null;
+  int sortedTriangleCount = 0;
+  void sortTriangles() {
+    if (sortedPolyTriangles == null) {
+      sortedPolyTriangles = new Triangle[512];
+    }
+
+    float[] vertices = tessGeo.polyVertices;
+    short[] indices = tessGeo.polyIndices;
+    float[] src0 = {0, 0, 0, 0};
+    float[] src1 = {0, 0, 0, 0};
+    float[] src2 = {0, 0, 0, 0};
+    float[] pt0 = {0, 0, 0, 0};
+    float[] pt1 = {0, 0, 0, 0};
+    float[] pt2 = {0, 0, 0, 0};
+
+    sortedTriangleCount = 0;
+    for (int i = 0; i < texCache.size; i++) {
+      PImage textureImage = texCache.getTextureImage(i);
+      int first = texCache.firstCache[i];
+      int last = texCache.lastCache[i];
+      IndexCache cache = tessGeo.polyIndexCache;
+      for (int n = first; n <= last; n++) {
+        int ioffset = n == first ? texCache.firstIndex[i] :
+                                   cache.indexOffset[n];
+        int icount = n == last ? texCache.lastIndex[i] - ioffset + 1 :
+                                 cache.indexOffset[n] + cache.indexCount[n] -
+                                 ioffset;
+        int voffset = cache.vertexOffset[n];
+        for (int tr = ioffset / 3; tr < (ioffset + icount) / 3; tr++) {
+          if (sortedPolyTriangles.length == sortedTriangleCount) {
+            // expand array
+            int newSize = sortedTriangleCount << 1;
+            Triangle[] temp = new Triangle[newSize];
+            PApplet.arrayCopy(sortedPolyTriangles, 0, temp, 0, newSize);
+            sortedPolyTriangles = temp;
+          }
+
+          int i0 = voffset + indices[3 * tr + 0];
+          int i1 = voffset + indices[3 * tr + 1];
+          int i2 = voffset + indices[3 * tr + 2];
+          PApplet.arrayCopy(vertices, 4 * i0, src0, 0, 4);
+          PApplet.arrayCopy(vertices, 4 * i1, src1, 0, 4);
+          PApplet.arrayCopy(vertices, 4 * i2, src2, 0, 4);
+          modelview.mult(src0, pt0);
+          modelview.mult(src1, pt1);
+          modelview.mult(src2, pt2);
+          // add all three verts together and divide...  could use another determination
+          // of the 'depth' of the triangle such as min or max vert dist...
+          float[] pos = new float[]{(pt0[X] + pt1[X] + pt2[X]) /3,
+                                    (pt0[Y] + pt1[Y] + pt2[Y]) /3,
+                                    (pt0[Z] + pt1[Z] + pt2[Z]) /3};
+
+          // pt0, pt1 and pt2 are in eye coordinates since they have been
+          // multiplied by the modelview matrix.
+          float d = PApplet.dist(0f, 0f, 0f, pos[0], pos[1], pos[2]);
+
+          Triangle tri = new Triangle(i0, i1, i2, textureImage, d);
+          sortedPolyTriangles[sortedTriangleCount] = tri;
+          sortedTriangleCount++;
+        }
+      }
+    }
+    quickSortTris(0, sortedTriangleCount - 1);
+  }
+
+  // an 'in-place' implementation of quick I whipped together late at night
+  // based off of the algorithm found on wikipedia: http://en.wikipedia.org/wiki/Quicksort
+  private void quickSortTris(int leftI, int rightI) {
+    if (leftI < rightI) {
+      int pivotIndex = (leftI + rightI)/2;
+      int newPivotIndex = partition(leftI,rightI,pivotIndex);
+      quickSortTris(leftI, newPivotIndex-1);
+      quickSortTris(newPivotIndex+1, rightI);
+    }
+  }
+
+  //part of quicksort
+  private int partition(int leftIndex, int rightIndex, int pivotIndex) {
+    float pivotVal = sortedPolyTriangles[pivotIndex].dist;
+    swapTris(pivotIndex,rightIndex);
+    int storeIndex = leftIndex;
+    for(int i = leftIndex; i < rightIndex; i++)
+    {
+      if(sortedPolyTriangles[i].dist > pivotVal)
+      {
+        swapTris(i,storeIndex);
+        storeIndex++;
+      }
+    }
+    swapTris(rightIndex,storeIndex);
+    return storeIndex;
+  }
+
+  //part of quicksort
+  private void swapTris(int a, int b) {
+    Triangle tmp = sortedPolyTriangles[a];
+    sortedPolyTriangles[a] = sortedPolyTriangles[b];
+    sortedPolyTriangles[b] = tmp;
+  }
+
+
+
   void rawPolys() {
     raw.colorMode(RGB);
     raw.noStroke();
     raw.beginShape(TRIANGLES);
+
+    sortTriangles();
 
     float[] vertices = tessGeo.polyVertices;
     int[] color = tessGeo.polyColors;
     float[] uv = tessGeo.polyTexCoords;
     short[] indices = tessGeo.polyIndices;
 
+
+    sortTriangles();
+    for (int i = 0; i < sortedTriangleCount; i++) {
+      Triangle tri = sortedPolyTriangles[i];
+      int i0 = tri.i0;
+      int i1 = tri.i1;
+      int i2 = tri.i2;
+      PImage tex = tri.tex;
+
+      float[] pt0 = {0, 0, 0, 0};
+      float[] pt1 = {0, 0, 0, 0};
+      float[] pt2 = {0, 0, 0, 0};
+      int argb0 = PGL.nativeToJavaARGB(color[i0]);
+      int argb1 = PGL.nativeToJavaARGB(color[i1]);
+      int argb2 = PGL.nativeToJavaARGB(color[i2]);
+
+      if (flushMode == FLUSH_CONTINUOUSLY) {
+        float[] src0 = {0, 0, 0, 0};
+        float[] src1 = {0, 0, 0, 0};
+        float[] src2 = {0, 0, 0, 0};
+        PApplet.arrayCopy(vertices, 4 * i0, src0, 0, 4);
+        PApplet.arrayCopy(vertices, 4 * i1, src1, 0, 4);
+        PApplet.arrayCopy(vertices, 4 * i2, src2, 0, 4);
+        modelview.mult(src0, pt0);
+        modelview.mult(src1, pt1);
+        modelview.mult(src2, pt2);
+      } else {
+        PApplet.arrayCopy(vertices, 4 * i0, pt0, 0, 4);
+        PApplet.arrayCopy(vertices, 4 * i1, pt1, 0, 4);
+        PApplet.arrayCopy(vertices, 4 * i2, pt2, 0, 4);
+      }
+
+      if (tex != null) {
+        raw.texture(tex);
+        if (raw.is3D()) {
+          raw.fill(argb0);
+          raw.vertex(pt0[X], pt0[Y], pt0[Z], uv[2 * i0 + 0], uv[2 * i0 + 1]);
+          raw.fill(argb1);
+          raw.vertex(pt1[X], pt1[Y], pt1[Z], uv[2 * i1 + 0], uv[2 * i1 + 1]);
+          raw.fill(argb2);
+          raw.vertex(pt2[X], pt2[Y], pt2[Z], uv[2 * i2 + 0], uv[2 * i2 + 1]);
+        } else if (raw.is2D()) {
+          float sx0 = screenXImpl(pt0[0], pt0[1], pt0[2], pt0[3]);
+          float sy0 = screenYImpl(pt0[0], pt0[1], pt0[2], pt0[3]);
+          float sx1 = screenXImpl(pt1[0], pt1[1], pt1[2], pt1[3]);
+          float sy1 = screenYImpl(pt1[0], pt1[1], pt1[2], pt1[3]);
+          float sx2 = screenXImpl(pt2[0], pt2[1], pt2[2], pt2[3]);
+          float sy2 = screenYImpl(pt2[0], pt2[1], pt2[2], pt2[3]);
+          raw.fill(argb0);
+          raw.vertex(sx0, sy0, uv[2 * i0 + 0], uv[2 * i0 + 1]);
+          raw.fill(argb1);
+          raw.vertex(sx1, sy1, uv[2 * i1 + 0], uv[2 * i1 + 1]);
+          raw.fill(argb1);
+          raw.vertex(sx2, sy2, uv[2 * i2 + 0], uv[2 * i2 + 1]);
+        }
+      } else {
+        if (raw.is3D()) {
+          raw.fill(argb0);
+          raw.vertex(pt0[X], pt0[Y], pt0[Z]);
+          raw.fill(argb1);
+          raw.vertex(pt1[X], pt1[Y], pt1[Z]);
+          raw.fill(argb2);
+          raw.vertex(pt2[X], pt2[Y], pt2[Z]);
+        } else if (raw.is2D()) {
+          float sx0 = screenXImpl(pt0[0], pt0[1], pt0[2], pt0[3]);
+          float sy0 = screenYImpl(pt0[0], pt0[1], pt0[2], pt0[3]);
+          float sx1 = screenXImpl(pt1[0], pt1[1], pt1[2], pt1[3]);
+          float sy1 = screenYImpl(pt1[0], pt1[1], pt1[2], pt1[3]);
+          float sx2 = screenXImpl(pt2[0], pt2[1], pt2[2], pt2[3]);
+          float sy2 = screenYImpl(pt2[0], pt2[1], pt2[2], pt2[3]);
+          raw.fill(argb0);
+          raw.vertex(sx0, sy0);
+          raw.fill(argb1);
+          raw.vertex(sx1, sy1);
+          raw.fill(argb2);
+          raw.vertex(sx2, sy2);
+        }
+      }
+
+    }
+
+
+/*
     for (int i = 0; i < texCache.size; i++) {
       PImage textureImage = texCache.getTextureImage(i);
 
@@ -2530,6 +2731,7 @@ public class PGraphicsOpenGL extends PGraphics {
         }
       }
     }
+*/
 
     raw.endShape();
   }
@@ -2916,7 +3118,7 @@ public class PGraphicsOpenGL extends PGraphics {
                       ambientColor, specularColor, emissiveColor, shininess);
     inGeo.setNormal(normalX, normalY, normalZ);
     inGeo.addRect(x1, y1, x2, y2, tl, tr, br, bl, stroke);
-    endShape();
+    endShape(CLOSE);
   }
 
 
@@ -4191,21 +4393,6 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-  // Sets a camera for 2D rendering, which only involves centering
-  public void camera(float centerX, float centerY) {
-    modelview.reset();
-    modelview.translate(-centerX, -centerY);
-
-    modelviewInv.set(modelview);
-    modelviewInv.invert();
-
-    camera.set(modelview);
-    cameraInv.set(modelviewInv);
-
-    updateProjmodelview();
-  }
-
-
   /**
    * Print the current camera matrix.
    */
@@ -4254,6 +4441,9 @@ public class PGraphicsOpenGL extends PGraphics {
   public void ortho(float left, float right,
                     float bottom, float top,
                     float near, float far) {
+    // Translating the origin to (widht/2, height/2) since the matrix math
+    // below assumes the center of the screen to be (0, 0), but in Processing
+    // it is (w/2, h/2).
     left   -= width/2f;
     right  -= width/2f;
     bottom -= height/2f;
@@ -5054,6 +5244,13 @@ public class PGraphicsOpenGL extends PGraphics {
       pgl.depthMask(true);
     }
 
+    // Code to use instead in order to fix
+    // https://github.com/processing/processing/issues/2296
+//    if (!hints[DISABLE_DEPTH_MASK]) {
+//      pgl.clearDepth(1);
+//      pgl.clear(PGL.DEPTH_BUFFER_BIT);
+//    }
+
     pgl.clearColor(backgroundR, backgroundG, backgroundB, backgroundA);
     pgl.clear(PGL.COLOR_BUFFER_BIT);
     if (0 < parent.frameCount) {
@@ -5546,7 +5743,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public void filter(PShader shader) {
-    if (!shader.isPolyShader() || !shader.supportsTexturing()) {
+    if (!shader.isPolyShader()) {
       PGraphics.showWarning(INVALID_FILTER_SHADER_ERROR);
       return;
     }
@@ -5654,12 +5851,33 @@ public class PGraphicsOpenGL extends PGraphics {
     flush(); // make sure that the screen contents are up to date.
 
     Texture tex = getTexture(src);
+    boolean invX = tex.invertedX();
+    boolean invY = tex.invertedY();
+    int scrX0, scrX1;
+    int scrY0, scrY1;
+    if (invX) {
+      scrX0 = dx + dw;
+      scrX1 = dx;
+    } else {
+      scrX0 = dx;
+      scrX1 = dx + dw;
+    }
+    if (invY) {
+      scrY0 = height - (dy + dh);
+      scrY1 = height - dy;
+    } else {
+      // Because drawTexture uses bottom-to-top orientation of Y axis.
+      scrY0 = height - dy;
+      scrY1 = height - (dy + dh);
+    }
+
     pgl.drawTexture(tex.glTarget, tex.glName,
                     tex.glWidth, tex.glHeight, width, height,
                     sx, tex.height - (sy + sh),
                     sx + sw, tex.height - sy,
-                    dx, height - (dy + dh),
-                    dx + dw, height - dy);
+                    scrX0, scrY0,
+                    scrX1, scrY1);
+
 
     if (needEndDraw) {
       endDraw();
@@ -6015,7 +6233,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   protected void initOffscreen() {
     // Getting the context and capabilities from the main renderer.
-    loadTextureImpl(Texture.BILINEAR, false);
+    loadTextureImpl(textureSampling, false);
 
     // In case of reinitialization (for example, when the smooth level
     // is changed), we make sure that all the OpenGL resources associated
@@ -7738,13 +7956,10 @@ public class PGraphicsOpenGL extends PGraphics {
       int startLUT = (int) (0.5f + (start / TWO_PI) * SINCOS_LENGTH);
       int stopLUT = (int) (0.5f + (stop / TWO_PI) * SINCOS_LENGTH);
 
-      if (fill) {
-        addVertex(centerX, centerY, VERTEX, true);
-      }
+      int idx0 = addVertex(centerX, centerY, VERTEX, true);
 
       int increment = 1; // what's a good algorithm? stopLUT - startLUT;
-      int idx0, pidx, idx;
-      idx0 = pidx = idx = 0;
+      int pidx = 0, idx = 0;
       for (int i = startLUT; i < stopLUT; i += increment) {
         int ii = i % SINCOS_LENGTH;
         // modulo won't make the value positive
@@ -7758,11 +7973,10 @@ public class PGraphicsOpenGL extends PGraphics {
             addEdge(pidx, idx, i == startLUT, false);
           } else if (startLUT < i) {
             addEdge(pidx, idx, i == startLUT + 1, arcMode == 0 &&
-                                                  i == stopLUT - 1);
+                               i == stopLUT - 1);
           }
         }
 
-        if (startLUT == i) idx0 = idx;
         pidx = idx;
       }
       // draw last point explicitly for accuracy
@@ -9473,10 +9687,9 @@ public class PGraphicsOpenGL extends PGraphics {
       this.fill = fill;
     }
 
-    void setTexCache(TexCache texCache, PImage prevTexImage,
-                     PImage newTexImage) {
+    void setTexCache(TexCache texCache, PImage newTexImage) {
       this.texCache = texCache;
-      this.prevTexImage = prevTexImage;
+      //this.prevTexImage = prevTexImage;
       this.newTexImage = newTexImage;
     }
 
@@ -10941,7 +11154,6 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     void beginNoTex() {
-      prevTexImage = newTexImage;
       newTexImage = null;
       setFirstTexIndex(tess.polyIndexCount, tess.polyIndexCache.size - 1);
     }
@@ -10971,6 +11183,7 @@ public class PGraphicsOpenGL extends PGraphics {
           texCache.setLastIndex(lastIndex, lastCache);
         }
       }
+      prevTexImage = newTexImage;
     }
 
     // -----------------------------------------------------------------

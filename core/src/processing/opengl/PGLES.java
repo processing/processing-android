@@ -16,7 +16,6 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.EGLConfigChooser;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
-
 import processing.core.PApplet;
 import processing.opengl.tess.PGLU;
 import processing.opengl.tess.PGLUtessellator;
@@ -84,6 +83,12 @@ public class PGLES extends PGL {
   public PGLES(PGraphicsOpenGL pg) {
     super(pg);
     if (glu == null) glu = new PGLU();
+  }
+
+
+  @Override
+  public GLSurfaceView getCanvas() {
+    return glview;
   }
 
 
