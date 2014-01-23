@@ -27,10 +27,10 @@ public class PGLES extends PGL {
   // Public members to access the underlying GL objects and glview
 
   /** Basic GLES 1.0 interface */
-  public static GL10 gl;
+  public GL10 gl;
 
   /** GLU interface **/
-  public static PGLU glu;
+  public PGLU glu;
 
   /** The current opengl context */
   public static EGLContext context;
@@ -82,7 +82,7 @@ public class PGLES extends PGL {
 
   public PGLES(PGraphicsOpenGL pg) {
     super(pg);
-    if (glu == null) glu = new PGLU();
+    glu = new PGLU();
   }
 
 
@@ -121,6 +121,13 @@ public class PGLES extends PGL {
   ///////////////////////////////////////////////////////////
 
   // Frame rendering
+
+
+  @Override
+  protected void getGL(PGL pgl) {
+    PGLES pgles = (PGLES)pgl;
+    this.gl = pgles.gl;
+  }
 
 
   @Override

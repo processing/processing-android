@@ -819,7 +819,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
       setEGLContextClientVersion(2);
 
       // The renderer can be set only once.
-      setRenderer(((PGLES)PGraphicsOpenGL.pgl).getRenderer());
+      setRenderer(((PGLES)g3.pgl).getRenderer());
       setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
       // assign this g to the PApplet
