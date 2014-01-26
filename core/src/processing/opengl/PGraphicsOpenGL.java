@@ -5282,21 +5282,10 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void backgroundImpl() {
     flush();
 
-    pgl.depthMask(true);
-    pgl.clearDepth(1);
-    pgl.clear(PGL.DEPTH_BUFFER_BIT);
-    if (hints[DISABLE_DEPTH_MASK]) {
-      pgl.depthMask(false);
-    } else {
-      pgl.depthMask(true);
+    if (!hints[DISABLE_DEPTH_MASK]) {
+      pgl.clearDepth(1);
+      pgl.clear(PGL.DEPTH_BUFFER_BIT);
     }
-
-    // Code to use instead in order to fix
-    // https://github.com/processing/processing/issues/2296
-//    if (!hints[DISABLE_DEPTH_MASK]) {
-//      pgl.clearDepth(1);
-//      pgl.clear(PGL.DEPTH_BUFFER_BIT);
-//    }
 
     pgl.clearColor(backgroundR, backgroundG, backgroundB, backgroundA);
     pgl.clear(PGL.COLOR_BUFFER_BIT);
@@ -6381,14 +6370,13 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected void endOffscreenDraw() {
-    // Set alpha channel to opaque in order to match behavior of JAVA2D:
-    // https://github.com/processing/processing/issues/1844
-    // but still not working as expected. Some strange artifacts with multismapled
-    // surfaces (see second code example in the issue above).
-//    pgl.colorMask(false, false, false, true);
-//    pgl.clearColor(0, 0, 0, 1);
-//    pgl.clear(PGL.COLOR_BUFFER_BIT);
-//    pgl.colorMask(true, true, true, true);
+    if (backgroundA == 1) {
+      // Set alpha channel to opaque in order to match behavior of JAVA2D:
+      pgl.colorMask(false, false, false, true);
+      pgl.clearColor(0, 0, 0, backgroundA);
+      pgl.clear(PGL.COLOR_BUFFER_BIT);
+      pgl.colorMask(true, true, true, true);
+    }
 
     if (offscreenMultisample) {
       multisampleFramebuffer.copyColor(offscreenFramebuffer);
@@ -6454,7 +6442,12 @@ public class PGraphicsOpenGL extends PGraphics {
 
       // To avoid having garbage in the screen after a resize,
       // in the case background is not called in draw().
-      background(backgroundColor);
+      if (primarySurface) {
+        background(backgroundColor);
+      } else {
+        // offscreen surfaces are transparent by default.
+        background(0x00 << 24 | (backgroundColor & 0xFFFFFF));
+      }
 
       // Sets the default projection and camera (initializes modelview).
       // If the user has setup up their own projection, they'll need
@@ -11916,7 +11909,6 @@ public class PGraphicsOpenGL extends PGraphics {
         vertFirst = cache.vertexCount[cacheIndex];
         vertOffset = cache.vertexOffset[cacheIndex];
         vertCount = 0;
-        System.out.println(vertFirst + " " + vertOffset);
 
         if (type == PGL.TRIANGLE_FAN) primitive = TRIANGLE_FAN;
         else if (type == PGL.TRIANGLE_STRIP) primitive = TRIANGLE_STRIP;
