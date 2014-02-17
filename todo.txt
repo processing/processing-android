@@ -12,6 +12,10 @@ X   https://github.com/processing/processing-android/pull/42
 
 _ figure out how to build from Eclipse JDI so we can remove tools.jar and javac
 _   https://github.com/processing/processing/issues/1840
+_ figure out Android build w/o javac so we can remove tools.jar and javac
+_   also to the p5 repo with just a JRE
+_   remove initRequirements from Base (no longer need JDI)
+_     move this into Android mode?
 
 _ temporary files (for sketches and logs) are not deleted
 o   http://code.google.com/p/processing/issues/detail?id=562

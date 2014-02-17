@@ -50,6 +50,7 @@ import java.util.Set;
 
 import processing.core.PApplet;
 
+
 /**
  * A JSONObject is an unordered collection of name/value pairs. Its external
  * form is a string wrapped in curly braces with colons between the names and
@@ -110,6 +111,7 @@ import processing.core.PApplet;
  * @see PApplet#saveJSONObject(JSONObject, String)
  * @see PApplet#saveJSONArray(JSONArray, String)
  */
+@SuppressWarnings("rawtypes")
 public class JSONObject {
   /**
    * The maximum number of keys in the key pool.
