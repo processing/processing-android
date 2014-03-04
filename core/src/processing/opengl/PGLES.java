@@ -45,6 +45,7 @@ public class PGLES extends PGL {
   /** The renderer object driving the rendering loop, analogous to the
    * GLEventListener in JOGL */
   protected static AndroidRenderer renderer;
+  protected static AndroidConfigChooser configChooser;
 
   // ........................................................
 
@@ -70,10 +71,15 @@ public class PGLES extends PGL {
     MAX_CAPS_JOINS_LENGTH = 1000;
   }
 
+  public static final boolean ENABLE_MULTISAMPLING = false;
+
   // Some EGL constants needed to initialize a GLES2 context.
   protected static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
   protected static final int EGL_OPENGL_ES2_BIT         = 0x0004;
 
+  // Coverage multisampling identifiers for nVidia Tegra2
+  protected static final int EGL_COVERAGE_BUFFERS_NV    = 0x30E0;
+  protected static final int EGL_COVERAGE_SAMPLES_NV    = 0x30E1;
 
   ///////////////////////////////////////////////////////////
 
@@ -168,9 +174,16 @@ public class PGLES extends PGL {
   }
 
 
+  public AndroidConfigChooser getConfigChooser() {
+    configChooser = new AndroidConfigChooser(5, 6, 5, 4, 16, 1);
+    return configChooser;
+  }
+
+
   public AndroidConfigChooser getConfigChooser(int r, int g, int b, int a,
                                                int d, int s) {
-    return new AndroidConfigChooser(r, g, b, a, d, s);
+    configChooser = new AndroidConfigChooser(r, g, b, a, d, s);
+    return configChooser;
   }
 
 
@@ -249,12 +262,51 @@ public class PGLES extends PGL {
     // The attributes we want in the frame buffer configuration for Processing.
     // For more details on other attributes, see:
     // http://www.khronos.org/opengles/documentation/opengles1_0/html/eglChooseConfig.html
-    protected int[] configAttribsGL = { EGL10.EGL_RED_SIZE, 4,
-                                        EGL10.EGL_GREEN_SIZE, 4,
-                                        EGL10.EGL_BLUE_SIZE, 4,
-                                        EGL10.EGL_RENDERABLE_TYPE,
-                                        EGL_OPENGL_ES2_BIT,
-                                        EGL10.EGL_NONE };
+    protected int[] configAttribsGL_MSAA = {
+      EGL10.EGL_RED_SIZE, 5,
+      EGL10.EGL_GREEN_SIZE, 6,
+      EGL10.EGL_BLUE_SIZE, 5,
+      EGL10.EGL_ALPHA_SIZE, 4,
+      EGL10.EGL_DEPTH_SIZE, 16,
+      EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL10.EGL_SAMPLE_BUFFERS, 1,
+      EGL10.EGL_SAMPLES, 2,
+      EGL10.EGL_NONE };
+
+    protected int[] configAttribsGL_CovMSAA = {
+      EGL10.EGL_RED_SIZE, 5,
+      EGL10.EGL_GREEN_SIZE, 6,
+      EGL10.EGL_BLUE_SIZE, 5,
+      EGL10.EGL_ALPHA_SIZE, 4,
+      EGL10.EGL_DEPTH_SIZE, 16,
+      EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL_COVERAGE_BUFFERS_NV, 1,
+      EGL_COVERAGE_SAMPLES_NV, 2,
+      EGL10.EGL_NONE };
+
+    protected int[] configAttribsGL_NoMSAA = {
+      EGL10.EGL_RED_SIZE, 5,
+      EGL10.EGL_GREEN_SIZE, 6,
+      EGL10.EGL_BLUE_SIZE, 5,
+      EGL10.EGL_ALPHA_SIZE, 4,
+      EGL10.EGL_DEPTH_SIZE, 16,
+      EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL10.EGL_NONE };
+
+    protected int[] configAttribsGL_Good = {
+      EGL10.EGL_RED_SIZE, 8,
+      EGL10.EGL_GREEN_SIZE, 8,
+      EGL10.EGL_BLUE_SIZE, 8,
+      EGL10.EGL_ALPHA_SIZE, 8,
+      EGL10.EGL_DEPTH_SIZE, 16,
+      EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL10.EGL_NONE };
+
+    protected int[] configAttribsGL_TestMSAA = {
+      EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL10.EGL_SAMPLE_BUFFERS, 1,
+      EGL10.EGL_SAMPLES, 2,
+      EGL10.EGL_NONE };
 
     public AndroidConfigChooser(int r, int g, int b, int a, int d, int s) {
       redTarget = r;
@@ -266,21 +318,17 @@ public class PGLES extends PGL {
     }
 
     public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
-
-      // Get the number of minimally matching EGL configurations
-      int[] num_config = new int[1];
-      egl.eglChooseConfig(display, configAttribsGL, null, 0, num_config);
-
-      int numConfigs = num_config[0];
-
-      if (numConfigs <= 0) {
-        throw new IllegalArgumentException("No EGL configs match configSpec");
+      EGLConfig[] configs = chooseConfigWithAttribs(egl, display, configAttribsGL_MSAA);
+      if (configs == null) {
+        chooseConfigWithAttribs(egl, display, configAttribsGL_CovMSAA);
+        if (configs == null) {
+          chooseConfigWithAttribs(egl, display, configAttribsGL_NoMSAA);
+        }
       }
 
-      // Allocate then read the array of minimally matching EGL configs
-      EGLConfig[] configs = new EGLConfig[numConfigs];
-      egl.eglChooseConfig(display, configAttribsGL, configs, numConfigs,
-          num_config);
+      if (configs == null) {
+        throw new IllegalArgumentException("No EGL configs match configSpec");
+      }
 
       if (PApplet.DEBUG) {
         for (EGLConfig config : configs) {
@@ -297,12 +345,13 @@ public class PGLES extends PGL {
     public EGLConfig chooseBestConfig(EGL10 egl, EGLDisplay display,
                                       EGLConfig[] configs) {
       EGLConfig bestConfig = null;
-      float bestScore = 1000;
+      float bestScore = Float.MAX_VALUE;
 
       for (EGLConfig config : configs) {
         int gl = findConfigAttrib(egl, display, config,
                                   EGL10.EGL_RENDERABLE_TYPE, 0);
-        if (gl == EGL_OPENGL_ES2_BIT) {
+        boolean isGLES2 = (gl & EGL_OPENGL_ES2_BIT) != 0;
+        if (isGLES2) {
           int d = findConfigAttrib(egl, display, config,
                                    EGL10.EGL_DEPTH_SIZE, 0);
           int s = findConfigAttrib(egl, display, config,
@@ -320,7 +369,7 @@ public class PGLES extends PGL {
           float score = 0.20f * PApplet.abs(r - redTarget) +
                         0.20f * PApplet.abs(g - greenTarget) +
                         0.20f * PApplet.abs(b - blueTarget) +
-                        0.15f * PApplet.abs(a - blueTarget) +
+                        0.15f * PApplet.abs(a - alphaTarget) +
                         0.15f * PApplet.abs(d - depthTarget) +
                         0.10f * PApplet.abs(s - stencilTarget);
 
@@ -391,6 +440,42 @@ public class PGLES extends PGL {
       }
       return defaultValue;
     }
+
+     protected EGLConfig[] chooseConfigWithAttribs(EGL10 egl,
+                                                   EGLDisplay display,
+                                                   int[] configAttribs) {
+       // Get the number of minimally matching EGL configurations
+       int[] configCounts = new int[1];
+       egl.eglChooseConfig(display, configAttribs, null, 0, configCounts);
+
+       int count = configCounts[0];
+
+       if (count <= 0) {
+         //throw new IllegalArgumentException("No EGL configs match configSpec");
+         return null;
+       }
+
+       // Allocate then read the array of minimally matching EGL configs
+       EGLConfig[] configs = new EGLConfig[count];
+       egl.eglChooseConfig(display, configAttribs, configs, count, configCounts);
+       return configs;
+
+       // Get the number of minimally matching EGL configurations
+//     int[] num_config = new int[1];
+//     egl.eglChooseConfig(display, configAttribsGL, null, 0, num_config);
+//
+//     int numConfigs = num_config[0];
+//
+//     if (numConfigs <= 0) {
+//       throw new IllegalArgumentException("No EGL configs match configSpec");
+//     }
+//
+//     // Allocate then read the array of minimally matching EGL configs
+//     EGLConfig[] configs = new EGLConfig[numConfigs];
+//     egl.eglChooseConfig(display, configAttribsGL, configs, numConfigs,
+//         num_config);
+
+     }
   }
 
 
