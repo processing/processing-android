@@ -1807,16 +1807,29 @@ public class PGraphicsOpenGL extends PGraphics {
 
     FrameBuffer fb = getCurrentFB();
     if (fb != null) {
-      getCurrentFB().bind();
-      pgl.drawBuffer(getCurrentFB().getDefaultDrawBuffer());
+      fb.bind();
+      pgl.drawBuffer(fb.getDefaultDrawBuffer());
     }
   }
 
-  public void beginReadPixels() {
+  protected void beginBindFramebuffer(int target, int framebuffer) {
+    // Actually, nothing to do here.
+  }
+
+  protected void endBindFramebuffer(int target, int framebuffer) {
+    FrameBuffer fb = getCurrentFB();
+    if (framebuffer == 0 && fb != null && fb.glFbo != 0) {
+      // The user is setting the framebuffer to 0 (screen buffer), but the
+      // renderer is drawing into an offscreen buffer.
+      fb.bind();
+    }
+  }
+
+  protected void beginReadPixels() {
     beginPixelsOp(OP_READ);
   }
 
-  public void endReadPixels() {
+  protected void endReadPixels() {
     endPixelsOp();
   }
 
@@ -2597,14 +2610,15 @@ public class PGraphicsOpenGL extends PGraphics {
     raw.noStroke();
     raw.beginShape(TRIANGLES);
 
-    sortTriangles();
+
+    //sortTriangles();
 
     float[] vertices = tessGeo.polyVertices;
     int[] color = tessGeo.polyColors;
     float[] uv = tessGeo.polyTexCoords;
-    //short[] indices = tessGeo.polyIndices;  // unused [fry]
+    short[] indices = tessGeo.polyIndices;  // unused [fry]
 
-
+/*
     sortTriangles();
     for (int i = 0; i < sortedTriangleCount; i++) {
       Triangle tri = sortedPolyTriangles[i];
@@ -2684,9 +2698,9 @@ public class PGraphicsOpenGL extends PGraphics {
       }
 
     }
+*/
 
 
-/*
     for (int i = 0; i < texCache.size; i++) {
       PImage textureImage = texCache.getTextureImage(i);
 
@@ -2778,7 +2792,7 @@ public class PGraphicsOpenGL extends PGraphics {
         }
       }
     }
-*/
+
 
     raw.endShape();
   }
