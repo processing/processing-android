@@ -655,9 +655,9 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   protected void finalize() throws Throwable {
     try {
-      deletePolyBuffers();
-      deleteLineBuffers();
-      deletePointBuffers();
+      finalizePolyBuffers();
+      finalizeLineBuffers();
+      finalizePointBuffers();
 
       deleteSurfaceTextures();
       if (!primarySurface) {
@@ -1412,6 +1412,45 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
+  protected void finalizePolyBuffers() {
+    if (glPolyVertex != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyVertex, polyBuffersContext);
+    }
+
+    if (glPolyColor != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyColor, polyBuffersContext);
+    }
+
+    if (glPolyNormal != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyNormal, polyBuffersContext);
+    }
+
+    if (glPolyTexcoord != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyTexcoord, polyBuffersContext);
+    }
+
+    if (glPolyAmbient != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyAmbient, polyBuffersContext);
+    }
+
+    if (glPolySpecular != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolySpecular, polyBuffersContext);
+    }
+
+    if (glPolyEmissive != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyEmissive, polyBuffersContext);
+    }
+
+    if (glPolyShininess != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyShininess, polyBuffersContext);
+    }
+
+    if (glPolyIndex != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPolyIndex, polyBuffersContext);
+    }
+  }
+
+
   protected void createLineBuffers() {
     if (!lineBuffersCreated || lineBufferContextIsOutdated()) {
       lineBuffersContext = pgl.getCurrentContext();
@@ -1502,6 +1541,25 @@ public class PGraphicsOpenGL extends PGraphics {
       glLineIndex = 0;
 
       lineBuffersCreated = false;
+    }
+  }
+
+
+  protected void finalizeLineBuffers() {
+    if (glLineVertex != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glLineVertex, lineBuffersContext);
+    }
+
+    if (glLineColor != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glLineColor, lineBuffersContext);
+    }
+
+    if (glLineAttrib != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glLineAttrib, lineBuffersContext);
+    }
+
+    if (glLineIndex != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glLineIndex, lineBuffersContext);
     }
   }
 
@@ -1599,6 +1657,25 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
+  protected void finalizePointBuffers() {
+    if (glPointVertex != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPointVertex, pointBuffersContext);
+    }
+
+    if (glPointColor != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPointColor, pointBuffersContext);
+    }
+
+    if (glPointAttrib != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPointAttrib, pointBuffersContext);
+    }
+
+    if (glPointIndex != 0) {
+      PGraphicsOpenGL.finalizeVertexBufferObject(glPointIndex, pointBuffersContext);
+    }
+  }
+
+
   @Override
   public void requestFocus() {  // ignore
     pgl.requestFocus();
@@ -1620,7 +1697,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (primarySurface) {
       if (initialized) {
         if (sized) pgl.reinitSurface();
-        pgl.requestDraw();
+        if (parent.canDraw()) pgl.requestDraw();
       } else {
         initPrimary();
       }
