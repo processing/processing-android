@@ -329,8 +329,7 @@ public class Texture implements PConstants {
       return;
     }
 
-    if (pixels.length == 0) {
-      // Nothing to do (means that w == h == 0) but not an erroneous situation
+    if (pixels.length == 0 || w == 0 || h == 0) {
       return;
     }
 
@@ -1267,7 +1266,7 @@ public class Texture implements PConstants {
     pg.setFramebuffer(tempFbo);
     // Clear the color buffer to make sure that the alpha channel is set to
     // full transparency
-    pgl.clearColor(1, 1, 1, 1);
+    pgl.clearColor(0, 0, 0, 0);
     pgl.clear(PGL.COLOR_BUFFER_BIT);
     if (scale) {
       // Rendering tex into "this", and scaling the source rectangle
