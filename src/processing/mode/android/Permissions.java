@@ -46,7 +46,7 @@ public class Permissions extends JFrame {
   static final int BORDER_VERT = 3;
 
   JScrollPane permissionScroller;
-  JList permissionList;
+  JList<JCheckBox> permissionList;
   JLabel descriptionLabel;
 //  JTextArea descriptionLabel;
 
@@ -111,7 +111,7 @@ public class Permissions extends JFrame {
     permissionList.setBorder(new EmptyBorder(BORDER_VERT, BORDER_HORIZ,
                                              BORDER_VERT, BORDER_HORIZ));
 
-    DefaultListModel model = new DefaultListModel();
+    DefaultListModel<JCheckBox> model = new DefaultListModel<JCheckBox>();
     permissionList.setModel(model);
     for (String item : title) {
       model.addElement(new JCheckBox(item));
@@ -130,7 +130,7 @@ public class Permissions extends JFrame {
         if (e.getKeyChar() == ' ') {
           int index = permissionList.getSelectedIndex();
           JCheckBox checkbox =
-            (JCheckBox) permissionList.getModel().getElementAt(index);
+            permissionList.getModel().getElementAt(index);
           checkbox.setSelected(!checkbox.isSelected());
           permissionList.repaint();
         }
@@ -497,9 +497,9 @@ public class Permissions extends JFrame {
 // link. If you run across the original version, please let me know so that
 // the original author can be credited properly. It was from a snippet
 // collection, but it seems to have been picked up so many places with others
-// placing their copyright on it, that I haven't been able to determine the
+// placing their copyright on it that I haven't been able to determine the
 // original author. [fry 20100216]
-class CheckBoxList extends JList {
+class CheckBoxList extends JList<JCheckBox> {
   protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
   int checkboxWidth;
 
@@ -518,7 +518,7 @@ class CheckBoxList extends JList {
           int index = locationToIndex(e.getPoint());
 //          descriptionLabel.setText(description[index]);
           if (index != -1) {
-            JCheckBox checkbox = (JCheckBox) getModel().getElementAt(index);
+            JCheckBox checkbox = getModel().getElementAt(index);
             //System.out.println("mouse event in list: " + e);
 //            System.out.println(checkbox.getSize() + " ... " + checkbox);
 //            if (e.getX() < checkbox.getSize().height) {
@@ -534,11 +534,11 @@ class CheckBoxList extends JList {
   }
 
 
-  protected class CellRenderer implements ListCellRenderer {
-    public Component getListCellRendererComponent(JList list, Object value,
+  protected class CellRenderer implements ListCellRenderer<JCheckBox> {
+    public Component getListCellRendererComponent(JList<? extends JCheckBox> list, 
+                                                  JCheckBox checkbox,
                                                   int index, boolean isSelected,
                                                   boolean cellHasFocus) {
-      JCheckBox checkbox = (JCheckBox) value;
 //      checkbox.setBorder(new EmptyBorder(13, 5, 3, 5));  // trying again
       checkbox.setBackground(isSelected ? getSelectionBackground() : getBackground());
       checkbox.setForeground(isSelected ? getSelectionForeground() : getForeground());
@@ -550,5 +550,14 @@ class CheckBoxList extends JList {
       checkbox.setBorder(isSelected ? UIManager.getBorder("List.focusCellHighlightBorder") : noFocusBorder);
       return checkbox;
     }
+
+//    @Override
+//    public Component getListCellRendererComponent(JList<? extends JCheckBox> list,
+//                                                  JCheckBox value, int index,
+//                                                  boolean isSelected,
+//                                                  boolean cellHasFocus) {
+//      // TODO Auto-generated method stub
+//      return null;
+//    }
   }
 }
