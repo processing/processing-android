@@ -267,20 +267,16 @@ class AndroidBuild extends JavaBuild {
     return null;
   }
 
-
-  public boolean exportPackage() throws IOException, SketchException {
+  public File exportPackage() throws IOException, SketchException {
     File projectFolder = build("release");
-    if (projectFolder == null) {
-      return false;
-    }
+    if(projectFolder == null) return null;
 
     // TODO all the signing magic needs to happen here
 
     File exportFolder = createExportFolder();
     Base.copyDir(projectFolder, exportFolder);
-    return true;
+    return new File(exportFolder, "/bin/");
   }
-
 
   /*
   // SDK tools 17 have a problem where 'dex' won't pick up the libs folder
