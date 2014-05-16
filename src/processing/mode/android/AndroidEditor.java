@@ -393,6 +393,8 @@ public class AndroidEditor extends JavaEditor {
             statusError(e);
           } catch (SketchException e) {
             statusError(e);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
           }
           stopIndeterminate();
         }

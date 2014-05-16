@@ -21,14 +21,20 @@
 
 package processing.mode.android;
 
-import java.io.*;
-
-import org.apache.tools.ant.*;
-
-import processing.app.*;
-import processing.app.exec.*;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DefaultLogger;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
+import processing.app.Base;
+import processing.app.Library;
+import processing.app.Sketch;
+import processing.app.SketchException;
+import processing.app.exec.ProcessHelper;
+import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
+
+import java.io.*;
 
 
 class AndroidBuild extends JavaBuild {
@@ -267,15 +273,62 @@ class AndroidBuild extends JavaBuild {
     return null;
   }
 
-  public File exportPackage() throws IOException, SketchException {
+  public File exportPackage() throws IOException, SketchException, InterruptedException {
     File projectFolder = build("release");
     if(projectFolder == null) return null;
 
-    // TODO all the signing magic needs to happen here
+    File keyStore = getKeyStore();
+    if(keyStore == null) return null;
 
     File exportFolder = createExportFolder();
     Base.copyDir(projectFolder, exportFolder);
     return new File(exportFolder, "/bin/");
+  }
+
+  private File getKeyStore() throws IOException, InterruptedException {
+    File keyStoreFolder = new File(sketch.getFolder(), "keystore");
+    if(!keyStoreFolder.exists()) {
+      boolean result = keyStoreFolder.mkdirs();
+
+      if(!result) {
+        Base.showWarning("Folders, folders, folders",
+            "Could not create the necessary folders to build.\n" +
+                "Perhaps you have some file permissions to sort out?", null);
+        return null;
+      }
+    }
+
+    File keyStore = new File(keyStoreFolder, sketch.getName() + "-release-key.keystore");
+    if(!keyStore.exists()) {
+      String dname = "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, S=Unknown, C=Unknown";
+      // TODO Generate password and store it with alias in some accessible place
+      String password = "generatedpasswordhere";
+
+      String[] args = {
+          "keytool", "-genkey",
+          "-keystore", keyStore.getCanonicalPath(),
+          "-alias", sketch.getName(),
+          "-keyalg", "RSA",
+          "-keysize", "2048",
+          "-validity", "10000",
+          "-keypass", password,
+          "-storepass", password,
+          "-dname", dname
+      };
+
+      Process generation = Runtime.getRuntime().exec(args);
+      generation.waitFor();
+
+      // any better ways to check if it is created now?
+      keyStore = new File(keyStore.getCanonicalPath());
+      if(!keyStore.exists()) {
+        Base.showWarning("Failed to create key store",
+            "There was an error while creating the key store");
+        return null;
+      }
+    }
+
+    return keyStore;
   }
 
   /*
