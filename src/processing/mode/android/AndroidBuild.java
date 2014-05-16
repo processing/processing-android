@@ -285,22 +285,6 @@ class AndroidBuild extends JavaBuild {
     return new File(exportFolder, "/bin/");
   }
 
-  String combine(String[] s, String glue)
-  {
-    int k = s.length;
-    if ( k == 0 )
-    {
-      return null;
-    }
-    StringBuilder out = new StringBuilder();
-    out.append( s[0] );
-    for ( int x=1; x < k; ++x )
-    {
-      out.append(glue).append(s[x]);
-    }
-    return out.toString();
-  }
-
   private File signPackage() throws IOException, InterruptedException {
     File keyStore = getKeyStore();
     if(keyStore == null) return null;
@@ -325,13 +309,8 @@ class AndroidBuild extends JavaBuild {
         sketch.getName()
     };
 
-    System.out.println("Started signing process");
-    System.out.println(combine(args, " "));
-
     Process signingProcess = Runtime.getRuntime().exec(args);
     signingProcess.waitFor();
-
-    System.out.println("Finished signing process");
 
     if(verifySignedPackage(unsignedPackage)) {
       File signedPackage = new File(sketch.getFolder(), "android/bin/" + sketch.getName() + "-release-signed.apk");
