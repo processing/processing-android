@@ -277,12 +277,114 @@ class AndroidBuild extends JavaBuild {
     File projectFolder = build("release");
     if(projectFolder == null) return null;
 
-    File keyStore = getKeyStore();
-    if(keyStore == null) return null;
+    File signedPackage = signPackage();
+    if(signedPackage == null) return null;
 
     File exportFolder = createExportFolder();
     Base.copyDir(projectFolder, exportFolder);
     return new File(exportFolder, "/bin/");
+  }
+
+  String combine(String[] s, String glue)
+  {
+    int k = s.length;
+    if ( k == 0 )
+    {
+      return null;
+    }
+    StringBuilder out = new StringBuilder();
+    out.append( s[0] );
+    for ( int x=1; x < k; ++x )
+    {
+      out.append(glue).append(s[x]);
+    }
+    return out.toString();
+  }
+
+  private File signPackage() throws IOException, InterruptedException {
+    File keyStore = getKeyStore();
+    if(keyStore == null) return null;
+
+    File unsignedPackage = new File(sketch.getFolder(), "android/bin/" + sketch.getName() + "-release-unsigned.apk");
+    if(!unsignedPackage.exists()) return null;
+
+    // NOT sure that works: java.home returns JRE path here, need to walk back to ../../bin to find jarsigner
+    // TODO receive generated password here
+    String password = "generatedpasswordhere";
+
+    String[] args = {
+        System.getProperty("java.home") + System.getProperty("file.separator") + ".."
+            + System.getProperty("file.separator") + "bin"
+            + System.getProperty("file.separator") + "jarsigner",
+        "-sigalg", "SHA1withRSA",
+        "-digestalg", "SHA1",
+        "-keypass", password,
+        "-storepass", password,
+        "-keystore", keyStore.getCanonicalPath(),
+        unsignedPackage.getCanonicalPath(),
+        sketch.getName()
+    };
+
+    System.out.println("Started signing process");
+    System.out.println(combine(args, " "));
+
+    Process signingProcess = Runtime.getRuntime().exec(args);
+    signingProcess.waitFor();
+
+    System.out.println("Finished signing process");
+
+    if(verifySignedPackage(unsignedPackage)) {
+      File signedPackage = new File(sketch.getFolder(), "android/bin/" + sketch.getName() + "-release-signed.apk");
+      if(signedPackage.exists()) {
+        boolean deleteResult = signedPackage.delete();
+        if(!deleteResult) {
+          Base.showWarning("Error during package signing",
+              "Unable to delete old signed package");
+          return null;
+        }
+      }
+
+      boolean renameResult = unsignedPackage.renameTo(signedPackage);
+      if(!renameResult) {
+        Base.showWarning("Error during package signing",
+            "Unable to rename package file");
+        return null;
+      }
+
+      // TODO zipalign package
+      return signedPackage;
+    } else {
+      Base.showWarning("Error during package signing",
+          "Verification of the signed package has failed");
+      return null;
+    }
+  }
+
+  // probably not the best way to do it; should we really verify?
+  private boolean verifySignedPackage(File signedPackage) throws IOException, InterruptedException {
+    // same concerns about jarsigner path here as above
+    String[] args = {
+        System.getProperty("java.home") + System.getProperty("file.separator") + ".."
+            + System.getProperty("file.separator") + "bin"
+            + System.getProperty("file.separator") + "jarsigner",
+        "-verify", signedPackage.getCanonicalPath()
+    };
+
+    Process signingProcess = Runtime.getRuntime().exec(args);
+    signingProcess.waitFor();
+
+    InputStream is = signingProcess.getInputStream();
+    InputStreamReader isr = new InputStreamReader(is);
+    BufferedReader br = new BufferedReader(isr);
+    String line;
+
+    while((line = br.readLine()) != null) {
+      if(line.contains("verified")) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private File getKeyStore() throws IOException, InterruptedException {
@@ -305,7 +407,9 @@ class AndroidBuild extends JavaBuild {
       String password = "generatedpasswordhere";
 
       String[] args = {
-          "keytool", "-genkey",
+          System.getProperty("java.home")
+              + System.getProperty("file.separator") + "bin"
+              + System.getProperty("file.separator") + "keytool", "-genkey",
           "-keystore", keyStore.getCanonicalPath(),
           "-alias", sketch.getName(),
           "-keyalg", "RSA",
