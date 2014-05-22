@@ -33,6 +33,7 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
+import sun.security.tools.JarSigner;
 
 import java.io.*;
 
@@ -273,7 +274,7 @@ class AndroidBuild extends JavaBuild {
     return null;
   }
 
-  public File exportPackage() throws IOException, SketchException, InterruptedException {
+  public File exportPackage() throws Exception {
     File projectFolder = build("release");
     if(projectFolder == null) return null;
 
@@ -285,7 +286,7 @@ class AndroidBuild extends JavaBuild {
     return new File(exportFolder, "/bin/");
   }
 
-  private File signPackage() throws IOException, InterruptedException {
+  private File signPackage() throws Exception {
     File keyStore = getKeyStore();
     if(keyStore == null) return null;
 
@@ -297,9 +298,6 @@ class AndroidBuild extends JavaBuild {
     String password = "generatedpasswordhere";
 
     String[] args = {
-        System.getProperty("java.home") + System.getProperty("file.separator") + ".."
-            + System.getProperty("file.separator") + "bin"
-            + System.getProperty("file.separator") + "jarsigner",
         "-sigalg", "SHA1withRSA",
         "-digestalg", "SHA1",
         "-keypass", password,
@@ -309,8 +307,8 @@ class AndroidBuild extends JavaBuild {
         sketch.getName()
     };
 
-    Process signingProcess = Runtime.getRuntime().exec(args);
-    signingProcess.waitFor();
+    // TODO remove hardcoded tools.jar path from build.xml
+    JarSigner.main(args);
 
     if(verifySignedPackage(unsignedPackage)) {
       File signedPackage = new File(sketch.getFolder(), "android/bin/" + sketch.getName() + "-release-signed.apk");

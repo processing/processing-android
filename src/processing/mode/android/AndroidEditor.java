@@ -395,6 +395,8 @@ public class AndroidEditor extends JavaEditor {
             statusError(e);
           } catch (InterruptedException e) {
             e.printStackTrace();
+          } catch (Exception e) {
+            e.printStackTrace();
           }
           stopIndeterminate();
         }
