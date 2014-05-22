@@ -278,7 +278,7 @@ class AndroidBuild extends JavaBuild {
     File projectFolder = build("release");
     if(projectFolder == null) return null;
 
-    File signedPackage = signPackage();
+    File signedPackage = signPackage(projectFolder);
     if(signedPackage == null) return null;
 
     File exportFolder = createExportFolder();
@@ -286,11 +286,11 @@ class AndroidBuild extends JavaBuild {
     return new File(exportFolder, "/bin/");
   }
 
-  private File signPackage() throws Exception {
+  private File signPackage(File projectFolder) throws Exception {
     File keyStore = getKeyStore();
     if(keyStore == null) return null;
 
-    File unsignedPackage = new File(sketch.getFolder(), "android/bin/" + sketch.getName() + "-release-unsigned.apk");
+    File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
     if(!unsignedPackage.exists()) return null;
 
     // NOT sure that works: java.home returns JRE path here, need to walk back to ../../bin to find jarsigner
@@ -311,7 +311,7 @@ class AndroidBuild extends JavaBuild {
     JarSigner.main(args);
 
     if(verifySignedPackage(unsignedPackage)) {
-      File signedPackage = new File(sketch.getFolder(), "android/bin/" + sketch.getName() + "-release-signed.apk");
+      File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
       if(signedPackage.exists()) {
         boolean deleteResult = signedPackage.delete();
         if(!deleteResult) {
