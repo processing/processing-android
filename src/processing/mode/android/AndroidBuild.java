@@ -34,6 +34,7 @@ import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import sun.security.tools.JarSigner;
+import sun.security.tools.KeyTool;
 
 import java.io.*;
 
@@ -337,9 +338,7 @@ class AndroidBuild extends JavaBuild {
     }
   }
 
-  // probably not the best way to do it; should we really verify?
   private boolean verifySignedPackage(File signedPackage) throws IOException, InterruptedException {
-    // same concerns about jarsigner path here as above
     String[] args = {
         System.getProperty("java.home") + System.getProperty("file.separator") + ".."
             + System.getProperty("file.separator") + "bin"
@@ -364,7 +363,7 @@ class AndroidBuild extends JavaBuild {
     return false;
   }
 
-  private File getKeyStore() throws IOException, InterruptedException {
+  private File getKeyStore() throws Exception {
     File keyStoreFolder = new File(sketch.getFolder(), "keystore");
     if(!keyStoreFolder.exists()) {
       boolean result = keyStoreFolder.mkdirs();
@@ -384,9 +383,7 @@ class AndroidBuild extends JavaBuild {
       String password = "generatedpasswordhere";
 
       String[] args = {
-          System.getProperty("java.home")
-              + System.getProperty("file.separator") + "bin"
-              + System.getProperty("file.separator") + "keytool", "-genkey",
+          "-genkey",
           "-keystore", keyStore.getCanonicalPath(),
           "-alias", sketch.getName(),
           "-keyalg", "RSA",
@@ -397,8 +394,7 @@ class AndroidBuild extends JavaBuild {
           "-dname", dname
       };
 
-      Process generation = Runtime.getRuntime().exec(args);
-      generation.waitFor();
+      KeyTool.main(args);
 
       // any better ways to check if it is created now?
       keyStore = new File(keyStore.getCanonicalPath());
