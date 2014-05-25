@@ -374,6 +374,8 @@ public class AndroidEditor extends JavaEditor {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
     deactivateExport();
+    new KeyStoreCredentials(sketch);
+    /*
 
     if(handleExportCheckModified()) {
       new Thread() {
@@ -401,17 +403,6 @@ public class AndroidEditor extends JavaEditor {
           stopIndeterminate();
         }
       }.start();
-    }
-
-    // TODO now sign it... lots of fun signing code mess to go here. yay!
-
-    // maybe even send it to the device? mmm?
-//      try {
-//        runSketchOnDevice(AndroidEnvironment.getInstance().getHardware(), "release");
-//      } catch (final MonitorCanceled ok) {
-//        editor.statusNotice("Canceled.");
-//      } finally {
-//        editor.deactivateExport();
-//      }
+    }                */
   }
 }
