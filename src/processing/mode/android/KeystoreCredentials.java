@@ -114,8 +114,8 @@ public class KeyStoreCredentials extends JFrame {
     localityNameLabel.setLabelFor(localityName);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    textPane.add(localityName);
     textPane.add(localityNameLabel);
+    textPane.add(localityName);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textPane);
 
@@ -125,8 +125,8 @@ public class KeyStoreCredentials extends JFrame {
     stateNameLabel.setLabelFor(stateName);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    textPane.add(stateName);
     textPane.add(stateNameLabel);
+    textPane.add(stateName);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textPane);
 
@@ -136,8 +136,8 @@ public class KeyStoreCredentials extends JFrame {
     countryLabel.setLabelFor(country);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-    textPane.add(country);
     textPane.add(countryLabel);
+    textPane.add(country);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textPane);
 
