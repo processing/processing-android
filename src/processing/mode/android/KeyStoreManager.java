@@ -15,13 +15,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 
-public class KeyStoreCredentials extends JFrame {
+public class KeyStoreManager extends JFrame {
   static final String GUIDE_URL =
       "http://developer.android.com/tools/publishing/app-signing.html#cert";
 
   Sketch sketch;
 
-  public KeyStoreCredentials(Sketch sketch) {
+  public KeyStoreManager(Sketch sketch) {
+    super("Android keystore manager");
     this.sketch = sketch;
 
     Container outer = getContentPane();
@@ -29,6 +30,78 @@ public class KeyStoreCredentials extends JFrame {
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
+    showKeystorePasswordLayout(pain);
+
+    // buttons
+    JPanel buttons = new JPanel();
+    buttons.setAlignmentX(LEFT_ALIGNMENT);
+    JButton okButton = new JButton("OK");
+    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH,
+        okButton.getPreferredSize().height);
+    okButton.setPreferredSize(dim);
+    okButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        setVisible(false);
+      }
+    });
+    okButton.setEnabled(true);
+
+    JButton cancelButton = new JButton("Cancel");
+    cancelButton.setPreferredSize(dim);
+    cancelButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        setVisible(false);
+      }
+    });
+    cancelButton.setEnabled(true);
+
+    // think different, biznatchios!
+    if (Base.isMacOS()) {
+      buttons.add(cancelButton);
+//      buttons.add(Box.createHorizontalStrut(8));
+      buttons.add(okButton);
+    } else {
+      buttons.add(okButton);
+//      buttons.add(Box.createHorizontalStrut(8));
+      buttons.add(cancelButton);
+    }
+//    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
+    pain.add(buttons);
+
+    JRootPane root = getRootPane();
+    root.setDefaultButton(okButton);
+    ActionListener disposer = new ActionListener() {
+      public void actionPerformed(ActionEvent actionEvent) {
+        setVisible(false);
+      }
+    };
+    processing.app.Toolkit.registerWindowCloseKeys(root, disposer);
+    processing.app.Toolkit.setIcon(this);
+
+    pack();
+
+    Dimension screen = processing.app.Toolkit.getScreenSize();
+    Dimension windowSize = getSize();
+
+    setLocation((screen.width - windowSize.width) / 2,
+        (screen.height - windowSize.height) / 2);
+
+    setVisible(true);
+  }
+
+  private void showKeystorePasswordLayout(Box pain) {
+    JPasswordField passwordField = new JPasswordField(15);
+    JLabel passwordLabel = new JLabel("<html><body><b>Keystore password: </b></body></html>");
+    passwordLabel.setLabelFor(passwordField);
+
+    JPanel textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+    textPane.add(passwordLabel);
+    textPane.add(passwordField);
+    textPane.setAlignmentX(LEFT_ALIGNMENT);
+    pain.add(textPane);
+  }
+
+  private void showKeystoreCredentialsLayout(Box pain) {
     String labelText =
         "<html>" +
             "Please enter the information below so we can generate a private key for you.<br/>" +
@@ -140,61 +213,5 @@ public class KeyStoreCredentials extends JFrame {
     textPane.add(country);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textPane);
-
-    // buttons
-    JPanel buttons = new JPanel();
-    buttons.setAlignmentX(LEFT_ALIGNMENT);
-    JButton okButton = new JButton("OK");
-    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH,
-        okButton.getPreferredSize().height);
-    okButton.setPreferredSize(dim);
-    okButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        setVisible(false);
-      }
-    });
-    okButton.setEnabled(true);
-
-    JButton cancelButton = new JButton("Cancel");
-    cancelButton.setPreferredSize(dim);
-    cancelButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        setVisible(false);
-      }
-    });
-    cancelButton.setEnabled(true);
-
-    // think different, biznatchios!
-    if (Base.isMacOS()) {
-      buttons.add(cancelButton);
-//      buttons.add(Box.createHorizontalStrut(8));
-      buttons.add(okButton);
-    } else {
-      buttons.add(okButton);
-//      buttons.add(Box.createHorizontalStrut(8));
-      buttons.add(cancelButton);
-    }
-//    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
-    pain.add(buttons);
-
-    JRootPane root = getRootPane();
-    root.setDefaultButton(okButton);
-    ActionListener disposer = new ActionListener() {
-      public void actionPerformed(ActionEvent actionEvent) {
-        setVisible(false);
-      }
-    };
-    processing.app.Toolkit.registerWindowCloseKeys(root, disposer);
-    processing.app.Toolkit.setIcon(this);
-
-    pack();
-
-    Dimension screen = processing.app.Toolkit.getScreenSize();
-    Dimension windowSize = getSize();
-
-    setLocation((screen.width - windowSize.width) / 2,
-        (screen.height - windowSize.height) / 2);
-
-    setVisible(true);
   }
 }
