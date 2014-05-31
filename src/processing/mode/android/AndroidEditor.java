@@ -373,36 +373,37 @@ public class AndroidEditor extends JavaEditor {
   public void handleExportPackage() {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
-    deactivateExport();
-    new KeyStoreManager(sketch);
-    /*
-
     if(handleExportCheckModified()) {
-      new Thread() {
-        public void run() {
-          startIndeterminate();
-          statusNotice("Exporting signed package...");
-          AndroidBuild build = new AndroidBuild(sketch, androidMode);
-          try {
-            File projectFolder = build.exportPackage();
-            if(projectFolder != null) {
-              statusNotice("Done with export.");
-              Base.openFolder(projectFolder);
-            } else {
-              statusError("Error with export");
-            }
-          } catch (IOException e) {
-            statusError(e);
-          } catch (SketchException e) {
-            statusError(e);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          } catch (Exception e) {
-            e.printStackTrace();
+      deactivateExport();
+      new KeyStoreManager(this);
+    }
+  }
+
+  public void startExportPackage(final String keyStorePassword) {
+    new Thread() {
+      public void run() {
+        startIndeterminate();
+        statusNotice("Exporting signed package...");
+        AndroidBuild build = new AndroidBuild(sketch, androidMode);
+        try {
+          File projectFolder = build.exportPackage(keyStorePassword);
+          if(projectFolder != null) {
+            statusNotice("Done with export.");
+            Base.openFolder(projectFolder);
+          } else {
+            statusError("Error with export");
           }
-          stopIndeterminate();
+        } catch (IOException e) {
+          statusError(e);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (Exception e) {
+          e.printStackTrace();
         }
-      }.start();
-    }                */
+        stopIndeterminate();
+      }
+    }.start();
   }
 }

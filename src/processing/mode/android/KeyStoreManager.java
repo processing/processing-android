@@ -2,7 +2,6 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Preferences;
-import processing.app.Sketch;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,24 +12,40 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.Arrays;
 
 
 public class KeyStoreManager extends JFrame {
   static final String GUIDE_URL =
       "http://developer.android.com/tools/publishing/app-signing.html#cert";
 
-  Sketch sketch;
+  File keyStore;
 
-  public KeyStoreManager(Sketch sketch) {
+  JPasswordField passwordField;
+  JPasswordField repeatPasswordField;
+
+  JTextField commonName;
+  JTextField organizationalUnit;
+  JTextField organizationName;
+  JTextField localityName;
+  JTextField country;
+  JTextField stateName;
+
+  public KeyStoreManager(final AndroidEditor editor) {
     super("Android keystore manager");
-    this.sketch = sketch;
 
     Container outer = getContentPane();
     Box pain = Box.createVerticalBox();
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
-    showKeystorePasswordLayout(pain);
+    keyStore = AndroidKeyStore.getKeyStore();
+    if(keyStore != null) {
+      showKeystorePasswordLayout(pain);
+    } else {
+      showKeystoreCredentialsLayout(pain);
+    }
 
     // buttons
     JPanel buttons = new JPanel();
@@ -41,7 +56,23 @@ public class KeyStoreManager extends JFrame {
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        setVisible(false);
+        if(keyStore == null) {
+          if(checkRequiredFields()) {
+            try {
+              AndroidKeyStore.generateKeyStore(new String(passwordField.getPassword()),
+                  commonName.getText(), organizationalUnit.getText(), organizationName.getText(),
+                  localityName.getText(), stateName.getText(), country.getText());
+
+              setVisible(false);
+              editor.startExportPackage(new String(passwordField.getPassword()));
+            } catch (Exception e1) {
+              e1.printStackTrace();
+            }
+          }
+        } else {
+          setVisible(false);
+          editor.startExportPackage(new String(passwordField.getPassword()));
+        }
       }
     });
     okButton.setEnabled(true);
@@ -90,7 +121,7 @@ public class KeyStoreManager extends JFrame {
   }
 
   private void showKeystorePasswordLayout(Box pain) {
-    JPasswordField passwordField = new JPasswordField(15);
+    passwordField = new JPasswordField(15);
     JLabel passwordLabel = new JLabel("<html><body><b>Keystore password: </b></body></html>");
     passwordLabel.setLabelFor(passwordField);
 
@@ -99,6 +130,20 @@ public class KeyStoreManager extends JFrame {
     textPane.add(passwordField);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textPane);
+  }
+
+  private boolean checkRequiredFields() {
+    if(passwordField.getPassword().length > 5) {
+      if(Arrays.equals(passwordField.getPassword(), repeatPasswordField.getPassword())) {
+        return true;
+      } else {
+        Base.showWarning("Passwords", "Keystore passwords do not match");
+        return false;
+      }
+    } else {
+      Base.showWarning("Passwords", "Keystore password should be at least 6 characters long");
+      return false;
+    }
   }
 
   private void showKeystoreCredentialsLayout(Box pain) {
@@ -120,7 +165,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textarea);
 
     // password field
-    JPasswordField passwordField = new JPasswordField(15);
+    passwordField = new JPasswordField(15);
     JLabel passwordLabel = new JLabel("<html><body><b>Keystore password: </b></body></html>");
     passwordLabel.setLabelFor(passwordField);
 
@@ -131,7 +176,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textPane);
 
     // repeat password field
-    JPasswordField repeatPasswordField = new JPasswordField(15);
+    repeatPasswordField = new JPasswordField(15);
     JLabel repeatPasswordLabel = new JLabel("<html><body><b>Repeat keystore password: </b></body></html>");
     repeatPasswordLabel.setLabelFor(passwordField);
 
@@ -149,7 +194,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(separatorPanel);
 
     // common name (CN)
-    JTextField commonName = new JTextField(15);
+    commonName = new JTextField(15);
     JLabel commonNameLabel = new JLabel("First and last name: ");
     commonNameLabel.setLabelFor(commonName);
 
@@ -160,7 +205,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textPane);
 
     // organizational unit (OU)
-    JTextField organizationalUnit = new JTextField(15);
+    organizationalUnit = new JTextField(15);
     JLabel organizationalUnitLabel = new JLabel("Organizational unit: ");
     organizationalUnitLabel.setLabelFor(organizationalUnit);
 
@@ -171,7 +216,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textPane);
 
     // organization name (O)
-    JTextField organizationName = new JTextField(15);
+    organizationName = new JTextField(15);
     JLabel organizationNameLabel = new JLabel("Organization name: ");
     organizationNameLabel.setLabelFor(organizationName);
 
@@ -182,7 +227,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textPane);
 
     // locality name (L)
-    JTextField localityName = new JTextField(15);
+    localityName = new JTextField(15);
     JLabel localityNameLabel = new JLabel("City or locality: ");
     localityNameLabel.setLabelFor(localityName);
 
@@ -193,7 +238,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textPane);
 
     // state name (S)
-    JTextField stateName = new JTextField(15);
+    stateName = new JTextField(15);
     JLabel stateNameLabel = new JLabel("State name: ");
     stateNameLabel.setLabelFor(stateName);
 
@@ -204,7 +249,7 @@ public class KeyStoreManager extends JFrame {
     pain.add(textPane);
 
     // country (C)
-    JTextField country = new JTextField(15);
+    country = new JTextField(15);
     JLabel countryLabel = new JLabel("Country code (XX): ");
     countryLabel.setLabelFor(country);
 
