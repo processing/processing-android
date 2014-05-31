@@ -34,7 +34,6 @@ import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import sun.security.tools.JarSigner;
-import sun.security.tools.KeyTool;
 
 import java.io.*;
 
@@ -275,11 +274,11 @@ class AndroidBuild extends JavaBuild {
     return null;
   }
 
-  public File exportPackage() throws Exception {
+  public File exportPackage(String keyStorePassword) throws Exception {
     File projectFolder = build("release");
     if(projectFolder == null) return null;
 
-    File signedPackage = signPackage(projectFolder);
+    File signedPackage = signPackage(projectFolder, keyStorePassword);
     if(signedPackage == null) return null;
 
     File exportFolder = createExportFolder();
@@ -287,25 +286,21 @@ class AndroidBuild extends JavaBuild {
     return new File(exportFolder, "/bin/");
   }
 
-  private File signPackage(File projectFolder) throws Exception {
-    File keyStore = getKeyStore();
+  private File signPackage(File projectFolder, String keyStorePassword) throws Exception {
+    File keyStore = AndroidKeyStore.getKeyStore();
     if(keyStore == null) return null;
 
     File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
     if(!unsignedPackage.exists()) return null;
 
-    // NOT sure that works: java.home returns JRE path here, need to walk back to ../../bin to find jarsigner
-    // TODO receive generated password here
-    String password = "generatedpasswordhere";
-
     String[] args = {
         "-sigalg", "SHA1withRSA",
         "-digestalg", "SHA1",
-        "-keypass", password,
-        "-storepass", password,
+        "-keypass", keyStorePassword,
+        "-storepass", keyStorePassword,
         "-keystore", keyStore.getCanonicalPath(),
         unsignedPackage.getCanonicalPath(),
-        sketch.getName()
+        AndroidKeyStore.ALIAS_STRING
     };
 
     // TODO remove hardcoded tools.jar path from build.xml
@@ -361,51 +356,6 @@ class AndroidBuild extends JavaBuild {
     }
 
     return false;
-  }
-
-  private File getKeyStore() throws Exception {
-    File keyStoreFolder = new File(sketch.getFolder(), "keystore");
-    if(!keyStoreFolder.exists()) {
-      boolean result = keyStoreFolder.mkdirs();
-
-      if(!result) {
-        Base.showWarning("Folders, folders, folders",
-            "Could not create the necessary folders to build.\n" +
-                "Perhaps you have some file permissions to sort out?", null);
-        return null;
-      }
-    }
-
-    File keyStore = new File(keyStoreFolder, sketch.getName() + "-release-key.keystore");
-    if(!keyStore.exists()) {
-      String dname = "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, S=Unknown, C=Unknown";
-      // TODO Generate password and store it with alias in some accessible place
-      String password = "generatedpasswordhere";
-
-      String[] args = {
-          "-genkey",
-          "-keystore", keyStore.getCanonicalPath(),
-          "-alias", sketch.getName(),
-          "-keyalg", "RSA",
-          "-keysize", "2048",
-          "-validity", "10000",
-          "-keypass", password,
-          "-storepass", password,
-          "-dname", dname
-      };
-
-      KeyTool.main(args);
-
-      // any better ways to check if it is created now?
-      keyStore = new File(keyStore.getCanonicalPath());
-      if(!keyStore.exists()) {
-        Base.showWarning("Failed to create key store",
-            "There was an error while creating the key store");
-        return null;
-      }
-    }
-
-    return keyStore;
   }
 
   /*
