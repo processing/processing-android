@@ -66,6 +66,15 @@ public class AndroidKeyStore {
     if(getKeyStore() == null) throw new Exception();
   }
 
+  public static boolean resetKeyStore() {
+    File keyStore = getKeyStore();
+    if(keyStore == null) return true;
+
+    File keyStoreBackup = new File(processing.app.Base.getSketchbookFolder(), "keystore/" + KEYSTORE_FILE_NAME + "-" + AndroidMode.getDateStamp());
+    if(!keyStore.renameTo(keyStoreBackup)) return false;
+    return true;
+  }
+
   private static String parseDnameField(String content) {
     if(content == null || content.length() == 0) return "Unknown";
     else return content;
