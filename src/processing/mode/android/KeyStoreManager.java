@@ -21,6 +21,7 @@ public class KeyStoreManager extends JFrame {
       "http://developer.android.com/tools/publishing/app-signing.html#cert";
 
   File keyStore;
+  AndroidEditor editor;
 
   JPasswordField passwordField;
   JPasswordField repeatPasswordField;
@@ -34,8 +35,15 @@ public class KeyStoreManager extends JFrame {
 
   public KeyStoreManager(final AndroidEditor editor) {
     super("Android keystore manager");
+    this.editor = editor;
 
+    createLayout();
+  }
+
+  private void createLayout() {
     Container outer = getContentPane();
+    outer.removeAll();
+
     Box pain = Box.createVerticalBox();
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
@@ -86,13 +94,44 @@ public class KeyStoreManager extends JFrame {
     });
     cancelButton.setEnabled(true);
 
+    JButton resetKeystoreButton = new JButton("Reset password");
+    dim = new Dimension(Preferences.BUTTON_WIDTH*2,
+        okButton.getPreferredSize().height);
+    resetKeystoreButton.setPreferredSize(dim);
+    resetKeystoreButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        setVisible(false);
+        int result = Base.showYesNoQuestion(editor, "Android keystore",
+            "Are you sure you want to reset the password?", "<html><body>We will have to reset the keystore to do this, " +
+            "which means you won't be able to upload an update for your app signed with the new keystore to Google Play.<br/><br/>" +
+            "We will make a backup for the old keystore.</body></html>");
+
+        if(result == JOptionPane.NO_OPTION) {
+          setVisible(true);
+        } else {
+          if(!AndroidKeyStore.resetKeyStore()) {
+            Base.showWarning("Android keystore", "Failed to remove keystore");
+            setVisible(true);
+          } else {
+            keyStore = null;
+            createLayout();
+          }
+        }
+      }
+    });
+    resetKeystoreButton.setEnabled(true);
+
     // think different, biznatchios!
     if (Base.isMacOS()) {
       buttons.add(cancelButton);
+
+      if(keyStore != null) buttons.add(resetKeystoreButton);
 //      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(okButton);
     } else {
       buttons.add(okButton);
+
+      if(keyStore != null) buttons.add(resetKeystoreButton);
 //      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(cancelButton);
     }
