@@ -324,8 +324,8 @@ class AndroidBuild extends JavaBuild {
         return null;
       }
 
-      // TODO zipalign package
-      return signedPackage;
+      File alignedPackage = zipalignPackage(signedPackage, projectFolder);
+      return alignedPackage;
     } else {
       Base.showWarning("Error during package signing",
           "Verification of the signed package has failed");
@@ -356,6 +356,22 @@ class AndroidBuild extends JavaBuild {
     }
 
     return false;
+  }
+
+  private File zipalignPackage(File signedPackage, File projectFolder) throws IOException, InterruptedException {
+    String zipalignPath = sdk.getSdkFolder().getAbsolutePath() + "/tools/zipalign";
+    File alignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed-aligned.apk");
+
+    String[] args = {
+        zipalignPath, "-v", "-f", "4",
+        signedPackage.getAbsolutePath(), alignedPackage.getAbsolutePath()
+    };
+
+    Process alignProcess = Runtime.getRuntime().exec(args);
+    alignProcess.waitFor();
+
+    if(alignedPackage.exists()) return alignedPackage;
+    return null;
   }
 
   /*
