@@ -64,8 +64,8 @@ public class KeyStoreManager extends JFrame {
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        if(keyStore == null) {
-          if(checkRequiredFields()) {
+        if(checkRequiredFields()) {
+          if(keyStore == null) {
             try {
               AndroidKeyStore.generateKeyStore(new String(passwordField.getPassword()),
                   commonName.getText(), organizationalUnit.getText(), organizationName.getText(),
@@ -76,10 +76,10 @@ public class KeyStoreManager extends JFrame {
             } catch (Exception e1) {
               e1.printStackTrace();
             }
+          } else {
+            setVisible(false);
+            editor.startExportPackage(new String(passwordField.getPassword()));
           }
-        } else {
-          setVisible(false);
-          editor.startExportPackage(new String(passwordField.getPassword()));
         }
       }
     });
@@ -173,6 +173,8 @@ public class KeyStoreManager extends JFrame {
 
   private boolean checkRequiredFields() {
     if(passwordField.getPassword().length > 5) {
+      if(keyStore != null) return true;
+
       if(Arrays.equals(passwordField.getPassword(), repeatPasswordField.getPassword())) {
         return true;
       } else {
