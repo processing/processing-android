@@ -36,6 +36,7 @@ import processing.mode.java.JavaBuild;
 import sun.security.tools.JarSigner;
 
 import java.io.*;
+import java.security.Permission;
 
 
 class AndroidBuild extends JavaBuild {
@@ -304,7 +305,12 @@ class AndroidBuild extends JavaBuild {
     };
 
     // TODO remove hardcoded tools.jar path from build.xml
-    JarSigner.main(args);
+
+    SystemExitControl.forbidSystemExitCall();
+    try {
+      JarSigner.main(args);
+    } catch (SystemExitControl.ExitTrappedException ignored) { }
+    SystemExitControl.enableSystemExitCall();
 
     if(verifySignedPackage(unsignedPackage)) {
       File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
@@ -905,5 +911,28 @@ class AndroidBuild extends JavaBuild {
     // don't want to be responsible for this
     //rm(tempBuildFolder);
     tmpFolder.deleteOnExit();
+  }
+}
+
+// http://www.avanderw.co.za/preventing-calls-to-system-exit-in-java/
+class SystemExitControl {
+
+  public static class ExitTrappedException extends SecurityException {
+  }
+
+  public static void forbidSystemExitCall() {
+    final SecurityManager securityManager = new SecurityManager() {
+      @Override
+      public void checkPermission(Permission permission) {
+        if (permission.getName().contains("exitVM")) {
+          throw new ExitTrappedException();
+        }
+      }
+    };
+    System.setSecurityManager(securityManager);
+  }
+
+  public static void enableSystemExitCall() {
+    System.setSecurityManager(null);
   }
 }
