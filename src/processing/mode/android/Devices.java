@@ -1,20 +1,16 @@
 package processing.mode.android;
 
+import processing.app.exec.ProcessResult;
+import processing.mode.android.EmulatorController.State;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 //import processing.app.EditorConsole;
-import processing.app.exec.ProcessResult;
-import processing.mode.android.EmulatorController.State;
 
 /**
  * <pre> AndroidEnvironment env = AndroidEnvironment.getInstance();
@@ -152,22 +148,40 @@ class Devices {
     return null;
   }
 
+  public List<Device> findMultiple(final boolean wantEmulator) {
+    List<Device> deviceList = new ArrayList<Device>();
+
+    refresh();
+    synchronized (devices) {
+      for (final Device device : devices.values()) {
+        final boolean isEmulator = device.getId().contains("emulator");
+        if ((isEmulator && wantEmulator) || (!isEmulator && !wantEmulator)) {
+          deviceList.add(device);
+        }
+      }
+    }
+
+    return deviceList;
+  }
 
   /**
    * @return the first Android hardware device known to be running, or null if there are none.
    */
   public Future<Device> getHardware() {
+    return getHardware(blockingGetHardware());
+  }
+
+  public Future<Device> getHardware(final Device device) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetHardware();
+        return device;
       }
     };
     final FutureTask<Device> task =
-      new FutureTask<Device>(androidFinder);
+        new FutureTask<Device>(androidFinder);
     deviceLaunchThread.execute(task);
     return task;
   }
-
 
   private final Device blockingGetHardware() {
     Device hardware = find(false);

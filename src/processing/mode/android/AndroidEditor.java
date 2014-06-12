@@ -21,18 +21,15 @@
 
 package processing.mode.android;
 
+import processing.app.*;
+import processing.core.PApplet;
+import processing.mode.java.JavaEditor;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-
-import processing.app.*;
-import processing.mode.java.JavaEditor;
-
-import processing.core.PApplet;
 
 
 public class AndroidEditor extends JavaEditor {
@@ -114,14 +111,24 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    item = new JMenuItem("Signing Key Setup");
+    /*item = new JMenuItem("Signing Key Setup");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Keys(AndroidEditor.this);
       }
     });
     item.setEnabled(false);
+    menu.add(item); */
+
+    item = new JMenuItem("Device selector");
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new DeviceSelector();
+      }
+    });
     menu.add(item);
+
+    menu.addSeparator();
 
     item = new JMenuItem("Android SDK Manager");
     item.addActionListener(new ActionListener() {
