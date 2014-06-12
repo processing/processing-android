@@ -339,29 +339,30 @@ class AndroidBuild extends JavaBuild {
     }
   }
 
-  private boolean verifySignedPackage(File signedPackage) throws IOException, InterruptedException {
+  private boolean verifySignedPackage(File signedPackage) throws Exception {
     String[] args = {
-        System.getProperty("java.home") + System.getProperty("file.separator") + ".."
-            + System.getProperty("file.separator") + "bin"
-            + System.getProperty("file.separator") + "jarsigner",
         "-verify", signedPackage.getCanonicalPath()
     };
 
-    Process signingProcess = Runtime.getRuntime().exec(args);
-    signingProcess.waitFor();
+    PrintStream defaultPrintStream = System.out;
 
-    InputStream is = signingProcess.getInputStream();
-    InputStreamReader isr = new InputStreamReader(is);
-    BufferedReader br = new BufferedReader(isr);
-    String line;
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream printStream = new PrintStream(baos);
+    System.setOut(printStream);
 
-    while((line = br.readLine()) != null) {
-      if(line.contains("verified")) {
-        return true;
-      }
-    }
+    SystemExitControl.forbidSystemExitCall();
+    try {
+      JarSigner.main(args);
+    } catch (SystemExitControl.ExitTrappedException ignored) { }
+    SystemExitControl.enableSystemExitCall();
 
-    return false;
+    System.setOut(defaultPrintStream);
+    String result = baos.toString();
+
+    baos.close();
+    printStream.close();
+
+    return result.contains("verified");
   }
 
   private File zipalignPackage(File signedPackage, File projectFolder) throws IOException, InterruptedException {
