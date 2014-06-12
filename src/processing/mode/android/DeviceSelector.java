@@ -20,15 +20,19 @@ public class DeviceSelector extends JFrame {
   }
 
   private void refreshList() {
-    Devices devices = Devices.getInstance();
-    java.util.List<Device> deviceList = devices.findMultiple(false);
+    new Thread() {
+      public void run() {
+        Devices devices = Devices.getInstance();
+        java.util.List<Device> deviceList = devices.findMultiple(false);
 
-    String[] data = new String[deviceList.size()];
-    for(int i = 0; i < deviceList.size(); i++) {
-      data[i] = deviceList.get(0).toString();
-    }
+        String[] data = new String[deviceList.size()];
+        for(int i = 0; i < deviceList.size(); i++) {
+          data[i] = deviceList.get(0).getName();
+        }
 
-    list.setListData(data);
+        list.setListData(data);
+      }
+    }.start();
   }
 
   private void createLayout() {
