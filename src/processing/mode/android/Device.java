@@ -1,14 +1,5 @@
 package processing.mode.android;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import processing.app.Base;
 import processing.app.RunnerListener;
 import processing.app.exec.LineProcessor;
@@ -17,6 +8,11 @@ import processing.app.exec.ProcessResult;
 import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.android.LogEntry.Severity;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 class Device {
@@ -45,6 +41,28 @@ class Device {
     } catch (final Exception e) {
       e.printStackTrace(System.err);
     }
+  }
+
+  public String getName() {
+    String name = "";
+
+    try {
+      ProcessResult result = AndroidSDK.runADB("-s", id, "shell", "getprop", "ro.product.brand");
+      if(result.succeeded()) {
+        name += result.getStdout() + " ";
+      }
+
+      result = AndroidSDK.runADB("-s", id, "shell", "getprop", "ro.product.model");
+      if(result.succeeded()) {
+        name += result.getStdout();
+      }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return name + " [" + id + "]";
   }
 
   // adb -s emulator-5556 install helloWorld.apk
