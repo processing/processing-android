@@ -26,6 +26,8 @@ class Devices {
 
   private static final Devices INSTANCE = new Devices();
 
+  private String selectedDeviceId;
+
   public static Devices getInstance() {
     return INSTANCE;
   }
@@ -35,6 +37,13 @@ class Devices {
   private final ExecutorService deviceLaunchThread =
     Executors.newSingleThreadExecutor();
 
+  public String getSelectedDeviceId() {
+    return selectedDeviceId;
+  }
+
+  public void setSelectedDeviceId(String selectedDeviceId) {
+    this.selectedDeviceId = selectedDeviceId;
+  }
 
   public static void killAdbServer() {
     System.out.println("Shutting down any existing adb server...");

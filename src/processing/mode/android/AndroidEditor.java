@@ -30,11 +30,75 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.TimerTask;
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
+
+  class UpdateDeviceListTask extends TimerTask {
+
+    private JMenu deviceMenu;
+
+    public UpdateDeviceListTask(JMenu deviceMenu) {
+      this.deviceMenu = deviceMenu;
+    }
+
+    @Override
+    public void run() {
+      final Devices devices = Devices.getInstance();
+      java.util.List<Device> deviceList = devices.findMultiple(false);
+      String selectedDeviceId = devices.getSelectedDeviceId();
+
+      if(deviceList.size() == 0) {
+        if(deviceMenu.getItem(0).isEnabled()) {
+          deviceMenu.removeAll();
+          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+          noDevicesItem.setEnabled(false);
+          deviceMenu.add(noDevicesItem);
+        }
+
+        devices.setSelectedDeviceId(null);
+      } else {
+        deviceMenu.removeAll();
+        JMenuItem deviceItem;
+
+        if(selectedDeviceId == null) {
+          selectedDeviceId = deviceList.get(0).getId();
+          devices.setSelectedDeviceId(selectedDeviceId);
+        } else {
+          // check if selected device is still connected
+          boolean found = false;
+          for (Device device : deviceList) {
+            if(device.getId().equals(selectedDeviceId)) {
+              found = true;
+              break;
+            }
+          }
+
+          if(!found) {
+            selectedDeviceId = deviceList.get(0).getId();
+            devices.setSelectedDeviceId(selectedDeviceId);
+          }
+        }
+
+        for (final Device device : deviceList) {
+          deviceItem = new JMenuItem(device.getName());
+          deviceItem.setEnabled(true);
+          deviceItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              devices.setSelectedDeviceId(device.getId());
+            }
+          });
+
+          deviceMenu.add(deviceItem);
+        }
+      }
+
+      deviceMenu.updateUI();
+    }
+  }
 
   protected AndroidEditor(Base base, String path, EditorState state, Mode mode) throws Exception {
     super(base, path, state, mode);
@@ -128,31 +192,7 @@ public class AndroidEditor extends JavaEditor {
     menu.add(deviceMenu);
 
     // start updating device menus
-    TimerTask task = new TimerTask() {
-      @Override
-      public void run() {
-        Devices devices = Devices.getInstance();
-        java.util.List<Device> deviceList = devices.findMultiple(false);
-
-        if(deviceList.size() == 0) {
-          if(deviceMenu.getItem(0).isEnabled()) {
-            deviceMenu.removeAll();
-            JMenuItem noDevicesItem = new JMenuItem("No connected devices");
-            noDevicesItem.setEnabled(false);
-            deviceMenu.add(noDevicesItem);
-          }
-        } else {
-          deviceMenu.removeAll();
-          JMenuItem deviceItem;
-
-          for(int i = 0; i < deviceList.size(); i++) {
-            deviceItem = new JMenuItem(deviceList.get(i).getName());
-            deviceItem.setEnabled(true);
-            deviceMenu.add(deviceItem);
-          }
-        }
-      }
-    };
+    UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
     Timer timer = new Timer();
     timer.schedule(task, 0, 5000);
 
