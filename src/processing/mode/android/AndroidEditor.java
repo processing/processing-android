@@ -30,11 +30,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-
+import java.util.TimerTask;
+import java.util.Timer;
 
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
-
 
   protected AndroidEditor(Base base, String path, EditorState state, Mode mode) throws Exception {
     super(base, path, state, mode);
@@ -120,13 +120,46 @@ public class AndroidEditor extends JavaEditor {
     item.setEnabled(false);
     menu.add(item); */
 
-    item = new JMenuItem("Device selector");
-    item.addActionListener(new ActionListener() {
+    final JMenu deviceMenu = new JMenu("Device selector");
+    /*item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new DeviceSelector();
       }
-    });
-    menu.add(item);
+    });*/
+
+    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+    noDevicesItem.setEnabled(false);
+    deviceMenu.add(noDevicesItem);
+    menu.add(deviceMenu);
+
+    // start updating device menus
+    TimerTask task = new TimerTask() {
+      @Override
+      public void run() {
+        Devices devices = Devices.getInstance();
+        java.util.List<Device> deviceList = devices.findMultiple(false);
+
+        if(deviceList.size() == 0) {
+          if(deviceMenu.getItem(0).isEnabled()) {
+            deviceMenu.removeAll();
+            JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+            noDevicesItem.setEnabled(false);
+            deviceMenu.add(noDevicesItem);
+          }
+        } else {
+          deviceMenu.removeAll();
+          JMenuItem deviceItem;
+
+          for(int i = 0; i < deviceList.size(); i++) {
+            deviceItem = new JMenuItem(deviceList.get(i).getName());
+            deviceItem.setEnabled(true);
+            deviceMenu.add(deviceItem);
+          }
+        }
+      }
+    };
+    Timer timer = new Timer();
+    timer.schedule(task, 0, 5000);
 
     menu.addSeparator();
 
