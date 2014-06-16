@@ -120,12 +120,7 @@ public class AndroidEditor extends JavaEditor {
     item.setEnabled(false);
     menu.add(item); */
 
-    final JMenu deviceMenu = new JMenu("Device selector");
-    /*item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        new DeviceSelector();
-      }
-    });*/
+    final JMenu deviceMenu = new JMenu("Select device");
 
     JMenuItem noDevicesItem = new JMenuItem("No connected devices");
     noDevicesItem.setEnabled(false);
