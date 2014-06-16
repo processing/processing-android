@@ -177,7 +177,9 @@ class Devices {
    * @return the first Android hardware device known to be running, or null if there are none.
    */
   public Future<Device> getHardware() {
-    return getHardware(blockingGetHardware());
+    Device device = getSelectedDevice();
+    if(device == null || !device.isAlive()) device = blockingGetHardware();
+    return getHardware(device);
   }
 
   public Future<Device> getHardware(final Device device) {
