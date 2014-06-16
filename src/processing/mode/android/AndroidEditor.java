@@ -26,6 +26,8 @@ import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -48,7 +50,7 @@ public class AndroidEditor extends JavaEditor {
     public void run() {
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
-      String selectedDeviceId = devices.getSelectedDeviceId();
+      Device selectedDevice = devices.getSelectedDevice();
 
       if(deviceList.size() == 0) {
         if(deviceMenu.getItem(0).isEnabled()) {
@@ -58,45 +60,54 @@ public class AndroidEditor extends JavaEditor {
           deviceMenu.add(noDevicesItem);
         }
 
-        devices.setSelectedDeviceId(null);
+        devices.setSelectedDevice(null);
       } else {
         deviceMenu.removeAll();
-        JMenuItem deviceItem;
 
-        if(selectedDeviceId == null) {
-          selectedDeviceId = deviceList.get(0).getId();
-          devices.setSelectedDeviceId(selectedDeviceId);
+        if(selectedDevice == null) {
+          selectedDevice = deviceList.get(0);
+          devices.setSelectedDevice(selectedDevice);
         } else {
           // check if selected device is still connected
           boolean found = false;
           for (Device device : deviceList) {
-            if(device.getId().equals(selectedDeviceId)) {
+            if(device.equals(selectedDevice)) {
               found = true;
               break;
             }
           }
 
           if(!found) {
-            selectedDeviceId = deviceList.get(0).getId();
-            devices.setSelectedDeviceId(selectedDeviceId);
+            selectedDevice = deviceList.get(0);
+            devices.setSelectedDevice(selectedDevice);
           }
         }
 
         for (final Device device : deviceList) {
-          deviceItem = new JMenuItem(device.getName());
+          final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
           deviceItem.setEnabled(true);
+
+          if(device.equals(selectedDevice)) deviceItem.setState(true);
+
+          // prevent checkboxmenuitem automatic state changing onclick
+          final Device finalSelectedDevice = selectedDevice;
+          deviceItem.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+              if(device.equals(finalSelectedDevice)) deviceItem.setState(true);
+            }
+          });
+
           deviceItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-              devices.setSelectedDeviceId(device.getId());
+              devices.setSelectedDevice(device);
             }
           });
 
           deviceMenu.add(deviceItem);
         }
       }
-
-      deviceMenu.updateUI();
     }
   }
 

@@ -317,4 +317,8 @@ class Device {
     return "[AndroidDevice " + getId() + "]";
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    return ((Device) obj).getId().equals(getId());
+  }
 }

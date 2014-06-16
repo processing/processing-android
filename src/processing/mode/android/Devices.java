@@ -26,7 +26,7 @@ class Devices {
 
   private static final Devices INSTANCE = new Devices();
 
-  private String selectedDeviceId;
+  private Device selectedDevice;
 
   public static Devices getInstance() {
     return INSTANCE;
@@ -37,12 +37,12 @@ class Devices {
   private final ExecutorService deviceLaunchThread =
     Executors.newSingleThreadExecutor();
 
-  public String getSelectedDeviceId() {
-    return selectedDeviceId;
+  public Device getSelectedDevice() {
+    return selectedDevice;
   }
 
-  public void setSelectedDeviceId(String selectedDeviceId) {
-    this.selectedDeviceId = selectedDeviceId;
+  public void setSelectedDevice(Device selectedDevice) {
+    this.selectedDevice = selectedDevice;
   }
 
   public static void killAdbServer() {
