@@ -90,11 +90,11 @@ public class AndroidEditor extends JavaEditor {
           if(device.equals(selectedDevice)) deviceItem.setState(true);
 
           // prevent checkboxmenuitem automatic state changing onclick
-          final Device finalSelectedDevice = selectedDevice;
           deviceItem.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-              if(device.equals(finalSelectedDevice)) deviceItem.setState(true);
+              if(device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
+              else deviceItem.setState(false);
             }
           });
 
@@ -102,6 +102,12 @@ public class AndroidEditor extends JavaEditor {
             @Override
             public void actionPerformed(ActionEvent e) {
               devices.setSelectedDevice(device);
+
+              for(int i = 0; i < deviceMenu.getItemCount(); i++) {
+                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
+              }
+
+              deviceItem.setState(true);
             }
           });
 
