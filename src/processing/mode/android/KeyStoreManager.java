@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.util.Arrays;
 
 
+@SuppressWarnings("serial")
 public class KeyStoreManager extends JFrame {
   static final String GUIDE_URL =
       "http://developer.android.com/tools/publishing/app-signing.html#cert";

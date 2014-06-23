@@ -26,12 +26,14 @@ import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 
 import javax.swing.*;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
 
+@SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
 

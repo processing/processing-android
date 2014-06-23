@@ -38,6 +38,7 @@ import processing.app.Sketch;
 import processing.app.Toolkit;
 
 
+@SuppressWarnings("serial")
 public class Permissions extends JFrame {
   static final String GUIDE_URL =
     "http://developer.android.com/guide/topics/security/security.html#permissions";
@@ -300,6 +301,7 @@ public class Permissions extends JFrame {
   }
 
 
+  @SuppressWarnings("rawtypes")
   protected void setSelections(String[] sel) {
 //    processing.core.PApplet.println("permissions are:");
 //    processing.core.PApplet.println(sel);
@@ -316,6 +318,7 @@ public class Permissions extends JFrame {
   }
 
 
+  @SuppressWarnings("rawtypes")
   protected String[] getSelections() {
     ArrayList<String> sel = new ArrayList<String>();
     DefaultListModel model = (DefaultListModel) permissionList.getModel();
@@ -499,6 +502,7 @@ public class Permissions extends JFrame {
 // collection, but it seems to have been picked up so many places with others
 // placing their copyright on it that I haven't been able to determine the
 // original author. [fry 20100216]
+@SuppressWarnings("serial")
 class CheckBoxList extends JList<JCheckBox> {
   protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
   int checkboxWidth;
