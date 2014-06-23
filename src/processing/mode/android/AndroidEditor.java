@@ -21,18 +21,15 @@
 
 package processing.mode.android;
 
+import processing.app.*;
+import processing.core.PApplet;
+import processing.mode.java.JavaEditor;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-
-import processing.app.*;
-import processing.mode.java.JavaEditor;
-
-import processing.core.PApplet;
 
 
 public class AndroidEditor extends JavaEditor {
@@ -376,27 +373,37 @@ public class AndroidEditor extends JavaEditor {
   public void handleExportPackage() {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
-    statusError("Exporting signed packages is not yet implemented.");
-    deactivateExport();
+    if(handleExportCheckModified()) {
+      deactivateExport();
+      new KeyStoreManager(this);
+    }
+  }
 
-    // make a release build
-//    try {
-//      buildReleaseForExport("release");
-//    } catch (final MonitorCanceled ok) {
-//      statusNotice("Canceled.");
-//    } finally {
-//      deactivateExport();
-//    }
-
-    // TODO now sign it... lots of fun signing code mess to go here. yay!
-
-    // maybe even send it to the device? mmm?
-//      try {
-//        runSketchOnDevice(AndroidEnvironment.getInstance().getHardware(), "release");
-//      } catch (final MonitorCanceled ok) {
-//        editor.statusNotice("Canceled.");
-//      } finally {
-//        editor.deactivateExport();
-//      }
+  public void startExportPackage(final String keyStorePassword) {
+    new Thread() {
+      public void run() {
+        startIndeterminate();
+        statusNotice("Exporting signed package...");
+        AndroidBuild build = new AndroidBuild(sketch, androidMode);
+        try {
+          File projectFolder = build.exportPackage(keyStorePassword);
+          if(projectFolder != null) {
+            statusNotice("Done with export.");
+            Base.openFolder(projectFolder);
+          } else {
+            statusError("Error with export");
+          }
+        } catch (IOException e) {
+          statusError(e);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        stopIndeterminate();
+      }
+    }.start();
   }
 }
