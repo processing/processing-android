@@ -45,8 +45,7 @@
 		      ${processing.dir}/app/pde.jar;
 		      ${processing.dir}/app/lib/ant.jar;
 		      ${processing.dir}/app/lib/ant-launcher.jar;
-		      ${processing.dir}/app/lib/antlr.jar;
-              ${tools.jar.path}"
+		      ${processing.dir}/app/lib/antlr.jar"
 	   debug="on">
       <src path="src" />
     </javac>

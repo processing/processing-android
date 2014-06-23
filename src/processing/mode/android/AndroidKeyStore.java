@@ -1,7 +1,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import sun.security.tools.KeyTool;
 
 import java.io.File;
 
@@ -50,7 +49,9 @@ public class AndroidKeyStore {
         parseDnameField(locality), parseDnameField(state), parseDnameField(country));
 
     String[] args = {
-        "-genkey",
+        System.getProperty("java.home")
+            + System.getProperty("file.separator") + "bin"
+            + System.getProperty("file.separator") + "keytool", "-genkey",
         "-keystore", getKeyStoreLocation().getAbsolutePath(),
         "-alias", ALIAS_STRING,
         "-keyalg", "RSA",
@@ -61,7 +62,8 @@ public class AndroidKeyStore {
         "-dname", dname
     };
 
-    KeyTool.main(args);
+    Process generation = Runtime.getRuntime().exec(args);
+    generation.waitFor();
 
     if(getKeyStore() == null) throw new Exception();
   }
