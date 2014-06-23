@@ -33,7 +33,6 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
-import sun.security.tools.JarSigner;
 
 import java.io.*;
 import java.security.Permission;
@@ -294,52 +293,36 @@ class AndroidBuild extends JavaBuild {
     File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
     if(!unsignedPackage.exists()) return null;
 
-    String[] args = {
-        "-sigalg", "SHA1withRSA",
-        "-digestalg", "SHA1",
-        "-keypass", keyStorePassword,
-        "-storepass", keyStorePassword,
-        "-keystore", keyStore.getCanonicalPath(),
-        unsignedPackage.getCanonicalPath(),
-        AndroidKeyStore.ALIAS_STRING
-    };
+    JarSigner.signJar(unsignedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
 
-    // TODO remove hardcoded tools.jar path from build.xml
-
-    SystemExitControl.forbidSystemExitCall();
-    try {
-      JarSigner.main(args);
-    } catch (SystemExitControl.ExitTrappedException ignored) { }
-    SystemExitControl.enableSystemExitCall();
-
-    if(verifySignedPackage(unsignedPackage)) {
-      File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
-      if(signedPackage.exists()) {
-        boolean deleteResult = signedPackage.delete();
-        if(!deleteResult) {
-          Base.showWarning("Error during package signing",
-              "Unable to delete old signed package");
-          return null;
-        }
-      }
-
-      boolean renameResult = unsignedPackage.renameTo(signedPackage);
-      if(!renameResult) {
+    //if(verifySignedPackage(unsignedPackage)) {
+    File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
+    if(signedPackage.exists()) {
+      boolean deleteResult = signedPackage.delete();
+      if(!deleteResult) {
         Base.showWarning("Error during package signing",
-            "Unable to rename package file");
+            "Unable to delete old signed package");
         return null;
       }
+    }
 
-      File alignedPackage = zipalignPackage(signedPackage, projectFolder);
-      return alignedPackage;
-    } else {
+    boolean renameResult = unsignedPackage.renameTo(signedPackage);
+    if(!renameResult) {
+      Base.showWarning("Error during package signing",
+          "Unable to rename package file");
+      return null;
+    }
+
+    File alignedPackage = zipalignPackage(signedPackage, projectFolder);
+    return alignedPackage;
+    /*} else {
       Base.showWarning("Error during package signing",
           "Verification of the signed package has failed");
       return null;
-    }
+    }*/
   }
 
-  private boolean verifySignedPackage(File signedPackage) throws Exception {
+  /*private boolean verifySignedPackage(File signedPackage) throws Exception {
     String[] args = {
         "-verify", signedPackage.getCanonicalPath()
     };
@@ -363,7 +346,7 @@ class AndroidBuild extends JavaBuild {
     printStream.close();
 
     return result.contains("verified");
-  }
+  } */
 
   private File zipalignPackage(File signedPackage, File projectFolder) throws IOException, InterruptedException {
     String zipalignPath = sdk.getSdkFolder().getAbsolutePath() + "/tools/zipalign";
