@@ -25,6 +25,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
+
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Sketch;
@@ -901,6 +902,7 @@ class AndroidBuild extends JavaBuild {
 // http://www.avanderw.co.za/preventing-calls-to-system-exit-in-java/
 class SystemExitControl {
 
+  @SuppressWarnings("serial")
   public static class ExitTrappedException extends SecurityException {
   }
 
