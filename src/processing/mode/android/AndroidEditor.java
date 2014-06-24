@@ -27,16 +27,97 @@ import processing.mode.java.JavaEditor;
 
 import javax.swing.*;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-
+import java.util.Timer;
+import java.util.TimerTask;
 
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
 
+  class UpdateDeviceListTask extends TimerTask {
+
+    private JMenu deviceMenu;
+
+    public UpdateDeviceListTask(JMenu deviceMenu) {
+      this.deviceMenu = deviceMenu;
+    }
+
+    @Override
+    public void run() {
+      final Devices devices = Devices.getInstance();
+      java.util.List<Device> deviceList = devices.findMultiple(false);
+      Device selectedDevice = devices.getSelectedDevice();
+
+      if(deviceList.size() == 0) {
+        if(deviceMenu.getItem(0).isEnabled()) {
+          deviceMenu.removeAll();
+          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+          noDevicesItem.setEnabled(false);
+          deviceMenu.add(noDevicesItem);
+        }
+
+        devices.setSelectedDevice(null);
+      } else {
+        deviceMenu.removeAll();
+
+        if(selectedDevice == null) {
+          selectedDevice = deviceList.get(0);
+          devices.setSelectedDevice(selectedDevice);
+        } else {
+          // check if selected device is still connected
+          boolean found = false;
+          for (Device device : deviceList) {
+            if(device.equals(selectedDevice)) {
+              found = true;
+              break;
+            }
+          }
+
+          if(!found) {
+            selectedDevice = deviceList.get(0);
+            devices.setSelectedDevice(selectedDevice);
+          }
+        }
+
+        for (final Device device : deviceList) {
+          final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
+          deviceItem.setEnabled(true);
+
+          if(device.equals(selectedDevice)) deviceItem.setState(true);
+
+          // prevent checkboxmenuitem automatic state changing onclick
+          deviceItem.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+              if(device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
+              else deviceItem.setState(false);
+            }
+          });
+
+          deviceItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              devices.setSelectedDevice(device);
+
+              for(int i = 0; i < deviceMenu.getItemCount(); i++) {
+                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
+              }
+
+              deviceItem.setState(true);
+            }
+          });
+
+          deviceMenu.add(deviceItem);
+        }
+      }
+    }
+  }
 
   protected AndroidEditor(Base base, String path, EditorState state, Mode mode) throws Exception {
     super(base, path, state, mode);
@@ -113,14 +194,28 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    item = new JMenuItem("Signing Key Setup");
+    /*item = new JMenuItem("Signing Key Setup");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Keys(AndroidEditor.this);
       }
     });
     item.setEnabled(false);
-    menu.add(item);
+    menu.add(item); */
+
+    final JMenu deviceMenu = new JMenu("Select device");
+
+    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+    noDevicesItem.setEnabled(false);
+    deviceMenu.add(noDevicesItem);
+    menu.add(deviceMenu);
+
+    // start updating device menus
+    UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
+    Timer timer = new Timer();
+    timer.schedule(task, 0, 5000);
+
+    menu.addSeparator();
 
     item = new JMenuItem("Android SDK Manager");
     item.addActionListener(new ActionListener() {
