@@ -48,12 +48,12 @@ class Device {
 
     try {
       ProcessResult result = AndroidSDK.runADB("-s", id, "shell", "getprop", "ro.product.brand");
-      if(result.succeeded()) {
+      if (result.succeeded()) {
         name += result.getStdout() + " ";
       }
 
       result = AndroidSDK.runADB("-s", id, "shell", "getprop", "ro.product.model");
-      if(result.succeeded()) {
+      if (result.succeeded()) {
         name += result.getStdout();
       }
     } catch (InterruptedException e) {

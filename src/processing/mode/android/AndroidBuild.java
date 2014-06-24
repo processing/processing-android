@@ -277,10 +277,10 @@ class AndroidBuild extends JavaBuild {
 
   public File exportPackage(String keyStorePassword) throws Exception {
     File projectFolder = build("release");
-    if(projectFolder == null) return null;
+    if (projectFolder == null) return null;
 
     File signedPackage = signPackage(projectFolder, keyStorePassword);
-    if(signedPackage == null) return null;
+    if (signedPackage == null) return null;
 
     File exportFolder = createExportFolder();
     Base.copyDir(projectFolder, exportFolder);
@@ -289,18 +289,18 @@ class AndroidBuild extends JavaBuild {
 
   private File signPackage(File projectFolder, String keyStorePassword) throws Exception {
     File keyStore = AndroidKeyStore.getKeyStore();
-    if(keyStore == null) return null;
+    if (keyStore == null) return null;
 
     File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
-    if(!unsignedPackage.exists()) return null;
+    if (!unsignedPackage.exists()) return null;
 
     JarSigner.signJar(unsignedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
 
-    //if(verifySignedPackage(unsignedPackage)) {
+    //if (verifySignedPackage(unsignedPackage)) {
     File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
-    if(signedPackage.exists()) {
+    if (signedPackage.exists()) {
       boolean deleteResult = signedPackage.delete();
-      if(!deleteResult) {
+      if (!deleteResult) {
         Base.showWarning("Error during package signing",
             "Unable to delete old signed package");
         return null;
@@ -308,7 +308,7 @@ class AndroidBuild extends JavaBuild {
     }
 
     boolean renameResult = unsignedPackage.renameTo(signedPackage);
-    if(!renameResult) {
+    if (!renameResult) {
       Base.showWarning("Error during package signing",
           "Unable to rename package file");
       return null;
@@ -361,7 +361,7 @@ class AndroidBuild extends JavaBuild {
     Process alignProcess = Runtime.getRuntime().exec(args);
     alignProcess.waitFor();
 
-    if(alignedPackage.exists()) return alignedPackage;
+    if (alignedPackage.exists()) return alignedPackage;
     return null;
   }
 

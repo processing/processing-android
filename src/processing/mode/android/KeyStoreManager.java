@@ -51,7 +51,7 @@ public class KeyStoreManager extends JFrame {
     outer.add(pain);
 
     keyStore = AndroidKeyStore.getKeyStore();
-    if(keyStore != null) {
+    if (keyStore != null) {
       showKeystorePasswordLayout(pain);
     } else {
       showKeystoreCredentialsLayout(pain);
@@ -66,8 +66,8 @@ public class KeyStoreManager extends JFrame {
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        if(checkRequiredFields()) {
-          if(keyStore == null) {
+        if (checkRequiredFields()) {
+          if (keyStore == null) {
             try {
               AndroidKeyStore.generateKeyStore(new String(passwordField.getPassword()),
                   commonName.getText(), organizationalUnit.getText(), organizationName.getText(),
@@ -108,10 +108,10 @@ public class KeyStoreManager extends JFrame {
             "which means you won't be able to upload an update for your app signed with the new keystore to Google Play.<br/><br/>" +
             "We will make a backup for the old keystore.</body></html>");
 
-        if(result == JOptionPane.NO_OPTION) {
+        if (result == JOptionPane.NO_OPTION) {
           setVisible(true);
         } else {
-          if(!AndroidKeyStore.resetKeyStore()) {
+          if (!AndroidKeyStore.resetKeyStore()) {
             Base.showWarning("Android keystore", "Failed to remove keystore");
             setVisible(true);
           } else {
@@ -127,13 +127,13 @@ public class KeyStoreManager extends JFrame {
     if (Base.isMacOS()) {
       buttons.add(cancelButton);
 
-      if(keyStore != null) buttons.add(resetKeystoreButton);
+      if (keyStore != null) buttons.add(resetKeystoreButton);
 //      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(okButton);
     } else {
       buttons.add(okButton);
 
-      if(keyStore != null) buttons.add(resetKeystoreButton);
+      if (keyStore != null) buttons.add(resetKeystoreButton);
 //      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(cancelButton);
     }
@@ -174,10 +174,10 @@ public class KeyStoreManager extends JFrame {
   }
 
   private boolean checkRequiredFields() {
-    if(passwordField.getPassword().length > 5) {
-      if(keyStore != null) return true;
+    if (passwordField.getPassword().length > 5) {
+      if (keyStore != null) return true;
 
-      if(Arrays.equals(passwordField.getPassword(), repeatPasswordField.getPassword())) {
+      if (Arrays.equals(passwordField.getPassword(), repeatPasswordField.getPassword())) {
         return true;
       } else {
         Base.showWarning("Passwords", "Keystore passwords do not match");

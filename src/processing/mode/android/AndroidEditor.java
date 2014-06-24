@@ -53,33 +53,33 @@ public class AndroidEditor extends JavaEditor {
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
       Device selectedDevice = devices.getSelectedDevice();
-
-      if(deviceList.size() == 0) {
-        if(deviceMenu.getItem(0).isEnabled()) {
+      
+      if (deviceList.size() == 0) {
+        //if (deviceMenu.getItem(0).isEnabled()) {
+        if (0 < deviceMenu.getItemCount()) {
           deviceMenu.removeAll();
           JMenuItem noDevicesItem = new JMenuItem("No connected devices");
           noDevicesItem.setEnabled(false);
           deviceMenu.add(noDevicesItem);
         }
-
         devices.setSelectedDevice(null);
       } else {
         deviceMenu.removeAll();
 
-        if(selectedDevice == null) {
+        if (selectedDevice == null) {
           selectedDevice = deviceList.get(0);
           devices.setSelectedDevice(selectedDevice);
         } else {
           // check if selected device is still connected
           boolean found = false;
           for (Device device : deviceList) {
-            if(device.equals(selectedDevice)) {
+            if (device.equals(selectedDevice)) {
               found = true;
               break;
             }
           }
 
-          if(!found) {
+          if (!found) {
             selectedDevice = deviceList.get(0);
             devices.setSelectedDevice(selectedDevice);
           }
@@ -89,13 +89,13 @@ public class AndroidEditor extends JavaEditor {
           final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
           deviceItem.setEnabled(true);
 
-          if(device.equals(selectedDevice)) deviceItem.setState(true);
+          if (device.equals(selectedDevice)) deviceItem.setState(true);
 
           // prevent checkboxmenuitem automatic state changing onclick
           deviceItem.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-              if(device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
+              if (device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
               else deviceItem.setState(false);
             }
           });
@@ -105,7 +105,7 @@ public class AndroidEditor extends JavaEditor {
             public void actionPerformed(ActionEvent e) {
               devices.setSelectedDevice(device);
 
-              for(int i = 0; i < deviceMenu.getItemCount(); i++) {
+              for (int i = 0; i < deviceMenu.getItemCount(); i++) {
                 ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
               }
 
@@ -470,7 +470,7 @@ public class AndroidEditor extends JavaEditor {
   public void handleExportPackage() {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
-    if(handleExportCheckModified()) {
+    if (handleExportCheckModified()) {
       deactivateExport();
       new KeyStoreManager(this);
     }
@@ -484,7 +484,7 @@ public class AndroidEditor extends JavaEditor {
         AndroidBuild build = new AndroidBuild(sketch, androidMode);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
-          if(projectFolder != null) {
+          if (projectFolder != null) {
             statusNotice("Done with export.");
             Base.openFolder(projectFolder);
           } else {

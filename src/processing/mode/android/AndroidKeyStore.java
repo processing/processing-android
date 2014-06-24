@@ -17,17 +17,17 @@ public class AndroidKeyStore {
 
   public static File getKeyStore() {
     File keyStore = getKeyStoreLocation();
-    if(!keyStore.exists()) return null;
+    if (!keyStore.exists()) return null;
     return keyStore;
   }
 
   public static File getKeyStoreLocation() {
     File sketchbookFolder = processing.app.Base.getSketchbookFolder();
     File keyStoreFolder = new File(sketchbookFolder, "keystore");
-    if(!keyStoreFolder.exists()) {
+    if (!keyStoreFolder.exists()) {
       boolean result = keyStoreFolder.mkdirs();
 
-      if(!result) {
+      if (!result) {
         Base.showWarning("Folders, folders, folders",
             "Could not create the necessary folders to build.\n" +
                 "Perhaps you have some file permissions to sort out?", null);
@@ -65,20 +65,20 @@ public class AndroidKeyStore {
     Process generation = Runtime.getRuntime().exec(args);
     generation.waitFor();
 
-    if(getKeyStore() == null) throw new Exception();
+    if (getKeyStore() == null) throw new Exception();
   }
 
   public static boolean resetKeyStore() {
     File keyStore = getKeyStore();
-    if(keyStore == null) return true;
+    if (keyStore == null) return true;
 
     File keyStoreBackup = new File(processing.app.Base.getSketchbookFolder(), "keystore/" + KEYSTORE_FILE_NAME + "-" + AndroidMode.getDateStamp());
-    if(!keyStore.renameTo(keyStoreBackup)) return false;
+    if (!keyStore.renameTo(keyStoreBackup)) return false;
     return true;
   }
 
   private static String parseDnameField(String content) {
-    if(content == null || content.length() == 0) return "Unknown";
+    if (content == null || content.length() == 0) return "Unknown";
     else return content;
   }
 }
