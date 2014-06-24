@@ -213,7 +213,7 @@ public class AndroidEditor extends JavaEditor {
     // start updating device menus
     UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
     Timer timer = new Timer();
-    timer.schedule(task, 0, 5000);
+    timer.schedule(task, 5000, 5000);
 
     menu.addSeparator();
 
