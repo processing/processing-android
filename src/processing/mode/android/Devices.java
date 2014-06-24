@@ -178,7 +178,7 @@ class Devices {
    */
   public Future<Device> getHardware() {
     Device device = getSelectedDevice();
-    if(device == null || !device.isAlive()) device = blockingGetHardware();
+    if (device == null || !device.isAlive()) device = blockingGetHardware();
     return getHardware(device);
   }
 
