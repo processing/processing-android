@@ -21,19 +21,13 @@
 
 package processing.mode.android;
 
+import processing.app.*;
+import processing.mode.java.JavaMode;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import processing.app.Base;
-import processing.app.Editor;
-import processing.app.EditorState;
-import processing.app.Library;
-import processing.app.RunnerListener;
-import processing.app.Sketch;
-import processing.app.SketchException;
-import processing.mode.java.JavaMode;
 
 
 public class AndroidMode extends JavaMode {
