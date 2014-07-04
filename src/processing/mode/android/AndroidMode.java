@@ -120,7 +120,8 @@ public class AndroidMode extends JavaMode {
     if (sdk == null) {
       try {
         sdk = AndroidSDK.load();
-        if (sdk == null) {
+        // FIXME REVERT THIS STATEMENT AFTER TESTING (should be ==)
+        if (sdk != null) {
           sdk = AndroidSDK.locate(parent);
         }
       } catch (BadSDKException e) {
