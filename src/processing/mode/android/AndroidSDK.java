@@ -234,15 +234,17 @@ class AndroidSDK {
 
 
   static public AndroidSDK locate(final Frame window)
-  throws BadSDKException, IOException {
+      throws BadSDKException, IOException {
     final int result = showLocateDialog(window);
     if (result == JOptionPane.CANCEL_OPTION) {
       throw new BadSDKException("User canceled attempt to find SDK.");
     }
     if (result == JOptionPane.YES_OPTION) {
       // here we are going to download sdk automatically
-      Base.openURL(ANDROID_SDK_URL);
-      throw new BadSDKException("No SDK installed.");
+      //Base.openURL(ANDROID_SDK_URL);
+      //throw new BadSDKException("No SDK installed.");
+
+      return download();
     }
     while (true) {
       // TODO this is really a yucky way to do this stuff. fix it.
@@ -261,46 +263,50 @@ class AndroidSDK {
     }
   }
 
-  static public int showLocateDialog(Frame editor) {
-    if (!Base.isMacOS()) {
-      return JOptionPane.showConfirmDialog(editor,
-          "<html><body>" +
-              "<b>" + ANDROID_SDK_PRIMARY + "</b>" +
-              "<br>" + ANDROID_SDK_SECONDARY, "Android SDK",
-          JOptionPane.YES_NO_OPTION,
-          JOptionPane.QUESTION_MESSAGE);
-    } else {
-      // Pane formatting adapted from the Quaqua guide
-      // http://www.randelshofer.ch/quaqua/guide/joptionpane.html
-      JOptionPane pane =
-          new JOptionPane("<html> " +
-              "<head> <style type=\"text/css\">"+
-              "b { font: 13pt \"Lucida Grande\" }"+
-              "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
-              "</style> </head>" +
-              "<b>" + ANDROID_SDK_PRIMARY + "</b>" +
-              "<p>" + ANDROID_SDK_SECONDARY + "</p>",
-              JOptionPane.QUESTION_MESSAGE);
+  static public AndroidSDK download() throws BadSDKException {
+    AndroidMode.sdkDownloadInProgress = true;
 
-      String[] options = new String[] {
-          "Download SDK automatically", "Locate SDK path manually"
-      };
-      pane.setOptions(options);
-
-      // highlight the safest option ala apple hig
-      pane.setInitialValue(options[0]);
-
-      JDialog dialog = pane.createDialog(editor, null);
-      dialog.setVisible(true);
-
-      Object result = pane.getValue();
-      if (result == options[0]) {
-        return JOptionPane.YES_OPTION;
-      } else if (result == options[1]) {
-        return JOptionPane.NO_OPTION;
-      } else {
-        return JOptionPane.CLOSED_OPTION;
+    SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        SDKDownloader downloader = new SDKDownloader();
+        downloader.startDownload();
       }
+    });
+    return null;
+  }
+
+  static public int showLocateDialog(Frame editor) {
+    // Pane formatting adapted from the Quaqua guide
+    // http://www.randelshofer.ch/quaqua/guide/joptionpane.html
+    JOptionPane pane =
+        new JOptionPane("<html> " +
+            "<head> <style type=\"text/css\">"+
+            "b { font: 13pt \"Lucida Grande\" }"+
+            "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+            "</style> </head>" +
+            "<b>" + ANDROID_SDK_PRIMARY + "</b>" +
+            "<p>" + ANDROID_SDK_SECONDARY + "</p>",
+            JOptionPane.QUESTION_MESSAGE);
+
+    String[] options = new String[] {
+        "Download SDK automatically", "Locate SDK path manually"
+    };
+    pane.setOptions(options);
+
+    // highlight the safest option ala apple hig
+    pane.setInitialValue(options[0]);
+
+    JDialog dialog = pane.createDialog(editor, null);
+    dialog.setVisible(true);
+
+    Object result = pane.getValue();
+    if (result == options[0]) {
+      return JOptionPane.YES_OPTION;
+    } else if (result == options[1]) {
+      return JOptionPane.NO_OPTION;
+    } else {
+      return JOptionPane.CLOSED_OPTION;
     }
   }
 
