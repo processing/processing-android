@@ -18,33 +18,81 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 
 public class SDKDownloader extends JFrame implements PropertyChangeListener {
-
-  private static final String URL_SDK_TOOLS_WINDOWS = "http://dl.google.com/android/android-sdk_r23-windows.zip";
-  private static final String URL_SDK_TOOLS_MACOS = "http://dl.google.com/android/android-sdk_r23-macosx.zip";
-  private static final String URL_SDK_TOOLS_LINUX = "http://dl.google.com/android/android-sdk_r23-linux.tgz";
 
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-10.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
 
   private static final String PLATFORM_API_LEVEL = "10";
 
+  public static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
+  private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
+
+  JProgressBar progressBar;
+  JLabel downloadedTextArea;
+
+  private int totalSize = 0;
+
   class SDKUrlHolder {
-    public String platformToolsUrl, buildToolsUrl, platformUrl;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
+    public int totalSize = 0;
   }
 
   class SDKDownloadTask extends SwingWorker {
 
+    private int downloadedSize = 0, totalSize = 0;
+    private int BUFFER_SIZE = 4096;
+
     @Override
     protected Object doInBackground() throws Exception {
       String hostOs = getOsString();
+      File modeFolder = new File(Base.getSketchbookModesFolder() + "/AndroidMode");
+
+      // creating sdk root folder
+      File sdkFolder = new File(modeFolder, "sdk");
+      if(!sdkFolder.exists()) sdkFolder.mkdir();
+
+      // creating temp folder for downloaded zip packages
+      File tempFolder = new File(modeFolder, "temp");
+      if(!tempFolder.exists()) tempFolder.mkdir();
+
+      // creating sdk folders
+      File toolsFolder = new File(sdkFolder, "tools"); toolsFolder.mkdir();
+      File platformToolsFolder = new File(sdkFolder, "platform-tools"); platformToolsFolder.mkdir();
+      File buildToolsFolder = new File(sdkFolder, "build-tools"); buildToolsFolder.mkdir();
+      File platformsFoolder = new File(sdkFolder, "platforms"); platformsFoolder.mkdir();
+      File platformFolder = new File(platformsFoolder, "android-10"); platformFolder.mkdir();
+
       try {
         SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, hostOs);
+        firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
+        totalSize = downloadUrls.totalSize;
+
+        // tools
+        File downloadedTools = new File(tempFolder, downloadUrls.toolsFilename);
+        downloadFile(downloadUrls.toolsUrl, downloadedTools);
+
+        // platform-tools
+        File downloadedPlatformTools = new File(tempFolder, downloadUrls.platformToolsFilename);
+        downloadFile(downloadUrls.platformToolsUrl, downloadedPlatformTools);
+
+        // build-tools
+        File downloadedBuildTools = new File(tempFolder, downloadUrls.buildToolsFilename);
+        downloadFile(downloadUrls.buildToolsUrl, downloadedBuildTools);
+
+        // platform
+        File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
+        downloadFile(downloadUrls.platformUrl, downloadedPlatform);
       } catch (ParserConfigurationException e) {
-        // TODO Handle exceptions here somehow (ie show error message)
+        // TODO Handle exceptions here somehow (ie show error message) and handle at least mkdir() results (above)
         e.printStackTrace();
       } catch (IOException e) {
         e.printStackTrace();
@@ -57,6 +105,27 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     @Override
     protected void done() {
       super.done();
+    }
+
+    private void downloadFile(String urlString, File saveTo) throws IOException {
+      URL url = new URL(urlString);
+      URLConnection conn = url.openConnection();
+
+      InputStream inputStream = conn.getInputStream();
+      FileOutputStream outputStream = new FileOutputStream(saveTo);
+
+      byte[] b = new byte[BUFFER_SIZE];
+      int count;
+      while ((count = inputStream.read(b)) >= 0) {
+        outputStream.write(b, 0, count);
+        downloadedSize += count;
+
+        firePropertyChange(PROPERTY_CHANGE_EVENT_DOWNLOADED, 0, downloadedSize);
+      }
+      outputStream.flush(); outputStream.close(); inputStream.close();
+
+      inputStream.close();
+      outputStream.close();
     }
 
     private String getOsString() {
@@ -84,6 +153,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
           Node archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
           Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
           urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
+          urlHolder.platformFilename = urlHolder.platformUrl.split("/")[urlHolder.platformUrl.split("/").length-1];
+          urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
         }
       }
 
@@ -95,9 +166,9 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if(hostOs.equals(requiredHostOs)) {
-          String platformToolsUrl = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-          if(!platformToolsUrl.startsWith("http")) platformToolsUrl = URL_REPOSITORY_FOLDER + platformToolsUrl;
-          urlHolder.platformToolsUrl = platformToolsUrl;
+          urlHolder.platformToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+          urlHolder.platformToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.platformToolsFilename;
+          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
           break;
         }
       }
@@ -110,9 +181,24 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if(hostOs.equals(requiredHostOs)) {
-          String buildToolsUrl = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-          if(!buildToolsUrl.startsWith("http")) buildToolsUrl = URL_REPOSITORY_FOLDER + buildToolsUrl;
-          urlHolder.buildToolsUrl = buildToolsUrl;
+          urlHolder.buildToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+          urlHolder.buildToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.buildToolsFilename;
+          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
+          break;
+        }
+      }
+
+      // tools
+      Node toolsItem = doc.getElementsByTagName("sdk:tool").item(0);
+      archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
+      archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
+      for(int i = 0; i < archiveList.getLength(); i++) {
+        Node archive = archiveList.item(i);
+        String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
+        if(hostOs.equals(requiredHostOs)) {
+          urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+          urlHolder.toolsUrl = URL_REPOSITORY_FOLDER + urlHolder.toolsFilename;
+          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
           break;
         }
       }
@@ -123,7 +209,24 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
+    if(evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_TOTAL)) {
+      progressBar.setIndeterminate(false);
+      totalSize = (Integer) evt.getNewValue();
+      progressBar.setMaximum(totalSize);
+    } else if(evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_DOWNLOADED)) {
+      downloadedTextArea.setText(humanReadableByteCount((Integer) evt.getNewValue(), true)
+          + " / " + humanReadableByteCount(totalSize, true));
+      progressBar.setValue((Integer) evt.getNewValue());
+    }
+  }
 
+  // http://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
+  public static String humanReadableByteCount(long bytes, boolean si) {
+    int unit = si ? 1000 : 1024;
+    if (bytes < unit) return bytes + " B";
+    int exp = (int) (Math.log(bytes) / Math.log(unit));
+    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
   public SDKDownloader() {
@@ -152,11 +255,16 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textarea);
 
-    JProgressBar progressBar = new JProgressBar(0, 100);
+    progressBar = new JProgressBar(0, 100);
     progressBar.setValue(0);
     progressBar.setStringPainted(true);
     progressBar.setIndeterminate(true);
+    progressBar.setBorder(new EmptyBorder(10, 10, 10, 10) );
     pain.add(progressBar);
+
+    downloadedTextArea = new JLabel("");
+    downloadedTextArea.setAlignmentX(LEFT_ALIGNMENT);
+    pain.add(downloadedTextArea);
 
     // buttons
     JPanel buttons = new JPanel();
@@ -176,7 +284,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton cancelButton = new JButton("Cancel download");
-    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH,
+    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH*2,
         cancelButton.getPreferredSize().height);
 
     cancelButton.setPreferredSize(dim);
