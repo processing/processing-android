@@ -18,12 +18,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
@@ -34,6 +34,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   public static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
+
+  private AndroidMode androidMode;
 
   JProgressBar progressBar;
   JLabel downloadedTextArea;
@@ -56,20 +58,17 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       String hostOs = getOsString();
       File modeFolder = new File(Base.getSketchbookModesFolder() + "/AndroidMode");
 
-      // creating sdk root folder
+      // creating sdk folders
       File sdkFolder = new File(modeFolder, "sdk");
       if(!sdkFolder.exists()) sdkFolder.mkdir();
+      File platformsFolder = new File(sdkFolder, "platforms");
+      if(!platformsFolder.exists()) platformsFolder.mkdir();
+      File buildToolsFolder = new File(sdkFolder, "build-tools");
+      if(!buildToolsFolder.exists()) buildToolsFolder.mkdir();
 
       // creating temp folder for downloaded zip packages
       File tempFolder = new File(modeFolder, "temp");
       if(!tempFolder.exists()) tempFolder.mkdir();
-
-      // creating sdk folders
-      File toolsFolder = new File(sdkFolder, "tools"); toolsFolder.mkdir();
-      File platformToolsFolder = new File(sdkFolder, "platform-tools"); platformToolsFolder.mkdir();
-      File buildToolsFolder = new File(sdkFolder, "build-tools"); buildToolsFolder.mkdir();
-      File platformsFoolder = new File(sdkFolder, "platforms"); platformsFoolder.mkdir();
-      File platformFolder = new File(platformsFoolder, "android-10"); platformFolder.mkdir();
 
       try {
         SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, hostOs);
@@ -78,19 +77,26 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
         // tools
         File downloadedTools = new File(tempFolder, downloadUrls.toolsFilename);
-        downloadFile(downloadUrls.toolsUrl, downloadedTools);
+        downloadAndUnpack(downloadUrls.toolsUrl, downloadedTools, sdkFolder);
 
         // platform-tools
         File downloadedPlatformTools = new File(tempFolder, downloadUrls.platformToolsFilename);
-        downloadFile(downloadUrls.platformToolsUrl, downloadedPlatformTools);
+        downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder);
 
         // build-tools
         File downloadedBuildTools = new File(tempFolder, downloadUrls.buildToolsFilename);
-        downloadFile(downloadUrls.buildToolsUrl, downloadedBuildTools);
+        downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder);
 
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
-        downloadFile(downloadUrls.platformUrl, downloadedPlatform);
+        downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
+
+        if(Base.isLinux() || Base.isMacOS()) {
+          Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
+        }
+
+        Base.getPlatform().setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
+        androidMode.loadSDK();
       } catch (ParserConfigurationException e) {
         // TODO Handle exceptions here somehow (ie show error message) and handle at least mkdir() results (above)
         e.printStackTrace();
@@ -105,9 +111,10 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     @Override
     protected void done() {
       super.done();
+      setVisible(false);
     }
 
-    private void downloadFile(String urlString, File saveTo) throws IOException {
+    private void downloadAndUnpack(String urlString, File saveTo, File unpackTo) throws IOException {
       URL url = new URL(urlString);
       URLConnection conn = url.openConnection();
 
@@ -126,6 +133,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
       inputStream.close();
       outputStream.close();
+
+      extractFolder(saveTo, unpackTo);
     }
 
     private String getOsString() {
@@ -229,8 +238,10 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  public SDKDownloader() {
+  public SDKDownloader(AndroidMode androidMode) {
     super("Android SDK downloading...");
+
+    this.androidMode = androidMode;
 
     createLayout();
   }
@@ -319,5 +330,47 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
     setVisible(true);
     setAlwaysOnTop(true);
+  }
+
+  static public void extractFolder(File file, File newPath) throws IOException {
+    int BUFFER = 2048;
+    ZipFile zip = new ZipFile(file);
+    Enumeration zipFileEntries = zip.entries();
+
+    // Process each entry
+    while (zipFileEntries.hasMoreElements())
+    {
+      // grab a zip file entry
+      ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
+      String currentEntry = entry.getName();
+      File destFile = new File(newPath, currentEntry);
+      //destFile = new File(newPath, destFile.getName());
+      File destinationParent = destFile.getParentFile();
+
+      // create the parent directory structure if needed
+      destinationParent.mkdirs();
+
+      if (!entry.isDirectory())
+      {
+        BufferedInputStream is = new BufferedInputStream(zip
+            .getInputStream(entry));
+        int currentByte;
+        // establish buffer for writing file
+        byte data[] = new byte[BUFFER];
+
+        // write the current file to disk
+        FileOutputStream fos = new FileOutputStream(destFile);
+        BufferedOutputStream dest = new BufferedOutputStream(fos,
+            BUFFER);
+
+        // read and write until last byte is encountered
+        while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
+          dest.write(data, 0, currentByte);
+        }
+        dest.flush();
+        dest.close();
+        is.close();
+      }
+    }
   }
 }

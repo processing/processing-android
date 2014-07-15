@@ -1,6 +1,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Editor;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
@@ -233,7 +234,7 @@ class AndroidSDK {
   }
 
 
-  static public AndroidSDK locate(final Frame window)
+  static public AndroidSDK locate(final Frame window, final AndroidMode androidMode)
       throws BadSDKException, IOException {
     final int result = showLocateDialog(window);
     if (result == JOptionPane.CANCEL_OPTION) {
@@ -244,7 +245,7 @@ class AndroidSDK {
       //Base.openURL(ANDROID_SDK_URL);
       //throw new BadSDKException("No SDK installed.");
 
-      return download();
+      return download(androidMode);
     }
     while (true) {
       // TODO this is really a yucky way to do this stuff. fix it.
@@ -263,13 +264,13 @@ class AndroidSDK {
     }
   }
 
-  static public AndroidSDK download() throws BadSDKException {
+  static public AndroidSDK download(final AndroidMode androidMode) throws BadSDKException {
     AndroidMode.sdkDownloadInProgress = true;
 
     SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
-        SDKDownloader downloader = new SDKDownloader();
+        SDKDownloader downloader = new SDKDownloader(androidMode);
         downloader.startDownload();
       }
     });

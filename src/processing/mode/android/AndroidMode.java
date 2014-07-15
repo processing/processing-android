@@ -116,14 +116,23 @@ public class AndroidMode extends JavaMode {
 //    return sdk;
 //  }
 
+  public void loadSDK() {
+    try {
+      sdk = AndroidSDK.load();
+    } catch (BadSDKException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
   public void checkSDK(Editor parent) {
     if (sdk == null) {
       try {
         sdk = AndroidSDK.load();
         // FIXME REVERT THIS STATEMENT AFTER TESTING (should be ==)
-        if (sdk != null) {
-          sdk = AndroidSDK.locate(parent);
+        if (sdk == null) {
+          sdk = AndroidSDK.locate(parent, this);
         }
       } catch (BadSDKException e) {
         e.printStackTrace();
