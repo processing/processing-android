@@ -26,14 +26,12 @@ import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 
 import javax.swing.*;
-
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.Timer;
 import java.util.TimerTask;
 
 @SuppressWarnings("serial")
@@ -50,6 +48,8 @@ public class AndroidEditor extends JavaEditor {
 
     @Override
     public void run() {
+      if(androidMode.getSDK() == null) return;
+
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
       Device selectedDevice = devices.getSelectedDevice();
@@ -212,7 +212,7 @@ public class AndroidEditor extends JavaEditor {
 
     // start updating device menus
     UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
-    Timer timer = new Timer();
+    java.util.Timer timer = new java.util.Timer();
     timer.schedule(task, 5000, 5000);
 
     menu.addSeparator();

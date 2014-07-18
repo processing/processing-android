@@ -95,6 +95,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
 
+        tempFolder.delete();
+
         Base.getPlatform().setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
         androidMode.loadSDK();
       } catch (ParserConfigurationException e) {
