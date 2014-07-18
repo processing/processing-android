@@ -1,23 +1,21 @@
 package processing.mode.android;
 
-import java.awt.FileDialog;
-import java.awt.Frame;
+import processing.app.Base;
+import processing.app.Editor;
+import processing.app.Platform;
+import processing.app.Preferences;
+import processing.app.exec.ProcessHelper;
+import processing.app.exec.ProcessResult;
+import processing.core.PApplet;
+
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-
-import processing.app.Base;
-import processing.app.Platform;
-import processing.app.Preferences;
-import processing.app.exec.ProcessHelper;
-import processing.app.exec.ProcessResult;
-import processing.core.PApplet;
 
 class AndroidSDK {
   private final File folder;
@@ -31,8 +29,10 @@ class AndroidSDK {
   private static final String ANDROID_SDK_SECONDARY =
     "The Android SDK does not appear to be installed, <br>" +
     "because the ANDROID_SDK variable is not set. <br>" +
-    "If it is installed, click “Yes” to select the <br>" +
-    "location of the SDK, or “No” to visit the SDK<br>" +
+    "If it is installed, click “Locate SDK path” to select the <br>" +
+    "location of the SDK, or “Download SDK” to let <br>" +
+    "Processing download SDK automatically.<br><br>" +
+    "If you want to download SDK manually, you can visit <br>"+
     "download site at http://developer.android.com/sdk.";
 
   private static final String SELECT_ANDROID_SDK_FOLDER =
@@ -234,17 +234,18 @@ class AndroidSDK {
   }
 
 
-  static public AndroidSDK locate(final Frame window)
-  throws BadSDKException, IOException {
-    final int result = Base.showYesNoQuestion(window, "Android SDK",
-      ANDROID_SDK_PRIMARY, ANDROID_SDK_SECONDARY);
+  static public AndroidSDK locate(final Frame window, final AndroidMode androidMode)
+      throws BadSDKException, IOException {
+    final int result = showLocateDialog(window);
     if (result == JOptionPane.CANCEL_OPTION) {
       throw new BadSDKException("User canceled attempt to find SDK.");
     }
-    if (result == JOptionPane.NO_OPTION) {
-      // user admitted they don't have the SDK installed, and need help.
-      Base.openURL(ANDROID_SDK_URL);
-      throw new BadSDKException("No SDK installed.");
+    if (result == JOptionPane.YES_OPTION) {
+      // here we are going to download sdk automatically
+      //Base.openURL(ANDROID_SDK_URL);
+      //throw new BadSDKException("No SDK installed.");
+
+      return download(androidMode);
     }
     while (true) {
       // TODO this is really a yucky way to do this stuff. fix it.
@@ -263,6 +264,52 @@ class AndroidSDK {
     }
   }
 
+  static public AndroidSDK download(final AndroidMode androidMode) throws BadSDKException {
+    AndroidMode.sdkDownloadInProgress = true;
+
+    SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        SDKDownloader downloader = new SDKDownloader(androidMode);
+        downloader.startDownload();
+      }
+    });
+    return null;
+  }
+
+  static public int showLocateDialog(Frame editor) {
+    // Pane formatting adapted from the Quaqua guide
+    // http://www.randelshofer.ch/quaqua/guide/joptionpane.html
+    JOptionPane pane =
+        new JOptionPane("<html> " +
+            "<head> <style type=\"text/css\">"+
+            "b { font: 13pt \"Lucida Grande\" }"+
+            "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+            "</style> </head>" +
+            "<b>" + ANDROID_SDK_PRIMARY + "</b>" +
+            "<p>" + ANDROID_SDK_SECONDARY + "</p>",
+            JOptionPane.QUESTION_MESSAGE);
+
+    String[] options = new String[] {
+        "Download SDK automatically", "Locate SDK path manually"
+    };
+    pane.setOptions(options);
+
+    // highlight the safest option ala apple hig
+    pane.setInitialValue(options[0]);
+
+    JDialog dialog = pane.createDialog(editor, null);
+    dialog.setVisible(true);
+
+    Object result = pane.getValue();
+    if (result == options[0]) {
+      return JOptionPane.YES_OPTION;
+    } else if (result == options[1]) {
+      return JOptionPane.NO_OPTION;
+    } else {
+      return JOptionPane.CLOSED_OPTION;
+    }
+  }
 
   // this was banished from Base because it encourages bad practice.
   // TODO figure out a better way to handle the above.
