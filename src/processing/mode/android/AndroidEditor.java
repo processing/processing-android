@@ -471,7 +471,7 @@ public class AndroidEditor extends JavaEditor {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
     if (handleExportCheckModified()) {
-      deactivateExport();
+//      deactivateExport();
       new KeyStoreManager(this);
     }
   }
