@@ -25,7 +25,6 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
-
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Sketch;
@@ -36,11 +35,15 @@ import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 
 import java.io.*;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.Permission;
 
 
 class AndroidBuild extends JavaBuild {
-//  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
+  //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
   static final String sdkName = "2.3.3";
   static final String sdkVersion = "10";  // Android 2.3.3 (Gingerbread)
@@ -238,10 +241,10 @@ class AndroidBuild extends JavaBuild {
         if (!pr.succeeded()) {
           System.err.println(pr.getStderr());
           Base.showWarning("Failed to rename",
-                           "Could not rename the old “android” build folder.\n" +
-                           "Please delete, close, or rename the folder\n" +
-                           androidFolder.getAbsolutePath() + "\n" +
-                           "and try again." , null);
+              "Could not rename the old “android” build folder.\n" +
+                  "Please delete, close, or rename the folder\n" +
+                  androidFolder.getAbsolutePath() + "\n" +
+                  "and try again." , null);
           Base.openFolder(sketch.getFolder());
           return null;
         }
@@ -250,8 +253,8 @@ class AndroidBuild extends JavaBuild {
       boolean result = androidFolder.mkdirs();
       if (!result) {
         Base.showWarning("Folders, folders, folders",
-                         "Could not create the necessary folders to build.\n" +
-                         "Perhaps you have some file permissions to sort out?", null);
+            "Could not create the necessary folders to build.\n" +
+                "Perhaps you have some file permissions to sort out?", null);
         return null;
       }
     }
@@ -460,7 +463,7 @@ class AndroidBuild extends JavaBuild {
     p.setUserProperty("ant.file", path);
 
     // deals with a problem where javac error messages weren't coming through
-    p.setUserProperty("build.compiler", "extJavac");
+    //p.setUserProperty("build.compiler", "extJavac");
     // p.setUserProperty("build.compiler.emacs", "true"); // does nothing
 
     // try to spew something useful to the console
@@ -514,7 +517,7 @@ class AndroidBuild extends JavaBuild {
       //final String outPile = new String(outb.toByteArray());
       //antBuildProblems(new String(outb.toByteArray())
       antBuildProblems(new String(outb.toByteArray()),
-                       new String(errb.toByteArray()));
+          new String(errb.toByteArray()));
     }
     return false;
   }
@@ -522,9 +525,9 @@ class AndroidBuild extends JavaBuild {
 
   void antBuildProblems(String outPile, String errPile) throws SketchException {
     final String[] outLines =
-      outPile.split(System.getProperty("line.separator"));
+        outPile.split(System.getProperty("line.separator"));
     final String[] errLines =
-      errPile.split(System.getProperty("line.separator"));
+        errPile.split(System.getProperty("line.separator"));
 
     for (final String line : outLines) {
       final String javacPrefix = "[javac]";
@@ -535,7 +538,7 @@ class AndroidBuild extends JavaBuild {
         // String sketchPath = sketch.getFolder().getAbsolutePath();
         int offset = javacIndex + javacPrefix.length() + 1;
         String[] pieces =
-          PApplet.match(line.substring(offset), "^(.+):([0-9]+):\\s+(.+)$");
+            PApplet.match(line.substring(offset), "^(.+):([0-9]+):\\s+(.+)$");
         if (pieces != null) {
 //          PApplet.println(pieces);
           String fileName = pieces[1];
@@ -558,8 +561,8 @@ class AndroidBuild extends JavaBuild {
 
     // Couldn't parse the exception, so send something generic
     SketchException skex =
-      new SketchException("Error from inside the Android tools, " +
-                          "check the console.");
+        new SketchException("Error from inside the Android tools, " +
+            "check the console.");
 
     // Try to parse anything else we might know about
     for (final String line : errLines) {
@@ -567,9 +570,9 @@ class AndroidBuild extends JavaBuild {
         System.err.println("Use the Android SDK Manager (under the Android");
         System.err.println("menu) to install the SDK platform and ");
         System.err.println("Google APIs for Android " + sdkName +
-                           " (API " + sdkVersion + ")");
+            " (API " + sdkVersion + ")");
         skex = new SketchException("Please install the SDK platform and " +
-                                   "Google APIs for API " + sdkVersion);
+            "Google APIs for API " + sdkVersion);
       }
     }
     // Stack trace is not relevant, just the message.
@@ -611,6 +614,120 @@ class AndroidBuild extends JavaBuild {
     writer.println("       <isset property=\"env.ANDROID_HOME\" />");
     writer.println("  </condition>");
 
+    writer.println("  <property name=\"ecj.jar\" value=\"" + Base.getToolsFolder() + "/../modes/Java/mode/ecj.jar\" />");
+    writer.println("  <property name=\"build.compiler\" value=\"org.eclipse.jdt.core.JDTCompilerAdapter\" />");
+//    writer.println("  <property name=\"project.javac.classpath\" value=\"/Users/andres/code/processing/git/processing/build/macosx/work/Processing.app/Contents/Java/modes/java/mode/ecj.jar\" />");
+//    writer.println("  <property name=\"java.compiler.classpath\" value=\"/Users/andres/code/processing/git/processing/build/macosx/work/Processing.app/Contents/Java/modes/java/mode/ecj.jar\" />");
+    //
+
+//    writer.println("    <condition property=\"build.compiler\""); 
+//    writer.println("         value=\"org.eclipse.jdt.core.JDTCompilerAdapter\"");
+//    writer.println("         else=\"modern\">");
+//    writer.println("    <available file=\"${ecj.jar}\" />");
+//    writer.println("  </condition>");
+
+    writer.println("  <mkdir dir=\"bin\" />");
+
+    writer.println("  <echo message=\"${ecj.jar}\" />");
+    writer.println("  <echo message=\"${build.compiler}\" />");
+//    writer.println("  <echo message=\"${project.javac.classpath}\" />");    
+//    writer.println("  <echo message=\"${java.compiler.classpath}\" />");
+
+
+//    writer.println("  <javac source=\"1.7\"");
+//    writer.println("    target=\"1.7\""); 
+//    writer.println("    encoding=\"UTF-8\"");
+//    writer.println("    includeAntRuntime=\"false\"");
+//    writer.println("    debug=\"true\"");
+//    writer.println("    srcdir=\"src\" destdir=\"bin\"");
+//    writer.println("    classpath=\"/Users/andres/code/processing/git/processing/build/macosx/work/Processing.app/Contents/Java/core.jar\"");
+//    writer.println("    nowarn=\"true\">");
+//    writer.println("    <compilerclasspath path=\"${ecj.jar}\" />");
+//    writer.println("  </javac>");
+
+
+
+
+// Override target from maint android build file
+    writer.println("    <target name=\"-compile\" depends=\"-pre-build, -build-setup, -code-gen, -pre-compile\">");
+    writer.println("        <do-only-if-manifest-hasCode elseText=\"hasCode = false. Skipping...\">");
+    writer.println("            <path id=\"project.javac.classpath\">");
+    writer.println("                <path refid=\"project.all.jars.path\" />");
+    writer.println("                <path refid=\"tested.project.classpath\" />");
+    writer.println("                <path path=\"${java.compiler.classpath}\" />");
+    writer.println("            </path>");
+    writer.println("            <javac encoding=\"${java.encoding}\"");
+    writer.println("                    source=\"${java.source}\" target=\"${java.target}\"");
+    writer.println("                    debug=\"true\" extdirs=\"\" includeantruntime=\"false\"");
+    writer.println("                    destdir=\"${out.classes.absolute.dir}\"");
+    writer.println("                    bootclasspathref=\"project.target.class.path\"");
+    writer.println("                    verbose=\"${verbose}\"");
+    writer.println("                    classpathref=\"project.javac.classpath\"");
+    writer.println("                    fork=\"${need.javac.fork}\">");
+    writer.println("                <src path=\"${source.absolute.dir}\" />");
+    writer.println("                <src path=\"${gen.absolute.dir}\" />");
+    writer.println("                <compilerarg line=\"${java.compilerargs}\" />");
+    writer.println("                <compilerclasspath path=\"${ecj.jar}\" />");
+    writer.println("            </javac>");
+
+    writer.println("            <if condition=\"${build.is.instrumented}\">");
+    writer.println("                <then>");
+    writer.println("                    <echo level=\"info\">Instrumenting classes from ${out.absolute.dir}/classes...</echo>");
+
+
+    writer.println("                    <getemmafilter");
+    writer.println("                            appPackage=\"${project.app.package}\"");
+    writer.println("                            libraryPackagesRefId=\"project.library.packages\"");
+    writer.println("                            filterOut=\"emma.default.filter\"/>");
+
+
+    writer.println("                    <property name=\"emma.coverage.absolute.file\" location=\"${out.absolute.dir}/coverage.em\" />");
+
+
+    writer.println("                    <emma enabled=\"true\">");
+    writer.println("                        <instr verbosity=\"${verbosity}\"");
+    writer.println("                               mode=\"overwrite\"");
+    writer.println("                               instrpath=\"${out.absolute.dir}/classes\"");
+    writer.println("                               outdir=\"${out.absolute.dir}/classes\"");
+    writer.println("                               metadatafile=\"${emma.coverage.absolute.file}\">");
+    writer.println("                            <filter excludes=\"${emma.default.filter}\" />");
+    writer.println("                            <filter value=\"${emma.filter}\" />");
+    writer.println("                        </instr>");
+    writer.println("                    </emma>");
+    writer.println("                </then>");
+    writer.println("            </if>");
+
+    writer.println("            <if condition=\"${project.is.library}\">");
+    writer.println("                <then>");
+    writer.println("                    <echo level=\"info\">Creating library output jar file...</echo>");
+    writer.println("                    <property name=\"out.library.jar.file\" location=\"${out.absolute.dir}/classes.jar\" />");
+    writer.println("                    <if>");
+    writer.println("                        <condition>");
+    writer.println("                            <length string=\"${android.package.excludes}\" trim=\"true\" when=\"greater\" length=\"0\" />");
+    writer.println("                        </condition>");
+    writer.println("                        <then>");
+    writer.println("                            <echo level=\"info\">Custom jar packaging exclusion: ${android.package.excludes}</echo>");
+    writer.println("                        </then>");
+    writer.println("                    </if>");
+
+    writer.println("                    <propertybyreplace name=\"project.app.package.path\" input=\"${project.app.package}\" replace=\".\" with=\"/\" />");
+
+    writer.println("                    <jar destfile=\"${out.library.jar.file}\">");
+    writer.println("                        <fileset dir=\"${out.classes.absolute.dir}\"");
+    writer.println("                                includes=\"**/*.class\"");
+    writer.println("                                excludes=\"${project.app.package.path}/R.class ${project.app.package.path}/R$*.class ${project.app.package.path}/BuildConfig.class\"/>");
+    writer.println("                        <fileset dir=\"${source.absolute.dir}\" excludes=\"**/*.java ${android.package.excludes}\" />");
+    writer.println("                    </jar>");
+    writer.println("                </then>");
+    writer.println("            </if>");
+
+    writer.println("        </do-only-if-manifest-hasCode>");
+    writer.println("    </target>");
+
+
+
+
+
     writer.println("  <loadproperties srcFile=\"project.properties\" />");
 
     writer.println("  <fail message=\"sdk.dir is missing. Make sure to generate local.properties using 'android update project'\" unless=\"sdk.dir\" />");
@@ -625,6 +742,17 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
+  // http://stackoverflow.com/questions/7884393/can-a-directory-be-added-to-the-class-path-at-runtime  
+//need to do add path to Classpath with reflection since the URLClassLoader.addURL(URL url) method is protected:
+  public static void addPath(String s) throws Exception {
+    File f = new File(s);
+    URI u = f.toURI();
+    URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+    Class<URLClassLoader> urlClass = URLClassLoader.class;
+    Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
+    method.setAccessible(true);
+    method.invoke(urlClassLoader, new Object[]{u.toURL()});
+  }
 
   private void writeProjectProps(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
@@ -792,8 +920,8 @@ class AndroidBuild extends JavaBuild {
         String exportName = exportFile.getName();
         if (!exportFile.exists()) {
           System.err.println(exportFile.getName() +
-                             " is mentioned in export.txt, but it's " +
-                             "a big fat lie and does not exist.");
+              " is mentioned in export.txt, but it's " +
+              "a big fat lie and does not exist.");
         } else if (exportFile.isDirectory()) {
           // Copy native library folders to the correct location
           if (exportName.equals("armeabi") ||
