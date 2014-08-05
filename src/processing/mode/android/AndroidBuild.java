@@ -25,7 +25,6 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
-
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Sketch;
@@ -40,7 +39,7 @@ import java.security.Permission;
 
 
 class AndroidBuild extends JavaBuild {
-//  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
+  //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
   static final String sdkName = "2.3.3";
   static final String sdkVersion = "10";  // Android 2.3.3 (Gingerbread)
@@ -460,7 +459,7 @@ class AndroidBuild extends JavaBuild {
     p.setUserProperty("ant.file", path);
 
     // deals with a problem where javac error messages weren't coming through
-    p.setUserProperty("build.compiler", "extJavac");
+    //p.setUserProperty("build.compiler", "extJavac");
     // p.setUserProperty("build.compiler.emacs", "true"); // does nothing
 
     // try to spew something useful to the console
@@ -611,6 +610,94 @@ class AndroidBuild extends JavaBuild {
     writer.println("       <isset property=\"env.ANDROID_HOME\" />");
     writer.println("  </condition>");
 
+    writer.println("  <property name=\"ecj.jar\" value=\"" + Base.getToolsFolder() + "/../modes/Java/mode/ecj.jar\" />");
+    writer.println("  <property name=\"build.compiler\" value=\"org.eclipse.jdt.core.JDTCompilerAdapter\" />");
+
+    writer.println("  <mkdir dir=\"bin\" />");
+
+    writer.println("  <echo message=\"${ecj.jar}\" />");
+    writer.println("  <echo message=\"${build.compiler}\" />");
+
+// Override target from maint android build file
+    writer.println("    <target name=\"-compile\" depends=\"-pre-build, -build-setup, -code-gen, -pre-compile\">");
+    writer.println("        <do-only-if-manifest-hasCode elseText=\"hasCode = false. Skipping...\">");
+    writer.println("            <path id=\"project.javac.classpath\">");
+    writer.println("                <path refid=\"project.all.jars.path\" />");
+    writer.println("                <path refid=\"tested.project.classpath\" />");
+    writer.println("                <path path=\"${java.compiler.classpath}\" />");
+    writer.println("            </path>");
+    writer.println("            <javac encoding=\"${java.encoding}\"");
+    writer.println("                    source=\"${java.source}\" target=\"${java.target}\"");
+    writer.println("                    debug=\"true\" extdirs=\"\" includeantruntime=\"false\"");
+    writer.println("                    destdir=\"${out.classes.absolute.dir}\"");
+    writer.println("                    bootclasspathref=\"project.target.class.path\"");
+    writer.println("                    verbose=\"${verbose}\"");
+    writer.println("                    classpathref=\"project.javac.classpath\"");
+    writer.println("                    fork=\"${need.javac.fork}\">");
+    writer.println("                <src path=\"${source.absolute.dir}\" />");
+    writer.println("                <src path=\"${gen.absolute.dir}\" />");
+    writer.println("                <compilerarg line=\"${java.compilerargs}\" />");
+    writer.println("                <compilerclasspath path=\"${ecj.jar}\" />");
+    writer.println("            </javac>");
+
+    writer.println("            <if condition=\"${build.is.instrumented}\">");
+    writer.println("                <then>");
+    writer.println("                    <echo level=\"info\">Instrumenting classes from ${out.absolute.dir}/classes...</echo>");
+
+
+    writer.println("                    <getemmafilter");
+    writer.println("                            appPackage=\"${project.app.package}\"");
+    writer.println("                            libraryPackagesRefId=\"project.library.packages\"");
+    writer.println("                            filterOut=\"emma.default.filter\"/>");
+
+
+    writer.println("                    <property name=\"emma.coverage.absolute.file\" location=\"${out.absolute.dir}/coverage.em\" />");
+
+
+    writer.println("                    <emma enabled=\"true\">");
+    writer.println("                        <instr verbosity=\"${verbosity}\"");
+    writer.println("                               mode=\"overwrite\"");
+    writer.println("                               instrpath=\"${out.absolute.dir}/classes\"");
+    writer.println("                               outdir=\"${out.absolute.dir}/classes\"");
+    writer.println("                               metadatafile=\"${emma.coverage.absolute.file}\">");
+    writer.println("                            <filter excludes=\"${emma.default.filter}\" />");
+    writer.println("                            <filter value=\"${emma.filter}\" />");
+    writer.println("                        </instr>");
+    writer.println("                    </emma>");
+    writer.println("                </then>");
+    writer.println("            </if>");
+
+    writer.println("            <if condition=\"${project.is.library}\">");
+    writer.println("                <then>");
+    writer.println("                    <echo level=\"info\">Creating library output jar file...</echo>");
+    writer.println("                    <property name=\"out.library.jar.file\" location=\"${out.absolute.dir}/classes.jar\" />");
+    writer.println("                    <if>");
+    writer.println("                        <condition>");
+    writer.println("                            <length string=\"${android.package.excludes}\" trim=\"true\" when=\"greater\" length=\"0\" />");
+    writer.println("                        </condition>");
+    writer.println("                        <then>");
+    writer.println("                            <echo level=\"info\">Custom jar packaging exclusion: ${android.package.excludes}</echo>");
+    writer.println("                        </then>");
+    writer.println("                    </if>");
+
+    writer.println("                    <propertybyreplace name=\"project.app.package.path\" input=\"${project.app.package}\" replace=\".\" with=\"/\" />");
+
+    writer.println("                    <jar destfile=\"${out.library.jar.file}\">");
+    writer.println("                        <fileset dir=\"${out.classes.absolute.dir}\"");
+    writer.println("                                includes=\"**/*.class\"");
+    writer.println("                                excludes=\"${project.app.package.path}/R.class ${project.app.package.path}/R$*.class ${project.app.package.path}/BuildConfig.class\"/>");
+    writer.println("                        <fileset dir=\"${source.absolute.dir}\" excludes=\"**/*.java ${android.package.excludes}\" />");
+    writer.println("                    </jar>");
+    writer.println("                </then>");
+    writer.println("            </if>");
+
+    writer.println("        </do-only-if-manifest-hasCode>");
+    writer.println("    </target>");
+
+
+
+
+
     writer.println("  <loadproperties srcFile=\"project.properties\" />");
 
     writer.println("  <fail message=\"sdk.dir is missing. Make sure to generate local.properties using 'android update project'\" unless=\"sdk.dir\" />");
@@ -624,7 +711,6 @@ class AndroidBuild extends JavaBuild {
     writer.flush();
     writer.close();
   }
-
 
   private void writeProjectProps(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
