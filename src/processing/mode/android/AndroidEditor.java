@@ -217,6 +217,14 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
+    JMenu sdkMenu = new JMenu("Select target SDK");
+    JCheckBoxMenuItem defaultItem = new JCheckBoxMenuItem("API 2.3.3 (10)");
+    defaultItem.setState(true);
+    sdkMenu.add(defaultItem);
+    menu.add(sdkMenu);
+
+    menu.addSeparator();
+
     item = new JMenuItem("Android SDK Manager");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
