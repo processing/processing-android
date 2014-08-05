@@ -32,6 +32,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.TimerTask;
 
 @SuppressWarnings("serial")
@@ -217,10 +218,21 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    JMenu sdkMenu = new JMenu("Select target SDK");
-    JCheckBoxMenuItem defaultItem = new JCheckBoxMenuItem("API 2.3.3 (10)");
-    defaultItem.setState(true);
+    final JMenu sdkMenu = new JMenu("Select target SDK");
+    JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
+    defaultItem.setEnabled(false);
     sdkMenu.add(defaultItem);
+
+    new Thread() {
+      @Override
+      public void run() {
+        while(androidMode == null || androidMode.getSDK() == null) {
+          System.out.println("Still null");
+        }
+        updateSdkMenu(sdkMenu);
+      }
+    }.start();
+
     menu.add(sdkMenu);
 
     menu.addSeparator();
@@ -257,6 +269,21 @@ public class AndroidEditor extends JavaEditor {
     menu.add(item);
 
     return menu;
+  }
+
+  private void updateSdkMenu(JMenu sdkMenu) {
+    try {
+      ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
+
+      if(targets.size() != 0) sdkMenu.removeAll();
+
+      for(AndroidSDK.SDKTarget target : targets) {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
+        sdkMenu.add(item);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
 
