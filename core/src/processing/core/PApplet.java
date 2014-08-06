@@ -818,8 +818,9 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
       setEGLContextClientVersion(2);
 
-      if (PGLES.ENABLE_MULTISAMPLING) {
-        setEGLConfigChooser(((PGLES)g3.pgl).getConfigChooser());
+      int quality = sketchQuality();
+      if (1 < quality) {
+        setEGLConfigChooser(((PGLES)g3.pgl).getConfigChooser(quality));
       }
 
       // The renderer can be set only once.

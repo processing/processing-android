@@ -140,6 +140,7 @@ class AndroidBuild extends JavaBuild {
 //    }
     // On Android, this init will throw a SketchException if there's a problem with size()
     preproc.initSketchSize(sketch.getMainProgram());
+    preproc.initSketchSmooth(sketch.getMainProgram());
     sketchClassName = preprocess(srcFolder, manifest.getPackageName(), preproc, false);
     if (sketchClassName != null) {
       File tempManifest = new File(tmpFolder, "AndroidManifest.xml");

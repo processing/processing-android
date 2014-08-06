@@ -27,6 +27,7 @@ import java.io.Writer;
 import java.util.List;
 
 import processing.app.*;
+import processing.core.PApplet;
 import processing.mode.java.preproc.PdePreprocessor;
 import processing.mode.java.preproc.PreprocessorResult;
 import antlr.RecognitionException;
@@ -36,7 +37,13 @@ import antlr.TokenStreamException;
 public class AndroidPreprocessor extends PdePreprocessor {
   Sketch sketch;
   String packageName;
+  
+  protected String smoothStatement;
+  protected String sketchQuality; 
 
+  
+  public static final String SMOOTH_REGEX =
+      "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
   public AndroidPreprocessor(final Sketch sketch,
                              final String packageName) throws IOException {
@@ -59,6 +66,48 @@ public class AndroidPreprocessor extends PdePreprocessor {
     sketchRenderer = info[3];
     return info;
   }
+  
+  
+  public String[] initSketchSmooth(String code) throws SketchException {
+    String[] info = parseSketchSmooth(code, true);
+    if (info == null) {
+      System.err.println("More about the size() command on Android can be");
+      System.err.println("found here: http://wiki.processing.org/w/Android");
+      throw new SketchException("Could not parse the size() command.");
+    }
+    smoothStatement = info[0];
+    sketchQuality = info[1];    
+    return info;
+  }
+    
+  
+  static public String[] parseSketchSmooth(String code, boolean fussy) {
+    String[] matches = PApplet.match(scrubComments(code), SMOOTH_REGEX);
+
+    if (matches != null) {
+      boolean badSmooth = false;
+      
+      if (PApplet.parseInt(matches[1], -1) == -1) {
+        badSmooth = true;
+      }
+
+      if (badSmooth && fussy) {
+        // found a reference to smooth, but it didn't seem to contain numbers
+        final String message =
+          "The smooth level of this applet could not automatically\n" +
+          "be determined from your code. Use only a numeric\n" +
+          "value (not variables) for the smooth() command.\n" +
+          "See the smooth() reference for an explanation.";
+        Base.showWarning("Could not find smooth level", message, null);
+//        new Exception().printStackTrace(System.out);
+        return null;
+      }
+      
+      return matches;
+    }
+    return new String[] { null, null };  // not an error, just empty
+  }
+  
 
   /*
   protected boolean parseSketchSize() {
@@ -172,6 +221,10 @@ public class AndroidPreprocessor extends PdePreprocessor {
         out.println(indent + "public String sketchRenderer() { return " + sketchRenderer + "; }");
       }
 
+      if (sketchQuality != null) {
+        out.println(indent + "public int sketchQuality() { return " + sketchQuality + "; }");
+      }
+      
       // close off the class definition
       out.println("}");
     }
