@@ -303,7 +303,7 @@ public class AndroidEditor extends JavaEditor {
         item.addActionListener(new ActionListener() {
           @Override
           public void actionPerformed(ActionEvent e) {
-            AndroidBuild.setSdkTarget(target);
+            AndroidBuild.setSdkTarget(target, sketch);
 
             for (int i = 0; i < sdkMenu.getItemCount(); i++) {
               ((JCheckBoxMenuItem) sdkMenu.getItem(i)).setState(false);
@@ -316,7 +316,7 @@ public class AndroidEditor extends JavaEditor {
         sdkMenu.add(item);
       }
 
-      AndroidBuild.setSdkTarget(lowestTargetAvailable);
+      AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
       lowestTargetMenuItem.setState(true);
     } catch (IOException e) {
       e.printStackTrace();

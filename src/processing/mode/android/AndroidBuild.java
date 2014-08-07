@@ -67,9 +67,12 @@ class AndroidBuild extends JavaBuild {
     coreZipFile = mode.getCoreZipLocation();
   }
 
-  public static void setSdkTarget(AndroidSDK.SDKTarget target) {
+  public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
     sdkName = target.name;
     sdkVersion = Integer.toString(target.version);
+
+    Manifest manifest = new Manifest(sketch);
+    manifest.setSdkTarget(sdkVersion);
   }
 
   /**
