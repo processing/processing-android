@@ -227,7 +227,11 @@ public class AndroidEditor extends JavaEditor {
       @Override
       public void run() {
         while(androidMode == null || androidMode.getSDK() == null) {
-          System.out.println("Still null");
+          try {
+            Thread.sleep(3000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
         }
         updateSdkMenu(sdkMenu);
       }
@@ -271,16 +275,49 @@ public class AndroidEditor extends JavaEditor {
     return menu;
   }
 
-  private void updateSdkMenu(JMenu sdkMenu) {
+  private void updateSdkMenu(final JMenu sdkMenu) {
     try {
       ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
 
       if(targets.size() != 0) sdkMenu.removeAll();
 
-      for(AndroidSDK.SDKTarget target : targets) {
-        JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
+      AndroidSDK.SDKTarget lowestTargetAvailable = null;
+      JCheckBoxMenuItem lowestTargetMenuItem = null;
+
+      for(final AndroidSDK.SDKTarget target : targets) {
+        final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
+
+        if(lowestTargetAvailable == null || lowestTargetAvailable.version > target.version) {
+          lowestTargetAvailable = target;
+          lowestTargetMenuItem = item;
+        }
+
+        item.addChangeListener(new ChangeListener() {
+          @Override
+          public void stateChanged(ChangeEvent e) {
+            if (target.name.equals(AndroidBuild.sdkName)) item.setState(true);
+            else item.setState(false);
+          }
+        });
+
+        item.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            AndroidBuild.setSdkTarget(target);
+
+            for (int i = 0; i < sdkMenu.getItemCount(); i++) {
+              ((JCheckBoxMenuItem) sdkMenu.getItem(i)).setState(false);
+            }
+
+            item.setState(true);
+          }
+        });
+
         sdkMenu.add(item);
       }
+
+      AndroidBuild.setSdkTarget(lowestTargetAvailable);
+      lowestTargetMenuItem.setState(true);
     } catch (IOException e) {
       e.printStackTrace();
     }
