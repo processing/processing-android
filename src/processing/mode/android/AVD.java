@@ -138,6 +138,7 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN
+      "--abi", "armeabi"
     };
 
     // Set the list to null so that exists() will check again
