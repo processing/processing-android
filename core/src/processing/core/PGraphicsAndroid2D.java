@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
 import processing.data.XML;
+import android.app.ActivityManager;
+import android.app.ActivityManager.MemoryInfo;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
@@ -135,6 +137,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void allocate() {
+    if (bitmap != null) bitmap.recycle();
     bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
     canvas = new Canvas(bitmap);
 //    image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -996,6 +999,10 @@ public class PGraphicsAndroid2D extends PGraphics {
   protected void imageImpl(PImage src,
                            float x1, float y1, float x2, float y2,
                            int u1, int v1, int u2, int v2) {
+    if (src.bitmap != null && src.bitmap.isRecycled()) {
+      // Let's make sure it is recreated
+      src.bitmap = null;
+    }
 
     if (src.bitmap == null && src.format == ALPHA) {
       // create an alpha bitmap for this feller
@@ -1019,15 +1026,19 @@ public class PGraphicsAndroid2D extends PGraphics {
     if (src.bitmap == null ||
         src.width != src.bitmap.getWidth() ||
         src.height != src.bitmap.getHeight()) {
+      if (src.bitmap != null) src.bitmap.recycle();
       src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
       src.modified = true;
     }
     if (src.modified) {
       //System.out.println("mutable, recycled = " + who.bitmap.isMutable() + ", " + who.bitmap.isRecycled());
       if (!src.bitmap.isMutable()) {
+        src.bitmap.recycle();
         src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
       }
-      src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
+      if (src.pixels != null) {
+        src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
+      }
       src.modified = false;
     }
 
@@ -1043,6 +1054,17 @@ public class PGraphicsAndroid2D extends PGraphics {
     //canvas.drawBitmap(who.bitmap, imageImplSrcRect, imageImplDstRect, fillPaint);
     //      System.out.println("drawing lower, tint = " + tint + " " + PApplet.hex(tintPaint.getColor()));
     canvas.drawBitmap(src.bitmap, imageImplSrcRect, imageImplDstRect, tint ? tintPaint : null);
+
+    // If the OS things the memory is low, then recycles bitmaps automatically...
+    // but I don't think it is particularly efficient, as the bitmaps are stored
+    // in native heap for Android 10 and older.
+    MemoryInfo mi = new MemoryInfo();
+    ActivityManager activityManager = (ActivityManager) parent.getApplicationContext().getSystemService(android.content.Context.ACTIVITY_SERVICE);
+    activityManager.getMemoryInfo(mi);
+    if (mi.lowMemory) {
+      src.bitmap.recycle();
+      src.bitmap = null;
+    }
   }
 
 
@@ -1996,11 +2018,13 @@ public class PGraphicsAndroid2D extends PGraphics {
     } else {  // src.bitmap != null
       if (src.width != src.bitmap.getWidth() ||
           src.height != src.bitmap.getHeight()) {
+        src.bitmap.recycle();
         src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
         src.modified = true;
       }
       if (src.modified) {
         if (!src.bitmap.isMutable()) {
+          src.bitmap.recycle();
           src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
         }
         src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
