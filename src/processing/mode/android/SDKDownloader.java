@@ -98,6 +98,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         tempFolder.delete();
 
         Base.getPlatform().setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
+        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
         androidMode.loadSDK();
       } catch (ParserConfigurationException e) {
         // TODO Handle exceptions here somehow (ie show error message) and handle at least mkdir() results (above)
