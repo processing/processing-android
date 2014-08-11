@@ -21,14 +21,22 @@
 
 package processing.mode.android;
 
-import java.io.*;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DefaultLogger;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
 
-import org.apache.tools.ant.*;
-
-import processing.app.*;
-import processing.app.exec.*;
+import processing.app.Base;
+import processing.app.Library;
+import processing.app.Sketch;
+import processing.app.SketchException;
+import processing.app.exec.ProcessHelper;
+import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
+
+import java.io.*;
+import java.security.Permission;
 
 
 class AndroidBuild extends JavaBuild {
@@ -267,20 +275,95 @@ class AndroidBuild extends JavaBuild {
     return null;
   }
 
-
-  public boolean exportPackage() throws IOException, SketchException {
+  public File exportPackage(String keyStorePassword) throws Exception {
     File projectFolder = build("release");
-    if (projectFolder == null) {
-      return false;
-    }
+    if (projectFolder == null) return null;
 
-    // TODO all the signing magic needs to happen here
+    File signedPackage = signPackage(projectFolder, keyStorePassword);
+    if (signedPackage == null) return null;
 
     File exportFolder = createExportFolder();
     Base.copyDir(projectFolder, exportFolder);
-    return true;
+    return new File(exportFolder, "/bin/");
   }
 
+  private File signPackage(File projectFolder, String keyStorePassword) throws Exception {
+    File keyStore = AndroidKeyStore.getKeyStore();
+    if (keyStore == null) return null;
+
+    File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
+    if (!unsignedPackage.exists()) return null;
+
+    JarSigner.signJar(unsignedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
+
+    //if (verifySignedPackage(unsignedPackage)) {
+    File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
+    if (signedPackage.exists()) {
+      boolean deleteResult = signedPackage.delete();
+      if (!deleteResult) {
+        Base.showWarning("Error during package signing",
+            "Unable to delete old signed package");
+        return null;
+      }
+    }
+
+    boolean renameResult = unsignedPackage.renameTo(signedPackage);
+    if (!renameResult) {
+      Base.showWarning("Error during package signing",
+          "Unable to rename package file");
+      return null;
+    }
+
+    File alignedPackage = zipalignPackage(signedPackage, projectFolder);
+    return alignedPackage;
+    /*} else {
+      Base.showWarning("Error during package signing",
+          "Verification of the signed package has failed");
+      return null;
+    }*/
+  }
+
+  /*private boolean verifySignedPackage(File signedPackage) throws Exception {
+    String[] args = {
+        "-verify", signedPackage.getCanonicalPath()
+    };
+
+    PrintStream defaultPrintStream = System.out;
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream printStream = new PrintStream(baos);
+    System.setOut(printStream);
+
+    SystemExitControl.forbidSystemExitCall();
+    try {
+      JarSigner.main(args);
+    } catch (SystemExitControl.ExitTrappedException ignored) { }
+    SystemExitControl.enableSystemExitCall();
+
+    System.setOut(defaultPrintStream);
+    String result = baos.toString();
+
+    baos.close();
+    printStream.close();
+
+    return result.contains("verified");
+  } */
+
+  private File zipalignPackage(File signedPackage, File projectFolder) throws IOException, InterruptedException {
+    String zipalignPath = sdk.getSdkFolder().getAbsolutePath() + "/tools/zipalign";
+    File alignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed-aligned.apk");
+
+    String[] args = {
+        zipalignPath, "-v", "-f", "4",
+        signedPackage.getAbsolutePath(), alignedPackage.getAbsolutePath()
+    };
+
+    Process alignProcess = Runtime.getRuntime().exec(args);
+    alignProcess.waitFor();
+
+    if (alignedPackage.exists()) return alignedPackage;
+    return null;
+  }
 
   /*
   // SDK tools 17 have a problem where 'dex' won't pick up the libs folder
@@ -813,5 +896,29 @@ class AndroidBuild extends JavaBuild {
     // don't want to be responsible for this
     //rm(tempBuildFolder);
     tmpFolder.deleteOnExit();
+  }
+}
+
+// http://www.avanderw.co.za/preventing-calls-to-system-exit-in-java/
+class SystemExitControl {
+
+  @SuppressWarnings("serial")
+  public static class ExitTrappedException extends SecurityException {
+  }
+
+  public static void forbidSystemExitCall() {
+    final SecurityManager securityManager = new SecurityManager() {
+      @Override
+      public void checkPermission(Permission permission) {
+        if (permission.getName().contains("exitVM")) {
+          throw new ExitTrappedException();
+        }
+      }
+    };
+    System.setSecurityManager(securityManager);
+  }
+
+  public static void enableSystemExitCall() {
+    System.setSecurityManager(null);
   }
 }

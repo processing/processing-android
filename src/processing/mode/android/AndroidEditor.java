@@ -21,23 +21,103 @@
 
 package processing.mode.android;
 
+import processing.app.*;
+import processing.core.PApplet;
+import processing.mode.java.JavaEditor;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.TimerTask;
 
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-
-import processing.app.*;
-import processing.mode.java.JavaEditor;
-
-import processing.core.PApplet;
-
-
+@SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
 
+  class UpdateDeviceListTask extends TimerTask {
+
+    private JMenu deviceMenu;
+
+    public UpdateDeviceListTask(JMenu deviceMenu) {
+      this.deviceMenu = deviceMenu;
+    }
+
+    @Override
+    public void run() {
+      if(androidMode.getSDK() == null) return;
+
+      final Devices devices = Devices.getInstance();
+      java.util.List<Device> deviceList = devices.findMultiple(false);
+      Device selectedDevice = devices.getSelectedDevice();
+      
+      if (deviceList.size() == 0) {
+        //if (deviceMenu.getItem(0).isEnabled()) {
+        if (0 < deviceMenu.getItemCount()) {
+          deviceMenu.removeAll();
+          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+          noDevicesItem.setEnabled(false);
+          deviceMenu.add(noDevicesItem);
+        }
+        devices.setSelectedDevice(null);
+      } else {
+        deviceMenu.removeAll();
+
+        if (selectedDevice == null) {
+          selectedDevice = deviceList.get(0);
+          devices.setSelectedDevice(selectedDevice);
+        } else {
+          // check if selected device is still connected
+          boolean found = false;
+          for (Device device : deviceList) {
+            if (device.equals(selectedDevice)) {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            selectedDevice = deviceList.get(0);
+            devices.setSelectedDevice(selectedDevice);
+          }
+        }
+
+        for (final Device device : deviceList) {
+          final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
+          deviceItem.setEnabled(true);
+
+          if (device.equals(selectedDevice)) deviceItem.setState(true);
+
+          // prevent checkboxmenuitem automatic state changing onclick
+          deviceItem.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+              if (device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
+              else deviceItem.setState(false);
+            }
+          });
+
+          deviceItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              devices.setSelectedDevice(device);
+
+              for (int i = 0; i < deviceMenu.getItemCount(); i++) {
+                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
+              }
+
+              deviceItem.setState(true);
+            }
+          });
+
+          deviceMenu.add(deviceItem);
+        }
+      }
+    }
+  }
 
   protected AndroidEditor(Base base, String path, EditorState state, Mode mode) throws Exception {
     super(base, path, state, mode);
@@ -114,14 +194,28 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    item = new JMenuItem("Signing Key Setup");
+    /*item = new JMenuItem("Signing Key Setup");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Keys(AndroidEditor.this);
       }
     });
     item.setEnabled(false);
-    menu.add(item);
+    menu.add(item); */
+
+    final JMenu deviceMenu = new JMenu("Select device");
+
+    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+    noDevicesItem.setEnabled(false);
+    deviceMenu.add(noDevicesItem);
+    menu.add(deviceMenu);
+
+    // start updating device menus
+    UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
+    java.util.Timer timer = new java.util.Timer();
+    timer.schedule(task, 5000, 5000);
+
+    menu.addSeparator();
 
     item = new JMenuItem("Android SDK Manager");
     item.addActionListener(new ActionListener() {
@@ -376,27 +470,37 @@ public class AndroidEditor extends JavaEditor {
   public void handleExportPackage() {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
-    statusError("Exporting signed packages is not yet implemented.");
-    deactivateExport();
+    if (handleExportCheckModified()) {
+      deactivateExport();
+      new KeyStoreManager(this);
+    }
+  }
 
-    // make a release build
-//    try {
-//      buildReleaseForExport("release");
-//    } catch (final MonitorCanceled ok) {
-//      statusNotice("Canceled.");
-//    } finally {
-//      deactivateExport();
-//    }
-
-    // TODO now sign it... lots of fun signing code mess to go here. yay!
-
-    // maybe even send it to the device? mmm?
-//      try {
-//        runSketchOnDevice(AndroidEnvironment.getInstance().getHardware(), "release");
-//      } catch (final MonitorCanceled ok) {
-//        editor.statusNotice("Canceled.");
-//      } finally {
-//        editor.deactivateExport();
-//      }
+  public void startExportPackage(final String keyStorePassword) {
+    new Thread() {
+      public void run() {
+        startIndeterminate();
+        statusNotice("Exporting signed package...");
+        AndroidBuild build = new AndroidBuild(sketch, androidMode);
+        try {
+          File projectFolder = build.exportPackage(keyStorePassword);
+          if (projectFolder != null) {
+            statusNotice("Done with export.");
+            Base.openFolder(projectFolder);
+          } else {
+            statusError("Error with export");
+          }
+        } catch (IOException e) {
+          statusError(e);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        stopIndeterminate();
+      }
+    }.start();
   }
 }

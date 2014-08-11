@@ -27,15 +27,12 @@ package processing.mode.android;
 //import java.util.HashMap;
 
 import javax.swing.*;
-//import javax.swing.border.*;
-//import javax.swing.event.*;
 
 import processing.app.*;
 
-
+@SuppressWarnings("serial")
 public class Keys extends JFrame {
   Editor editor;
-
 
   public Keys(Editor editor) {
     this.editor = editor;

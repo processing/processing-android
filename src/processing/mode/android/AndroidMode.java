@@ -21,19 +21,13 @@
 
 package processing.mode.android;
 
+import processing.app.*;
+import processing.mode.java.JavaMode;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import processing.app.Base;
-import processing.app.Editor;
-import processing.app.EditorState;
-import processing.app.Library;
-import processing.app.RunnerListener;
-import processing.app.Sketch;
-import processing.app.SketchException;
-import processing.mode.java.JavaMode;
 
 
 public class AndroidMode extends JavaMode {
@@ -41,6 +35,7 @@ public class AndroidMode extends JavaMode {
   private File coreZipLocation;
   private AndroidRunner runner;
 
+  public static boolean sdkDownloadInProgress = false;
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
@@ -121,13 +116,23 @@ public class AndroidMode extends JavaMode {
 //    return sdk;
 //  }
 
+  public void loadSDK() {
+    try {
+      sdk = AndroidSDK.load();
+    } catch (BadSDKException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
   public void checkSDK(Editor parent) {
     if (sdk == null) {
       try {
         sdk = AndroidSDK.load();
+        // FIXME REVERT THIS STATEMENT AFTER TESTING (should be ==)
         if (sdk == null) {
-          sdk = AndroidSDK.locate(parent);
+          sdk = AndroidSDK.locate(parent, this);
         }
       } catch (BadSDKException e) {
         e.printStackTrace();
@@ -136,10 +141,12 @@ public class AndroidMode extends JavaMode {
       }
     }
     if (sdk == null) {
-      Base.showWarning("It's gonna be a bad day",
-                       "The Android SDK could not be loaded.\n" +
-                       "Use of Android mode will be all but disabled.",
-                       null);
+      if(!sdkDownloadInProgress) {
+        Base.showWarning("It's gonna be a bad day",
+            "The Android SDK could not be loaded.\n" +
+                "Use of Android mode will be all but disabled.",
+            null);
+      }
     }
   }
 

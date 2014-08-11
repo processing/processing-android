@@ -8,7 +8,7 @@
   <property name="core.jar.path" value="android-core.zip" />
   <property name="mode.jar.path" value="mode/AndroidMode.jar" />
   <property name="mode.dist.path" value="release/AndroidMode.zip" />
-
+  <property name="tools.jar.path" value="mode/tools.jar" />
   
   <target name="clean" description="Clean the build directories">
     <delete dir="bin" />

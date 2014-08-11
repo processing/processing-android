@@ -30,6 +30,7 @@ import processing.app.Editor;
 import processing.app.EditorToolbar;
 
 
+@SuppressWarnings("serial")
 public class AndroidToolbar extends EditorToolbar {
   static protected final int RUN    = 0;
   static protected final int STOP   = 1;
