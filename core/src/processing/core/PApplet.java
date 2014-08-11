@@ -467,6 +467,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
     int sw = sketchWidth();
     int sh = sketchHeight();
 
+    //get renderer name anc class
     String renderer_name = sketchRenderer();
     Class<?> renderer_class = null;
     try{
@@ -474,13 +475,18 @@ public class PApplet extends Activity implements PConstants, Runnable {
     catch( ClassNotFoundException exception){
       //what to throw here?
       throw new RuntimeException(
-        "Error: Could not resolve renderer class name", exception);}
+        String.format(
+          "Error: Could not resolve renderer class name: %s", renderer_name),
+        exception);}
 
+    //java2d renderer
     if( renderer_name.equals( JAVA2D))
       surfaceView = new SketchSurfaceView( this, sw, sh);
+    //P2D, P3D, and any other PGraphicsOpenGL-based renderer
     else if( PGraphicsOpenGL.class.isAssignableFrom( renderer_class))
       surfaceView = new SketchSurfaceViewGL( this, sw, sh,
         (Class<? extends PGraphicsOpenGL>) renderer_class);
+    //anything else
     else throw new RuntimeException(
       String.format(
         "Error: Unsupported renderer class: %s",
@@ -822,10 +828,13 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // this.onResume() and thus require a valid renderer) are triggered
       // before surfaceChanged() is ever called.
 
+      //P2D
       if( renderer_class.equals( PGraphics2D.class))
         g3 = new PGraphics2D();
+      //P3D
       else if( renderer_class.equals( PGraphics3D.class))
         g3 = new PGraphics3D();
+      //something that extends P2D or P3D
       else
         try{
           //dang java generics
