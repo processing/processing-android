@@ -470,27 +470,30 @@ public class PApplet extends Activity implements PConstants, Runnable {
     //get renderer name anc class
     String renderer_name = sketchRenderer();
     Class<?> renderer_class = null;
-    try{
-      renderer_class = Class.forName( renderer_name);}
-    catch( ClassNotFoundException exception){
+    try {
+      renderer_class = Class.forName(renderer_name);
+    } catch (ClassNotFoundException exception) {
       //what to throw here?
-      throw new RuntimeException(
-        String.format(
-          "Error: Could not resolve renderer class name: %s", renderer_name),
-        exception);}
+      String message = String.format(
+        "Error: Could not resolve renderer class name: %s", renderer_name);
+      throw new RuntimeException(message, exception);
+    }
 
     //java2d renderer
-    if( renderer_name.equals( JAVA2D))
-      surfaceView = new SketchSurfaceView( this, sw, sh);
+    if (renderer_name.equals(JAVA2D)) {
+      surfaceView = new SketchSurfaceView(this, sw, sh);
+    }
     //P2D, P3D, and any other PGraphicsOpenGL-based renderer
-    else if( PGraphicsOpenGL.class.isAssignableFrom( renderer_class))
-      surfaceView = new SketchSurfaceViewGL( this, sw, sh,
+    else if (PGraphicsOpenGL.class.isAssignableFrom(renderer_class)){
+      surfaceView = new SketchSurfaceViewGL(this, sw, sh,
         (Class<? extends PGraphicsOpenGL>) renderer_class);
+    }
     //anything else
-    else throw new RuntimeException(
-      String.format(
-        "Error: Unsupported renderer class: %s",
-        renderer_name));
+    else {
+      String message = String.format(
+        "Error: Unsupported renderer class: %s", renderer_name)
+      throw new RuntimeException(message);
+    }
 
 //    g = ((SketchSurfaceView) surfaceView).getGraphics();
 
@@ -829,22 +832,26 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // before surfaceChanged() is ever called.
 
       //P2D
-      if( renderer_class.equals( PGraphics2D.class))
+      if (renderer_class.equals( PGraphics2D.class)) {
         g3 = new PGraphics2D();
+      }
       //P3D
-      else if( renderer_class.equals( PGraphics3D.class))
+      else if (renderer_class.equals( PGraphics3D.class)) {
         g3 = new PGraphics3D();
-      //something that extends P2D or P3D
-      else
-        try{
+      }
+      //something that extends P2D, P3D, or PGraphicsOpenGL
+      else {
+        try {
           //dang java generics
           Constructor<? extends PGraphicsOpenGL> constructor =
             renderer_class.getConstructor();
-          g3 = constructor.newInstance();}
-        catch( Exception exception){
+          g3 = constructor.newInstance();
+        } catch (Exception exception) {
           throw new RuntimeException(
             "Error: Failed to initialize custom OpenGL renderer",
-            exception);}
+            exception);
+        }
+      }
 
 
       //set it up
