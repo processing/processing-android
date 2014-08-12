@@ -284,12 +284,21 @@ public class AndroidEditor extends JavaEditor {
       AndroidSDK.SDKTarget lowestTargetAvailable = null;
       JCheckBoxMenuItem lowestTargetMenuItem = null;
 
+      String savedTargetVersion = Preferences.get("android.sdk.version");
+      boolean savedTargetSet = false;
+
       for(final AndroidSDK.SDKTarget target : targets) {
         final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
 
-        if(lowestTargetAvailable == null || lowestTargetAvailable.version > target.version) {
+        if(savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
           lowestTargetAvailable = target;
           lowestTargetMenuItem = item;
+        }
+
+        if(Integer.toString(target.version).equals(savedTargetVersion)) {
+          AndroidBuild.setSdkTarget(target, sketch);
+          item.setState(true);
+          savedTargetSet = true;
         }
 
         item.addChangeListener(new ChangeListener() {
@@ -316,8 +325,10 @@ public class AndroidEditor extends JavaEditor {
         sdkMenu.add(item);
       }
 
-      AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
-      lowestTargetMenuItem.setState(true);
+      if(!savedTargetSet) {
+        AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
+        lowestTargetMenuItem.setState(true);
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }

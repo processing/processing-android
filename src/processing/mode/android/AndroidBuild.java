@@ -25,11 +25,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
-
-import processing.app.Base;
-import processing.app.Library;
-import processing.app.Sketch;
-import processing.app.SketchException;
+import processing.app.*;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
@@ -73,6 +69,8 @@ class AndroidBuild extends JavaBuild {
 
     Manifest manifest = new Manifest(sketch);
     manifest.setSdkTarget(sdkVersion);
+
+    Preferences.set("android.sdk.version", sdkVersion);
   }
 
   /**
