@@ -78,13 +78,13 @@ class Device {
   // Success
 
   // safe to just always include the -r (reinstall) flag
-  public boolean installApp(final String apkPath, final RunnerListener status) {
+  public boolean installApp(final AndroidBuild build, final RunnerListener status) {
     if (!isAlive()) {
       return false;
     }
     bringLauncherToFront();
     try {
-      final ProcessResult installResult = adb("install", "-r", apkPath);
+      final ProcessResult installResult = adb("install", "-r", build.getPathForAPK());
       if (!installResult.succeeded()) {
         status.statusError("Could not install the sketch.");
         System.err.println(installResult);
@@ -94,6 +94,12 @@ class Device {
       for (final String line : installResult) {
         if (line.startsWith("Failure")) {
           errorMsg = line.substring(8);
+
+          if(line.contains("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES")) {
+            boolean removeResult = removeApp(build.getPackageName());
+            if(removeResult) return installApp(build, status);
+          }
+
           System.err.println(line);
         }
       }
@@ -107,6 +113,16 @@ class Device {
     } catch (final InterruptedException e) {
     }
     return false;
+  }
+
+  public boolean removeApp(String packageName) throws IOException, InterruptedException {
+    final ProcessResult removeResult = adb("uninstall", packageName);
+
+    if (!removeResult.succeeded()) {
+      return false;
+    }
+
+    return true;
   }
 
   
