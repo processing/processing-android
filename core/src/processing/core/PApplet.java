@@ -425,6 +425,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
 
   /** Called with the activity is first created. */
+  @SuppressWarnings("unchecked")
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -467,31 +468,30 @@ public class PApplet extends Activity implements PConstants, Runnable {
     int sw = sketchWidth();
     int sh = sketchHeight();
 
-    //get renderer name anc class
-    String renderer_name = sketchRenderer();
-    Class<?> renderer_class = null;
+    // Get renderer name and class
+    String rendererName = sketchRenderer();
+    Class<?> rendererClass = null;
     try {
-      renderer_class = Class.forName(renderer_name);
+      rendererClass = Class.forName(rendererName);
     } catch (ClassNotFoundException exception) {
-      //what to throw here?
       String message = String.format(
-        "Error: Could not resolve renderer class name: %s", renderer_name);
+        "Error: Could not resolve renderer class name: %s", rendererName);
       throw new RuntimeException(message, exception);
     }
 
-    //java2d renderer
-    if (renderer_name.equals(JAVA2D)) {
+    // JAVA2D renderer
+    if (rendererName.equals(JAVA2D)) {
       surfaceView = new SketchSurfaceView(this, sw, sh);
     }
-    //P2D, P3D, and any other PGraphicsOpenGL-based renderer
-    else if (PGraphicsOpenGL.class.isAssignableFrom(renderer_class)){
+    // P2D, P3D, and any other PGraphicsOpenGL-based renderer
+    else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)){
       surfaceView = new SketchSurfaceViewGL(this, sw, sh,
-        (Class<? extends PGraphicsOpenGL>) renderer_class);
+        (Class<? extends PGraphicsOpenGL>) rendererClass);
     }
-    //anything else
+    // Anything else
     else {
       String message = String.format(
-        "Error: Unsupported renderer class: %s", renderer_name)
+        "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
     }
 
@@ -809,7 +809,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
     public SketchSurfaceViewGL(
         Context context, int wide, int high,
-        Class<? extends PGraphicsOpenGL> renderer_class){
+        Class<? extends PGraphicsOpenGL> clazz){
       super(context);
 
       // Check if the system supports OpenGL ES 2.0.
@@ -832,11 +832,11 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // before surfaceChanged() is ever called.
 
       //P2D
-      if (renderer_class.equals( PGraphics2D.class)) {
+      if (clazz.equals(PGraphics2D.class)) {
         g3 = new PGraphics2D();
       }
       //P3D
-      else if (renderer_class.equals( PGraphics3D.class)) {
+      else if (clazz.equals(PGraphics3D.class)) {
         g3 = new PGraphics3D();
       }
       //something that extends P2D, P3D, or PGraphicsOpenGL
@@ -844,7 +844,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
         try {
           //dang java generics
           Constructor<? extends PGraphicsOpenGL> constructor =
-            renderer_class.getConstructor();
+            clazz.getConstructor();
           g3 = constructor.newInstance();
         } catch (Exception exception) {
           throw new RuntimeException(
