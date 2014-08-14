@@ -350,7 +350,10 @@ class AndroidBuild extends JavaBuild {
   } */
 
   private File zipalignPackage(File signedPackage, File projectFolder) throws IOException, InterruptedException {
-    String zipalignPath = sdk.getSdkFolder().getAbsolutePath() + "/tools/zipalign";
+
+    File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0];
+    String zipalignPath = buildToolsFolder.getAbsolutePath() + "/zipalign";
+
     File alignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed-aligned.apk");
 
     String[] args = {

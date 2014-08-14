@@ -1,12 +1,12 @@
 package processing.mode.android;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import processing.app.Base;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class AVD {
@@ -137,7 +137,8 @@ public class AVD {
       "-n", name, 
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
-      "-s", DEFAULT_SKIN
+      "-s", DEFAULT_SKIN,
+      "--abi", "armeabi"
     };
 
     // Set the list to null so that exists() will check again
