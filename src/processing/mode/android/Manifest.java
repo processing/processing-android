@@ -21,18 +21,17 @@
 
 package processing.mode.android;
 
+import org.xml.sax.SAXException;
+import processing.app.Base;
+import processing.app.Sketch;
+import processing.core.PApplet;
+import processing.data.XML;
+
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
-import processing.app.*;
-import processing.core.PApplet;
-import processing.data.XML;
 
 
 public class Manifest {
@@ -90,6 +89,11 @@ public class Manifest {
     save();
   }
 
+  public void setSdkTarget(String version) {
+    XML usesSdk = xml.getChild("uses-sdk");
+    usesSdk.setString("android:minSdkVersion", version);
+    save();
+  }
 
 //writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />");
 //writer.println("  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />");
