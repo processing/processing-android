@@ -25,8 +25,10 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
+
 import processing.app.Base;
 import processing.app.Library;
+import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.exec.ProcessHelper;
@@ -41,8 +43,8 @@ import java.security.Permission;
 class AndroidBuild extends JavaBuild {
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
-  static final String sdkName = "2.3.3";
-  static final String sdkVersion = "10";  // Android 2.3.3 (Gingerbread)
+  static String sdkName = "2.3.3";
+  static String sdkVersion = "10";  // Android 2.3.3 (Gingerbread)
   static final String sdkTarget = "android-" + sdkVersion;
 
   private final AndroidSDK sdk;
@@ -66,6 +68,15 @@ class AndroidBuild extends JavaBuild {
     coreZipFile = mode.getCoreZipLocation();
   }
 
+  public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
+    sdkName = target.name;
+    sdkVersion = Integer.toString(target.version);
+
+    Manifest manifest = new Manifest(sketch);
+    manifest.setSdkTarget(sdkVersion);
+
+    Preferences.set("android.sdk.version", sdkVersion);
+  }
 
   /**
    * Build into temporary folders (needed for the Windows 8.3 bugs in the Android SDK).
