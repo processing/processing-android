@@ -49,7 +49,7 @@ public class AndroidEditor extends JavaEditor {
 
     @Override
     public void run() {
-      if(androidMode.getSDK() == null) return;
+      if (androidMode.getSDK() == null) return;
 
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
@@ -279,7 +279,7 @@ public class AndroidEditor extends JavaEditor {
     try {
       ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
 
-      if(targets.size() != 0) sdkMenu.removeAll();
+      if (targets.size() != 0) sdkMenu.removeAll();
 
       AndroidSDK.SDKTarget lowestTargetAvailable = null;
       JCheckBoxMenuItem lowestTargetMenuItem = null;
@@ -290,12 +290,12 @@ public class AndroidEditor extends JavaEditor {
       for(final AndroidSDK.SDKTarget target : targets) {
         final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
 
-        if(savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
+        if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
           lowestTargetAvailable = target;
           lowestTargetMenuItem = item;
         }
 
-        if(Integer.toString(target.version).equals(savedTargetVersion)) {
+        if (Integer.toString(target.version).equals(savedTargetVersion)) {
           AndroidBuild.setSdkTarget(target, sketch);
           item.setState(true);
           savedTargetSet = true;
@@ -325,7 +325,7 @@ public class AndroidEditor extends JavaEditor {
         sdkMenu.add(item);
       }
 
-      if(!savedTargetSet) {
+      if (!savedTargetSet) {
         AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
         lowestTargetMenuItem.setState(true);
       }

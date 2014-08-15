@@ -45,8 +45,8 @@ class AndroidSDK {
     "The selected folder does not appear to contain an Android SDK,\n" +
     "or the SDK needs to be updated to the latest version.";
 
-  private static final String ANDROID_SDK_URL =
-    "http://developer.android.com/sdk/";
+//  private static final String ANDROID_SDK_URL =
+//    "http://developer.android.com/sdk/";
 
 
   public AndroidSDK(File folder) throws BadSDKException, IOException {
@@ -404,7 +404,7 @@ class AndroidSDK {
 
     for(File platform : platforms.listFiles()) {
       File propFile = new File(platform, "build.prop");
-      if(!propFile.exists()) continue;
+      if (!propFile.exists()) continue;
 
       SDKTarget target = new SDKTarget();
 
@@ -412,18 +412,18 @@ class AndroidSDK {
       String line;
       while ((line = br.readLine()) != null) {
         String[] lineData = line.split("=");
-        if(lineData[0].equals("ro.build.version.sdk")) {
+        if (lineData[0].equals("ro.build.version.sdk")) {
           target.version = Integer.valueOf(lineData[1]);
         }
 
-        if(lineData[0].equals("ro.build.version.release")) {
+        if (lineData[0].equals("ro.build.version.release")) {
           target.name = lineData[1];
           break;
         }
       }
       br.close();
 
-      if(target.version != 0 && target.name != null) targets.add(target);
+      if (target.version != 0 && target.name != null) targets.add(target);
     }
 
     return targets;

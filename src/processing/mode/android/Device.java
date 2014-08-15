@@ -95,9 +95,9 @@ class Device {
         if (line.startsWith("Failure")) {
           errorMsg = line.substring(8);
 
-          if(line.contains("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES")) {
+          if (line.contains("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES")) {
             boolean removeResult = removeApp(build.getPackageName());
-            if(removeResult) return installApp(build, status);
+            if (removeResult) return installApp(build, status);
           }
 
           System.err.println(line);

@@ -5,6 +5,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
 import processing.app.Base;
 import processing.app.Preferences;
 
@@ -13,6 +14,7 @@ import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,6 +27,7 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+@SuppressWarnings("serial")
 public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-10.xml";
@@ -41,6 +44,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
   JLabel downloadedTextArea;
 
   private int totalSize = 0;
+  private static ZipFile zip;
 
   class SDKUrlHolder {
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
@@ -48,9 +52,9 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     public int totalSize = 0;
   }
 
-  class SDKDownloadTask extends SwingWorker {
+  class SDKDownloadTask extends SwingWorker<Object, Object> {
 
-    private int downloadedSize = 0, totalSize = 0;
+    private int downloadedSize = 0;
     private int BUFFER_SIZE = 4096;
 
     @Override
@@ -60,15 +64,15 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
       // creating sdk folders
       File sdkFolder = new File(modeFolder, "sdk");
-      if(!sdkFolder.exists()) sdkFolder.mkdir();
+      if (!sdkFolder.exists()) sdkFolder.mkdir();
       File platformsFolder = new File(sdkFolder, "platforms");
-      if(!platformsFolder.exists()) platformsFolder.mkdir();
+      if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
-      if(!buildToolsFolder.exists()) buildToolsFolder.mkdir();
+      if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
 
       // creating temp folder for downloaded zip packages
       File tempFolder = new File(modeFolder, "temp");
-      if(!tempFolder.exists()) tempFolder.mkdir();
+      if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
         SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, hostOs);
@@ -91,7 +95,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
 
-        if(Base.isLinux() || Base.isMacOS()) {
+        if (Base.isLinux() || Base.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
 
@@ -141,9 +145,9 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     }
 
     private String getOsString() {
-      if(Base.isWindows()) {
+      if (Base.isWindows()) {
         return "windows";
-      } else if(Base.isLinux()) {
+      } else if (Base.isLinux()) {
         return "linux";
       } else {
         return "macosx";
@@ -161,7 +165,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       NodeList platformList = doc.getElementsByTagName("sdk:platform");
       for(int i = 0; i < platformList.getLength(); i++) {
         Node platform = platformList.item(i);
-        if(((Element) platform).getElementsByTagName("sdk:api-level").item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
+        if (((Element) platform).getElementsByTagName("sdk:api-level").item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
           Node archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
           Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
           urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
@@ -177,7 +181,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       for(int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-        if(hostOs.equals(requiredHostOs)) {
+        if (hostOs.equals(requiredHostOs)) {
           urlHolder.platformToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
           urlHolder.platformToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.platformToolsFilename;
           urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
@@ -192,7 +196,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       for(int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-        if(hostOs.equals(requiredHostOs)) {
+        if (hostOs.equals(requiredHostOs)) {
           urlHolder.buildToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
           urlHolder.buildToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.buildToolsFilename;
           urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
@@ -207,7 +211,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       for(int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-        if(hostOs.equals(requiredHostOs)) {
+        if (hostOs.equals(requiredHostOs)) {
           urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
           urlHolder.toolsUrl = URL_REPOSITORY_FOLDER + urlHolder.toolsFilename;
           urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
@@ -221,11 +225,11 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    if(evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_TOTAL)) {
+    if (evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_TOTAL)) {
       progressBar.setIndeterminate(false);
       totalSize = (Integer) evt.getNewValue();
       progressBar.setMaximum(totalSize);
-    } else if(evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_DOWNLOADED)) {
+    } else if (evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_DOWNLOADED)) {
       downloadedTextArea.setText(humanReadableByteCount((Integer) evt.getNewValue(), true)
           + " / " + humanReadableByteCount(totalSize, true));
       progressBar.setValue((Integer) evt.getNewValue());
@@ -337,12 +341,11 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   static public void extractFolder(File file, File newPath) throws IOException {
     int BUFFER = 2048;
-    ZipFile zip = new ZipFile(file);
-    Enumeration zipFileEntries = zip.entries();
+    zip = new ZipFile(file);
+    Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
 
     // Process each entry
-    while (zipFileEntries.hasMoreElements())
-    {
+    while (zipFileEntries.hasMoreElements()) {
       // grab a zip file entry
       ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
       String currentEntry = entry.getName();
@@ -353,8 +356,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       // create the parent directory structure if needed
       destinationParent.mkdirs();
 
-      if (!entry.isDirectory())
-      {
+      if (!entry.isDirectory()) {
         BufferedInputStream is = new BufferedInputStream(zip
             .getInputStream(entry));
         int currentByte;
