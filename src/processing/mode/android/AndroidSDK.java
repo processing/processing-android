@@ -1,7 +1,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Editor;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
@@ -10,16 +9,20 @@ import processing.core.PApplet;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 class AndroidSDK {
   private final File folder;
   private final File tools;
+  private final File platforms;
   private final File platformTools;
   private final File androidTool;
 
@@ -42,8 +45,8 @@ class AndroidSDK {
     "The selected folder does not appear to contain an Android SDK,\n" +
     "or the SDK needs to be updated to the latest version.";
 
-  private static final String ANDROID_SDK_URL =
-    "http://developer.android.com/sdk/";
+//  private static final String ANDROID_SDK_URL =
+//    "http://developer.android.com/sdk/";
 
 
   public AndroidSDK(File folder) throws BadSDKException, IOException {
@@ -60,6 +63,11 @@ class AndroidSDK {
     platformTools = new File(folder, "platform-tools");
     if (!platformTools.exists()) {
       throw new BadSDKException("There is no platform-tools folder in " + folder);
+    }
+
+    platforms = new File(folder, "platforms");
+    if (!platforms.exists()) {
+      throw new BadSDKException("There is no platforms folder in " + folder);
     }
 
     androidTool = findAndroidTool(tools);
@@ -384,5 +392,40 @@ class AndroidSDK {
 //      ioe.printStackTrace();
 //      throw ioe;
 //    }
+  }
+
+  public static class SDKTarget {
+    public int version = 0;
+    public String name;
+  }
+
+  public ArrayList<SDKTarget> getAvailableSdkTargets() throws IOException {
+    ArrayList<SDKTarget> targets = new ArrayList<SDKTarget>();
+
+    for(File platform : platforms.listFiles()) {
+      File propFile = new File(platform, "build.prop");
+      if (!propFile.exists()) continue;
+
+      SDKTarget target = new SDKTarget();
+
+      BufferedReader br = new BufferedReader(new FileReader(propFile));
+      String line;
+      while ((line = br.readLine()) != null) {
+        String[] lineData = line.split("=");
+        if (lineData[0].equals("ro.build.version.sdk")) {
+          target.version = Integer.valueOf(lineData[1]);
+        }
+
+        if (lineData[0].equals("ro.build.version.release")) {
+          target.name = lineData[1];
+          break;
+        }
+      }
+      br.close();
+
+      if (target.version != 0 && target.name != null) targets.add(target);
+    }
+
+    return targets;
   }
 }

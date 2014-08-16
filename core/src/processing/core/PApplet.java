@@ -425,6 +425,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
 
   /** Called with the activity is first created. */
+  @SuppressWarnings("unchecked")
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -467,11 +468,32 @@ public class PApplet extends Activity implements PConstants, Runnable {
     int sw = sketchWidth();
     int sh = sketchHeight();
 
-    if (sketchRenderer().equals(JAVA2D)) {
-      surfaceView = new SketchSurfaceView(this, sw, sh);
-    } else if (sketchRenderer().equals(P2D) || sketchRenderer().equals(P3D)) {
-      surfaceView = new SketchSurfaceViewGL(this, sw, sh, sketchRenderer().equals(P3D));
+    // Get renderer name and class
+    String rendererName = sketchRenderer();
+    Class<?> rendererClass = null;
+    try {
+      rendererClass = Class.forName(rendererName);
+    } catch (ClassNotFoundException exception) {
+      String message = String.format(
+        "Error: Could not resolve renderer class name: %s", rendererName);
+      throw new RuntimeException(message, exception);
     }
+
+    if (rendererName.equals(JAVA2D)) {
+      // JAVA2D renderer
+      surfaceView = new SketchSurfaceView(this, sw, sh,
+        (Class<? extends PGraphicsAndroid2D>) rendererClass);
+    } else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)) {
+      // P2D, P3D, and any other PGraphicsOpenGL-based renderer
+      surfaceView = new SketchSurfaceViewGL(this, sw, sh,
+        (Class<? extends PGraphicsOpenGL>) rendererClass);
+    } else {
+      // Anything else
+      String message = String.format(
+        "Error: Unsupported renderer class: %s", rendererName);
+      throw new RuntimeException(message);
+    }
+
 //    g = ((SketchSurfaceView) surfaceView).getGraphics();
 
 //    surfaceView.setLayoutParams(new LayoutParams(sketchWidth(), sketchHeight()));
@@ -677,13 +699,15 @@ public class PApplet extends Activity implements PConstants, Runnable {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-  public class SketchSurfaceView extends SurfaceView
-  implements /*SketchSurfaceView,*/ SurfaceHolder.Callback {
+  public class SketchSurfaceView extends SurfaceView implements
+    SurfaceHolder.Callback {
+
     PGraphicsAndroid2D g2;
     SurfaceHolder surfaceHolder;
 
 
-    public SketchSurfaceView(Context context, int wide, int high) {
+    public SketchSurfaceView(Context context, int wide, int high,
+                             Class<? extends PGraphicsAndroid2D> clazz) {
       super(context);
 
 //      println("surface holder");
@@ -694,7 +718,20 @@ public class PApplet extends Activity implements PConstants, Runnable {
       surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
 //      println("creating graphics");
-      g2 = new PGraphicsAndroid2D();
+      if (clazz.equals(PGraphicsAndroid2D.class)) {
+        g2 = new PGraphicsAndroid2D();
+      } else {
+        try {
+          Constructor<? extends PGraphicsAndroid2D> constructor =
+            clazz.getConstructor();
+          g2 = constructor.newInstance();
+        } catch (Exception exception) {
+          throw new RuntimeException(
+            "Error: Failed to initialize custom Android2D renderer",
+            exception);
+        }
+      }
+
       // Set semi-arbitrary size; will be set properly when surfaceChanged() called
       g2.setSize(wide, high);
 //      newGraphics.setSize(getWidth(), getHeight());
@@ -779,12 +816,13 @@ public class PApplet extends Activity implements PConstants, Runnable {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-  public class SketchSurfaceViewGL extends GLSurfaceView /*implements SketchSurfaceView*/ {
+  public class SketchSurfaceViewGL extends GLSurfaceView {
     PGraphicsOpenGL g3;
     SurfaceHolder surfaceHolder;
 
 
-    public SketchSurfaceViewGL(Context context, int wide, int high, boolean is3D) {
+    public SketchSurfaceViewGL(Context context, int wide, int high,
+                               Class<? extends PGraphicsOpenGL> clazz) {
       super(context);
 
       // Check if the system supports OpenGL ES 2.0.
@@ -805,11 +843,24 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // null. This is required because PApplet.onResume events (which call
       // this.onResume() and thus require a valid renderer) are triggered
       // before surfaceChanged() is ever called.
-      if (is3D) {
-        g3 = new PGraphics3D();
-      } else {
+
+      if (clazz.equals(PGraphics2D.class)) { // P2D
         g3 = new PGraphics2D();
+      } else if (clazz.equals(PGraphics3D.class)) { // P3D
+        g3 = new PGraphics3D();
+      } else { // something that extends P2D, P3D, or PGraphicsOpenGL
+        try {
+          Constructor<? extends PGraphicsOpenGL> constructor =
+            clazz.getConstructor();
+          g3 = constructor.newInstance();
+        } catch (Exception exception) {
+          throw new RuntimeException(
+            "Error: Failed to initialize custom OpenGL renderer",
+            exception);
+        }
       }
+
+      //set it up
       g3.setParent(PApplet.this);
       g3.setPrimary(true);
       // Set semi-arbitrary size; will be set properly when surfaceChanged() called
@@ -818,8 +869,9 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
       setEGLContextClientVersion(2);
 
-      if (PGLES.ENABLE_MULTISAMPLING) {
-        setEGLConfigChooser(((PGLES)g3.pgl).getConfigChooser());
+      int quality = sketchQuality();
+      if (1 < quality) {
+        setEGLConfigChooser(((PGLES)g3.pgl).getConfigChooser(quality));
       }
 
       // The renderer can be set only once.

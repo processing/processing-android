@@ -32,6 +32,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.TimerTask;
 
 @SuppressWarnings("serial")
@@ -48,7 +49,7 @@ public class AndroidEditor extends JavaEditor {
 
     @Override
     public void run() {
-      if(androidMode.getSDK() == null) return;
+      if (androidMode.getSDK() == null) return;
 
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
@@ -217,6 +218,29 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
+    final JMenu sdkMenu = new JMenu("Select target SDK");
+    JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
+    defaultItem.setEnabled(false);
+    sdkMenu.add(defaultItem);
+
+    new Thread() {
+      @Override
+      public void run() {
+        while(androidMode == null || androidMode.getSDK() == null) {
+          try {
+            Thread.sleep(3000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+        updateSdkMenu(sdkMenu);
+      }
+    }.start();
+
+    menu.add(sdkMenu);
+
+    menu.addSeparator();
+
     item = new JMenuItem("Android SDK Manager");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -249,6 +273,65 @@ public class AndroidEditor extends JavaEditor {
     menu.add(item);
 
     return menu;
+  }
+
+  private void updateSdkMenu(final JMenu sdkMenu) {
+    try {
+      ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
+
+      if (targets.size() != 0) sdkMenu.removeAll();
+
+      AndroidSDK.SDKTarget lowestTargetAvailable = null;
+      JCheckBoxMenuItem lowestTargetMenuItem = null;
+
+      String savedTargetVersion = Preferences.get("android.sdk.version");
+      boolean savedTargetSet = false;
+
+      for(final AndroidSDK.SDKTarget target : targets) {
+        final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
+
+        if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
+          lowestTargetAvailable = target;
+          lowestTargetMenuItem = item;
+        }
+
+        if (Integer.toString(target.version).equals(savedTargetVersion)) {
+          AndroidBuild.setSdkTarget(target, sketch);
+          item.setState(true);
+          savedTargetSet = true;
+        }
+
+        item.addChangeListener(new ChangeListener() {
+          @Override
+          public void stateChanged(ChangeEvent e) {
+            if (target.name.equals(AndroidBuild.sdkName)) item.setState(true);
+            else item.setState(false);
+          }
+        });
+
+        item.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            AndroidBuild.setSdkTarget(target, sketch);
+
+            for (int i = 0; i < sdkMenu.getItemCount(); i++) {
+              ((JCheckBoxMenuItem) sdkMenu.getItem(i)).setState(false);
+            }
+
+            item.setState(true);
+          }
+        });
+
+        sdkMenu.add(item);
+      }
+
+      if (!savedTargetSet) {
+        AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
+        lowestTargetMenuItem.setState(true);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
 
@@ -287,7 +370,7 @@ public class AndroidEditor extends JavaEditor {
   public void showReference(String filename) {
     File javaReferenceFolder = Base.getContentFile("modes/java/reference");
     File file = new File(javaReferenceFolder, filename);
-    Base.openURL("file://" + file.getAbsolutePath());
+    Base.openURL(file.toURI().toString());
   }
 
 
@@ -471,7 +554,7 @@ public class AndroidEditor extends JavaEditor {
     // Need to implement an entire signing setup first
     // http://dev.processing.org/bugs/show_bug.cgi?id=1430
     if (handleExportCheckModified()) {
-      deactivateExport();
+//      deactivateExport();
       new KeyStoreManager(this);
     }
   }

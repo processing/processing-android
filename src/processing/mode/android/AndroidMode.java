@@ -141,7 +141,7 @@ public class AndroidMode extends JavaMode {
       }
     }
     if (sdk == null) {
-      if(!sdkDownloadInProgress) {
+      if (!sdkDownloadInProgress) {
         Base.showWarning("It's gonna be a bad day",
             "The Android SDK could not be loaded.\n" +
                 "Use of Android mode will be all but disabled.",

@@ -71,8 +71,6 @@ public class PGLES extends PGL {
     MAX_CAPS_JOINS_LENGTH = 1000;
   }
 
-  public static final boolean ENABLE_MULTISAMPLING = false;
-
   // Some EGL constants needed to initialize a GLES2 context.
   protected static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
   protected static final int EGL_OPENGL_ES2_BIT         = 0x0004;
@@ -80,6 +78,11 @@ public class PGLES extends PGL {
   // Coverage multisampling identifiers for nVidia Tegra2
   protected static final int EGL_COVERAGE_BUFFERS_NV    = 0x30E0;
   protected static final int EGL_COVERAGE_SAMPLES_NV    = 0x30E1;
+  protected static final int GL_COVERAGE_BUFFER_BIT_NV  = 0x8000;
+
+  protected static boolean usingMultisampling = false;
+  protected static boolean usingCoverageMultisampling = false;
+  protected static int multisampleCount = 1;
 
   ///////////////////////////////////////////////////////////
 
@@ -174,15 +177,15 @@ public class PGLES extends PGL {
   }
 
 
-  public AndroidConfigChooser getConfigChooser() {
-    configChooser = new AndroidConfigChooser(5, 6, 5, 4, 16, 1);
+  public AndroidConfigChooser getConfigChooser(int samples) {
+    configChooser = new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
     return configChooser;
   }
 
 
   public AndroidConfigChooser getConfigChooser(int r, int g, int b, int a,
-                                               int d, int s) {
-    configChooser = new AndroidConfigChooser(r, g, b, a, d, s);
+                                               int d, int s, int samples) {
+    configChooser = new AndroidConfigChooser(r, g, b, a, d, s, samples);
     return configChooser;
   }
 
@@ -259,6 +262,26 @@ public class PGLES extends PGL {
     public int stencilBits;
     public int[] tempValue = new int[1];
 
+    public int numSamples;
+
+    /*
+    The GLES2 extensions supported are:
+      GL_OES_rgb8_rgba8 GL_OES_depth24 GL_OES_vertex_half_float
+      GL_OES_texture_float GL_OES_texture_half_float
+      GL_OES_element_index_uint GL_OES_mapbuffer
+      GL_OES_fragment_precision_high GL_OES_compressed_ETC1_RGB8_texture
+      GL_OES_EGL_image GL_OES_required_internalformat GL_OES_depth_texture
+      GL_OES_get_program_binary GL_OES_packed_depth_stencil
+      GL_OES_standard_derivatives GL_OES_vertex_array_object GL_OES_egl_sync
+      GL_EXT_multi_draw_arrays GL_EXT_texture_format_BGRA8888
+      GL_EXT_discard_framebuffer GL_EXT_shader_texture_lod
+      GL_IMG_shader_binary GL_IMG_texture_compression_pvrtc
+      GL_IMG_texture_stream2 GL_IMG_texture_npot
+      GL_IMG_texture_format_BGRA8888 GL_IMG_read_format
+      GL_IMG_program_binary GL_IMG_multisampled_render_to_texture
+      */
+
+    /*
     // The attributes we want in the frame buffer configuration for Processing.
     // For more details on other attributes, see:
     // http://www.khronos.org/opengles/documentation/opengles1_0/html/eglChooseConfig.html
@@ -307,23 +330,57 @@ public class PGLES extends PGL {
       EGL10.EGL_SAMPLE_BUFFERS, 1,
       EGL10.EGL_SAMPLES, 2,
       EGL10.EGL_NONE };
+    */
 
-    public AndroidConfigChooser(int r, int g, int b, int a, int d, int s) {
-      redTarget = r;
-      greenTarget = g;
-      blueTarget = b;
-      alphaTarget = a;
-      depthTarget = d;
-      stencilTarget = s;
+    protected int[] attribsNoMSAA = {
+      EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL10.EGL_SAMPLE_BUFFERS, 0,
+      EGL10.EGL_NONE };
+
+    public AndroidConfigChooser(int rbits, int gbits, int bbits, int abits,
+                                int dbits, int sbits, int samples) {
+      redTarget = rbits;
+      greenTarget = gbits;
+      blueTarget = bbits;
+      alphaTarget = abits;
+      depthTarget = dbits;
+      stencilTarget = sbits;
+      numSamples = samples;
     }
 
     public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
-      EGLConfig[] configs = chooseConfigWithAttribs(egl, display, configAttribsGL_MSAA);
-      if (configs == null) {
-        chooseConfigWithAttribs(egl, display, configAttribsGL_CovMSAA);
+      EGLConfig[] configs = null;
+      if (1 < numSamples) {
+        int[] attribs = new int[] {
+          EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+          EGL10.EGL_SAMPLE_BUFFERS, 1,
+          EGL10.EGL_SAMPLES, numSamples,
+          EGL10.EGL_NONE };
+        configs = chooseConfigWithAttribs(egl, display, attribs);
         if (configs == null) {
-          chooseConfigWithAttribs(egl, display, configAttribsGL_NoMSAA);
+          // No normal multisampling config was found. Try to create a
+          // coverage multisampling configuration, for the nVidia Tegra2.
+          // See the EGL_NV_coverage_sample documentation.
+          int[] attribsCov = {
+            EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_COVERAGE_BUFFERS_NV, 1,
+            EGL_COVERAGE_SAMPLES_NV, numSamples,
+            EGL10.EGL_NONE };
+          configs = chooseConfigWithAttribs(egl, display, attribsCov);
+          if (configs == null) {
+            configs = chooseConfigWithAttribs(egl, display, attribsNoMSAA);
+          } else {
+            usingMultisampling = true;
+            usingCoverageMultisampling = true;
+            multisampleCount = numSamples;
+          }
+        } else {
+          usingMultisampling = true;
+          usingCoverageMultisampling = false;
+          multisampleCount = numSamples;
         }
+      } else {
+        configs = chooseConfigWithAttribs(egl, display, attribsNoMSAA);
       }
 
       if (configs == null) {
@@ -873,9 +930,9 @@ public class PGLES extends PGL {
     RENDERBUFFER_STENCIL_SIZE    = GLES20.GL_RENDERBUFFER_STENCIL_SIZE;
     RENDERBUFFER_INTERNAL_FORMAT = GLES20.GL_RENDERBUFFER_INTERNAL_FORMAT;
 
-    MULTISAMPLE    = 0x809D;
-    POINT_SMOOTH   = 0x0B10;
-    LINE_SMOOTH    = 0x0B10;
+    MULTISAMPLE    = -1;
+    POINT_SMOOTH   = -1;
+    LINE_SMOOTH    = -1;
     POLYGON_SMOOTH = -1;
   }
 
@@ -1619,6 +1676,9 @@ public class PGLES extends PGL {
 
   @Override
   public void clear(int buf) {
+    if (usingMultisampling && usingCoverageMultisampling) {
+      buf |= GL_COVERAGE_BUFFER_BIT_NV;
+    }
     GLES20.glClear(buf);
   }
 
