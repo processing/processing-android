@@ -32,6 +32,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-10.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
+  private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
 
   private static final String PLATFORM_API_LEVEL = "10";
 
@@ -69,6 +70,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
+      File extrasFolder = new File(sdkFolder, "extras");
+      if(!extrasFolder.exists()) extrasFolder.mkdir();
 
       // creating temp folder for downloaded zip packages
       File tempFolder = new File(modeFolder, "temp");
@@ -94,6 +97,13 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
+
+        // usb driver
+        if(Base.isWindows()) {
+          File usbDriverFolder = new File(extrasFolder, "google");
+          File downloadedFolder = new File(tempFolder, "latest_usb_driver_windows.zip");
+          downloadAndUnpack(URL_USB_DRIVER, downloadedFolder, usbDriverFolder);
+        }
 
         if (Base.isLinux() || Base.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
