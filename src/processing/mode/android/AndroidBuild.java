@@ -34,6 +34,7 @@ import processing.app.SketchException;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
+import processing.mode.android.signing.JarSigner;
 import processing.mode.java.JavaBuild;
 
 import java.io.*;
@@ -304,11 +305,12 @@ class AndroidBuild extends JavaBuild {
 
     File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
     if (!unsignedPackage.exists()) return null;
+    File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
 
-    JarSigner.signJar(unsignedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
+    JarSigner.signJar(unsignedPackage, signedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
 
     //if (verifySignedPackage(unsignedPackage)) {
-    File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
+    /*File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
     if (signedPackage.exists()) {
       boolean deleteResult = signedPackage.delete();
       if (!deleteResult) {
@@ -323,7 +325,7 @@ class AndroidBuild extends JavaBuild {
       Base.showWarning("Error during package signing",
           "Unable to rename package file");
       return null;
-    }
+    }*/
 
     File alignedPackage = zipalignPackage(signedPackage, projectFolder);
     return alignedPackage;
