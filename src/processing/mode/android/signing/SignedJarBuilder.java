@@ -43,7 +43,6 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.eclipse.core.runtime.*;
 import sun.misc.BASE64Encoder;
 import sun.security.pkcs.ContentInfo;
 import sun.security.pkcs.PKCS7;
@@ -100,12 +99,12 @@ public class SignedJarBuilder {
     public int size() {
       return mCount;
     }
-    public byte[] getContents(){
-      byte[] result = new byte[contents.size()];
-      for(int i=0;i<contents.size();i++)
-        result[i]=contents.get(i);
-      return result;
-    }
+//    public byte[] getContents(){
+//      byte[] result = new byte[contents.size()];
+//      for(int i=0;i<contents.size();i++)
+//        result[i]=contents.get(i);
+//      return result;
+//    }
   }
 
   private JarOutputStream mOutputJar;

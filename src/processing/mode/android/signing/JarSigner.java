@@ -2,7 +2,6 @@ package processing.mode.android.signing;
 
 import java.io.*;
 import java.security.*;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
