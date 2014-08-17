@@ -482,21 +482,44 @@ public class AndroidEditor extends JavaEditor {
    * Build the sketch and run it on a device with the debugger connected.
    */
   public void handleRunDevice() {
-    new Thread() {
-      public void run() {
-        toolbar.activate(AndroidToolbar.RUN);
-        startIndeterminate();
-        prepareRun();
-        try {
-          androidMode.handleRunDevice(sketch, AndroidEditor.this);
-        } catch (SketchException e) {
-          statusError(e);
-        } catch (IOException e) {
-          statusError(e);
-        }
-        stopIndeterminate();
+    if(Base.isWindows() && !Preferences.getBoolean("usbDriverWarningShown")) {
+      Preferences.setBoolean("usbDriverWarningShown", true);
+
+      String message = "";
+      File usbDriverFile = new File(((AndroidMode) sketch.getMode()).getSDK().getSdkFolder(), "extras/google/usb_driver");
+      if (usbDriverFile.exists()) {
+        message = "<html><body>" +
+            "You might need to install Google USB Driver to run the sketch on your device.<br>" +
+            "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
+            "For your reference, the driver is located in: " + usbDriverFile.getAbsolutePath();
+      } else {
+        message = "<html><body>" +
+            "You might need to install Google USB Driver to run the sketch on your device.<br>" +
+            "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
+            "You will also need to download the driver from <a href='http://developer.android.com/sdk/win-usb.html'>http://developer.android.com/sdk/win-usb.html</a>";
       }
-    }.start();
+
+      Base.showWarning(
+          "USB Driver warning",
+          message
+      );
+    } else {
+      new Thread() {
+        public void run() {
+          toolbar.activate(AndroidToolbar.RUN);
+          startIndeterminate();
+          prepareRun();
+          try {
+            androidMode.handleRunDevice(sketch, AndroidEditor.this);
+          } catch (SketchException e) {
+            statusError(e);
+          } catch (IOException e) {
+            statusError(e);
+          }
+          stopIndeterminate();
+        }
+      }.start();
+    }
   }
 
 
