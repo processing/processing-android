@@ -46,7 +46,7 @@ class AndroidBuild extends JavaBuild {
   static final String basePackage = "processing.test";
   static String sdkName = "2.3.3";
   static String sdkVersion = "10";  // Android 2.3.3 (Gingerbread)
-  static final String sdkTarget = "android-" + sdkVersion;
+  static String sdkTarget = "android-" + sdkVersion;
 
   private final AndroidSDK sdk;
   private final File coreZipFile;
@@ -72,6 +72,7 @@ class AndroidBuild extends JavaBuild {
   public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
     sdkName = target.name;
     sdkVersion = Integer.toString(target.version);
+    sdkTarget = "android-" + sdkVersion;
 
     Manifest manifest = new Manifest(sketch);
     manifest.setSdkTarget(sdkVersion);
