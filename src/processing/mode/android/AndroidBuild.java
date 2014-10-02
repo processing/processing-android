@@ -627,7 +627,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("       <isset property=\"env.ANDROID_HOME\" />");
     writer.println("  </condition>");
 
-    writer.println("  <property name=\"ecj.jar\" value=\"" + Base.getToolsFolder() + "/../modes/Java/mode/ecj.jar\" />");
+    writer.println("  <property name=\"ecj.jar\" value=\"" + Base.getToolsFolder() + "/../modes/java/mode/ecj.jar\" />");
     writer.println("  <property name=\"build.compiler\" value=\"org.eclipse.jdt.core.JDTCompilerAdapter\" />");
 
     writer.println("  <mkdir dir=\"bin\" />");
