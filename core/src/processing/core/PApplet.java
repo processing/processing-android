@@ -38,9 +38,11 @@ import android.content.pm.ConfigurationInfo;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.*;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.text.format.Time;
 import android.util.*;
@@ -5286,6 +5288,12 @@ public class PApplet extends Activity implements PConstants, Runnable {
     return new File(sketchPath(where));
   }
 
+  public File getSDCardDirectoryFile(String where) {
+	  return new File(new File(
+			  Environment.getExternalStorageDirectory() + "/Processing",
+			  getPackageName()),
+			  where);
+  }
 
   /**
    * Returns a path inside the applet folder to save to. Like sketchPath(),
@@ -5302,11 +5310,12 @@ public class PApplet extends Activity implements PConstants, Runnable {
    */
   public String savePath(String where) {
     if (where == null) return null;
-//    System.out.println("filename before sketchpath is " + where);
-    String filename = sketchPath(where);
-//    System.out.println("filename after sketchpath is " + filename);
+    File filename = getSDCardDirectoryFile(where);
     createPath(filename);
-    return filename;
+    //Notify the Gallery fot the new file
+    MediaScannerConnection.scanFile(this,
+    		new String[] { filename.getPath() }, new String[] { "image/*" }, null);
+    return filename.getAbsolutePath();
   }
 
 
