@@ -63,7 +63,9 @@ public class AndroidPreprocessor extends PdePreprocessor {
     sizeStatement = info[0];
     sketchWidth = info[1];
     sketchHeight = info[2];
-    sketchRenderer = info[3];
+    if (info[3] != null) {
+    	sketchRenderer = info[3].replace(",", "");
+    }
     return info;
   }
   
