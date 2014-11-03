@@ -1234,7 +1234,7 @@ public class PGLES extends PGL {
 
   @Override
   public void copyTexSubImage2D(int target, int level, int xOffset, int yOffset, int x, int y, int width, int height) {
-    GLES20.glCopyTexSubImage2D(target, level, x, y, xOffset, xOffset, width, height);
+    GLES20.glCopyTexSubImage2D(target, level, x, y, xOffset, yOffset, width, height);
   }
 
   @Override
