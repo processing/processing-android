@@ -55,7 +55,7 @@ public class AndroidRunner implements DeviceListener {
 //  final Device device = waitForDevice(deviceFuture, monitor);
     final Device device = waitForDevice(deviceFuture, listener);
     if (device == null || !device.isAlive()) {
-      listener.statusError("Lost connection with device while launching. Try again.");
+      listener.statusError("Couldn't find the device. Try again.");
       // Reset the server, in case that's the problem. Sometimes when 
       // launching the emulator times out, the device list refuses to update.
       Devices.killAdbServer();

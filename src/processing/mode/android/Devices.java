@@ -199,9 +199,11 @@ class Devices {
     if (hardware != null) {
       return hardware;
     }
+    int sleepCount = 0;
     while (!Thread.currentThread().isInterrupted()) {
       try {
         Thread.sleep(2000);
+        ++sleepCount;
       } catch (final InterruptedException e) {
         return null;
       }
@@ -209,6 +211,7 @@ class Devices {
       if (hardware != null) {
         return hardware;
       }
+      if (sleepCount > 4) break; //We won't wait for more than 10 seconds
     }
     return null;
   }
