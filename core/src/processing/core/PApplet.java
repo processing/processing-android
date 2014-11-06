@@ -5289,10 +5289,17 @@ public class PApplet extends Activity implements PConstants, Runnable {
   }
 
   public File getSDCardDirectoryFile(String where) {
-	  return new File(new File(
-			  Environment.getExternalStorageDirectory() + "/Processing",
-			  getPackageName()),
-			  where);
+	  String state = Environment.getExternalStorageState();
+	  if (Environment.MEDIA_MOUNTED.equals(state)) {
+		  return new File(new File(
+				  Environment.getExternalStorageDirectory() + "/Processing",
+				  getPackageName()),
+				  where);
+	  } else {
+		  //If external storage is not available, fall back to internal storage.
+		  Log.i(getComponentName().getPackageName(), "External storage not available, falling back to internal.");
+		  return new File(sketchPath(where));
+	  }
   }
 
   /**
