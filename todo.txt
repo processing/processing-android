@@ -8,7 +8,26 @@ X   https://github.com/processing/processing-android/issues/50
 X sync PVector plus the processing.data package
 X   https://github.com/processing/processing-android/issues/47
 X   https://github.com/processing/processing-android/pull/42
+X "Smooth is not supported by this hardware (or driver)" message
+X   even with Nexus 4, Android 4.2.2
+X   https://github.com/processing/processing-android/issues/2
+X "Bitmap size exceeds VM budget" error when loading many images
+X   https://github.com/processing/processing-android/issues/60
+_ seems to not be printing newlines and indents when writing the xml files
 
+gsoc
+X fixes for ecj compilation
+X   https://github.com/processing/processing-android/pull/58
+X implement certificates (self-signed) for distribution
+X   http://developer.android.com/guide/publishing/app-signing.html
+X   http://code.google.com/p/processing/issues/detail?id=222
+X   https://github.com/processing/processing-android/issues/15
+X implement automatic download/install of android tools
+X   also need to install USB Driver on Windows, and set device rules on Linux
+X   http://code.google.com/p/processing/issues/detail?id=203
+X   https://github.com/processing/processing-android/issues/20
+
+_ make Android write .jar not .zip
 
 _ figure out how to build from Eclipse JDI so we can remove tools.jar and javac
 _   https://github.com/processing/processing/issues/1840
@@ -144,16 +163,6 @@ _ setting the default package: manifest/package
 _ application/android:label
 _   used on home screen, manage applications, my downloads, etc
 _ http://developer.android.com/guide/publishing/preparing.html
-_ implement certificates (self-signed) for distribution
-_   http://developer.android.com/guide/publishing/app-signing.html
-_   http://code.google.com/p/processing/issues/detail?id=222
-create new keystore
-location: [   ] (browse)
-password: [   ]
-confirm: [   ]
-...then asks for 
-alias, password, confirm, validity (years)
-first/last name, ounit, org, city/locale, state/province, country code (xx)
 
 _ StreamPump has been quieted, but maybe this needs to be a global log setting
 
@@ -277,10 +286,6 @@ P3 _     perhaps the first time an application is installed, remove it?
 P3 _   http://code.google.com/p/processing/issues/detail?id=236
 P3 _ library support also needs android manifest changes
 P3 _   http://code.google.com/p/processing/issues/detail?id=225
-
-_ implement automatic download/install of android tools
-_   also need to install USB Driver on Windows, and set device rules on Linux
-_   http://code.google.com/p/processing/issues/detail?id=203
 
 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 
