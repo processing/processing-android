@@ -357,7 +357,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     // Process each entry
     while (zipFileEntries.hasMoreElements()) {
       // grab a zip file entry
-      ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
+      ZipEntry entry = zipFileEntries.nextElement();
       String currentEntry = entry.getName();
       File destFile = new File(newPath, currentEntry);
       //destFile = new File(newPath, destFile.getName());
