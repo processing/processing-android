@@ -40,12 +40,6 @@ _ temporary files (for sketches and logs) are not deleted
 o   http://code.google.com/p/processing/issues/detail?id=562
 _   https://github.com/processing/processing-android/issues/33
 
-_ requires deleting the app before reinstalling
-_   just fix this like the others
-debug:
-Failure [INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]
-Shutting down any existing adb server...
-
 _ NullPointerException in AndroidBuild.writeLocalProps(AndroidBuild.java:458)
 _   prompts for SDK, works; then after restart breaks again
 _   also refers to ANDROID_HOME and not ANDROID_SDK.. 

@@ -1,3 +1,23 @@
+0232
+X Mismatched API level inside project.properties (Android mode ver. 3)
+X   https://github.com/processing/processing-android/issues/73
+X ecj.jar isn't found properly
+X   https://github.com/processing/processing-android/issues/67
+X   https://github.com/processing/processing-android/pull/76
+
+0228
+X figure out how to build from Eclipse JDI so we can remove tools.jar and javac
+X   https://github.com/processing/processing/issues/1840
+X figure out Android build w/o javac so we can remove tools.jar and javac
+X   also to the p5 repo with just a JRE
+X   remove initRequirements from Base (no longer need JDI)
+X     move this into Android mode?
+X   https://github.com/processing/processing-android/issues/46
+  
+X requires deleting the app before reinstalling
+X   just fix this like the others
+X   https://github.com/processing/processing-android/issues/55
+
 0217 android (released alongside 2.0b9)
 X split Android mode from the rest of the project
 X   build core when building the mode itself
