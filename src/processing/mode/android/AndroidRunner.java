@@ -21,12 +21,14 @@
 
 package processing.mode.android;
 
+import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import processing.app.Editor;
 import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
@@ -36,10 +38,22 @@ public class AndroidRunner implements DeviceListener {
   AndroidBuild build;
   RunnerListener listener;
   
+  protected PrintStream sketchErr;
+  protected PrintStream sketchOut;
+
   
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
     this.listener = listener;
+    
+    if (listener instanceof Editor) {
+      Editor editor = (Editor) listener;
+      sketchErr = editor.getConsole().getErr();
+      sketchOut = editor.getConsole().getOut();
+    } else {
+      sketchErr = System.err;
+      sketchOut = System.out;
+    }
   }
   
   
@@ -263,7 +277,7 @@ public class AndroidRunner implements DeviceListener {
 //    if (Runner.handleCommonErrors(exceptionClass, exceptionLine, listener)) {
 //      return;
 //    }
-    Runner.handleCommonErrors(exceptionClass, exceptionLine, listener);
+    Runner.handleCommonErrors(exceptionClass, exceptionLine, listener, sketchErr);
 
     while (frames.hasNext()) {
       final String line = frames.next();
