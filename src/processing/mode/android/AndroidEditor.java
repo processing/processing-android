@@ -23,7 +23,7 @@ package processing.mode.android;
 
 import processing.app.*;
 import processing.core.PApplet;
-import processing.mode.java.JavaEditor;
+import processing.mode.experimental.DebugEditor;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.TimerTask;
 
 @SuppressWarnings("serial")
-public class AndroidEditor extends JavaEditor {
+public class AndroidEditor extends DebugEditor {
   private AndroidMode androidMode;
 
   class UpdateDeviceListTask extends TimerTask {

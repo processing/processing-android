@@ -22,7 +22,7 @@
 package processing.mode.android;
 
 import processing.app.*;
-import processing.mode.java.JavaMode;
+import processing.mode.experimental.ExperimentalMode;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-public class AndroidMode extends JavaMode {
+public class AndroidMode extends ExperimentalMode {
   private AndroidSDK sdk;
   private File coreZipLocation;
   private AndroidRunner runner;
