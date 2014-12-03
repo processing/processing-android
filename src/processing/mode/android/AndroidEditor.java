@@ -181,7 +181,7 @@ public class AndroidEditor extends DebugEditor {
   }
 
 
-  public JMenu buildModeMenu() {
+  public JMenu[] buildMultipleModeMenu() {
     JMenu menu = new JMenu("Android");
     JMenuItem item;
 
@@ -272,7 +272,7 @@ public class AndroidEditor extends DebugEditor {
     });
     menu.add(item);
 
-    return menu;
+    return new JMenu[] {menu, super.buildDebugMenu()};
   }
 
   private void updateSdkMenu(final JMenu sdkMenu) {
