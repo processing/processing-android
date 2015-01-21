@@ -83,8 +83,6 @@ public class Commander implements RunnerListener {
     Base.setCommandLine();
     // init the platform so that prefs and other native code is ready to go
     Base.initPlatform();
-    // make sure a full JDK is installed
-    Base.initRequirements();
 
     // launch command line handler
     Commander commander = new Commander(args);
