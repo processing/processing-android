@@ -21,8 +21,10 @@
 package processing.mode.android;
 
 import java.awt.Image;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 
+import javax.swing.Box;
 import javax.swing.JPopupMenu;
 
 import processing.app.Base;
@@ -39,20 +41,20 @@ public class AndroidToolbar extends EditorToolbar {
   static protected final int OPEN   = 3;
   static protected final int SAVE   = 4;
   static protected final int EXPORT = 5;
+  
+  AndroidEditor aeditor;;
 
 
-  public AndroidToolbar(Editor editor, Base base) {
-    super(editor, base);
+  public AndroidToolbar(Editor editor) {
+    super(editor);
+    this.aeditor = (AndroidEditor) editor;
   }
 
-
-  public void init() {
-    Image[][] images = loadImages();
-    for (int i = 0; i < 6; i++) {
-      addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
-    }
+  
+  @Override
+  public void addModeButtons(Box box) {
+	  //TODO: What to write here ?
   }
-
 
   static public String getTitle(int index, boolean shift) {
     switch (index) {
@@ -109,6 +111,23 @@ public class AndroidToolbar extends EditorToolbar {
         aeditor.handleExportProject();
       }
       break;
+    }
+  }
+  
+  
+  @Override
+  public void handleStop() {
+	aeditor.handleStop();
+  }
+
+
+  @Override
+  public void handleRun(int modifiers) {
+	boolean shift = (modifiers & InputEvent.SHIFT_MASK) != 0;
+	if (!shift) {
+      aeditor.handleRunDevice();
+    } else {
+      aeditor.handleRunEmulator();
     }
   }
 }

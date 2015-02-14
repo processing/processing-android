@@ -36,16 +36,17 @@
 <!--
 	   classpath="../core/library/core.jar; lib/ant.jar; lib/ant-launcher.jar; lib/antlr.jar; lib/apple.jar; lib/jdt-core.jar; lib/jna.jar; lib/org-netbeans-swing-outline.jar;lib/com.ibm.icu_4.4.2.v20110823.jar;lib/jdi.jar;lib/jdimodel.jar;lib/org.eclipse.osgi_3.8.1.v20120830-144521.jar"
 -->
-    <javac source="1.6" 
-	   target="1.6" 
-	   destdir="bin" 
-	   encoding="UTF-8" 
+    <javac source="1.6"
+	   target="1.6"
+	   destdir="bin"
+	   encoding="UTF-8"
 	   includeAntRuntime="false"
- 	   classpath="${processing.dir}/core/library/core.jar; 
+ 	   classpath="${processing.dir}/core/library/core.jar;
+          ${processing.dir}/java/mode/JavaMode.jar;
 		      ${processing.dir}/app/pde.jar;
 		      ${processing.dir}/app/lib/ant.jar;
 		      ${processing.dir}/app/lib/ant-launcher.jar;
-		      ${processing.dir}/app/lib/antlr.jar;
+		      ${processing.dir}/java/mode/antlr.jar;
 		      mode/org.eclipse.core.runtime-3.1.0.jar"
 	   debug="on">
       <src path="src" />

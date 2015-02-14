@@ -446,7 +446,8 @@ public class AndroidEditor extends JavaEditor {
   public void statusError(String what) {
     super.statusError(what);
 //    new Exception("deactivating RUN").printStackTrace();
-    toolbar.deactivate(AndroidToolbar.RUN);
+//    toolbar.deactivate(AndroidToolbar.RUN);
+    toolbar.deactivateRun();
   }
 
 
@@ -462,7 +463,8 @@ public class AndroidEditor extends JavaEditor {
   public void handleRunEmulator() {
     new Thread() {
       public void run() {
-        toolbar.activate(AndroidToolbar.RUN);
+//        toolbar.activate(AndroidToolbar.RUN);
+    	toolbar.activateRun();
         startIndeterminate();
         prepareRun();
         try {
@@ -506,7 +508,8 @@ public class AndroidEditor extends JavaEditor {
     } else {
       new Thread() {
         public void run() {
-          toolbar.activate(AndroidToolbar.RUN);
+//          toolbar.activate(AndroidToolbar.RUN);
+          toolbar.activateRun();
           startIndeterminate();
           prepareRun();
           try {
@@ -522,9 +525,11 @@ public class AndroidEditor extends JavaEditor {
     }
   }
 
-
+  
+  @Override
   public void handleStop() {
-    toolbar.deactivate(AndroidToolbar.RUN);
+//    toolbar.deactivate(AndroidToolbar.RUN);
+    toolbar.deactivateRun();
     stopIndeterminate();
     androidMode.handleStop(this);
   }
@@ -538,7 +543,8 @@ public class AndroidEditor extends JavaEditor {
     if (handleExportCheckModified()) {
       new Thread() {
         public void run() {
-          toolbar.activate(AndroidToolbar.EXPORT);
+//          toolbar.activate(AndroidToolbar.EXPORT);
+          toolbar.activateRun();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
           AndroidBuild build = new AndroidBuild(sketch, androidMode);
@@ -554,7 +560,8 @@ public class AndroidEditor extends JavaEditor {
             statusError(e);
           }
           stopIndeterminate();
-          toolbar.deactivate(AndroidToolbar.EXPORT);
+//          toolbar.deactivate(AndroidToolbar.EXPORT);
+          toolbar.deactivateRun();
         }
       }.start();
     }
