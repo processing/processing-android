@@ -36,6 +36,13 @@
 <!--
 	   classpath="../core/library/core.jar; lib/ant.jar; lib/ant-launcher.jar; lib/antlr.jar; lib/apple.jar; lib/jdt-core.jar; lib/jna.jar; lib/org-netbeans-swing-outline.jar;lib/com.ibm.icu_4.4.2.v20110823.jar;lib/jdi.jar;lib/jdimodel.jar;lib/org.eclipse.osgi_3.8.1.v20120830-144521.jar"
 -->
+    <condition property="java-mode-built">
+      <available file="${processing.dir}/java/mode/JavaMode.jar" />
+    </condition>
+    <fail unless="java-mode-built" />
+    <copy file="${processing.dir}/java/mode/JavaMode.jar"
+      tofile="mode/JavaMode.jar" />
+
     <javac source="1.6"
 	   target="1.6"
 	   destdir="bin"
