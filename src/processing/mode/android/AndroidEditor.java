@@ -128,7 +128,7 @@ public class AndroidEditor extends JavaEditor {
 
 
   public EditorToolbar createToolbar() {
-    return new AndroidToolbar(this, base);
+    return new AndroidToolbar(this);
   }
 
 

@@ -20,14 +20,12 @@
 
 package processing.mode.android;
 
-import java.awt.Image;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 
 import javax.swing.Box;
 import javax.swing.JPopupMenu;
 
-import processing.app.Base;
 import processing.app.Editor;
 import processing.app.EditorToolbar;
 
