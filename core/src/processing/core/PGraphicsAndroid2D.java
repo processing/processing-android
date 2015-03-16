@@ -754,13 +754,42 @@ public class PGraphicsAndroid2D extends PGraphics {
         }
       } else if (mode == OPEN) {
         if (fill) {
-          showMissingWarning("arc");
+          // Work around:android does not support storke and fill with different color
+          // after drawing the arc,draw the arc with Paint.Style.Stroke style again
+          canvas.drawArc(rect, start, sweep, false, fillPaint);
+          canvas.drawArc(rect, start, sweep, false, strokePaint);
         }
         if (stroke) {
           canvas.drawArc(rect, start, sweep, false, strokePaint);
         }
       } else if (mode == CHORD) {
-        showMissingWarning("arc");
+          // Work around: draw an extra line between start angle point and end point
+    	  // to achiece the Chord
+      	  float endAngle = start + sweep;
+      	  float halfRectWidth = rect.width()/2;
+          float halfRectHeight = rect.height()/2;
+      	  float centerX = rect.centerX();
+      	  float centerY = rect.cenerY();
+      	
+          float startX = (float) (halfWidth* Math.cos(Math.toRadians(start))) + centerX;
+          float startY = (float) (halfHeight * Math.sin(Math.toRadians(start))) + centerY;
+          float endX = (float) (halfWidth * Math.cos(Math.toRadians(endAngle))) + centerX;
+          float endY = (float) (halfHeight * Math.sin(Math.toRadians(endAngle))) + centerY;
+          
+          if(fill){
+            // draw the fill arc
+            canvas.drawArc(rect,start,sweep,false,fillPaint);
+            // draw the arc round border
+            canvas.drawAcr(rect,start,sweep,false,strokePaint);
+            // draw the straight border
+            canvas.drawLine(startX,startY,endX,endY,strokePaint);
+        }
+          if (stroke) {
+        	 // draw the arc 
+            canvas.drawAcr(rect,start,sweep,false,strokePaint);
+            // draw the straight border
+            canvas.drawLine(startX,startY,endX,endY,strokePaint);
+		}
 
       } else if (mode == PIE) {
         if (fill) {
