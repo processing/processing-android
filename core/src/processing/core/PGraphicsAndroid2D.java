@@ -771,22 +771,22 @@ public class PGraphicsAndroid2D extends PGraphics {
       	  float centerX = rect.centerX();
       	  float centerY = rect.cenerY();
       	
-          float startX = (float) (halfWidth* Math.cos(Math.toRadians(start))) + centerX;
-          float startY = (float) (halfHeight * Math.sin(Math.toRadians(start))) + centerY;
-          float endX = (float) (halfWidth * Math.cos(Math.toRadians(endAngle))) + centerX;
-          float endY = (float) (halfHeight * Math.sin(Math.toRadians(endAngle))) + centerY;
+          float startX = (float) (halfRectWidth* Math.cos(Math.toRadians(start))) + centerX;
+          float startY = (float) (halfRectHeight * Math.sin(Math.toRadians(start))) + centerY;
+          float endX = (float) (halfRectWidth * Math.cos(Math.toRadians(endAngle))) + centerX;
+          float endY = (float) (halfRectHeight * Math.sin(Math.toRadians(endAngle))) + centerY;
           
           if(fill){
             // draw the fill arc
             canvas.drawArc(rect,start,sweep,false,fillPaint);
             // draw the arc round border
-            canvas.drawAcr(rect,start,sweep,false,strokePaint);
+            canvas.drawArc(rect,start,sweep,false,strokePaint);
             // draw the straight border
             canvas.drawLine(startX,startY,endX,endY,strokePaint);
         }
           if (stroke) {
         	 // draw the arc 
-            canvas.drawAcr(rect,start,sweep,false,strokePaint);
+            canvas.drawArc(rect,start,sweep,false,strokePaint);
             // draw the straight border
             canvas.drawLine(startX,startY,endX,endY,strokePaint);
 		}
