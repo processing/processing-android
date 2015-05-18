@@ -42,16 +42,18 @@ public class AndroidToolbar extends EditorToolbar {
 
 
   public AndroidToolbar(Editor editor, Base base) {
-    super(editor, base);
+    super(editor);
   }
 
 
-  public void init() {
-    Image[][] images = loadImages();
-    for (int i = 0; i < 6; i++) {
-      addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
-    }
-  }
+  // TODO:
+  // Buttons are initialized in createButtons, see code of EditorToolbar.rebuild()
+//  public void init() {
+//    Image[][] images = loadImages();
+//    for (int i = 0; i < 6; i++) {
+//      addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
+//    }
+//  }
 
 
   static public String getTitle(int index, boolean shift) {
@@ -111,4 +113,28 @@ public class AndroidToolbar extends EditorToolbar {
       break;
     }
   }
+
+
+  @Override
+  public void handleRun(int modifiers) {
+    // TODO Auto-generated method stub
+    
+  }
+
+
+  @Override
+  public void handleStop() {
+    // TODO Auto-generated method stub
+   
+  }
+  
+  
+  public void activateExport() {
+    // TODO added to match the new API in EditorToolbar (activateRun, etc).
+  }
+
+
+  public void deactivateExport() {
+    // TODO added to match the new API in EditorToolbar (activateRun, etc).
+  }    
 }
