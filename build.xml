@@ -41,11 +41,12 @@
 	   destdir="bin" 
 	   encoding="UTF-8" 
 	   includeAntRuntime="false"
- 	   classpath="${processing.dir}/core/library/core.jar; 
+ 	   classpath="${processing.dir}/core/library/core.jar;
+ 	          ${processing.dir}/java/mode/JavaMode.jar; 
+		      ${processing.dir}/java/mode/antlr.jar;
 		      ${processing.dir}/app/pde.jar;
 		      ${processing.dir}/app/lib/ant.jar;
 		      ${processing.dir}/app/lib/ant-launcher.jar;
-		      ${processing.dir}/app/lib/antlr.jar;
 		      mode/org.eclipse.core.runtime-3.1.0.jar"
 	   debug="on">
       <src path="src" />
