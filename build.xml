@@ -44,10 +44,10 @@
  	   classpath="${processing.dir}/core/library/core.jar;
  	          ${processing.dir}/java/mode/JavaMode.jar; 
 		      ${processing.dir}/java/mode/antlr.jar;
+		      ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
 		      ${processing.dir}/app/pde.jar;
 		      ${processing.dir}/app/lib/ant.jar;
-		      ${processing.dir}/app/lib/ant-launcher.jar;
-		      mode/org.eclipse.core.runtime-3.1.0.jar"
+		      ${processing.dir}/app/lib/ant-launcher.jar"
 	   debug="on">
       <src path="src" />
     </javac>
