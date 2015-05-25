@@ -40,7 +40,7 @@
 	 Eclipse does this automatically. -->
     <copy todir="bin">
       <fileset dir="src">
-	<include name="processing/opengl/*.glsl" />
+	    <include name="processing/opengl/shaders/*.glsl" />
       </fileset>
     </copy>
 	   
@@ -48,7 +48,7 @@
   </target>
 
   <target name="clean" 
-	  description="Clean out the build directories">
+	      description="Clean out the build directories">
     <delete dir="bin" />
     <delete file="${core.jar.path}" />
   </target>
