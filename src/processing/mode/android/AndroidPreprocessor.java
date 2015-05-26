@@ -177,6 +177,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
   */
 
 
+  /*
   public PreprocessorResult write(Writer out, String program, String[] codeFolderPackages)
   throws SketchException, RecognitionException, TokenStreamException {
     if (sizeStatement != null) {
@@ -188,6 +189,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
     //program = program.replaceAll("import\\s+processing\\.opengl\\.\\S+;", "");
     return super.write(out, program, codeFolderPackages);
   }
+  */
 
 
   @Override
