@@ -20,7 +20,7 @@
 
 package processing.mode.android;
 
-import java.awt.Image;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JPopupMenu;
@@ -117,15 +117,21 @@ public class AndroidToolbar extends EditorToolbar {
 
   @Override
   public void handleRun(int modifiers) {
-    // TODO Auto-generated method stub
-    
+    AndroidEditor aEditor = (AndroidEditor) editor;
+    boolean shift = (modifiers & InputEvent.SHIFT_MASK) != 0;
+    if (!shift) {
+      aEditor.handleRunDevice();
+    } else {
+      aEditor.handleStop();
+    }
   }
 
 
   @Override
   public void handleStop() {
     // TODO Auto-generated method stub
-   
+    AndroidEditor aEditor = (AndroidEditor) editor;
+    aEditor.handleStop();
   }
   
   
