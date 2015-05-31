@@ -20,14 +20,16 @@
 
 package processing.mode.android;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
-
-import javax.swing.JPopupMenu;
+import java.util.ArrayList;
+import java.util.List;
 
 import processing.app.Base;
 import processing.app.Editor;
+import processing.app.EditorButton;
 import processing.app.EditorToolbar;
+import processing.app.Language;
 
 
 @SuppressWarnings("serial")
@@ -55,7 +57,7 @@ public class AndroidToolbar extends EditorToolbar {
 //    }
 //  }
 
-
+  
   static public String getTitle(int index, boolean shift) {
     switch (index) {
     case RUN:    return !shift ? "Run on Device" : "Run in Emulator";
@@ -68,7 +70,7 @@ public class AndroidToolbar extends EditorToolbar {
     return null;
   }
 
-
+/*
   public void handlePressed(MouseEvent e, int sel) {
     boolean shift = e.isShiftDown();
     AndroidEditor aeditor = (AndroidEditor) editor;
@@ -113,7 +115,33 @@ public class AndroidToolbar extends EditorToolbar {
       break;
     }
   }
+*/
+  
+  @Override
+  public List<EditorButton> createButtons() {
+    ArrayList<EditorButton> toReturn = new ArrayList<EditorButton>();
+    runButton = new EditorButton(mode,
+                                 "/lib/toolbar/run",
+                                 "Run on device",
+                                 "Run on emulator") {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        handleRun(e.getModifiers());
+      }
+    };
+    toReturn.add(runButton);
 
+    stopButton = new EditorButton(mode,
+                                  "/lib/toolbar/stop",
+                                  Language.text("toolbar.stop")) {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        handleStop();
+      }
+    };
+    toReturn.add(stopButton);
+    return toReturn;
+  }
 
   @Override
   public void handleRun(int modifiers) {
