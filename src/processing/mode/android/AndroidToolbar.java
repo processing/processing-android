@@ -150,7 +150,7 @@ public class AndroidToolbar extends EditorToolbar {
     if (!shift) {
       aEditor.handleRunDevice();
     } else {
-      aEditor.handleStop();
+      aEditor.handleRunEmulator();
     }
   }
 
