@@ -293,7 +293,7 @@ class Devices {
 
     // might read "List of devices attached"
     final String stdout = result.getStdout();
-    if (!(stdout.startsWith("List of devices") || stdout.trim().length() == 0)) {
+    if (!(stdout.contains("List of devices") || stdout.trim().length() == 0)) {
       System.err.println(ADB_DEVICES_ERROR);
       System.err.println("Output was “" + stdout + "”");
       return Collections.emptyList();
