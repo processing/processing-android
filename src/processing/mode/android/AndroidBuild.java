@@ -634,7 +634,6 @@ class AndroidBuild extends JavaBuild {
 
     writer.println("  <mkdir dir=\"bin\" />");
 
-    writer.println("  <echo message=\"${ecj.jar}\" />");
     writer.println("  <echo message=\"${build.compiler}\" />");
 
 // Override target from maint android build file
