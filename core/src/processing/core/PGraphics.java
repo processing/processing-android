@@ -2647,18 +2647,18 @@ public class PGraphics extends PImage implements PConstants {
    * If true in PImage, use bilinear interpolation for copy()
    * operations. When inherited by PGraphics, also controls shapes.
    */
-  public void smooth() {
+  public void smooth() { // ignore
     smooth = true;
   }
 
-  public void smooth(int level) {
+  public void smooth(int level) { // ignore
     smooth = true;
   }
 
   /**
    * Disable smoothing. See smooth().
    */
-  public void noSmooth() {
+  public void noSmooth() { // ignore
     smooth = false;
   }
 

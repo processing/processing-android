@@ -507,6 +507,13 @@ public class PApplet extends Activity implements PConstants, Runnable {
         "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
     }
+    
+    //set smooth level
+    if (smooth == 0) {
+      g.noSmooth();
+    } else {
+      g.smooth(smooth);
+    }
 
 //    g = ((SketchSurfaceView) surfaceView).getGraphics();
 
@@ -1599,6 +1606,44 @@ public class PApplet extends Activity implements PConstants, Runnable {
       }
     }
   }
+  
+  
+//. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+
+ public void smooth() {
+   smooth(1);
+ }
+
+
+ public void smooth(int level) {
+   if (insideSettings) {
+     this.smooth = level;
+
+   } else if (this.smooth != level) {
+     smoothWarning("smooth");
+   }
+ }
+
+
+ public void noSmooth() {
+   if (insideSettings) {
+     this.smooth = 0;
+
+   } else if (this.smooth != 0) {
+     smoothWarning("noSmooth");
+   }
+ }
+
+
+ private void smoothWarning(String method) {
+   // When running from the PDE, say setup(), otherwise say settings()
+   final String where = external ? "setup" : "settings";
+   PGraphics.showWarning("%s() can only be used inside %s()", method, where);
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
   // not finished yet--will swap the renderer at a bad time
@@ -8572,28 +8617,6 @@ public class PApplet extends Activity implements PConstants, Runnable {
                     float x3, float y3, float z3,
                     float x4, float y4, float z4) {
     g.curve(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
-  }
-
-
-  /**
-   * If true in PImage, use bilinear interpolation for copy()
-   * operations. When inherited by PGraphics, also controls shapes.
-   */
-  public void smooth() {
-    g.smooth();
-  }
-
-
-  public void smooth(int level) {
-    g.smooth(level);
-  }
-
-
-  /**
-   * Disable smoothing. See smooth().
-   */
-  public void noSmooth() {
-    g.noSmooth();
   }
 
 
