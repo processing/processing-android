@@ -204,7 +204,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return 2 + super.writeImports(out, programImports, codeFolderImports);
   }
 
-
+/*
   protected void writeFooter(PrintWriter out, String className) {
     if (mode == Mode.STATIC) {
       // close off draw() definition
@@ -233,7 +233,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
       out.println("}");
     }
   }
-
+*/
 
   // As of revision 0215 (2.0b7-ish), the default imports are now identical
   // between desktop and Android (to avoid unintended incompatibilities).
