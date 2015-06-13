@@ -767,8 +767,11 @@ class AndroidBuild extends JavaBuild {
   private void writeRes(File resFolder,
                         String className) throws SketchException {
     File layoutFolder = mkdirs(resFolder, "layout");
-    File layoutFile = new File(layoutFolder, "main.xml");
-    writeResLayoutMain(layoutFile);
+    File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
+    writeResLayoutMainActivity(mainActivityLayoutFile);
+    
+    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
+    writeResLayoutMainFragment(mainFragmentLayoutFile);
 
     // write the icon files
     File sketchFolder = sketch.getFolder();
@@ -875,7 +878,7 @@ class AndroidBuild extends JavaBuild {
   }
 
 
-  private void writeResLayoutMain(final File file) {
+  private void writeResLayoutMainActivity(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
     writer.println("<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"");
     writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
@@ -886,6 +889,17 @@ class AndroidBuild extends JavaBuild {
     writer.println("    android:layout_height=\"match_parent\" />");
     writer.flush();
     writer.close();
+  }
+  
+  
+  private void writeResLayoutMainFragment(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+    writer.println("              android:orientation=\"vertical\"");
+    writer.println("              android:layout_width=\"fill_parent\"");
+    writer.println("              android:layout_height=\"fill_parent\">");
+    writer.println("</LinearLayout>");
   }
 
 
