@@ -51,6 +51,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.*;
+import android.support.v4.app.Fragment;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -63,7 +64,7 @@ import processing.event.*;
 import processing.opengl.*;
 
 
-public class PApplet extends Activity implements PConstants, Runnable {
+public class PApplet extends Fragment implements PConstants, Runnable {
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
 
