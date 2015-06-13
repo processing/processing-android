@@ -167,6 +167,8 @@ class AndroidBuild extends JavaBuild {
 
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
+      writeMainActivity(srcFolder);
+      
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
 //      File proguardSrc = new File(sdk.getSdkFolder(), "tools/lib/proguard.cfg");
@@ -854,16 +856,34 @@ class AndroidBuild extends JavaBuild {
     }
     return result;
   }
+  
+  
+  private void writeMainActivity(final File file) {
+    File mainActivityFile = new File(file, "MainActivity.java");
+    final PrintWriter writer = PApplet.createWriter(mainActivityFile);
+    writer.println("package " + basePackage + "." + sketch.getName());
+    writer.println("import android.app.Activity;");
+    writer.println("public class TestActivity extends Activity {");
+    writer.println("    @Override");
+    writer.println("    protected void onCreate(Bundle savedInstanceState) {");
+    writer.println("        super.onCreate(savedInstanceState);");
+    writer.println("        setContentView(R.layout.main);");
+    writer.println("    }");
+    writer.println("}");
+    writer.flush();
+    writer.close();
+  }
 
 
   private void writeResLayoutMain(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("              android:orientation=\"vertical\"");
-    writer.println("              android:layout_width=\"fill_parent\"");
-    writer.println("              android:layout_height=\"fill_parent\">");
-    writer.println("</LinearLayout>");
+    writer.println("<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
+    writer.println("    android:id=\"@+id/fragment\"");
+    writer.println("    android:name=\"." + sketchClassName + "\"");
+    writer.println("    tools:layout=\"@layout/fragment_main\"");
+    writer.println("    android:layout_width=\"match_parent\"");
+    writer.println("    android:layout_height=\"match_parent\" />");
     writer.flush();
     writer.close();
   }
