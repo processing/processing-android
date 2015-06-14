@@ -26,6 +26,8 @@ import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 
+import android.view.Window;
+import android.view.WindowManager;
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Preferences;
@@ -870,6 +872,12 @@ class AndroidBuild extends JavaBuild {
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
     writer.println("        super.onCreate(savedInstanceState);");
+    writer.println("        Window window = getWindow();");
+    writer.println("        requestWindowFeature(Window.FEATURE_NO_TITLE);");
+    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,"
+        + "WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
+    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
+        + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
     writer.println("        setContentView(R.layout.main);");
     writer.println("    }");
     writer.println("}");
