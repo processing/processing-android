@@ -846,6 +846,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+      super.onWindowFocusChanged(hasFocus);
       surfaceWindowFocusChanged(hasFocus);
     }
 
@@ -858,13 +859,15 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public boolean onKeyDown(int code, android.view.KeyEvent event) {
-      return surfaceKeyDown(code, event);
+      surfaceKeyDown(code, event);
+      return super.onKeyDown(code, event);
     }
 
 
     @Override
     public boolean onKeyUp(int code, android.view.KeyEvent event) {
-      return surfaceKeyUp(code, event);
+      surfaceKeyUp(code, event);
+      return super.onKeyUp(code, event);
     }
 
 
@@ -1011,6 +1014,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
      */
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+      super.onWindowFocusChanged(hasFocus);
       surfaceWindowFocusChanged(hasFocus);
 //      super.onWindowFocusChanged(hasFocus);
 //      focused = hasFocus;
@@ -1032,13 +1036,15 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public boolean onKeyDown(int code, android.view.KeyEvent event) {
-      return surfaceKeyDown(code, event);
+      surfaceKeyDown(code, event);
+      return super.onKeyDown(code, event);
     }
 
 
     @Override
     public boolean onKeyUp(int code, android.view.KeyEvent event) {
-      return surfaceKeyUp(code, event);
+      surfaceKeyUp(code, event);
+      return super.onKeyUp(code, event);
     }
 
 
@@ -1059,7 +1065,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    * by Android as well.
    */
   public void surfaceWindowFocusChanged(boolean hasFocus) {
-    super.onWindowFocusChanged(hasFocus);
     focused = hasFocus;
     if (focused) {
       focusGained();
@@ -1081,17 +1086,17 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  public boolean surfaceKeyDown(int code, android.view.KeyEvent event) {
+  public void surfaceKeyDown(int code, android.view.KeyEvent event) {
     //  System.out.println("got onKeyDown for " + code + " " + event);
     nativeKeyEvent(event);
-    return super.onKeyDown(code, event);
+//    return super.onKeyDown(code, event);
   }
 
 
-  public boolean surfaceKeyUp(int code, android.view.KeyEvent event) {
+  public void surfaceKeyUp(int code, android.view.KeyEvent event) {
     //  System.out.println("got onKeyUp for " + code + " " + event);
     nativeKeyEvent(event);
-    return super.onKeyUp(code, event);
+//    return super.onKeyUp(code, event);
   }
 
 
@@ -2906,7 +2911,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  @Override
   public void onBackPressed() {
 	  exit();
   }

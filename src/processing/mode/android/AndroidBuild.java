@@ -869,6 +869,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("package " + basePackage + "." + sketch.getName());
     writer.println("import android.app.Activity;");
     writer.println("public class TestActivity extends Activity {");
+    writer.println("    PApplet fragment;");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
     writer.println("        super.onCreate(savedInstanceState);");
@@ -878,7 +879,19 @@ class AndroidBuild extends JavaBuild {
         + "WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
     writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
         + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
-    writer.println("        setContentView(R.layout.main);");
+    writer.println("        FrameLayout frame = new FrameLayout(this)");
+    writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
+        + "LayoutParams.MATCH_PARENT));");
+    writer.println("        if (savedInstanceState == null) {");
+    writer.println("            fragment = new " + sketchClassName + "()");
+    writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
+    writer.println("            ft.add(frame.getId(), fragment).commit();");
+    writer.println("        }");
+    writer.println("    }");
+    writer.println("    @Override");
+    writer.println("    public void onBackPressed() {");
+    writer.println("        fragment.onBackPressed();");
+    writer.println("        super.onBackPressed()");
     writer.println("    }");
     writer.println("}");
     writer.flush();
