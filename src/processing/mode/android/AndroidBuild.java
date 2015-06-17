@@ -628,12 +628,12 @@ class AndroidBuild extends JavaBuild {
     writer.println("       <isset property=\"env.ANDROID_HOME\" />");
     writer.println("  </condition>");
 
-    writer.println("  <property name=\"ecj.jar\" value=\"" + Base.getToolsFolder() + "/../modes/java/mode/ecj.jar\" />");
+    writer.println("  <property name=\"jdt.core\" value=\"" + Base.getToolsFolder() + "/../modes/java/mode/org.eclipse.jdt.core.jar\" />");
+    writer.println("  <property name=\"jdtCompilerAdapter\" value=\"" + Base.getToolsFolder() + "/../modes/java/mode/jdtCompilerAdapter.jar\" />");
     writer.println("  <property name=\"build.compiler\" value=\"org.eclipse.jdt.core.JDTCompilerAdapter\" />");
 
     writer.println("  <mkdir dir=\"bin\" />");
 
-    writer.println("  <echo message=\"${ecj.jar}\" />");
     writer.println("  <echo message=\"${build.compiler}\" />");
 
 // Override target from maint android build file
@@ -655,7 +655,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("                <src path=\"${source.absolute.dir}\" />");
     writer.println("                <src path=\"${gen.absolute.dir}\" />");
     writer.println("                <compilerarg line=\"${java.compilerargs}\" />");
-    writer.println("                <compilerclasspath path=\"${ecj.jar}\" />");
+    writer.println("                <compilerclasspath path=\"${jdtCompilerAdapter};${jdt.core}\" />");
     writer.println("            </javac>");
 
     writer.println("            <if condition=\"${build.is.instrumented}\">");

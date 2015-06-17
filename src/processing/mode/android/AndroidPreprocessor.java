@@ -30,6 +30,7 @@ import processing.app.*;
 import processing.core.PApplet;
 import processing.mode.java.preproc.PdePreprocessor;
 import processing.mode.java.preproc.PreprocessorResult;
+import processing.mode.java.preproc.SurfaceInfo;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
 
@@ -53,18 +54,19 @@ public class AndroidPreprocessor extends PdePreprocessor {
   }
 
 
-  public String[] initSketchSize(String code) throws SketchException {
-    String[] info = parseSketchSize(code, true);
-    if (info == null) {
+  public SurfaceInfo initSketchSize(String code) throws SketchException {
+    SurfaceInfo surfaceInfo = parseSketchSize(code, true);
+    if (surfaceInfo == null) {
       System.err.println("More about the size() command on Android can be");
       System.err.println("found here: http://wiki.processing.org/w/Android");
       throw new SketchException("Could not parse the size() command.");
     }
-    sizeStatement = info[0];
-    sketchWidth = info[1];
-    sketchHeight = info[2];
-    sketchRenderer = info[3];
-    return info;
+    /*
+    sizeStatement = surfaceInfo.getStatement();
+    sketchWidth = surfaceInfo.getWidth();
+    sketchHeight = surfaceInfo.getHeight();
+    sketchRenderer = surfaceInfo.getRenderer();*/
+    return surfaceInfo;
   }
   
   
@@ -202,7 +204,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return 2 + super.writeImports(out, programImports, codeFolderImports);
   }
 
-
+/*
   protected void writeFooter(PrintWriter out, String className) {
     if (mode == Mode.STATIC) {
       // close off draw() definition
@@ -213,14 +215,14 @@ public class AndroidPreprocessor extends PdePreprocessor {
     if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
       out.println();
       
-      if (sketchWidth != null) {
-        out.println(indent + "public int sketchWidth() { return " + sketchWidth + "; }");
+      if (sizeInfo.getWidth() != null) {
+        out.println(indent + "public int sketchWidth() { return " + sizeInfo.getWidth() + "; }");
       }
-      if (sketchHeight != null) {
-        out.println(indent + "public int sketchHeight() { return " + sketchHeight + "; }");
+      if (sizeInfo.getHeight() != null) {
+        out.println(indent + "public int sketchHeight() { return " + sizeInfo.getHeight() + "; }");
       }
-      if (sketchRenderer != null) {
-        out.println(indent + "public String sketchRenderer() { return " + sketchRenderer + "; }");
+      if (sizeInfo.getRenderer() != null) {
+        out.println(indent + "public String sketchRenderer() { return " + sizeInfo.getRenderer() + "; }");
       }
 
       if (sketchQuality != null) {
@@ -231,7 +233,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
       out.println("}");
     }
   }
-
+*/
 
   // As of revision 0215 (2.0b7-ish), the default imports are now identical
   // between desktop and Android (to avoid unintended incompatibilities).

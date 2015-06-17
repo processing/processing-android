@@ -45,6 +45,27 @@ public class StringList implements Iterable<String> {
 
 
   /**
+   * Construct a StringList from a random pile of objects. Null values will
+   * stay null, but all the others will be converted to String values.
+   */
+  public StringList(Object... items) {
+    count = items.length;
+    data = new String[count];
+    int index = 0;
+    for (Object o : items) {
+//      // Not gonna go with null values staying that way because perhaps
+//      // the most common case here is to immediately call join() or similar.
+//      data[index++] = String.valueOf(o);
+      // Keep null values null (because join() will make non-null anyway)
+      if (o != null) {  // leave null values null
+        data[index] = o.toString();
+      }
+      index++;
+    }
+  }
+
+
+  /**
    * Create from something iterable, for instance:
    * StringList list = new StringList(hashMap.keySet());
    *
@@ -113,6 +134,9 @@ public class StringList implements Iterable<String> {
    * @brief Get an entry at a particular index
    */
   public String get(int index) {
+    if (index >= count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
     return data[index];
   }
 
@@ -134,6 +158,22 @@ public class StringList implements Iterable<String> {
       count = index+1;
     }
     data[index] = what;
+  }
+
+
+  /** Just an alias for append(), but matches pop() */
+  public void push(String value) {
+    append(value);
+  }
+
+
+  public String pop() {
+    if (count == 0) {
+      throw new RuntimeException("Can't call pop() on an empty list");
+    }
+    String value = get(count-1);
+    data[--count] = null;  // avoid leak
+    return value;
   }
 
 
@@ -274,6 +314,14 @@ public class StringList implements Iterable<String> {
   }
 
 
+  /** Add this value, but only if it's not already in the list. */
+  public void appendUnique(String value) {
+    if (!hasValue(value)) {
+      append(value);
+    }
+  }
+
+
 //  public void insert(int index, int value) {
 //    if (index+1 > count) {
 //      if (index+1 < data.length) {
@@ -304,12 +352,17 @@ public class StringList implements Iterable<String> {
 //  }
 
 
+  public void insert(int index, String value) {
+    insert(index, new String[] { value });
+  }
+
+
   // same as splice
   public void insert(int index, String[] values) {
     if (index < 0) {
       throw new IllegalArgumentException("insert() index cannot be negative: it was " + index);
     }
-    if (index >= values.length) {
+    if (index >= data.length) {
       throw new IllegalArgumentException("insert() index " + index + " is past the end of this list");
     }
 
@@ -495,7 +548,7 @@ public class StringList implements Iterable<String> {
 
   /**
    * @webref stringlist:method
-   * @brief To come...
+   * @brief Reverse the order of the list elements
    */
   public void reverse() {
     int ii = count - 1;
@@ -592,6 +645,7 @@ public class StringList implements Iterable<String> {
   }
 
 
+  @Override
   public Iterator<String> iterator() {
 //    return valueIterator();
 //  }
@@ -629,7 +683,8 @@ public class StringList implements Iterable<String> {
 
 
   /**
-   * Copy as many values as possible into the specified array.
+   * Copy values into the specified array. If the specified array is null or
+   * not the same size, a new array will be allocated.
    * @param array
    */
   public String[] array(String[] array) {
@@ -679,14 +734,6 @@ public class StringList implements Iterable<String> {
   }
 
 
-//  public void println() {
-//    for (int i = 0; i < count; i++) {
-//      System.out.println("[" + i + "] " + data[i]);
-//    }
-//    System.out.flush();
-//  }
-
-
   public String join(String separator) {
     if (count == 0) {
       return "";
@@ -701,10 +748,11 @@ public class StringList implements Iterable<String> {
   }
 
 
-//  static public StringList split(String value, char delim) {
-//    String[] array = PApplet.split(value, delim);
-//    return new StringList(array);
-//  }
+  public void print() {
+    for (int i = 0; i < size(); i++) {
+      System.out.format("[%d] %s%n", i, data[i]);
+    }
+  }
 
 
   @Override

@@ -417,6 +417,14 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
   static final String ERROR_MIN_MAX =
     "Cannot use min() or max() on an empty array.";
+  
+  boolean insideSettings;
+  
+  String renderer = JAVA2D;
+  
+  int smooth = 1;  // default smoothing (whatever that means for the renderer)
+  
+  boolean fullScreen = false;
 
 
   //////////////////////////////////////////////////////////////
@@ -448,6 +456,10 @@ public class PApplet extends Activity implements PConstants, Runnable {
     getWindowManager().getDefaultDisplay().getMetrics(dm);
     displayWidth = dm.widthPixels;
     displayHeight = dm.heightPixels;
+    
+    //Setting the default height and width to be fullscreen
+    width = displayWidth;
+    height = displayHeight;
 //    println("density is " + dm.density);
 //    println("densityDpi is " + dm.densityDpi);
     if (DEBUG) println("display metrics: " + dm);
@@ -464,6 +476,8 @@ public class PApplet extends Activity implements PConstants, Runnable {
 //    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.FILL_PARENT);
 //lp.addRule(RelativeLayout.RIGHT_OF, tv1.getId());
 //    layout.setGravity(RelativeLayout.CENTER_IN_PARENT);
+    
+    handleSettings();
 
     int sw = sketchWidth();
     int sh = sketchHeight();
@@ -492,6 +506,13 @@ public class PApplet extends Activity implements PConstants, Runnable {
       String message = String.format(
         "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
+    }
+    
+    //set smooth level
+    if (smooth == 0) {
+      g.noSmooth();
+    } else {
+      g.smooth(smooth);
     }
 
 //    g = ((SketchSurfaceView) surfaceView).getGraphics();
@@ -637,6 +658,41 @@ public class PApplet extends Activity implements PConstants, Runnable {
 //  paused = true;
 //}
 //    surfaceView.onPause();
+  }
+  
+  
+  /**
+   * @param method "size" or "fullScreen"
+   * @param args parameters passed to the function so we can show the user
+   * @return true if safely inside the settings() method
+   */
+  boolean insideSettings(String method, Object... args) {
+    if (insideSettings) {
+      return true;
+    }
+    final String url = "https://processing.org/reference/" + method + "_.html";
+    if (!external) {  // post a warning for users of Eclipse and other IDEs
+      StringList argList = new StringList(args);
+      System.err.println("When not using the PDE, " + method + "() can only be used inside settings().");
+      System.err.println("Remove the " + method + "() method from setup(), and add the following:");
+      System.err.println("public void settings() {");
+      System.err.println("  " + method + "(" + argList.join(", ") + ");");
+      System.err.println("}");
+    }
+    throw new IllegalStateException(method + "() cannot be used here, see " + url);
+  }
+  
+  
+  void handleSettings() {
+    insideSettings = true;
+    //Do stuff
+    settings();
+    insideSettings = false;
+  }
+  
+  
+  public void settings() {
+    //It'll be empty. Will be overridden by user's sketch class.
   }
 
 
@@ -1040,17 +1096,23 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
 
   public int sketchWidth() {
-    return displayWidth;
+    if (fullScreen) {
+      return displayWidth;
+    }
+    return width;
   }
 
 
   public int sketchHeight() {
-    return displayHeight;
+    if (fullScreen) {
+      return displayHeight;
+    }
+    return height;
   }
 
 
   public String sketchRenderer() {
-    return JAVA2D;
+    return renderer;
   }
 
 
@@ -1465,6 +1527,54 @@ public class PApplet extends Activity implements PConstants, Runnable {
 //      layout.invalidate();
 //    }
 //  }
+  
+  
+  /**
+   * Create a full-screen sketch using the default renderer.
+   */
+  public void fullScreen() {
+    if (!fullScreen) {
+      if (insideSettings("fullScreen")) {
+        this.fullScreen = true;
+      }
+    }
+  }
+
+
+  public void fullScreen(int display) {
+    //Display index doesn't make sense in Android.
+    //Should we throw some error in log ?
+    if (!fullScreen /*|| display != this.display*/) {
+      if (insideSettings("fullScreen", display)) {
+        this.fullScreen = true;
+//        this.display = display;
+      }
+    }
+  }
+
+
+  public void fullScreen(String renderer) {
+    if (!fullScreen ||
+        !renderer.equals(this.renderer)) {
+      if (insideSettings("fullScreen", renderer)) {
+        this.fullScreen = true;
+        this.renderer = renderer;
+      }
+    }
+  }
+
+
+  public void fullScreen(String renderer, int display) {
+    if (!fullScreen ||
+        !renderer.equals(this.renderer) /*||
+        display != this.display*/) {
+      if (insideSettings("fullScreen", renderer, display)) {
+        this.fullScreen = true;
+        this.renderer = renderer;
+//        this.display = display;
+      }
+    }
+  }
 
 
   /**
@@ -1477,13 +1587,63 @@ public class PApplet extends Activity implements PConstants, Runnable {
    * previous renderer and simply resize it.
    */
   public void size(int iwidth, int iheight) {
-    size(iwidth, iheight, P2D, null);
+    if (iwidth != this.width || iheight != this.height) {
+      if (insideSettings("size", iwidth, iheight)) {
+        this.width = iwidth;
+        this.height = iheight;
+      }
+    }
   }
 
 
   public void size(int iwidth, int iheight, String irenderer) {
-    size(iwidth, iheight, irenderer, null);
+    if (iwidth != this.width || iheight != this.height ||
+        !this.renderer.equals(irenderer)) {
+      if (insideSettings("size", iwidth, iheight, irenderer)) {
+        this.width = iwidth;
+        this.height = iheight;
+        this.renderer = irenderer;
+      }
+    }
   }
+  
+  
+//. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+
+ public void smooth() {
+   smooth(1);
+ }
+
+
+ public void smooth(int level) {
+   if (insideSettings) {
+     this.smooth = level;
+
+   } else if (this.smooth != level) {
+     smoothWarning("smooth");
+   }
+ }
+
+
+ public void noSmooth() {
+   if (insideSettings) {
+     this.smooth = 0;
+
+   } else if (this.smooth != 0) {
+     smoothWarning("noSmooth");
+   }
+ }
+
+
+ private void smoothWarning(String method) {
+   // When running from the PDE, say setup(), otherwise say settings()
+   final String where = external ? "setup" : "settings";
+   PGraphics.showWarning("%s() can only be used inside %s()", method, where);
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
   // not finished yet--will swap the renderer at a bad time
@@ -1519,82 +1679,15 @@ public class PApplet extends Activity implements PConstants, Runnable {
    */
   public void size(final int iwidth, final int iheight,
                    final String irenderer, final String ipath) {
-    System.out.println("This size() method is ignored on Android.");
-    System.out.println("See http://wiki.processing.org/w/Android for more information.");
-
-    /*
-//    Looper.prepare();
-    // Run this from the EDT, just cuz it's AWT stuff (or maybe later Swing)
-//    new Handler().post(new Runnable() {
-    handler.post(new Runnable() {
-      public void run() {
-        println("Handler is on thread " + Thread.currentThread().getName());
-//        // Set the preferred size so that the layout managers can handle it
-////        setPreferredSize(new Dimension(iwidth, iheight));
-////        setSize(iwidth, iheight);
-//        g.setSize(iwidth, iheight);
-//      }
-//    });
-
-    // ensure that this is an absolute path
-//    if (ipath != null) ipath = savePath(ipath);
-        // no path renderers supported yet
-
-    println("I'm the ole thread " + Thread.currentThread().getName());
-    String currentRenderer = g.getClass().getName();
-    if (currentRenderer.equals(irenderer)) {
-      println("resizing renderer inside size(....)");
-      // Avoid infinite loop of throwing exception to reset renderer
-      resizeRenderer(iwidth, iheight);
-      //redraw();  // will only be called insize draw()
-
-    } else {  // renderer is being changed
-      println("changing renderer inside size(....)");
-
-      // otherwise ok to fall through and create renderer below
-      // the renderer is changing, so need to create a new object
-//      g = makeGraphics(iwidth, iheight, irenderer, ipath, true);
-//      width = iwidth;
-//      height = iheight;
-//      if ()
-
-      // Remove the old view from the layout
-      layout.removeView(surfaceView);
-
-      if (irenderer.equals(A2D)) {
-        surfaceView = new SketchSurfaceView2D(PApplet.this, iwidth, iheight);
-      } else if (irenderer.equals(A3D)) {
-        surfaceView = new SketchSurfaceView3D(PApplet.this, iwidth, iheight);
+    if (iwidth != this.width || iheight != this.height ||
+        !this.renderer.equals(irenderer)) {
+      if (insideSettings("size", iwidth, iheight, irenderer, 
+          ipath)) {
+        this.width = iwidth;
+        this.height = iheight;
+        this.renderer = irenderer;
       }
-      g = ((SketchSurfaceView) surfaceView).getGraphics();
-
-      // these don't seem like a good idea
-//      width = screenWidth;
-//      height = screenHeight;
-
-//      println("getting window");
-//      Window window = getWindow();
-//      window.setContentView(surfaceView);  // set full screen
-//      layout.removeAllViews();
-      layout.addView(surfaceView);
-
-      // fire resize event to make sure the applet is the proper size
-//      setSize(iwidth, iheight);
-      // this is the function that will run if the user does their own
-      // size() command inside setup, so set defaultSize to false.
-//      defaultSize = false;
-
-      // throw an exception so that setup() is called again
-      // but with a properly sized render
-      // this is for opengl, which needs a valid, properly sized
-      // display before calling anything inside setup().
-//      throw new RendererChangeException();
-      println("interrupting animation thread");
-      thread.interrupt();
     }
-      }
-    });
-*/
   }
 
 
@@ -3541,6 +3634,100 @@ public class PApplet extends Activity implements PConstants, Runnable {
         System.out.println(what);
       }
     }
+  }
+  
+  
+/**
+ * @webref output:text_area
+ * @param what one-dimensional array
+ * @usage IDE
+ * @see PApplet#print(byte)
+ * @see PApplet#println()
+ */
+  static public void printArray(Object what) {
+    if (what == null) {
+      // special case since this does fuggly things on > 1.1
+      System.out.println("null");
+
+    } else {
+      String name = what.getClass().getName();
+      if (name.charAt(0) == '[') {
+        switch (name.charAt(1)) {
+        case '[':
+          // don't even mess with multi-dimensional arrays (case '[')
+          // or anything else that's not int, float, boolean, char
+          System.out.println(what);
+          break;
+
+        case 'L':
+          // print a 1D array of objects as individual elements
+          Object poo[] = (Object[]) what;
+          for (int i = 0; i < poo.length; i++) {
+            if (poo[i] instanceof String) {
+              System.out.println("[" + i + "] \"" + poo[i] + "\"");
+            } else {
+              System.out.println("[" + i + "] " + poo[i]);
+            }
+          }
+          break;
+
+        case 'Z':  // boolean
+          boolean zz[] = (boolean[]) what;
+          for (int i = 0; i < zz.length; i++) {
+            System.out.println("[" + i + "] " + zz[i]);
+          }
+          break;
+
+        case 'B':  // byte
+          byte bb[] = (byte[]) what;
+          for (int i = 0; i < bb.length; i++) {
+            System.out.println("[" + i + "] " + bb[i]);
+          }
+          break;
+
+        case 'C':  // char
+          char cc[] = (char[]) what;
+          for (int i = 0; i < cc.length; i++) {
+            System.out.println("[" + i + "] '" + cc[i] + "'");
+          }
+          break;
+
+        case 'I':  // int
+          int ii[] = (int[]) what;
+          for (int i = 0; i < ii.length; i++) {
+            System.out.println("[" + i + "] " + ii[i]);
+          }
+          break;
+
+        case 'J':  // int
+          long jj[] = (long[]) what;
+          for (int i = 0; i < jj.length; i++) {
+            System.out.println("[" + i + "] " + jj[i]);
+          }
+          break;
+
+        case 'F':  // float
+          float ff[] = (float[]) what;
+          for (int i = 0; i < ff.length; i++) {
+            System.out.println("[" + i + "] " + ff[i]);
+          }
+          break;
+
+        case 'D':  // double
+          double dd[] = (double[]) what;
+          for (int i = 0; i < dd.length; i++) {
+            System.out.println("[" + i + "] " + dd[i]);
+          }
+          break;
+
+        default:
+          System.out.println(what);
+        }
+      } else {  // not an array
+        System.out.println(what);
+      }
+    }
+    System.out.flush();
   }
 
   //
@@ -8430,28 +8617,6 @@ public class PApplet extends Activity implements PConstants, Runnable {
                     float x3, float y3, float z3,
                     float x4, float y4, float z4) {
     g.curve(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
-  }
-
-
-  /**
-   * If true in PImage, use bilinear interpolation for copy()
-   * operations. When inherited by PGraphics, also controls shapes.
-   */
-  public void smooth() {
-    g.smooth();
-  }
-
-
-  public void smooth(int level) {
-    g.smooth(level);
-  }
-
-
-  /**
-   * Disable smoothing. See smooth().
-   */
-  public void noSmooth() {
-    g.noSmooth();
   }
 
 
