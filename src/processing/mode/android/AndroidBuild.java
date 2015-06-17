@@ -26,8 +26,6 @@ import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 
-import android.view.Window;
-import android.view.WindowManager;
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Preferences;
@@ -170,7 +168,7 @@ class AndroidBuild extends JavaBuild {
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
       writeMainActivity(srcFolder);
-      
+
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
 //      File proguardSrc = new File(sdk.getSdkFolder(), "tools/lib/proguard.cfg");
@@ -183,6 +181,8 @@ class AndroidBuild extends JavaBuild {
 //      InputStream input = PApplet.createInput(getCoreZipLocation());
 //      PApplet.saveStream(new File(libsFolder, "processing-core.jar"), input);
       Base.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
+      
+      copySupportV4(libsFolder);
 
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
@@ -772,8 +772,8 @@ class AndroidBuild extends JavaBuild {
     File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
     writeResLayoutMainActivity(mainActivityLayoutFile);
     
-    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
-    writeResLayoutMainFragment(mainFragmentLayoutFile);
+//    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
+//    writeResLayoutMainFragment(mainFragmentLayoutFile);
 
     // write the icon files
     File sketchFolder = sketch.getFolder();
@@ -866,9 +866,16 @@ class AndroidBuild extends JavaBuild {
   private void writeMainActivity(final File file) {
     File mainActivityFile = new File(file, "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
-    writer.println("package " + basePackage + "." + sketch.getName());
-    writer.println("import android.app.Activity;");
-    writer.println("public class TestActivity extends Activity {");
+    writer.println("package " + basePackage + "." + sketch.getName() + ";");
+    writer.println("import android.support.v4.app.FragmentActivity;");
+    writer.println("import android.os.Bundle;");
+    writer.println("import android.view.Window;");
+    writer.println("import android.view.WindowManager;");
+    writer.println("import android.widget.FrameLayout;");
+    writer.println("import android.view.ViewGroup.LayoutParams;");
+    writer.println("import  android.support.v4.app.FragmentTransaction;");
+    writer.println("import processing.core.PApplet;");
+    writer.println("public class MainActivity extends FragmentActivity {");
     writer.println("    PApplet fragment;");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
@@ -879,19 +886,19 @@ class AndroidBuild extends JavaBuild {
         + "WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
     writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
         + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
-    writer.println("        FrameLayout frame = new FrameLayout(this)");
+    writer.println("        FrameLayout frame = new FrameLayout(this);");
     writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
         + "LayoutParams.MATCH_PARENT));");
     writer.println("        if (savedInstanceState == null) {");
-    writer.println("            fragment = new " + sketchClassName + "()");
-    writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
+    writer.println("            fragment = new " + sketchClassName + "();");
+    writer.println("            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();");
     writer.println("            ft.add(frame.getId(), fragment).commit();");
     writer.println("        }");
     writer.println("    }");
     writer.println("    @Override");
     writer.println("    public void onBackPressed() {");
     writer.println("        fragment.onBackPressed();");
-    writer.println("        super.onBackPressed()");
+    writer.println("        super.onBackPressed();");
     writer.println("    }");
     writer.println("}");
     writer.flush();
@@ -912,7 +919,7 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
   
-  
+/*
   private void writeResLayoutMainFragment(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
     writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -922,7 +929,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("              android:layout_height=\"fill_parent\">");
     writer.println("</LinearLayout>");
   }
-
+*/
 
   // This recommended to be a string resource so that it can be localized.
   // nah.. we're gonna be messing with it in the GUI anyway...
@@ -938,6 +945,22 @@ class AndroidBuild extends JavaBuild {
 //    writer.close();
 //  }
 
+  
+  private void copySupportV4(File libsFolder) throws SketchException {
+    File sdkLocation = sdk.getSdkFolder();
+    File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
+    if (!supportV4Jar.exists()) {
+      SketchException sketchException = 
+          new SketchException("Please install support repository from SDK manager");
+      throw sketchException;
+    } else {
+      try {
+        Base.copyFile(supportV4Jar, new File(libsFolder, "android-support-v4.jar"));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
 
   /**
    * For each library, copy .jar and .zip files to the 'libs' folder,

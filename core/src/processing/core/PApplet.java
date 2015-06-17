@@ -1128,7 +1128,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     return renderer;
   }
 
-
+/*
   public void orientation(int which) {
     if (which == PORTRAIT) {
       setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -1136,7 +1136,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
   }
-
+*/
 
 //  public int sketchOrientation() {
 //    return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
