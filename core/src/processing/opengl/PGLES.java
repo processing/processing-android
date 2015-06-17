@@ -1790,4 +1790,32 @@ public class PGLES extends PGL {
   public void drawBuffer(int buf) {
     throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "glDrawBuffer()"));
   }
+
+
+  @Override
+  protected int getFontAscent(Object font) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+
+  @Override
+  protected int getFontDescent(Object font) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+
+  @Override
+  protected int getTextWidth(Object font, char[] buffer, int start, int stop) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+
+  @Override
+  protected Object getDerivedFont(Object font, float size) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

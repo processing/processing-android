@@ -28,7 +28,6 @@ import java.util.WeakHashMap;
 
 import processing.opengl.PGL;
 import processing.opengl.PShader;
-
 import android.graphics.Bitmap;
 import android.graphics.Color;
 
@@ -128,10 +127,7 @@ public class PGraphics extends PImage implements PConstants {
   public int pixelCount;
 
   /// true if smoothing is enabled (read-only)
-  public boolean smooth = false;
-
-  /// the anti-aliasing level for renderers that support it
-  protected int quality;
+  public int smooth;
 
   // ........................................................
 
@@ -152,7 +148,7 @@ public class PGraphics extends PImage implements PConstants {
    * created any other way than size(). When this is set, the listeners
    * are also added to the sketch.
    */
-  protected boolean primarySurface;
+  protected boolean primaryGraphics;
 
   // ........................................................
 
@@ -670,12 +666,12 @@ public class PGraphics extends PImage implements PConstants {
    * else that goes along with that.
    */
   public void setPrimary(boolean primary) {  // ignore
-    this.primarySurface = primary;
+    this.primaryGraphics = primary;
 
     // base images must be opaque (for performance and general
     // headache reasons.. argh, a semi-transparent opengl surface?)
     // use createGraphics() if you want a transparent surface.
-    if (primarySurface) {
+    if (primaryGraphics) {
       format = RGB;
     }
   }
@@ -886,7 +882,7 @@ public class PGraphics extends PImage implements PConstants {
     // a gray background (when just a transparent surface or an empty pdf
     // is what's desired).
     // this background() call is for the Java 2D and OpenGL renderers.
-    if (primarySurface) {
+    if (primaryGraphics) {
       //System.out.println("main drawing surface bg " + getClass().getName());
       background(backgroundColor);
     }
@@ -945,12 +941,12 @@ public class PGraphics extends PImage implements PConstants {
     } else {
       noTint();
     }
-    if (smooth) {
-      smooth();
-    } else {
-      // Don't bother setting this, cuz it'll anger P3D.
-      noSmooth();
-    }
+//    if (smooth) {
+//      smooth();
+//    } else {
+//      // Don't bother setting this, cuz it'll anger P3D.
+//      noSmooth();
+//    }
     if (textFont != null) {
 //      System.out.println("  textFont in reapply is " + textFont);
       // textFont() resets the leading, so save it in case it's changed
@@ -1075,6 +1071,21 @@ public class PGraphics extends PImage implements PConstants {
       }
     }
   }
+
+  public void attrib(String name, float... values) {
+    showMissingWarning("attrib");
+  }
+
+
+  public void attrib(String name, int... values) {
+    showMissingWarning("attrib");
+  }
+
+
+  public void attrib(String name, boolean... values) {
+    showMissingWarning("attrib");
+  }
+
 
   /**
    * Set texture mode to either to use coordinates based on the IMAGE
@@ -1471,29 +1482,120 @@ public class PGraphics extends PImage implements PConstants {
   // SHAPE CREATION
 
 
-  public PShape createShape(PShape source) {
-    showMissingWarning("createShape");
-    return null;
-  }
-
-
+  /**
+   * @webref shape
+   * @see PShape
+   * @see PShape#endShape()
+   * @see PApplet#loadShape(String)
+   */
   public PShape createShape() {
-    showMissingWarning("createShape");
-    return null;
+    // Defaults to GEOMETRY (rather than GROUP like the default constructor)
+    // because that's how people will use it within a sketch.
+    return createShape(PShape.GEOMETRY);
   }
 
 
+  // POINTS, LINES, TRIANGLES, TRIANGLE_FAN, TRIANGLE_STRIP, QUADS, QUAD_STRIP
   public PShape createShape(int type) {
-    showMissingWarning("createShape");
-    return null;
+    // If it's a PRIMITIVE, it needs the 'params' field anyway
+    if (type == PConstants.GROUP ||
+        type == PShape.PATH ||
+        type == PShape.GEOMETRY) {
+      return createShapeFamily(type);
+    }
+    final String msg =
+      "Only GROUP, PShape.PATH, and PShape.GEOMETRY work with createShape()";
+    throw new IllegalArgumentException(msg);
   }
 
 
+  /** Override this method to return an appropriate shape for your renderer */
+  protected PShape createShapeFamily(int type) {
+    return new PShape(this, type);
+//    showMethodWarning("createShape()");
+//    return null;
+  }
+
+
+  /**
+   * @param kind either POINT, LINE, TRIANGLE, QUAD, RECT, ELLIPSE, ARC, BOX, SPHERE
+   * @param p parameters that match the kind of shape
+   */
   public PShape createShape(int kind, float... p) {
-    showMissingWarning("createShape");
-    return null;
+    int len = p.length;
+
+    if (kind == POINT) {
+      if (is3D() && len != 2 && len != 3) {
+        throw new IllegalArgumentException("Use createShape(POINT, x, y) or createShape(POINT, x, y, z)");
+      } else if (len != 2) {
+        throw new IllegalArgumentException("Use createShape(POINT, x, y)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == LINE) {
+      if (is3D() && len != 4 && len != 6) {
+        throw new IllegalArgumentException("Use createShape(LINE, x1, y1, x2, y2) or createShape(LINE, x1, y1, z1, x2, y2, z1)");
+      } else if (len != 4) {
+        throw new IllegalArgumentException("Use createShape(LINE, x1, y1, x2, y2)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == TRIANGLE) {
+      if (len != 6) {
+        throw new IllegalArgumentException("Use createShape(TRIANGLE, x1, y1, x2, y2, x3, y3)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == QUAD) {
+      if (len != 8) {
+        throw new IllegalArgumentException("Use createShape(QUAD, x1, y1, x2, y2, x3, y3, x4, y4)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == RECT) {
+      if (len != 4 && len != 5 && len != 8 && len != 9) {
+        throw new IllegalArgumentException("Wrong number of parameters for createShape(RECT), see the reference");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == ELLIPSE) {
+      if (len != 4 && len != 5) {
+        throw new IllegalArgumentException("Use createShape(ELLIPSE, x, y, w, h) or createShape(ELLIPSE, x, y, w, h, mode)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == ARC) {
+      if (len != 6 && len != 7) {
+        throw new IllegalArgumentException("Use createShape(ARC, x, y, w, h, start, stop)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == BOX) {
+      if (!is3D()) {
+        throw new IllegalArgumentException("createShape(BOX) is not supported in 2D");
+      } else if (len != 1 && len != 3) {
+        throw new IllegalArgumentException("Use createShape(BOX, size) or createShape(BOX, width, height, depth)");
+      }
+      return createShapePrimitive(kind, p);
+
+    } else if (kind == SPHERE) {
+      if (!is3D()) {
+        throw new IllegalArgumentException("createShape(SPHERE) is not supported in 2D");
+      } else if (len != 1) {
+        throw new IllegalArgumentException("Use createShape(SPHERE, radius)");
+      }
+      return createShapePrimitive(kind, p);
+    }
+    throw new IllegalArgumentException("Unknown shape type passed to createShape()");
   }
 
+
+  /** Override this to have a custom shape object used by your renderer. */
+  protected PShape createShapePrimitive(int kind, float... p) {
+//    showMethodWarning("createShape()");
+//    return null;
+    return new PShape(this, kind, p);
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -2643,25 +2745,36 @@ public class PGraphics extends PImage implements PConstants {
   // SMOOTHING
 
 
-  /**
-   * If true in PImage, use bilinear interpolation for copy()
-   * operations. When inherited by PGraphics, also controls shapes.
-   */
-  public void smooth() { // ignore
-    smooth = true;
+  public void smooth() {  // ignore
+    smooth(1);
   }
 
-  public void smooth(int level) { // ignore
-    smooth = true;
+
+  public void smooth(int quality) {  // ignore
+    if (primaryGraphics) {
+      parent.smooth(quality);
+    } else {
+      // for createGraphics(), make sure beginDraw() not called yet
+      if (settingsInited) {
+        // ignore if it's just a repeat of the current state
+        if (this.smooth != quality) {
+          smoothWarning("smooth");
+        }
+      } else {
+        this.smooth = quality;
+      }
+    }
   }
 
-  /**
-   * Disable smoothing. See smooth().
-   */
-  public void noSmooth() { // ignore
-    smooth = false;
+
+  public void noSmooth() {  // ignore
+    smooth(0);
   }
 
+
+  private void smoothWarning(String method) {
+    PGraphics.showWarning("%s() can only be used before beginDraw()", method);
+  }
 
 
   //////////////////////////////////////////////////////////////

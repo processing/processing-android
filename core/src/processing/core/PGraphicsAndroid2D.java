@@ -175,7 +175,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void beginDraw() {
-//    if (primarySurface) {
+//    if (primaryGraphics) {
 //      canvas = parent.getSurfaceHolder().lockCanvas(null);
 //      if (canvas == null) {
 //        throw new RuntimeException("canvas is still null");
@@ -199,13 +199,13 @@ public class PGraphicsAndroid2D extends PGraphics {
     // copy of all the pixels to the surface.. so that's kind of a mess.
     //updatePixels();
 
-//    if (primarySurface) {
+//    if (primaryGraphics) {
 //      if (canvas != null) {
 //        parent.getSurfaceHolder().unlockCanvasAndPost(canvas);
 //      }
 //    }
 
-    if (primarySurface) {
+    if (primaryGraphics) {
       Canvas screen = null;
       try {
         screen = parent.getSurfaceHolder().lockCanvas(null);
@@ -945,8 +945,9 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   @Override
-  public void smooth() {
-    smooth = true;
+  public void smooth(int quality) {  // ignore
+    super.smooth(quality);
+//    smooth = true;
 //    canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 //                        RenderingHints.VALUE_ANTIALIAS_ON);
 //    canvas.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
@@ -958,7 +959,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void noSmooth() {
-    smooth = false;
+    super.noSmooth();
+//    smooth = false;
 //    canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 //                        RenderingHints.VALUE_ANTIALIAS_OFF);
 //    canvas.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
@@ -1304,7 +1306,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
     // return to previous smoothing state if it was changed
 //    canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING, antialias);
-    fillPaint.setAntiAlias(smooth);
+    fillPaint.setAntiAlias(0 < smooth);
 
 //    textX = x + textWidthImpl(buffer, start, stop);
 //    textY = y;
