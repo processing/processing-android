@@ -645,7 +645,6 @@ public class StringList implements Iterable<String> {
   }
 
 
-  @Override
   public Iterator<String> iterator() {
 //    return valueIterator();
 //  }
