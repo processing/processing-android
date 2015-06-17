@@ -220,10 +220,10 @@ public class Manifest {
       }
       app.setString("android:debuggable", debug ? "true" : "false");
 
-      XML activity = app.getChild("activity");
+//      XML activity = app.getChild("activity");
       // the '.' prefix is just an alias for the full package name
       // http://developer.android.com/guide/topics/manifest/activity-element.html#name
-      activity.setString("android:name", "." + className);  // this has to be right
+//      activity.setString("android:name", "." + className);  // this has to be right
 
       PrintWriter writer = PApplet.createWriter(file);
       writer.print(mf.toString());
