@@ -863,10 +863,11 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  private void writeMainActivity(final File file) {
-    File mainActivityFile = new File(file, "MainActivity.java");
+  private void writeMainActivity(final File srcDirectory) {
+    File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+        "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
-    writer.println("package " + basePackage + "." + sketch.getName() + ";");
+    writer.println("package " + manifest.getPackageName() +";");
     writer.println("import android.support.v4.app.FragmentActivity;");
     writer.println("import android.os.Bundle;");
     writer.println("import android.view.Window;");
