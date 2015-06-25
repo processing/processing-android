@@ -22,16 +22,11 @@
 
 package processing.opengl;
 
-import java.io.InputStream;
-import java.util.zip.GZIPInputStream;
-
-import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
 import processing.core.PShapeSVG;
-import processing.data.XML;
+
 
 public class PGraphics2D extends PGraphicsOpenGL {
 
@@ -156,7 +151,7 @@ public class PGraphics2D extends PGraphicsOpenGL {
 
   @Override
   protected void defaultCamera() {
-    cameraEyeX = cameraEyeY = cameraEyeZ = 0;
+    eyeDist = 1;
     resetMatrix();
   }
 
@@ -233,6 +228,7 @@ public class PGraphics2D extends PGraphicsOpenGL {
   }
 
 
+
   //////////////////////////////////////////////////////////////
 
   // SHAPE I/O
@@ -243,31 +239,15 @@ public class PGraphics2D extends PGraphicsOpenGL {
   }
 
 
-  static protected PShape loadShapeImpl(PGraphics pg, String filename,
-                                                      String extension) {
-    PShapeSVG svg = null;
-
-    if (extension.equals("svg")) {
-      svg = new PShapeSVG(pg.parent.loadXML(filename));
-
-    } else if (extension.equals("svgz")) {
-      try {
-        InputStream input =
-          new GZIPInputStream(pg.parent.createInput(filename));
-        XML xml = new XML(PApplet.createReader(input));
-        svg = new PShapeSVG(xml);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+  static protected PShape loadShapeImpl(PGraphics pg,
+                                        String filename, String extension) {
+    if (extension.equals("svg") || extension.equals("svgz")) {
+      PShapeSVG svg = new PShapeSVG(pg.parent.loadXML(filename));
+      return PShapeOpenGL.createShape((PGraphicsOpenGL) pg, svg);
     }
-
-    if (svg != null) {
-      PShapeOpenGL p2d = PShapeOpenGL.createShape2D((PGraphicsOpenGL)pg, svg);
-      return p2d;
-    } else {
-      return null;
-    }
+    return null;
   }
+
 
 
   //////////////////////////////////////////////////////////////
@@ -275,6 +255,19 @@ public class PGraphics2D extends PGraphicsOpenGL {
   // SHAPE CREATION
 
 
+//  @Override
+//  protected PShape createShapeFamily(int type) {
+//    return new PShapeOpenGL(this, type);
+//  }
+//
+//
+//  @Override
+//  protected PShape createShapePrimitive(int kind, float... p) {
+//    return new PShapeOpenGL(this, kind, p);
+//  }
+
+
+  /*
   @Override
   public PShape createShape(PShape source) {
     return PShapeOpenGL.createShape2D(this, source);
@@ -308,7 +301,7 @@ public class PGraphics2D extends PGraphicsOpenGL {
     } else if (type == PShape.GEOMETRY) {
       shape = new PShapeOpenGL(pg, PShape.GEOMETRY);
     }
-    shape.is3D(false);
+    shape.set3D(false);
     return shape;
   }
 
@@ -379,9 +372,10 @@ public class PGraphics2D extends PGraphicsOpenGL {
       shape.setParams(p);
     }
 
-    shape.is3D(false);
+    shape.set3D(false);
     return shape;
   }
+  */
 
 
   //////////////////////////////////////////////////////////////

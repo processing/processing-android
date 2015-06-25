@@ -179,7 +179,7 @@ public class Manifest {
     // the actual activity class. or the package can be replaced by a single
     // dot as a prefix as an easier shorthand.
     writer.println("    <activity android:name=\".MainActivity\">");
-
+    writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">");
     writer.println("      <intent-filter>");
     writer.println("        <action android:name=\"android.intent.action.MAIN\" />");
     writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />");

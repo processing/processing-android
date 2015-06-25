@@ -428,14 +428,19 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
   static final String ERROR_MIN_MAX =
     "Cannot use min() or max() on an empty array.";
-  
+
   boolean insideSettings;
-  
+
   String renderer = JAVA2D;
-  
+
   int smooth = 1;  // default smoothing (whatever that means for the renderer)
-  
+
   boolean fullScreen = false;
+
+  // Background default needs to be different from the default value in
+  // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
+  // https://github.com/processing/processing/issues/2297
+  int windowColor = 0xffDDDDDD;
 
 
   //////////////////////////////////////////////////////////////
@@ -462,7 +467,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
     displayWidth = dm.widthPixels;
     displayHeight = dm.heightPixels;
-    
+
     //Setting the default height and width to be fullscreen
     width = displayWidth;
     height = displayHeight;
@@ -482,7 +487,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.FILL_PARENT);
 //lp.addRule(RelativeLayout.RIGHT_OF, tv1.getId());
 //    layout.setGravity(RelativeLayout.CENTER_IN_PARENT);
-    
+
     handleSettings();
 
     int sw = sketchWidth();
@@ -513,7 +518,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
         "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
     }
-    
+
     //set smooth level
     if (smooth == 0) {
       g.noSmooth();
@@ -667,8 +672,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //}
 //    surfaceView.onPause();
   }
-  
-  
+
+
   /**
    * @param method "size" or "fullScreen"
    * @param args parameters passed to the function so we can show the user
@@ -689,16 +694,16 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     }
     throw new IllegalStateException(method + "() cannot be used here, see " + url);
   }
-  
-  
+
+
   void handleSettings() {
     insideSettings = true;
     //Do stuff
     settings();
     insideSettings = false;
   }
-  
-  
+
+
   public void settings() {
     //It'll be empty. Will be overridden by user's sketch class.
   }
@@ -1108,7 +1113,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  public int sketchWidth() {
+  final public int sketchWidth() {
     if (fullScreen) {
       return displayWidth;
     }
@@ -1116,7 +1121,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  public int sketchHeight() {
+  final public  int sketchHeight() {
     if (fullScreen) {
       return displayHeight;
     }
@@ -1124,9 +1129,15 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  public String sketchRenderer() {
+  final public String sketchRenderer() {
     return renderer;
   }
+
+
+  final public int sketchWindowColor() {
+    return windowColor;
+  }
+
 
 
   public void orientation(int which) {
@@ -1540,8 +1551,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //      layout.invalidate();
 //    }
 //  }
-  
-  
+
+
   /**
    * Create a full-screen sketch using the default renderer.
    */
@@ -1619,8 +1630,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       }
     }
   }
-  
-  
+
+
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -1694,7 +1705,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
                    final String irenderer, final String ipath) {
     if (iwidth != this.width || iheight != this.height ||
         !this.renderer.equals(irenderer)) {
-      if (insideSettings("size", iwidth, iheight, irenderer, 
+      if (insideSettings("size", iwidth, iheight, irenderer,
           ipath)) {
         this.width = iwidth;
         this.height = iheight;
@@ -3653,8 +3664,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       }
     }
   }
-  
-  
+
+
 /**
  * @webref output:text_area
  * @param what one-dimensional array
@@ -8144,6 +8155,21 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
+  public void attrib(String name, float... values) {
+    g.attrib(name, values);
+  }
+
+
+  public void attrib(String name, int... values) {
+    g.attrib(name, values);
+  }
+
+
+  public void attrib(String name, boolean... values) {
+    g.attrib(name, values);
+  }
+
+
   /**
    * Set texture mode to either to use coordinates based on the IMAGE
    * (more intuitive for new users) or NORMALIZED (better for advanced chaps)
@@ -8255,11 +8281,12 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  public PShape createShape(PShape source) {
-    return g.createShape(source);
-  }
-
-
+  /**
+   * @webref shape
+   * @see PShape
+   * @see PShape#endShape()
+   * @see PApplet#loadShape(String)
+   */
   public PShape createShape() {
     return g.createShape();
   }
@@ -8270,6 +8297,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
+  /**
+   * @param kind either POINT, LINE, TRIANGLE, QUAD, RECT, ELLIPSE, ARC, BOX, SPHERE
+   * @param p parameters that match the kind of shape
+   */
   public PShape createShape(int kind, float... p) {
     return g.createShape(kind, p);
   }
