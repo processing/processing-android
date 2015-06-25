@@ -23,16 +23,16 @@ package processing.mode.android;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
+//import java.io.Writer;
 import java.util.List;
 
 import processing.app.*;
 import processing.core.PApplet;
 import processing.mode.java.preproc.PdePreprocessor;
-import processing.mode.java.preproc.PreprocessorResult;
+//import processing.mode.java.preproc.PreprocessorResult;
 import processing.mode.java.preproc.SurfaceInfo;
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
+//import antlr.RecognitionException;
+//import antlr.TokenStreamException;
 
 
 public class AndroidPreprocessor extends PdePreprocessor {
