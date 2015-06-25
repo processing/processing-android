@@ -878,7 +878,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends FragmentActivity {");
     writer.println("    PApplet fragment;");
-    writer.println("    int viewPagerId = 0x1000;");
+    writer.println("    int viewId = 0x1000;");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
     writer.println("        super.onCreate(savedInstanceState);");
@@ -889,7 +889,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
         + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
     writer.println("        FrameLayout frame = new FrameLayout(this);");
-    writer.println("        frame.setId(viewPagerId);");
+    writer.println("        frame.setId(viewId);");
     writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
         + "LayoutParams.MATCH_PARENT));");
     writer.println("        if (savedInstanceState == null) {");
