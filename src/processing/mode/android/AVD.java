@@ -1,7 +1,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Preferences;
+//import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
