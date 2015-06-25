@@ -878,6 +878,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends FragmentActivity {");
     writer.println("    PApplet fragment;");
+    writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
     writer.println("    int viewId = 0x1000;");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
@@ -895,7 +896,9 @@ class AndroidBuild extends JavaBuild {
     writer.println("        if (savedInstanceState == null) {");
     writer.println("            fragment = new " + sketchClassName + "();");
     writer.println("            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();");
-    writer.println("            ft.add(frame.getId(), fragment).commit();");
+    writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
+    writer.println("        } else {");
+    writer.println("            fragment = (PApplet) getSupportFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
     writer.println("        }");
     writer.println("    }");
     writer.println("    @Override");
