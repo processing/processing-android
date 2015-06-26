@@ -28,7 +28,7 @@ import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import processing.app.Editor;
+import processing.app.ui.Editor;
 import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
@@ -37,15 +37,15 @@ import processing.mode.java.runner.Runner;
 public class AndroidRunner implements DeviceListener {
   AndroidBuild build;
   RunnerListener listener;
-  
+
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
 
-  
+
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
     this.listener = listener;
-    
+
     if (listener instanceof Editor) {
       Editor editor = (Editor) listener;
       sketchErr = editor.getConsole().getErr();
@@ -55,8 +55,8 @@ public class AndroidRunner implements DeviceListener {
       sketchOut = System.out;
     }
   }
-  
-  
+
+
   public void launch(Future<Device> deviceFuture) {
 //    try {
 //      runSketchOnDevice(Devices.getInstance().getEmulator(), "debug", AndroidEditor.this);
@@ -70,7 +70,7 @@ public class AndroidRunner implements DeviceListener {
     final Device device = waitForDevice(deviceFuture, listener);
     if (device == null || !device.isAlive()) {
       listener.statusError("Lost connection with device while launching. Try again.");
-      // Reset the server, in case that's the problem. Sometimes when 
+      // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
       Devices.killAdbServer();
       return;
@@ -91,7 +91,7 @@ public class AndroidRunner implements DeviceListener {
       Devices.killAdbServer();  // see above
       return;
     }
-//    if (!build.antInstall()) {      
+//    if (!build.antInstall()) {
 //    }
 
 //  if (monitor.isCanceled()) {
@@ -115,8 +115,8 @@ public class AndroidRunner implements DeviceListener {
 //listener.stopIndeterminate();
 //}
   }
-  
-  
+
+
   private volatile Device lastRunDevice = null;
 
   /**
@@ -132,7 +132,7 @@ public class AndroidRunner implements DeviceListener {
 //                                       "Building and launching...",
 //                                       "Creating project...");
 
-    
+
     AndroidBuild build = new AndroidBuild(sketch, listener);
     try {
       try {
@@ -207,7 +207,7 @@ public class AndroidRunner implements DeviceListener {
   }
   */
 
-  
+
   // if user asks for 480x320, 320x480, 854x480 etc, then launch like that
   // though would need to query the emulator to see if it can do that
 
@@ -248,8 +248,8 @@ public class AndroidRunner implements DeviceListener {
                          "on waiting for that device to show up.");
     return null;
   }
-  
-  
+
+
   private static final Pattern LOCATION =
     Pattern.compile("\\(([^:]+):(\\d+)\\)");
   private static final Pattern EXCEPTION_PARSER =
@@ -304,7 +304,7 @@ public class AndroidRunner implements DeviceListener {
   }
 
 
-  // sketch stopped on the device 
+  // sketch stopped on the device
   public void sketchStopped() {
     listener.stopIndeterminate();
     listener.statusHalt();

@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import processing.app.Base;
-import processing.app.Editor;
-import processing.app.EditorButton;
-import processing.app.EditorToolbar;
+import processing.app.ui.Editor;
+import processing.app.ui.EditorButton;
+import processing.app.ui.EditorToolbar;
 import processing.app.Language;
 
 
@@ -57,7 +57,7 @@ public class AndroidToolbar extends EditorToolbar {
 //    }
 //  }
 
-  
+
   static public String getTitle(int index, boolean shift) {
     switch (index) {
     case RUN:    return !shift ? "Run on Device" : "Run in Emulator";
@@ -116,7 +116,7 @@ public class AndroidToolbar extends EditorToolbar {
     }
   }
 */
-  
+
   @Override
   public List<EditorButton> createButtons() {
     ArrayList<EditorButton> toReturn = new ArrayList<EditorButton>();
@@ -161,8 +161,8 @@ public class AndroidToolbar extends EditorToolbar {
     AndroidEditor aEditor = (AndroidEditor) editor;
     aEditor.handleStop();
   }
-  
-  
+
+
   public void activateExport() {
     // TODO added to match the new API in EditorToolbar (activateRun, etc).
   }
@@ -170,5 +170,5 @@ public class AndroidToolbar extends EditorToolbar {
 
   public void deactivateExport() {
     // TODO added to match the new API in EditorToolbar (activateRun, etc).
-  }    
+  }
 }

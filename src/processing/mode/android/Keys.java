@@ -21,14 +21,10 @@
 
 package processing.mode.android;
 
-//import java.awt.*;
-//import java.awt.event.*;
-//import java.util.ArrayList;
-//import java.util.HashMap;
-
 import javax.swing.*;
 
-import processing.app.*;
+import processing.app.ui.Editor;
+
 
 @SuppressWarnings("serial")
 public class Keys extends JFrame {

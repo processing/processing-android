@@ -8,6 +8,7 @@ import org.xml.sax.SAXException;
 
 import processing.app.Base;
 import processing.app.Preferences;
+import processing.app.ui.Toolkit;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -99,7 +100,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
 
         // usb driver
-        if(Base.isWindows()) {
+        if (Base.isWindows()) {
           File usbDriverFolder = new File(extrasFolder, "google");
           File downloadedFolder = new File(tempFolder, "latest_usb_driver_windows.zip");
           downloadAndUnpack(URL_USB_DRIVER, downloadedFolder, usbDriverFolder);
@@ -115,7 +116,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
         androidMode.loadSDK();
       } catch (ParserConfigurationException e) {
-        // TODO Handle exceptions here somehow (ie show error message) and handle at least mkdir() results (above)
+        // TODO Handle exceptions here somehow (ie show error message)
+        // and handle at least mkdir() results (above)
         e.printStackTrace();
       } catch (IOException e) {
         e.printStackTrace();
@@ -131,7 +133,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       setVisible(false);
     }
 
-    private void downloadAndUnpack(String urlString, File saveTo, File unpackTo) throws IOException {
+    private void downloadAndUnpack(String urlString, File saveTo,
+                                   File unpackTo) throws IOException {
       URL url = new URL(urlString);
       URLConnection conn = url.openConnection();
 
@@ -312,7 +315,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton cancelButton = new JButton("Cancel download");
-    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH*2,
+    Dimension dim = new Dimension(Toolkit.BUTTON_WIDTH*2,
         cancelButton.getPreferredSize().height);
 
     cancelButton.setPreferredSize(dim);
@@ -334,22 +337,25 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         setVisible(false);
       }
     };
-    processing.app.Toolkit.registerWindowCloseKeys(root, disposer);
-    processing.app.Toolkit.setIcon(this);
+    Toolkit.registerWindowCloseKeys(root, disposer);
+    Toolkit.setIcon(this);
 
     pack();
 
-    Dimension screen = processing.app.Toolkit.getScreenSize();
+    /*
+    Dimension screen = Toolkit.getScreenSize();
     Dimension windowSize = getSize();
-
     setLocation((screen.width - windowSize.width) / 2,
         (screen.height - windowSize.height) / 2);
+     */
+    setLocationRelativeTo(null);
 
     setVisible(true);
     setAlwaysOnTop(true);
   }
 
-  static public void extractFolder(File file, File newPath) throws IOException {
+
+  static void extractFolder(File file, File newPath) throws IOException {
     int BUFFER = 2048;
     zip = new ZipFile(file);
     Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();

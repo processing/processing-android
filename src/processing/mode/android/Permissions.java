@@ -33,9 +33,8 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 import processing.app.Base;
-import processing.app.Preferences;
 import processing.app.Sketch;
-import processing.app.Toolkit;
+import processing.app.ui.Toolkit;
 
 
 @SuppressWarnings("serial")
@@ -241,7 +240,7 @@ public class Permissions extends JFrame {
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
-    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH,
+    Dimension dim = new Dimension(Toolkit.BUTTON_WIDTH,
                                   okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
@@ -539,7 +538,7 @@ class CheckBoxList extends JList<JCheckBox> {
 
 
   protected class CellRenderer implements ListCellRenderer<JCheckBox> {
-    public Component getListCellRendererComponent(JList<? extends JCheckBox> list, 
+    public Component getListCellRendererComponent(JList<? extends JCheckBox> list,
                                                   JCheckBox checkbox,
                                                   int index, boolean isSelected,
                                                   boolean cellHasFocus) {
