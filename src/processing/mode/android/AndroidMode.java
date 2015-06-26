@@ -21,7 +21,14 @@
 
 package processing.mode.android;
 
-import processing.app.*;
+import processing.app.Base;
+import processing.app.Library;
+import processing.app.Preferences;
+import processing.app.RunnerListener;
+import processing.app.Sketch;
+import processing.app.SketchException;
+import processing.app.ui.Editor;
+import processing.app.ui.EditorState;
 import processing.mode.java.JavaMode;
 
 import java.io.File;
@@ -57,11 +64,11 @@ public class AndroidMode extends JavaMode {
   public String getTitle() {
     return "Android";
   }
-  
-  
+
+
   public File[] getKeywordFiles() {
-    return new File[] { 
-      Base.getContentFile("modes/java/keywords.txt") 
+    return new File[] {
+      Base.getContentFile("modes/java/keywords.txt")
     };
   }
 
@@ -209,7 +216,8 @@ public class AndroidMode extends JavaMode {
   }
 
 
-  public void handleRunDevice(Sketch sketch, RunnerListener listener) throws SketchException, IOException {
+  public void handleRunDevice(Sketch sketch, RunnerListener listener)
+    throws SketchException, IOException {
 //    JavaBuild build = new JavaBuild(sketch);
 //    String appletClassName = build.build();
 //    if (appletClassName != null) {

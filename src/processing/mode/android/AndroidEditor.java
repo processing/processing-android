@@ -21,7 +21,13 @@
 
 package processing.mode.android;
 
-import processing.app.*;
+import processing.app.Base;
+import processing.app.Mode;
+import processing.app.Preferences;
+import processing.app.SketchException;
+import processing.app.ui.EditorState;
+import processing.app.ui.EditorToolbar;
+import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 
@@ -35,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TimerTask;
+
 
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
@@ -55,7 +62,7 @@ public class AndroidEditor extends JavaEditor {
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
       Device selectedDevice = devices.getSelectedDevice();
-      
+
       if (deviceList.size() == 0) {
         //if (deviceMenu.getItem(0).isEnabled()) {
         if (0 < deviceMenu.getItemCount()) {
@@ -121,7 +128,9 @@ public class AndroidEditor extends JavaEditor {
     }
   }
 
-  protected AndroidEditor(Base base, String path, EditorState state, Mode mode) throws Exception {
+
+  protected AndroidEditor(Base base, String path,
+                          EditorState state, Mode mode) throws Exception {
     super(base, path, state, mode);
     androidMode = (AndroidMode) mode;
     androidMode.checkSDK(this);
@@ -240,7 +249,7 @@ public class AndroidEditor extends JavaEditor {
 
     menu.add(sdkMenu);
     menu.addSeparator();
-    
+
     final JMenu abiMenu = new JMenu("Select CPU/ABI");
     for (int i = 0; i < AVD.ABI.length; ++i) {
       JMenuItem menuItem = new JCheckBoxMenuItem(AVD.ABI[i]);
@@ -249,7 +258,7 @@ public class AndroidEditor extends JavaEditor {
         menuItem.setSelected(true);
       }
     }
-    
+
     for (int i = 0; i < abiMenu.getItemCount(); ++i) {
       final JMenuItem abiItem = abiMenu.getItem(i);
       abiItem.addActionListener(new ActionListener() {
@@ -263,7 +272,7 @@ public class AndroidEditor extends JavaEditor {
         }
       });
     }
-    
+
     menu.add(abiMenu);
     menu.addSeparator();
 
@@ -569,7 +578,7 @@ public class AndroidEditor extends JavaEditor {
       new Thread() {
         public void run() {
 //          toolbar.activate(AndroidToolbar.EXPORT);
-          ((AndroidToolbar)toolbar).activateExport();
+          ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
           AndroidBuild build = new AndroidBuild(sketch, androidMode);

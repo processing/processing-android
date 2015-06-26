@@ -1,7 +1,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Preferences;
+import processing.app.ui.Toolkit;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -61,7 +61,7 @@ public class KeyStoreManager extends JFrame {
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
-    Dimension dim = new Dimension(Preferences.BUTTON_WIDTH,
+    Dimension dim = new Dimension(Toolkit.BUTTON_WIDTH,
         okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
@@ -97,7 +97,7 @@ public class KeyStoreManager extends JFrame {
     cancelButton.setEnabled(true);
 
     JButton resetKeystoreButton = new JButton("Reset password");
-    dim = new Dimension(Preferences.BUTTON_WIDTH*2,
+    dim = new Dimension(Toolkit.BUTTON_WIDTH*2,
         okButton.getPreferredSize().height);
     resetKeystoreButton.setPreferredSize(dim);
     resetKeystoreButton.addActionListener(new ActionListener() {
@@ -147,17 +147,17 @@ public class KeyStoreManager extends JFrame {
         setVisible(false);
       }
     };
-    processing.app.Toolkit.registerWindowCloseKeys(root, disposer);
-    processing.app.Toolkit.setIcon(this);
+    Toolkit.registerWindowCloseKeys(root, disposer);
+    Toolkit.setIcon(this);
 
     pack();
-
-    Dimension screen = processing.app.Toolkit.getScreenSize();
+    /*
+    Dimension screen = Toolkit.getScreenSize();
     Dimension windowSize = getSize();
-
     setLocation((screen.width - windowSize.width) / 2,
         (screen.height - windowSize.height) / 2);
-
+     */
+    setLocationRelativeTo(null);
     setVisible(true);
   }
 
