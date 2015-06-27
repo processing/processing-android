@@ -51,11 +51,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.*;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
+import android.app.Fragment;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -73,7 +70,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   /**
    * The activity which holds this fragment.
    */
-  private FragmentActivity activity;
+  private Activity activity;
   
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;

@@ -182,7 +182,7 @@ class AndroidBuild extends JavaBuild {
 //      PApplet.saveStream(new File(libsFolder, "processing-core.jar"), input);
       Base.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
       
-      copySupportV4(libsFolder);
+//      copySupportV4(libsFolder);
 
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
@@ -868,15 +868,15 @@ class AndroidBuild extends JavaBuild {
         "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
     writer.println("package " + manifest.getPackageName() +";");
-    writer.println("import android.support.v4.app.FragmentActivity;");
+    writer.println("import android.app.Activity;");
     writer.println("import android.os.Bundle;");
     writer.println("import android.view.Window;");
     writer.println("import android.view.WindowManager;");
     writer.println("import android.widget.FrameLayout;");
     writer.println("import android.view.ViewGroup.LayoutParams;");
-    writer.println("import  android.support.v4.app.FragmentTransaction;");
+    writer.println("import  android.app.FragmentTransaction;");
     writer.println("import processing.core.PApplet;");
-    writer.println("public class MainActivity extends FragmentActivity {");
+    writer.println("public class MainActivity extends Activity {");
     writer.println("    PApplet fragment;");
     writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
     writer.println("    int viewId = 0x1000;");
@@ -895,10 +895,10 @@ class AndroidBuild extends JavaBuild {
         + "LayoutParams.MATCH_PARENT));");
     writer.println("        if (savedInstanceState == null) {");
     writer.println("            fragment = new " + sketchClassName + "();");
-    writer.println("            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();");
+    writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
     writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
     writer.println("        } else {");
-    writer.println("            fragment = (PApplet) getSupportFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
+    writer.println("            fragment = (PApplet) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
     writer.println("        }");
     writer.println("    }");
     writer.println("    @Override");
@@ -951,7 +951,7 @@ class AndroidBuild extends JavaBuild {
 //    writer.close();
 //  }
 
-  
+/*
   private void copySupportV4(File libsFolder) throws SketchException {
     File sdkLocation = sdk.getSdkFolder();
     File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
@@ -967,7 +967,7 @@ class AndroidBuild extends JavaBuild {
       }
     }
   }
-
+*/
   /**
    * For each library, copy .jar and .zip files to the 'libs' folder,
    * and copy anything else to the 'assets' folder.
