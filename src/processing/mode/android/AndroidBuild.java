@@ -31,6 +31,7 @@ import processing.app.Library;
 import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
+import processing.app.Util;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
@@ -178,7 +179,7 @@ class AndroidBuild extends JavaBuild {
 
 //      InputStream input = PApplet.createInput(getCoreZipLocation());
 //      PApplet.saveStream(new File(libsFolder, "processing-core.jar"), input);
-      Base.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
+      Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
 
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
@@ -188,14 +189,14 @@ class AndroidBuild extends JavaBuild {
       // Copy the data folder (if one exists) to the project's 'assets' folder
       final File sketchDataFolder = sketch.getDataFolder();
       if (sketchDataFolder.exists()) {
-        Base.copyDir(sketchDataFolder, assetsFolder);
+        Util.copyDir(sketchDataFolder, assetsFolder);
       }
 
       // Do the same for the 'res' folder.
       // http://code.google.com/p/processing/issues/detail?id=767
       final File sketchResFolder = new File(sketch.getFolder(), "res");
       if (sketchResFolder.exists()) {
-        Base.copyDir(sketchResFolder, resFolder);
+        Util.copyDir(sketchResFolder, resFolder);
       }
     }
     return tmpFolder;
@@ -282,7 +283,7 @@ class AndroidBuild extends JavaBuild {
     File projectFolder = createProject();
     if (projectFolder != null) {
       File exportFolder = createExportFolder();
-      Base.copyDir(projectFolder, exportFolder);
+      Util.copyDir(projectFolder, exportFolder);
       return exportFolder;
     }
     return null;
@@ -296,7 +297,7 @@ class AndroidBuild extends JavaBuild {
     if (signedPackage == null) return null;
 
     File exportFolder = createExportFolder();
-    Base.copyDir(projectFolder, exportFolder);
+    Util.copyDir(projectFolder, exportFolder);
     return new File(exportFolder, "/bin/");
   }
 
@@ -789,22 +790,22 @@ class AndroidBuild extends JavaBuild {
       try {
         // if no icons are in the sketch folder, then copy all the defaults
         if (buildIcon36.getParentFile().mkdirs()) {
-          Base.copyFile(mode.getContentFile("icons/" + ICON_36), buildIcon36);
+          Util.copyFile(mode.getContentFile("icons/" + ICON_36), buildIcon36);
         } else {
           System.err.println("Could not create \"drawable-ldpi\" folder.");
         }
         if (buildIcon48.getParentFile().mkdirs()) {
-          Base.copyFile(mode.getContentFile("icons/" + ICON_48), buildIcon48);
+          Util.copyFile(mode.getContentFile("icons/" + ICON_48), buildIcon48);
         } else {
           System.err.println("Could not create \"drawable\" folder.");
         }
         if (buildIcon72.getParentFile().mkdirs()) {
-          Base.copyFile(mode.getContentFile("icons/" + ICON_72), buildIcon72);
+          Util.copyFile(mode.getContentFile("icons/" + ICON_72), buildIcon72);
         } else {
           System.err.println("Could not create \"drawable-hdpi\" folder.");
         }
         if (buildIcon96.getParentFile().mkdirs()) {
-          Base.copyFile(mode.getContentFile("icons/" + ICON_96), buildIcon96);
+          Util.copyFile(mode.getContentFile("icons/" + ICON_96), buildIcon96);
         } else {
           System.err.println("Could not create \"drawable-xhdpi\" folder.");
         }
@@ -817,22 +818,22 @@ class AndroidBuild extends JavaBuild {
       try {
         if (localIcon36.exists()) {
           if (new File(resFolder, "drawable-ldpi").mkdirs()) {
-            Base.copyFile(localIcon36, buildIcon36);
+            Util.copyFile(localIcon36, buildIcon36);
           }
         }
         if (localIcon48.exists()) {
           if (new File(resFolder, "drawable").mkdirs()) {
-            Base.copyFile(localIcon48, buildIcon48);
+            Util.copyFile(localIcon48, buildIcon48);
           }
         }
         if (localIcon72.exists()) {
           if (new File(resFolder, "drawable-hdpi").mkdirs()) {
-            Base.copyFile(localIcon72, buildIcon72);
+            Util.copyFile(localIcon72, buildIcon72);
           }
         }
         if (localIcon96.exists()) {
           if (new File(resFolder, "drawable-xhdpi").mkdirs()) {
-            Base.copyFile(localIcon96, buildIcon96);
+            Util.copyFile(localIcon96, buildIcon96);
           }
         }
       } catch (IOException e) {
@@ -903,10 +904,10 @@ class AndroidBuild extends JavaBuild {
           if (exportName.equals("armeabi") ||
               exportName.equals("armeabi-v7a") ||
               exportName.equals("x86")) {
-            Base.copyDir(exportFile, new File(libsFolder, exportName));
+            Util.copyDir(exportFile, new File(libsFolder, exportName));
           } else {
             // Copy any other directory to the assets folder
-            Base.copyDir(exportFile, new File(assetsFolder, exportName));
+            Util.copyDir(exportFile, new File(assetsFolder, exportName));
           }
         } else if (exportName.toLowerCase().endsWith(".zip")) {
           // As of r4 of the Android SDK, it looks like .zip files
@@ -914,13 +915,13 @@ class AndroidBuild extends JavaBuild {
           System.err.println(".zip files are not allowed in Android libraries.");
           System.err.println("Please rename " + exportFile.getName() + " to be a .jar file.");
           String jarName = exportName.substring(0, exportName.length() - 4) + ".jar";
-          Base.copyFile(exportFile, new File(libsFolder, jarName));
+          Util.copyFile(exportFile, new File(libsFolder, jarName));
 
         } else if (exportName.toLowerCase().endsWith(".jar")) {
-          Base.copyFile(exportFile, new File(libsFolder, exportName));
+          Util.copyFile(exportFile, new File(libsFolder, exportName));
 
         } else {
-          Base.copyFile(exportFile, new File(assetsFolder, exportName));
+          Util.copyFile(exportFile, new File(assetsFolder, exportName));
         }
       }
     }
@@ -983,7 +984,7 @@ class AndroidBuild extends JavaBuild {
           final String lcname = name.toLowerCase();
           if (lcname.endsWith(".jar") || lcname.endsWith(".zip")) {
             String jarName = name.substring(0, name.length() - 4) + ".jar";
-            Base.copyFile(item, new File(libsFolder, jarName));
+            Util.copyFile(item, new File(libsFolder, jarName));
           }
         }
       }
