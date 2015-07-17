@@ -45,13 +45,13 @@ public class AVD {
   /** "android-7" or "Google Inc.:Google APIs:7" */
   protected String target;
   
-  /** x86, x86_64 or armeabi-v7a **/
+  /** x86, x86_64 or armeabi **/
   protected String abi;
   
   protected VirtualDevice virtualDevice;
   
   public static final String PREF_KEY_ABI = "android.sdk.abi";
-  public static final String[] ABI = {"armeabi-v7a", "x86", "x86_64"};
+  public static final String[] ABI = {"armeabi", "x86", "x86_64"};
 
   /** Default virtual device used by Processing. */
   static public AVD defaultAVD;
