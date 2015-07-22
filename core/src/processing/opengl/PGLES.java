@@ -136,6 +136,7 @@ public class PGLES extends PGL {
   protected void getGL(PGL pgl) {
     PGLES pgles = (PGLES)pgl;
     this.gl = pgles.gl;
+    setThread(pgles.glThread);
   }
 
 
@@ -213,6 +214,7 @@ public class PGLES extends PGL {
       gl = igl;
       context = ((EGL10)EGLContext.getEGL()).eglGetCurrentContext();
       glContext = context.hashCode();
+      glThread = Thread.currentThread();
 
       if (!hasFBOs()) {
         throw new RuntimeException(MISSING_FBO_ERROR);
