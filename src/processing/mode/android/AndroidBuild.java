@@ -168,6 +168,8 @@ class AndroidBuild extends JavaBuild {
 
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
+      writeMainActivity(srcFolder);
+
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
 //      File proguardSrc = new File(sdk.getSdkFolder(), "tools/lib/proguard.cfg");
@@ -766,8 +768,11 @@ class AndroidBuild extends JavaBuild {
   private void writeRes(File resFolder,
                         String className) throws SketchException {
     File layoutFolder = mkdirs(resFolder, "layout");
-    File layoutFile = new File(layoutFolder, "main.xml");
-    writeResLayoutMain(layoutFile);
+    File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
+    writeResLayoutMainActivity(mainActivityLayoutFile);
+    
+//    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
+//    writeResLayoutMainFragment(mainFragmentLayoutFile);
 
     // write the icon files
     File sketchFolder = sketch.getFolder();
@@ -855,9 +860,72 @@ class AndroidBuild extends JavaBuild {
     }
     return result;
   }
+  
+  
+  private void writeMainActivity(final File srcDirectory) {
+    File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+        "MainActivity.java");
+    final PrintWriter writer = PApplet.createWriter(mainActivityFile);
+    writer.println("package " + manifest.getPackageName() +";");
+    writer.println("import android.app.Activity;");
+    writer.println("import android.os.Bundle;");
+    writer.println("import android.view.Window;");
+    writer.println("import android.view.WindowManager;");
+    writer.println("import android.widget.FrameLayout;");
+    writer.println("import android.view.ViewGroup.LayoutParams;");
+    writer.println("import  android.app.FragmentTransaction;");
+    writer.println("import processing.core.PApplet;");
+    writer.println("public class MainActivity extends Activity {");
+    writer.println("    PApplet fragment;");
+    writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
+    writer.println("    int viewId = 0x1000;");
+    writer.println("    @Override");
+    writer.println("    protected void onCreate(Bundle savedInstanceState) {");
+    writer.println("        super.onCreate(savedInstanceState);");
+    writer.println("        Window window = getWindow();");
+    writer.println("        requestWindowFeature(Window.FEATURE_NO_TITLE);");
+    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,"
+        + "WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
+    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
+        + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
+    writer.println("        FrameLayout frame = new FrameLayout(this);");
+    writer.println("        frame.setId(viewId);");
+    writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
+        + "LayoutParams.MATCH_PARENT));");
+    writer.println("        if (savedInstanceState == null) {");
+    writer.println("            fragment = new " + sketchClassName + "();");
+    writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
+    writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
+    writer.println("        } else {");
+    writer.println("            fragment = (PApplet) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
+    writer.println("        }");
+    writer.println("    }");
+    writer.println("    @Override");
+    writer.println("    public void onBackPressed() {");
+    writer.println("        fragment.onBackPressed();");
+    writer.println("        super.onBackPressed();");
+    writer.println("    }");
+    writer.println("}");
+    writer.flush();
+    writer.close();
+  }
 
 
-  private void writeResLayoutMain(final File file) {
+  private void writeResLayoutMainActivity(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
+    writer.println("    android:id=\"@+id/fragment\"");
+    writer.println("    android:name=\"." + sketchClassName + "\"");
+    writer.println("    tools:layout=\"@layout/fragment_main\"");
+    writer.println("    android:layout_width=\"match_parent\"");
+    writer.println("    android:layout_height=\"match_parent\" />");
+    writer.flush();
+    writer.close();
+  }
+  
+/*
+  private void writeResLayoutMainFragment(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
     writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
     writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
@@ -865,10 +933,8 @@ class AndroidBuild extends JavaBuild {
     writer.println("              android:layout_width=\"fill_parent\"");
     writer.println("              android:layout_height=\"fill_parent\">");
     writer.println("</LinearLayout>");
-    writer.flush();
-    writer.close();
   }
-
+*/
 
   // This recommended to be a string resource so that it can be localized.
   // nah.. we're gonna be messing with it in the GUI anyway...
@@ -884,7 +950,23 @@ class AndroidBuild extends JavaBuild {
 //    writer.close();
 //  }
 
-
+/*
+  private void copySupportV4(File libsFolder) throws SketchException {
+    File sdkLocation = sdk.getSdkFolder();
+    File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
+    if (!supportV4Jar.exists()) {
+      SketchException sketchException = 
+          new SketchException("Please install support repository from SDK manager");
+      throw sketchException;
+    } else {
+      try {
+        Base.copyFile(supportV4Jar, new File(libsFolder, "android-support-v4.jar"));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+*/
   /**
    * For each library, copy .jar and .zip files to the 'libs' folder,
    * and copy anything else to the 'assets' folder.
