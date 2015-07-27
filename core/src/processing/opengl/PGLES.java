@@ -1785,12 +1785,12 @@ public class PGLES extends PGL {
 
   @Override
   public void readBuffer(int buf) {
-    throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "glReadBuffer()"));
+//    throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "glReadBuffer()"));
   }
 
   @Override
   public void drawBuffer(int buf) {
-    throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "glDrawBuffer()"));
+//    throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "glDrawBuffer()"));
   }
 
 
