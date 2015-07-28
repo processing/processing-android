@@ -251,18 +251,12 @@ public class AndroidEditor extends JavaEditor {
     menu.addSeparator();
 
     final JMenu abiMenu = new JMenu("Select CPU/ABI");
-    boolean abiSelected = false;
     for (int i = 0; i < AVD.ABI.length; ++i) {
       JMenuItem menuItem = new JCheckBoxMenuItem(AVD.ABI[i]);
       abiMenu.add(menuItem);
       if (AVD.ABI[i].equals(Preferences.get(AVD.PREF_KEY_ABI))) {
         menuItem.setSelected(true);
-        abiSelected = true;
       }
-    }
-    if (!abiSelected) {
-        abiMenu.getItem(2).setSelected(true); //Select x86_64 as the default
-        Preferences.set(AVD.PREF_KEY_ABI, AVD.ABI[2]);
     }
 
     for (int i = 0; i < abiMenu.getItemCount(); ++i) {
