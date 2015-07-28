@@ -1,7 +1,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-//import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
@@ -44,15 +43,11 @@ public class AVD {
 
   /** "android-7" or "Google Inc.:Google APIs:7" */
   protected String target;
-  
-  /** x86, x86_64 or armeabi **/
-  protected String abi;
-  
-  public static final String PREF_KEY_ABI = "android.sdk.abi";
-  public static final String[] ABI = {"armeabi", "x86", "x86_64"};
 
   /** Default virtual device used by Processing. */
-  static public AVD defaultAVD;
+  static public final AVD defaultAVD =
+    new AVD("Processing-0" + Base.getRevision(),
+            "android-" + AndroidBuild.sdkVersion);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
   static ArrayList<String> avdList;
@@ -60,10 +55,9 @@ public class AVD {
 //  static ArrayList<String> skinList;
 
 
-  public AVD(String name, String target, String abi) {
+  public AVD(final String name, final String target) {
     this.name = name;
     this.target = target;
-    this.abi = abi;
   }
 
 
@@ -144,11 +138,12 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN,
-      "--abi", abi
+      "--abi", "armeabi"
     };
 
     // Set the list to null so that exists() will check again
     avdList = null;
+
     final ProcessHelper p = new ProcessHelper(params);
     try {
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
@@ -176,10 +171,8 @@ public class AVD {
   }
 
 
-  static public boolean ensureProperAVD(final AndroidSDK sdk, final String abi) {
+  static public boolean ensureProperAVD(final AndroidSDK sdk) {
     try {
-      defaultAVD = new AVD("Processing-0" + Base.getRevision(),
-          "android-" + AndroidBuild.sdkVersion, abi);
       if (defaultAVD.exists(sdk)) {
 //        System.out.println("the avd exists");
         return true;
