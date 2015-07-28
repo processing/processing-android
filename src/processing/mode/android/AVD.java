@@ -7,6 +7,7 @@ import processing.core.PApplet;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class AVD {
@@ -54,10 +55,20 @@ public class AVD {
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
 
+  private String[] preferredAbi = new String[50];
+  private static ArrayList<String> abiList = new ArrayList<>();
 
   public AVD(final String name, final String target) {
     this.name = name;
     this.target = target;
+  }
+  
+  private void initializeAbiList() {
+	  if (abiList.size() == 0) {
+		  abiList.add("armeabi");
+		  abiList.add("x86");
+		  abiList.add("x86_64");
+	  }
   }
 
 
@@ -131,6 +142,45 @@ public class AVD {
 
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
+	  
+	final String[] list_abi = {
+	  sdk.getAndroidToolPath(),
+	  "list", "targets"
+	};
+	
+	ProcessHelper p = new ProcessHelper(list_abi);
+	try {
+	  final ProcessResult abiListResult = p.execute();
+	  String api = null;
+	  String abi = null;
+	  for (String line : abiListResult) {
+		String[] m = PApplet.match(line, "API\\slevel:\\s(\\S+)");
+		if (m != null) {
+		  api = m[1];
+		}
+			
+		m = PApplet.match(line, "Tag\\/ABIs\\s:\\sdefault\\/(\\S+)");
+		if (m != null) {
+		  abi = m[1];
+			
+		  if (api != null && abi != null) {
+			int index = Integer.parseInt(api);
+			if (preferredAbi[index] == null) {
+			  preferredAbi[index] = abi;
+			} else if (abiList.indexOf(preferredAbi[index]) < abiList.indexOf(abi)) {
+			  preferredAbi[index] = abi;
+			}
+			api = null;
+			abi = null;
+		  }
+		}
+	  }
+	} catch (InterruptedException e) {}
+	
+	if (preferredAbi[Integer.parseInt(AndroidBuild.sdkVersion)] == null) {
+	  return false;
+	}
+	  
     final String[] params = {
       sdk.getAndroidToolPath(),
       "create", "avd",
@@ -138,13 +188,13 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN,
-      "--abi", "armeabi"
+      "--abi", preferredAbi[Integer.parseInt(AndroidBuild.sdkVersion)]
     };
 
     // Set the list to null so that exists() will check again
     avdList = null;
 
-    final ProcessHelper p = new ProcessHelper(params);
+    p = new ProcessHelper(params);
     try {
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
 //      System.out.println("CREATE AVD STARTING");
@@ -191,7 +241,6 @@ public class AVD {
 //      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
       Base.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
     }
-    System.out.println("at bottom of ensure proper");
     return false;
   }
 }
