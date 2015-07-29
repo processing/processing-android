@@ -7,7 +7,6 @@ import processing.core.PApplet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class AVD {
@@ -17,7 +16,7 @@ public class AVD {
   static private final String AVD_CREATE_SECONDARY =
     "The default Android emulator could not be set up. Make sure<br>" +
     "that the Android SDK is installed properly, and that the<br>" +
-    "Android and Google APIs are installed for level " + AndroidBuild.sdkVersion + ".<br>" +
+    "system images are installed for level %s.<br>" +
     "(Between you and me, occasionally, this error is a red herring,<br>" +
     "and your sketch may be launching shortly.)";
 
@@ -239,7 +238,8 @@ public class AVD {
       }
     } catch (final Exception e) {
 //      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
-      Base.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
+      Base.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
+    		  String.format(AVD_CREATE_SECONDARY, AndroidBuild.sdkVersion), null);
     }
     return false;
   }
