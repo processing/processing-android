@@ -60,6 +60,8 @@ public class AVD {
   public AVD(final String name, final String target) {
     this.name = name;
     this.target = target;
+    
+    initializeAbiList();
   }
   
   private void initializeAbiList() {
