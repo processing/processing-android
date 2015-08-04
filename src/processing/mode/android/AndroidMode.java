@@ -23,7 +23,6 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Library;
-import processing.app.Preferences;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;

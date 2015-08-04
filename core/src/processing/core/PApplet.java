@@ -66,12 +66,12 @@ import processing.opengl.*;
 
 
 public class PApplet extends Fragment implements PConstants, Runnable {
-  
+
   /**
    * The activity which holds this fragment.
    */
   private Activity activity;
-  
+
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
 
@@ -454,12 +454,12 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
-    
+
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
-    
+
     activity = getActivity();
     View rootView;
-    
+
     DisplayMetrics dm = new DisplayMetrics();
     activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
     displayWidth = dm.widthPixels;
@@ -781,7 +781,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       // underlying surface is created and destroyed
       surfaceHolder = getHolder();
       surfaceHolder.addCallback(this);
-      surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+//      surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU); // no longer needed.
 
 //      println("creating graphics");
       if (clazz.equals(PGraphicsAndroid2D.class)) {
