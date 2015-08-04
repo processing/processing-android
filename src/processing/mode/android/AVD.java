@@ -44,18 +44,18 @@ public class AVD {
   /** "android-7" or "Google Inc.:Google APIs:7" */
   protected String target;
 
-  /** Default virtual device used by Processing. */
-  static public final AVD defaultAVD =
-    new AVD("Processing-0" + Base.getRevision(),
-            "android-" + AndroidBuild.sdkVersion);
-//            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
-
   static ArrayList<String> avdList;
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
 
   private String[] preferredAbi = new String[50];
   private static ArrayList<String> abiList = new ArrayList<>();
+  
+  /** Default virtual device used by Processing. */
+  static public final AVD defaultAVD =
+    new AVD("Processing-0" + Base.getRevision(),
+            "android-" + AndroidBuild.sdkVersion);
+//            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
   public AVD(final String name, final String target) {
     this.name = name;
