@@ -7,6 +7,9 @@ import processing.core.PApplet;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class AVD {
@@ -48,8 +51,8 @@ public class AVD {
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
 
-  private String[] preferredAbi = new String[50];
-  private static ArrayList<String> abiList = new ArrayList<>();
+  private Map<String, String> preferredAbi = new HashMap<>(30);
+  private static List<String> abiList = new ArrayList<>();
   
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
@@ -66,6 +69,7 @@ public class AVD {
   
   private void initializeAbiList() {
 	  if (abiList.size() == 0) {
+		  //The order in this list determines the preference of one abi over the other
 		  abiList.add("armeabi");
 		  abiList.add("x86");
 		  abiList.add("x86_64");
@@ -165,11 +169,10 @@ public class AVD {
 		  abi = m[1];
 			
 		  if (api != null && abi != null) {
-			int index = Integer.parseInt(api);
-			if (preferredAbi[index] == null) {
-			  preferredAbi[index] = abi;
-			} else if (abiList.indexOf(preferredAbi[index]) < abiList.indexOf(abi)) {
-			  preferredAbi[index] = abi;
+			if (preferredAbi.get(api) == null) {
+			  preferredAbi.put(api, abi);
+			} else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
+			  preferredAbi.put(api, abi);
 			}
 			api = null;
 			abi = null;
@@ -178,7 +181,7 @@ public class AVD {
 	  }
 	} catch (InterruptedException e) {}
 	
-	if (preferredAbi[Integer.parseInt(AndroidBuild.sdkVersion)] == null) {
+	if (preferredAbi.get(AndroidBuild.sdkVersion) == null) {
 	  return false;
 	}
 	  
@@ -189,7 +192,7 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN,
-      "--abi", preferredAbi[Integer.parseInt(AndroidBuild.sdkVersion)]
+      "--abi", preferredAbi.get(AndroidBuild.sdkVersion)
     };
 
     // Set the list to null so that exists() will check again
