@@ -297,6 +297,10 @@ public class AndroidEditor extends JavaEditor {
       boolean savedTargetSet = false;
 
       for(final AndroidSDK.SDKTarget target : targets) {
+    	if (target.version < 11) {
+    		//We do not support API level less than 11
+    		continue;
+    	}
         final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
 
         if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
