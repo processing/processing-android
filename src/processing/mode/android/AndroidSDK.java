@@ -26,6 +26,8 @@ class AndroidSDK {
   private final File platformTools;
   private final File androidTool;
 
+  static private boolean downloading;
+
   private static final String ANDROID_SDK_PRIMARY =
     "Is the Android SDK installed?";
 
@@ -272,10 +274,15 @@ class AndroidSDK {
     }
   }
 
-  static public AndroidSDK download(final AndroidMode androidMode) throws BadSDKException {
-    AndroidMode.sdkDownloadInProgress = true;
+  static boolean isDownloading() {
+    return downloading;
+  }
 
-    SwingUtilities.invokeLater(new Runnable() {
+  static public AndroidSDK download(final AndroidMode androidMode) throws BadSDKException {
+    // TODO This is never set back to false once true [fry 150813]
+    downloading = true;
+
+    EventQueue.invokeLater(new Runnable() {
       @Override
       public void run() {
         SDKDownloader downloader = new SDKDownloader(androidMode);
@@ -394,7 +401,7 @@ class AndroidSDK {
 //    }
   }
 
-  public static class SDKTarget {
+  static class SDKTarget {
     public int version = 0;
     public String name;
   }
