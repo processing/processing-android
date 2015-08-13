@@ -42,7 +42,8 @@ public class AndroidMode extends JavaMode {
   private File coreZipLocation;
   private AndroidRunner runner;
 
-  public static boolean sdkDownloadInProgress = false;
+  static boolean sdkDownloadInProgress = false;
+
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
@@ -147,7 +148,7 @@ public class AndroidMode extends JavaMode {
       if (!sdkDownloadInProgress) {
         Base.showWarning("It's gonna be a bad day",
             "The Android SDK could not be loaded.\n" +
-                "Use of Android mode will be all but disabled.",
+            "Use of Android Mode will be all but disabled.",
             null);
       }
     }
