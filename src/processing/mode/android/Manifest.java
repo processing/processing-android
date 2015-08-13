@@ -126,7 +126,7 @@ public class Manifest {
     save();
   }
 
-
+/*
   public void setClassName(String className) {
     XML[] kids = xml.getChildren("application/activity");
     if (kids.length != 1) {
@@ -140,7 +140,7 @@ public class Manifest {
       save();
     }
   }
-
+*/
 
   private void writeBlankManifest(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
@@ -178,9 +178,8 @@ public class Manifest {
     // activity/android:name should be the full name (package + class name) of
     // the actual activity class. or the package can be replaced by a single
     // dot as a prefix as an easier shorthand.
-    writer.println("    <activity android:name=\"\"");
+    writer.println("    <activity android:name=\".MainActivity\">");
     writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">");
-
     writer.println("      <intent-filter>");
     writer.println("        <action android:name=\"android.intent.action.MAIN\" />");
     writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />");
@@ -221,10 +220,10 @@ public class Manifest {
       }
       app.setString("android:debuggable", debug ? "true" : "false");
 
-      XML activity = app.getChild("activity");
+//      XML activity = app.getChild("activity");
       // the '.' prefix is just an alias for the full package name
       // http://developer.android.com/guide/topics/manifest/activity-element.html#name
-      activity.setString("android:name", "." + className);  // this has to be right
+//      activity.setString("android:name", "." + className);  // this has to be right
 
       PrintWriter writer = PApplet.createWriter(file);
       writer.print(mf.toString());

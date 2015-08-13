@@ -35,7 +35,6 @@ import processing.mode.java.JavaEditor;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -249,38 +248,7 @@ public class AndroidEditor extends JavaEditor {
     }.start();
 
     menu.add(sdkMenu);
-    menu.addSeparator();
-
-    final JMenu abiMenu = new JMenu("Select CPU/ABI");
-    boolean abiSelected = false;
-    for (int i = 0; i < AVD.ABI.length; ++i) {
-      JMenuItem menuItem = new JCheckBoxMenuItem(AVD.ABI[i]);
-      abiMenu.add(menuItem);
-      if (AVD.ABI[i].equals(Preferences.get(AVD.PREF_KEY_ABI))) {
-        menuItem.setSelected(true);
-        abiSelected = true;
-      }
-    }
-    if (!abiSelected) {
-        abiMenu.getItem(2).setSelected(true); //Select x86_64 as the default
-        Preferences.set(AVD.PREF_KEY_ABI, AVD.ABI[2]);
-    }
-
-    for (int i = 0; i < abiMenu.getItemCount(); ++i) {
-      final JMenuItem abiItem = abiMenu.getItem(i);
-      abiItem.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          for (int j = 0; j < abiMenu.getItemCount(); ++j) {
-            abiMenu.getItem(j).setSelected(false);
-          }
-          abiItem.setSelected(true);
-          Preferences.set(AVD.PREF_KEY_ABI, abiItem.getText());
-        }
-      });
-    }
-
-    menu.add(abiMenu);
+    
     menu.addSeparator();
 
     item = new JMenuItem("Android SDK Manager");
@@ -330,6 +298,10 @@ public class AndroidEditor extends JavaEditor {
       boolean savedTargetSet = false;
 
       for(final AndroidSDK.SDKTarget target : targets) {
+    	if (target.version < 11) {
+    		//We do not support API level less than 11
+    		continue;
+    	}
         final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
 
         if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {

@@ -23,7 +23,6 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Library;
-import processing.app.Preferences;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
@@ -195,11 +194,7 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Building Android project...");
     build.build("debug");
 
-    String abi = Preferences.get(AVD.PREF_KEY_ABI);
-    if (abi.equals("")) {
-      abi = "x86_64";
-    }
-    boolean avd = AVD.ensureProperAVD(sdk, abi);
+    boolean avd = AVD.ensureProperAVD(sdk);
     if (!avd) {
       SketchException se =
         new SketchException("Could not create a virtual device for the emulator.");

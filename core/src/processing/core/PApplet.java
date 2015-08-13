@@ -44,13 +44,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.format.Time;
 import android.util.*;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.*;
+import android.app.Fragment;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -63,7 +65,13 @@ import processing.event.*;
 import processing.opengl.*;
 
 
-public class PApplet extends Activity implements PConstants, Runnable {
+public class PApplet extends Fragment implements PConstants, Runnable {
+
+  /**
+   * The activity which holds this fragment.
+   */
+  private Activity activity;
+
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
 
@@ -436,29 +444,24 @@ public class PApplet extends Activity implements PConstants, Runnable {
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
 
+  /**
+   * Required empty constructor.
+   */
+  public PApplet() {}
 
   /** Called with the activity is first created. */
   @SuppressWarnings("unchecked")
   @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-//    println("PApplet.onCreate()");
+  public View onCreateView(LayoutInflater inflater, ViewGroup container,
+      Bundle savedInstanceState) {
 
-    if (DEBUG) println("onCreate() happening here: " + Thread.currentThread().getName());
+    if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
-    Window window = getWindow();
-
-    // Take up as much area as possible
-    requestWindowFeature(Window.FEATURE_NO_TITLE);
-    window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-
-    // This does the actual full screen work
-    window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    activity = getActivity();
+    View rootView;
 
     DisplayMetrics dm = new DisplayMetrics();
-    getWindowManager().getDefaultDisplay().getMetrics(dm);
+    activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
     displayWidth = dm.widthPixels;
     displayHeight = dm.heightPixels;
 
@@ -500,11 +503,11 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
     if (rendererName.equals(JAVA2D)) {
       // JAVA2D renderer
-      surfaceView = new SketchSurfaceView(this, sw, sh,
+      surfaceView = new SketchSurfaceView(activity, sw, sh,
         (Class<? extends PGraphicsAndroid2D>) rendererClass);
     } else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)) {
       // P2D, P3D, and any other PGraphicsOpenGL-based renderer
-      surfaceView = new SketchSurfaceViewGL(this, sw, sh,
+      surfaceView = new SketchSurfaceViewGL(activity, sw, sh,
         (Class<? extends PGraphicsOpenGL>) rendererClass);
     } else {
       // Anything else
@@ -541,22 +544,24 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
     if (sw == displayWidth && sh == displayHeight) {
       // If using the full screen, don't embed inside other layouts
-      window.setContentView(surfaceView);
+//      window.setContentView(surfaceView);
+      rootView = surfaceView;
     } else {
       // If not using full screen, setup awkward view-inside-a-view so that
       // the sketch can be centered on screen. (If anyone has a more efficient
       // way to do this, please file an issue on Google Code, otherwise you
       // can keep your "talentless hack" comments to yourself. Ahem.)
-      RelativeLayout overallLayout = new RelativeLayout(this);
+      RelativeLayout overallLayout = new RelativeLayout(activity);
       RelativeLayout.LayoutParams lp =
         new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
                                         LayoutParams.WRAP_CONTENT);
       lp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
-      LinearLayout layout = new LinearLayout(this);
+      LinearLayout layout = new LinearLayout(activity);
       layout.addView(surfaceView, sketchWidth(), sketchHeight());
       overallLayout.addView(layout, lp);
-      window.setContentView(overallLayout);
+//      window.setContentView(overallLayout);
+      rootView = overallLayout;
     }
 
     /*
@@ -615,8 +620,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
     redraw = true;  // draw this guy once
 //    firstMotion = true;
 
-    Context context = getApplicationContext();
-    sketchPath = context.getFilesDir().getAbsolutePath();
+    sketchPath = activity.getFilesDir().getAbsolutePath();
 
 //    Looper.prepare();
     handler = new Handler();
@@ -625,6 +629,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 //    println("done with loop() call, will continue...");
 
     start();
+    return rootView;
   }
 
 
@@ -636,7 +641,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
 
   @Override
-  protected void onResume() {
+  public void onResume() {
     super.onResume();
 
     // TODO need to bring back app state here!
@@ -651,7 +656,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
 
   @Override
-  protected void onPause() {
+  public void onPause() {
     super.onPause();
 
     // TODO need to save all application state here!
@@ -776,7 +781,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
       // underlying surface is created and destroyed
       surfaceHolder = getHolder();
       surfaceHolder.addCallback(this);
-      surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+//      surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU); // no longer needed.
 
 //      println("creating graphics");
       if (clazz.equals(PGraphicsAndroid2D.class)) {
@@ -843,6 +848,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+      super.onWindowFocusChanged(hasFocus);
       surfaceWindowFocusChanged(hasFocus);
     }
 
@@ -855,13 +861,15 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
     @Override
     public boolean onKeyDown(int code, android.view.KeyEvent event) {
-      return surfaceKeyDown(code, event);
+      surfaceKeyDown(code, event);
+      return super.onKeyDown(code, event);
     }
 
 
     @Override
     public boolean onKeyUp(int code, android.view.KeyEvent event) {
-      return surfaceKeyUp(code, event);
+      surfaceKeyUp(code, event);
+      return super.onKeyUp(code, event);
     }
 
 
@@ -887,7 +895,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
       super(context);
 
       // Check if the system supports OpenGL ES 2.0.
-      final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+      final ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
       final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
       final boolean supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000;
 
@@ -1008,6 +1016,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
      */
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
+      super.onWindowFocusChanged(hasFocus);
       surfaceWindowFocusChanged(hasFocus);
 //      super.onWindowFocusChanged(hasFocus);
 //      focused = hasFocus;
@@ -1029,13 +1038,15 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
     @Override
     public boolean onKeyDown(int code, android.view.KeyEvent event) {
-      return surfaceKeyDown(code, event);
+      surfaceKeyDown(code, event);
+      return super.onKeyDown(code, event);
     }
 
 
     @Override
     public boolean onKeyUp(int code, android.view.KeyEvent event) {
-      return surfaceKeyUp(code, event);
+      surfaceKeyUp(code, event);
+      return super.onKeyUp(code, event);
     }
 
 
@@ -1056,7 +1067,6 @@ public class PApplet extends Activity implements PConstants, Runnable {
    * by Android as well.
    */
   public void surfaceWindowFocusChanged(boolean hasFocus) {
-    super.onWindowFocusChanged(hasFocus);
     focused = hasFocus;
     if (focused) {
       focusGained();
@@ -1078,17 +1088,17 @@ public class PApplet extends Activity implements PConstants, Runnable {
   }
 
 
-  public boolean surfaceKeyDown(int code, android.view.KeyEvent event) {
+  public void surfaceKeyDown(int code, android.view.KeyEvent event) {
     //  System.out.println("got onKeyDown for " + code + " " + event);
     nativeKeyEvent(event);
-    return super.onKeyDown(code, event);
+//    return super.onKeyDown(code, event);
   }
 
 
-  public boolean surfaceKeyUp(int code, android.view.KeyEvent event) {
+  public void surfaceKeyUp(int code, android.view.KeyEvent event) {
     //  System.out.println("got onKeyUp for " + code + " " + event);
     nativeKeyEvent(event);
-    return super.onKeyUp(code, event);
+//    return super.onKeyUp(code, event);
   }
 
 
@@ -1129,9 +1139,9 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
   public void orientation(int which) {
     if (which == PORTRAIT) {
-      setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     } else if (which == LANDSCAPE) {
-      setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
   }
 
@@ -1804,6 +1814,12 @@ public class PApplet extends Activity implements PConstants, Runnable {
           } catch (InstantiationException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
+          } catch (java.lang.InstantiationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          } catch (IllegalArgumentException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
           }
         }
       }
@@ -2903,7 +2919,6 @@ public class PApplet extends Activity implements PConstants, Runnable {
   }
 
 
-  @Override
   public void onBackPressed() {
 	  exit();
   }
@@ -4586,7 +4601,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
     Typeface baseFont = null;
 
     if (lowerName.endsWith(".otf") || lowerName.endsWith(".ttf")) {
-      AssetManager assets = getBaseContext().getAssets();
+      AssetManager assets = activity.getAssets();
       baseFont = Typeface.createFromAsset(assets, name);
     } else {
       baseFont = (Typeface) PFont.findNative(name);
@@ -5023,7 +5038,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
      */
 
     // Try the assets folder
-    AssetManager assets = getAssets();
+    AssetManager assets = activity.getAssets();
     try {
       stream = assets.open(filename);
       if (stream != null) {
@@ -5061,10 +5076,9 @@ public class PApplet extends Activity implements PConstants, Runnable {
     }
 
     // Attempt to load the file more directly. Doesn't like paths.
-    Context context = getApplicationContext();
     try {
       // MODE_PRIVATE is default, should we use something else?
-      stream = context.openFileInput(filename);
+      stream = activity.openFileInput(filename);
       if (stream != null) {
         return stream;
       }
@@ -5475,8 +5489,7 @@ public class PApplet extends Activity implements PConstants, Runnable {
       if (new File(where).isAbsolute()) return where;
     } catch (Exception e) { }
 
-    Context context = getApplicationContext();
-    return context.getFileStreamPath(where).getAbsolutePath();
+    return activity.getFileStreamPath(where).getAbsolutePath();
   }
 
 
@@ -7981,19 +7994,19 @@ public class PApplet extends Activity implements PConstants, Runnable {
 
 
   private void tellPDE(final String message) {
-    Log.i(getComponentName().getPackageName(), "PROCESSING " + message);
+    Log.i(activity.getComponentName().getPackageName(), "PROCESSING " + message);
   }
 
 
   @Override
-  protected void onStart() {
+  public void onStart() {
     tellPDE("onStart");
     super.onStart();
   }
 
 
   @Override
-  protected void onStop() {
+  public void onStop() {
     tellPDE("onStop");
     super.onStop();
   }

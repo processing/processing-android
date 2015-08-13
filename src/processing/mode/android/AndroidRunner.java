@@ -213,9 +213,8 @@ public class AndroidRunner implements DeviceListener {
 
   private boolean startSketch(AndroidBuild build, final Device device) {
     final String packageName = build.getPackageName();
-    final String className = build.getSketchClassName();
     try {
-      if (device.launchApp(packageName, className)) {
+      if (device.launchApp(packageName)) {
         return true;
       }
     } catch (final Exception e) {

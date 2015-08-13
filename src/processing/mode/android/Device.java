@@ -128,17 +128,17 @@ class Device {
   
   // different version that actually runs through JDI:
   // http://asantoso.wordpress.com/2009/09/26/using-jdb-with-adb-to-debugging-of-android-app-on-a-real-device/
-  public boolean launchApp(final String packageName, final String className)
+  public boolean launchApp(final String packageName)
       throws IOException, InterruptedException {
     if (!isAlive()) {
       return false;
     }
     String[] cmd = {
-      "shell", "am", "start", 
-      "-e", "debug", "true", 
-      "-a", "android.intent.action.MAIN", 
+      "shell", "am", "start",
+      "-e", "debug", "true",
+      "-a", "android.intent.action.MAIN",
       "-c", "android.intent.category.LAUNCHER",
-      "-n", packageName + "/." + className
+      "-n", packageName + "/.MainActivity"
     };
 //    PApplet.println(cmd);
     ProcessResult pr = adb(cmd);
