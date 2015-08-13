@@ -25,6 +25,7 @@ import processing.app.Base;
 import processing.app.Mode;
 import processing.app.Preferences;
 import processing.app.SketchException;
+import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
@@ -130,7 +131,7 @@ public class AndroidEditor extends JavaEditor {
 
 
   protected AndroidEditor(Base base, String path,
-                          EditorState state, Mode mode) throws Exception {
+                          EditorState state, Mode mode) throws EditorException {
     super(base, path, state, mode);
     androidMode = (AndroidMode) mode;
     androidMode.checkSDK(this);

@@ -28,6 +28,7 @@ import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.ui.Editor;
+import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.mode.java.JavaMode;
 
@@ -50,13 +51,9 @@ public class AndroidMode extends JavaMode {
 
 
   @Override
-  public Editor createEditor(Base base, String path, EditorState state) {
-    try {
-      return new AndroidEditor(base, path, state, this);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+  public Editor createEditor(Base base, String path,
+                             EditorState state) throws EditorException {
+    return new AndroidEditor(base, path, state, this);
   }
 
 
