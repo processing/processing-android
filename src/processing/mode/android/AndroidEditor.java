@@ -22,6 +22,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Messages;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Preferences;
@@ -516,11 +517,8 @@ public class AndroidEditor extends JavaEditor {
             "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
             "You will also need to download the driver from <a href='http://developer.android.com/sdk/win-usb.html'>http://developer.android.com/sdk/win-usb.html</a>";
       }
+      Messages.showWarning("USB Driver warning", message);
 
-      Base.showWarning(
-          "USB Driver warning",
-          message
-      );
     } else {
       new Thread() {
         public void run() {

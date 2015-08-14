@@ -1,6 +1,6 @@
 package processing.mode.android;
 
-import processing.app.Base;
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.ui.Toolkit;
 
@@ -104,7 +104,7 @@ public class KeyStoreManager extends JFrame {
     resetKeystoreButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         setVisible(false);
-        int result = Base.showYesNoQuestion(editor, "Android keystore",
+        int result = Messages.showYesNoQuestion(editor, "Android keystore",
             "Are you sure you want to reset the password?", "<html><body>We will have to reset the keystore to do this, " +
             "which means you won't be able to upload an update for your app signed with the new keystore to Google Play.<br/><br/>" +
             "We will make a backup for the old keystore.</body></html>");
@@ -113,7 +113,7 @@ public class KeyStoreManager extends JFrame {
           setVisible(true);
         } else {
           if (!AndroidKeyStore.resetKeyStore()) {
-            Base.showWarning("Android keystore", "Failed to remove keystore");
+            Messages.showWarning("Android keystore", "Failed to remove keystore");
             setVisible(true);
           } else {
             keyStore = null;
@@ -181,11 +181,11 @@ public class KeyStoreManager extends JFrame {
       if (Arrays.equals(passwordField.getPassword(), repeatPasswordField.getPassword())) {
         return true;
       } else {
-        Base.showWarning("Passwords", "Keystore passwords do not match");
+        Messages.showWarning("Passwords", "Keystore passwords do not match");
         return false;
       }
     } else {
-      Base.showWarning("Passwords", "Keystore password should be at least 6 characters long");
+      Messages.showWarning("Passwords", "Keystore password should be at least 6 characters long");
       return false;
     }
   }

@@ -1,6 +1,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Messages;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
@@ -29,7 +30,7 @@ public class AVD {
     "This could mean that the Android tools need to be updated,<br>" +
     "or that the Processing AVD should be deleted (it will<br>" +
     "automatically re-created the next time you run Processing).<br>" +
-    "Open the Android SDK Manager (underneath the Android menu)<br>" + 
+    "Open the Android SDK Manager (underneath the Android menu)<br>" +
     "to check for any errors.";
 
   static private final String AVD_TARGET_PRIMARY =
@@ -53,7 +54,7 @@ public class AVD {
 
   private Map<String, String> preferredAbi = new HashMap<>(30);
   private static List<String> abiList = new ArrayList<>();
-  
+
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
     new AVD("Processing-0" + Base.getRevision(),
@@ -63,10 +64,10 @@ public class AVD {
   public AVD(final String name, final String target) {
     this.name = name;
     this.target = target;
-    
+
     initializeAbiList();
   }
-  
+
   private void initializeAbiList() {
 	  if (abiList.size() == 0) {
 		  //The order in this list determines the preference of one abi over the other
@@ -131,9 +132,9 @@ public class AVD {
   }
 
 
-  /** 
-   * Return true if a member of the renowned and prestigious 
-   * "The following Android Virtual Devices could not be loaded:" club. 
+  /**
+   * Return true if a member of the renowned and prestigious
+   * "The following Android Virtual Devices could not be loaded:" club.
    * (Prestigious may also not be the right word.)
    */
   protected boolean badness() {
@@ -147,12 +148,12 @@ public class AVD {
 
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
-	  
+
 	final String[] list_abi = {
 	  sdk.getAndroidToolPath(),
 	  "list", "targets"
 	};
-	
+
 	ProcessHelper p = new ProcessHelper(list_abi);
 	try {
 	  final ProcessResult abiListResult = p.execute();
@@ -163,11 +164,11 @@ public class AVD {
 		if (m != null) {
 		  api = m[1];
 		}
-			
+
 		m = PApplet.match(line, "Tag\\/ABIs\\s:\\sdefault\\/(\\S+)");
 		if (m != null) {
 		  abi = m[1];
-			
+
 		  if (api != null && abi != null) {
 			if (preferredAbi.get(api) == null) {
 			  preferredAbi.put(api, abi);
@@ -180,15 +181,15 @@ public class AVD {
 		}
 	  }
 	} catch (InterruptedException e) {}
-	
+
 	if (preferredAbi.get(AndroidBuild.sdkVersion) == null) {
 	  return false;
 	}
-	  
+
     final String[] params = {
       sdk.getAndroidToolPath(),
       "create", "avd",
-      "-n", name, 
+      "-n", name,
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN,
@@ -209,12 +210,12 @@ public class AVD {
       }
       if (createAvdResult.toString().contains("Target id is not valid")) {
         // They didn't install the Google APIs
-        Base.showWarningTiered("Android Error", AVD_TARGET_PRIMARY, AVD_TARGET_SECONDARY, null);
+        Messages.showWarningTiered("Android Error", AVD_TARGET_PRIMARY, AVD_TARGET_SECONDARY, null);
 //        throw new IOException("Missing required SDK components");
       } else {
         // Just generally not working
 //        Base.showWarning("Android Error", AVD_CREATE_ERROR, null);
-        Base.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
+        Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
         System.out.println(createAvdResult);
 //        throw new IOException("Error creating the AVD");
       }
@@ -234,7 +235,7 @@ public class AVD {
 //      if (badList.contains(defaultAVD)) {
       if (defaultAVD.badness()) {
 //        Base.showWarning("Android Error", AVD_CANNOT_LOAD, null);
-        Base.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+        Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
         return false;
       }
       if (defaultAVD.create(sdk)) {
@@ -243,8 +244,9 @@ public class AVD {
       }
     } catch (final Exception e) {
 //      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
-      Base.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
-    		  String.format(AVD_CREATE_SECONDARY, AndroidBuild.sdkVersion), null);
+      Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
+                                 String.format(AVD_CREATE_SECONDARY,
+                                               AndroidBuild.sdkVersion), null);
     }
     return false;
   }

@@ -23,6 +23,7 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Library;
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
@@ -145,10 +146,9 @@ public class AndroidMode extends JavaMode {
     }
     if (sdk == null) {
       if (!AndroidSDK.isDownloading()) {
-        Base.showWarning("It's gonna be a bad day",
-            "The Android SDK could not be loaded.\n" +
-            "Use of Android Mode will be all but disabled.",
-            null);
+        Messages.showWarning("It's gonna be a bad day",
+                             "The Android SDK could not be loaded.\n" +
+                             "Use of Android Mode will be all but disabled.");
       }
     }
   }

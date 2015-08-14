@@ -1,17 +1,11 @@
 package processing.mode.android;
 
-import processing.app.Base;
+import processing.app.Messages;
 
 import java.io.File;
 
-/**
- * Created with IntelliJ IDEA.
- * User: imilka
- * Date: 27.05.14
- * Time: 14:38
- */
-public class AndroidKeyStore {
 
+public class AndroidKeyStore {
   public static final String ALIAS_STRING = "processing-keystore";
   public static final String KEYSTORE_FILE_NAME = "android-release-key.keystore";
 
@@ -28,9 +22,9 @@ public class AndroidKeyStore {
       boolean result = keyStoreFolder.mkdirs();
 
       if (!result) {
-        Base.showWarning("Folders, folders, folders",
-            "Could not create the necessary folders to build.\n" +
-                "Perhaps you have some file permissions to sort out?", null);
+        Messages.showWarning("Folders, folders, folders",
+                             "Could not create the necessary folders to build.\n" +
+                             "Perhaps you have some file permissions to sort out?");
         return null;
       }
     }

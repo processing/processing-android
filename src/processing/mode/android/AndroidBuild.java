@@ -28,6 +28,7 @@ import org.apache.tools.ant.ProjectHelper;
 
 import processing.app.Base;
 import processing.app.Library;
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.Sketch;
@@ -254,11 +255,11 @@ class AndroidBuild extends JavaBuild {
         }
         if (!pr.succeeded()) {
           System.err.println(pr.getStderr());
-          Base.showWarning("Failed to rename",
-                           "Could not rename the old “android” build folder.\n" +
-                           "Please delete, close, or rename the folder\n" +
-                           androidFolder.getAbsolutePath() + "\n" +
-                           "and try again." , null);
+          Messages.showWarning("Failed to rename",
+                               "Could not rename the old “android” build folder.\n" +
+                               "Please delete, close, or rename the folder\n" +
+                               androidFolder.getAbsolutePath() + "\n" +
+                               "and try again." , null);
           Platform.openFolder(sketch.getFolder());
           return null;
         }
@@ -266,9 +267,9 @@ class AndroidBuild extends JavaBuild {
     } else {
       boolean result = androidFolder.mkdirs();
       if (!result) {
-        Base.showWarning("Folders, folders, folders",
-                         "Could not create the necessary folders to build.\n" +
-                         "Perhaps you have some file permissions to sort out?", null);
+        Messages.showWarning("Folders, folders, folders",
+                             "Could not create the necessary folders to build.\n" +
+                             "Perhaps you have some file permissions to sort out?", null);
         return null;
       }
     }
