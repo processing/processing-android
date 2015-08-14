@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import processing.app.Base;
+import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
@@ -83,7 +84,7 @@ public class Commander implements RunnerListener {
     // Do this early so that error messages go to the console
     Base.setCommandLine();
     // init the platform so that prefs and other native code is ready to go
-    Base.initPlatform();
+    Platform.init();
 
     // launch command line handler
     Commander commander = new Commander(args);
@@ -181,7 +182,7 @@ public class Commander implements RunnerListener {
     checkOrQuit(sketchPath != null, "No sketch path specified.", true);
     checkOrQuit(!outputPath.equals(sketchPath), "The sketch path and output path cannot be identical.", false);
 
-    androidMode = (AndroidMode) ModeContribution.load(null, Base.getContentFile("modes/android"),
+    androidMode = (AndroidMode) ModeContribution.load(null, Platform.getContentFile("modes/android"),
         "processing.mode.android.AndroidMode").getMode();
     androidMode.checkSDK(null);
   }

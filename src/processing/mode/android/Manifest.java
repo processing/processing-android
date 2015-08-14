@@ -22,12 +22,14 @@
 package processing.mode.android;
 
 import org.xml.sax.SAXException;
-import processing.app.Base;
+
+import processing.app.Messages;
 import processing.app.Sketch;
 import processing.core.PApplet;
 import processing.data.XML;
 
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -277,7 +279,7 @@ public class Manifest {
       }
     }
     if (xml == null) {
-      Base.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING, null);
+      Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
     }
 //    return xml;
   }

@@ -23,10 +23,13 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Library;
+import processing.app.Messages;
+import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.ui.Editor;
+import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.mode.java.JavaMode;
 
@@ -41,7 +44,6 @@ public class AndroidMode extends JavaMode {
   private File coreZipLocation;
   private AndroidRunner runner;
 
-  public static boolean sdkDownloadInProgress = false;
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
@@ -49,13 +51,9 @@ public class AndroidMode extends JavaMode {
 
 
   @Override
-  public Editor createEditor(Base base, String path, EditorState state) {
-    try {
-      return new AndroidEditor(base, path, state, this);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+  public Editor createEditor(Base base, String path,
+                             EditorState state) throws EditorException {
+    return new AndroidEditor(base, path, state, this);
   }
 
 
@@ -67,7 +65,7 @@ public class AndroidMode extends JavaMode {
 
   public File[] getKeywordFiles() {
     return new File[] {
-      Base.getContentFile("modes/java/keywords.txt")
+      Platform.getContentFile("modes/java/keywords.txt")
     };
   }
 
@@ -147,11 +145,10 @@ public class AndroidMode extends JavaMode {
       }
     }
     if (sdk == null) {
-      if (!sdkDownloadInProgress) {
-        Base.showWarning("It's gonna be a bad day",
-            "The Android SDK could not be loaded.\n" +
-                "Use of Android mode will be all but disabled.",
-            null);
+      if (!AndroidSDK.isDownloading()) {
+        Messages.showWarning("It's gonna be a bad day",
+                             "The Android SDK could not be loaded.\n" +
+                             "Use of Android Mode will be all but disabled.");
       }
     }
   }

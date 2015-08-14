@@ -7,6 +7,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import processing.app.Base;
+import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
 
@@ -61,7 +62,6 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
     @Override
     protected Object doInBackground() throws Exception {
-      String hostOs = getOsString();
       File modeFolder = new File(Base.getSketchbookModesFolder() + "/AndroidMode");
 
       // creating sdk folders
@@ -79,7 +79,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, hostOs);
+        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
@@ -100,19 +100,19 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
 
         // usb driver
-        if (Base.isWindows()) {
+        if (Platform.isWindows()) {
           File usbDriverFolder = new File(extrasFolder, "google");
           File downloadedFolder = new File(tempFolder, "latest_usb_driver_windows.zip");
           downloadAndUnpack(URL_USB_DRIVER, downloadedFolder, usbDriverFolder);
         }
 
-        if (Base.isLinux() || Base.isMacOS()) {
+        if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
 
         tempFolder.delete();
 
-        Base.getPlatform().setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
+        Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
         Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
         androidMode.loadSDK();
       } catch (ParserConfigurationException e) {
@@ -157,6 +157,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       extractFolder(saveTo, unpackTo);
     }
 
+    /*
     private String getOsString() {
       if (Base.isWindows()) {
         return "windows";
@@ -166,6 +167,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
         return "macosx";
       }
     }
+    */
 
     private SDKUrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) throws ParserConfigurationException, IOException, SAXException {
       SDKUrlHolder urlHolder = new SDKUrlHolder();

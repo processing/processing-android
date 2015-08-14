@@ -38,11 +38,11 @@ import processing.mode.java.preproc.SurfaceInfo;
 public class AndroidPreprocessor extends PdePreprocessor {
   Sketch sketch;
   String packageName;
-  
-  protected String smoothStatement;
-  protected String sketchQuality; 
 
-  
+  protected String smoothStatement;
+  protected String sketchQuality;
+
+
   public static final String SMOOTH_REGEX =
       "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
@@ -68,8 +68,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
     sketchRenderer = surfaceInfo.getRenderer();*/
     return surfaceInfo;
   }
-  
-  
+
+
   public String[] initSketchSmooth(String code) throws SketchException {
     String[] info = parseSketchSmooth(code, true);
     if (info == null) {
@@ -78,17 +78,17 @@ public class AndroidPreprocessor extends PdePreprocessor {
       throw new SketchException("Could not parse the size() command.");
     }
     smoothStatement = info[0];
-    sketchQuality = info[1];    
+    sketchQuality = info[1];
     return info;
   }
-    
-  
+
+
   static public String[] parseSketchSmooth(String code, boolean fussy) {
     String[] matches = PApplet.match(scrubComments(code), SMOOTH_REGEX);
 
     if (matches != null) {
       boolean badSmooth = false;
-      
+
       if (PApplet.parseInt(matches[1], -1) == -1) {
         badSmooth = true;
       }
@@ -100,16 +100,16 @@ public class AndroidPreprocessor extends PdePreprocessor {
           "be determined from your code. Use only a numeric\n" +
           "value (not variables) for the smooth() command.\n" +
           "See the smooth() reference for an explanation.";
-        Base.showWarning("Could not find smooth level", message, null);
+        Messages.showWarning("Could not find smooth level", message, null);
 //        new Exception().printStackTrace(System.out);
         return null;
       }
-      
+
       return matches;
     }
     return new String[] { null, null };  // not an error, just empty
   }
-  
+
 
   /*
   protected boolean parseSketchSize() {
@@ -214,7 +214,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
 
     if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
       out.println();
-      
+
       if (sizeInfo.getWidth() != null) {
         out.println(indent + "public int sketchWidth() { return " + sizeInfo.getWidth() + "; }");
       }
@@ -228,7 +228,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
       if (sketchQuality != null) {
         out.println(indent + "public int sketchQuality() { return " + sketchQuality + "; }");
       }
-      
+
       // close off the class definition
       out.println("}");
     }
@@ -258,7 +258,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
 
     // The initial values are stored in here for the day when Android
     // is broken out as a separate mode.
-    
+
     // In the future, this may include standard classes for phone or
     // accelerometer access within the Android APIs. This is currently living
     // in code rather than preferences.txt because Android mode needs to
