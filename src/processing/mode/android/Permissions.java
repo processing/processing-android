@@ -32,7 +32,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-import processing.app.Base;
+import processing.app.Platform;
 import processing.app.Sketch;
 import processing.app.ui.Toolkit;
 
@@ -180,7 +180,7 @@ public class Permissions extends JFrame {
     textarea.setPreferredSize(new Dimension(400, 100));
     textarea.addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent e) {
-        Base.openURL(GUIDE_URL);
+        Platform.openURL(GUIDE_URL);
       }
     });
     //textarea.setHorizontalAlignment(SwingConstants.LEFT);
@@ -262,7 +262,7 @@ public class Permissions extends JFrame {
     cancelButton.setEnabled(true);
 
     // think different, biznatchios!
-    if (Base.isMacOS()) {
+    if (Platform.isMacOS()) {
       buttons.add(cancelButton);
 //      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(okButton);

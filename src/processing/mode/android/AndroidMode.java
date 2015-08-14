@@ -23,6 +23,7 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Library;
+import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
@@ -63,7 +64,7 @@ public class AndroidMode extends JavaMode {
 
   public File[] getKeywordFiles() {
     return new File[] {
-      Base.getContentFile("modes/java/keywords.txt")
+      Platform.getContentFile("modes/java/keywords.txt")
     };
   }
 

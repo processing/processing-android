@@ -23,6 +23,7 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Mode;
+import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.SketchException;
 import processing.app.ui.EditorException;
@@ -35,6 +36,7 @@ import processing.mode.java.JavaEditor;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -248,7 +250,7 @@ public class AndroidEditor extends JavaEditor {
     }.start();
 
     menu.add(sdkMenu);
-    
+
     menu.addSeparator();
 
     item = new JMenuItem("Android SDK Manager");
@@ -362,16 +364,16 @@ public class AndroidEditor extends JavaEditor {
     item = new JMenuItem("Processing for Android Wiki");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        Base.openURL("http://wiki.processing.org/w/Android");
+        Platform.openURL("http://wiki.processing.org/w/Android");
       }
     });
     menu.add(item);
 
 
-    item = new JMenuItem("Android Developers Site");
+    item = new JMenuItem("Android Developer Site");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        Base.openURL("http://developer.android.com/index.html");
+        Platform.openURL("http://developer.android.com/");
       }
     });
     menu.add(item);
@@ -382,9 +384,9 @@ public class AndroidEditor extends JavaEditor {
 
   /** override the standard grab reference to just show the java reference */
   public void showReference(String filename) {
-    File javaReferenceFolder = Base.getContentFile("modes/java/reference");
+    File javaReferenceFolder = Platform.getContentFile("modes/java/reference");
     File file = new File(javaReferenceFolder, filename);
-    Base.openURL(file.toURI().toString());
+    Platform.openURL(file.toURI().toString());
   }
 
 
@@ -498,7 +500,7 @@ public class AndroidEditor extends JavaEditor {
    * Build the sketch and run it on a device with the debugger connected.
    */
   public void handleRunDevice() {
-    if(Base.isWindows() && !Preferences.getBoolean("usbDriverWarningShown")) {
+    if (Platform.isWindows() && !Preferences.getBoolean("usbDriverWarningShown")) {
       Preferences.setBoolean("usbDriverWarningShown", true);
 
       String message = "";
@@ -564,7 +566,7 @@ public class AndroidEditor extends JavaEditor {
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
-              Base.openFolder(exportFolder);
+              Platform.openFolder(exportFolder);
               statusNotice("Done with export.");
             }
           } catch (IOException e) {
@@ -612,7 +614,7 @@ public class AndroidEditor extends JavaEditor {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
             statusNotice("Done with export.");
-            Base.openFolder(projectFolder);
+            Platform.openFolder(projectFolder);
           } else {
             statusError("Error with export");
           }

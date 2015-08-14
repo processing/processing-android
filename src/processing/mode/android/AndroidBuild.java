@@ -28,6 +28,7 @@ import org.apache.tools.ant.ProjectHelper;
 
 import processing.app.Base;
 import processing.app.Library;
+import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
@@ -138,7 +139,7 @@ class AndroidBuild extends JavaBuild {
     // use the src folder, since 'bin' might be used by the ant build
     binFolder = srcFolder;
     if (processing.app.Base.DEBUG) {
-      Base.openFolder(tmpFolder);
+      Platform.openFolder(tmpFolder);
     }
 
     manifest = new Manifest(sketch);
@@ -258,7 +259,7 @@ class AndroidBuild extends JavaBuild {
                            "Please delete, close, or rename the folder\n" +
                            androidFolder.getAbsolutePath() + "\n" +
                            "and try again." , null);
-          Base.openFolder(sketch.getFolder());
+          Platform.openFolder(sketch.getFolder());
           return null;
         }
       }
@@ -748,7 +749,7 @@ class AndroidBuild extends JavaBuild {
   private void writeLocalProps(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
     final String sdkPath = sdk.getSdkFolder().getAbsolutePath();
-    if (Base.isWindows()) {
+    if (Platform.isWindows()) {
       // Windows needs backslashes escaped, or it will also accept forward
       // slashes in the build file. We're using the forward slashes since this
       // path gets concatenated with a lot of others that use forwards anyway.
@@ -770,7 +771,7 @@ class AndroidBuild extends JavaBuild {
     File layoutFolder = mkdirs(resFolder, "layout");
     File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
     writeResLayoutMainActivity(mainActivityLayoutFile);
-    
+
 //    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
 //    writeResLayoutMainFragment(mainFragmentLayoutFile);
 
@@ -860,8 +861,8 @@ class AndroidBuild extends JavaBuild {
     }
     return result;
   }
-  
-  
+
+
   private void writeMainActivity(final File srcDirectory) {
     File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
         "MainActivity.java");
@@ -923,7 +924,7 @@ class AndroidBuild extends JavaBuild {
     writer.flush();
     writer.close();
   }
-  
+
 /*
   private void writeResLayoutMainFragment(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
@@ -955,7 +956,7 @@ class AndroidBuild extends JavaBuild {
     File sdkLocation = sdk.getSdkFolder();
     File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
     if (!supportV4Jar.exists()) {
-      SketchException sketchException = 
+      SketchException sketchException =
           new SketchException("Please install support repository from SDK manager");
       throw sketchException;
     } else {

@@ -1,6 +1,5 @@
 package processing.mode.android;
 
-import processing.app.Base;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
@@ -18,6 +17,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
 
 class AndroidSDK {
   private final File folder;
@@ -74,21 +74,18 @@ class AndroidSDK {
 
     androidTool = findAndroidTool(tools);
 
-    final Platform p = Base.getPlatform();
+    String path = Platform.getenv("PATH");
 
-    String path = p.getenv("PATH");
-
-    p.setenv("ANDROID_SDK", folder.getCanonicalPath());
+    Platform.setenv("ANDROID_SDK", folder.getCanonicalPath());
     path = platformTools.getCanonicalPath() + File.pathSeparator +
       tools.getCanonicalPath() + File.pathSeparator + path;
 
     String javaHomeProp = System.getProperty("java.home");
     File javaHome = new File(javaHomeProp).getCanonicalFile();
-    p.setenv("JAVA_HOME", javaHome.getCanonicalPath());
+    Platform.setenv("JAVA_HOME", javaHome.getCanonicalPath());
 
     path = new File(javaHome, "bin").getCanonicalPath() + File.pathSeparator + path;
-
-    p.setenv("PATH", path);
+    Platform.setenv("PATH", path);
 
     checkDebugCertificate();
   }
@@ -210,10 +207,8 @@ class AndroidSDK {
    * @throws IOException
    */
   public static AndroidSDK load() throws BadSDKException, IOException {
-    final Platform platform = Base.getPlatform();
-
     // The environment variable is king. The preferences.txt entry is a page.
-    final String sdkEnvPath = platform.getenv("ANDROID_SDK");
+    final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
     if (sdkEnvPath != null) {
       try {
         final AndroidSDK androidSDK = new AndroidSDK(new File(sdkEnvPath));
@@ -329,7 +324,7 @@ class AndroidSDK {
   // this was banished from Base because it encourages bad practice.
   // TODO figure out a better way to handle the above.
   static public File selectFolder(String prompt, File folder, Frame frame) {
-    if (Base.isMacOS()) {
+    if (Platform.isMacOS()) {
       if (frame == null) frame = new Frame(); //.pack();
       FileDialog fd = new FileDialog(frame, prompt, FileDialog.LOAD);
       if (folder != null) {

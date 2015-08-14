@@ -1,6 +1,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Platform;
 import processing.app.ui.Toolkit;
 
 import javax.swing.*;
@@ -124,7 +125,7 @@ public class KeyStoreManager extends JFrame {
     resetKeystoreButton.setEnabled(true);
 
     // think different, biznatchios!
-    if (Base.isMacOS()) {
+    if (Platform.isMacOS()) {
       buttons.add(cancelButton);
 
       if (keyStore != null) buttons.add(resetKeystoreButton);
@@ -201,7 +202,7 @@ public class KeyStoreManager extends JFrame {
     textarea.setPreferredSize(new Dimension(400, 100));
     textarea.addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent e) {
-        Base.openURL(GUIDE_URL);
+        Platform.openURL(GUIDE_URL);
       }
     });
     textarea.setAlignmentX(LEFT_ALIGNMENT);
