@@ -884,6 +884,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     SurfaceHolder surfaceHolder;
 
 
+    @SuppressWarnings("deprecation")
     public SketchSurfaceViewGL(Context context, int wide, int high,
                                Class<? extends PGraphicsOpenGL> clazz) {
       super(context);
@@ -900,7 +901,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       surfaceHolder = getHolder();
       // are these two needed?
       surfaceHolder.addCallback(this);
-      //surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+      surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
       // The PGraphics object needs to be created here so the renderer is not
       // null. This is required because PApplet.onResume events (which call
