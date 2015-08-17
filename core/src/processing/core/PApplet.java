@@ -54,12 +54,6 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
 import android.app.Fragment;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpEntity;
-
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
