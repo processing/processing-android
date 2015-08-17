@@ -161,10 +161,10 @@ public class AndroidMode extends JavaMode {
   
   @Override
   public String getSearchPath() {
-    String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + "/platforms/"
-    	  + "android-" + AndroidBuild.sdkVersion + "/android.jar";
-    
-    return super.getSearchPath() + androidJarPath;
+    String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + 
+      File.separator + "platforms" + File.separator + "android-" + 
+      AndroidBuild.sdkVersion + File.separator + "android.jar";    
+    return super.getSearchPath() + File.pathSeparatorChar + androidJarPath;
   }
 
 
