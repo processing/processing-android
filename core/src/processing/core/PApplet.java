@@ -8153,6 +8153,21 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
+  public void attribPosition(String name, float x, float y, float z) {
+    g.attribPosition(name, x, y, z);
+  }
+
+
+  public void attribNormal(String name, float nx, float ny, float nz) {
+    g.attribNormal(name, nx, ny, nz);
+  }
+
+
+  public void attribColor(String name, int color) {
+    g.attribColor(name, color);
+  }
+
+
   public void attrib(String name, float... values) {
     g.attrib(name, values);
   }
