@@ -4944,12 +4944,19 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //      URL url = new URL(filename);
 //      stream = url.openStream();
 //      return stream;
-        HttpGet httpRequest = null;
-        httpRequest = new HttpGet(URI.create(filename));
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpResponse response = (HttpResponse) httpclient.execute(httpRequest);
-        HttpEntity entity = response.getEntity();
-        return entity.getContent();
+    	URL url = new URL(filename);
+    	HttpURLConnection con = (HttpURLConnection) url.openConnection();
+    	con.setRequestMethod("GET");
+    	con.setDoInput(true);
+    	con.connect();
+    	return con.getInputStream();
+    	//The following code is deprecaded by Android
+//        HttpGet httpRequest = null;
+//        httpRequest = new HttpGet(URI.create(filename));
+//        HttpClient httpclient = new DefaultHttpClient();
+//        HttpResponse response = (HttpResponse) httpclient.execute(httpRequest);
+//        HttpEntity entity = response.getEntity();
+//        return entity.getContent();
         // can't use BufferedHttpEntity because it may try to allocate a byte
         // buffer of the size of the download, bad when DL is 25 MB... [0200]
 //        BufferedHttpEntity bufHttpEntity = new BufferedHttpEntity(entity);
