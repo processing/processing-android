@@ -157,6 +157,15 @@ public class AndroidMode extends JavaMode {
   public AndroidSDK getSDK() {
     return sdk;
   }
+  
+  
+  @Override
+  public String getSearchPath() {
+    String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + "/platforms/"
+    	  + "android-" + AndroidBuild.sdkVersion + "/android.jar";
+    
+    return super.getSearchPath() + androidJarPath;
+  }
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
