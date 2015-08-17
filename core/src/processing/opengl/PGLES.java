@@ -127,6 +127,22 @@ public class PGLES extends PGL {
   protected void registerListeners() { }
 
 
+  @Override
+  protected int getDepthBits()  {
+    intBuffer.rewind();
+    getIntegerv(DEPTH_BITS, intBuffer);
+    return intBuffer.get(0);
+  }
+
+
+  @Override
+  protected int getStencilBits()  {
+    intBuffer.rewind();
+    getIntegerv(STENCIL_BITS, intBuffer);
+    return intBuffer.get(0);
+  }
+
+
   ///////////////////////////////////////////////////////////
 
   // Frame rendering
@@ -1091,8 +1107,16 @@ public class PGLES extends PGL {
 
   @Override
   public void viewport(int x, int y, int w, int h) {
-    GLES20.glViewport(x, y, w, h);
+//    float scale = pg.getPixelScale();
+    float scale = 1;
+    viewportImpl((int)scale * x, (int)(scale * y), (int)(scale * w), (int)(scale * h));
   }
+
+  @Override
+  protected void viewportImpl(int x, int y, int w, int h) {
+    gl.glViewport(x, y, w, h);
+  }
+
 
   //////////////////////////////////////////////////////////////////////////////
 

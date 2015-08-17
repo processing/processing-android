@@ -34,6 +34,7 @@ import java.nio.ShortBuffer;
 import java.util.Arrays;
 
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PGraphics;
 
 
@@ -142,13 +143,19 @@ public abstract class PGL {
   protected boolean firstFrame = true;
   public int reqNumSamples;
   protected int numSamples;
+
   protected IntBuffer glColorFbo;
-  protected IntBuffer glMultiFbo;
-  protected IntBuffer glColorBuf;
   protected IntBuffer glColorTex;
   protected IntBuffer glDepthStencil;
   protected IntBuffer glDepth;
   protected IntBuffer glStencil;
+
+  protected IntBuffer glMultiFbo;
+  protected IntBuffer glMultiColor;
+  protected IntBuffer glMultiDepthStencil;
+  protected IntBuffer glMultiDepth;
+  protected IntBuffer glMultiStencil;
+
   protected int fboWidth, fboHeight;
   protected int backTex, frontTex;
 
@@ -283,6 +290,11 @@ public abstract class PGL {
     "if using any of the built-in OpenGL renderers. If you are using a contributed " +
     "library, contact the library's developers.";
 
+  protected static final String DEPTH_READING_NOT_ENABLED_ERROR =
+    "Reading depth and stencil values from this multisampled buffer is not enabled. " +
+    "You can enable it by calling hint(ENABLE_DEPTH_READING) once. " +
+    "If your sketch becomes too slow, disable multisampling with noSmooth() instead.";
+
   // ........................................................
 
   // Constants
@@ -333,13 +345,17 @@ public abstract class PGL {
   public PGL(PGraphicsOpenGL pg) {
     this.pg = pg;
     if (glColorTex == null) {
-      glColorTex = allocateIntBuffer(2);
       glColorFbo = allocateIntBuffer(1);
-      glMultiFbo = allocateIntBuffer(1);
-      glColorBuf = allocateIntBuffer(1);
+      glColorTex = allocateIntBuffer(2);
       glDepthStencil = allocateIntBuffer(1);
       glDepth = allocateIntBuffer(1);
       glStencil = allocateIntBuffer(1);
+
+      glMultiFbo = allocateIntBuffer(1);
+      glMultiColor = allocateIntBuffer(1);
+      glMultiDepthStencil = allocateIntBuffer(1);
+      glMultiDepth = allocateIntBuffer(1);
+      glMultiStencil = allocateIntBuffer(1);
 
       fboLayerCreated = false;
       fboLayerInUse = false;
@@ -370,11 +386,6 @@ public abstract class PGL {
     }
   }
 
-
-  /**
-   * Return the native canvas the OpenGL context associated to this PGL object
-   * is rendering to (if any).
-   */
   public abstract Object getCanvas();
 
 
@@ -392,13 +403,17 @@ public abstract class PGL {
 
   protected void deleteSurface() {
     if (threadIsCurrent() && fboLayerCreated) {
-      deleteTextures(2, glColorTex);
       deleteFramebuffers(1, glColorFbo);
-      deleteFramebuffers(1, glMultiFbo);
-      deleteRenderbuffers(1, glColorBuf);
+      deleteTextures(2, glColorTex);
       deleteRenderbuffers(1, glDepthStencil);
       deleteRenderbuffers(1, glDepth);
       deleteRenderbuffers(1, glStencil);
+
+      deleteFramebuffers(1, glMultiFbo);
+      deleteRenderbuffers(1, glMultiColor);
+      deleteRenderbuffers(1, glMultiDepthStencil);
+      deleteRenderbuffers(1, glMultiDepth);
+      deleteRenderbuffers(1, glMultiStencil);
     }
 
     fboLayerCreated = false;
@@ -444,18 +459,10 @@ public abstract class PGL {
   }
 
 
-  protected int getDepthBits()  {
-    intBuffer.rewind();
-    getIntegerv(DEPTH_BITS, intBuffer);
-    return intBuffer.get(0);
-  }
+  abstract protected int getDepthBits();
 
 
-  protected int getStencilBits()  {
-    intBuffer.rewind();
-    getIntegerv(STENCIL_BITS, intBuffer);
-    return intBuffer.get(0);
-  }
+  abstract protected int getStencilBits();
 
 
   protected boolean getDepthTest() {
@@ -534,9 +541,13 @@ public abstract class PGL {
     if (1 < numSamples) {
       bindFramebufferImpl(READ_FRAMEBUFFER, glMultiFbo.get(0));
       bindFramebufferImpl(DRAW_FRAMEBUFFER, glColorFbo.get(0));
+      int mask = COLOR_BUFFER_BIT;
+      if (pg.getHint(PConstants.ENABLE_BUFFER_READING)) {
+        mask |= DEPTH_BUFFER_BIT | STENCIL_BUFFER_BIT;
+      }
       blitFramebuffer(0, 0, fboWidth, fboHeight,
                       0, 0, fboWidth, fboHeight,
-                      COLOR_BUFFER_BIT, NEAREST);
+                      mask, NEAREST);
     }
   }
 
@@ -549,8 +560,6 @@ public abstract class PGL {
   protected void beginDraw(boolean clear0) {
     if (needFBOLayer(clear0)) {
       if (!fboLayerCreated) createFBOLayer();
-
-//      System.err.println("Using FBO layer");
 
       bindFramebufferImpl(FRAMEBUFFER, glColorFbo.get(0));
       framebufferTexture2D(FRAMEBUFFER, COLOR_ATTACHMENT0,
@@ -598,7 +607,8 @@ public abstract class PGL {
   }
 
 
-  protected void endDraw(boolean clear0, int windowColor) {
+  IntBuffer labelTex;
+  protected void endDraw(boolean clear, int windowColor) {
     if (fboLayerInUse) {
       syncBackTexture();
 
@@ -621,12 +631,13 @@ public abstract class PGL {
       int temp = frontTex;
       frontTex = backTex;
       backTex = temp;
+    } else if (!clear && pg.parent.frameCount == 1) {
+      //requestFBOLayer();
     }
   }
 
 
   protected abstract void getGL(PGL pgl);
-
 
   protected abstract boolean canDraw();
 
@@ -667,11 +678,10 @@ public abstract class PGL {
 
 
   private void createFBOLayer() {
-    String ext = getString(EXTENSIONS);
 //    float scale = pg.getPixelScale();
     float scale = 1;
 
-    if (-1 < ext.indexOf("texture_non_power_of_two")) {
+    if (hasNpotTexSupport()) {
       fboWidth = (int)(scale * pg.width);
       fboHeight = (int)(scale * pg.height);
     } else {
@@ -680,14 +690,14 @@ public abstract class PGL {
     }
 
     int maxs = maxSamples();
-    if (-1 < ext.indexOf("_framebuffer_multisample") && 1 < maxs) {
+    if (hasFboMultisampleSupport() && 1 < maxs) {
       numSamples = PApplet.min(reqNumSamples, maxs);
     } else {
       numSamples = 1;
     }
     boolean multisample = 1 < numSamples;
 
-    boolean packed = ext.indexOf("packed_depth_stencil") != -1;
+    boolean packed = hasPackedDepthStencilSupport();
     int depthBits = PApplet.min(REQUESTED_DEPTH_BITS, getDepthBits());
     int stencilBits = PApplet.min(REQUESTED_STENCIL_BITS, getStencilBits());
 
@@ -712,83 +722,28 @@ public abstract class PGL {
     framebufferTexture2D(FRAMEBUFFER, COLOR_ATTACHMENT0, TEXTURE_2D,
                          glColorTex.get(backTex), 0);
 
+    if (!multisample || pg.getHint(PConstants.ENABLE_BUFFER_READING)) {
+      // If not multisampled, this is the only depth and stencil buffer.
+      // If multisampled and depth reading enabled, these are going to
+      // hold downsampled depth and stencil buffers.
+      createDepthAndStencilBuffer(false, depthBits, stencilBits, packed);
+    }
+
     if (multisample) {
       // Creating multisampled FBO
       genFramebuffers(1, glMultiFbo);
       bindFramebufferImpl(FRAMEBUFFER, glMultiFbo.get(0));
 
       // color render buffer...
-      genRenderbuffers(1, glColorBuf);
-      bindRenderbuffer(RENDERBUFFER, glColorBuf.get(0));
+      genRenderbuffers(1, glMultiColor);
+      bindRenderbuffer(RENDERBUFFER, glMultiColor.get(0));
       renderbufferStorageMultisample(RENDERBUFFER, numSamples,
                                      RGBA8, fboWidth, fboHeight);
       framebufferRenderbuffer(FRAMEBUFFER, COLOR_ATTACHMENT0,
-                              RENDERBUFFER, glColorBuf.get(0));
-    }
+                              RENDERBUFFER, glMultiColor.get(0));
 
-    // Creating depth and stencil buffers
-    if (packed && depthBits == 24 && stencilBits == 8) {
-      // packed depth+stencil buffer
-      genRenderbuffers(1, glDepthStencil);
-      bindRenderbuffer(RENDERBUFFER, glDepthStencil.get(0));
-      if (multisample) {
-        renderbufferStorageMultisample(RENDERBUFFER, numSamples,
-                                       DEPTH24_STENCIL8, fboWidth, fboHeight);
-      } else {
-        renderbufferStorage(RENDERBUFFER, DEPTH24_STENCIL8,
-                            fboWidth, fboHeight);
-      }
-      framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT, RENDERBUFFER,
-                              glDepthStencil.get(0));
-      framebufferRenderbuffer(FRAMEBUFFER, STENCIL_ATTACHMENT, RENDERBUFFER,
-                              glDepthStencil.get(0));
-    } else {
-      // separate depth and stencil buffers
-      if (0 < depthBits) {
-        int depthComponent = DEPTH_COMPONENT16;
-        if (depthBits == 32) {
-          depthComponent = DEPTH_COMPONENT32;
-        } else if (depthBits == 24) {
-          depthComponent = DEPTH_COMPONENT24;
-        } else if (depthBits == 16) {
-          depthComponent = DEPTH_COMPONENT16;
-        }
-
-        genRenderbuffers(1, glDepth);
-        bindRenderbuffer(RENDERBUFFER, glDepth.get(0));
-        if (multisample) {
-          renderbufferStorageMultisample(RENDERBUFFER, numSamples,
-                                         depthComponent, fboWidth, fboHeight);
-        } else {
-          renderbufferStorage(RENDERBUFFER, depthComponent,
-                              fboWidth, fboHeight);
-        }
-        framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT,
-                                RENDERBUFFER, glDepth.get(0));
-      }
-
-      if (0 < stencilBits) {
-        int stencilIndex = STENCIL_INDEX1;
-        if (stencilBits == 8) {
-          stencilIndex = STENCIL_INDEX8;
-        } else if (stencilBits == 4) {
-          stencilIndex = STENCIL_INDEX4;
-        } else if (stencilBits == 1) {
-          stencilIndex = STENCIL_INDEX1;
-        }
-
-        genRenderbuffers(1, glStencil);
-        bindRenderbuffer(RENDERBUFFER, glStencil.get(0));
-        if (multisample) {
-          renderbufferStorageMultisample(RENDERBUFFER, numSamples,
-                                         stencilIndex, fboWidth, fboHeight);
-        } else {
-          renderbufferStorage(RENDERBUFFER, stencilIndex,
-                              fboWidth, fboHeight);
-        }
-        framebufferRenderbuffer(FRAMEBUFFER, STENCIL_ATTACHMENT,
-                                RENDERBUFFER, glStencil.get(0));
-      }
+      // Creating multisampled depth and stencil buffers
+      createDepthAndStencilBuffer(true, depthBits, stencilBits, packed);
     }
 
     validateFramebuffer();
@@ -807,6 +762,78 @@ public abstract class PGL {
     bindFramebufferImpl(FRAMEBUFFER, 0);
 
     fboLayerCreated = true;
+  }
+
+  private void createDepthAndStencilBuffer(boolean multisample, int depthBits,
+                                           int stencilBits, boolean packed) {
+    // Creating depth and stencil buffers
+    if (packed && depthBits == 24 && stencilBits == 8) {
+      // packed depth+stencil buffer
+      IntBuffer depthStencilBuf =
+          multisample ? glMultiDepthStencil : glDepthStencil;
+      genRenderbuffers(1, depthStencilBuf);
+      bindRenderbuffer(RENDERBUFFER, depthStencilBuf.get(0));
+      if (multisample) {
+        renderbufferStorageMultisample(RENDERBUFFER, numSamples,
+                                       DEPTH24_STENCIL8, fboWidth, fboHeight);
+      } else {
+        renderbufferStorage(RENDERBUFFER, DEPTH24_STENCIL8,
+                            fboWidth, fboHeight);
+      }
+      framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT, RENDERBUFFER,
+                              depthStencilBuf.get(0));
+      framebufferRenderbuffer(FRAMEBUFFER, STENCIL_ATTACHMENT, RENDERBUFFER,
+                              depthStencilBuf.get(0));
+    } else {
+      // separate depth and stencil buffers
+      if (0 < depthBits) {
+        int depthComponent = DEPTH_COMPONENT16;
+        if (depthBits == 32) {
+          depthComponent = DEPTH_COMPONENT32;
+        } else if (depthBits == 24) {
+          depthComponent = DEPTH_COMPONENT24;
+        } else if (depthBits == 16) {
+          depthComponent = DEPTH_COMPONENT16;
+        }
+
+        IntBuffer depthBuf = multisample ? glMultiDepth : glDepth;
+        genRenderbuffers(1, depthBuf);
+        bindRenderbuffer(RENDERBUFFER, depthBuf.get(0));
+        if (multisample) {
+          renderbufferStorageMultisample(RENDERBUFFER, numSamples,
+                                         depthComponent, fboWidth, fboHeight);
+        } else {
+          renderbufferStorage(RENDERBUFFER, depthComponent,
+                              fboWidth, fboHeight);
+        }
+        framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT,
+                                RENDERBUFFER, depthBuf.get(0));
+      }
+
+      if (0 < stencilBits) {
+        int stencilIndex = STENCIL_INDEX1;
+        if (stencilBits == 8) {
+          stencilIndex = STENCIL_INDEX8;
+        } else if (stencilBits == 4) {
+          stencilIndex = STENCIL_INDEX4;
+        } else if (stencilBits == 1) {
+          stencilIndex = STENCIL_INDEX1;
+        }
+
+        IntBuffer stencilBuf = multisample ? glMultiStencil : glStencil;
+        genRenderbuffers(1, stencilBuf);
+        bindRenderbuffer(RENDERBUFFER, stencilBuf.get(0));
+        if (multisample) {
+          renderbufferStorageMultisample(RENDERBUFFER, numSamples,
+                                         stencilIndex, fboWidth, fboHeight);
+        } else {
+          renderbufferStorage(RENDERBUFFER, stencilIndex,
+                              fboWidth, fboHeight);
+        }
+        framebufferRenderbuffer(FRAMEBUFFER, STENCIL_ATTACHMENT,
+                                RENDERBUFFER, stencilBuf.get(0));
+      }
+    }
   }
 
 
@@ -927,8 +954,10 @@ public abstract class PGL {
    */
   public void drawTexture(int target, int id, int width, int height,
                           int X0, int Y0, int X1, int Y1) {
+    // If a texture is drawing on a viewport of the same size as its resolution,
+    // the pixel factor is 1:1, so we override the surface's pixel factor.
     drawTexture(target, id, width, height,
-                0, 0, width, height,
+                0, 0, width, height, 1,
                 X0, Y0, X1, Y1,
                 X0, Y0, X1, Y1);
   }
@@ -938,17 +967,30 @@ public abstract class PGL {
    * Not an approved function, this will change or be removed in the future.
    */
   public void drawTexture(int target, int id,int texW, int texH,
-                          int viewX, int viewY, int scrW, int scrH,
+                          int viewX, int viewY, int viewW, int viewH,
+                          int texX0, int texY0, int texX1, int texY1,
+                          int scrX0, int scrY0, int scrX1, int scrY1) {
+//    int viewF = (int)pg.getPixelScale();
+    int viewF = 1;
+    drawTexture(target, id, texW, texH,
+                viewX, viewY, viewW, viewH, viewF,
+                texX0, texY0, texX1, texY1,
+                scrX0, scrY0, scrX1, scrY1);
+  }
+
+
+  public void drawTexture(int target, int id,int texW, int texH,
+                          int viewX, int viewY, int viewW, int viewH, int viewF,
                           int texX0, int texY0, int texX1, int texY1,
                           int scrX0, int scrY0, int scrX1, int scrY1) {
     if (target == TEXTURE_2D) {
       drawTexture2D(id, texW, texH,
-                    viewX, viewY, scrW, scrH,
+                    viewX, viewY, viewW, viewH, viewF,
                     texX0, texY0, texX1, texY1,
                     scrX0, scrY0, scrX1, scrY1);
     } else if (target == TEXTURE_RECTANGLE) {
       drawTextureRect(id, texW, texH,
-                      viewX, viewY, scrW, scrH,
+                      viewX, viewY, viewW, viewH, viewF,
                       texX0, texY0, texX1, texY1,
                       scrX0, scrY0, scrX1, scrY1);
     }
@@ -959,8 +1001,10 @@ public abstract class PGL {
     PGL ppgl = primaryPGL ? this : pg.getPrimaryPGL();
 
     if (!ppgl.loadedTex2DShader || ppgl.tex2DShaderContext != ppgl.glContext) {
-      String vertSource = PApplet.join(texVertShaderSource, "\n");
-      String fragSource = PApplet.join(tex2DFragShaderSource, "\n");
+      String[] preprocVertSrc = preprocessVertexSource(texVertShaderSource, getGLSLVersion());
+      String vertSource = PApplet.join(preprocVertSrc, "\n");
+      String[] preprocFragSrc = preprocessFragmentSource(tex2DFragShaderSource, getGLSLVersion());
+      String fragSource = PApplet.join(preprocFragSrc, "\n");
       ppgl.tex2DVertShader = createShader(VERTEX_SHADER, vertSource);
       ppgl.tex2DFragShader = createShader(FRAGMENT_SHADER, fragSource);
       if (0 < ppgl.tex2DVertShader && 0 < ppgl.tex2DFragShader) {
@@ -989,7 +1033,7 @@ public abstract class PGL {
 
 
   protected void drawTexture2D(int id, int texW, int texH,
-                               int viewX, int viewY, int scrW, int scrH,
+                               int viewX, int viewY, int viewW, int viewH, int viewF,
                                int texX0, int texY0, int texX1, int texY1,
                                int scrX0, int scrY0, int scrX1, int scrY1) {
     PGL ppgl = initTex2DShader();
@@ -1009,7 +1053,7 @@ public abstract class PGL {
       // Making sure that the viewport matches the provided screen dimensions
       viewBuffer.rewind();
       getIntegerv(VIEWPORT, viewBuffer);
-      viewport(viewX, viewY, scrW, scrH);
+      viewportImpl(viewF * viewX, viewF * viewY, viewF * viewW, viewF * viewH);
 
       useProgram(ppgl.tex2DShaderProgram);
 
@@ -1019,23 +1063,23 @@ public abstract class PGL {
       // Vertex coordinates of the textured quad are specified
       // in normalized screen space (-1, 1):
       // Corner 1
-      texCoords[ 0] = 2 * (float)scrX0 / scrW - 1;
-      texCoords[ 1] = 2 * (float)scrY0 / scrH - 1;
+      texCoords[ 0] = 2 * (float)scrX0 / viewW - 1;
+      texCoords[ 1] = 2 * (float)scrY0 / viewH - 1;
       texCoords[ 2] = (float)texX0 / texW;
       texCoords[ 3] = (float)texY0 / texH;
       // Corner 2
-      texCoords[ 4] = 2 * (float)scrX1 / scrW - 1;
-      texCoords[ 5] = 2 * (float)scrY0 / scrH - 1;
+      texCoords[ 4] = 2 * (float)scrX1 / viewW - 1;
+      texCoords[ 5] = 2 * (float)scrY0 / viewH - 1;
       texCoords[ 6] = (float)texX1 / texW;
       texCoords[ 7] = (float)texY0 / texH;
       // Corner 3
-      texCoords[ 8] = 2 * (float)scrX0 / scrW - 1;
-      texCoords[ 9] = 2 * (float)scrY1 / scrH - 1;
+      texCoords[ 8] = 2 * (float)scrX0 / viewW - 1;
+      texCoords[ 9] = 2 * (float)scrY1 / viewH - 1;
       texCoords[10] = (float)texX0 / texW;
       texCoords[11] = (float)texY1 / texH;
       // Corner 4
-      texCoords[12] = 2 * (float)scrX1 / scrW - 1;
-      texCoords[13] = 2 * (float)scrY1 / scrH - 1;
+      texCoords[12] = 2 * (float)scrX1 / viewW - 1;
+      texCoords[13] = 2 * (float)scrY1 / viewH - 1;
       texCoords[14] = (float)texX1 / texW;
       texCoords[15] = (float)texY1 / texH;
 
@@ -1079,8 +1123,8 @@ public abstract class PGL {
       }
       depthMask(depthMask);
 
-      viewport(viewBuffer.get(0), viewBuffer.get(1),
-               viewBuffer.get(2), viewBuffer.get(3));
+      viewportImpl(viewBuffer.get(0), viewBuffer.get(1),
+                   viewBuffer.get(2), viewBuffer.get(3));
     }
   }
 
@@ -1089,8 +1133,10 @@ public abstract class PGL {
     PGL ppgl = primaryPGL ? this : pg.getPrimaryPGL();
 
     if (!ppgl.loadedTexRectShader || ppgl.texRectShaderContext != ppgl.glContext) {
-      String vertSource = PApplet.join(texVertShaderSource, "\n");
-      String fragSource = PApplet.join(texRectFragShaderSource, "\n");
+      String[] preprocVertSrc = preprocessVertexSource(texVertShaderSource, getGLSLVersion());
+      String vertSource = PApplet.join(preprocVertSrc, "\n");
+      String[] preprocFragSrc = preprocessFragmentSource(texRectFragShaderSource, getGLSLVersion());
+      String fragSource = PApplet.join(preprocFragSrc, "\n");
       ppgl.texRectVertShader = createShader(VERTEX_SHADER, vertSource);
       ppgl.texRectFragShader = createShader(FRAGMENT_SHADER, fragSource);
       if (0 < ppgl.texRectVertShader && 0 < ppgl.texRectFragShader) {
@@ -1116,7 +1162,7 @@ public abstract class PGL {
 
 
   protected void drawTextureRect(int id, int texW, int texH,
-                                 int viewX, int viewY, int scrW, int scrH,
+                                 int viewX, int viewY, int viewW, int viewH, int viewF,
                                  int texX0, int texY0, int texX1, int texY1,
                                  int scrX0, int scrY0, int scrX1, int scrY1) {
     PGL ppgl = initTexRectShader();
@@ -1140,7 +1186,7 @@ public abstract class PGL {
       // Making sure that the viewport matches the provided screen dimensions
       viewBuffer.rewind();
       getIntegerv(VIEWPORT, viewBuffer);
-      viewport(viewX, viewY, scrW, scrH);
+      viewportImpl(viewF * viewX, viewF * viewY, viewF * viewW, viewF * viewH);
 
       useProgram(ppgl.texRectShaderProgram);
 
@@ -1150,23 +1196,23 @@ public abstract class PGL {
       // Vertex coordinates of the textured quad are specified
       // in normalized screen space (-1, 1):
       // Corner 1
-      texCoords[ 0] = 2 * (float)scrX0 / scrW - 1;
-      texCoords[ 1] = 2 * (float)scrY0 / scrH - 1;
+      texCoords[ 0] = 2 * (float)scrX0 / viewW - 1;
+      texCoords[ 1] = 2 * (float)scrY0 / viewH - 1;
       texCoords[ 2] = texX0;
       texCoords[ 3] = texY0;
       // Corner 2
-      texCoords[ 4] = 2 * (float)scrX1 / scrW - 1;
-      texCoords[ 5] = 2 * (float)scrY0 / scrH - 1;
+      texCoords[ 4] = 2 * (float)scrX1 / viewW - 1;
+      texCoords[ 5] = 2 * (float)scrY0 / viewH - 1;
       texCoords[ 6] = texX1;
       texCoords[ 7] = texY0;
       // Corner 3
-      texCoords[ 8] = 2 * (float)scrX0 / scrW - 1;
-      texCoords[ 9] = 2 * (float)scrY1 / scrH - 1;
+      texCoords[ 8] = 2 * (float)scrX0 / viewW - 1;
+      texCoords[ 9] = 2 * (float)scrY1 / viewH - 1;
       texCoords[10] = texX0;
       texCoords[11] = texY1;
       // Corner 4
-      texCoords[12] = 2 * (float)scrX1 / scrW - 1;
-      texCoords[13] = 2 * (float)scrY1 / scrH - 1;
+      texCoords[12] = 2 * (float)scrX1 / viewW - 1;
+      texCoords[13] = 2 * (float)scrY1 / viewH - 1;
       texCoords[14] = texX1;
       texCoords[15] = texY1;
 
@@ -1210,8 +1256,8 @@ public abstract class PGL {
       }
       depthMask(depthMask);
 
-      viewport(viewBuffer.get(0), viewBuffer.get(1),
-               viewBuffer.get(2), viewBuffer.get(3));
+      viewportImpl(viewBuffer.get(0), viewBuffer.get(1),
+                   viewBuffer.get(2), viewBuffer.get(3));
     }
   }
 
@@ -1242,6 +1288,7 @@ public abstract class PGL {
     if (stencilBuffer == null) {
       stencilBuffer = ByteBuffer.allocate(1);
     }
+    stencilBuffer.rewind();
     readPixels(scrX, pg.height - scrY - 1, 1, 1, STENCIL_INDEX,
                UNSIGNED_BYTE, stencilBuffer);
     return stencilBuffer.get(0);
@@ -1509,6 +1556,11 @@ public abstract class PGL {
   }
 
 
+  protected int getGLSLVersion() {
+    return 100;
+  }
+
+
   protected String[] loadVertexShader(String filename) {
     return pg.parent.loadStrings(filename);
   }
@@ -1559,44 +1611,95 @@ public abstract class PGL {
   }
 
 
-  protected static String[] convertFragmentSource(String[] fragSrc0,
-                                                  int version0, int version1) {
-    if (version0 == 120 && version1 == 150) {
-      String[] fragSrc = new String[fragSrc0.length + 2];
-      fragSrc[0] = "#version 150";
+  protected static String[] preprocessFragmentSource(String[] fragSrc0,
+                                                     int version) {
+    String[] fragSrc;
+
+    if (version < 130) {
+      String[] search = { };
+      String[] replace = { };
+      int offset = 1;
+
+      fragSrc = preprocessShaderSource(fragSrc0, search, replace, offset);
+      fragSrc[0] = "#version " + version;
+    } else {
+      // We need to replace 'texture' uniform by 'texMap' uniform and
+      // 'textureXXX()' functions by 'texture()' functions. Order of these
+      // replacements is important to prevent collisions between these two.
+      String[] search = new String[] {
+          "varying", "attribute",
+          "texture",
+          "texMap2D", "texMap3D", "texMap2DRect",
+          "texMapCube", "gl_FragColor"
+      };
+      String[] replace = new String[] {
+          "in", "in",
+          "texMap",
+          "texture", "texture", "texture", "texture",
+          "fragColor"
+      };
+      int offset = 2;
+
+      fragSrc = preprocessShaderSource(fragSrc0, search, replace, offset);
+      fragSrc[0] = "#version " + version;
       fragSrc[1] = "out vec4 fragColor;";
-      for (int i = 0; i < fragSrc0.length; i++) {
-        String line = fragSrc0[i];
-        line = line.replace("varying", "in");
-        line = line.replace("attribute", "in");
-        line = line.replace("gl_FragColor", "fragColor");
-        line = line.replace("texture", "texMap");
-        line = line.replace("texMap2D(", "texture(");
-        line = line.replace("texMap2DRect(", "texture(");
-        fragSrc[i + 2] = line;
-      }
-      return fragSrc;
     }
-    return fragSrc0;
+
+    return fragSrc;
   }
 
+  protected static String[] preprocessVertexSource(String[] vertSrc0,
+                                                   int version) {
+    String[] vertSrc;
 
+    if (version < 130) {
+      String[] search = { };
+      String[] replace = { };
+      int offset = 1;
 
-  protected static String[] convertVertexSource(String[] vertSrc0,
-                                                int version0, int version1) {
-    if (version0 == 120 && version1 == 150) {
-      String[] vertSrc = new String[vertSrc0.length + 1];
-      vertSrc[0] = "#version 150";
-      for (int i = 0; i < vertSrc0.length; i++) {
-        String line = vertSrc0[i];
-        line = line.replace("attribute", "in");
-        line = line.replace("varying", "out");
-        vertSrc[i + 1] = line;
-      }
-      return vertSrc;
+      vertSrc = preprocessShaderSource(vertSrc0, search, replace, offset);
+      vertSrc[0] = "#version " + version;
+    } else {
+      // We need to replace 'texture' uniform by 'texMap' uniform and
+      // 'textureXXX()' functions by 'texture()' functions. Order of these
+      // replacements is important to prevent collisions between these two.
+      String[] search = new String[] {
+          "varying", "attribute",
+          "texture",
+          "texMap2D", "texMap3D", "texMap2DRect", "texMapCube"
+      };
+      String[] replace = new String[] {
+          "out", "in",
+          "texMap",
+          "texture", "texture", "texture", "texture"
+      };
+      int offset = 1;
+
+      vertSrc = preprocessShaderSource(vertSrc0, search, replace, offset);
+      vertSrc[0] = "#version " + version;
     }
-    return vertSrc0;
+
+    return vertSrc;
   }
+
+  protected static String[] preprocessShaderSource(String[] src0,
+                                                   String[] search,
+                                                   String[] replace,
+                                                   int offset) {
+    String[] src = new String[src0.length+offset];
+    for (int i = 0; i < src0.length; i++) {
+      String line = src0[i];
+      if (line.contains("#version")) {
+        line = "";
+      }
+      for (int j = 0; j < search.length; j++) {
+        line = line.replace(search[j], replace[j]);
+      }
+      src[i+offset] = line;
+    }
+    return src;
+  }
+
 
   protected int createShader(int shaderType, String source) {
     int shader = createShader(shaderType);
@@ -2605,6 +2708,7 @@ public abstract class PGL {
 
   public abstract void depthRangef(float n, float f);
   public abstract void viewport(int x, int y, int w, int h);
+  protected abstract void viewportImpl(int x, int y, int w, int h);
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -2615,11 +2719,18 @@ public abstract class PGL {
   // to glReadPixels() should be done in readPixelsImpl().
 
   public void readPixels(int x, int y, int width, int height, int format, int type, Buffer buffer){
-    boolean pgCall = format != STENCIL_INDEX &&
-                     format != DEPTH_COMPONENT && format != DEPTH_STENCIL;
-    if (pgCall) pg.beginReadPixels();
+    boolean multisampled = isMultisampled() || pg.offscreenMultisample;
+    boolean depthReadingEnabled = pg.getHint(PConstants.ENABLE_BUFFER_READING);
+    boolean depthRequested = format == STENCIL_INDEX || format == DEPTH_COMPONENT || format == DEPTH_STENCIL;
+
+    if (multisampled && depthRequested && !depthReadingEnabled) {
+      PGraphics.showWarning(DEPTH_READING_NOT_ENABLED_ERROR);
+      return;
+    }
+
+    pg.beginReadPixels();
     readPixelsImpl(x, y, width, height, format, type, buffer);
-    if (pgCall) pg.endReadPixels();
+    pg.endReadPixels();
   }
 
   protected abstract void readPixelsImpl(int x, int y, int width, int height, int format, int type, Buffer buffer);
