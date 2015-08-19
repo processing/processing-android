@@ -93,7 +93,8 @@ public class Manifest {
 
   public void setSdkTarget(String version) {
     XML usesSdk = xml.getChild("uses-sdk");
-    usesSdk.setString("android:minSdkVersion", version);
+    usesSdk.setString("android:minSdkVersion", "15");
+    usesSdk.setString("android:targetSdkVersion", version);
     save();
   }
 
