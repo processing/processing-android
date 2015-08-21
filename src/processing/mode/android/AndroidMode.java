@@ -161,9 +161,25 @@ public class AndroidMode extends JavaMode {
   
   @Override
   public String getSearchPath() {
-    String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + 
-      File.separator + "platforms" + File.separator + "android-" + 
-      AndroidBuild.sdkVersion + File.separator + "android.jar";    
+    int i = 0;
+	//getSearchPath() is called form a separate thread and sdk might be null.
+	//Waiting for 3 seconds is more than enough
+    while (i < 3 && sdk == null) {
+//	  System.out.println("SDK is null. Waiting...");
+      ++i;
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        //Ignore
+      }
+    }
+    if (sdk == null) {
+      //If sdk is still null, return empty string.
+      return "";
+    }
+    String androidJarPath = sdk.getSdkFolder().getAbsolutePath() +
+      File.separator + "platforms" + File.separator + "android-" +
+      AndroidBuild.sdkVersion + File.separator + "android.jar";
     return super.getSearchPath() + File.pathSeparatorChar + androidJarPath;
   }
 
