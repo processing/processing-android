@@ -60,7 +60,7 @@ public class AndroidEditor extends JavaEditor {
 
     @Override
     public void run() {
-      if (androidMode.getSDK() == null) return;
+      if (androidMode == null || androidMode.getSDK() == null) return;
 
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
