@@ -23,6 +23,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Enumeration;
@@ -32,7 +33,7 @@ import java.util.zip.ZipFile;
 @SuppressWarnings("serial")
 public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
-  private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-10.xml";
+  private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
   private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
 
@@ -135,7 +136,19 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
     private void downloadAndUnpack(String urlString, File saveTo,
                                    File unpackTo) throws IOException {
-      URL url = new URL(urlString);
+      URL url = null;
+      try {
+        url = new URL(urlString);
+      } catch (MalformedURLException e) {
+    	  //This is expected for API level 14 and more
+    	  try {
+    		  url = new URL(URL_REPOSITORY_FOLDER + urlString);
+    	  } catch (MalformedURLException e1) {
+    		  //This exception is not expected. Need to return.
+    		  e1.printStackTrace();
+    		  return;
+    	  }
+      }
       URLConnection conn = url.openConnection();
 
       InputStream inputStream = conn.getInputStream();
