@@ -47,6 +47,7 @@ public class AndroidMode extends JavaMode {
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
+    checkSDK(null);
   }
 
 
@@ -135,7 +136,7 @@ public class AndroidMode extends JavaMode {
       try {
         sdk = AndroidSDK.load();
         // FIXME REVERT THIS STATEMENT AFTER TESTING (should be ==)
-        if (sdk == null) {
+        if (sdk == null && parent != null) {
           sdk = AndroidSDK.locate(parent, this);
         }
       } catch (BadSDKException e) {
@@ -164,7 +165,7 @@ public class AndroidMode extends JavaMode {
     String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + 
       File.separator + "platforms" + File.separator + "android-" + 
       AndroidBuild.sdkVersion + File.separator + "android.jar";    
-    return super.getSearchPath() + File.pathSeparatorChar + androidJarPath;
+    return androidJarPath;
   }
 
 
