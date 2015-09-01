@@ -607,7 +607,6 @@ public abstract class PGL {
   }
 
 
-  IntBuffer labelTex;
   protected void endDraw(boolean clear, int windowColor) {
     if (fboLayerInUse) {
       syncBackTexture();
