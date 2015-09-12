@@ -1320,7 +1320,7 @@ public class PShader implements PConstants {
     if (-1 < normalLoc) pgl.disableVertexAttribArray(normalLoc);
 
     if (-1 < ppixelsLoc) {
-      pgl.requestFBOLayer();
+      pgl.enableFBOLayer();
       pgl.activeTexture(PGL.TEXTURE0 + ppixelsUnit);
       currentPG.unbindFrontTexture();
       pgl.activeTexture(PGL.TEXTURE0);

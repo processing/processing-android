@@ -69,7 +69,6 @@ public abstract class PGL {
 
   // Parameters
 
-  protected static boolean USE_FBOLAYER_BY_DEFAULT = false;
   public static int REQUESTED_DEPTH_BITS   = 24;
   public static int REQUESTED_STENCIL_BITS = 8;
   public static int REQUESTED_ALPHA_BITS   = 8;
@@ -128,16 +127,17 @@ public abstract class PGL {
    * order to make sure the lines are always on top of the fill geometry */
   protected static float STROKE_DISPLACEMENT = 0.999f;
 
+  protected static boolean DOUBLE_BUFFERED = true;
 
   // ........................................................
 
   // FBO layer
 
-  protected boolean requestedFBOLayer = false;
-  protected boolean requestedFBOLayerReset = false;
+  protected boolean fboLayerEnabled = false;
   protected boolean fboLayerCreated = false;
-  protected boolean fboLayerInUse = false;
-  protected boolean firstFrame = true;
+  protected boolean fboLayerEnabledReq = false;
+  protected boolean fboLayerDisableReq = false;
+  protected boolean fbolayerResetReq = false;
   public int reqNumSamples;
   protected int numSamples;
 
@@ -442,10 +442,6 @@ public abstract class PGL {
       glMultiDepthStencil = allocateIntBuffer(1);
       glMultiDepth = allocateIntBuffer(1);
       glMultiStencil = allocateIntBuffer(1);
-
-      fboLayerCreated = false;
-      fboLayerInUse = false;
-      firstFrame = false;
     }
 
     byteBuffer = allocateByteBuffer(1);
@@ -494,39 +490,44 @@ public abstract class PGL {
 
 
   protected int getReadFramebuffer()  {
-    return fboLayerInUse ? glColorFbo.get(0) : 0;
+    return fboLayerEnabled ? glColorFbo.get(0) : 0;
   }
 
 
   protected int getDrawFramebuffer()  {
-    if (fboLayerInUse) return 1 < numSamples ? glMultiFbo.get(0) :
-                                               glColorFbo.get(0);
+    if (fboLayerEnabled) return 1 < numSamples ? glMultiFbo.get(0) :
+                                                 glColorFbo.get(0);
     else return 0;
   }
 
 
   protected int getDefaultDrawBuffer()  {
-    return fboLayerInUse ? COLOR_ATTACHMENT0 : BACK;
+    return fboLayerEnabled ? COLOR_ATTACHMENT0 : BACK;
   }
 
 
   protected int getDefaultReadBuffer()  {
-    return fboLayerInUse ? COLOR_ATTACHMENT0 : FRONT;
+    return fboLayerEnabled ? COLOR_ATTACHMENT0 : FRONT;
   }
 
 
   protected boolean isFBOBacked() {;
-    return fboLayerInUse;
+    return fboLayerEnabled;
   }
 
 
-  public void requestFBOLayer() {
-    requestedFBOLayer = true;
+  public void enableFBOLayer() {
+    fboLayerEnabledReq = true;
   }
 
 
-  public void requestFBOLayerReset() {
-    requestedFBOLayerReset = true;
+  public void disableFBOLayer() {
+    fboLayerDisableReq = true;
+  }
+
+
+  public void resetFBOLayer() {
+    fbolayerResetReq = true;
   }
 
 
@@ -639,7 +640,7 @@ public abstract class PGL {
     presentMode = true;
     presentX = x;
     presentY = y;
-    requestFBOLayer();
+    enableFBOLayer();
   }
 
 
@@ -693,12 +694,17 @@ public abstract class PGL {
     pclearColor = clearColor;
     clearColor = false;
 
-    if (requestedFBOLayer) {
-      if (requestedFBOLayerReset) {
+    if (fboLayerEnabledReq) {
+      fboLayerEnabled = true;
+      fboLayerEnabledReq = false;
+    }
+
+    if (fboLayerEnabled) {
+      if (fbolayerResetReq) {
         destroyFBOLayer();
-        requestedFBOLayerReset = false;
+        fbolayerResetReq = false;
       }
-      if (!fboLayerCreated) {
+      if (!fboLayerCreated && DOUBLE_BUFFERED) {
         createFBOLayer();
       }
 
@@ -711,7 +717,7 @@ public abstract class PGL {
         bindFramebufferImpl(FRAMEBUFFER, glMultiFbo.get(0));
       }
 
-      if (firstFrame) {
+      if (sketch.frameCount == 0) {
         // No need to draw back color buffer because we are in the first frame.
         int argb = graphics.backgroundColor;
         float a = ((argb >> 24) & 0xff) / 255.0f;
@@ -735,18 +741,12 @@ public abstract class PGL {
                     0, 0, (int)(scale * graphics.width), (int)(scale * graphics.height),
                     0, 0, graphics.width, graphics.height);
       }
-
-      fboLayerInUse = true;
-    } else {
-      fboLayerInUse = false;
     }
-
-    firstFrame = false;
   }
 
 
   protected void endRender(int windowColor) {
-    if (fboLayerInUse) {
+    if (fboLayerEnabled) {
       syncBackTexture();
 
       // Draw the contents of the back texture to the screen framebuffer.
@@ -804,8 +804,17 @@ public abstract class PGL {
       int temp = frontTex;
       frontTex = backTex;
       backTex = temp;
+
+      if (fboLayerDisableReq) {
+        fboLayerEnabled = false;
+        fboLayerDisableReq = false;
+      }
     } else if (!clearColor && 0 < sketch.frameCount || !sketch.isLooping()) {
-      requestFBOLayer();
+      enableFBOLayer();
+    }
+
+    if (fboLayerEnabledReq && !fboLayerCreated && !DOUBLE_BUFFERED) {
+      createFBOLayer();
     }
   }
 
@@ -944,10 +953,7 @@ public abstract class PGL {
       deleteRenderbuffers(1, glMultiDepth);
       deleteRenderbuffers(1, glMultiStencil);
     }
-
     fboLayerCreated = false;
-    fboLayerInUse = false;
-//    firstFrame = false;
   }
 
 

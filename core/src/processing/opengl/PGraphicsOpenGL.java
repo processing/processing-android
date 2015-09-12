@@ -704,7 +704,7 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-/*
+  /*
   @Override
   // Java only
   public PSurface createSurface() {  // ignore
@@ -5766,7 +5766,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
     boolean needEndDraw = false;
     if (primaryGraphics) {
-      pgl.requestFBOLayer();
+      pgl.enableFBOLayer();
     } else if (!drawing) {
       beginDraw();
       needEndDraw = true;
@@ -5842,7 +5842,7 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public void copy(int sx, int sy, int sw, int sh,
                    int dx, int dy, int dw, int dh) {
-    if (primaryGraphics) pgl.requestFBOLayer();
+    if (primaryGraphics) pgl.enableFBOLayer();
     loadTexture();
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height,
