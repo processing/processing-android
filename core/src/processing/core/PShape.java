@@ -238,6 +238,9 @@ public class PShape implements PConstants {
 
   /** True if contains 3D data */
   protected boolean is3D = false;
+  
+  protected boolean perVertexStyles = false;
+
 
   // should this be called vertices (consistent with PGraphics internals)
   // or does that hurt flexibility?

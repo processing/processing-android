@@ -52,6 +52,13 @@ public class PImage implements PConstants, Cloneable {
   public int width, height;
 
   /**
+   * For the time being, simply to ensure compatibility with Java mode code
+   */
+  public int pixelDensity = 1;
+  public int pixelWidth;
+  public int pixelHeight;
+
+  /**
    * Path to parent object that will be used with save().
    * This prevents users from needing savePath() to use PImage.save().
    */
@@ -148,6 +155,10 @@ public class PImage implements PConstants, Cloneable {
     this.pixels = new int[width*height];
     this.format = format;
 //    this.cache = null;
+
+    pixelWidth = width * pixelDensity;
+    pixelHeight = height * pixelDensity;
+    this.pixels = new int[pixelWidth * pixelHeight];
   }
 
 
@@ -182,6 +193,9 @@ public class PImage implements PConstants, Cloneable {
     this.height = bitmap.getHeight();
     this.pixels = null;
     this.format = bitmap.hasAlpha() ? ARGB : RGB;
+    this.pixelDensity = 1;
+    this.pixelWidth = width;
+    this.pixelHeight = height;
   }
 
 

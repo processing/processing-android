@@ -2217,6 +2217,11 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
+  public boolean isLooping() {
+    return looping;
+  }
+
+
   //////////////////////////////////////////////////////////////
 
 

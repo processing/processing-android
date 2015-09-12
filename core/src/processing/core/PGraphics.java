@@ -3188,15 +3188,40 @@ public class PGraphics extends PImage implements PConstants {
    * Sets the text size, also resets the value for the leading.
    */
   public void textSize(float size) {
+    // https://github.com/processing/processing/issues/3110
+    if (size <= 0) {
+      // Using System.err instead of showWarning to avoid running out of
+      // memory with a bunch of textSize() variants (cause of this bug is
+      // usually something done with map() or in a loop).
+      System.err.println("textSize(" + size + ") ignored: " +
+                         "the text size must be larger than zero");
+      return;
+    }
     if (textFont == null) {
       defaultFontOrDeath("textSize", size);
     }
+    textSizeImpl(size);
+  }
 
+
+  /**
+   * Called from textSize() after validating size. Subclasses
+   * will want to override this one.
+   * @param size size of the text, greater than zero
+   */
+  protected void textSizeImpl(float size) {
+    handleTextSize(size);
+  }
+
+
+  /**
+   * Sets the actual size. Called from textSizeImpl and
+   * from textFontImpl after setting the font.
+   * @param size size of the text, greater than zero
+   */
+  protected void handleTextSize(float size) {
     textSize = size;
-//    PApplet.println("textSize textAscent -> " + textAscent());
-//    PApplet.println("textSize textDescent -> " + textDescent());
     textLeading = (textAscent() + textDescent()) * 1.275f;
-//    PApplet.println("textSize textLeading = " + textLeading);
   }
 
 
