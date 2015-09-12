@@ -227,6 +227,41 @@ public class PGLES extends PGL {
   }
 
 
+  @Override
+  protected void initFBOLayer() {
+    if (0 < sketch.frameCount) {
+      IntBuffer buf = null;
+      buf = allocateDirectIntBuffer(fboWidth * fboHeight);
+
+      // Copy the contents of the front and back screen buffers to the textures
+      // of the FBO, so they are properly initialized. Note that the front buffer
+      // of the default framebuffer (the screen) contains the previous frame:
+      // https://www.opengl.org/wiki/Default_Framebuffer
+      // so it is copied to the front texture of the FBO layer:
+      if (pclearColor || 0 < pgeomCount || !sketch.isLooping()) {
+        readBuffer(FRONT);
+      } else {
+        // ...except when the previous frame has not been cleared and nothing was
+        // renderered while looping. In this case the back buffer, which holds the
+        // initial state of the previous frame, still contains the most up-to-date
+        // screen state.
+        readBuffer(BACK);
+      }
+      readPixelsImpl(0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
+      bindTexture(TEXTURE_2D, glColorTex.get(frontTex));
+      texSubImage2D(TEXTURE_2D, 0, 0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
+
+      readBuffer(BACK);
+      readPixelsImpl(0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
+      bindTexture(TEXTURE_2D, glColorTex.get(backTex));
+      texSubImage2D(TEXTURE_2D, 0, 0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
+
+      bindTexture(TEXTURE_2D, 0);
+      bindFramebufferImpl(FRAMEBUFFER, 0);
+    }
+  }
+
+
   ///////////////////////////////////////////////////////////
 
   // Android specific classes (Renderer, ConfigChooser)
