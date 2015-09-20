@@ -120,7 +120,7 @@ public class AndroidToolbar extends EditorToolbar {
   @Override
   public List<EditorButton> createButtons() {
     ArrayList<EditorButton> toReturn = new ArrayList<EditorButton>();
-    runButton = new EditorButton(mode,
+    runButton = new EditorButton(this,
                                  "/lib/toolbar/run",
                                  "Run on device",
                                  "Run on emulator") {
@@ -131,7 +131,7 @@ public class AndroidToolbar extends EditorToolbar {
     };
     toReturn.add(runButton);
 
-    stopButton = new EditorButton(mode,
+    stopButton = new EditorButton(this,
                                   "/lib/toolbar/stop",
                                   Language.text("toolbar.stop")) {
       @Override
