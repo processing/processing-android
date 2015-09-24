@@ -205,7 +205,9 @@ public class PGLES extends PGL {
 
   @Override
   protected void requestDraw() {
-    if (graphics.initialized && sketch.canDraw()) {
+    PGraphicsOpenGL g = graphics.get();
+    if (g == null) return;
+    if (g.initialized && sketch.canDraw()) {
       glview.requestRender();
     }
   }
@@ -297,12 +299,15 @@ public class PGLES extends PGL {
     }
 
     public void onSurfaceChanged(GL10 igl, int iwidth, int iheight) {
+      PGraphicsOpenGL g = graphics.get();
+      if (g == null) return;
+
       gl = igl;
 
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
-      graphics.setSize(iwidth, iheight);
+      g.setSize(iwidth, iheight);
     }
 
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {
