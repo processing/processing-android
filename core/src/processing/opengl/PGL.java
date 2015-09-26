@@ -25,7 +25,6 @@
 package processing.opengl;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -52,7 +51,7 @@ public abstract class PGL {
   // Basic fields
 
   /** The PGraphics and PApplet objects using this interface */
-  protected WeakReference<PGraphicsOpenGL> graphics;
+  protected PGraphicsOpenGL graphics;
   protected PApplet sketch;
 
   /** OpenGL thread */
@@ -126,7 +125,12 @@ public abstract class PGL {
    * order to make sure the lines are always on top of the fill geometry */
   protected static float STROKE_DISPLACEMENT = 0.999f;
 
-  protected static boolean DOUBLE_BUFFERED = true;
+  // ........................................................
+
+  // Variables to handle single-buffered situations (i.e.: Android)
+
+  protected IntBuffer firstFrame;
+  protected static boolean SINGLE_BUFFERED = false;
 
   // ........................................................
 
@@ -428,7 +432,7 @@ public abstract class PGL {
 
 
   public PGL(PGraphicsOpenGL pg) {
-    this.graphics = new WeakReference<PGraphicsOpenGL>(pg);
+    this.graphics = pg;
     if (glColorTex == null) {
       glColorFbo = allocateIntBuffer(1);
       glColorTex = allocateIntBuffer(2);
@@ -563,16 +567,14 @@ public abstract class PGL {
 
   protected Texture wrapBackTexture(Texture texture) {
     if (texture == null) {
-      PGraphicsOpenGL g = graphics.get();
-      if (g == null) return null;
-      texture = new Texture(g);
-      texture.init(g.width, g.height,
+      texture = new Texture(graphics);
+      texture.init(graphics.width, graphics.height,
                    glColorTex.get(backTex), TEXTURE_2D, RGBA,
                    fboWidth, fboHeight, NEAREST, NEAREST,
                    CLAMP_TO_EDGE, CLAMP_TO_EDGE);
       texture.invertedY(true);
       texture.colorBuffer(true);
-      g.setCache(g, texture);
+      graphics.setCache(graphics, texture);
     } else {
       texture.glName = glColorTex.get(backTex);
     }
@@ -582,10 +584,8 @@ public abstract class PGL {
 
   protected Texture wrapFrontTexture(Texture texture)  {
     if (texture == null) {
-      PGraphicsOpenGL g = graphics.get();
-      if (g == null) return null;
-      texture = new Texture(g);
-      texture.init(g.width, g.height,
+      texture = new Texture(graphics);
+      texture.init(graphics.width, graphics.height,
                    glColorTex.get(frontTex), TEXTURE_2D, RGBA,
                    fboWidth, fboHeight, NEAREST, NEAREST,
                    CLAMP_TO_EDGE, CLAMP_TO_EDGE);
@@ -628,8 +628,7 @@ public abstract class PGL {
       bindFramebufferImpl(READ_FRAMEBUFFER, glMultiFbo.get(0));
       bindFramebufferImpl(DRAW_FRAMEBUFFER, glColorFbo.get(0));
       int mask = COLOR_BUFFER_BIT;
-      PGraphicsOpenGL g = graphics.get();
-      if (g != null && g.getHint(PConstants.ENABLE_BUFFER_READING)) {
+      if (graphics.getHint(PConstants.ENABLE_BUFFER_READING)) {
         mask |= DEPTH_BUFFER_BIT | STENCIL_BUFFER_BIT;
       }
       blitFramebuffer(0, 0, fboWidth, fboHeight,
@@ -694,11 +693,8 @@ public abstract class PGL {
 
 
   protected void beginRender() {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return;
-
     if (sketch == null) {
-      sketch = g.parent;
+      sketch = graphics.parent;
     }
 
     pgeomCount = geomCount;
@@ -706,6 +702,10 @@ public abstract class PGL {
 
     pclearColor = clearColor;
     clearColor = false;
+
+    if (SINGLE_BUFFERED && sketch.frameCount == 1) {
+      restoreFirstFrame();
+    }
 
     if (fboLayerEnabledReq) {
       fboLayerEnabled = true;
@@ -717,7 +717,7 @@ public abstract class PGL {
         destroyFBOLayer();
         fbolayerResetReq = false;
       }
-      if (!fboLayerCreated && DOUBLE_BUFFERED) {
+      if (!fboLayerCreated) {
         createFBOLayer();
       }
 
@@ -732,10 +732,11 @@ public abstract class PGL {
 
       if (sketch.frameCount == 0) {
         // No need to draw back color buffer because we are in the first frame.
-        float ba = ((g.backgroundColor >> 24) & 0xff) / 255.0f;
-        float br = ((g.backgroundColor >> 16) & 0xff) / 255.0f;
-        float bg = ((g.backgroundColor >> 8) & 0xff) / 255.0f;
-        float bb = ((g.backgroundColor) & 0xff) / 255.0f;
+        int argb = graphics.backgroundColor;
+        float ba = ((argb >> 24) & 0xff) / 255.0f;
+        float br = ((argb >> 16) & 0xff) / 255.0f;
+        float bg = ((argb >> 8) & 0xff) / 255.0f;
+        float bb = ((argb) & 0xff) / 255.0f;
         clearColor(br, bg, bb, ba);
         clear(COLOR_BUFFER_BIT);
       } else if (!pclearColor || !sketch.isLooping()) {
@@ -749,18 +750,15 @@ public abstract class PGL {
         }
         float scale = getPixelScale();
         drawTexture(TEXTURE_2D, glColorTex.get(frontTex), fboWidth, fboHeight,
-                    x, y, g.width, g.height,
-                    0, 0, (int)(scale * g.width), (int)(scale * g.height),
-                    0, 0, g.width, g.height);
+                    x, y, graphics.width, graphics.height,
+                    0, 0, (int)(scale * graphics.width), (int)(scale * graphics.height),
+                    0, 0, graphics.width, graphics.height);
       }
     }
   }
 
 
   protected void endRender(int windowColor) {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return;
-
     if (fboLayerEnabled) {
       syncBackTexture();
 
@@ -810,9 +808,9 @@ public abstract class PGL {
       float scale = getPixelScale();
       drawTexture(TEXTURE_2D, glColorTex.get(backTex),
                   fboWidth, fboHeight,
-                  x, y, g.width, g.height,
-                  0, 0, (int)(scale * g.width), (int)(scale * g.height),
-                  0, 0, g.width, g.height);
+                  x, y, graphics.width, graphics.height,
+                  0, 0, (int)(scale * graphics.width), (int)(scale * graphics.height),
+                  0, 0, graphics.width, graphics.height);
 
       // Swapping front and back textures.
       int temp = frontTex;
@@ -823,12 +821,17 @@ public abstract class PGL {
         fboLayerEnabled = false;
         fboLayerDisableReq = false;
       }
-    } else if (!clearColor && 0 < sketch.frameCount || !sketch.isLooping()) {
-      enableFBOLayer();
-    }
+    } else {
+      if (SINGLE_BUFFERED && sketch.frameCount == 0) {
+        saveFirstFrame();
+      }
 
-    if (fboLayerEnabledReq && !fboLayerCreated && !DOUBLE_BUFFERED) {
-      createFBOLayer();
+      if (!clearColor && 0 < sketch.frameCount || !sketch.isLooping()) {
+        enableFBOLayer();
+        if (SINGLE_BUFFERED) {
+          createFBOLayer();
+        }
+      }
     }
   }
 
@@ -865,17 +868,14 @@ public abstract class PGL {
 
 
   private void createFBOLayer() {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return;
-
     float scale = getPixelScale();
 
     if (hasNpotTexSupport()) {
-      fboWidth = (int)(scale * g.width);
-      fboHeight = (int)(scale * g.height);
+      fboWidth = (int)(scale * graphics.width);
+      fboHeight = (int)(scale * graphics.height);
     } else {
-      fboWidth = nextPowerOfTwo((int)(scale * g.width));
-      fboHeight = nextPowerOfTwo((int)(scale * g.height));
+      fboWidth = nextPowerOfTwo((int)(scale * graphics.width));
+      fboHeight = nextPowerOfTwo((int)(scale * graphics.height));
     }
 
     int maxs = maxSamples();
@@ -899,7 +899,7 @@ public abstract class PGL {
       texParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
       texImage2D(TEXTURE_2D, 0, RGBA, fboWidth, fboHeight, 0,
                  RGBA, UNSIGNED_BYTE, null);
-      initTexture(TEXTURE_2D, RGBA, fboWidth, fboHeight, g.backgroundColor);
+      initTexture(TEXTURE_2D, RGBA, fboWidth, fboHeight, graphics.backgroundColor);
     }
     bindTexture(TEXTURE_2D, 0);
 
@@ -911,7 +911,7 @@ public abstract class PGL {
     framebufferTexture2D(FRAMEBUFFER, COLOR_ATTACHMENT0, TEXTURE_2D,
                          glColorTex.get(backTex), 0);
 
-    if (!multisample || g.getHint(PConstants.ENABLE_BUFFER_READING)) {
+    if (!multisample || graphics.getHint(PConstants.ENABLE_BUFFER_READING)) {
       // If not multisampled, this is the only depth and stencil buffer.
       // If multisampled and depth reading enabled, these are going to
       // hold downsampled depth and stencil buffers.
@@ -940,10 +940,11 @@ public abstract class PGL {
     // Clear all buffers.
     clearDepth(1);
     clearStencil(0);
-    float ba = ((g.backgroundColor >> 24) & 0xff) / 255.0f;
-    float br = ((g.backgroundColor >> 16) & 0xff) / 255.0f;
-    float bg = ((g.backgroundColor >> 8) & 0xff) / 255.0f;
-    float bb = ((g.backgroundColor) & 0xff) / 255.0f;
+    int argb = graphics.backgroundColor;
+    float ba = ((argb >> 24) & 0xff) / 255.0f;
+    float br = ((argb >> 16) & 0xff) / 255.0f;
+    float bg = ((argb >> 8) & 0xff) / 255.0f;
+    float bb = ((argb) & 0xff) / 255.0f;
     clearColor(br, bg, bb, ba);
     clear(DEPTH_BUFFER_BIT | STENCIL_BUFFER_BIT | COLOR_BUFFER_BIT);
 
@@ -954,6 +955,46 @@ public abstract class PGL {
   }
 
   protected abstract void initFBOLayer();
+
+
+  protected void saveFirstFrame() {
+    firstFrame = allocateDirectIntBuffer(graphics.width * graphics.height);
+    readBuffer(BACK);
+    readPixelsImpl(0, 0, graphics.width, graphics.height, RGBA, UNSIGNED_BYTE, firstFrame);
+  }
+
+
+  protected void restoreFirstFrame() {
+    IntBuffer tex = allocateIntBuffer(1);
+    genTextures(1, tex);
+
+    int w, h;
+    float scale = getPixelScale();
+    if (hasNpotTexSupport()) {
+      w = (int)(scale * graphics.width);
+      h = (int)(scale * graphics.height);
+    } else {
+      w = nextPowerOfTwo((int)(scale * graphics.width));
+      h = nextPowerOfTwo((int)(scale * graphics.height));
+    }
+
+    bindTexture(TEXTURE_2D, tex.get(0));
+    texParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, NEAREST);
+    texParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, NEAREST);
+    texParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE);
+    texParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
+    texImage2D(TEXTURE_2D, 0, RGBA, w, h, 0, RGBA, UNSIGNED_BYTE, null);
+    texSubImage2D(TEXTURE_2D, 0, 0, 0, graphics.width, graphics.height, RGBA, UNSIGNED_BYTE, firstFrame);
+
+    drawTexture(TEXTURE_2D, tex.get(0), w, h,
+                0, 0, graphics.width, graphics.height,
+                0, 0, (int)(scale * graphics.width), (int)(scale * graphics.height),
+                0, 0, graphics.width, graphics.height);
+
+    deleteTextures(1, tex);
+    firstFrame.clear();
+    firstFrame = null;
+  }
 
   protected void destroyFBOLayer() {
     if (threadIsCurrent() && fboLayerCreated) {
@@ -1206,9 +1247,7 @@ public abstract class PGL {
 
 
   protected PGL initTex2DShader() {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return null;
-    PGL ppgl = primaryPGL ? this : g.getPrimaryPGL();
+    PGL ppgl = primaryPGL ? this : graphics.getPrimaryPGL();
 
     if (!ppgl.loadedTex2DShader || ppgl.tex2DShaderContext != ppgl.glContext) {
       String[] preprocVertSrc = preprocessVertexSource(texVertShaderSource, getGLSLVersion());
@@ -1340,9 +1379,7 @@ public abstract class PGL {
 
 
   protected PGL initTexRectShader() {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return null;
-    PGL ppgl = primaryPGL ? this : g.getPrimaryPGL();
+    PGL ppgl = primaryPGL ? this : graphics.getPrimaryPGL();
 
     if (!ppgl.loadedTexRectShader || ppgl.texRectShaderContext != ppgl.glContext) {
       String[] preprocVertSrc = preprocessVertexSource(texVertShaderSource, getGLSLVersion());
@@ -1475,42 +1512,33 @@ public abstract class PGL {
 
 
   protected int getColorValue(int scrX, int scrY) {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return 0;
-
     if (colorBuffer == null) {
       colorBuffer = IntBuffer.allocate(1);
     }
     colorBuffer.rewind();
-    readPixels(scrX, g.height - scrY - 1, 1, 1, RGBA, UNSIGNED_BYTE,
+    readPixels(scrX, graphics.height - scrY - 1, 1, 1, RGBA, UNSIGNED_BYTE,
                colorBuffer);
     return colorBuffer.get();
   }
 
 
   protected float getDepthValue(int scrX, int scrY) {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return 0;
-
     if (depthBuffer == null) {
       depthBuffer = FloatBuffer.allocate(1);
     }
     depthBuffer.rewind();
-    readPixels(scrX, g.height - scrY - 1, 1, 1, DEPTH_COMPONENT, FLOAT,
+    readPixels(scrX, graphics.height - scrY - 1, 1, 1, DEPTH_COMPONENT, FLOAT,
                depthBuffer);
     return depthBuffer.get(0);
   }
 
 
   protected byte getStencilValue(int scrX, int scrY) {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return 0;
-
     if (stencilBuffer == null) {
       stencilBuffer = ByteBuffer.allocate(1);
     }
     stencilBuffer.rewind();
-    readPixels(scrX, g.height - scrY - 1, 1, 1, STENCIL_INDEX,
+    readPixels(scrX, graphics.height - scrY - 1, 1, 1, STENCIL_INDEX,
                UNSIGNED_BYTE, stencilBuffer);
     return stencilBuffer.get(0);
   }
@@ -2017,9 +2045,19 @@ public abstract class PGL {
     return false;
   }
 
+  protected boolean isES() {
+    return getString(VERSION).trim().toLowerCase().contains("opengl es");
+  }
 
   protected int[] getGLVersion() {
-    String version = getString(VERSION).trim();
+    String version = getString(VERSION).trim().toLowerCase();
+
+    String ES = "opengl es";
+    int esPosition = version.indexOf(ES);
+    if (esPosition >= 0) {
+      version = version.substring(esPosition + ES.length()).trim();
+    }
+
     int[] res = {0, 0, 0};
     String[] parts = version.split(" ");
     for (int i = 0; i < parts.length; i++) {
@@ -2129,6 +2167,24 @@ public abstract class PGL {
     } else {
       return true;
     }
+  }
+
+
+  protected boolean hasSynchronization() {
+    int[] version = getGLVersion();
+    if (isES()) {
+      return version[0] >= 3;
+    }
+    return (version[0] > 3) || (version[0] == 3 && version[1] >= 2);
+  }
+
+
+  protected boolean hasPBOs() {
+    int[] version = getGLVersion();
+    if (isES()) {
+      return version[0] >= 3;
+    }
+    return (version[0] > 2) || (version[0] == 2 && version[1] >= 1);
   }
 
 
@@ -2681,12 +2737,14 @@ public abstract class PGL {
 
   public static int ARRAY_BUFFER;
   public static int ELEMENT_ARRAY_BUFFER;
+  public static int PIXEL_PACK_BUFFER;
 
   public static int MAX_VERTEX_ATTRIBS;
 
   public static int STATIC_DRAW;
   public static int DYNAMIC_DRAW;
   public static int STREAM_DRAW;
+  public static int STREAM_READ;
 
   public static int BUFFER_SIZE;
   public static int BUFFER_USAGE;
@@ -2901,6 +2959,10 @@ public abstract class PGL {
   public static int LINE_SMOOTH;
   public static int POLYGON_SMOOTH;
 
+  public static int SYNC_GPU_COMMANDS_COMPLETE;
+  public static int ALREADY_SIGNALED;
+  public static int CONDITION_SATISFIED;
+
   ///////////////////////////////////////////////////////////
 
   // Special Functions
@@ -2945,6 +3007,14 @@ public abstract class PGL {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  // Synchronization
+
+  public abstract long fenceSync(int condition, int flags);
+  public abstract void deleteSync(long sync);
+  public abstract int clientWaitSync(long sync, int flags, long timeout);
+
+  //////////////////////////////////////////////////////////////////////////////
+
   // Viewport and Clipping
 
   public abstract void depthRangef(float n, float f);
@@ -2960,11 +3030,8 @@ public abstract class PGL {
   // to glReadPixels() should be done in readPixelsImpl().
 
   public void readPixels(int x, int y, int width, int height, int format, int type, Buffer buffer){
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return;
-
-    boolean multisampled = isMultisampled() || g.offscreenMultisample;
-    boolean depthReadingEnabled = g.getHint(PConstants.ENABLE_BUFFER_READING);
+    boolean multisampled = isMultisampled() || graphics.offscreenMultisample;
+    boolean depthReadingEnabled = graphics.getHint(PConstants.ENABLE_BUFFER_READING);
     boolean depthRequested = format == STENCIL_INDEX || format == DEPTH_COMPONENT || format == DEPTH_STENCIL;
 
     if (multisampled && depthRequested && !depthReadingEnabled) {
@@ -2972,12 +3039,28 @@ public abstract class PGL {
       return;
     }
 
-    g.beginReadPixels();
+    graphics.beginReadPixels();
     readPixelsImpl(x, y, width, height, format, type, buffer);
-    g.endReadPixels();
+    graphics.endReadPixels();
+  }
+
+  public void readPixels(int x, int y, int width, int height, int format, int type, long offset){
+    boolean multisampled = isMultisampled() || graphics.offscreenMultisample;
+    boolean depthReadingEnabled = graphics.getHint(PConstants.ENABLE_BUFFER_READING);
+    boolean depthRequested = format == STENCIL_INDEX || format == DEPTH_COMPONENT || format == DEPTH_STENCIL;
+
+    if (multisampled && depthRequested && !depthReadingEnabled) {
+      PGraphics.showWarning(DEPTH_READING_NOT_ENABLED_ERROR);
+      return;
+    }
+
+    graphics.beginReadPixels();
+    readPixelsImpl(x, y, width, height, format, type, offset);
+    graphics.endReadPixels();
   }
 
   protected abstract void readPixelsImpl(int x, int y, int width, int height, int format, int type, Buffer buffer);
+  protected abstract void readPixelsImpl(int x, int y, int width, int height, int format, int type, long offset);
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -3166,12 +3249,9 @@ public abstract class PGL {
   // Framebuffers Objects
 
   public void bindFramebuffer(int target, int framebuffer) {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return;
-
-    g.beginBindFramebuffer(target, framebuffer);
+    graphics.beginBindFramebuffer(target, framebuffer);
     bindFramebufferImpl(target, framebuffer);
-    g.endBindFramebuffer(target, framebuffer);
+    graphics.endBindFramebuffer(target, framebuffer);
   }
   protected abstract void bindFramebufferImpl(int target, int framebuffer);
 

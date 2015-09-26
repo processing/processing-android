@@ -77,12 +77,12 @@ public class PGLES extends PGL {
   // GLES
 
   static {
-    DOUBLE_BUFFERED = false;
+    SINGLE_BUFFERED = true;
 
     MIN_DIRECT_BUFFER_SIZE = 1;
     INDEX_TYPE             = GLES20.GL_UNSIGNED_SHORT;
 
-    MIPMAPS_ENABLED     = false;
+    MIPMAPS_ENABLED        = false;
 
     DEFAULT_IN_VERTICES   = 16;
     DEFAULT_IN_EDGES      = 32;
@@ -205,9 +205,7 @@ public class PGLES extends PGL {
 
   @Override
   protected void requestDraw() {
-    PGraphicsOpenGL g = graphics.get();
-    if (g == null) return;
-    if (g.initialized && sketch.canDraw()) {
+    if (graphics.initialized && sketch.canDraw()) {
       glview.requestRender();
     }
   }
@@ -226,30 +224,13 @@ public class PGLES extends PGL {
   @Override
   protected void initFBOLayer() {
     if (0 < sketch.frameCount) {
-      IntBuffer buf = null;
-      buf = allocateDirectIntBuffer(fboWidth * fboHeight);
+      IntBuffer buf = allocateDirectIntBuffer(fboWidth * fboHeight);
 
-//      // Copy the contents of the front and back screen buffers to the textures
-//      // of the FBO, so they are properly initialized. Note that the front buffer
-//      // of the default framebuffer (the screen) contains the previous frame:
-//      // https://www.opengl.org/wiki/Default_Framebuffer
-//      // so it is copied to the front texture of the FBO layer:
-//      if (pclearColor || 0 < pgeomCount || !sketch.isLooping()) {
-//        readBuffer(FRONT);
-//      } else {
-//        // ...except when the previous frame has not been cleared and nothing was
-//        // renderered while looping. In this case the back buffer, which holds the
-//        // initial state of the previous frame, still contains the most up-to-date
-//        // screen state.
-//        readBuffer(BACK);
-//      }
-      readBuffer(FRONT);
+      readBuffer(BACK);
       readPixelsImpl(0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
       bindTexture(TEXTURE_2D, glColorTex.get(frontTex));
       texSubImage2D(TEXTURE_2D, 0, 0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
 
-//      readBuffer(BACK);
-//      readPixelsImpl(0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
       bindTexture(TEXTURE_2D, glColorTex.get(backTex));
       texSubImage2D(TEXTURE_2D, 0, 0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
 
@@ -299,15 +280,12 @@ public class PGLES extends PGL {
     }
 
     public void onSurfaceChanged(GL10 igl, int iwidth, int iheight) {
-      PGraphicsOpenGL g = graphics.get();
-      if (g == null) return;
-
       gl = igl;
 
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
-      g.setSize(iwidth, iheight);
+      graphics.setSize(iwidth, iheight);
     }
 
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {
@@ -1208,6 +1186,14 @@ public class PGLES extends PGL {
     GLES20.glReadPixels(x, y, width, height, format, type, buffer);
   }
 
+
+  @Override
+  protected void readPixelsImpl(int x, int y, int width, int height, int format,
+                                int type, long offset) {
+    // TODO Auto-generated method stub
+  }
+
+
   //////////////////////////////////////////////////////////////////////////////
 
   // Vertices
@@ -1910,4 +1896,38 @@ public class PGLES extends PGL {
     // TODO Auto-generated method stub
     return null;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Synchronization
+
+  @Override
+  public long fenceSync(int condition, int flags) {
+    return 0;
+//    if (gl3es3 != null) {
+//      return gl3es3.glFenceSync(condition, flags);
+//    } else {
+//      throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "fenceSync()"));
+//    }
+  }
+
+  @Override
+  public void deleteSync(long sync) {
+//    if (gl3es3 != null) {
+//      gl3es3.glDeleteSync(sync);
+//    } else {
+//      throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "deleteSync()"));
+//    }
+  }
+
+  @Override
+  public int clientWaitSync(long sync, int flags, long timeout) {
+    return 0;
+//    if (gl3es3 != null) {
+//      return gl3es3.glClientWaitSync(sync, flags, timeout);
+//    } else {
+//      throw new RuntimeException(String.format(MISSING_GLFUNC_ERROR, "clientWaitSync()"));
+//    }
+  }
+
 }

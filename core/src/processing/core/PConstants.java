@@ -422,10 +422,13 @@ public interface PConstants {
   static final int ENABLE_STROKE_PURE         =  9;
   static final int DISABLE_STROKE_PURE        = -9;
 
-  static final int ENABLE_BUFFER_READING       =  10;
-  static final int DISABLE_BUFFER_READING      = -10;
+  static final int ENABLE_BUFFER_READING      =  10;
+  static final int DISABLE_BUFFER_READING     = -10;
 
-  static final int HINT_COUNT                 =  11;
+  static final int DISABLE_ASYNC_SAVEFRAME    =  11;
+  static final int ENABLE_ASYNC_SAVEFRAME     = -11;
+
+  static final int HINT_COUNT                 =  12;
 
 
   // error messages
