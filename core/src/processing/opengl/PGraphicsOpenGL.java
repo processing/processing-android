@@ -687,14 +687,13 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-/*
+  /*
   @Override
   // Java only
   public PSurface createSurface() {  // ignore
     return surface = new PSurfaceJOGL(this);
   }
 */
-
 
   public boolean saveImpl(String filename) {
     return super.save(filename); // ASYNC save frame using PBOs not yet available on Android
@@ -834,7 +833,7 @@ public class PGraphicsOpenGL extends PGraphics {
         if (res == null) {
           break;
         }
-        System.out.println("Disposing texture resource " + iterations + " " + res.hashCode());
+//        System.out.println("Disposing texture resource " + iterations + " " + res.hashCode());
         res.dispose();
         ++iterations;
       }
@@ -1080,7 +1079,7 @@ public class PGraphicsOpenGL extends PGraphics {
         if (res == null) {
           break;
         }
-        System.out.println("Disposing framebuffer resource " + iterations + " " + res.hashCode());
+//        System.out.println("Disposing framebuffer resource " + iterations + " " + res.hashCode());
         res.dispose();
         ++iterations;
       }
@@ -5930,7 +5929,7 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void createPTexture() {
     updatePixelSize();
     if (texture != null) {
-      texture = new Texture(this, pixelWidth, pixelHeight, texture.getParameters());
+      ptexture = new Texture(this, pixelWidth, pixelHeight, texture.getParameters());
       ptexture.invertedY(true);
       ptexture.colorBuffer(true);
     }
