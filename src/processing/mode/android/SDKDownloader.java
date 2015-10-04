@@ -330,7 +330,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton cancelButton = new JButton("Cancel download");
-    Dimension dim = new Dimension(Toolkit.BUTTON_WIDTH*2,
+    Dimension dim = new Dimension(Toolkit.getButtonWidth()*2,
         cancelButton.getPreferredSize().height);
 
     cancelButton.setPreferredSize(dim);

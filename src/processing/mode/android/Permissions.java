@@ -240,7 +240,7 @@ public class Permissions extends JFrame {
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
-    Dimension dim = new Dimension(Toolkit.BUTTON_WIDTH,
+    Dimension dim = new Dimension(Toolkit.getButtonWidth(),
                                   okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {

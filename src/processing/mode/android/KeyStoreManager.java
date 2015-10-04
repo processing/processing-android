@@ -62,7 +62,7 @@ public class KeyStoreManager extends JFrame {
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
-    Dimension dim = new Dimension(Toolkit.BUTTON_WIDTH,
+    Dimension dim = new Dimension(Toolkit.getButtonWidth(),
         okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
@@ -98,7 +98,7 @@ public class KeyStoreManager extends JFrame {
     cancelButton.setEnabled(true);
 
     JButton resetKeystoreButton = new JButton("Reset password");
-    dim = new Dimension(Toolkit.BUTTON_WIDTH*2,
+    dim = new Dimension(Toolkit.getButtonWidth()*2,
         okButton.getPreferredSize().height);
     resetKeystoreButton.setPreferredSize(dim);
     resetKeystoreButton.addActionListener(new ActionListener() {
