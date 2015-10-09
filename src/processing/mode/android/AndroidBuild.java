@@ -81,6 +81,7 @@ class AndroidBuild extends JavaBuild {
     manifest.setSdkTarget(sdkVersion);
 
     Preferences.set("android.sdk.version", sdkVersion);
+    Preferences.set("android.sdk.name", target.name);
   }
 
   /**
