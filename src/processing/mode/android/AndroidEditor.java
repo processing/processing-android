@@ -297,7 +297,8 @@ public class AndroidEditor extends JavaEditor {
       AndroidSDK.SDKTarget lowestTargetAvailable = null;
       JCheckBoxMenuItem lowestTargetMenuItem = null;
 
-      String savedTargetVersion = Preferences.get("android.sdk.version");
+//      String savedTargetVersion = Preferences.get("android.sdk.version");
+      String savedSdkName = Preferences.get("android.sdk.name");
       boolean savedTargetSet = false;
 
       for(final AndroidSDK.SDKTarget target : targets) {
@@ -312,7 +313,7 @@ public class AndroidEditor extends JavaEditor {
           lowestTargetMenuItem = item;
         }
 
-        if (Integer.toString(target.version).equals(savedTargetVersion)) {
+        if (target.name.equals(savedSdkName)) {
           AndroidBuild.setSdkTarget(target, sketch);
           item.setState(true);
           savedTargetSet = true;
