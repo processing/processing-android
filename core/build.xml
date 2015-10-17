@@ -33,7 +33,8 @@
 	   target="1.7" 
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
-	   bootclasspath="${env.ANDROID_SDK}/platforms/android-15/android.jar"
+	   classpath="library/cardboard.jar"
+	   bootclasspath="${env.ANDROID_SDK}/platforms/android-19/android.jar"
 	   srcdir="src" destdir="bin" />
 
     <!-- Copy the shaders to the bin folder. 
