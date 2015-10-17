@@ -124,8 +124,6 @@ public class AndroidMode extends JavaMode {
   public void loadSDK() {
     try {
       sdk = AndroidSDK.load();
-    } catch (BadSDKException e) {
-      e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
     }
