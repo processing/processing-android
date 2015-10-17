@@ -47,7 +47,6 @@ public class AndroidMode extends JavaMode {
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
-    checkSDK(null);
   }
 
 
