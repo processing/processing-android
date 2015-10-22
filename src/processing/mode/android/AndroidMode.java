@@ -47,7 +47,6 @@ public class AndroidMode extends JavaMode {
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
-    checkSDK(null);
   }
 
 
@@ -129,13 +128,13 @@ public class AndroidMode extends JavaMode {
     }
   }
 
-  public void checkSDK(Editor parent) {
+  public void checkSDK(Editor editor) {
     if (sdk == null) {
       try {
         sdk = AndroidSDK.load();
         // FIXME REVERT THIS STATEMENT AFTER TESTING (should be ==)
-        if (sdk == null && parent != null) {
-          sdk = AndroidSDK.locate(parent, this);
+        if (sdk == null && editor != null) {
+          sdk = AndroidSDK.locate(editor, this);
         }
       } catch (BadSDKException e) {
         e.printStackTrace();
