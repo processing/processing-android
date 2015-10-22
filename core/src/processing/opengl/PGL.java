@@ -878,8 +878,8 @@ public abstract class PGL {
       fboHeight = nextPowerOfTwo((int)(scale * graphics.height));
     }
 
-    int maxs = maxSamples();
-    if (hasFboMultisampleSupport() && 1 < maxs) {
+    if (hasFboMultisampleSupport()) {
+      int maxs = maxSamples();
       numSamples = PApplet.min(reqNumSamples, maxs);
     } else {
       numSamples = 1;
@@ -959,7 +959,7 @@ public abstract class PGL {
 
   protected void saveFirstFrame() {
     firstFrame = allocateDirectIntBuffer(graphics.width * graphics.height);
-    readBuffer(BACK);
+    if (hasReadBuffer()) readBuffer(BACK);
     readPixelsImpl(0, 0, graphics.width, graphics.height, RGBA, UNSIGNED_BYTE, firstFrame);
   }
 
@@ -2185,6 +2185,24 @@ public abstract class PGL {
       return version[0] >= 3;
     }
     return (version[0] > 2) || (version[0] == 2 && version[1] >= 1);
+  }
+
+
+  protected boolean hasReadBuffer() {
+    int[] version = getGLVersion();
+    if (isES()) {
+      return version[0] >= 3;
+    }
+    return version[0] >= 2;
+  }
+
+
+  protected boolean hasDrawBuffer() {
+    int[] version = getGLVersion();
+    if (isES()) {
+      return version[0] >= 3;
+    }
+    return version[0] >= 2;
   }
 
 

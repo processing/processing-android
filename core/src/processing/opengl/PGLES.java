@@ -226,7 +226,7 @@ public class PGLES extends PGL {
     if (0 < sketch.frameCount) {
       IntBuffer buf = allocateDirectIntBuffer(fboWidth * fboHeight);
 
-      readBuffer(BACK);
+      if (hasReadBuffer()) readBuffer(BACK);
       readPixelsImpl(0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);
       bindTexture(TEXTURE_2D, glColorTex.get(frontTex));
       texSubImage2D(TEXTURE_2D, 0, 0, 0, fboWidth, fboHeight, RGBA, UNSIGNED_BYTE, buf);

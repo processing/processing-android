@@ -117,6 +117,8 @@ public class PGraphicsOpenGL extends PGraphics {
   static public boolean packedDepthStencilSupported;
   static public boolean anisoSamplingSupported;
   static public boolean blendEqSupported;
+  static public boolean readBufferSupported;
+  static public boolean drawBufferSupported;
 
   /** Some hardware limits */
   static public int maxTextureSize;
@@ -695,10 +697,10 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 */
 
+
   public boolean saveImpl(String filename) {
     return super.save(filename); // ASYNC save frame using PBOs not yet available on Android
-
-    /*
+/*
     if (getHint(DISABLE_ASYNC_SAVEFRAME)) {
       // Act as an opaque surface for the purposes of saving.
       if (primaryGraphics) {
@@ -833,7 +835,6 @@ public class PGraphicsOpenGL extends PGraphics {
         if (res == null) {
           break;
         }
-//        System.out.println("Disposing texture resource " + iterations + " " + res.hashCode());
         res.dispose();
         ++iterations;
       }
@@ -908,7 +909,6 @@ public class PGraphicsOpenGL extends PGraphics {
         if (res == null) {
           break;
         }
-//        System.out.println("Disposing VertexBuffer resource " + iterations + " " + res.hashCode());
         res.dispose();
         ++iterations;
       }
@@ -985,7 +985,6 @@ public class PGraphicsOpenGL extends PGraphics {
         if (res == null) {
           break;
         }
-//        System.out.println("Disposing shader resource " + res.hashCode());
         res.dispose();
         ++iterations;
       }
@@ -1079,7 +1078,6 @@ public class PGraphicsOpenGL extends PGraphics {
         if (res == null) {
           break;
         }
-//        System.out.println("Disposing framebuffer resource " + iterations + " " + res.hashCode());
         res.dispose();
         ++iterations;
       }
@@ -1683,7 +1681,7 @@ public class PGraphicsOpenGL extends PGraphics {
     FrameBuffer fb = getCurrentFB();
     if (fb != null) {
       fb.bind();
-      pgl.drawBuffer(fb.getDefaultDrawBuffer());
+      if (drawBufferSupported) pgl.drawBuffer(fb.getDefaultDrawBuffer());
     }
   }
 
@@ -1758,9 +1756,9 @@ public class PGraphicsOpenGL extends PGraphics {
 
     // We read from/write to the draw buffer.
     if (op == OP_READ) {
-      pgl.readBuffer(getCurrentFB().getDefaultDrawBuffer());
+      if (readBufferSupported) pgl.readBuffer(getCurrentFB().getDefaultDrawBuffer());
     } else if (op == OP_WRITE) {
-      pgl.drawBuffer(getCurrentFB().getDefaultDrawBuffer());
+      if (drawBufferSupported) pgl.drawBuffer(getCurrentFB().getDefaultDrawBuffer());
     }
 
     pixelsOp = op;
@@ -1775,8 +1773,8 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     // Restoring default read/draw buffer configuration.
-    pgl.readBuffer(getCurrentFB().getDefaultReadBuffer());
-    pgl.drawBuffer(getCurrentFB().getDefaultDrawBuffer());
+    if (readBufferSupported) pgl.readBuffer(getCurrentFB().getDefaultReadBuffer());
+    if (drawBufferSupported) pgl.drawBuffer(getCurrentFB().getDefaultDrawBuffer());
 
     pixelsOp = OP_NONE;
   }
@@ -6459,7 +6457,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (img.parent == null) {
       img.parent = parent;
     }
-    Texture tex = new Texture(this, img.width, img.height, params);
+    Texture tex = new Texture(this, img.pixelWidth, img.pixelHeight, params);
     setCache(img, tex);
     return tex;
   }
@@ -6865,6 +6863,8 @@ public class PGraphicsOpenGL extends PGraphics {
     fboMultisampleSupported = pgl.hasFboMultisampleSupport();
     packedDepthStencilSupported = pgl.hasPackedDepthStencilSupport();
     anisoSamplingSupported = pgl.hasAnisoSamplingSupport();
+    readBufferSupported = pgl.hasReadBuffer();
+    drawBufferSupported = pgl.hasDrawBuffer();
 
     try {
       pgl.blendEquation(PGL.FUNC_ADD);
@@ -7504,17 +7504,19 @@ public class PGraphicsOpenGL extends PGraphics {
     int[] indexOffset;
     int[] vertexCount;
     int[] vertexOffset;
+    int[] counter;
 
     IndexCache() {
       allocate();
     }
 
     void allocate() {
+      size = 0;
       indexCount = new int[2];
       indexOffset = new int[2];
       vertexCount = new int[2];
       vertexOffset = new int[2];
-      size = 0;
+      counter = null;
     }
 
     void clear() {
@@ -7547,9 +7549,17 @@ public class PGraphicsOpenGL extends PGraphics {
       return size - 1;
     }
 
+    void setCounter(int[] counter) {
+      this.counter = counter;
+    }
+
     void incCounts(int index, int icount, int vcount) {
       indexCount[index] += icount;
       vertexCount[index] += vcount;
+      if (counter != null) {
+        counter[0] += icount;
+        counter[1] += vcount;
+      }
     }
 
     void init(int n) {
@@ -7776,8 +7786,11 @@ public class PGraphicsOpenGL extends PGraphics {
       if (bevel) {
         for (int i = 0; i < edgeCount; i++) {
           int[] edge = edges[i];
-          if (edge[2] == EDGE_MIDDLE || edge[2] == EDGE_START) bevVert++;
-          if (edge[2] == EDGE_CLOSE) segVert--;
+          if (edge[2] == EDGE_MIDDLE || edge[2] == EDGE_START) bevVert += 3;
+          if (edge[2] == EDGE_CLOSE) {
+            bevVert += 5;
+            segVert--;
+          }
         }
       } else {
         segVert -= getNumEdgeClosures();
@@ -7792,7 +7805,10 @@ public class PGraphicsOpenGL extends PGraphics {
         for (int i = 0; i < edgeCount; i++) {
           int[] edge = edges[i];
           if (edge[2] == EDGE_MIDDLE || edge[2] == EDGE_START) bevInd++;
-          if (edge[2] == EDGE_CLOSE) segInd--;
+          if (edge[2] == EDGE_CLOSE) {
+            bevInd++;
+            segInd--;
+          }
         }
       } else {
         segInd -= getNumEdgeClosures();
@@ -10616,8 +10632,6 @@ public class PGraphicsOpenGL extends PGraphics {
           if (attrib.isFloat()) {
             inValues = in.fattribs.get(name);
             tessValues = fpolyAttribs.get(name);
-//            PApplet.println(inValues);
-//            PApplet.println("****************");
           } else if (attrib.isInt()) {
             inValues = in.iattribs.get(name);
             tessValues = ipolyAttribs.get(name);
@@ -11306,16 +11320,24 @@ public class PGraphicsOpenGL extends PGraphics {
       // require 3 indices to specify their connectivities.
       int nind = lineCount * 2 * 3;
 
+      int vcount0 = tess.lineVertexCount;
+      int icount0 = tess.lineIndexCount;
       tess.lineVertexCheck(nvert);
       tess.lineIndexCheck(nind);
       int index = in.renderMode == RETAINED ? tess.lineIndexCache.addNew() :
                                               tess.lineIndexCache.getLast();
       firstLineIndexCache = index;
+      int[] tmp = {0, 0};
+      tess.lineIndexCache.setCounter(tmp);
       for (int ln = 0; ln < lineCount; ln++) {
         int i0 = 2 * ln + 0;
         int i1 = 2 * ln + 1;
         index = addLineSegment3D(i0, i1, i0 - 2, i1 - 1, index, null, false);
       }
+      // Adjust counts of line vertices and indices to exact values
+      tess.lineIndexCache.setCounter(null);
+      tess.lineIndexCount = icount0 + tmp[0];
+      tess.lineVertexCount = vcount0 + tmp[1];
       lastLineIndexCache = index;
     }
 
@@ -11384,9 +11406,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
     void tessellateLineStrip3D(int lineCount) {
       int nBevelTr = noCapsJoins() ? 0 : (lineCount - 1);
-      int nvert = lineCount * 4 + nBevelTr;
+      int nvert = lineCount * 4 + nBevelTr * 3;
       int nind = lineCount * 2 * 3 + nBevelTr * 2 * 3;
 
+      int vcount0 = tess.lineVertexCount;
+      int icount0 = tess.lineIndexCount;
       tess.lineVertexCheck(nvert);
       tess.lineIndexCheck(nind);
       int index = in.renderMode == RETAINED ? tess.lineIndexCache.addNew() :
@@ -11394,6 +11418,8 @@ public class PGraphicsOpenGL extends PGraphics {
       firstLineIndexCache = index;
       int i0 = 0;
       short[] lastInd = {-1, -1};
+      int[] tmp = {0, 0};
+      tess.lineIndexCache.setCounter(tmp);
       for (int ln = 0; ln < lineCount; ln++) {
         int i1 = ln + 1;
         if (0 < nBevelTr) {
@@ -11403,6 +11429,10 @@ public class PGraphicsOpenGL extends PGraphics {
         }
         i0 = i1;
       }
+      // Adjust counts of line vertices and indices to exact values
+      tess.lineIndexCache.setCounter(null);
+      tess.lineIndexCount = icount0 + tmp[0];
+      tess.lineVertexCount = vcount0 + tmp[1];
       lastLineIndexCache = index;
     }
 
@@ -11468,9 +11498,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
     void tessellateLineLoop3D(int lineCount) {
       int nBevelTr = noCapsJoins() ? 0 : lineCount;
-      int nvert = lineCount * 4 + nBevelTr;
+      int nvert = lineCount * 4 + nBevelTr * 3;
       int nind = lineCount * 2 * 3 + nBevelTr * 2 * 3;
 
+      int vcount0 = tess.lineVertexCount;
+      int icount0 = tess.lineIndexCount;
       tess.lineVertexCheck(nvert);
       tess.lineIndexCheck(nind);
       int index = in.renderMode == RETAINED ? tess.lineIndexCache.addNew() :
@@ -11478,33 +11510,26 @@ public class PGraphicsOpenGL extends PGraphics {
       firstLineIndexCache = index;
       int i0 = 0;
       int i1 = -1;
-      int findex = 0;
       short[] lastInd = {-1, -1};
-      short firstInd = -1;
+      int[] tmp = {0, 0};
+      tess.lineIndexCache.setCounter(tmp);
       for (int ln = 0; ln < lineCount - 1; ln++) {
         i1 = ln + 1;
         if (0 < nBevelTr) {
           index = addLineSegment3D(i0, i1, i1 - 2, i1 - 1, index, lastInd, false);
-          if (ln == 0) {
-            findex = index;
-            firstInd = (short)(lastInd[0] - 2);
-          }
         } else {
           index = addLineSegment3D(i0, i1, i1 - 2, i1 - 1, index, null, false);
         }
         i0 = i1;
       }
-      index = addLineSegment3D(0, in.vertexCount - 1, i1 - 2, i1 - 1, index, lastInd, false);
+      index = addLineSegment3D(in.vertexCount - 1, 0, i1 - 2, i1 - 1, index, lastInd, false);
       if (0 < nBevelTr) {
-        if (findex == index) {
-          // The first index is in the same cache block as the last segment,
-          // so we can connect them. A consequence of this is that the connecting
-          // bevel will be missing in situations with very large stroke
-          // geometry the cache ends in the middle. Code to handle this
-          // properly will be too complex for the expected benefit.
-          index = addBevel3D(0, 0, in.vertexCount - 1, index, lastInd, firstInd, false);
-        }
+        index = addBevel3D(0, 1, in.vertexCount - 1, 0, index, lastInd, false);
       }
+      // Adjust counts of line vertices and indices to exact values
+      tess.lineIndexCache.setCounter(null);
+      tess.lineIndexCount = icount0 + tmp[0];
+      tess.lineVertexCount = vcount0 + tmp[1];
       lastLineIndexCache = index;
     }
 
@@ -11573,47 +11598,53 @@ public class PGraphicsOpenGL extends PGraphics {
       int nInVert = in.getNumEdgeVertices(bevel);
       int nInInd = in.getNumEdgeIndices(bevel);
 
+      int vcount0 = tess.lineVertexCount;
+      int icount0 = tess.lineIndexCount;
       tess.lineVertexCheck(nInVert);
       tess.lineIndexCheck(nInInd);
       int index = in.renderMode == RETAINED ? tess.lineIndexCache.addNew() :
                                               tess.lineIndexCache.getLast();
       firstLineIndexCache = index;
-      int findex = 0;
+      int fi0 = 0;
+      int fi1 = 0;
       short[] lastInd = {-1, -1};
-      short firstInd = -1;
       int pi0 = -1;
       int pi1 = -1;
+
+      int[] tmp = {0, 0};
+      tess.lineIndexCache.setCounter(tmp);
       for (int i = 0; i <= in.edgeCount - 1; i++) {
         int[] edge = in.edges[i];
         int i0 = edge[0];
         int i1 = edge[1];
         if (bevel) {
           if (edge[2] == EDGE_CLOSE) {
-            if (findex == index) {
-              // The first index is in the same cache block as the last segment,
-              // so we can connect them. A consequence of this is that the connecting
-              // bevel will be missing in situations with very large stroke
-              // geometry the cache ends in the middle. Code to handle this
-              // properly will be too complex for the expected benefit.
-              index = addBevel3D(edge[1], pi0, pi1, index, lastInd, firstInd, false);
-            }
-            lastInd[0] = lastInd[1] = -1; // No join with next line segment.
+            index = addBevel3D(fi0, fi1, pi0, pi1, index, lastInd, false);
           } else {
             index = addLineSegment3D(i0, i1, pi0, pi1, index, lastInd, false);
-            if (edge[2] == EDGE_START) {
-              findex = index;
-              firstInd = (short)(lastInd[0] - 2);
-            }
-            if (edge[2] == EDGE_STOP || edge[2] == EDGE_SINGLE) {
-              lastInd[0] = lastInd[1] = -1; // No join with next line segment.
-            }
           }
         } else if (edge[2] != EDGE_CLOSE) {
           index = addLineSegment3D(i0, i1, pi0, pi1, index, null, false);
         }
-        pi0 = i0;
-        pi1 = i1;
+        if (edge[2] == EDGE_START) {
+          fi0 = i0;
+          fi1 = i1;
+        }
+
+        if (edge[2] == EDGE_STOP || edge[2] == EDGE_SINGLE || edge[2] == EDGE_CLOSE) {
+          // No join with next line segment.
+          lastInd[0] = lastInd[1] = -1;
+          pi1 = pi0 = -1;
+        } else {
+          pi0 = i0;
+          pi1 = i1;
+        }
       }
+      // Adjust counts of line vertices and indices to exact values
+      tess.lineIndexCache.setCounter(null);
+      tess.lineIndexCount = icount0 + tmp[0];
+      tess.lineVertexCount = vcount0 + tmp[1];
+
       lastLineIndexCache = index;
     }
 
@@ -11741,16 +11772,16 @@ public class PGraphicsOpenGL extends PGraphics {
         if (-1 < lastInd[0] && -1 < lastInd[1]) {
           // Adding bevel triangles
           if (newCache) {
-            if (-1 < pi0 && -1 <= pi1) {
+            if (-1 < pi0 && -1 < pi1) {
               // Vertices used in the previous cache need to be copied to the
               // newly created one
-              tess.setLineVertex(vidx, strokeVertices, i0, color0);
-
               color = constStroke ? strokeColor : strokeColors[pi0];
               weight = constStroke ? strokeWeight : strokeWeights[pi0];
               weight *= transformScale();
+
+              tess.setLineVertex(vidx++, strokeVertices, pi1, color);
               tess.setLineVertex(vidx++, strokeVertices, pi1, pi0, color, -weight/2); // count+2 vert from previous block
-              tess.setLineVertex(vidx++, strokeVertices, pi1, pi0, color, +weight/2); // count+3 vert from previous block
+              tess.setLineVertex(vidx, strokeVertices, pi1, pi0, color, +weight/2); // count+3 vert from previous block
 
               tess.lineIndices[iidx++] = (short) (count + 4);
               tess.lineIndices[iidx++] = (short) (count + 5);
@@ -11785,58 +11816,53 @@ public class PGraphicsOpenGL extends PGraphics {
       return index;
     }
 
-    int addBevel3D(int i0, int pi0, int pi1, int index, short[] lastInd, short firstInd,
+    int addBevel3D(int fi0, int fi1, int pi0 ,int pi1, int index, short[] lastInd,
                    boolean constStroke) {
       IndexCache cache = tess.lineIndexCache;
       int count = cache.vertexCount[index];
-      boolean addBevel = lastInd != null && -1 < lastInd[0] && -1 < lastInd[1];
       boolean newCache = false;
-      if (PGL.MAX_VERTEX_INDEX1 <= count + (addBevel ? 1 : 0)) {
+      if (PGL.MAX_VERTEX_INDEX1 <= count + 3) {
         // We need to start a new index block for this line.
         index = cache.addNew();
         count = 0;
         newCache = true;
       }
+
       int iidx = cache.indexOffset[index] + cache.indexCount[index];
       int vidx = cache.vertexOffset[index] + cache.vertexCount[index];
-      int color0 = constStroke ? strokeColor : strokeColors[i0];
+      int color = constStroke ? strokeColor : strokeColors[fi0];
+      float weight = constStroke ? strokeWeight : strokeWeights[fi0];
+      weight *= transformScale();
 
-      if (lastInd != null) {
-        if (-1 < lastInd[0] && -1 < lastInd[1]) {
-          tess.setLineVertex(vidx, strokeVertices, i0, color0);
+      tess.setLineVertex(vidx++, strokeVertices, fi0, color);
+      tess.setLineVertex(vidx++, strokeVertices, fi0, fi1, color, +weight/2);
+      tess.setLineVertex(vidx++, strokeVertices, fi0, fi1, color, -weight/2);
 
-          if (newCache) {
-            if (-1 < pi0 && -1 <= pi1) {
-              // Vertices used in the previous cache need to be copied to the
-              // newly created one
-              int color1 = constStroke ? strokeColor : strokeColors[pi1];
+      int extra = 0;
+      if (newCache && -1 < pi0 && -1 < pi1) {
+        // Vertices used in the previous cache need to be copied to the
+        // newly created one
+        color = constStroke ? strokeColor : strokeColors[pi1];
+        weight = constStroke ? strokeWeight : strokeWeights[pi1];
+        weight *= transformScale();
 
-              tess.setLineVertex(vidx, strokeVertices, pi0, color0);
-              tess.setLineVertex(vidx, strokeVertices, pi1, color1);
+        tess.setLineVertex(vidx++, strokeVertices, pi1, pi0, color, -weight/2);
+        tess.setLineVertex(vidx  , strokeVertices, pi1, pi0, color, +weight/2);
 
-              tess.lineIndices[iidx++] = (short) (count + 4);
-              tess.lineIndices[iidx++] = (short) (count + 5);
-              tess.lineIndices[iidx++] = (short) (count + 0);
-
-              tess.lineIndices[iidx++] = (short) (count + 4);
-              tess.lineIndices[iidx++] = (short) (count + 6);
-              tess.lineIndices[iidx  ] = (short) (count + 1);
-
-              cache.incCounts(index, 6, 3);
-            }
-          } else {
-            tess.lineIndices[iidx++] = (short) (count + 0);
-            tess.lineIndices[iidx++] = lastInd[0];
-            tess.lineIndices[iidx++] = (short) (firstInd + 0);
-
-            tess.lineIndices[iidx++] = (short) (count + 0);
-            tess.lineIndices[iidx++] = lastInd[1];
-            tess.lineIndices[iidx  ] = (short) (firstInd + 1);
-
-            cache.incCounts(index, 6, 1);
-          }
-        }
+        lastInd[0] = (short) (count + 3);
+        lastInd[1] = (short) (count + 4);
+        extra = 2;
       }
+
+      tess.lineIndices[iidx++] = (short) (count + 0);
+      tess.lineIndices[iidx++] = lastInd[0];
+      tess.lineIndices[iidx++] = (short) (count + 1);
+
+      tess.lineIndices[iidx++] = (short) (count + 0);
+      tess.lineIndices[iidx++] = (short) (count + 2);
+      tess.lineIndices[iidx  ] = lastInd[1];
+
+      cache.incCounts(index, 6, 3 + extra);
 
       return index;
     }
@@ -12290,7 +12316,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
       IndexCache cache = tess.polyIndexCache;
       // In retained mode, each shape has with its own cache item, since
-      // they should always be available to be rendererd individually, even
+      // they should always be available to be rendered individually, even
       // if contained in a larger hierarchy.
       int index = in.renderMode == RETAINED ? cache.addNew() : cache.getLast();
       firstPolyIndexCache = index;
@@ -13446,9 +13472,9 @@ public class PGraphicsOpenGL extends PGraphics {
 
                 testTid = activeTid + 1;
               } else {
-                // oops, we already tested this one, probably intersecting or
-                // interlocked in loop with others, just draw it incorrectly :(
-                draw = true;
+                // oops, we already tested this one, either in one plane or
+                // interlocked in loop with others, just ignore it for now :(
+                testTid++;
               }
             }
           }
