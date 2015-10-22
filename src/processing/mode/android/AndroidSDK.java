@@ -206,7 +206,7 @@ class AndroidSDK {
    * @throws BadSDKException
    * @throws IOException
    */
-  public static AndroidSDK load() throws BadSDKException, IOException {
+  public static AndroidSDK load() throws IOException {
     // The environment variable is king. The preferences.txt entry is a page.
     final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
     if (sdkEnvPath != null) {
