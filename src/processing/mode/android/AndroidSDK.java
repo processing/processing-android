@@ -36,10 +36,12 @@ class AndroidSDK {
     "because the ANDROID_SDK variable is not set. <br>" +
     "If it is installed, click “Locate SDK path” to select the <br>" +
     "location of the SDK, or “Download SDK” to let <br>" +
-    "Processing download SDK automatically.<br><br>" +
-    "If you want to download SDK manually, you can visit <br>"+
-    "download site at http://developer.android.com/sdk.";
-
+    "Processing download the SDK automatically.<br><br>" +
+    "If you want to download the SDK manually, you can visit <br>"+
+    "http://developer.android.com/sdk/installing/index.html <br>" +
+    "and select the stand-alone SDK tools. Make sure to install <br>"+
+    "the SDK platform for API 15 (Android 4.0.3) or higher.";
+    
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
 
