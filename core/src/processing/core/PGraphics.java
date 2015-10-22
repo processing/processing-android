@@ -475,16 +475,6 @@ public class PGraphics extends PImage implements PConstants {
 
   // ........................................................
 
-  /**
-   * Java AWT Image object associated with this renderer. For P2D and P3D,
-   * this will be associated with their MemoryImageSource. For PGraphicsJava2D,
-   * it will be the offscreen drawing buffer.
-   */
-  //public Image image;
-  public Bitmap bitmap;
-
-  // ........................................................
-
   // internal color for setting/calculating
   protected float calcR, calcG, calcB, calcA;
   protected int calcRi, calcGi, calcBi, calcAi;
