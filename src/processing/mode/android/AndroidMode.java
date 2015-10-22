@@ -22,7 +22,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Preferences;
 import processing.app.Library;
 import processing.app.Messages;
 import processing.app.Platform;
@@ -109,10 +108,7 @@ public class AndroidMode extends JavaMode {
 
       // otherwise do the usual
       //    return new File(base.getSketchbookFolder(), ANDROID_CORE_FILENAME);
-      // coreZipLocation = getContentFile("android-core.zip");
-      coreZipLocation = new File(Preferences.getSketchbookPath()
-                                    + "/modes/AndroidMode/android-core.zip");
-
+      coreZipLocation = getContentFile("android-core.zip");
     }
     return coreZipLocation;
   }
