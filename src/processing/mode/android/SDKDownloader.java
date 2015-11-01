@@ -10,6 +10,7 @@ import processing.app.Base;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
+import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -86,25 +87,25 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
         // tools
         File downloadedTools = new File(tempFolder, downloadUrls.toolsFilename);
-        downloadAndUnpack(downloadUrls.toolsUrl, downloadedTools, sdkFolder);
+        downloadAndUnpack(downloadUrls.toolsUrl, downloadedTools, sdkFolder, true);
 
         // platform-tools
         File downloadedPlatformTools = new File(tempFolder, downloadUrls.platformToolsFilename);
-        downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder);
+        downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder, true);
 
         // build-tools
         File downloadedBuildTools = new File(tempFolder, downloadUrls.buildToolsFilename);
-        downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder);
+        downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder, true);
 
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
-        downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
+        downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
 
         // usb driver
         if (Platform.isWindows()) {
           File usbDriverFolder = new File(extrasFolder, "google");
           File downloadedFolder = new File(tempFolder, "latest_usb_driver_windows.zip");
-          downloadAndUnpack(URL_USB_DRIVER, downloadedFolder, usbDriverFolder);
+          downloadAndUnpack(URL_USB_DRIVER, downloadedFolder, usbDriverFolder, false);
         }
 
         if (Platform.isLinux() || Platform.isMacOS()) {
@@ -135,7 +136,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     }
 
     private void downloadAndUnpack(String urlString, File saveTo,
-                                   File unpackTo) throws IOException {
+                                   File unpackTo, boolean setExec) throws IOException {
       URL url = null;
       try {
         url = new URL(urlString);
@@ -167,7 +168,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       inputStream.close();
       outputStream.close();
 
-      extractFolder(saveTo, unpackTo);
+      extractFolder(saveTo, unpackTo, setExec);
     }
 
     /*
@@ -370,7 +371,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
   }
 
 
-  static void extractFolder(File file, File newPath) throws IOException {
+  static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
     int BUFFER = 2048;
     zip = new ZipFile(file);
     Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
@@ -387,7 +388,16 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
       // create the parent directory structure if needed
       destinationParent.mkdirs();
 
+      String ext = PApplet.getExtension(currentEntry);
+      if (setExec && ext.equals("unknown")) {        
+        // On some OS X machines the android binaries loose their executable
+        // attribute, rendering the mode unusable
+        destFile.setExecutable(true);
+      }
+      
       if (!entry.isDirectory()) {
+        // should preserve permissions
+        // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
         BufferedInputStream is = new BufferedInputStream(zip
             .getInputStream(entry));
         int currentByte;
