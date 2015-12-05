@@ -343,7 +343,7 @@ public class AndroidEditor extends JavaEditor {
         sdkMenu.add(item);
       }
 
-      if (!savedTargetSet) {
+      if (!savedTargetSet && lowestTargetAvailable != null) {
         AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
         lowestTargetMenuItem.setState(true);
       }
