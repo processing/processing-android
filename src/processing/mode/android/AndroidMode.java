@@ -170,8 +170,9 @@ public class AndroidMode extends JavaMode {
 
     String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + 
       File.separator + "platforms" + File.separator + "android-" + 
-      AndroidBuild.sdkVersion + File.separator + "android.jar";    
-    return androidJarPath;
+      AndroidBuild.sdkVersion + File.separator + "android.jar";
+    String processingAndroidCoreJarPath = new File(getFolder(), "android-core.zip").getAbsolutePath();
+    return androidJarPath + File.pathSeparatorChar + processingAndroidCoreJarPath;
   }
 
 
