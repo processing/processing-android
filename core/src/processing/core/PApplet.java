@@ -654,6 +654,12 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
+  public Activity getActivity() {
+
+    return this.activity;
+  }
+
+
   /**
    * @param method "size" or "fullScreen"
    * @param args parameters passed to the function so we can show the user
