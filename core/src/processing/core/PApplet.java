@@ -625,7 +625,7 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
-  
+
 
   public void onResume() {
 
@@ -1127,6 +1127,10 @@ public class PApplet implements PConstants, Runnable {
     }
   }
 
+
+  public Activity getActivity() {
+    return activity;
+  }
 
 //  public int sketchOrientation() {
 //    return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
