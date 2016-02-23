@@ -2088,7 +2088,7 @@ public class PApplet implements PConstants, Runnable {
     // width and height that have been set by surfaceChanged().
 //    boolean validSize = width != 0 && height != 0;
 //    println("valid size = " + validSize + " (" + width + "x" + height + ")");
-    if (canDraw()) {
+   // if (canDraw()) {
 //      if (!g.canDraw()) {
 //        // Don't draw if the renderer is not yet ready.
 //        // (e.g. OpenGL has to wait for a peer to be on screen)
@@ -2159,7 +2159,7 @@ public class PApplet implements PConstants, Runnable {
 
       frameRateLastNanos = now;
       frameCount++;
-    }
+   // }
   }
 
 
