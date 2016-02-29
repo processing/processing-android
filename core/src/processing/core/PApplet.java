@@ -4485,6 +4485,105 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
+  /**
+   * @webref input:files
+   * @param input String to parse as a JSONObject
+   * @see PApplet#loadJSONObject(String)
+   * @see PApplet#saveJSONObject(JSONObject, String)
+   */
+  public JSONObject parseJSONObject(String input) {
+    return new JSONObject(new StringReader(input));
+  }
+
+
+  /**
+   * @webref input:files
+   * @param filename name of a file in the data folder or a URL
+   * @see JSONObject
+   * @see JSONArray
+   * @see PApplet#loadJSONArray(String)
+   * @see PApplet#saveJSONObject(JSONObject, String)
+   * @see PApplet#saveJSONArray(JSONArray, String)
+   */
+  public JSONObject loadJSONObject(String filename) {
+    return new JSONObject(createReader(filename));
+  }
+
+
+  static public JSONObject loadJSONObject(File file) {
+    return new JSONObject(createReader(file));
+  }
+
+
+  /**
+   * @webref output:files
+   * @see JSONObject
+   * @see JSONArray
+   * @see PApplet#loadJSONObject(String)
+   * @see PApplet#loadJSONArray(String)
+   * @see PApplet#saveJSONArray(JSONArray, String)
+   */
+  public boolean saveJSONObject(JSONObject json, String filename) {
+    return saveJSONObject(json, filename, null);
+  }
+
+
+  /**
+   * @nowebref
+   */
+  public boolean saveJSONObject(JSONObject json, String filename, String options) {
+    return json.save(saveFile(filename), options);
+  }
+
+  
+  /**
+   * @webref input:files
+   * @param input String to parse as a JSONArray
+   * @see JSONObject
+   * @see PApplet#loadJSONObject(String)
+   * @see PApplet#saveJSONObject(JSONObject, String)
+   */
+  public JSONArray parseJSONArray(String input) {
+    return new JSONArray(new StringReader(input));
+  }
+
+
+  /**
+   * @webref input:files
+   * @param filename name of a file in the data folder or a URL
+   * @see JSONArray
+   * @see PApplet#loadJSONObject(String)
+   * @see PApplet#saveJSONObject(JSONObject, String)
+   * @see PApplet#saveJSONArray(JSONArray, String)
+   */
+  public JSONArray loadJSONArray(String filename) {
+    return new JSONArray(createReader(filename));
+  }
+
+
+  static public JSONArray loadJSONArray(File file) {
+    return new JSONArray(createReader(file));
+  }
+
+
+  /**
+   * @webref output:files
+   * @see JSONObject
+   * @see JSONArray
+   * @see PApplet#loadJSONObject(String)
+   * @see PApplet#loadJSONArray(String)
+   * @see PApplet#saveJSONObject(JSONObject, String)
+   */
+  public boolean saveJSONArray(JSONArray json, String filename) {
+    return saveJSONArray(json, filename, null);
+  }
+
+
+  public boolean saveJSONArray(JSONArray json, String filename, String options) {
+    return json.save(saveFile(filename), options);
+  }
+
+
   public Table createTable() {
     return new Table();
   }
