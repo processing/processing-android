@@ -3529,6 +3529,25 @@ public class PApplet implements PConstants, Runnable {
     System.out.flush();
   }
 
+  /**
+   * @param variables list of data, separated by commas
+   */
+  static public void print(Object... variables) {
+    StringBuilder sb = new StringBuilder();
+    for (Object o : variables) {
+      if (sb.length() != 0) {
+        sb.append(" ");
+      }
+      if (o == null) {
+        sb.append("null");
+      } else {
+        sb.append(o.toString());
+      }
+    }
+    System.out.print(sb.toString());
+  }
+
+  /*
   static public void print(Object what) {
     if (what == null) {
       // special case since this does fuggly things on > 1.1
@@ -3537,6 +3556,7 @@ public class PApplet implements PConstants, Runnable {
       System.out.println(what.toString());
     }
   }
+  */
 
   //
 
@@ -3568,6 +3588,15 @@ public class PApplet implements PConstants, Runnable {
 
   static public void println(String what) {
     print(what); System.out.println();
+  }
+
+  /**
+   * @param variables list of data, separated by commas
+   */
+  static public void println(Object... variables) {
+//    System.out.println("got " + variables.length + " variables");
+    print(variables);
+    println();
   }
 
   static public void println(Object what) {
