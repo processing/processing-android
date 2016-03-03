@@ -164,13 +164,25 @@ public class AndroidMode extends JavaMode {
     }
 
     if (sdk == null) {
-        Messages.log("Android SDK path couldn't be loaded.");
-        return "";
+      Messages.log("Android SDK path couldn't be loaded.");
+      return "";
     }
 
     String androidJarPath = sdk.getSdkFolder().getAbsolutePath() + 
       File.separator + "platforms" + File.separator + "android-" + 
       AndroidBuild.sdkVersion + File.separator + "android.jar";
+    
+    if (!new File(androidJarPath).exists()) {
+      // Try again using SDK name, I have seen the SDK stored as platforms/android-x.y.z
+      androidJarPath = sdk.getSdkFolder().getAbsolutePath() + 
+        File.separator + "platforms" + File.separator + "android-" + 
+        AndroidBuild.sdkName + File.separator + "android.jar";
+      if (!new File(androidJarPath).exists()) {
+        Messages.log("Android SDK path couldn't be loaded.");
+        return "";        
+      }
+    }
+    
     String processingAndroidCoreJarPath = new File(getFolder(), "android-core.zip").getAbsolutePath();
     return androidJarPath + File.pathSeparatorChar + processingAndroidCoreJarPath;
   }
