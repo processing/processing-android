@@ -46,6 +46,12 @@ public class AndroidPreprocessor extends PdePreprocessor {
   public static final String SMOOTH_REGEX =
       "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
+ 
+  public AndroidPreprocessor(final String sketchName) {
+    super(sketchName);
+  } 
+  
+  
   public AndroidPreprocessor(final Sketch sketch,
                              final String packageName) throws IOException {
     super(sketch.getName());
@@ -278,4 +284,21 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return androidImports;
   }
   */
+  
+  public String[] getDefaultImports() {
+//    String[] defs = super.getDefaultImports();    
+//    return defs;
+    return new String[] {
+        "java.util.HashMap",
+        "java.util.ArrayList",
+        "java.io.File",
+        "java.io.BufferedReader",
+        "java.io.PrintWriter",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.io.IOException",
+        "android.app.Activity",
+        "android.app.Fragment"
+      };    
+  }  
 }
