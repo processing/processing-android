@@ -3090,10 +3090,47 @@ public class PGraphics extends PImage implements PConstants {
    * The leading will also be reset.
    */
   public void textFont(PFont which) {
-    if (which != null) {
-      textFont = which;
+    if (which == null) {
+      throw new RuntimeException(ERROR_TEXTFONT_NULL_PFONT);
+    }
+    textFontImpl(which, which.getDefaultSize());
+  }
+
+
+  /**
+   * Useful function to set the font and size at the same time.
+   */
+  public void textFont(PFont which, float size) {
+    if (which == null) {
+      throw new RuntimeException(ERROR_TEXTFONT_NULL_PFONT);
+    }
+    // https://github.com/processing/processing/issues/3110
+    if (size <= 0) {
+      // Using System.err instead of showWarning to avoid running out of
+      // memory with a bunch of textSize() variants (cause of this bug is
+      // usually something done with map() or in a loop).
+      System.err.println("textFont: ignoring size " + size + " px:" +
+                             "the text size must be larger than zero");
+      size = textSize;
+    }
+    textFontImpl(which, size);
+  }
+
+
+  /**
+   * Called from textFont. Check the validity of args and
+   * print possible errors to the user before calling this.
+   * Subclasses will want to override this one.
+   *
+   * @param which font to set, not null
+   * @param size size to set, greater than zero
+   */
+  protected void textFontImpl(PFont which, float size) {
+    textFont = which;
 //      if (hints[ENABLE_NATIVE_FONTS]) {
-//        which.findTypeface(name);
+//        //if (which.font == null) {
+//        which.findNative();
+//        //}
 //      }
       /*
       textFontNative = which.font;
@@ -3118,20 +3155,8 @@ public class PGraphics extends PImage implements PConstants {
         // float w = font.getStringBounds(text, g2.getFontRenderContext()).getWidth();
       }
       */
-      textSize(which.size);
 
-    } else {
-      throw new RuntimeException(ERROR_TEXTFONT_NULL_PFONT);
-    }
-  }
-
-
-  /**
-   * Useful function to set the font and size at the same time.
-   */
-  public void textFont(PFont which, float size) {
-    textFont(which);
-    textSize(size);
+    handleTextSize(size);
   }
 
 

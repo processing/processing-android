@@ -417,6 +417,14 @@ public class PFont implements PConstants {
   }
 
 
+  /**
+   * Returns the size that will be used when textFont(font) is called.
+   */
+  public int getDefaultSize() {
+    return size;
+  }
+
+
   public void setSubsetting() {
     subsetting = true;
   }
