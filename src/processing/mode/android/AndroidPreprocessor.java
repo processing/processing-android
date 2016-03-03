@@ -285,6 +285,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
   }
   */
   
+  // No need for it now
+  /*
   public String[] getDefaultImports() {
 //    String[] defs = super.getDefaultImports();    
 //    return defs;
@@ -300,5 +302,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
         "android.app.Activity",
         "android.app.Fragment"
       };    
-  }  
+  } 
+  */ 
 }
