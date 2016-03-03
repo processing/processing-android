@@ -33,6 +33,7 @@ import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.preproc.PdePreprocessor;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -49,6 +50,18 @@ import java.util.TimerTask;
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
+
+  protected AndroidEditor(Base base, String path, EditorState state, 
+                          Mode mode) throws EditorException {
+    super(base, path, state, mode);
+    androidMode = (AndroidMode) mode;
+    androidMode.checkSDK(this);
+  }  
+
+  @Override
+  public PdePreprocessor createPreprocessor(final String sketchName) {
+    return new AndroidPreprocessor(sketchName);  
+  }
 
   class UpdateDeviceListTask extends TimerTask {
 
@@ -129,14 +142,6 @@ public class AndroidEditor extends JavaEditor {
         }
       }
     }
-  }
-
-
-  protected AndroidEditor(Base base, String path,
-                          EditorState state, Mode mode) throws EditorException {
-    super(base, path, state, mode);
-    androidMode = (AndroidMode) mode;
-    androidMode.checkSDK(this);
   }
 
 
