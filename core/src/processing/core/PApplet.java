@@ -59,7 +59,7 @@ import processing.event.*;
 import processing.opengl.*;
 
 
-public class PApplet implements PConstants, Runnable {
+public class PApplet extends Fragment implements PConstants, Runnable {
 
   /**
    * The activity which holds this fragment.
@@ -445,11 +445,13 @@ public class PApplet implements PConstants, Runnable {
 
   /** Called with the activity is first created. */
   @SuppressWarnings("unchecked")
-  public View onCreateView(Activity activity) {
+  @Override
+  public View onCreateView(LayoutInflater inflater, ViewGroup container,
+      Bundle savedInstanceState) {
 
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
-    this.activity = activity;
+    activity = getActivity();
     View rootView;
 
     DisplayMetrics dm = new DisplayMetrics();
@@ -625,9 +627,16 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
+  @Override
+  public void onConfigurationChanged(Configuration newConfig) {
+    if (DEBUG) System.out.println("configuration changed: " + newConfig);
+    super.onConfigurationChanged(newConfig);
+  }
 
 
+  @Override
   public void onResume() {
+    super.onResume();
 
     // TODO need to bring back app state here!
 //    surfaceView.onResume();
@@ -640,7 +649,9 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
+  @Override
   public void onPause() {
+    super.onPause();
 
     // TODO need to save all application state here!
 //    System.out.println("PApplet.onPause() called");
@@ -705,12 +716,14 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
+  @Override
   public void onDestroy() {
 //    stop();
     dispose();
     if (PApplet.DEBUG) {
       System.out.println("PApplet.onDestroy() called");
     }
+    super.onDestroy();
     //finish();
   }
 
@@ -1127,10 +1140,6 @@ public class PApplet implements PConstants, Runnable {
     }
   }
 
-
-  public Activity getActivity() {
-    return activity;
-  }
 
 //  public int sketchOrientation() {
 //    return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
@@ -1800,6 +1809,9 @@ public class PApplet implements PConstants, Runnable {
           } catch (InstantiationException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
+          } catch (java.lang.InstantiationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
           } catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -3167,7 +3179,7 @@ public class PApplet implements PConstants, Runnable {
    */
   public void link(String url, String frameTitle) {
     Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse(url));
-    activity.startActivity(viewIntent);
+    startActivity(viewIntent);
   }
 
 
@@ -8116,18 +8128,22 @@ public class PApplet implements PConstants, Runnable {
   }
 
 
-  public void tellPDE(final String message) {
+  private void tellPDE(final String message) {
     Log.i(activity.getComponentName().getPackageName(), "PROCESSING " + message);
   }
 
 
+  @Override
   public void onStart() {
     tellPDE("onStart");
+    super.onStart();
   }
 
 
+  @Override
   public void onStop() {
     tellPDE("onStop");
+    super.onStop();
   }
 
 

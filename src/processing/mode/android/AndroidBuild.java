@@ -171,7 +171,6 @@ class AndroidBuild extends JavaBuild {
 
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
-      writeSketchFragment(srcFolder);
       writeMainActivity(srcFolder);
 
 
@@ -865,73 +864,6 @@ class AndroidBuild extends JavaBuild {
     return result;
   }
 
-  private void writeSketchFragment(final File srcDirectory) {
-    File sketchFragmentFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
-        "SketchFragment.java");
-    final PrintWriter writer = PApplet.createWriter(sketchFragmentFile);
-    writer.println("package " + manifest.getPackageName() +";");
-    writer.println("import android.app.Activity;");
-    writer.println("import android.os.Bundle;");
-    writer.println("import android.view.LayoutInflater;");
-    writer.println("import android.view.View;");
-    writer.println("import android.view.ViewGroup;");
-    writer.println("import android.content.res.Configuration;");
-    writer.println("import android.app.Fragment;");
-    writer.println("import processing.core.PApplet;");
-    writer.println("public class SketchFragment extends Fragment {");
-    writer.println("  PApplet mPApplet;");
-    writer.println("  @Override");
-    writer.println("  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {");
-    writer.println("    mPApplet = new " + sketchClassName + "();");
-    writer.println("    Activity activity = getActivity();");
-    writer.println("    View rootView = mPApplet.onCreateView(activity);");
-    writer.println("    return rootView;");
-    writer.println("  }");
-
-    writer.println("  @Override");
-    writer.println("  public void onConfigurationChanged(Configuration newConfig) {");
-    writer.println("    super.onConfigurationChanged(newConfig);");
-    writer.println("  }");
-
-    writer.println("  @Override");
-    writer.println("  public void onResume() {");
-    writer.println("    super.onResume();");
-    writer.println("    mPApplet.onResume();");
-    writer.println("  }");
-
-    writer.println("  @Override");
-    writer.println("  public void onPause() {");
-    writer.println("    super.onPause();");
-    writer.println("    mPApplet.onPause();");
-    writer.println("  }");
-
-    writer.println("  @Override");
-    writer.println("    public void onDestroy() {");
-    writer.println("      mPApplet.onDestroy();");
-    writer.println("      super.onDestroy();");
-    writer.println("    }");
-
-    writer.println("  @Override");
-    writer.println("  public void onStart() {");
-    writer.println("    mPApplet.tellPDE(\"onStart\");");
-    writer.println("    super.onStart();");
-    writer.println("  }");
-
-    writer.println("  @Override");
-    writer.println("  public void onStop() {");
-    writer.println("    mPApplet.tellPDE(\"onStop\");");
-    writer.println("    super.onStop();");
-    writer.println("  }");
-
-    writer.println("  public void onBackPressed() {");
-    writer.println("    mPApplet.onBackPressed();");
-    writer.println("  }");
-
-    writer.println("}");
-    writer.flush();
-    writer.close();
-
-  }
 
   private void writeMainActivity(final File srcDirectory) {
     File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
@@ -945,9 +877,9 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.widget.FrameLayout;");
     writer.println("import android.view.ViewGroup.LayoutParams;");
     writer.println("import  android.app.FragmentTransaction;");
-    writer.println("import android.app.Fragment;");
+    writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends Activity {");
-    writer.println("    SketchFragment fragment;");
+    writer.println("    PApplet fragment;");
     writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
     writer.println("    int viewId = 0x1000;");
     writer.println("    @Override");
@@ -964,11 +896,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
         + "LayoutParams.MATCH_PARENT));");
     writer.println("        if (savedInstanceState == null) {");
-    writer.println("            fragment = new SketchFragment();");
+    writer.println("            fragment = new " + sketchClassName + "();");
     writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
     writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
     writer.println("        } else {");
-    writer.println("            fragment = (SketchFragment) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
+    writer.println("            fragment = (PApplet) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
     writer.println("        }");
     writer.println("    }");
     writer.println("    @Override");
