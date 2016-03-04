@@ -80,11 +80,17 @@
 	  description="Create AndroidMode.zip and AndroidMode.txt">
     <mkdir dir="release" />
 
+    <copy todir="mode">
+      <fileset dir="core/library">
+	    <include name="*.jar" />
+      </fileset>
+    </copy>
+
     <zip destfile="${mode.dist.path}">
       <zipfileset dir="." prefix="AndroidMode">
 	<include name="android-core.zip" />
-	<include name="mode.properties" />
-	<include name="mode/**" />
+	<include name="mode.properties" />	
+	<include name="mode/**" />	
 	<include name="examples/**" />
 	<include name="icons/**" />
 	<include name="theme/**" />

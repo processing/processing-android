@@ -59,12 +59,19 @@ import processing.event.*;
 import processing.opengl.*;
 
 
-public class PApplet extends Fragment implements PConstants, Runnable {
+public class PApplet extends Object implements PConstants, Runnable {
 
   /**
-   * The activity which holds this fragment.
+   * The activity which holds this sketch.
    */
   private Activity activity;
+
+  private Object wrapper;
+
+  /**
+   * The surface holding this sketch.
+   */
+  public PSurface surface;
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
@@ -443,15 +450,16 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    */
   public PApplet() {}
 
-  /** Called with the activity is first created. */
-  @SuppressWarnings("unchecked")
-  @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container,
-      Bundle savedInstanceState) {
+  public PApplet(Object wrapper) {
+    super();
+    this.wrapper = wrapper;
+  }
 
+
+  public void initSurface(Activity activity) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
-    activity = getActivity();
+    this.activity = activity;
     View rootView;
 
     DisplayMetrics dm = new DisplayMetrics();
@@ -501,14 +509,16 @@ public class PApplet extends Fragment implements PConstants, Runnable {
         (Class<? extends PGraphicsAndroid2D>) rendererClass);
     } else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)) {
       // P2D, P3D, and any other PGraphicsOpenGL-based renderer
-      surfaceView = new SketchSurfaceViewGL(activity, sw, sh,
-        (Class<? extends PGraphicsOpenGL>) rendererClass);
+      surface = new PSurfaceGL(this, activity, rendererClass, sw, sh);
     } else {
       // Anything else
       String message = String.format(
         "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
     }
+
+
+
 
     //set smooth level
     if (smooth == 0) {
@@ -539,7 +549,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     if (sw == displayWidth && sh == displayHeight) {
       // If using the full screen, don't embed inside other layouts
 //      window.setContentView(surfaceView);
-      rootView = surfaceView;
+      rootView = surface.getSurfaceView();
     } else {
       // If not using full screen, setup awkward view-inside-a-view so that
       // the sketch can be centered on screen. (If anyone has a more efficient
@@ -552,7 +562,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       lp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
       LinearLayout layout = new LinearLayout(activity);
-      layout.addView(surfaceView, sketchWidth(), sketchHeight());
+      layout.addView(surface.getSurfaceView(), sketchWidth(), sketchHeight());
       overallLayout.addView(layout, lp);
 //      window.setContentView(overallLayout);
       rootView = overallLayout;
@@ -623,21 +633,17 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //    println("done with loop() call, will continue...");
 
     start();
-    return rootView;
+
+    surface.setRootView(rootView);
   }
 
 
-  @Override
-  public void onConfigurationChanged(Configuration newConfig) {
-    if (DEBUG) System.out.println("configuration changed: " + newConfig);
-    super.onConfigurationChanged(newConfig);
+  public Activity getActivity() {
+    return activity;
   }
 
 
-  @Override
   public void onResume() {
-    super.onResume();
-
     // TODO need to bring back app state here!
 //    surfaceView.onResume();
     if (DEBUG) System.out.println("PApplet.onResume() called");
@@ -649,10 +655,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  @Override
   public void onPause() {
-    super.onPause();
-
     // TODO need to save all application state here!
 //    System.out.println("PApplet.onPause() called");
     paused = true;
@@ -662,6 +665,31 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //  paused = true;
 //}
 //    surfaceView.onPause();
+  }
+
+
+  private void tellPDE(final String message) {
+    Log.i(activity.getComponentName().getPackageName(), "PROCESSING " + message);
+  }
+
+
+  public void onStart() {
+    tellPDE("onStart");
+  }
+
+
+  public void onStop() {
+    tellPDE("onStop");
+  }
+
+
+  public void onDestroy() {
+//    stop();
+    dispose();
+    if (PApplet.DEBUG) {
+      System.out.println("PApplet.onDestroy() called");
+    }
+    //finish();
   }
 
 
@@ -716,19 +744,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
-  @Override
-  public void onDestroy() {
-//    stop();
-    dispose();
-    if (PApplet.DEBUG) {
-      System.out.println("PApplet.onDestroy() called");
-    }
-    super.onDestroy();
-    //finish();
-  }
-
-
-
   //////////////////////////////////////////////////////////////
 
   // ANDROID SURFACE VIEW
@@ -737,14 +752,14 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   // TODO this is only used by A2D, when finishing up a draw. but if the
   // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
   public SurfaceHolder getSurfaceHolder() {
-    return surfaceView.getHolder();
+    return surface.getSurfaceView().getHolder();
 //    return surfaceHolder;
   }
 
 
   /** Not official API, not guaranteed to work in the future. */
   public SurfaceView getSurfaceView() {
-    return surfaceView;
+    return surface.getSurfaceView();
   }
 
 
@@ -754,6 +769,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //  public interface SketchSurfaceView {
 //    public PGraphics getGraphics();
 //  }
+
+  public void surfaceChanged() {
+    surfaceChanged = true;
+  }
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -839,7 +858,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //      g.setSize(w, h);
     }
 
-
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
       super.onWindowFocusChanged(hasFocus);
@@ -879,179 +897,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-  public class SketchSurfaceViewGL extends GLSurfaceView {
-    PGraphicsOpenGL g3;
-    SurfaceHolder surfaceHolder;
-
-
-    @SuppressWarnings("deprecation")
-    public SketchSurfaceViewGL(Context context, int wide, int high,
-                               Class<? extends PGraphicsOpenGL> clazz) {
-      super(context);
-
-      // Check if the system supports OpenGL ES 2.0.
-      final ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-      final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
-      final boolean supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000;
-
-      if (!supportsGLES2) {
-        throw new RuntimeException("OpenGL ES 2.0 is not supported by this device.");
-      }
-
-      surfaceHolder = getHolder();
-      // are these two needed?
-      surfaceHolder.addCallback(this);
-      surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
-
-      // The PGraphics object needs to be created here so the renderer is not
-      // null. This is required because PApplet.onResume events (which call
-      // this.onResume() and thus require a valid renderer) are triggered
-      // before surfaceChanged() is ever called.
-
-      if (clazz.equals(PGraphics2D.class)) { // P2D
-        g3 = new PGraphics2D();
-      } else if (clazz.equals(PGraphics3D.class)) { // P3D
-        g3 = new PGraphics3D();
-      } else { // something that extends P2D, P3D, or PGraphicsOpenGL
-        try {
-          Constructor<? extends PGraphicsOpenGL> constructor =
-            clazz.getConstructor();
-          g3 = constructor.newInstance();
-        } catch (Exception exception) {
-          throw new RuntimeException(
-            "Error: Failed to initialize custom OpenGL renderer",
-            exception);
-        }
-      }
-
-      //set it up
-      g3.setParent(PApplet.this);
-      g3.setPrimary(true);
-      // Set semi-arbitrary size; will be set properly when surfaceChanged() called
-      g3.setSize(wide, high);
-
-      // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
-      setEGLContextClientVersion(2);
-
-      int quality = sketchQuality();
-      if (1 < quality) {
-        setEGLConfigChooser(((PGLES)g3.pgl).getConfigChooser(quality));
-      }
-
-      // The renderer can be set only once.
-      setRenderer(((PGLES)g3.pgl).getRenderer());
-      setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-      // assign this g to the PApplet
-      g = g3;
-
-      setFocusable(true);
-      setFocusableInTouchMode(true);
-      requestFocus();
-    }
-
-
-    public PGraphics getGraphics() {
-      return g3;
-    }
-
-
-    // part of SurfaceHolder.Callback
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-      super.surfaceCreated(holder);
-      if (DEBUG) {
-        System.out.println("surfaceCreated()");
-      }
-    }
-
-
-    // part of SurfaceHolder.Callback
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-      super.surfaceDestroyed(holder);
-      if (DEBUG) {
-        System.out.println("surfaceDestroyed()");
-      }
-
-      /*
-      // TODO: Check how to make sure of calling g3.dispose() when this call to
-      // surfaceDestoryed corresponds to the sketch being shut down instead of just
-      // taken to the background.
-
-      // For instance, something like this would be ok?
-      // The sketch is being stopped, so we dispose the resources.
-      if (!paused) {
-        g3.dispose();
-      }
-      */
-    }
-
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-      super.surfaceChanged(holder, format, w, h);
-
-      if (DEBUG) {
-        System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h);
-      }
-      surfaceChanged = true;
-//      width = w;
-//      height = h;
-//      g.setSize(w, h);
-
-      // No need to call g.setSize(width, height) b/c super.surfaceChanged()
-      // will trigger onSurfaceChanged in the renderer, which calls setSize().
-      // -- apparently not true? (100110)
-    }
-
-
-    /**
-     * Inform the view that the window focus has changed.
-     */
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-      super.onWindowFocusChanged(hasFocus);
-      surfaceWindowFocusChanged(hasFocus);
-//      super.onWindowFocusChanged(hasFocus);
-//      focused = hasFocus;
-//      if (focused) {
-////        println("got focus");
-//        focusGained();
-//      } else {
-////        println("lost focus");
-//        focusLost();
-//      }
-    }
-
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-      return surfaceTouchEvent(event);
-    }
-
-
-    @Override
-    public boolean onKeyDown(int code, android.view.KeyEvent event) {
-      surfaceKeyDown(code, event);
-      return super.onKeyDown(code, event);
-    }
-
-
-    @Override
-    public boolean onKeyUp(int code, android.view.KeyEvent event) {
-      surfaceKeyUp(code, event);
-      return super.onKeyUp(code, event);
-    }
-
-
-    // don't think i want to call stop() from here, since it might be swapping renderers
-//    @Override
-//    protected void onDetachedFromWindow() {
-//      super.onDetachedFromWindow();
-//      stop();
-//    }
-  }
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -1809,9 +1654,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
           } catch (InstantiationException e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
-          } catch (java.lang.InstantiationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
           } catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -2075,8 +1917,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
               " redraw=" + redraw);
     }
     if (surfaceChanged) {
-      int newWidth = surfaceView.getWidth();
-      int newHeight = surfaceView.getHeight();
+      int newWidth = surface.getSurfaceView().getWidth();
+      int newHeight = surface.getSurfaceView().getHeight();
       if (newWidth != width || newHeight != height) {
         width = newWidth;
         height = newHeight;
@@ -3179,7 +3021,9 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    */
   public void link(String url, String frameTitle) {
     Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse(url));
-    startActivity(viewIntent);
+    if (wrapper instanceof Fragment) {
+      ((Fragment)wrapper).startActivity(viewIntent);
+    }
   }
 
 
@@ -8125,25 +7969,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
   public void updatePixels(int x1, int y1, int x2, int y2) {
     g.updatePixels(x1, y1, x2, y2);
-  }
-
-
-  private void tellPDE(final String message) {
-    Log.i(activity.getComponentName().getPackageName(), "PROCESSING " + message);
-  }
-
-
-  @Override
-  public void onStart() {
-    tellPDE("onStart");
-    super.onStart();
-  }
-
-
-  @Override
-  public void onStop() {
-    tellPDE("onStop");
-    super.onStop();
   }
 
 

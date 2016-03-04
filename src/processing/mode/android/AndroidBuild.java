@@ -150,14 +150,11 @@ class AndroidBuild extends JavaBuild {
 
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
-//    if (!preproc.parseSketchSize()) {
-//    String[] sizeInfo = PdePreprocessor.parseSketchSize(sketch.getMainProgram());
-//    if (sizeInfo == null) {
-//      throw new SketchException("Could not parse the size() command.");
-//    }
     // On Android, this init will throw a SketchException if there's a problem with size()
     preproc.initSketchSize(sketch.getMainProgram());
-    preproc.initSketchSmooth(sketch.getMainProgram());
+    preproc.initSketchSmooth(sketch.getMainProgram());    
+    String kind = preproc.initSketchKind(sketch.getMainProgram());
+    
     sketchClassName = preprocess(srcFolder, manifest.getPackageName(), preproc, false);
     if (sketchClassName != null) {
       File tempManifest = new File(tmpFolder, "AndroidManifest.xml");
@@ -171,7 +168,9 @@ class AndroidBuild extends JavaBuild {
 
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
-      writeMainActivity(srcFolder);
+
+      
+      writeMainActivity(srcFolder, kind);
 
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
@@ -865,7 +864,16 @@ class AndroidBuild extends JavaBuild {
   }
 
 
-  private void writeMainActivity(final File srcDirectory) {
+  private void writeMainActivity(final File srcDirectory, final String sketchKind) {
+    if (sketchKind == null || sketchKind.equals("FRAGMENT")) {
+      writeFragmentActivity(srcDirectory);
+    } else if (sketchKind.equals("STEREO")) {
+      writeStereoActivity(srcDirectory);
+    }
+  }
+
+  
+  private void writeFragmentActivity(final File srcDirectory) {
     File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
         "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
@@ -876,10 +884,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.view.WindowManager;");
     writer.println("import android.widget.FrameLayout;");
     writer.println("import android.view.ViewGroup.LayoutParams;");
-    writer.println("import  android.app.FragmentTransaction;");
+    writer.println("import android.app.FragmentTransaction;");
+    writer.println("import processing.app.PFragment;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends Activity {");
-    writer.println("    PApplet fragment;");
+    writer.println("    PFragment fragment;");
     writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
     writer.println("    int viewId = 0x1000;");
     writer.println("    @Override");
@@ -895,13 +904,15 @@ class AndroidBuild extends JavaBuild {
     writer.println("        frame.setId(viewId);");
     writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
         + "LayoutParams.MATCH_PARENT));");
+    writer.println("        PApplet sketch = new " + sketchClassName + "();");    
     writer.println("        if (savedInstanceState == null) {");
-    writer.println("            fragment = new " + sketchClassName + "();");
+    writer.println("            fragment = new PFragment(sketch);");
     writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
     writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
     writer.println("        } else {");
-    writer.println("            fragment = (PApplet) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
-    writer.println("        }");
+    writer.println("            fragment = (PFragment) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
+    writer.println("            fragment.setSketch(sketch);");
+    writer.println("        }");    
     writer.println("    }");
     writer.println("    @Override");
     writer.println("    public void onBackPressed() {");
@@ -910,9 +921,14 @@ class AndroidBuild extends JavaBuild {
     writer.println("    }");
     writer.println("}");
     writer.flush();
-    writer.close();
+    writer.close();    
   }
-
+  
+  
+  private void writeStereoActivity(final File srcDirectory) {
+    
+  }
+  
 
   private void writeResLayoutMainActivity(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
