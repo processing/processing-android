@@ -53,7 +53,7 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
 import android.app.Fragment;
-
+import processing.app.PContainer;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
@@ -64,14 +64,17 @@ public class PApplet extends Object implements PConstants, Runnable {
   /**
    * The activity which holds this sketch.
    */
-  private Activity activity;
-
-  private Object wrapper;
-
+//  private Activity activity;
   /**
    * The surface holding this sketch.
    */
   public PSurface surface;
+
+//  private Object wrapper;
+
+  public PSurface getSurface() {
+    return surface;
+  }
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
@@ -448,31 +451,28 @@ public class PApplet extends Object implements PConstants, Runnable {
   /**
    * Required empty constructor.
    */
-  public PApplet() {}
-
-  public PApplet(Object wrapper) {
-    super();
-    this.wrapper = wrapper;
+  public PApplet() {
   }
 
+//  public PApplet(Object wrapper) {
+//    super();
+//    this.wrapper = wrapper;
+//  }
 
-  public void initSurface(Activity activity) {
+
+  public void initSurface(PContainer container) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
-    this.activity = activity;
-    View rootView;
-
-    DisplayMetrics dm = new DisplayMetrics();
-    activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
-    displayWidth = dm.widthPixels;
-    displayHeight = dm.heightPixels;
+    container.initDimensions();
+    displayWidth = container.getWidth();
+    displayHeight = container.getHeight();
 
     //Setting the default height and width to be fullscreen
     width = displayWidth;
     height = displayHeight;
 //    println("density is " + dm.density);
 //    println("densityDpi is " + dm.densityDpi);
-    if (DEBUG) println("display metrics: " + dm);
+//    if (DEBUG) println("display metrics: " + dm);
 
     //println("screen size is " + screenWidth + "x" + screenHeight);
 
@@ -492,6 +492,12 @@ public class PApplet extends Object implements PConstants, Runnable {
     int sw = sketchWidth();
     int sh = sketchHeight();
 
+    String rendererName = sketchRenderer();
+    g = makeGraphics(sw, sh, rendererName, true);
+    surface = g.createSurface(container);
+
+
+    /*
     // Get renderer name and class
     String rendererName = sketchRenderer();
     Class<?> rendererClass = null;
@@ -509,7 +515,7 @@ public class PApplet extends Object implements PConstants, Runnable {
         (Class<? extends PGraphicsAndroid2D>) rendererClass);
     } else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)) {
       // P2D, P3D, and any other PGraphicsOpenGL-based renderer
-      surface = new PSurfaceGL(this, activity, rendererClass, sw, sh);
+      surface = new PSurfaceGLES(this, activity, rendererClass, sw, sh);
     } else {
       // Anything else
       String message = String.format(
@@ -517,7 +523,7 @@ public class PApplet extends Object implements PConstants, Runnable {
       throw new RuntimeException(message);
     }
 
-
+*/
 
 
     //set smooth level
@@ -546,27 +552,12 @@ public class PApplet extends Object implements PConstants, Runnable {
 //      new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 //        RelativeLayout.LayoutParams.FILL_PARENT);
 
-    if (sw == displayWidth && sh == displayHeight) {
-      // If using the full screen, don't embed inside other layouts
-//      window.setContentView(surfaceView);
-      rootView = surface.getSurfaceView();
-    } else {
-      // If not using full screen, setup awkward view-inside-a-view so that
-      // the sketch can be centered on screen. (If anyone has a more efficient
-      // way to do this, please file an issue on Google Code, otherwise you
-      // can keep your "talentless hack" comments to yourself. Ahem.)
-      RelativeLayout overallLayout = new RelativeLayout(activity);
-      RelativeLayout.LayoutParams lp =
-        new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                        LayoutParams.WRAP_CONTENT);
-      lp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
-      LinearLayout layout = new LinearLayout(activity);
-      layout.addView(surface.getSurfaceView(), sketchWidth(), sketchHeight());
-      overallLayout.addView(layout, lp);
-//      window.setContentView(overallLayout);
-      rootView = overallLayout;
-    }
+    surface.initView(sw, sh);
+
+
+
+
 
     /*
     // Here we use Honeycomb API (11+) to hide (in reality, just make the status icons into small dots)
@@ -624,7 +615,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     redraw = true;  // draw this guy once
 //    firstMotion = true;
 
-    sketchPath = activity.getFilesDir().getAbsolutePath();
+    sketchPath = surface.getFilesDir().getAbsolutePath();
 
 //    Looper.prepare();
     handler = new Handler();
@@ -634,13 +625,13 @@ public class PApplet extends Object implements PConstants, Runnable {
 
     start();
 
-    surface.setRootView(rootView);
+//    surface.setRootView(rootView);
   }
 
 
-  public Activity getActivity() {
-    return activity;
-  }
+//  public Activity getActivity() {
+//    return activity;
+//  }
 
 
   public void onResume() {
@@ -669,7 +660,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 
 
   private void tellPDE(final String message) {
-    Log.i(activity.getComponentName().getPackageName(), "PROCESSING " + message);
+    Log.i(surface.getName(), "PROCESSING " + message);
   }
 
 
@@ -949,6 +940,9 @@ public class PApplet extends Object implements PConstants, Runnable {
     return 1;
   }
 
+  public int sketchKind() {
+    return PContainer.FRAGMENT;
+  }
 
   final public int sketchWidth() {
     if (fullScreen) {
@@ -978,11 +972,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 
 
   public void orientation(int which) {
-    if (which == PORTRAIT) {
-      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-    } else if (which == LANDSCAPE) {
-      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-    }
+    surface.setOrientation(which);
   }
 
 
@@ -1608,16 +1598,23 @@ public class PApplet extends Object implements PConstants, Runnable {
    * </UL>
    */
   public PGraphics createGraphics(int iwidth, int iheight, String irenderer) {
+    return makeGraphics(iwidth, iheight, irenderer, false);
+  }
+
+
+  protected PGraphics makeGraphics(int w, int h,
+                                   String renderer, boolean primary) {
     PGraphics pg = null;
-    if (irenderer.equals(JAVA2D)) {
+    if (renderer.equals(JAVA2D)) {
       pg = new PGraphicsAndroid2D();
-    } else if (irenderer.equals(P2D)) {
-      if (!g.isGL()) {
+    } else if (renderer.equals(P2D)) {
+      if (!primary && !g.isGL()) {
         throw new RuntimeException("createGraphics() with P2D requires size() to use P2D or P3D");
       }
       pg = new PGraphics2D();
-    } else if (irenderer.equals(P3D)) {
-      if (!g.isGL()) {
+
+    } else if (renderer.equals(P3D)) {
+      if (!primary && !g.isGL()) {
         throw new RuntimeException("createGraphics() with P3D or OPENGL requires size() to use P2D or P3D");
       }
       pg = new PGraphics3D();
@@ -1630,7 +1627,7 @@ public class PApplet extends Object implements PConstants, Runnable {
         // even though it should, according to this discussion:
         // http://code.google.com/p/android/issues/detail?id=11101
         // While the method that is not supposed to work, using the class loader, does:
-        rendererClass = this.getClass().getClassLoader().loadClass(irenderer);
+        rendererClass = this.getClass().getClassLoader().loadClass(renderer);
       } catch (ClassNotFoundException cnfe) {
         throw new RuntimeException("Missing renderer class");
       }
@@ -1663,12 +1660,11 @@ public class PApplet extends Object implements PConstants, Runnable {
     }
 
     pg.setParent(this);
-    pg.setPrimary(false);
-    pg.setSize(iwidth, iheight);
+    pg.setPrimary(primary);
+    pg.setSize(width, height);
 
     return pg;
   }
-
 
   /**
    * Create an offscreen graphics surface for drawing, in this case
@@ -3021,9 +3017,7 @@ public class PApplet extends Object implements PConstants, Runnable {
    */
   public void link(String url, String frameTitle) {
     Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse(url));
-    if (wrapper instanceof Fragment) {
-      ((Fragment)wrapper).startActivity(viewIntent);
-    }
+    surface.startActivity(viewIntent);
   }
 
 
@@ -4420,7 +4414,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     return json.save(saveFile(filename), options);
   }
 
-  
+
   /**
    * @webref input:files
    * @param input String to parse as a JSONArray
@@ -4573,7 +4567,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     Typeface baseFont = null;
 
     if (lowerName.endsWith(".otf") || lowerName.endsWith(".ttf")) {
-      AssetManager assets = activity.getAssets();
+      AssetManager assets = surface.getAssets();
       baseFont = Typeface.createFromAsset(assets, name);
     } else {
       baseFont = (Typeface) PFont.findNative(name);
@@ -5017,7 +5011,7 @@ public class PApplet extends Object implements PConstants, Runnable {
      */
 
     // Try the assets folder
-    AssetManager assets = activity.getAssets();
+    AssetManager assets = surface.getAssets();
     try {
       stream = assets.open(filename);
       if (stream != null) {
@@ -5055,18 +5049,18 @@ public class PApplet extends Object implements PConstants, Runnable {
     }
 
     // Attempt to load the file more directly. Doesn't like paths.
-    try {
-      // MODE_PRIVATE is default, should we use something else?
-      stream = activity.openFileInput(filename);
-      if (stream != null) {
-        return stream;
-      }
-    } catch (FileNotFoundException e) {
-      // ignore this and move on
-      //e.printStackTrace();
-    }
+//    try {
+//      // MODE_PRIVATE is default, should we use something else?
+//      stream = surface.openFileInput(filename);
+//      if (stream != null) {
+//        return stream;
+//      }
+//    } catch (FileNotFoundException e) {
+//      // ignore this and move on
+//      //e.printStackTrace();
+//    }
 
-    return null;
+    return surface.openFileInput(filename);
   }
 
 
@@ -5468,7 +5462,7 @@ public class PApplet extends Object implements PConstants, Runnable {
       if (new File(where).isAbsolute()) return where;
     } catch (Exception e) { }
 
-    return activity.getFileStreamPath(where).getAbsolutePath();
+    return surface.getFileStreamPath(where).getAbsolutePath();
   }
 
 

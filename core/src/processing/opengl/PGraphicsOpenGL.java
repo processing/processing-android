@@ -24,6 +24,7 @@
 
 package processing.opengl;
 
+import processing.app.PContainer;
 import processing.core.*;
 
 import java.lang.ref.ReferenceQueue;
@@ -655,6 +656,21 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
+  /*
+  @Override
+  // Java only
+  public PSurface createSurface() {  // ignore
+    return surface = new PSurfaceJOGL(this);
+  }
+*/
+
+  @Override
+  // Android only
+  public PSurface createSurface(PContainer container) {  // ignore
+    return new PSurfaceGLES(this, container);
+  }
+
+
   @Override
   // Android only
   public void setFrameRate(float frameRate) {
@@ -682,14 +698,6 @@ public class PGraphicsOpenGL extends PGraphics {
     }
   }
 
-
-/*
-  @Override
-  // Java only
-  public PSurface createSurface() {  // ignore
-    return surface = new PSurfaceJOGL(this);
-  }
-*/
 
   public boolean saveImpl(String filename) {
     return super.save(filename); // ASYNC save frame using PBOs not yet available on Android

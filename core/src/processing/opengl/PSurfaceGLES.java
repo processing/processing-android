@@ -1,34 +1,70 @@
 package processing.opengl;
 
-import java.lang.reflect.Constructor;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ConfigurationInfo;
+import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
+import android.service.wallpaper.WallpaperService;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import processing.app.PContainer;
+import processing.app.PFragment;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PSurface;
 
-public class PSurfaceGL implements PSurface, PConstants {
+public class PSurfaceGLES implements PSurface, PConstants {
+
+  private PContainer container;
+  private PGraphics graphics;
 
   private PApplet sketch;
+
   private Activity activity;
+  private WallpaperService wallpaper;
+
   private View view;
   private SketchSurfaceViewGL surface;
 
-  public PSurfaceGL(PApplet sketch, Activity activity, Class<?> rendererClass, int sw, int sh) {
-    this.sketch = sketch;
-    this.activity = activity;
-    surface = new SketchSurfaceViewGL(activity, sw, sh,
-      (Class<? extends PGraphicsOpenGL>)rendererClass);
+  public PSurfaceGLES(PGraphics graphics, PContainer container) {
+    this.sketch = graphics.parent;
+    this.graphics = graphics;
+    this.container = container;
+
+    if (container.getKind() == PContainer.FRAGMENT) {
+      PFragment frag = (PFragment)container;
+      activity = frag.getActivity();
+      surface = new SketchSurfaceViewGL(activity);
+    }
+  }
+
+//  public PSurfaceGLES(PGraphicsOpenGL graphics) {
+//    this.graphics = graphics;
+//  }
+//
+//  public PSurfaceGLES(PApplet sketch, Activity activity, Class<?> rendererClass, int sw, int sh) {
+//    this.sketch = sketch;
+//    this.activity = activity;
+//    surface = new SketchSurfaceViewGL(activity, sw, sh,
+//      (Class<? extends PGraphicsOpenGL>)rendererClass);
+//  }
+
+  public PContainer getContainer() {
+    return container;
   }
 
   @Override
@@ -57,9 +93,9 @@ public class PSurfaceGL implements PSurface, PConstants {
 
 
     @SuppressWarnings("deprecation")
-    public SketchSurfaceViewGL(Context context, int wide, int high,
-                               Class<? extends PGraphicsOpenGL> clazz) {
+    public SketchSurfaceViewGL(Context context) {
       super(context);
+      g3 = (PGraphicsOpenGL)graphics;
 
       // Check if the system supports OpenGL ES 2.0.
       final ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
@@ -75,11 +111,14 @@ public class PSurfaceGL implements PSurface, PConstants {
       surfaceHolder.addCallback(this);
       surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
+
+////////////////////////////////////////////////////////////////////////////////
+
       // The PGraphics object needs to be created here so the renderer is not
       // null. This is required because PApplet.onResume events (which call
       // this.onResume() and thus require a valid renderer) are triggered
       // before surfaceChanged() is ever called.
-
+/*
       if (clazz.equals(PGraphics2D.class)) { // P2D
         g3 = new PGraphics2D();
       } else if (clazz.equals(PGraphics3D.class)) { // P3D
@@ -101,6 +140,11 @@ public class PSurfaceGL implements PSurface, PConstants {
       g3.setPrimary(true);
       // Set semi-arbitrary size; will be set properly when surfaceChanged() called
       g3.setSize(wide, high);
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
       setEGLContextClientVersion(2);
@@ -123,9 +167,9 @@ public class PSurfaceGL implements PSurface, PConstants {
     }
 
 
-    public PGraphics getGraphics() {
-      return g3;
-    }
+//    public PGraphics getGraphics() {
+//      return g3;
+//    }
 
 
     // part of SurfaceHolder.Callback
@@ -223,5 +267,76 @@ public class PSurfaceGL implements PSurface, PConstants {
 //      super.onDetachedFromWindow();
 //      stop();
 //    }
+  }
+
+  public AssetManager getAssets() {
+    return activity.getAssets();
+//    return wallpaper.getBaseContext().getAssets();
+  }
+
+  public void startActivity(Intent intent) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      container.startActivity(intent);
+    }
+  }
+
+  public void initView(int sketchWidth, int sketchHeight) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      int displayWidth = container.getWidth();
+      int displayHeight = container.getHeight();
+      View rootView;
+      if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
+        // If using the full screen, don't embed inside other layouts
+//        window.setContentView(surfaceView);
+        rootView = getSurfaceView();
+      } else {
+        // If not using full screen, setup awkward view-inside-a-view so that
+        // the sketch can be centered on screen. (If anyone has a more efficient
+        // way to do this, please file an issue on Google Code, otherwise you
+        // can keep your "talentless hack" comments to yourself. Ahem.)
+        RelativeLayout overallLayout = new RelativeLayout(activity);
+        RelativeLayout.LayoutParams lp =
+          new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                          LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
+
+        LinearLayout layout = new LinearLayout(activity);
+        layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
+        overallLayout.addView(layout, lp);
+//        window.setContentView(overallLayout);
+        rootView = overallLayout;
+      }
+      setRootView(rootView);
+    }
+  }
+
+  public String getName() {
+    return activity.getComponentName().getPackageName();
+  }
+
+  public void setOrientation(int which) {
+    if (which == PORTRAIT) {
+      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    } else if (which == LANDSCAPE) {
+      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    }
+  }
+
+  public File getFilesDir() {
+    return activity.getFilesDir();
+  }
+
+  public InputStream openFileInput(String filename) {
+    try {
+      return activity.openFileInput(filename);
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public File getFileStreamPath(String path) {
+    return activity.getFileStreamPath(path);
   }
 }

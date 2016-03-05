@@ -32,9 +32,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import processing.app.PContainer;
 import processing.opengl.PGL;
 import processing.opengl.PShader;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 
 
@@ -721,6 +721,10 @@ public class PGraphics extends PImage implements PConstants {
   public void dispose() {  // ignore
   }
 
+
+  public PSurface createSurface(PContainer container) {  // ignore
+    return null;
+  }
 
 
   //////////////////////////////////////////////////////////////

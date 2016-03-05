@@ -1,20 +1,18 @@
 package processing.app;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 import android.app.Fragment;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import processing.core.PApplet;
-import processing.core.PConstants;
 
-public class PFragment extends Fragment implements PConstants {
+public class PFragment extends Fragment implements PContainer {
 
+  private DisplayMetrics metrics;
   private PApplet sketch;
 
   public PFragment() {
@@ -25,14 +23,31 @@ public class PFragment extends Fragment implements PConstants {
     this.sketch = sketch;
   }
 
+  public void initDimensions() {
+    DisplayMetrics dm = new DisplayMetrics();
+    getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+  }
+
+  public int getWidth() {
+    return metrics.widthPixels;
+  }
+
+  public int getHeight() {
+    return metrics.heightPixels;
+  }
+
+  public int getKind() {
+    return FRAGMENT;
+  }
+
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
   }
 
   @Override
-  public View onCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     if (sketch != null) {
-      sketch.initSurface(getActivity());
+      sketch.initSurface(this);
       return sketch.surface.getRootView();
     } else {
       return null;
