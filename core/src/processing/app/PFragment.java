@@ -24,15 +24,17 @@ public class PFragment extends Fragment implements PContainer {
   }
 
   public void initDimensions() {
-    DisplayMetrics dm = new DisplayMetrics();
-    getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+    metrics = new DisplayMetrics();
+    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
   }
 
   public int getWidth() {
+    System.out.println(metrics.widthPixels);
     return metrics.widthPixels;
   }
 
   public int getHeight() {
+    System.out.println(metrics.heightPixels);
     return metrics.heightPixels;
   }
 
