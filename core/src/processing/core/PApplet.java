@@ -452,15 +452,10 @@ public class PApplet extends Object implements PConstants, Runnable {
    * Required empty constructor.
    */
   public PApplet() {
+
   }
 
-//  public PApplet(Object wrapper) {
-//    super();
-//    this.wrapper = wrapper;
-//  }
-
-
-  public void initSurface(PContainer container) {
+  public void initSurface(PContainer container, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     container.initDimensions();
@@ -494,7 +489,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 
     String rendererName = sketchRenderer();
     g = makeGraphics(sw, sh, rendererName, true);
-    surface = g.createSurface(container);
+    surface = g.createSurface(container, holder);
 
 
     /*
@@ -624,8 +619,6 @@ public class PApplet extends Object implements PConstants, Runnable {
 //    println("done with loop() call, will continue...");
 
     start();
-
-//    surface.setRootView(rootView);
   }
 
 
@@ -3125,6 +3118,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     thread = null;
 
     // call to shut down renderer, in case it needs it (pdf does)
+    if (surface != null) surface.dispose();
     if (g != null) g.dispose();
 
     handleMethods("dispose");

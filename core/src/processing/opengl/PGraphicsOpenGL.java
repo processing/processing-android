@@ -33,6 +33,8 @@ import java.net.URL;
 import java.nio.*;
 import java.util.*;
 
+import android.view.SurfaceHolder;
+
 
 /**
  * OpenGL renderer.
@@ -666,8 +668,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   // Android only
-  public PSurface createSurface(PContainer container) {  // ignore
-    return new PSurfaceGLES(this, container);
+  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
+    return new PSurfaceGLES(this, container, holder);
   }
 
 
@@ -1480,10 +1482,10 @@ public class PGraphicsOpenGL extends PGraphics {
       getPrimaryPG().setCurrentPG(this);
     }
 
-    if (!pgl.threadIsCurrent()) {
-      PGraphics.showWarning(GL_THREAD_NOT_CURRENT);
-      return;
-    }
+//    if (!pgl.threadIsCurrent()) {
+//      PGraphics.showWarning(GL_THREAD_NOT_CURRENT);
+//      return;
+//    }
 
     // This has to go after the surface initialization, otherwise offscreen
     // surfaces will have a null gl object.
@@ -6516,12 +6518,13 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected boolean checkGLThread() {
-    if (pgl.threadIsCurrent()) {
-      return true;
-    } else {
-      PGraphics.showWarning(OPENGL_THREAD_ERROR);
-      return false;
-    }
+//    if (pgl.threadIsCurrent()) {
+//      return true;
+//    } else {
+//      PGraphics.showWarning(OPENGL_THREAD_ERROR);
+//      return false;
+//    }
+    return true;
   }
 
 

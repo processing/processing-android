@@ -14,6 +14,8 @@ public interface PSurface {
   public Activity getActivity();
   public PContainer getContainer();
 
+  public void dispose();
+
   public View getRootView();
 
   public String getName();

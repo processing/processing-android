@@ -40,7 +40,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
   private View view;
   private SketchSurfaceViewGL surface;
 
-  public PSurfaceGLES(PGraphics graphics, PContainer container) {
+  public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceHolder holder) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.container = container;
@@ -48,7 +48,10 @@ public class PSurfaceGLES implements PSurface, PConstants {
     if (container.getKind() == PContainer.FRAGMENT) {
       PFragment frag = (PFragment)container;
       activity = frag.getActivity();
-      surface = new SketchSurfaceViewGL(activity);
+      surface = new SketchSurfaceViewGL(activity, holder);
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      wallpaper = (WallpaperService)container;
+      surface = new SketchSurfaceViewGL(wallpaper, holder);
     }
   }
 
@@ -93,12 +96,12 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
     @SuppressWarnings("deprecation")
-    public SketchSurfaceViewGL(Context context) {
+    public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
       super(context);
       g3 = (PGraphicsOpenGL)graphics;
 
       // Check if the system supports OpenGL ES 2.0.
-      final ActivityManager activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+      final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
       final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
       final boolean supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000;
 
@@ -106,45 +109,15 @@ public class PSurfaceGLES implements PSurface, PConstants {
         throw new RuntimeException("OpenGL ES 2.0 is not supported by this device.");
       }
 
-      surfaceHolder = getHolder();
+      surfaceHolder = null;
+      if (holder == null) {
+        surfaceHolder = getHolder();
+      } else {
+        surfaceHolder = holder;
+      }
       // are these two needed?
       surfaceHolder.addCallback(this);
       surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-      // The PGraphics object needs to be created here so the renderer is not
-      // null. This is required because PApplet.onResume events (which call
-      // this.onResume() and thus require a valid renderer) are triggered
-      // before surfaceChanged() is ever called.
-/*
-      if (clazz.equals(PGraphics2D.class)) { // P2D
-        g3 = new PGraphics2D();
-      } else if (clazz.equals(PGraphics3D.class)) { // P3D
-        g3 = new PGraphics3D();
-      } else { // something that extends P2D, P3D, or PGraphicsOpenGL
-        try {
-          Constructor<? extends PGraphicsOpenGL> constructor =
-            clazz.getConstructor();
-          g3 = constructor.newInstance();
-        } catch (Exception exception) {
-          throw new RuntimeException(
-            "Error: Failed to initialize custom OpenGL renderer",
-            exception);
-        }
-      }
-
-      //set it up
-      g3.setParent(sketch);
-      g3.setPrimary(true);
-      // Set semi-arbitrary size; will be set properly when surfaceChanged() called
-      g3.setSize(wide, high);
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-
-
 
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
       setEGLContextClientVersion(2);
@@ -157,9 +130,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
       // The renderer can be set only once.
       setRenderer(((PGLES)g3.pgl).getRenderer());
       setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-
-      // assign this g to the PApplet
-      sketch.g = g3;
+      setPreserveEGLContextOnPause(true);
 
       setFocusable(true);
       setFocusableInTouchMode(true);
@@ -167,10 +138,17 @@ public class PSurfaceGLES implements PSurface, PConstants {
     }
 
 
-//    public PGraphics getGraphics() {
-//      return g3;
-//    }
 
+    @Override
+    public SurfaceHolder getHolder() {
+      if (surfaceHolder != null) return surfaceHolder;
+      else return super.getHolder();
+    }
+
+
+    public void onDestroy() {
+      super.onDetachedFromWindow();
+    }
 
     // part of SurfaceHolder.Callback
     @Override
@@ -270,8 +248,12 @@ public class PSurfaceGLES implements PSurface, PConstants {
   }
 
   public AssetManager getAssets() {
-    return activity.getAssets();
-//    return wallpaper.getBaseContext().getAssets();
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getAssets();
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getBaseContext().getAssets();
+    }
+    return null;
   }
 
   public void startActivity(Intent intent) {
@@ -307,36 +289,62 @@ public class PSurfaceGLES implements PSurface, PConstants {
         rootView = overallLayout;
       }
       setRootView(rootView);
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+
     }
   }
 
   public String getName() {
-    return activity.getComponentName().getPackageName();
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getComponentName().getPackageName();
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getPackageName();
+    }
+    return "";
   }
 
   public void setOrientation(int which) {
-    if (which == PORTRAIT) {
-      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-    } else if (which == LANDSCAPE) {
-      activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    if (container.getKind() == PContainer.FRAGMENT) {
+      if (which == PORTRAIT) {
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+      } else if (which == LANDSCAPE) {
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+      }
     }
   }
 
   public File getFilesDir() {
-    return activity.getFilesDir();
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getFilesDir();
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getFilesDir();
+    }
+    return null;
   }
 
   public InputStream openFileInput(String filename) {
-    try {
-      return activity.openFileInput(filename);
-    } catch (FileNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    if (container.getKind() == PContainer.FRAGMENT) {
+      try {
+        return activity.openFileInput(filename);
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
     }
     return null;
   }
 
   public File getFileStreamPath(String path) {
-    return activity.getFileStreamPath(path);
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getFileStreamPath(path);
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getFileStreamPath(path);
+    }
+    return null;
+  }
+
+  public void dispose() {
+    // TODO Auto-generated method stub
+    surface.onDestroy();
   }
 }

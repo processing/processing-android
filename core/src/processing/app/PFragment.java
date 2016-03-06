@@ -29,12 +29,10 @@ public class PFragment extends Fragment implements PContainer {
   }
 
   public int getWidth() {
-    System.out.println(metrics.widthPixels);
     return metrics.widthPixels;
   }
 
   public int getHeight() {
-    System.out.println(metrics.heightPixels);
     return metrics.heightPixels;
   }
 
@@ -49,7 +47,7 @@ public class PFragment extends Fragment implements PContainer {
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     if (sketch != null) {
-      sketch.initSurface(this);
+      sketch.initSurface(this, null);
       return sketch.surface.getRootView();
     } else {
       return null;

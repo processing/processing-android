@@ -1173,7 +1173,7 @@ public class PGLES extends PGL {
 
   @Override
   protected void viewportImpl(int x, int y, int w, int h) {
-    gl.glViewport(x, y, w, h);
+    GLES20.glViewport(x, y, w, h);
   }
 
 
@@ -1337,7 +1337,7 @@ public class PGLES extends PGL {
 
   @Override
   public void texParameterf(int target, int pname, float param) {
-    gl.glTexParameterf(target, pname, param);
+    GLES20.glTexParameterf(target, pname, param);
   }
 
   @Override
