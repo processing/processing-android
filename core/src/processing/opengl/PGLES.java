@@ -206,7 +206,7 @@ public class PGLES extends PGL {
   @Override
   protected void requestDraw() {
     if (graphics.initialized && sketch.canDraw()) {
-//      glview.requestRender();
+      glview.requestRender();
     }
   }
 
@@ -274,12 +274,12 @@ public class PGLES extends PGL {
     }
 
     public void onDrawFrame(GL10 igl) {
-      System.out.println("drawing frame " + sketch.frameCount);
+//      System.out.println("drawing frame " + sketch.frameCount);
       gl = igl;
       glThread = Thread.currentThread();
-//      sketch.handleDraw();
-      gl.glClearColor(sketch.random(0, 1), 0, 0, 1);
-      gl.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+      sketch.handleDraw();
+//      gl.glClearColor(sketch.random(0, 1), 0, 0, 1);
+//      gl.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
     }
 

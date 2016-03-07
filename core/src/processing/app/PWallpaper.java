@@ -135,6 +135,26 @@ public class PWallpaper extends WallpaperService implements PContainer {
         // will trigger onSurfaceChanged in the renderer, which calls setSize().
         // -- apparently not true? (100110)
       }
+
+      @Override
+      public boolean onTouchEvent(MotionEvent event) {
+        return sketch.surfaceTouchEvent(event);
+      }
+
+
+      @Override
+      public boolean onKeyDown(int code, android.view.KeyEvent event) {
+        sketch.surfaceKeyDown(code, event);
+        return super.onKeyDown(code, event);
+      }
+
+
+      @Override
+      public boolean onKeyUp(int code, android.view.KeyEvent event) {
+        sketch.surfaceKeyUp(code, event);
+        return super.onKeyUp(code, event);
+      }
+
     }
 
 
@@ -146,15 +166,19 @@ public class PWallpaper extends WallpaperService implements PContainer {
         sketch.initSurface(PWallpaper.this, view);
         view.initRenderer();
 
+        // By default we don't get touch events, so enable them.
+        setTouchEventsEnabled(true);
+
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable(){
             public void run() {
-                view.requestRender();
+//                view.requestRender();
+                sketch.g.requestDraw();
                 handler.postDelayed(this, 30);
             }
         }, 40);
 
-        sketch.start();
+//        sketch.start();
       }
     }
 
@@ -182,6 +206,23 @@ public class PWallpaper extends WallpaperService implements PContainer {
       } else {
         sketch.onPause();
       }
+    }
+
+    /*
+     * Store the position of the touch event so we can use it for drawing
+     * later
+     */
+    @Override
+    public void onTouchEvent(MotionEvent event) {
+//      if (event.getAction() == MotionEvent.ACTION_MOVE) {
+//        mTouchX = event.getX();
+//        mTouchY = event.getY();
+//      } else {
+//        mTouchX = -1;
+//        mTouchY = -1;
+//      }
+      sketch.surfaceTouchEvent(event);
+      super.onTouchEvent(event);
     }
 
     @Override

@@ -79,8 +79,8 @@ public class PApplet extends Object implements PConstants, Runnable {
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
 
-  static final public boolean DEBUG = true;
-//  static final public boolean DEBUG = false;
+//  static final public boolean DEBUG = true;
+  static final public boolean DEBUG = false;
 
   /** The frame containing this applet (if any) */
 //  public Frame frame;
@@ -465,6 +465,8 @@ public class PApplet extends Object implements PConstants, Runnable {
     //Setting the default height and width to be fullscreen
     width = displayWidth;
     height = displayHeight;
+    println("setting width/height to " + width + " " + height);
+
 //    println("density is " + dm.density);
 //    println("densityDpi is " + dm.densityDpi);
 //    if (DEBUG) println("display metrics: " + dm);
@@ -1904,13 +1906,13 @@ public class PApplet extends Object implements PConstants, Runnable {
               " redraw=" + redraw);
     }
     if (surfaceChanged) {
-      int newWidth = surface.getSurfaceView().getWidth();
-      int newHeight = surface.getSurfaceView().getHeight();
-      if (newWidth != width || newHeight != height) {
-        width = newWidth;
-        height = newHeight;
-        g.setSize(width, height);
-      }
+//      int newWidth = surface.getSurfaceView().getWidth();
+//      int newHeight = surface.getSurfaceView().getHeight();
+//      if (newWidth != width || newHeight != height) {
+//        width = newWidth;
+//        height = newHeight;
+//        g.setSize(width, height);
+//      }
       surfaceChanged = false;
       surfaceReady = true;
       if (DEBUG) {
