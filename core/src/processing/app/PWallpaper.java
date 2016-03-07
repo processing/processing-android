@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
+import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -141,9 +142,18 @@ public class PWallpaper extends WallpaperService implements PContainer {
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
       if (sketch != null) {
-        GLWallpaperSurfaceView view = new GLWallpaperSurfaceView(PWallpaper.this);
+        final GLWallpaperSurfaceView view = new GLWallpaperSurfaceView(PWallpaper.this);
         sketch.initSurface(PWallpaper.this, view);
         view.initRenderer();
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable(){
+            public void run() {
+                view.requestRender();
+                handler.postDelayed(this, 30);
+            }
+        }, 40);
+
         sketch.start();
       }
     }
