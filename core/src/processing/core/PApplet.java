@@ -79,8 +79,8 @@ public class PApplet extends Object implements PConstants, Runnable {
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
 
-//  static final public boolean DEBUG = true;
-  static final public boolean DEBUG = false;
+  static final public boolean DEBUG = true;
+//  static final public boolean DEBUG = false;
 
   /** The frame containing this applet (if any) */
 //  public Frame frame;
@@ -455,7 +455,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 
   }
 
-  public void initSurface(PContainer container, SurfaceHolder holder) {
+  public void initSurface(PContainer container, SurfaceView view) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     container.initDimensions();
@@ -489,7 +489,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 
     String rendererName = sketchRenderer();
     g = makeGraphics(sw, sh, rendererName, true);
-    surface = g.createSurface(container, holder);
+    surface = g.createSurface(container, view);
 
 
     /*
@@ -617,8 +617,6 @@ public class PApplet extends Object implements PConstants, Runnable {
 //    println("calling loop()");
 //    Looper.loop();
 //    println("done with loop() call, will continue...");
-
-    start();
   }
 
 

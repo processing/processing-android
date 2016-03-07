@@ -48,6 +48,7 @@ public class PFragment extends Fragment implements PContainer {
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(this, null);
+      sketch.start();
       return sketch.surface.getRootView();
     } else {
       return null;

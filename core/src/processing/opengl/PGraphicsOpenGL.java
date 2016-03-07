@@ -33,7 +33,9 @@ import java.net.URL;
 import java.nio.*;
 import java.util.*;
 
+import android.opengl.GLES20;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 
 /**
@@ -668,8 +670,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   // Android only
-  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
-    return new PSurfaceGLES(this, container, holder);
+  public PSurface createSurface(PContainer container, SurfaceView view) {  // ignore
+    return new PSurfaceGLES(this, container, view);
   }
 
 

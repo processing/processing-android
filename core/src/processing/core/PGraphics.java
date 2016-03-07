@@ -37,6 +37,7 @@ import processing.opengl.PGL;
 import processing.opengl.PShader;
 import android.graphics.Color;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 
 /**
@@ -723,7 +724,7 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
+  public PSurface createSurface(PContainer container, SurfaceView view) {  // ignore
     return null;
   }
 

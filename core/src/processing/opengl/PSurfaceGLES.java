@@ -38,9 +38,9 @@ public class PSurfaceGLES implements PSurface, PConstants {
   private WallpaperService wallpaper;
 
   private View view;
-  private SketchSurfaceViewGL surface;
+  private SurfaceView surface;
 
-  public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceHolder holder) {
+  public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceView view) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.container = container;
@@ -48,11 +48,12 @@ public class PSurfaceGLES implements PSurface, PConstants {
     if (container.getKind() == PContainer.FRAGMENT) {
       PFragment frag = (PFragment)container;
       activity = frag.getActivity();
-      surface = new SketchSurfaceViewGL(activity, holder);
+      if (view == null) surface = new SketchSurfaceViewGL(activity);
     } else if (container.getKind() == PContainer.WALLPAPER) {
       wallpaper = (WallpaperService)container;
-      surface = new SketchSurfaceViewGL(wallpaper, holder);
+      if (view == null) surface = new SketchSurfaceViewGL(wallpaper);
     }
+    if (view != null) surface = view;
   }
 
 //  public PSurfaceGLES(PGraphicsOpenGL graphics) {
@@ -96,7 +97,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
     @SuppressWarnings("deprecation")
-    public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
+    public SketchSurfaceViewGL(Context context) {
       super(context);
       g3 = (PGraphicsOpenGL)graphics;
 
@@ -109,12 +110,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
         throw new RuntimeException("OpenGL ES 2.0 is not supported by this device.");
       }
 
-      surfaceHolder = null;
-      if (holder == null) {
-        surfaceHolder = getHolder();
-      } else {
-        surfaceHolder = holder;
-      }
+      surfaceHolder = getHolder();
       // are these two needed?
       surfaceHolder.addCallback(this);
       surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
@@ -135,14 +131,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
       setFocusable(true);
       setFocusableInTouchMode(true);
       requestFocus();
-    }
-
-
-
-    @Override
-    public SurfaceHolder getHolder() {
-      if (surfaceHolder != null) return surfaceHolder;
-      else return super.getHolder();
     }
 
 
@@ -290,7 +278,31 @@ public class PSurfaceGLES implements PSurface, PConstants {
       }
       setRootView(rootView);
     } else if (container.getKind() == PContainer.WALLPAPER) {
+      int displayWidth = container.getWidth();
+      int displayHeight = container.getHeight();
+      View rootView;
+      if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
+        // If using the full screen, don't embed inside other layouts
+//        window.setContentView(surfaceView);
+        rootView = getSurfaceView();
+      } else {
+        // If not using full screen, setup awkward view-inside-a-view so that
+        // the sketch can be centered on screen. (If anyone has a more efficient
+        // way to do this, please file an issue on Google Code, otherwise you
+        // can keep your "talentless hack" comments to yourself. Ahem.)
+        RelativeLayout overallLayout = new RelativeLayout(wallpaper);
+        RelativeLayout.LayoutParams lp =
+          new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                          LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
+        LinearLayout layout = new LinearLayout(wallpaper);
+        layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
+        overallLayout.addView(layout, lp);
+//        window.setContentView(overallLayout);
+        rootView = overallLayout;
+      }
+      setRootView(rootView);
     }
   }
 
@@ -345,6 +357,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
   public void dispose() {
     // TODO Auto-generated method stub
-    surface.onDestroy();
+//    surface.onDestroy();
   }
 }

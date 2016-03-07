@@ -274,9 +274,13 @@ public class PGLES extends PGL {
     }
 
     public void onDrawFrame(GL10 igl) {
+      System.out.println("drawing frame " + sketch.frameCount);
       gl = igl;
       glThread = Thread.currentThread();
       sketch.handleDraw();
+//      gl.glClearColor(0, 0, 1, 1);
+//      gl.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+
     }
 
     public void onSurfaceChanged(GL10 igl, int iwidth, int iheight) {
