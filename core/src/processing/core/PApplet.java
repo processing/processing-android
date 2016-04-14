@@ -40,6 +40,7 @@ import android.content.res.Configuration;
 import android.graphics.*;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.format.Time;
@@ -71,6 +72,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
 //  static final public boolean DEBUG = true;
   static final public boolean DEBUG = false;
+
+  // Convenience public constant holding the SDK version, akin to platform in Java mode
+  static final public int SDK = android.os.Build.VERSION.SDK_INT;
+//  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
 
   /** The frame containing this applet (if any) */
 //  public Frame frame;
@@ -454,36 +459,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     activity = getActivity();
     View rootView;
 
-    DisplayMetrics dm = new DisplayMetrics();
-    activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
-    displayWidth = dm.widthPixels;
-    displayHeight = dm.heightPixels;
-
-    //Setting the default height and width to be fullscreen
-    width = displayWidth;
-    height = displayHeight;
-//    println("density is " + dm.density);
-//    println("densityDpi is " + dm.densityDpi);
-    if (DEBUG) println("display metrics: " + dm);
-
-    //println("screen size is " + screenWidth + "x" + screenHeight);
-
-//    LinearLayout layout = new LinearLayout(this);
-//    layout.setOrientation(LinearLayout.VERTICAL | LinearLayout.HORIZONTAL);
-//    viewGroup = new ViewGroup();
-//    surfaceView.setLayoutParams();
-//    viewGroup.setLayoutParams(LayoutParams.)
-//    RelativeLayout layout = new RelativeLayout(this);
-//    RelativeLayout overallLayout = new RelativeLayout(this);
-//    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.FILL_PARENT);
-//lp.addRule(RelativeLayout.RIGHT_OF, tv1.getId());
-//    layout.setGravity(RelativeLayout.CENTER_IN_PARENT);
-
-    handleSettings();
-
-    int sw = sketchWidth();
-    int sh = sketchHeight();
-
     // Get renderer name and class
     String rendererName = sketchRenderer();
     Class<?> rendererClass = null;
@@ -495,6 +470,9 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       throw new RuntimeException(message, exception);
     }
 
+    // Dummy values for initialization, setSize() will be called later onSurfaceChanged()
+    int sw = 0;
+    int sh = 0;
     if (rendererName.equals(JAVA2D)) {
       // JAVA2D renderer
       surfaceView = new SketchSurfaceView(activity, sw, sh,
@@ -509,6 +487,40 @@ public class PApplet extends Fragment implements PConstants, Runnable {
         "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
     }
+
+    handleSettings();
+
+    if (fullScreen) {
+      int visibility;
+      if (SDK < android.os.Build.VERSION_CODES.KITKAT) {
+        // Pre-4.4
+        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+      } else {
+        // 4.4 and higher. Equivalent to:
+        // View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+        // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+        // View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE
+        // so this line can be build with SDK < 4.4
+        visibility = 256 | 512 | 1024 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4 | 2048;
+      }
+      surfaceView.setSystemUiVisibility(visibility);
+    }
+
+    // Getting the display metrics only after setting fullscreen mode
+    DisplayMetrics dm = new DisplayMetrics();
+    activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+    displayWidth = dm.widthPixels;
+    displayHeight = dm.heightPixels;
+//    println("density is " + dm.density);
+//    println("densityDpi is " + dm.densityDpi);
+    if (DEBUG) println("display metrics: " + dm);
+
+    if (fullScreen) {
+      // Setting the default height and width to be fullscreen
+      width = displayWidth;
+      height = displayHeight;
+    }
+
 
     //set smooth level
     if (smooth == 0) {
@@ -536,7 +548,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //      new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 //        RelativeLayout.LayoutParams.FILL_PARENT);
 
-    if (sw == displayWidth && sh == displayHeight) {
+    if (width == displayWidth && height == displayHeight) {
       // If using the full screen, don't embed inside other layouts
 //      window.setContentView(surfaceView);
       rootView = surfaceView;
@@ -554,6 +566,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       LinearLayout layout = new LinearLayout(activity);
       layout.addView(surfaceView, sketchWidth(), sketchHeight());
       overallLayout.addView(layout, lp);
+      overallLayout.setBackgroundColor(sketchWindowColor());
 //      window.setContentView(overallLayout);
       rootView = overallLayout;
     }
@@ -793,7 +806,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       }
 
       // Set semi-arbitrary size; will be set properly when surfaceChanged() called
-      g2.setSize(wide, high);
+//      g2.setSize(wide, high);
 //      newGraphics.setSize(getWidth(), getHeight());
       g2.setParent(PApplet.this);
       g2.setPrimary(true);
@@ -832,11 +845,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
         System.out.println("SketchSurfaceView2D.surfaceChanged() " + w + " " + h);
       }
       surfaceChanged = true;
-
-//      width = w;
-//      height = h;
-//
-//      g.setSize(w, h);
+      // Display width/height migth change if the orientation changes.
+      displayHeight = w;
+      displayHeight = h;
+      g.setSize(sketchWidth(), sketchHeight());
     }
 
 
@@ -849,6 +861,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+      if (fullScreen && SDK < android.os.Build.VERSION_CODES.KITKAT) {
+        // The best we can do pre-KitKat to keep the navigation bar hidden
+        surfaceView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+      }
       return surfaceTouchEvent(event);
     }
 
@@ -928,7 +944,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       g3.setParent(PApplet.this);
       g3.setPrimary(true);
       // Set semi-arbitrary size; will be set properly when surfaceChanged() called
-      g3.setSize(wide, high);
+//      g3.setSize(wide, high);
 
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
       setEGLContextClientVersion(2);
@@ -1027,6 +1043,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+      if (fullScreen && SDK < android.os.Build.VERSION_CODES.KITKAT) {
+        // The best we can do pre-KitKat to keep the navigation bar hidden
+        surfaceView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+      }
       return surfaceTouchEvent(event);
     }
 

@@ -285,7 +285,9 @@ public class PGLES extends PGL {
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
-      graphics.setSize(iwidth, iheight);
+      sketch.displayHeight = iwidth;
+      sketch.displayHeight = iheight;
+      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
     }
 
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {
