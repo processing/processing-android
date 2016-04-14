@@ -492,7 +492,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     if (fullScreen) {
       int visibility;
-      if (SDK < android.os.Build.VERSION_CODES.KITKAT) {
+      if (SDK < 19) {
         // Pre-4.4
         visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
       } else {
@@ -861,7 +861,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-      if (fullScreen && SDK < android.os.Build.VERSION_CODES.KITKAT) {
+      if (fullScreen && SDK < 19) {
         // The best we can do pre-KitKat to keep the navigation bar hidden
         surfaceView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
       }
@@ -1043,7 +1043,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-      if (fullScreen && SDK < android.os.Build.VERSION_CODES.KITKAT) {
+      if (fullScreen && SDK < 19) {
         // The best we can do pre-KitKat to keep the navigation bar hidden
         surfaceView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
       }
