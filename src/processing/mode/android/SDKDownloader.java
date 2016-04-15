@@ -10,6 +10,7 @@ import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
+import processing.mode.android.AndroidSDK.CancelException;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -50,6 +51,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private Frame editor;
   private AndroidMode mode;
   private AndroidSDK sdk;
+  private boolean cancelled;
   
   private int totalSize = 0;
   private static ZipFile zip;
@@ -274,19 +276,24 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   }
 
   public SDKDownloader(Frame editor, AndroidMode mode) {
-    super(editor, "Android SDK downloading...", true);
+    super(editor, "", true);
     this.editor = editor;
     this.mode = mode;
-    this.sdk = null;
+    this.sdk = null;    
     createLayout();
   }
   
   public void run() {
+    cancelled = false;
     downloadTask = new SDKDownloadTask();
     downloadTask.addPropertyChangeListener(this);
     downloadTask.execute();
     setAlwaysOnTop(true);
     setVisible(true);
+  }
+  
+  public boolean cancelled() {
+    return cancelled;
   }
   
   public AndroidSDK getSDK() {
@@ -301,8 +308,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
-    String labelText =
-        "Downloading Android SDK...";
+    String labelText = "Downloading Android SDK...";
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textarea);
@@ -342,8 +348,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        if (downloadTask != null) downloadTask.cancel(true);
+        if (downloadTask != null) {
+          downloadTask.cancel(true);
+        }
         setVisible(false);
+        cancelled = true;
       }
     });
     cancelButton.setEnabled(true);

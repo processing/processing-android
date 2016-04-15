@@ -5,6 +5,7 @@ import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
+import processing.mode.android.AndroidSDK.CancelException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -235,23 +236,28 @@ class AndroidSDK {
       if (folder == null) {
         throw new CancelException("User canceled attempt to find SDK"); 
       } else {
-        try {
-          final AndroidSDK androidSDK = new AndroidSDK(folder);
-          Preferences.set("android.sdk.path", folder.getAbsolutePath());
-          return androidSDK;
-        } catch (BadSDKException bad) {
-          throw bad;
-        }
+        final AndroidSDK androidSDK = new AndroidSDK(folder);
+        Preferences.set("android.sdk.path", folder.getAbsolutePath());
+        return androidSDK;
       }
     } else {
       throw new CancelException("User canceled attempt to find SDK"); 
     }
   }
 
-  static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) throws BadSDKException {
+  static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
+      throws BadSDKException, CancelException {
     final SDKDownloader downloader = new SDKDownloader(editor, androidMode);    
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
-    return downloader.getSDK();
+    
+    if (downloader.cancelled()) {
+      throw new CancelException("User canceled SDK download");  
+    } 
+    AndroidSDK sdk = downloader.getSDK();
+    if (sdk == null) {
+      throw new BadSDKException("SDK could not be downloaded");
+    }
+    return sdk;
   }
 
   static public int showLocateDialog(Frame editor) {

@@ -137,6 +137,11 @@ public class AndroidMode extends JavaMode {
   }
   
   
+  public void userCancelledSDKSearch() {
+    userCancelledSDKSearch = true;
+  }
+  
+  
   public void checkSDK(Editor editor) {    
     if (checkingSDK) {
       // Some other thread has invoked SDK checking, so wait until the first one
