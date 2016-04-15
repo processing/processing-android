@@ -282,6 +282,7 @@ class AndroidSDK {
     pane.setInitialValue(options[0]);
 
     JDialog dialog = pane.createDialog(editor, null);
+    dialog.setTitle("");
     dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
     dialog.setVisible(true);
 

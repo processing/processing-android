@@ -276,7 +276,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   }
 
   public SDKDownloader(Frame editor, AndroidMode mode) {
-    super(editor, "", true);
+    super(editor, "Need to reach out Google!", true);
     this.editor = editor;
     this.mode = mode;
     this.sdk = null;    
@@ -373,6 +373,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     pack();
 
+    setResizable(false);
     setLocationRelativeTo(editor);
   }
 
