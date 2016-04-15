@@ -6,7 +6,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import processing.app.Base;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
@@ -32,7 +31,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @SuppressWarnings("serial")
-public class SDKDownloader extends JFrame implements PropertyChangeListener {
+public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
@@ -40,14 +39,18 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
   private static final String PLATFORM_API_LEVEL = "22";
 
-  public static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
+  private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
 
-  private AndroidMode androidMode;
+  private JProgressBar progressBar;
+  private JLabel downloadedTextArea;
 
-  JProgressBar progressBar;
-  JLabel downloadedTextArea;
-
+  private SDKDownloadTask downloadTask;
+  
+  private Frame editor;
+  private AndroidMode mode;
+  private AndroidSDK sdk;
+  
   private int totalSize = 0;
   private static ZipFile zip;
 
@@ -64,8 +67,14 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
     @Override
     protected Object doInBackground() throws Exception {
-      File modeFolder = new File(Base.getSketchbookModesFolder() + "/AndroidMode");
+      
+      
+//      File modeDirectory = new File(folder, getTypeName());
+//      
+//      File modeFolder = new File(Base.getSketchbookModesFolder() + "/AndroidMode");
 
+      File modeFolder = mode.getFolder();
+      
       // creating sdk folders
       File sdkFolder = new File(modeFolder, "sdk");
       if (!sdkFolder.exists()) sdkFolder.mkdir();
@@ -114,9 +123,10 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
         tempFolder.delete();
 
+        // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
-        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
-        androidMode.loadSDK();
+        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());        
+        sdk = AndroidSDK.load();        
       } catch (ParserConfigurationException e) {
         // TODO Handle exceptions here somehow (ie show error message)
         // and handle at least mkdir() results (above)
@@ -133,6 +143,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     protected void done() {
       super.done();
       setVisible(false);
+      dispose();
     }
 
     private void downloadAndUnpack(String urlString, File saveTo,
@@ -170,18 +181,6 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
       extractFolder(saveTo, unpackTo, setExec);
     }
-
-    /*
-    private String getOsString() {
-      if (Base.isWindows()) {
-        return "windows";
-      } else if (Base.isLinux()) {
-        return "linux";
-      } else {
-        return "macosx";
-      }
-    }
-    */
 
     private SDKUrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) throws ParserConfigurationException, IOException, SAXException {
       SDKUrlHolder urlHolder = new SDKUrlHolder();
@@ -274,20 +273,26 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  public SDKDownloader(AndroidMode androidMode) {
-    super("Android SDK downloading...");
-
-    this.androidMode = androidMode;
-
+  public SDKDownloader(Frame editor, AndroidMode mode) {
+    super(editor, "Android SDK downloading...", true);
+    this.editor = editor;
+    this.mode = mode;
+    this.sdk = null;
     createLayout();
   }
-
-  public void startDownload() {
-    SDKDownloadTask downloadTask = new SDKDownloadTask();
+  
+  public void run() {
+    downloadTask = new SDKDownloadTask();
     downloadTask.addPropertyChangeListener(this);
     downloadTask.execute();
+    setAlwaysOnTop(true);
+    setVisible(true);
   }
-
+  
+  public AndroidSDK getSDK() {
+    return sdk;
+  }
+  
   private void createLayout() {
     Container outer = getContentPane();
     outer.removeAll();
@@ -337,6 +342,7 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
+        if (downloadTask != null) downloadTask.cancel(true);
         setVisible(false);
       }
     });
@@ -358,18 +364,8 @@ public class SDKDownloader extends JFrame implements PropertyChangeListener {
 
     pack();
 
-    /*
-    Dimension screen = Toolkit.getScreenSize();
-    Dimension windowSize = getSize();
-    setLocation((screen.width - windowSize.width) / 2,
-        (screen.height - windowSize.height) / 2);
-     */
-    setLocationRelativeTo(null);
-
-    setVisible(true);
-    setAlwaysOnTop(true);
+    setLocationRelativeTo(editor);
   }
-
 
   static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
     int BUFFER = 2048;

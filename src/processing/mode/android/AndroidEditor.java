@@ -55,6 +55,7 @@ public class AndroidEditor extends JavaEditor {
                           Mode mode) throws EditorException {
     super(base, path, state, mode);
     androidMode = (AndroidMode) mode;
+    androidMode.resetUserSelection();
     androidMode.checkSDK(this);
   }  
 
