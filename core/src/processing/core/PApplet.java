@@ -459,6 +459,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     activity = getActivity();
     View rootView;
 
+    handleSettings();
+
     // Get renderer name and class
     String rendererName = sketchRenderer();
     Class<?> rendererClass = null;
@@ -487,8 +489,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
         "Error: Unsupported renderer class: %s", rendererName);
       throw new RuntimeException(message);
     }
-
-    handleSettings();
 
     if (fullScreen) {
       int visibility;
