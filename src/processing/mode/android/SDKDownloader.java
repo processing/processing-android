@@ -10,7 +10,6 @@ import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
-import processing.mode.android.AndroidSDK.CancelException;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -33,12 +32,11 @@ import java.util.zip.ZipFile;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-
+  private static final String PLATFORM_API_LEVEL = "22";
+  
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
   private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
-
-  private static final String PLATFORM_API_LEVEL = "22";
 
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -276,7 +274,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   }
 
   public SDKDownloader(Frame editor, AndroidMode mode) {
-    super(editor, "Need to reach out Google!", true);
+    super(editor, "SDK download", true);
     this.editor = editor;
     this.mode = mode;
     this.sdk = null;    

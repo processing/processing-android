@@ -5,7 +5,6 @@ import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
-import processing.mode.android.AndroidSDK.CancelException;
 
 import javax.swing.*;
 import java.awt.*;
