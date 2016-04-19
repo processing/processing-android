@@ -434,7 +434,16 @@ public abstract class PGL {
   abstract public Object getNative();
 
 
-  abstract protected void setFrameRate(float fps);
+  public void setFrameRate(float fps) {
+    targetFps = fps;
+    currentFps = fps;
+    setFps = true;
+  }
+
+
+  public float getFrameRate() {
+    return currentFps;
+  }
 
 
   abstract protected void initSurface(int antialias);
