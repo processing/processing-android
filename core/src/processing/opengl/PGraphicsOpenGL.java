@@ -144,32 +144,32 @@ public class PGraphicsOpenGL extends PGraphics {
   // Shaders
 
   static protected URL defColorShaderVertURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/ColorVert.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/ColorVert.glsl");
   static protected URL defTextureShaderVertURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/TexVert.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/TexVert.glsl");
   static protected URL defLightShaderVertURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/LightVert.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/LightVert.glsl");
   static protected URL defTexlightShaderVertURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/TexLightVert.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/TexLightVert.glsl");
   static protected URL defColorShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/ColorFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/ColorFrag.glsl");
   static protected URL defTextureShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/TexFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/TexFrag.glsl");
   static protected URL defLightShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/LightFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/LightFrag.glsl");
   static protected URL defTexlightShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/TexLightFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/TexLightFrag.glsl");
 
   static protected URL defLineShaderVertURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/LineVert.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/LineVert.glsl");
   static protected URL defLineShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/LineFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/LineFrag.glsl");
   static protected URL defPointShaderVertURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/PointVert.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/PointVert.glsl");
   static protected URL defPointShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/PointFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/PointFrag.glsl");
   static protected URL maskShaderFragURL =
-    PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/MaskFrag.glsl");
+    PGraphicsOpenGL.class.getResource("/assets/shaders/MaskFrag.glsl");
 
   protected PShader defColorShader;
   protected PShader defTextureShader;
@@ -670,8 +670,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   // Android only
-  public PSurface createSurface(PContainer container, SurfaceView view) {  // ignore
-    return new PSurfaceGLES(this, container, view);
+  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
+    return new PSurfaceGLES(this, container, holder);
   }
 
 
@@ -6885,9 +6885,9 @@ public class PGraphicsOpenGL extends PGraphics {
     if (OPENGL_RENDERER.equals("VideoCore IV HW") ||    // Broadcom's binary driver for Raspberry Pi
       OPENGL_RENDERER.equals("Gallium 0.4 on VC4")) {   // Mesa driver for same hardware
         defLightShaderVertURL =
-          PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/LightVert-vc4.glsl");
+          PGraphicsOpenGL.class.getResource("/assets/shaders/LightVert-vc4.glsl");
         defTexlightShaderVertURL =
-          PGraphicsOpenGL.class.getResource("/processing/opengl/shaders/TexLightVert-vc4.glsl");
+          PGraphicsOpenGL.class.getResource("/assets/shaders/TexLightVert-vc4.glsl");
     }
 
     glParamsRead = true;

@@ -259,7 +259,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 //  public MotionEvent motionEvent;
 
   /** Post events to the main thread that created the Activity */
-  Handler handler;
+//  Handler handler;
 
   /**
    * Last key pressed.
@@ -367,7 +367,7 @@ public class PApplet extends Object implements PConstants, Runnable {
    */
   protected boolean exitCalled;
 
-  Thread thread;
+//  Thread thread;
 
   // messages to send if attached as an external vm
 
@@ -455,7 +455,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 
   }
 
-  public void initSurface(PContainer container, SurfaceView view) {
+  public void initSurface(PContainer container, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     container.initDimensions();
@@ -467,61 +467,18 @@ public class PApplet extends Object implements PConstants, Runnable {
     height = displayHeight;
     println("setting width/height to " + width + " " + height);
 
-//    println("density is " + dm.density);
-//    println("densityDpi is " + dm.densityDpi);
-//    if (DEBUG) println("display metrics: " + dm);
-
-    //println("screen size is " + screenWidth + "x" + screenHeight);
-
-//    LinearLayout layout = new LinearLayout(this);
-//    layout.setOrientation(LinearLayout.VERTICAL | LinearLayout.HORIZONTAL);
-//    viewGroup = new ViewGroup();
-//    surfaceView.setLayoutParams();
-//    viewGroup.setLayoutParams(LayoutParams.)
-//    RelativeLayout layout = new RelativeLayout(this);
-//    RelativeLayout overallLayout = new RelativeLayout(this);
-//    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.FILL_PARENT);
-//lp.addRule(RelativeLayout.RIGHT_OF, tv1.getId());
-//    layout.setGravity(RelativeLayout.CENTER_IN_PARENT);
-
     handleSettings();
+    println("Handled setting");
 
     int sw = sketchWidth();
     int sh = sketchHeight();
 
     String rendererName = sketchRenderer();
+    println("Renderer " + rendererName);
     g = makeGraphics(sw, sh, rendererName, true);
-    surface = g.createSurface(container, view);
-
-
-    /*
-    // Get renderer name and class
-    String rendererName = sketchRenderer();
-    Class<?> rendererClass = null;
-    try {
-      rendererClass = Class.forName(rendererName);
-    } catch (ClassNotFoundException exception) {
-      String message = String.format(
-        "Error: Could not resolve renderer class name: %s", rendererName);
-      throw new RuntimeException(message, exception);
-    }
-
-    if (rendererName.equals(JAVA2D)) {
-      // JAVA2D renderer
-      surfaceView = new SketchSurfaceView(activity, sw, sh,
-        (Class<? extends PGraphicsAndroid2D>) rendererClass);
-    } else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)) {
-      // P2D, P3D, and any other PGraphicsOpenGL-based renderer
-      surface = new PSurfaceGLES(this, activity, rendererClass, sw, sh);
-    } else {
-      // Anything else
-      String message = String.format(
-        "Error: Unsupported renderer class: %s", rendererName);
-      throw new RuntimeException(message);
-    }
-
-*/
-
+    println("Created renderer");
+    surface = g.createSurface(container, holder);
+    println("Created surface");
 
     //set smooth level
     if (smooth == 0) {
@@ -530,101 +487,18 @@ public class PApplet extends Object implements PConstants, Runnable {
       g.smooth(smooth);
     }
 
-//    g = ((SketchSurfaceView) surfaceView).getGraphics();
-
-//    surfaceView.setLayoutParams(new LayoutParams(sketchWidth(), sketchHeight()));
-
-//    layout.addView(surfaceView);
-//    surfaceView.setVisibility(1);
-//    println("visibility " + surfaceView.getVisibility() + " " + SurfaceView.VISIBLE);
-//    layout.addView(surfaceView);
-//    AttributeSet as = new AttributeSet();
-//    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(layout, as);
-
-//    lp.addRule(android.R.styleable.ViewGroup_Layout_layout_height,
-//    layout.add
-    //lp.addRule(, arg1)
-    //layout.addView(surfaceView, sketchWidth(), sketchHeight());
-
-//      new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-//        RelativeLayout.LayoutParams.FILL_PARENT);
-
-
     surface.initView(sw, sh);
 
-
-
-
-
-    /*
-    // Here we use Honeycomb API (11+) to hide (in reality, just make the status icons into small dots)
-    // the status bar. Since the core is still built against API 7 (2.1), we use introspection to get
-    // the setSystemUiVisibility() method from the view class.
-    Method visibilityMethod = null;
-    try {
-      visibilityMethod = surfaceView.getClass().getMethod("setSystemUiVisibility", new Class[] { int.class});
-    } catch (NoSuchMethodException e) {
-      // Nothing to do. This means that we are running with a version of Android previous to Honeycomb.
-    }
-    if (visibilityMethod != null) {
-      try {
-        // This is equivalent to calling:
-        //surfaceView.setSystemUiVisibility(View.STATUS_BAR_HIDDEN);
-        // The value of View.STATUS_BAR_HIDDEN is 1.
-        visibilityMethod.invoke(surfaceView, new Object[] { 1 });
-      } catch (InvocationTargetException e) {
-      } catch (IllegalAccessException e) {
-      }
-    }
-    window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    */
-
-
-//    layout.addView(surfaceView, lp);
-//    surfaceView.setLayoutParams(new LayoutParams(sketchWidth(), sketchHeight()));
-
-//    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams()
-//    layout.addView(surfaceView, new LayoutParams(arg0)
-
-    // TODO probably don't want to set these here, can't we wait for surfaceChanged()?
-    // removing this in 0187
-//    width = screenWidth;
-//    height = screenHeight;
-
-//    int left = (screenWidth - iwidth) / 2;
-//    int right = screenWidth - (left + iwidth);
-//    int top = (screenHeight - iheight) / 2;
-//    int bottom = screenHeight - (top + iheight);
-//    surfaceView.setPadding(left, top, right, bottom);
-    // android:layout_width
-
-//    window.setContentView(surfaceView);  // set full screen
-
-    // code below here formerly from init()
-
-    //millisOffset = System.currentTimeMillis(); // moved to the variable declaration
-
     finished = false; // just for clarity
-
     // this will be cleared by draw() if it is not overridden
     looping = true;
     redraw = true;  // draw this guy once
-//    firstMotion = true;
 
     sketchPath = surface.getFilesDir().getAbsolutePath();
 
-//    Looper.prepare();
-    handler = new Handler();
-//    println("calling loop()");
-//    Looper.loop();
-//    println("done with loop() call, will continue...");
+//    handler = new Handler();
+    println("Done with init surface");
   }
-
-
-//  public Activity getActivity() {
-//    return activity;
-//  }
 
 
   public void onResume() {
@@ -634,6 +508,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     paused = false;
     handleMethods("resume");
     //start();  // kick the thread back on
+    surface.resumeThread();
     resume();
 //    surfaceView.onResume();
   }
@@ -644,6 +519,7 @@ public class PApplet extends Object implements PConstants, Runnable {
 //    System.out.println("PApplet.onPause() called");
     paused = true;
     handleMethods("pause");
+    surface.pauseThread();
     pause();  // handler for others to write
 //  synchronized (this) {
 //  paused = true;
@@ -652,8 +528,14 @@ public class PApplet extends Object implements PConstants, Runnable {
   }
 
 
-  private void tellPDE(final String message) {
-    Log.i(surface.getName(), "PROCESSING " + message);
+  public void onDestroy() {
+//    stop();
+    surface.stopThread();
+    dispose();
+    if (PApplet.DEBUG) {
+      System.out.println("PApplet.onDestroy() called");
+    }
+    //finish();
   }
 
 
@@ -667,13 +549,8 @@ public class PApplet extends Object implements PConstants, Runnable {
   }
 
 
-  public void onDestroy() {
-//    stop();
-    dispose();
-    if (PApplet.DEBUG) {
-      System.out.println("PApplet.onDestroy() called");
-    }
-    //finish();
+  private void tellPDE(final String message) {
+    Log.i(surface.getName(), "PROCESSING " + message);
   }
 
 
@@ -709,22 +586,6 @@ public class PApplet extends Object implements PConstants, Runnable {
 
   public void settings() {
     //It'll be empty. Will be overridden by user's sketch class.
-  }
-
-
-  /**
-   * Developers can override here to save state. The 'paused' variable will be
-   * set before this function is called.
-   */
-  public void pause() {
-  }
-
-
-  /**
-   * Developers can override here to restore state. The 'paused' variable
-   * will be cleared before this function is called.
-   */
-  public void resume() {
   }
 
 
@@ -990,10 +851,11 @@ public class PApplet extends Object implements PConstants, Runnable {
     finished = false;
     paused = false; // unpause the thread
 
-    if (thread == null) {
-      thread = new Thread(this, "Animation Thread");
-      thread.start();
-    }
+    surface.startThread();
+//    if (thread == null) {
+//      thread = new Thread(this, "Animation Thread");
+//      thread.start();
+//    }
   }
 
 
@@ -1014,6 +876,21 @@ public class PApplet extends Object implements PConstants, Runnable {
     //TODO listeners
   }
 
+
+  /**
+   * Developers can override here to save state. The 'paused' variable will be
+   * set before this function is called.
+   */
+  public void pause() {
+  }
+
+
+  /**
+   * Developers can override here to restore state. The 'paused' variable
+   * will be cleared before this function is called.
+   */
+  public void resume() {
+  }
 
   /**
    * Called by the browser or applet viewer to inform this applet
@@ -1612,18 +1489,39 @@ public class PApplet extends Object implements PConstants, Runnable {
       }
       pg = new PGraphics3D();
     } else {
+
+
       Class<?> rendererClass = null;
       Constructor<?> constructor = null;
-      try {
-        // The context class loader doesn't work:
-        //rendererClass = Thread.currentThread().getContextClassLoader().loadClass(irenderer);
-        // even though it should, according to this discussion:
-        // http://code.google.com/p/android/issues/detail?id=11101
-        // While the method that is not supposed to work, using the class loader, does:
-        rendererClass = this.getClass().getClassLoader().loadClass(renderer);
-      } catch (ClassNotFoundException cnfe) {
-        throw new RuntimeException("Missing renderer class");
-      }
+
+//      try {
+//          rendererClass = Class.forName(renderer);
+//      } catch (ClassNotFoundException exception) {
+//          String message = String.format(
+//                  "Error: Could not resolve renderer class name: %s", renderer);
+//          throw new RuntimeException(message, exception);
+//      }
+
+    try {
+    // The context class loader doesn't work:
+    rendererClass = Thread.currentThread().getContextClassLoader().loadClass(renderer);
+    // even though it should, according to this discussion:
+    // http://code.google.com/p/android/issues/detail?id=11101
+    // While the method that is not supposed to work, using the class loader, does:
+//    rendererClass = this.getClass().getClassLoader().loadClass(renderer);
+  } catch (ClassNotFoundException cnfe) {
+    throw new RuntimeException("Missing renderer class");
+  }
+
+//      try {
+//        constructor = rendererClass.getConstructor();
+//      } catch (Exception exception) {
+//        throw new RuntimeException(
+//                "Error: Failed to initialize custom OpenGL renderer",
+//                exception);
+//      }
+
+
 
       if (rendererClass != null) {
         try {
@@ -1818,7 +1716,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     // animation thread yields to other running threads.
     final int NO_DELAYS_PER_YIELD = 15;
 
-    while ((Thread.currentThread() == thread) && !finished) {
+    while (/*(Thread.currentThread() == thread) &&*/  !finished) {
 
       while (paused) {
         try{
@@ -1828,27 +1726,8 @@ public class PApplet extends Object implements PConstants, Runnable {
         }
       }
 
-      // Don't resize the renderer from the EDT (i.e. from a ComponentEvent),
-      // otherwise it may attempt a resize mid-render.
-//      if (resizeRequest) {
-//        resizeRenderer(resizeWidth, resizeHeight);
-//        resizeRequest = false;
-//      }
-
       // render a single frame
       if (g != null) g.requestDraw();
-//      g.requestDraw();
-//      surfaceView.requestDraw();
-
-      // removed in android
-//      if (frameCount == 1) {
-//        // Call the request focus event once the image is sure to be on
-//        // screen and the component is valid. The OpenGL renderer will
-//        // request focus for its canvas inside beginDraw().
-//        // http://java.sun.com/j2se/1.4.2/docs/api/java/awt/doc-files/FocusSpec.html
-//        //println("requesting focus");
-//        requestFocus();
-//      }
 
       // wait for update & paint to happen before drawing next frame
       // this is necessary since the drawing is sometimes in a
@@ -3071,7 +2950,8 @@ public class PApplet extends Object implements PConstants, Runnable {
    */
   public void exit() {
 //    println("exit() called");
-    if (thread == null) {
+//    if (thread == null) {
+    if (surface.isStopped()) {
       // exit immediately, stop() has already been called,
       // meaning that the main thread has long since exited
       exit2();
@@ -3114,8 +2994,8 @@ public class PApplet extends Object implements PConstants, Runnable {
     finished = true;  // let the sketch know it is shut down time
 
     // don't run stop and disposers twice
-    if (thread == null) return;
-    thread = null;
+//    if (thread == null) return;
+//    thread = null;
 
     // call to shut down renderer, in case it needs it (pdf does)
     if (surface != null) surface.dispose();

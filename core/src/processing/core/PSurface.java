@@ -36,5 +36,15 @@ public interface PSurface {
 
   public InputStream openFileInput(String filename);
 
+  public void startThread();
+
+  public void pauseThread();
+
+  public void resumeThread();
+
+  public boolean stopThread();
+
+  public boolean isStopped();
+
   public AssetManager getAssets();
 }

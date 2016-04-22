@@ -35,6 +35,7 @@ import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PSurface;
+import android.os.Handler;
 
 public class PSurfaceGLES implements PSurface, PConstants {
 
@@ -59,28 +60,22 @@ public class PSurfaceGLES implements PSurface, PConstants {
   protected AndroidRenderer renderer;
   protected AndroidConfigChooser configChooser;
 
-  public PSurfaceGLES(PGraphics graphics, PContainer container) {
+  public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceHolder holder) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.container = container;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
-  }
-
-  public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceView view) {
-    this(graphics, container);
-
     if (container.getKind() == PContainer.FRAGMENT) {
       PFragment frag = (PFragment)container;
       activity = frag.getActivity();
-      if (view == null) surface = new SketchSurfaceViewGL(activity);
+      surface = new SketchSurfaceViewGL(activity, null);
     } else if (container.getKind() == PContainer.WALLPAPER) {
       wallpaper = (WallpaperService)container;
-      if (view == null) surface = new SketchSurfaceViewGL(wallpaper);
-    } else if (container.getKind() == PContainer.WATCHFACE) {
+      surface = new SketchSurfaceViewGL(wallpaper, holder);
+    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
 //       watchface = (Gles2WatchFaceService)container;
-//       surface = null;
+      surface = null;
     }
-    if (view != null) surface = view;
   }
 
 //  public PSurfaceGLES(PGraphicsOpenGL graphics) {
@@ -118,6 +113,360 @@ public class PSurfaceGLES implements PSurface, PConstants {
     return surface;
   }
 
+  public AssetManager getAssets() {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getAssets();
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getBaseContext().getAssets();
+    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+//       return watchface.getBaseContext().getAssets();
+    }
+    return null;
+  }
+
+  public void startActivity(Intent intent) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      container.startActivity(intent);
+    }
+  }
+
+  public void initView(int sketchWidth, int sketchHeight) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      int displayWidth = container.getWidth();
+      int displayHeight = container.getHeight();
+      View rootView;
+      if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
+        // If using the full screen, don't embed inside other layouts
+//        window.setContentView(surfaceView);
+        rootView = getSurfaceView();
+      } else {
+        // If not using full screen, setup awkward view-inside-a-view so that
+        // the sketch can be centered on screen. (If anyone has a more efficient
+        // way to do this, please file an issue on Google Code, otherwise you
+        // can keep your "talentless hack" comments to yourself. Ahem.)
+        RelativeLayout overallLayout = new RelativeLayout(activity);
+        RelativeLayout.LayoutParams lp =
+          new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                          LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
+
+        LinearLayout layout = new LinearLayout(activity);
+        layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
+        overallLayout.addView(layout, lp);
+//        window.setContentView(overallLayout);
+        rootView = overallLayout;
+      }
+      setRootView(rootView);
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      int displayWidth = container.getWidth();
+      int displayHeight = container.getHeight();
+      View rootView;
+      // Looks like a wallpaper can be larger than the screen res, and have an offset, need to
+      // look more into that.
+      if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
+        // If using the full screen, don't embed inside other layouts
+//        window.setContentView(surfaceView);
+        rootView = getSurfaceView();
+      } else {
+        // If not using full screen, setup awkward view-inside-a-view so that
+        // the sketch can be centered on screen. (If anyone has a more efficient
+        // way to do this, please file an issue on Google Code, otherwise you
+        // can keep your "talentless hack" comments to yourself. Ahem.)
+        RelativeLayout overallLayout = new RelativeLayout(wallpaper);
+        RelativeLayout.LayoutParams lp =
+          new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                          LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
+
+        LinearLayout layout = new LinearLayout(wallpaper);
+        layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
+        overallLayout.addView(layout, lp);
+//        window.setContentView(overallLayout);
+        rootView = overallLayout;
+      }
+      setRootView(rootView);
+    }
+  }
+
+  public String getName() {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getComponentName().getPackageName();
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getPackageName();
+    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+//       return watchface.getPackageName();
+    }
+    return "";
+  }
+
+  public void setOrientation(int which) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      if (which == PORTRAIT) {
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+      } else if (which == LANDSCAPE) {
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+      }
+    }
+  }
+
+  public File getFilesDir() {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getFilesDir();
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getFilesDir();
+    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+//       return watchface.getFilesDir();
+
+    }
+    return null;
+  }
+
+  public InputStream openFileInput(String filename) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      try {
+        return activity.openFileInput(filename);
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
+  public File getFileStreamPath(String path) {
+    if (container.getKind() == PContainer.FRAGMENT) {
+      return activity.getFileStreamPath(path);
+    } else if (container.getKind() == PContainer.WALLPAPER) {
+      return wallpaper.getFileStreamPath(path);
+    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+//       return watchface.getFileStreamPath(path);
+    }
+    return null;
+  }
+
+  public void dispose() {
+    ((SketchSurfaceViewGL)surface).onDestroy();
+  }
+
+
+  ///////////////////////////////////////////////////////////
+
+  // Thread handling
+  // http://stackoverflow.com/questions/6964011/handler-vs-asynctask-vs-thread
+  // http://stackoverflow.com/questions/3102203/handler-vs-thread
+
+  // Some notes on how to control FPS:
+  // http://stackoverflow.com/questions/4772693/how-to-limit-framerate-when-using-androids-glsurfaceview-rendermode-continuousl
+  // https://github.com/LWJGL/lwjgl/blob/master/src/java/org/lwjgl/opengl/Sync.java
+
+  private final Handler handler = new Handler();
+  private int runCount = 0;
+  private final Runnable drawRunnable = new Runnable() {
+    public void run() {
+      if (sketch != null) {
+        sketch.g.requestDraw();
+      }
+      scheduleNextDraw();
+    }
+  };
+
+  private void scheduleNextDraw() {
+    handler.removeCallbacks(drawRunnable);
+    int waitMillis = 1000 / 15;
+    if (sketch != null) {
+      final PSurfaceGLES glsurf = (PSurfaceGLES) sketch.surface;
+      float targetfps = glsurf.pgl.getFrameRate();
+      float targetMillisPerFrame = 1000 / targetfps;
+
+//            float actualFps = sketch.frameRate;
+//            float actualMillisPerFrame = 1000 / actualFps;
+//            int waitMillis = (int)PApplet.max(0, targetMillisPerFrame - actualMillisPerFrame);
+      waitMillis = (int) targetMillisPerFrame;
+    }
+    handler.postDelayed(drawRunnable, waitMillis);
+  }
+
+
+  private void pauseNextDraw() {
+    handler.removeCallbacks(drawRunnable);
+  }
+
+
+  private void requestNextDraw() {
+    handler.post(drawRunnable);
+  }
+
+
+  public void startThread() {
+    requestNextDraw();
+  }
+
+
+  public void pauseThread() {
+    pauseNextDraw();
+  }
+
+
+  public void resumeThread() {
+    scheduleNextDraw();
+  }
+
+
+  public boolean stopThread() {
+    pauseNextDraw();
+    return true;
+  }
+
+
+  public boolean isStopped() {
+    return !handler.hasMessages(0);
+  }
+
+  ///////////////////////////////////////////////////////////
+
+  // GL SurfaceView
+
+    public class SketchSurfaceViewGL extends GLSurfaceView {
+      //      PGraphicsOpenGL g3;
+      PContainer container;
+      SurfaceHolder holder;
+
+      @SuppressWarnings("deprecation")
+      public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
+        super(context);
+        this.holder = holder;
+
+        // Check if the system supports OpenGL ES 2.0.
+        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+        final boolean supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000;
+
+        if (!supportsGLES2) {
+          throw new RuntimeException("OpenGL ES 2.0 is not supported by this device.");
+        }
+
+        SurfaceHolder h = getHolder();
+        h.addCallback(this);
+        h.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+
+        // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
+        setEGLContextClientVersion(2);
+        setPreserveEGLContextOnPause(true);
+
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        requestFocus();
+
+        int quality = sketch.sketchQuality();
+        if (1 < quality) {
+          setEGLConfigChooser(getConfigChooser(quality));
+        }
+        // The renderer can be set only once.
+        setRenderer(getRenderer());
+        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+      }
+
+
+      @Override
+      public SurfaceHolder getHolder() {
+        if (holder == null) {
+          return super.getHolder();
+        } else {
+          return holder;
+        }
+      }
+
+      public void onDestroy() {
+        super.onDetachedFromWindow();
+        // don't think i want to call stop() from here, since it might be swapping renderers
+        //      stop();
+      }
+
+
+      @Override
+      public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+        super.surfaceChanged(holder, format, w, h);
+
+//        if (PApplet.DEBUG) {
+//          System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h);
+//        }
+        System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h + " " + sketch);
+        sketch.surfaceChanged();
+      }
+
+    // part of SurfaceHolder.Callback
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+      super.surfaceCreated(holder);
+      if (PApplet.DEBUG) {
+        System.out.println("surfaceCreated()");
+      }
+    }
+
+
+    // part of SurfaceHolder.Callback
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+      super.surfaceDestroyed(holder);
+      if (PApplet.DEBUG) {
+        System.out.println("surfaceDestroyed()");
+      }
+
+
+      // TODO: Check how to make sure of calling g3.dispose() when this call to
+      // surfaceDestoryed corresponds to the sketch being shut down instead of just
+      // taken to the background.
+
+      // For instance, something like this would be ok?
+      // The sketch is being stopped, so we dispose the resources.
+//      if (!paused) {
+//        g3.dispose();
+//      }
+    }
+
+
+    // Inform the view that the window focus has changed.
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+      super.onWindowFocusChanged(hasFocus);
+      sketch.surfaceWindowFocusChanged(hasFocus);
+//      super.onWindowFocusChanged(hasFocus);
+//      focused = hasFocus;
+//      if (focused) {
+////        println("got focus");
+//        focusGained();
+//      } else {
+////        println("lost focus");
+//        focusLost();
+//      }
+    }
+
+
+    // Do we need these to catpure events...?
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+      return sketch.surfaceTouchEvent(event);
+    }
+
+
+    @Override
+    public boolean onKeyDown(int code, android.view.KeyEvent event) {
+      sketch.surfaceKeyDown(code, event);
+      return super.onKeyDown(code, event);
+    }
+
+
+    @Override
+    public boolean onKeyUp(int code, android.view.KeyEvent event) {
+      sketch.surfaceKeyUp(code, event);
+      return super.onKeyUp(code, event);
+    }
+
+
+
+    }
+
+/*
   public class SketchSurfaceViewGL extends GLSurfaceView {
     PGraphicsOpenGL g3;
     SurfaceHolder surfaceHolder;
@@ -183,17 +532,17 @@ public class PSurfaceGLES implements PSurface, PConstants {
         System.out.println("surfaceDestroyed()");
       }
 
-      /*
+
       // TODO: Check how to make sure of calling g3.dispose() when this call to
       // surfaceDestoryed corresponds to the sketch being shut down instead of just
       // taken to the background.
 
       // For instance, something like this would be ok?
       // The sketch is being stopped, so we dispose the resources.
-      if (!paused) {
-        g3.dispose();
-      }
-      */
+//      if (!paused) {
+//        g3.dispose();
+//      }
+
     }
 
 
@@ -215,9 +564,8 @@ public class PSurfaceGLES implements PSurface, PConstants {
     }
 
 
-    /**
-     * Inform the view that the window focus has changed.
-     */
+
+    // Inform the view that the window focus has changed.
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
       super.onWindowFocusChanged(hasFocus);
@@ -261,143 +609,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 //      stop();
 //    }
   }
-
-  public AssetManager getAssets() {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      return activity.getAssets();
-    } else if (container.getKind() == PContainer.WALLPAPER) {
-      return wallpaper.getBaseContext().getAssets();
-    } else if (container.getKind() == PContainer.WATCHFACE) {
-//       return watchface.getBaseContext().getAssets();
-    }
-    return null;
-  }
-
-  public void startActivity(Intent intent) {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      container.startActivity(intent);
-    }
-  }
-
-  public void initView(int sketchWidth, int sketchHeight) {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      int displayWidth = container.getWidth();
-      int displayHeight = container.getHeight();
-      View rootView;
-      if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
-        // If using the full screen, don't embed inside other layouts
-//        window.setContentView(surfaceView);
-        rootView = getSurfaceView();
-      } else {
-        // If not using full screen, setup awkward view-inside-a-view so that
-        // the sketch can be centered on screen. (If anyone has a more efficient
-        // way to do this, please file an issue on Google Code, otherwise you
-        // can keep your "talentless hack" comments to yourself. Ahem.)
-        RelativeLayout overallLayout = new RelativeLayout(activity);
-        RelativeLayout.LayoutParams lp =
-          new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                          LayoutParams.WRAP_CONTENT);
-        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
-
-        LinearLayout layout = new LinearLayout(activity);
-        layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
-        overallLayout.addView(layout, lp);
-//        window.setContentView(overallLayout);
-        rootView = overallLayout;
-      }
-      setRootView(rootView);
-    } else if (container.getKind() == PContainer.WALLPAPER) {
-      /*
-      int displayWidth = container.getWidth();
-      int displayHeight = container.getHeight();
-      View rootView;
-      if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
-        // If using the full screen, don't embed inside other layouts
-//        window.setContentView(surfaceView);
-        rootView = getSurfaceView();
-      } else {
-        // If not using full screen, setup awkward view-inside-a-view so that
-        // the sketch can be centered on screen. (If anyone has a more efficient
-        // way to do this, please file an issue on Google Code, otherwise you
-        // can keep your "talentless hack" comments to yourself. Ahem.)
-        RelativeLayout overallLayout = new RelativeLayout(wallpaper);
-        RelativeLayout.LayoutParams lp =
-          new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                          LayoutParams.WRAP_CONTENT);
-        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
-
-        LinearLayout layout = new LinearLayout(wallpaper);
-        layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
-        overallLayout.addView(layout, lp);
-//        window.setContentView(overallLayout);
-        rootView = overallLayout;
-      }
-      setRootView(rootView);
-      */
-    }
-  }
-
-  public String getName() {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      return activity.getComponentName().getPackageName();
-    } else if (container.getKind() == PContainer.WALLPAPER) {
-      return wallpaper.getPackageName();
-    } else if (container.getKind() == PContainer.WATCHFACE) {
-//       return watchface.getPackageName();
-    }
-    return "";
-  }
-
-  public void setOrientation(int which) {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      if (which == PORTRAIT) {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-      } else if (which == LANDSCAPE) {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-      }
-    }
-  }
-
-  public File getFilesDir() {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      return activity.getFilesDir();
-    } else if (container.getKind() == PContainer.WALLPAPER) {
-      return wallpaper.getFilesDir();
-    } else if (container.getKind() == PContainer.WATCHFACE) {
-//       return watchface.getFilesDir();
-
-    }
-    return null;
-  }
-
-  public InputStream openFileInput(String filename) {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      try {
-        return activity.openFileInput(filename);
-      } catch (FileNotFoundException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-    }
-    return null;
-  }
-
-  public File getFileStreamPath(String path) {
-    if (container.getKind() == PContainer.FRAGMENT) {
-      return activity.getFileStreamPath(path);
-    } else if (container.getKind() == PContainer.WALLPAPER) {
-      return wallpaper.getFileStreamPath(path);
-    } else if (container.getKind() == PContainer.WATCHFACE) {
-//       return watchface.getFileStreamPath(path);
-    }
-    return null;
-  }
-
-  public void dispose() {
-    // TODO Auto-generated method stub
-//    surface.onDestroy();
-  }
-
+*/
 
   ///////////////////////////////////////////////////////////
 

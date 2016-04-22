@@ -18,11 +18,6 @@ public class PFragment extends Fragment implements PContainer {
   public PFragment() {
   }
 
-  public PFragment(PApplet sketch) {
-    System.err.println("-----> PFragment CONSTRUCTOR: " + sketch);
-    this.sketch = sketch;
-  }
-
   public void initDimensions() {
     metrics = new DisplayMetrics();
     getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -54,7 +49,6 @@ public class PFragment extends Fragment implements PContainer {
       return null;
     }
   }
-
 
   @Override
   public void onResume() {
