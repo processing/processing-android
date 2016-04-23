@@ -105,4 +105,12 @@ public class PFragment extends Fragment implements PContainer {
       getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
   }
+
+
+  public void requestDraw() {
+  }
+
+  public boolean canDraw() {
+    return true;
+  }
 }

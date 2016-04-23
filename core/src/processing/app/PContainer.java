@@ -17,4 +17,7 @@ abstract public interface PContainer extends PConstants {
   public void setSketch(PApplet sketch);
 
   public void startActivity(Intent intent);
+
+  public void requestDraw();
+  public boolean canDraw();
 }

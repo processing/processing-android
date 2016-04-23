@@ -545,7 +545,9 @@ public class PApplet extends Object implements PConstants, Runnable {
 
 
   public void onStop() {
+
     tellPDE("onStop");
+
   }
 
 

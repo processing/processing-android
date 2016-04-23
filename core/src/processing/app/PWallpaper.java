@@ -62,6 +62,14 @@ public class PWallpaper extends WallpaperService implements PContainer {
     return new PApplet();
   }
 
+  public void requestDraw() {
+
+  }
+
+  public boolean canDraw() {
+    return true;
+  }
+
   @Override
   public Engine onCreateEngine() {
     engine = new PEngine();

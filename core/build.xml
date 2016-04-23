@@ -16,10 +16,10 @@
   </target>
 
   <target name="sdk_whining">
-    <available file="${env.ANDROID_SDK}/platforms/android-19/android.jar"
+    <available file="${env.ANDROID_SDK}/platforms/android-21/android.jar"
 	       property="andoid-jar-present" />
     <fail unless="andoid-jar-present" 
-	  message="Android SDK 10 could not be found in ${env.ANDROID_SDK}/platforms/android-19/android.jar" />
+	  message="Android SDK 21 could not be found in ${env.ANDROID_SDK}/platforms/android-21/android.jar" />
   </target>
 
   <target name="actual_build" if="env.ANDROID_SDK">
@@ -33,14 +33,15 @@
 	   target="1.7" 
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
-	   bootclasspath="${env.ANDROID_SDK}/platforms/android-19/android.jar"
+	   bootclasspath="${env.ANDROID_SDK}/platforms/android-21/android.jar;
+	                  library/wearable-1.3.0-classes.jar"
 	   srcdir="src" destdir="bin" />
 
     <!-- Copy the shaders to the bin folder. 
 	 Eclipse does this automatically. -->
     <copy todir="bin">
       <fileset dir="src">
-	    <include name="processing/opengl/shaders/*.glsl" />
+	    <include name="assets/shaders/*.glsl" />
       </fileset>
     </copy>
 	   

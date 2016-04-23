@@ -148,7 +148,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void dispose() {
-    bitmap.recycle();
+    if (bitmap != null) bitmap.recycle();
   }
 
 
@@ -1091,6 +1091,7 @@ public class PGraphicsAndroid2D extends PGraphics {
     // in native heap for Android 10 and older.
     MemoryInfo mi = new MemoryInfo();
     Activity activity = parent.getSurface().getActivity();
+    if (activity == null) return;
     ActivityManager activityManager = (ActivityManager) activity.getSystemService(android.content.Context.ACTIVITY_SERVICE);
     activityManager.getMemoryInfo(mi);
     if (mi.lowMemory) {
