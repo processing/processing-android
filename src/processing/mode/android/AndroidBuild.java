@@ -47,8 +47,8 @@ import java.security.Permission;
 class AndroidBuild extends JavaBuild {
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
-  static String sdkName = "4.0.3";
-  static String sdkVersion = "15";  // Android 4.0.3 (Ice Cream Sandwich MR1)
+  static String sdkName = "5.0";
+  static String sdkVersion = "21";  // Android 5.0 (Lollipop)
   static String sdkTarget = "android-" + sdkVersion;
 
   private final AndroidSDK sdk;

@@ -26,8 +26,6 @@ class AndroidSDK {
   private final File platformTools;
   private final File androidTool;
 
-  static private boolean downloading;
-
   private static final String ANDROID_SDK_PRIMARY =
     "Is the Android SDK installed?";
 
@@ -40,18 +38,10 @@ class AndroidSDK {
     "If you want to download the SDK manually, you can visit <br>"+
     "http://developer.android.com/sdk/installing/index.html <br>" +
     "and select the stand-alone SDK tools. Make sure to install <br>"+
-    "the SDK platform for API 15 (Android 4.0.3) or higher.";
+    "the SDK platform for API 21 (Android 5.0) or higher.";
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
-
-  private static final String NOT_ANDROID_SDK =
-    "The selected folder does not appear to contain an Android SDK,\n" +
-    "or the SDK needs to be updated to the latest version.";
-
-//  private static final String ANDROID_SDK_URL =
-//    "http://developer.android.com/sdk/";
-
 
   public AndroidSDK(File folder) throws BadSDKException, IOException {
     this.folder = folder;
@@ -163,13 +153,6 @@ class AndroidSDK {
   }
 
 
-  /*
-  public File getToolsFolder() {
-    return tools;
-  }
-  */
-
-
   public File getPlatformToolsFolder() {
     return platformTools;
   }
@@ -242,51 +225,38 @@ class AndroidSDK {
 
 
   static public AndroidSDK locate(final Frame window, final AndroidMode androidMode)
-      throws BadSDKException, IOException {
+      throws BadSDKException, CancelException, IOException {
     final int result = showLocateDialog(window);
-    if (result == JOptionPane.CANCEL_OPTION) {
-      throw new BadSDKException("User canceled attempt to find SDK.");
-    }
     if (result == JOptionPane.YES_OPTION) {
-      // here we are going to download sdk automatically
-      //Base.openURL(ANDROID_SDK_URL);
-      //throw new BadSDKException("No SDK installed.");
-
-      return download(androidMode);
-    }
-    while (true) {
-      // TODO this is really a yucky way to do this stuff. fix it.
+      return download(window, androidMode);
+    } else if (result == JOptionPane.NO_OPTION) {
+      // user will manually select folder containing SDK folder
       File folder = selectFolder(SELECT_ANDROID_SDK_FOLDER, null, window);
       if (folder == null) {
-        throw new BadSDKException("User canceled attempt to find SDK.");
-      }
-      try {
+        throw new CancelException("User canceled attempt to find SDK"); 
+      } else {
         final AndroidSDK androidSDK = new AndroidSDK(folder);
         Preferences.set("android.sdk.path", folder.getAbsolutePath());
         return androidSDK;
-
-      } catch (final BadSDKException nope) {
-        JOptionPane.showMessageDialog(window, NOT_ANDROID_SDK);
       }
+    } else {
+      throw new CancelException("User canceled attempt to find SDK"); 
     }
   }
 
-  static boolean isDownloading() {
-    return downloading;
-  }
-
-  static public AndroidSDK download(final AndroidMode androidMode) throws BadSDKException {
-    // TODO This is never set back to false once true [fry 150813]
-    downloading = true;
-
-    EventQueue.invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        SDKDownloader downloader = new SDKDownloader(androidMode);
-        downloader.startDownload();
-      }
-    });
-    return null;
+  static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
+      throws BadSDKException, CancelException {
+    final SDKDownloader downloader = new SDKDownloader(editor, androidMode);    
+    downloader.run(); // This call blocks until the SDK download complete, or user cancels.
+    
+    if (downloader.cancelled()) {
+      throw new CancelException("User canceled SDK download");  
+    } 
+    AndroidSDK sdk = downloader.getSDK();
+    if (sdk == null) {
+      throw new BadSDKException("SDK could not be downloaded");
+    }
+    return sdk;
   }
 
   static public int showLocateDialog(Frame editor) {
@@ -311,6 +281,8 @@ class AndroidSDK {
     pane.setInitialValue(options[0]);
 
     JDialog dialog = pane.createDialog(editor, null);
+    dialog.setTitle("");
+    dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
     dialog.setVisible(true);
 
     Object result = pane.getValue();
@@ -334,6 +306,7 @@ class AndroidSDK {
         //fd.setFile(folder.getName());
       }
       System.setProperty("apple.awt.fileDialogForDirectories", "true");
+      fd.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
       fd.setVisible(true);
       System.setProperty("apple.awt.fileDialogForDirectories", "false");
       if (fd.getFile() == null) {
@@ -432,4 +405,18 @@ class AndroidSDK {
 
     return targets;
   }
+  
+  @SuppressWarnings("serial")
+  static public class BadSDKException extends Exception {
+    public BadSDKException(final String message) {
+      super(message);
+    }
+  }
+  
+  @SuppressWarnings("serial")
+  static public class CancelException extends Exception {
+    public CancelException(final String message) {
+      super(message);
+    }
+  }    
 }

@@ -31,6 +31,7 @@ import processing.app.SketchException;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
+import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
 import java.io.File;
@@ -43,7 +44,9 @@ public class AndroidMode extends JavaMode {
   private AndroidSDK sdk;
   private File coreZipLocation;
   private AndroidRunner runner;
-
+  
+  private boolean checkingSDK = false;
+  private boolean userCancelledSDKSearch = false;
 
   public AndroidMode(Base base, File folder) {
     super(base, folder);
@@ -128,27 +131,46 @@ public class AndroidMode extends JavaMode {
     }
   }
 
-  public void checkSDK(Editor editor) {
-    if (sdk == null) {
+  
+  public void resetUserSelection() {
+    userCancelledSDKSearch = false;
+  }
+  
+  
+  public void checkSDK(Editor editor) {    
+    if (checkingSDK) {
+      // Some other thread has invoked SDK checking, so wait until the first one
+      // is done (it might involve downloading the SDK, etc).
+      while (checkingSDK) {
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) { 
+          return;
+        }      
+      }
+    }
+    if (userCancelledSDKSearch) return;
+    checkingSDK = true;
+    Throwable tr = null;
+    if (sdk == null) {      
       try {
         sdk = AndroidSDK.load();
-        // FIXME REVERT THIS STATEMENT AFTER TESTING (should be ==)
-        if (sdk == null && editor != null) {
+        if (sdk == null) {
           sdk = AndroidSDK.locate(editor, this);
         }
-      } catch (BadSDKException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (CancelException cancel) {
+        userCancelledSDKSearch = true;
+        tr = cancel;
+      } catch (Exception other) {
+        tr = other;
       }
     }
     if (sdk == null) {
-      if (!AndroidSDK.isDownloading()) {
-        Messages.showWarning("It's gonna be a bad day",
-                             "The Android SDK could not be loaded.\n" +
-                             "Use of Android Mode will be all but disabled.");
-      }
+      Messages.showWarning("Bad news...",
+                           "The Android SDK could not be loaded.\n" +
+                           "The Android Mode will be disabled.", tr);
     }
+    checkingSDK = false;
   }
 
 
