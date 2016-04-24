@@ -32,11 +32,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.*;
 import java.util.*;
-
-import android.opengl.GLES20;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-
 
 /**
  * OpenGL renderer.

@@ -1,7 +1,6 @@
 package processing.app;
 
 import android.content.Intent;
-import android.view.SurfaceHolder;
 import processing.core.PApplet;
 import processing.core.PConstants;
 

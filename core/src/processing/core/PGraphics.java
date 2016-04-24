@@ -37,7 +37,6 @@ import processing.opengl.PGL;
 import processing.opengl.PShader;
 import android.graphics.Color;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 
 
 /**

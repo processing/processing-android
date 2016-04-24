@@ -264,7 +264,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
   // https://github.com/LWJGL/lwjgl/blob/master/src/java/org/lwjgl/opengl/Sync.java
 
   private final Handler handler = new Handler();
-  private int runCount = 0;
   private final Runnable drawRunnable = new Runnable() {
     public void run() {
       if (sketch != null) {

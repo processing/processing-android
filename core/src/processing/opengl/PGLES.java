@@ -30,18 +30,13 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.EGLConfigChooser;
-import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLU;
 import android.view.SurfaceView;
-import processing.core.PApplet;
 import processing.opengl.tess.PGLU;
 import processing.opengl.tess.PGLUtessellator;
 import processing.opengl.tess.PGLUtessellatorCallbackAdapter;

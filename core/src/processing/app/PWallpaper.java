@@ -1,23 +1,12 @@
 package processing.app;
 
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.pm.ConfigurationInfo;
-import android.opengl.GLSurfaceView;
-//import android.opengl.GLSurfaceView.Renderer;
-import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
-//import processing.opengl.PGLES;
-import processing.opengl.PGraphicsOpenGL;
-import processing.opengl.PSurfaceGLES;
 import android.util.Log;
-//import android.hardware.display.DisplayManager;
-
 
 public class PWallpaper extends WallpaperService implements PContainer {
   String TAG = "PWallpaper";
