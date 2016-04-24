@@ -880,6 +880,8 @@ class AndroidBuild extends JavaBuild {
     writer.println("package " + manifest.getPackageName() +";");
     writer.println("import android.app.Activity;");
     writer.println("import android.os.Bundle;");
+    writer.println("import android.view.View;");
+    writer.println("import android.view.ViewGroup;");    
     writer.println("import android.view.Window;");
     writer.println("import android.view.WindowManager;");
     writer.println("import android.widget.FrameLayout;");
@@ -890,7 +892,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("public class MainActivity extends Activity {");
     writer.println("    PFragment fragment;");
     writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
-    writer.println("    int viewId = 0x1000;");
+    writer.println("    int viewId = View.generateViewId();");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
     writer.println("        super.onCreate(savedInstanceState);");
@@ -906,7 +908,8 @@ class AndroidBuild extends JavaBuild {
         + "LayoutParams.MATCH_PARENT));");
     writer.println("        PApplet sketch = new " + sketchClassName + "();");    
     writer.println("        if (savedInstanceState == null) {");
-    writer.println("            fragment = new PFragment(sketch);");
+    writer.println("            fragment = new PFragment();");
+    writer.println("            fragment.setSketch(sketch);");    
     writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
     writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
     writer.println("        } else {");
