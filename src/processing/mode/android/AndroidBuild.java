@@ -45,12 +45,19 @@ import java.security.Permission;
 
 
 class AndroidBuild extends JavaBuild {
+  static public final int FRAGMENT  = 0;
+  static public final int WALLPAPER = 1;
+  static public final int WATCHFACE = 2;
+  static public final int CARDBOARD = 3;
+  
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
   static String sdkName = "5.0";
   static String sdkVersion = "21";  // Android 5.0 (Lollipop)
   static String sdkTarget = "android-" + sdkVersion;
 
+  static int publishOpt = FRAGMENT;
+  
   private final AndroidSDK sdk;
   private final File coreZipFile;
 
@@ -72,6 +79,10 @@ class AndroidBuild extends JavaBuild {
     coreZipFile = mode.getCoreZipLocation();
   }
 
+  public static void setPublishOption(int opt, Sketch sketch) {
+    publishOpt = opt;
+  }
+  
   public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
     sdkName = target.name;
     sdkVersion = Integer.toString(target.version);
@@ -169,7 +180,7 @@ class AndroidBuild extends JavaBuild {
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
 
-      
+
       writeMainActivity(srcFolder, kind);
 
 

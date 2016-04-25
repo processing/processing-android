@@ -229,14 +229,75 @@ public class AndroidEditor extends JavaEditor {
     noDevicesItem.setEnabled(false);
     deviceMenu.add(noDevicesItem);
     menu.add(deviceMenu);
-
+    
     // start updating device menus
     UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
     java.util.Timer timer = new java.util.Timer();
     timer.schedule(task, 5000, 5000);
-
+    
     menu.addSeparator();
 
+    final JMenu publishMenu = new JMenu("App publishing");    
+    final JCheckBoxMenuItem fragmentItem = new JCheckBoxMenuItem("Regular app");
+    final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
+    final JCheckBoxMenuItem watchfaceItem = new JCheckBoxMenuItem("Watch face");
+    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard");
+
+    fragmentItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.FRAGMENT, sketch);
+        fragmentItem.setState(true);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+        cardboardItem.setSelected(false);
+      }
+    });
+    wallpaperItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.WALLPAPER, sketch);
+        fragmentItem.setState(false);
+        wallpaperItem.setState(true);
+        watchfaceItem.setSelected(false);
+        cardboardItem.setSelected(false);
+      }
+    });
+    watchfaceItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.WATCHFACE, sketch);
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(true);
+        cardboardItem.setSelected(false);
+      }
+    });
+    cardboardItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.CARDBOARD, sketch);
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+        cardboardItem.setSelected(true);
+      }
+    });    
+    
+    fragmentItem.setState(true);
+    wallpaperItem.setState(false);
+    watchfaceItem.setSelected(false);
+    cardboardItem.setSelected(false);    
+
+    publishMenu.add(fragmentItem);
+    publishMenu.add(wallpaperItem);
+    publishMenu.add(watchfaceItem);
+    publishMenu.add(cardboardItem);
+    menu.add(publishMenu);     
+    
+    // TODO: The SDK selection menu will be removed once app publishing is fully
+    // functional (correct SDK level can be inferred from app type (fragment, 
+    // wallpaper, etc).
     final JMenu sdkMenu = new JMenu("Select target SDK");
     JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
     defaultItem.setEnabled(false);
@@ -259,7 +320,7 @@ public class AndroidEditor extends JavaEditor {
     menu.add(sdkMenu);
 
     menu.addSeparator();
-
+    
     item = new JMenuItem("Android SDK Manager");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -307,11 +368,12 @@ public class AndroidEditor extends JavaEditor {
       String savedSdkName = Preferences.get("android.sdk.name");
       boolean savedTargetSet = false;
 
-      for(final AndroidSDK.SDKTarget target : targets) {
-    	if (target.version < 11) {
-    		//We do not support API level less than 11
-    		continue;
-    	}
+      for (final AndroidSDK.SDKTarget target : targets) {
+        if (target.version < 11) {
+          //We do not support API level less than 11
+          continue;
+        }
+        
         final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
 
         if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
