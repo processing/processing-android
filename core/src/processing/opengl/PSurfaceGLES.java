@@ -59,9 +59,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
   protected AndroidRenderer renderer;
   protected AndroidConfigChooser configChooser;
 
+
   public PSurfaceGLES() {
 
   }
+
 
   public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceHolder holder) {
     this.sketch = graphics.parent;
@@ -81,40 +83,35 @@ public class PSurfaceGLES implements PSurface, PConstants {
     }
   }
 
-//  public PSurfaceGLES(PGraphicsOpenGL graphics) {
-//    this.graphics = graphics;
-//  }
-//
-//  public PSurfaceGLES(PApplet sketch, Activity activity, Class<?> rendererClass, int sw, int sh) {
-//    this.sketch = sketch;
-//    this.activity = activity;
-//    surface = new SketchSurfaceViewGL(activity, sw, sh,
-//      (Class<? extends PGraphicsOpenGL>)rendererClass);
-//  }
 
   public PContainer getContainer() {
     return container;
   }
+
 
   @Override
   public Activity getActivity() {
     return activity;
   }
 
+
   @Override
   public View getRootView() {
     return view;
   }
+
 
   @Override
   public void setRootView(View view) {
     this.view = view;
   }
 
+
   @Override
   public SurfaceView getSurfaceView() {
     return surface;
   }
+
 
   public AssetManager getAssets() {
     if (container.getKind() == PContainer.FRAGMENT) {
@@ -127,11 +124,21 @@ public class PSurfaceGLES implements PSurface, PConstants {
     return null;
   }
 
+
   public void startActivity(Intent intent) {
     if (container.getKind() == PContainer.FRAGMENT) {
       container.startActivity(intent);
     }
   }
+
+
+  public void setSystemUiVisibility(int visibility) {
+    int kind = container.getKind();
+    if (kind == PContainer.FRAGMENT || kind == PContainer.WALLPAPER) {
+      surface.setSystemUiVisibility(visibility);
+    }
+  }
+
 
   public void initView(int sketchWidth, int sketchHeight) {
     if (container.getKind() == PContainer.FRAGMENT) {
@@ -156,6 +163,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
         LinearLayout layout = new LinearLayout(activity);
         layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
         overallLayout.addView(layout, lp);
+        overallLayout.setBackgroundColor(sketch.sketchWindowColor());
 //        window.setContentView(overallLayout);
         rootView = overallLayout;
       }
@@ -184,12 +192,14 @@ public class PSurfaceGLES implements PSurface, PConstants {
         LinearLayout layout = new LinearLayout(wallpaper);
         layout.addView(getSurfaceView(), sketchWidth, sketchHeight);
         overallLayout.addView(layout, lp);
+        overallLayout.setBackgroundColor(sketch.sketchWindowColor());
 //        window.setContentView(overallLayout);
         rootView = overallLayout;
       }
       setRootView(rootView);
     }
   }
+
 
   public String getName() {
     if (container.getKind() == PContainer.FRAGMENT) {
@@ -202,6 +212,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
     return "";
   }
 
+
   public void setOrientation(int which) {
     if (container.getKind() == PContainer.FRAGMENT) {
       if (which == PORTRAIT) {
@@ -211,6 +222,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
       }
     }
   }
+
 
   public File getFilesDir() {
     if (container.getKind() == PContainer.FRAGMENT) {
@@ -222,6 +234,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
     }
     return null;
   }
+
 
   public InputStream openFileInput(String filename) {
     if (container.getKind() == PContainer.FRAGMENT) {
@@ -235,6 +248,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
     return null;
   }
 
+
   public File getFileStreamPath(String path) {
     if (container.getKind() == PContainer.FRAGMENT) {
       return activity.getFileStreamPath(path);
@@ -245,6 +259,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
     }
     return null;
   }
+
 
   public void dispose() {
     if (surface != null && surface instanceof SketchSurfaceViewGL) {
@@ -333,7 +348,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
   // GL SurfaceView
 
     public class SketchSurfaceViewGL extends GLSurfaceView {
-      //      PGraphicsOpenGL g3;
       PContainer container;
       SurfaceHolder holder;
 
@@ -396,8 +410,8 @@ public class PSurfaceGLES implements PSurface, PConstants {
 //        if (PApplet.DEBUG) {
 //          System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h);
 //        }
-        System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h + " " + sketch);
-        sketch.surfaceChanged();
+//        System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h + " " + sketch);
+//        sketch.surfaceChanged();
       }
 
     // part of SurfaceHolder.Callback
@@ -450,6 +464,12 @@ public class PSurfaceGLES implements PSurface, PConstants {
     // Do we need these to catpure events...?
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+      boolean fullscreen = sketch.width == sketch.displayWidth &&
+                           sketch.height == sketch.displayHeight;
+      if (fullscreen && PApplet.SDK < 19) {
+        // The best we can do pre-KitKat to keep the navigation bar hidden
+        setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+      }
       return sketch.surfaceTouchEvent(event);
     }
 
@@ -510,7 +530,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
-      graphics.setSize(iwidth, iheight);
+       // Display width/height might change if the orientation changes.
+      sketch.displayHeight = iwidth;
+      sketch.displayHeight = iheight;
+      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
+      sketch.surfaceChanged();
     }
 
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {

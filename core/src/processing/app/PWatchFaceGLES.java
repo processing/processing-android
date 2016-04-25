@@ -115,19 +115,25 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements PContainer 
     }
 
 
-
     @Override
     public void onGlContextCreated() {
       super.onGlContextCreated();
     }
 
+
     @Override
     public void onGlSurfaceCreated(int width, int height) {
       super.onGlSurfaceCreated(width, height);
 //      graphics.setSize(width, height);
-      sketch.g.setSize(width, height);
+//      sketch.g.setSize(width, height);
+//      sketch.surfaceChanged();
+
+      sketch.displayHeight = width;
+      sketch.displayHeight = height;
+      sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
     }
+
 
     @Override
     public void onAmbientModeChanged(boolean inAmbientMode) {
@@ -135,6 +141,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements PContainer 
 //      invalidate();
       // call new event handlers in sketch (?)
     }
+
 
     @Override
     public void onVisibilityChanged(boolean visible) {
@@ -147,15 +154,18 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements PContainer 
 //      startTimerIfNecessary();
     }
 
+
     @Override
     public void onPeekCardPositionUpdate(Rect rect) {
 
     }
 
+
     @Override
     public void onTimeTick() {
       invalidate();
     }
+
 
     @Override
     public void onDraw() {
@@ -165,12 +175,14 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements PContainer 
       sketch.handleDraw();
     }
 
+
     @Override
     public void onTouchEvent(MotionEvent event) {
       PApplet.println("touch even:" + event.toString());
       sketch.surfaceTouchEvent(event);
       super.onTouchEvent(event);
     }
+
 
     @Override
     public void onTapCommand(

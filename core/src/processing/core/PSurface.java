@@ -47,4 +47,6 @@ public interface PSurface {
   public boolean isStopped();
 
   public AssetManager getAssets();
+
+  public void setSystemUiVisibility(int visibility);
 }

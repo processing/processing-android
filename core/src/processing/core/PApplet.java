@@ -40,6 +40,7 @@ import android.util.*;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import processing.app.PContainer;
 import processing.data.*;
 import processing.event.*;
@@ -49,19 +50,9 @@ import processing.opengl.*;
 public class PApplet extends Object implements PConstants, Runnable {
 
   /**
-   * The activity which holds this sketch.
-   */
-//  private Activity activity;
-  /**
-   * The surface holding this sketch.
+   * The surface this sketch draws to.
    */
   public PSurface surface;
-
-//  private Object wrapper;
-
-  public PSurface getSurface() {
-    return surface;
-  }
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
@@ -69,8 +60,9 @@ public class PApplet extends Object implements PConstants, Runnable {
 //  static final public boolean DEBUG = true;
   static final public boolean DEBUG = false;
 
-  /** The frame containing this applet (if any) */
-//  public Frame frame;
+  // Convenience public constant holding the SDK version, akin to platform in Java mode
+  static final public int SDK = android.os.Build.VERSION.SDK_INT;
+//  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
 
   /**
    * The screen size when the sketch was started. This is initialized inside
@@ -341,7 +333,7 @@ public class PApplet extends Object implements PConstants, Runnable {
    */
   protected boolean paused;
 
-  protected SurfaceView surfaceView;
+//  protected SurfaceView surfaceView;
 
   /**
    * The Window object for Android.
@@ -442,9 +434,71 @@ public class PApplet extends Object implements PConstants, Runnable {
 
   }
 
+
+  public PSurface getSurface() {
+    return surface;
+  }
+
+
   public void initSurface(PContainer container, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
+    handleSettings();
+
+    String rendererName = sketchRenderer();
+    // Dummy values for initialization, setSize() will be called later onSurfaceChanged()
+    int sw = 0;
+    int sh = 0;
+    if (DEBUG) println("Renderer " + rendererName);
+    g = makeGraphics(sw, sh, rendererName, true);
+    if (DEBUG) println("Created renderer");
+    surface = g.createSurface(container, holder);
+    if (DEBUG) println("Created surface");
+
+    if (fullScreen) {
+      int visibility;
+      if (SDK < 19) {
+        // Pre-4.4
+        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+      } else {
+        // 4.4 and higher. Equivalent to:
+        // View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+        // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+        // View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        // so this line can be build with SDK < 4.4
+        // This results in the navigation bar being not visible, but can still be
+        // brought into view when swiping from the edges
+        visibility = 256 | 512 | 1024 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4 | 2048 | 4096;
+      }
+      surface.setSystemUiVisibility(visibility);
+    }
+
+    container.initDimensions();
+    displayWidth = container.getWidth();
+    displayHeight = container.getHeight();
+    if (fullScreen) {
+      // Setting the default height and width to be fullscreen
+      width = displayWidth;
+      height = displayHeight;
+    }
+
+    //set smooth level
+    if (smooth == 0) {
+      g.noSmooth();
+    } else {
+      g.smooth(smooth);
+    }
+
+    surface.initView(width, height);
+
+    finished = false; // just for clarity
+    // this will be cleared by draw() if it is not overridden
+    looping = true;
+    redraw = true;  // draw this guy once
+
+    sketchPath = surface.getFilesDir().getAbsolutePath();
+
+/*
     container.initDimensions();
     displayWidth = container.getWidth();
     displayHeight = container.getHeight();
@@ -482,9 +536,9 @@ public class PApplet extends Object implements PConstants, Runnable {
     redraw = true;  // draw this guy once
 
     sketchPath = surface.getFilesDir().getAbsolutePath();
+    */
 
-//    handler = new Handler();
-    println("Done with init surface");
+    if (DEBUG) println("Done with init surface");
   }
 
 
@@ -1478,39 +1532,14 @@ public class PApplet extends Object implements PConstants, Runnable {
       }
       pg = new PGraphics3D();
     } else {
-
-
       Class<?> rendererClass = null;
       Constructor<?> constructor = null;
-
-//      try {
-//          rendererClass = Class.forName(renderer);
-//      } catch (ClassNotFoundException exception) {
-//          String message = String.format(
-//                  "Error: Could not resolve renderer class name: %s", renderer);
-//          throw new RuntimeException(message, exception);
-//      }
-
-    try {
-    // The context class loader doesn't work:
-    rendererClass = Thread.currentThread().getContextClassLoader().loadClass(renderer);
-    // even though it should, according to this discussion:
-    // http://code.google.com/p/android/issues/detail?id=11101
-    // While the method that is not supposed to work, using the class loader, does:
-//    rendererClass = this.getClass().getClassLoader().loadClass(renderer);
-  } catch (ClassNotFoundException cnfe) {
-    throw new RuntimeException("Missing renderer class");
-  }
-
-//      try {
-//        constructor = rendererClass.getConstructor();
-//      } catch (Exception exception) {
-//        throw new RuntimeException(
-//                "Error: Failed to initialize custom OpenGL renderer",
-//                exception);
-//      }
-
-
+      try {
+        // http://code.google.com/p/android/issues/detail?id=11101
+        rendererClass = Thread.currentThread().getContextClassLoader().loadClass(renderer);
+      } catch (ClassNotFoundException cnfe) {
+        throw new RuntimeException("Missing renderer class");
+      }
 
       if (rendererClass != null) {
         try {
@@ -1541,7 +1570,9 @@ public class PApplet extends Object implements PConstants, Runnable {
 
     pg.setParent(this);
     pg.setPrimary(primary);
-    pg.setSize(width, height);
+    if (0 < w && 0 < h) {
+      pg.setSize(width, height);
+    }
 
     return pg;
   }
