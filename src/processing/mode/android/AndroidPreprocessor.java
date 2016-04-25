@@ -49,9 +49,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
   public static final String SMOOTH_REGEX =
       "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
-  public static final String KIND_REGEX =
-      "(?:^|\\s|;)kind\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";  
- 
   public AndroidPreprocessor(final String sketchName) {
     super(sketchName);
   } 
@@ -120,29 +117,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return new String[] { null, null };  // not an error, just empty
   }
 
-
-  public String initSketchKind(String code) throws SketchException {
-    String[] info = parseSketchKind(code, true);
-    if (info == null) {
-      System.err.println("More about the kind() command on Android can be");
-      System.err.println("found here: http://wiki.processing.org/w/Android");
-      throw new SketchException("Could not parse the kind() command.");
-    }
-    kindStatement = info[0];
-    sketchKind = info[1];
-    return sketchKind;
-  }
-  
-  
-  static public String[] parseSketchKind(String code, boolean fussy) {
-    String[] matches = PApplet.match(scrubComments(code), KIND_REGEX);
-
-    if (matches != null) {
-      return matches;
-    }
-    return new String[] { null, null };  // not an error, just empty
-  }
-  
   
   /*
   protected boolean parseSketchSize() {

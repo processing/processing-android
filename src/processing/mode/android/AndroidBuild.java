@@ -163,8 +163,7 @@ class AndroidBuild extends JavaBuild {
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
     // On Android, this init will throw a SketchException if there's a problem with size()
     preproc.initSketchSize(sketch.getMainProgram());
-    preproc.initSketchSmooth(sketch.getMainProgram());    
-    String kind = preproc.initSketchKind(sketch.getMainProgram());
+    preproc.initSketchSmooth(sketch.getMainProgram());
     
     sketchClassName = preprocess(srcFolder, manifest.getPackageName(), preproc, false);
     if (sketchClassName != null) {
@@ -181,7 +180,7 @@ class AndroidBuild extends JavaBuild {
       writeRes(resFolder, sketchClassName);
 
 
-      writeMainActivity(srcFolder, kind);
+      writeMainClass(srcFolder);
 
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
@@ -875,11 +874,15 @@ class AndroidBuild extends JavaBuild {
   }
 
 
-  private void writeMainActivity(final File srcDirectory, final String sketchKind) {
-    if (sketchKind == null || sketchKind.equals("FRAGMENT")) {
+  private void writeMainClass(final File srcDirectory) {
+    if (publishOpt == FRAGMENT) {
       writeFragmentActivity(srcDirectory);
-    } else if (sketchKind.equals("STEREO")) {
-      writeStereoActivity(srcDirectory);
+    } else if (publishOpt == WALLPAPER) {
+      writeWallpaperService(srcDirectory);
+    } else if (publishOpt == WATCHFACE) {
+      writeWatchfaceService(srcDirectory);
+    } else if (publishOpt == CARDBOARD) {
+      writeCardboardActivity(srcDirectory);
     }
   }
 
@@ -939,7 +942,17 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  private void writeStereoActivity(final File srcDirectory) {
+  private void writeWallpaperService(final File srcDirectory) {
+    
+  }
+  
+  
+  private void writeWatchfaceService(final File srcDirectory) {
+    
+  }
+  
+  
+  private void writeCardboardActivity(final File srcDirectory) {
     
   }
   
