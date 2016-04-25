@@ -56,7 +56,8 @@ class AndroidBuild extends JavaBuild {
   static String sdkVersion = "21";  // Android 5.0 (Lollipop)
   static String sdkTarget = "android-" + sdkVersion;
 
-  static int publishOpt = FRAGMENT;
+  static int publishOption = FRAGMENT;
+  static boolean forceNewManifest = false;
   
   private final AndroidSDK sdk;
   private final File coreZipFile;
@@ -80,16 +81,18 @@ class AndroidBuild extends JavaBuild {
   }
 
   public static void setPublishOption(int opt, Sketch sketch) {
-    publishOpt = opt;
+    if (publishOption != opt) {
+      publishOption = opt;
+      forceNewManifest = true;
+    } else {
+      forceNewManifest = false;
+    }
   }
   
   public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
     sdkName = target.name;
     sdkVersion = Integer.toString(target.version);
     sdkTarget = "android-" + sdkVersion;
-
-    Manifest manifest = new Manifest(sketch);
-    manifest.setSdkTarget(sdkVersion);
 
     Preferences.set("android.sdk.version", sdkVersion);
     Preferences.set("android.sdk.name", target.name);
@@ -156,6 +159,8 @@ class AndroidBuild extends JavaBuild {
     }
 
     manifest = new Manifest(sketch);
+    manifest.setSdkTarget(sdkVersion);
+    
     // grab code from current editing window (GUI only)
 //    prepareExport(null);
 
@@ -875,13 +880,13 @@ class AndroidBuild extends JavaBuild {
 
 
   private void writeMainClass(final File srcDirectory) {
-    if (publishOpt == FRAGMENT) {
+    if (publishOption == FRAGMENT) {
       writeFragmentActivity(srcDirectory);
-    } else if (publishOpt == WALLPAPER) {
+    } else if (publishOption == WALLPAPER) {
       writeWallpaperService(srcDirectory);
-    } else if (publishOpt == WATCHFACE) {
+    } else if (publishOption == WATCHFACE) {
       writeWatchfaceService(srcDirectory);
-    } else if (publishOpt == CARDBOARD) {
+    } else if (publishOption == CARDBOARD) {
       writeCardboardActivity(srcDirectory);
     }
   }
@@ -943,7 +948,21 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeWallpaperService(final File srcDirectory) {
-    
+    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+        "MainService.java");
+    final PrintWriter writer = PApplet.createWriter(mainServiceFile);
+    writer.println("package " + manifest.getPackageName() +";");    
+    writer.println("import processing.app.PWallpaper;");
+    writer.println("import processing.core.PApplet;");
+    writer.println("public class MainService extends PWallpaper {");
+    writer.println("    @Override");
+    writer.println("    public PApplet createSketch() {");
+    writer.println("      PApplet sketch = new " + sketchClassName + "();");
+    writer.println("      return sketch;");
+    writer.println("    }");
+    writer.println("}");
+    writer.flush();
+    writer.close();  
   }
   
   

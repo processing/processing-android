@@ -167,6 +167,12 @@ public class Manifest {
 
     // for now including this... we're wiring to a particular SDK version anyway...
     writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />");
+    
+    // Publishing-specific features
+    if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
+      writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />");
+    }
+    
 //    writer.println("  <uses-sdk android:minSdkVersion=\"\" />");  // insert sdk version
 //    writer.println("  <application android:label=\"@string/app_name\"");
     writer.println("  <application android:label=\"\"");  // insert pretty name
@@ -178,16 +184,32 @@ public class Manifest {
 ////    writer.println("              android:label=\"@string/app_name\">");  // pretty name
 //    writer.println("              android:label=\"\">");
 
-    // activity/android:name should be the full name (package + class name) of
-    // the actual activity class. or the package can be replaced by a single
-    // dot as a prefix as an easier shorthand.
-    writer.println("    <activity android:name=\".MainActivity\">");
-    writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">");
-    writer.println("      <intent-filter>");
-    writer.println("        <action android:name=\"android.intent.action.MAIN\" />");
-    writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />");
-    writer.println("      </intent-filter>");
-    writer.println("    </activity>");
+    if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
+      // activity/android:name should be the full name (package + class name) of
+      // the actual activity class. or the package can be replaced by a single
+      // dot as a prefix as an easier shorthand.
+      writer.println("    <activity android:name=\".MainActivity\">");
+      writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">");
+      writer.println("      <intent-filter>");
+      writer.println("        <action android:name=\"android.intent.action.MAIN\" />");
+      writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />");
+      writer.println("      </intent-filter>");
+      writer.println("    </activity>"); 
+    } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
+      writer.println("    <service android:name=\".MainService\">");
+      writer.println("             android:theme=\"@android:style/Theme.NoTitleBar\">");
+      writer.println("             android:label=\"Wallpaper Test\">");      
+      writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\">");
+      writer.println("      <intent-filter>");
+      writer.println("         <action android:name=\"android.service.wallpaper.MainService\" />");
+      writer.println("      </intent-filter>");
+      writer.println("    <meta-data android:name=\"android.service.wallpaper\"></meta-data>");
+      writer.println("  </service>");  
+    } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+      
+    } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {
+      
+    }
     writer.println("  </application>");
     writer.println("</manifest>");
     writer.flush();
@@ -245,7 +267,8 @@ public class Manifest {
 //    File manifestFile = new File(sketch.getFolder(), MANIFEST_XML);
 //    XMLElement xml = null;
     File manifestFile = getManifestFile();
-    if (manifestFile.exists()) {
+    if (AndroidBuild.forceNewManifest) xml = null;
+    if (manifestFile.exists() && !AndroidBuild.forceNewManifest) {
       try {
         xml = new XML(manifestFile);
       } catch (Exception e) {
