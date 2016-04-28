@@ -47,7 +47,7 @@ import processing.event.*;
 import processing.opengl.*;
 
 
-public class PApplet extends Object implements PConstants, Runnable {
+public class PApplet extends Object implements PConstants {
 
   /**
    * The surface this sketch draws to.
@@ -116,7 +116,7 @@ public class PApplet extends Object implements PConstants, Runnable {
    * when the renderer is changed. This is the only way for us to handle
    * invoking the new renderer while also in the midst of rendering.
    */
-  static public class RendererChangeException extends RuntimeException { }
+//  static public class RendererChangeException extends RuntimeException { }
 
   protected boolean surfaceReady;
 
@@ -290,6 +290,8 @@ public class PApplet extends Object implements PConstants, Runnable {
    */
   long millisOffset = System.currentTimeMillis();
 
+  protected boolean insideDraw;
+
   /**
    * The current value of frames per second.
    * <P>
@@ -331,7 +333,7 @@ public class PApplet extends Object implements PConstants, Runnable {
   /**
    * For Android, true if the activity has been paused.
    */
-  protected boolean paused;
+//  protected boolean paused;
 
 //  protected SurfaceView surfaceView;
 
@@ -546,7 +548,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     // TODO need to bring back app state here!
 //    surfaceView.onResume();
     if (DEBUG) System.out.println("PApplet.onResume() called");
-    paused = false;
+//    paused = false;
     handleMethods("resume");
     //start();  // kick the thread back on
     surface.resumeThread();
@@ -558,7 +560,7 @@ public class PApplet extends Object implements PConstants, Runnable {
   public void onPause() {
     // TODO need to save all application state here!
 //    System.out.println("PApplet.onPause() called");
-    paused = true;
+//    paused = true;
     handleMethods("pause");
     surface.pauseThread();
     pause();  // handler for others to write
@@ -581,20 +583,19 @@ public class PApplet extends Object implements PConstants, Runnable {
 
 
   public void onStart() {
-    tellPDE("onStart");
+    start();
+//    tellPDE("onStart");
   }
 
 
   public void onStop() {
-
-    tellPDE("onStop");
-
+    stop();
+//    tellPDE("onStop");
   }
 
-
-  private void tellPDE(final String message) {
-    Log.i(surface.getName(), "PROCESSING " + message);
-  }
+//  private void tellPDE(final String message) {
+//    Log.i(surface.getName(), "PROCESSING " + message);
+//  }
 
 
   /**
@@ -873,12 +874,6 @@ public class PApplet extends Object implements PConstants, Runnable {
   }
 
 
-//  public int sketchOrientation() {
-//    return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
-//    //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-//  }
-
-
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -891,9 +886,10 @@ public class PApplet extends Object implements PConstants, Runnable {
    * PAppletGL needs to have a usable screen before getting things rolling.
    */
   public void start() {
-    finished = false;
-    paused = false; // unpause the thread
+//    finished = false;
+//    paused = false; // unpause the thread
 
+    resume();
     surface.startThread();
 //    if (thread == null) {
 //      thread = new Thread(this, "Animation Thread");
@@ -914,7 +910,9 @@ public class PApplet extends Object implements PConstants, Runnable {
     // this used to shut down the sketch, but that code has
     // been moved to dispose()
 
-    paused = true; // sleep the animation thread
+//    paused = true; // sleep the animation thread
+    pause();
+    surface.stopThread();
 
     //TODO listeners
   }
@@ -949,9 +947,9 @@ public class PApplet extends Object implements PConstants, Runnable {
    * no guarantees on when they're run (on browser quit, or
    * when moving between pages), though.
    */
-  public void destroy() {
-    ((PApplet)this).exit();
-  }
+//  public void destroy() {
+//    ((PApplet)this).exit();
+//  }
 
 
   /**
@@ -1724,9 +1722,7 @@ public class PApplet extends Object implements PConstants, Runnable {
   //////////////////////////////////////////////////////////////
 
 
-  /**
-   * Main method for the primary animation thread.
-   */
+/*
   public void run() {  // not good to make this synchronized, locks things up
     long beforeTime = System.nanoTime();
     long overSleepTime = 0L;
@@ -1736,7 +1732,7 @@ public class PApplet extends Object implements PConstants, Runnable {
     // animation thread yields to other running threads.
     final int NO_DELAYS_PER_YIELD = 15;
 
-    while (/*(Thread.currentThread() == thread) &&*/  !finished) {
+    while (!finished) {
 
       while (paused) {
         try{
@@ -1793,122 +1789,119 @@ public class PApplet extends Object implements PConstants, Runnable {
       }
     }
   }
-
+*/
 
   public void handleDraw() {
-    if (DEBUG) {
-      println("inside handleDraw() " + millis() +
-              " changed=" + surfaceChanged +
-              " ready=" + surfaceReady +
-              " paused=" + paused +
-              " looping=" + looping +
-              " redraw=" + redraw);
-    }
+    //debug("handleDraw() " + g + " " + looping + " " + redraw + " valid:" + this.isValid() + " visible:" + this.isVisible());
+
     if (surfaceChanged) {
-//      int newWidth = surface.getSurfaceView().getWidth();
-//      int newHeight = surface.getSurfaceView().getHeight();
-//      if (newWidth != width || newHeight != height) {
-//        width = newWidth;
-//        height = newHeight;
-//        g.setSize(width, height);
-//      }
       surfaceChanged = false;
       surfaceReady = true;
-      if (DEBUG) {
-        println("surfaceChanged true, resized to " + width + "x" + height);
-      }
     }
 
-//    if (surfaceView.isShown()) {
-//      println("surface view not visible, getting out");
+    // canDraw = g != null && (looping || redraw);
+    if (g == null) return;
+    if (!looping && !redraw) return;
+//    System.out.println("looping/redraw = " + looping + " " + redraw);
+
+    // no longer in use by any of our renderers
+//    if (!g.canDraw()) {
+//      debug("g.canDraw() is false");
+//      // Don't draw if the renderer is not yet ready.
+//      // (e.g. OpenGL has to wait for a peer to be on screen)
 //      return;
-//    } else {
-//      println("surface set to go.");
 //    }
 
-    // don't start drawing (e.g. don't call setup) until there's a legitimate
-    // width and height that have been set by surfaceChanged().
-//    boolean validSize = width != 0 && height != 0;
-//    println("valid size = " + validSize + " (" + width + "x" + height + ")");
-    if (canDraw()) {
-//      if (!g.canDraw()) {
-//        // Don't draw if the renderer is not yet ready.
-//        // (e.g. OpenGL has to wait for a peer to be on screen)
-//        return;
-//      }
+    // Store the quality setting in case it's changed during draw and the
+    // drawing context needs to be re-built before the next frame.
+//    int pquality = g.smooth;
 
-      g.beginDraw();
+    if (insideDraw) {
+      System.err.println("handleDraw() called before finishing");
+      System.exit(1);
+    }
 
-      long now = System.nanoTime();
+    insideDraw = true;
+    g.beginDraw();
+//    if (recorder != null) {
+//      recorder.beginDraw();
+//    }
 
-      if (frameCount == 0) {
-        try {
-          //println("Calling setup()");
-          setup();
-          //println("Done with setup()");
+    long now = System.nanoTime();
 
-        } catch (RendererChangeException e) {
-          // Give up, instead set the new renderer and re-attempt setup()
-          return;
-        }
-//        this.defaultSize = false;
+    if (frameCount == 0) {
+        // 3.0a5 should be no longer needed; handled by PSurface
+        //surface.checkDisplaySize();
 
-      } else {  // frameCount > 0, meaning an actual draw()
-        // update the current frameRate
-        double rate = 1000000.0 / ((now - frameRateLastNanos) / 1000000.0);
-        float instantaneousRate = (float) rate / 1000.0f;
-        frameRate = (frameRate * 0.9f) + (instantaneousRate * 0.1f);
+//        try {
+        //println("Calling setup()");
+      setup();
+        //println("Done with setup()");
 
-        if (frameCount != 0) {
-          handleMethods("pre");
-        }
+//        } catch (RendererChangeException e) {
+//          // Give up, instead set the new renderer and re-attempt setup()
+//          return;
+//        }
+//      defaultSize = false;
 
-        // use dmouseX/Y as previous mouse pos, since this is the
-        // last position the mouse was in during the previous draw.
-        pmouseX = dmouseX;
-        pmouseY = dmouseY;
-//        pmotionX = dmotionX;
-//        pmotionY = dmotionY;
-
-        //println("Calling draw()");
-        draw();
-        //println("Done calling draw()");
-
-        // dmouseX/Y is updated only once per frame (unlike emouseX/Y)
-        dmouseX = mouseX;
-        dmouseY = mouseY;
-//        dmotionX = motionX;
-//        dmotionY = motionY;
-
-        // these are called *after* loop so that valid
-        // drawing commands can be run inside them. it can't
-        // be before, since a call to background() would wipe
-        // out anything that had been drawn so far.
-//        dequeueMotionEvents();
-//        dequeueKeyEvents();
-        dequeueEvents();
-
-        handleMethods("draw");
-
-        redraw = false;  // unset 'redraw' flag in case it was set
-        // (only do this once draw() has run, not just setup())
-      }
-      g.endDraw();
+    } else {  // frameCount > 0, meaning an actual draw()
+      // update the current frameRate
+      double rate = 1000000.0 / ((now - frameRateLastNanos) / 1000000.0);
+      float instantaneousRate = (float) (rate / 1000.0);
+      frameRate = (frameRate * 0.9f) + (instantaneousRate * 0.1f);
 
       if (frameCount != 0) {
-        handleMethods("post");
+        handleMethods("pre");
       }
 
-      frameRateLastNanos = now;
-      frameCount++;
+      // use dmouseX/Y as previous mouse pos, since this is the
+      // last position the mouse was in during the previous draw.
+      pmouseX = dmouseX;
+      pmouseY = dmouseY;
+
+        //println("Calling draw()");
+      draw();
+        //println("Done calling draw()");
+
+      // dmouseX/Y is updated only once per frame (unlike emouseX/Y)
+      dmouseX = mouseX;
+      dmouseY = mouseY;
+
+      // these are called *after* loop so that valid
+      // drawing commands can be run inside them. it can't
+      // be before, since a call to background() would wipe
+      // out anything that had been drawn so far.
+      dequeueEvents();
+
+      handleMethods("draw");
+
+      redraw = false;  // unset 'redraw' flag in case it was set
+      // (only do this once draw() has run, not just setup())
     }
+    g.endDraw();
+
+//    if (pquality != g.smooth) {
+//      surface.setSmooth(g.smooth);
+//    }
+
+//    if (recorder != null) {
+//      recorder.endDraw();
+//    }
+    insideDraw = false;
+
+    if (frameCount != 0) {
+      handleMethods("post");
+    }
+
+    frameRateLastNanos = now;
+    frameCount++;
   }
 
 
   /** Not official API, not guaranteed to work in the future. */
-  public boolean canDraw() {
-    return g != null && surfaceReady && !paused && (looping || redraw);
-  }
+//  public boolean canDraw() {
+//    return g != null && surfaceReady && !paused && (looping || redraw);
+//  }
 
 
   //////////////////////////////////////////////////////////////

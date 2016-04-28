@@ -50,7 +50,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
   protected View view;
 
-  protected SurfaceView surface;
+  protected GLSurfaceView surface;
 
   public PGLES pgl;
 
@@ -282,7 +282,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
   private final Runnable drawRunnable = new Runnable() {
     public void run() {
       if (sketch != null) {
-        sketch.g.requestDraw();
+        surface.requestRender();
       }
       scheduleNextDraw();
     }
@@ -347,72 +347,71 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
   // GL SurfaceView
 
-    public class SketchSurfaceViewGL extends GLSurfaceView {
-      PContainer container;
-      SurfaceHolder holder;
+  public class SketchSurfaceViewGL extends GLSurfaceView {
+    PContainer container;
+    SurfaceHolder holder;
 
-      @SuppressWarnings("deprecation")
-      public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
-        super(context);
-        this.holder = holder;
+    @SuppressWarnings("deprecation")
+    public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
+      super(context);
+      this.holder = holder;
 
-        // Check if the system supports OpenGL ES 2.0.
-        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
-        final boolean supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000;
+      // Check if the system supports OpenGL ES 2.0.
+      final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+      final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+      final boolean supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000;
 
-        if (!supportsGLES2) {
-          throw new RuntimeException("OpenGL ES 2.0 is not supported by this device.");
-        }
-
-        SurfaceHolder h = getHolder();
-        h.addCallback(this);
-        h.setType(SurfaceHolder.SURFACE_TYPE_GPU);
-
-        // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
-        setEGLContextClientVersion(2);
-        setPreserveEGLContextOnPause(true);
-
-        setFocusable(true);
-        setFocusableInTouchMode(true);
-        requestFocus();
-
-        int quality = sketch.sketchQuality();
-        if (1 < quality) {
-          setEGLConfigChooser(getConfigChooser(quality));
-        }
-        // The renderer can be set only once.
-        setRenderer(getRenderer());
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+      if (!supportsGLES2) {
+        throw new RuntimeException("OpenGL ES 2.0 is not supported by this device.");
       }
 
+      SurfaceHolder h = getHolder();
+      h.addCallback(this);
+      h.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
-      @Override
-      public SurfaceHolder getHolder() {
-        if (holder == null) {
-          return super.getHolder();
-        } else {
-          return holder;
-        }
+      // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
+      setEGLContextClientVersion(2);
+      setPreserveEGLContextOnPause(true);
+
+      setFocusable(true);
+      setFocusableInTouchMode(true);
+      requestFocus();
+
+      int quality = sketch.sketchQuality();
+      if (1 < quality) {
+        setEGLConfigChooser(getConfigChooser(quality));
       }
+      // The renderer can be set only once.
+      setRenderer(getRenderer());
+      setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+    }
 
-      public void onDestroy() {
-        super.onDetachedFromWindow();
-        // don't think i want to call stop() from here, since it might be swapping renderers
-        //      stop();
+    @Override
+    public SurfaceHolder getHolder() {
+      if (holder == null) {
+        return super.getHolder();
+      } else {
+        return holder;
       }
+    }
+
+    public void onDestroy() {
+      super.onDetachedFromWindow();
+      // don't think i want to call stop() from here, since it might be swapping renderers
+      //      stop();
+    }
 
 
-      @Override
-      public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        super.surfaceChanged(holder, format, w, h);
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+      super.surfaceChanged(holder, format, w, h);
 
 //        if (PApplet.DEBUG) {
 //          System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h);
 //        }
 //        System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h + " " + sketch);
 //        sketch.surfaceChanged();
-      }
+    }
 
     // part of SurfaceHolder.Callback
     @Override
@@ -422,7 +421,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
         System.out.println("surfaceCreated()");
       }
     }
-
 
     // part of SurfaceHolder.Callback
     @Override

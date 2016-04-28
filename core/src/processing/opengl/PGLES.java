@@ -200,9 +200,7 @@ public class PGLES extends PGL {
 
 
   @Override
-  protected boolean canDraw() {
-    return true;
-  }
+  protected boolean canDraw() { return true; }
 
 
   @Override
@@ -210,11 +208,7 @@ public class PGLES extends PGL {
 
 
   @Override
-  protected void requestDraw() {
-    if (graphics.initialized && sketch.canDraw() && glview != null) {
-      glview.requestRender();
-    }
-  }
+  protected void requestDraw() { }
 
 
   @Override
