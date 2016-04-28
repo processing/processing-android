@@ -789,6 +789,17 @@ class AndroidBuild extends JavaBuild {
     File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
     writeResLayoutMainActivity(mainActivityLayoutFile);
 
+    if (publishOption == WALLPAPER) {
+      File xmlFolder = mkdirs(resFolder, "xml");
+      File mainServiceWallpaperFile = new File(xmlFolder, "wallpaper.xml");
+      writeResXMLWallpaper(mainServiceWallpaperFile);
+            
+      File valuesFolder = mkdirs(resFolder, "values");
+      File mainServiceStringFile = new File(valuesFolder, "strings.xml");
+      writeResStringsWallpaper(mainServiceStringFile);
+      
+    }
+    
 //    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
 //    writeResLayoutMainFragment(mainFragmentLayoutFile);
 
@@ -990,6 +1001,24 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
+  private void writeResXMLWallpaper(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+    writer.println("    android:thumbnail=\"@drawable/icon\"");
+    writer.println("    android:description=\"@string/app_name\" />");
+    writer.flush();
+    writer.close();    
+  }
+  
+  private void writeResStringsWallpaper(final File file) {
+     final PrintWriter writer = PApplet.createWriter(file);
+     writer.println("<resources>");
+     writer.println("  <string name=\"app_name\">" + sketchClassName + "</string>");
+     writer.println("</resources>");
+     writer.flush();
+     writer.close();    
+  }
+  
 /*
   private void writeResLayoutMainFragment(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);

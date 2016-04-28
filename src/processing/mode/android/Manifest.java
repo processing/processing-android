@@ -146,11 +146,13 @@ public class Manifest {
 */
 
   private void writeBlankManifest(final File file) {
+    char newLine = '\n';
+        
     final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" ");
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + newLine);
+    writer.println("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" " + newLine);
 //    writer.println("          package=\"" + defaultPackageName() + "\" ");
-    writer.println("          package=\"\" ");
+    writer.println("          package=\"\" " + newLine);
 
     // Tempting to use 'preferExternal' here, but might annoy some users.
     // 'auto' at least enables it to be moved back and forth
@@ -161,23 +163,23 @@ public class Manifest {
     // This is just a number (like the Processing 'revision'). It should
     // increment with each release. Perhaps P5 should do this automatically
     // with each build or read/write of the manifest file?
-    writer.println("          android:versionCode=\"1\" ");
+    writer.println("          android:versionCode=\"1\" " + newLine);
     // This is the version number/name seen by users
-    writer.println("          android:versionName=\"1.0\">");
+    writer.println("          android:versionName=\"1.0\">" + newLine);
 
     // for now including this... we're wiring to a particular SDK version anyway...
-    writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />");
+    writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);
     
     // Publishing-specific features
     if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
-      writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />");
+      writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />" + newLine);
     }
     
 //    writer.println("  <uses-sdk android:minSdkVersion=\"\" />");  // insert sdk version
 //    writer.println("  <application android:label=\"@string/app_name\"");
-    writer.println("  <application android:label=\"\"");  // insert pretty name
-    writer.println("               android:icon=\"@drawable/icon\"");
-    writer.println("               android:debuggable=\"true\">");
+    writer.println("  <application android:label=\"\" " + newLine);  // insert pretty name
+    writer.println("               android:icon=\"@drawable/icon\" " + newLine);
+    writer.println("               android:debuggable=\"true\">" + newLine);
 
     // turns out label is not required for the activity, so nixing it
 //    writer.println("    <activity android:name=\"\"");  // insert class name prefixed w/ dot
@@ -189,31 +191,31 @@ public class Manifest {
       // activity/android:name should be the full name (package + class name) of
       // the actual activity class. or the package can be replaced by a single
       // dot as a prefix as an easier shorthand.
-      writer.println("    <activity android:name=\".MainActivity\">");
-      writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">");
-      writer.println("      <intent-filter>");
-      writer.println("        <action android:name=\"android.intent.action.MAIN\" />");
-      writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />");
-      writer.println("      </intent-filter>");
-      writer.println("    </activity>"); 
+      writer.println("    <activity android:name=\".MainActivity\">" + newLine);
+      writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">" + newLine);
+      writer.println("      <intent-filter>" + newLine);
+      writer.println("        <action android:name=\"android.intent.action.MAIN\" />" + newLine);
+      writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />" + newLine);
+      writer.println("      </intent-filter>" + newLine);
+      writer.println("    </activity>" + newLine); 
     } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
 //      System.out.println("WRITING WALLPAPER MANIFEST");
-      writer.println("    <service android:name=\".MainService\">");
-      writer.println("             android:theme=\"@android:style/Theme.NoTitleBar\">");
-      writer.println("             android:label=\"Wallpaper Test\">");      
-      writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\">");
-      writer.println("      <intent-filter>");
-      writer.println("         <action android:name=\"android.service.wallpaper.MainService\" />");
-      writer.println("      </intent-filter>");
-      writer.println("    <meta-data android:name=\"android.service.wallpaper\"></meta-data>");
-      writer.println("  </service>");  
+      writer.println("    <service android:name=\".MainService\" " + newLine);
+      writer.println("             android:label=\"Wallpaper Test\" " + newLine);
+      writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
+      writer.println("      <intent-filter>" + newLine);
+      writer.println("         <action android:name=\"android.service.wallpaper.MainService\" />" + newLine);
+      writer.println("      </intent-filter>" + newLine);
+      writer.println("    <meta-data android:name=\"android.service.wallpaper\" " + newLine);
+      writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
+      writer.println("  </service>" + newLine);  
     } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
       
     } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {
       
     }
-    writer.println("  </application>");
-    writer.println("</manifest>");
+    writer.println("  </application>" + newLine);
+    writer.println("</manifest>" + newLine);
     writer.flush();
     writer.close();
   }
