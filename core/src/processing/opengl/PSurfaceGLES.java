@@ -38,11 +38,9 @@ import processing.core.PSurface;
 import android.os.Handler;
 
 public class PSurfaceGLES implements PSurface, PConstants {
-
-  protected PContainer container;
-  protected PGraphics graphics;
-
   protected PApplet sketch;
+  protected PGraphics graphics;
+  protected PContainer container;
 
   protected Activity activity;
   protected WallpaperService wallpaper;
@@ -83,7 +81,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
     }
   }
 
-
+  @Override
   public PContainer getContainer() {
     return container;
   }
@@ -348,7 +346,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
   // GL SurfaceView
 
   public class SketchSurfaceViewGL extends GLSurfaceView {
-    PContainer container;
     SurfaceHolder holder;
 
     @SuppressWarnings("deprecation")

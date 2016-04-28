@@ -10,6 +10,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import processing.app.PContainer;
 
+/*
+ * Holds the surface view associated with the sketch, and the rendering thread
+ * handling
+ */
 public interface PSurface {
   public Activity getActivity();
   public PContainer getContainer();
@@ -36,6 +40,10 @@ public interface PSurface {
 
   public InputStream openFileInput(String filename);
 
+  public AssetManager getAssets();
+
+  public void setSystemUiVisibility(int visibility);
+
   public void startThread();
 
   public void pauseThread();
@@ -45,8 +53,4 @@ public interface PSurface {
   public boolean stopThread();
 
   public boolean isStopped();
-
-  public AssetManager getAssets();
-
-  public void setSystemUiVisibility(int visibility);
 }

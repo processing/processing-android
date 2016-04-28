@@ -785,16 +785,16 @@ public class PGraphics extends PImage implements PConstants {
   /**
    * Some renderers have requirements re: when they are ready to draw.
    */
-  public boolean canDraw() {  // ignore
-    return true;
-  }
+//  public boolean canDraw() {  // ignore
+//    return true;
+//  }
 
 
   /**
    * Try to draw, or put a draw request on the queue.
    */
-  public void requestDraw() {  // ignore
-  }
+//  public void requestDraw() {  // ignore
+//  }
 
 
   /**

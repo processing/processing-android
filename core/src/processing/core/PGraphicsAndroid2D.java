@@ -25,6 +25,7 @@ package processing.core;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
+import processing.app.PContainer;
 import processing.data.XML;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -32,6 +33,7 @@ import android.app.ActivityManager.MemoryInfo;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
+import android.view.SurfaceHolder;
 
 
 /**
@@ -152,6 +154,11 @@ public class PGraphicsAndroid2D extends PGraphics {
   }
 
 
+  @Override
+  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
+    return new PSurfaceAndroid2D(this, container, holder);
+  }
+
 
   //////////////////////////////////////////////////////////////
 
@@ -168,10 +175,10 @@ public class PGraphicsAndroid2D extends PGraphics {
 //  }
 
 
-  @Override
-  public void requestDraw() {
-    parent.handleDraw();
-  }
+//  @Override
+//  public void requestDraw() {
+//    parent.handleDraw();
+//  }
 
 
   @Override
