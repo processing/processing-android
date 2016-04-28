@@ -185,6 +185,7 @@ public class Manifest {
 //    writer.println("              android:label=\"\">");
 
     if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
+//      System.out.println("WRITING FRAGMENT MANIFEST");
       // activity/android:name should be the full name (package + class name) of
       // the actual activity class. or the package can be replaced by a single
       // dot as a prefix as an easier shorthand.
@@ -196,6 +197,7 @@ public class Manifest {
       writer.println("      </intent-filter>");
       writer.println("    </activity>"); 
     } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
+//      System.out.println("WRITING WALLPAPER MANIFEST");
       writer.println("    <service android:name=\".MainService\">");
       writer.println("             android:theme=\"@android:style/Theme.NoTitleBar\">");
       writer.println("             android:label=\"Wallpaper Test\">");      

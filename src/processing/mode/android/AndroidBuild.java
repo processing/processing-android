@@ -160,6 +160,7 @@ class AndroidBuild extends JavaBuild {
 
     manifest = new Manifest(sketch);
     manifest.setSdkTarget(sdkVersion);
+    forceNewManifest = false;
     
     // grab code from current editing window (GUI only)
 //    prepareExport(null);

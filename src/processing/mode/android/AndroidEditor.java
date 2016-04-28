@@ -223,25 +223,32 @@ public class AndroidEditor extends JavaEditor {
     item.setEnabled(false);
     menu.add(item); */
 
-    final JMenu deviceMenu = new JMenu("Select device");
+    final JMenu mobDeveMenu = new JMenu("Select mobile device");
 
-    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
-    noDevicesItem.setEnabled(false);
-    deviceMenu.add(noDevicesItem);
-    menu.add(deviceMenu);
+    JMenuItem noMobDevItem = new JMenuItem("No connected devices");
+    noMobDevItem.setEnabled(false);
+    mobDeveMenu.add(noMobDevItem);
+    menu.add(mobDeveMenu);
     
     // start updating device menus
-    UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
+    UpdateDeviceListTask task = new UpdateDeviceListTask(mobDeveMenu);
     java.util.Timer timer = new java.util.Timer();
     timer.schedule(task, 5000, 5000);
     
+    final JMenu wearDevMenu = new JMenu("Select wearable device");
+
+    JMenuItem noWearDevicesItem = new JMenuItem("No connected devices");
+    noWearDevicesItem.setEnabled(false);
+    wearDevMenu.add(noWearDevicesItem);
+    menu.add(wearDevMenu);    
+    
     menu.addSeparator();
 
-    final JMenu publishMenu = new JMenu("App publishing");    
+    final JMenu publishMenu = new JMenu("Build sketch as...");    
     final JCheckBoxMenuItem fragmentItem = new JCheckBoxMenuItem("Regular app");
-    final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
+    final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Live wallpaper");
     final JCheckBoxMenuItem watchfaceItem = new JCheckBoxMenuItem("Watch face");
-    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard");
+    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard app");
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
