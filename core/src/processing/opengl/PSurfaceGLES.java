@@ -317,21 +317,25 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void startThread() {
+    if (container.getKind() == AppComponent.WATCHFACE_GLES) return;
     requestNextDraw();
   }
 
 
   public void pauseThread() {
+    if (container.getKind() == AppComponent.WATCHFACE_GLES) return;
     pauseNextDraw();
   }
 
 
   public void resumeThread() {
+    if (container.getKind() == AppComponent.WATCHFACE_GLES) return;
     scheduleNextDraw();
   }
 
 
   public boolean stopThread() {
+    if (container.getKind() == AppComponent.WATCHFACE_GLES) return true;
     pauseNextDraw();
     return true;
   }
