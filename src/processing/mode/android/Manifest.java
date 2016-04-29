@@ -154,6 +154,8 @@ public class Manifest {
 //    writer.println("          package=\"" + defaultPackageName() + "\" ");
     writer.println("          package=\"\" " + newLine);
 
+    
+    
     // Tempting to use 'preferExternal' here, but might annoy some users.
     // 'auto' at least enables it to be moved back and forth
     // http://developer.android.com/guide/appendix/install-location.html
@@ -187,7 +189,6 @@ public class Manifest {
 //    writer.println("              android:label=\"\">");
 
     if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
-//      System.out.println("WRITING FRAGMENT MANIFEST");
       // activity/android:name should be the full name (package + class name) of
       // the actual activity class. or the package can be replaced by a single
       // dot as a prefix as an easier shorthand.
@@ -199,12 +200,11 @@ public class Manifest {
       writer.println("      </intent-filter>" + newLine);
       writer.println("    </activity>" + newLine); 
     } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
-//      System.out.println("WRITING WALLPAPER MANIFEST");
       writer.println("    <service android:name=\".MainService\" " + newLine);
       writer.println("             android:label=\"Wallpaper Test\" " + newLine);
       writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
       writer.println("      <intent-filter>" + newLine);
-      writer.println("         <action android:name=\"android.service.wallpaper.MainService\" />" + newLine);
+      writer.println("         <action android:name=\"android.service.wallpaper.WallpaperService\" />" + newLine);
       writer.println("      </intent-filter>" + newLine);
       writer.println("    <meta-data android:name=\"android.service.wallpaper\" " + newLine);
       writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
