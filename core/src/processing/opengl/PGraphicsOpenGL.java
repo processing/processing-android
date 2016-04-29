@@ -24,7 +24,7 @@
 
 package processing.opengl;
 
-import processing.app.PContainer;
+import processing.app.AppComponent;
 import processing.core.*;
 
 import java.lang.ref.ReferenceQueue;
@@ -666,7 +666,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   // Android only
-  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
+  public PSurface createSurface(AppComponent container, SurfaceHolder holder) {  // ignore
     return new PSurfaceGLES(this, container, holder);
   }
 

@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.view.SurfaceView;
 import android.view.View;
-import processing.app.PContainer;
+import processing.app.AppComponent;
 
 /*
  * Holds the surface view associated with the sketch, and the rendering thread
@@ -16,7 +16,7 @@ import processing.app.PContainer;
  */
 public interface PSurface {
   public Activity getActivity();
-  public PContainer getContainer();
+  public AppComponent getContainer();
 
   public void dispose();
 

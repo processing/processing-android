@@ -10,7 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import processing.core.PApplet;
 
-public class PFragment extends Fragment implements PContainer {
+public class PFragment extends Fragment implements AppComponent {
 
   private DisplayMetrics metrics;
   private PApplet sketch;

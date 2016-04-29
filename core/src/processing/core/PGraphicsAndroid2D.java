@@ -25,7 +25,7 @@ package processing.core;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import processing.app.PContainer;
+import processing.app.AppComponent;
 import processing.data.XML;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -155,7 +155,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   @Override
-  public PSurface createSurface(PContainer container, SurfaceHolder holder) {  // ignore
+  public PSurface createSurface(AppComponent container, SurfaceHolder holder) {  // ignore
     return new PSurfaceAndroid2D(this, container, holder);
   }
 

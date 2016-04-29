@@ -11,7 +11,7 @@ import android.view.WindowManager;
 import processing.core.PApplet;
 import processing.core.PGraphicsAndroid2D;
 
-public class PWatchFaceCanvas extends CanvasWatchFaceService implements PContainer {
+public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
   private DisplayMetrics metrics;
   private PApplet sketch;
   private CEngine engine;

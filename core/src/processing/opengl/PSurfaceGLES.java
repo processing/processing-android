@@ -29,7 +29,7 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import processing.app.PContainer;
+import processing.app.AppComponent;
 import processing.app.PFragment;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -40,7 +40,7 @@ import android.os.Handler;
 public class PSurfaceGLES implements PSurface, PConstants {
   protected PApplet sketch;
   protected PGraphics graphics;
-  protected PContainer container;
+  protected AppComponent container;
 
   protected Activity activity;
   protected WallpaperService wallpaper;
@@ -63,26 +63,26 @@ public class PSurfaceGLES implements PSurface, PConstants {
   }
 
 
-  public PSurfaceGLES(PGraphics graphics, PContainer container, SurfaceHolder holder) {
+  public PSurfaceGLES(PGraphics graphics, AppComponent container, SurfaceHolder holder) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.container = container;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       PFragment frag = (PFragment)container;
       activity = frag.getActivity();
       surface = new SketchSurfaceViewGL(activity, null);
-    } else if (container.getKind() == PContainer.WALLPAPER) {
+    } else if (container.getKind() == AppComponent.WALLPAPER) {
       wallpaper = (WallpaperService)container;
       surface = new SketchSurfaceViewGL(wallpaper, holder);
-    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
       watchface = (Gles2WatchFaceService)container;
       surface = null;
     }
   }
 
   @Override
-  public PContainer getContainer() {
+  public AppComponent getContainer() {
     return container;
   }
 
@@ -112,11 +112,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public AssetManager getAssets() {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       return activity.getAssets();
-    } else if (container.getKind() == PContainer.WALLPAPER) {
+    } else if (container.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getBaseContext().getAssets();
-    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getBaseContext().getAssets();
     }
     return null;
@@ -124,7 +124,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void startActivity(Intent intent) {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       container.startActivity(intent);
     }
   }
@@ -132,14 +132,14 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
   public void setSystemUiVisibility(int visibility) {
     int kind = container.getKind();
-    if (kind == PContainer.FRAGMENT || kind == PContainer.WALLPAPER) {
+    if (kind == AppComponent.FRAGMENT || kind == AppComponent.WALLPAPER) {
       surface.setSystemUiVisibility(visibility);
     }
   }
 
 
   public void initView(int sketchWidth, int sketchHeight) {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       int displayWidth = container.getWidth();
       int displayHeight = container.getHeight();
       View rootView;
@@ -166,7 +166,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
         rootView = overallLayout;
       }
       setRootView(rootView);
-    } else if (container.getKind() == PContainer.WALLPAPER) {
+    } else if (container.getKind() == AppComponent.WALLPAPER) {
       int displayWidth = container.getWidth();
       int displayHeight = container.getHeight();
       View rootView;
@@ -200,11 +200,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public String getName() {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       return activity.getComponentName().getPackageName();
-    } else if (container.getKind() == PContainer.WALLPAPER) {
+    } else if (container.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getPackageName();
-    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getPackageName();
     }
     return "";
@@ -212,7 +212,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void setOrientation(int which) {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       if (which == PORTRAIT) {
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
       } else if (which == LANDSCAPE) {
@@ -223,11 +223,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public File getFilesDir() {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       return activity.getFilesDir();
-    } else if (container.getKind() == PContainer.WALLPAPER) {
+    } else if (container.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getFilesDir();
-    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getFilesDir();
     }
     return null;
@@ -235,7 +235,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public InputStream openFileInput(String filename) {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       try {
         return activity.openFileInput(filename);
       } catch (FileNotFoundException e) {
@@ -248,11 +248,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public File getFileStreamPath(String path) {
-    if (container.getKind() == PContainer.FRAGMENT) {
+    if (container.getKind() == AppComponent.FRAGMENT) {
       return activity.getFileStreamPath(path);
-    } else if (container.getKind() == PContainer.WALLPAPER) {
+    } else if (container.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getFileStreamPath(path);
-    } else if (container.getKind() == PContainer.WATCHFACE_GLES) {
+    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getFileStreamPath(path);
     }
     return null;

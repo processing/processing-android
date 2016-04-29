@@ -8,7 +8,7 @@ import android.view.WindowManager;
 import processing.core.PApplet;
 import android.util.Log;
 
-public class PWallpaper extends WallpaperService implements PContainer {
+public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
 
   private DisplayMetrics metrics;

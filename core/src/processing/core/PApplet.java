@@ -41,7 +41,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import processing.app.PContainer;
+import processing.app.AppComponent;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
@@ -442,7 +442,7 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void initSurface(PContainer container, SurfaceHolder holder) {
+  public void initSurface(AppComponent container, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     handleSettings();
@@ -715,7 +715,7 @@ public class PApplet extends Object implements PConstants {
   }
 
   public int sketchKind() {
-    return PContainer.FRAGMENT;
+    return AppComponent.FRAGMENT;
   }
 
   final public int sketchWidth() {

@@ -13,7 +13,7 @@ import processing.event.MouseEvent;
 
 import android.graphics.Rect;
 
-public class PWatchFaceGLES extends Gles2WatchFaceService implements PContainer {
+public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
   private DisplayMetrics metrics;
   private PApplet sketch;
   private GLEngine engine;
