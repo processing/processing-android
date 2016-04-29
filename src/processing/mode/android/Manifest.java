@@ -93,9 +93,11 @@ public class Manifest {
 
   public void setSdkTarget(String version) {
     XML usesSdk = xml.getChild("uses-sdk");
-    usesSdk.setString("android:minSdkVersion", "15");
-    usesSdk.setString("android:targetSdkVersion", version);
-    save();
+    if (usesSdk != null) { 
+      usesSdk.setString("android:minSdkVersion", "15");
+      usesSdk.setString("android:targetSdkVersion", version);
+      save();
+    }    
   }
 
 //writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />");
@@ -153,8 +155,6 @@ public class Manifest {
     writer.println("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" " + newLine);
 //    writer.println("          package=\"" + defaultPackageName() + "\" ");
     writer.println("          package=\"\" " + newLine);
-
-    
     
     // Tempting to use 'preferExternal' here, but might annoy some users.
     // 'auto' at least enables it to be moved back and forth
@@ -167,28 +167,39 @@ public class Manifest {
     // with each build or read/write of the manifest file?
     writer.println("          android:versionCode=\"1\" " + newLine);
     // This is the version number/name seen by users
-    writer.println("          android:versionName=\"1.0\">" + newLine);
-
-    // for now including this... we're wiring to a particular SDK version anyway...
-    writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);
+    writer.println("          android:versionName=\"1.0\">" + newLine);    
     
     // Publishing-specific features
-    if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
+    if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
+      // for now including this... we're wiring to a particular SDK version anyway...
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);  
+    } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />" + newLine);
+    } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {      
+      writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />" + newLine);
+      writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />" + newLine);
+      writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />" + newLine);
     }
     
 //    writer.println("  <uses-sdk android:minSdkVersion=\"\" />");  // insert sdk version
 //    writer.println("  <application android:label=\"@string/app_name\"");
     writer.println("  <application android:label=\"\" " + newLine);  // insert pretty name
     writer.println("               android:icon=\"@drawable/icon\" " + newLine);
+    if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+      writer.println("               android:supportsRtl=\"true\" " + newLine);
+      // android:theme="@android:style/Theme.DeviceDefault">
+    }
     writer.println("               android:debuggable=\"true\">" + newLine);
 
-    // turns out label is not required for the activity, so nixing it
+
+    if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
+      // turns out label is not required for the activity, so nixing it
 //    writer.println("    <activity android:name=\"\"");  // insert class name prefixed w/ dot
 ////    writer.println("              android:label=\"@string/app_name\">");  // pretty name
 //    writer.println("              android:label=\"\">");
-
-    if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
+      
+      
       // activity/android:name should be the full name (package + class name) of
       // the actual activity class. or the package can be replaced by a single
       // dot as a prefix as an easier shorthand.
@@ -201,7 +212,7 @@ public class Manifest {
       writer.println("    </activity>" + newLine); 
     } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
       writer.println("    <service android:name=\".MainService\" " + newLine);
-      writer.println("             android:label=\"Wallpaper Test\" " + newLine);
+      writer.println("             android:label=\"Processing Wallpaper\" " + newLine);
       writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
       writer.println("      <intent-filter>" + newLine);
       writer.println("         <action android:name=\"android.service.wallpaper.WallpaperService\" />" + newLine);
@@ -210,7 +221,22 @@ public class Manifest {
       writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
       writer.println("  </service>" + newLine);  
     } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
-      
+      writer.println("<service android:name=\".MainService\" " + newLine);
+      writer.println("         android:label=\"Processing Watch Face\" " + newLine);
+      writer.println("         android:permission=\"android.permission.BIND_WALLPAPER\"> " + newLine);
+      writer.println("   <meta-data android:name=\"android.service.wallpaper\" " + newLine);
+      writer.println("              android:resource=\"@xml/watch_face\" /> " + newLine);
+      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.preview\" " + newLine);
+      writer.println("              android:resource=\"@drawable/preview_rectangular\" /> " + newLine);
+      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.preview_circular\" " + newLine);
+      writer.println("              android:resource=\"@drawable/preview_circular\" /> " + newLine);
+      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.companionConfigurationAction\" " + newLine);
+      writer.println("              android:value=\"com.catinean.simpleandroidwatchface.CONFIG_DIGITAL\" /> " + newLine);
+      writer.println("   <intent-filter> " + newLine);
+      writer.println("     <action android:name=\"android.service.wallpaper.WallpaperService\" /> " + newLine);
+      writer.println("     <category android:name=\"com.google.android.wearable.watchface.category.WATCH_FACE\" /> " + newLine);
+      writer.println("   </intent-filter> " + newLine);
+      writer.println("</service> " + newLine);      
     } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {
       
     }

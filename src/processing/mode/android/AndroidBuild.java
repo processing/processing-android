@@ -783,6 +783,9 @@ class AndroidBuild extends JavaBuild {
   static final String ICON_48 = "icon-48.png";
   static final String ICON_36 = "icon-36.png";
 
+  static final String ICON_WATCHFACE_CIRCULAR = "preview_circular.png";
+  static final String ICON_WATCHFACE_RECTANGULAR = "preview_rectangular.png";  
+  
   private void writeRes(File resFolder,
                         String className) throws SketchException {
     File layoutFolder = mkdirs(resFolder, "layout");
@@ -796,8 +799,7 @@ class AndroidBuild extends JavaBuild {
             
       File valuesFolder = mkdirs(resFolder, "values");
       File mainServiceStringFile = new File(valuesFolder, "strings.xml");
-      writeResStringsWallpaper(mainServiceStringFile);
-      
+      writeResStringsWallpaper(mainServiceStringFile);      
     }
     
 //    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
@@ -876,6 +878,66 @@ class AndroidBuild extends JavaBuild {
       }
     }
 
+    
+    if (publishOption == WATCHFACE) {
+      File xmlFolder = mkdirs(resFolder, "xml");
+      File mainServiceWatchFaceFile = new File(xmlFolder, "watch_face.xml");
+      writeResXMLWatchFace(mainServiceWatchFaceFile);      
+      
+      // write the preview files
+      File localPrevCircle = new File(sketchFolder, ICON_WATCHFACE_CIRCULAR);
+      File localPrevRect = new File(sketchFolder, ICON_WATCHFACE_RECTANGULAR);
+      
+      File buildPrevCircle = new File(resFolder, "drawable/" + ICON_WATCHFACE_CIRCULAR);
+      File buildPrevRect = new File(resFolder, "drawable/" + ICON_WATCHFACE_RECTANGULAR);
+      
+      if (!localPrevCircle.exists()) {
+//        if (buildPrevCircle.getParentFile().mkdirs()) {
+          try {
+            Util.copyFile(mode.getContentFile("icons/" + ICON_WATCHFACE_CIRCULAR), buildPrevCircle);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        } else {
+//          System.err.println("Could not create \"drawable\" folder.");
+//        }        
+      } else {
+//        if (new File(resFolder, "drawable").mkdirs()) {
+          try {
+            Util.copyFile(localPrevCircle, buildPrevCircle);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        }        
+      }
+
+      if (!localPrevRect.exists())  {
+//        if (buildPrevRect.getParentFile().mkdirs()) {
+          try {
+            Util.copyFile(mode.getContentFile("icons/" + ICON_WATCHFACE_RECTANGULAR), buildPrevRect);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        } else {
+//          System.err.println("Could not create \"drawable\" folder.");
+//        }        
+      } else {
+//        if (new File(resFolder, "drawable").mkdirs()) {
+          try {
+            Util.copyFile(localPrevCircle, buildPrevRect);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        }        
+      }     
+    }
+    
+    
+    
 //    final File valuesFolder = mkdirs(resFolder, "values");
 //    final File stringsFile = new File(valuesFolder, "strings.xml");
 //    writeResValuesStrings(stringsFile, className);
@@ -979,7 +1041,21 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeWatchfaceService(final File srcDirectory) {
-    
+    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+        "MainService.java");
+    final PrintWriter writer = PApplet.createWriter(mainServiceFile);
+    writer.println("package " + manifest.getPackageName() +";");    
+    writer.println("import processing.android.PWatchFaceGLES;");
+    writer.println("import processing.core.PApplet;");
+    writer.println("public class MainService extends PWatchFaceGLES {");
+    writer.println("    public MainService() {");
+    writer.println("        super();");
+    writer.println("        PApplet sketch = new " + sketchClassName + "();");
+    writer.println("        setSketch(sketch);");
+    writer.println("    }");
+    writer.println("}");
+    writer.flush();
+    writer.close();  
   }
   
   
@@ -1017,6 +1093,13 @@ class AndroidBuild extends JavaBuild {
      writer.println("</resources>");
      writer.flush();
      writer.close();    
+  }
+  
+  private void writeResXMLWatchFace(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\" />");
+    writer.flush();
+    writer.close();     
   }
   
 /*
