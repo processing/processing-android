@@ -41,7 +41,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import processing.app.AppComponent;
+import processing.android.AppComponent;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;

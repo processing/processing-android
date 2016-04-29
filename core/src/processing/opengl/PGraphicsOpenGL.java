@@ -24,7 +24,7 @@
 
 package processing.opengl;
 
-import processing.app.AppComponent;
+import processing.android.AppComponent;
 import processing.core.*;
 
 import java.lang.ref.ReferenceQueue;

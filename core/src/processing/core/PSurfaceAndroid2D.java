@@ -19,8 +19,8 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import processing.app.AppComponent;
-import processing.app.PFragment;
+import processing.android.AppComponent;
+import processing.android.PFragment;
 import processing.opengl.PSurfaceGLES;
 
 public class PSurfaceAndroid2D implements PSurface, PConstants {

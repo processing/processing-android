@@ -1,4 +1,4 @@
-package processing.app;
+package processing.android;
 
 import android.content.Intent;
 import android.graphics.Canvas;

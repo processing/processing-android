@@ -1,4 +1,4 @@
-package processing.app;
+package processing.android;
 
 import android.service.wallpaper.WallpaperService;
 import android.util.DisplayMetrics;

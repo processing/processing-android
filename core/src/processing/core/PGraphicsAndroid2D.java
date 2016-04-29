@@ -25,7 +25,7 @@ package processing.core;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import processing.app.AppComponent;
+import processing.android.AppComponent;
 import processing.data.XML;
 import android.app.Activity;
 import android.app.ActivityManager;

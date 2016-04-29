@@ -1,4 +1,4 @@
-package processing.app;
+package processing.android;
 
 import android.app.Fragment;
 import android.content.pm.ActivityInfo;

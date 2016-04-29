@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import processing.app.AppComponent;
+import processing.android.AppComponent;
 import processing.opengl.PGL;
 import processing.opengl.PShader;
 import android.graphics.Color;

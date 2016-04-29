@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.view.SurfaceView;
 import android.view.View;
-import processing.app.AppComponent;
+import processing.android.AppComponent;
 
 /*
  * Holds the surface view associated with the sketch, and the rendering thread

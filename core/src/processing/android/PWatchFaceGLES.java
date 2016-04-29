@@ -1,4 +1,4 @@
-package processing.app;
+package processing.android;
 
 import android.content.Intent;
 import android.support.wearable.watchface.Gles2WatchFaceService;
