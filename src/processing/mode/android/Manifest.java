@@ -212,7 +212,7 @@ public class Manifest {
       writer.println("    </activity>" + newLine); 
     } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
       writer.println("    <service android:name=\".MainService\" " + newLine);
-      writer.println("             android:label=\"Processing Wallpaper\" " + newLine);
+      writer.println("             android:label=\"\" " + newLine); // insert pretty name
       writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
       writer.println("      <intent-filter>" + newLine);
       writer.println("         <action android:name=\"android.service.wallpaper.WallpaperService\" />" + newLine);
@@ -222,7 +222,7 @@ public class Manifest {
       writer.println("  </service>" + newLine);  
     } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
       writer.println("<service android:name=\".MainService\" " + newLine);
-      writer.println("         android:label=\"Processing Watch Face\" " + newLine);
+      writer.println("         android:label=\"\" " + newLine); // insert pretty name
       writer.println("         android:permission=\"android.permission.BIND_WALLPAPER\"> " + newLine);
       writer.println("   <meta-data android:name=\"android.service.wallpaper\" " + newLine);
       writer.println("              android:resource=\"@xml/watch_face\" /> " + newLine);
@@ -272,7 +272,17 @@ public class Manifest {
       String label = app.getString("android:label");
       if (label.length() == 0) {
         app.setString("android:label", className);
+      }      
+      
+      if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER ||
+          AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+        XML serv = app.getChild("service");
+        label = serv.getString("android:label");
+        if (label.length() == 0) {
+          app.setString("android:label", className);
+        }       
       }
+      
       app.setString("android:debuggable", debug ? "true" : "false");
 
 //      XML activity = app.getChild("activity");
@@ -296,7 +306,10 @@ public class Manifest {
 //    Sketch sketch = editor.getSketch();
 //    File manifestFile = new File(sketch.getFolder(), MANIFEST_XML);
 //    XMLElement xml = null;
+    
+    
     File manifestFile = getManifestFile();
+    
     if (AndroidBuild.forceNewManifest) xml = null;
     if (manifestFile.exists() && !AndroidBuild.forceNewManifest) {
       try {
@@ -317,6 +330,7 @@ public class Manifest {
         }
       }
     }
+    
     if (xml == null) {
       writeBlankManifest(manifestFile);
       try {

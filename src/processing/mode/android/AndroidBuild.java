@@ -205,6 +205,15 @@ class AndroidBuild extends JavaBuild {
       // and anything in the code folder contents to the project.
       copyLibraries(libsFolder, assetsFolder);
       copyCodeFolder(libsFolder);
+      
+      if (publishOption == WATCHFACE) {
+        // TODO: temporary hack until I find a better way to include the wearable aar
+        // package included in the SDK:
+        
+        File wearJarFile = mode.getContentFile("mode/wearable-1.3.0-classes.jar");
+        System.out.println(wearJarFile.toString());
+        Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
+      }
 
       // Copy the data folder (if one exists) to the project's 'assets' folder
       final File sketchDataFolder = sketch.getDataFolder();
