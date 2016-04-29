@@ -918,7 +918,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.widget.FrameLayout;");
     writer.println("import android.view.ViewGroup.LayoutParams;");
     writer.println("import android.app.FragmentTransaction;");
-    writer.println("import processing.app.PFragment;");
+    writer.println("import processing.android.PFragment;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends Activity {");
     writer.println("    PFragment fragment;");
@@ -964,7 +964,7 @@ class AndroidBuild extends JavaBuild {
         "MainService.java");
     final PrintWriter writer = PApplet.createWriter(mainServiceFile);
     writer.println("package " + manifest.getPackageName() +";");    
-    writer.println("import processing.app.PWallpaper;");
+    writer.println("import processing.android.PWallpaper;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWallpaper {");
     writer.println("    @Override");
