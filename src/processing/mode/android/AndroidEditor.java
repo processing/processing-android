@@ -213,6 +213,69 @@ public class AndroidEditor extends JavaEditor {
     menu.add(item);
 
     menu.addSeparator();
+    
+//    final JMenu publishMenu = new JMenu("Build sketch as...");    
+    final JCheckBoxMenuItem fragmentItem = new JCheckBoxMenuItem("App");
+    final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
+    final JCheckBoxMenuItem watchfaceItem = new JCheckBoxMenuItem("Watch Face");
+//    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard app");
+
+    fragmentItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.FRAGMENT, sketch);
+        fragmentItem.setState(true);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+//        cardboardItem.setSelected(false);
+      }
+    });
+    wallpaperItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.WALLPAPER, sketch);
+        fragmentItem.setState(false);
+        wallpaperItem.setState(true);
+        watchfaceItem.setSelected(false);
+//        cardboardItem.setSelected(false);
+      }
+    });
+    watchfaceItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.WATCHFACE, sketch);
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(true);
+//        cardboardItem.setSelected(false);
+      }
+    });
+//    cardboardItem.addActionListener(new ActionListener() {
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        AndroidBuild.setPublishOption(AndroidBuild.CARDBOARD, sketch);
+//        fragmentItem.setState(false);
+//        wallpaperItem.setState(false);
+//        watchfaceItem.setSelected(false);
+//        cardboardItem.setSelected(true);
+//      }
+//    });    
+    
+    fragmentItem.setState(true);
+    wallpaperItem.setState(false);
+    watchfaceItem.setSelected(false);
+//    cardboardItem.setSelected(false);    
+
+//    publishMenu.add(fragmentItem);
+//    publishMenu.add(wallpaperItem);
+//    publishMenu.add(watchfaceItem);
+//    publishMenu.add(cardboardItem);
+    menu.add(fragmentItem);
+    menu.add(wallpaperItem);
+    menu.add(watchfaceItem);
+    
+    menu.addSeparator();
+    
 
     /*item = new JMenuItem("Signing Key Setup");
     item.addActionListener(new ActionListener() {
@@ -223,7 +286,7 @@ public class AndroidEditor extends JavaEditor {
     item.setEnabled(false);
     menu.add(item); */
 
-    final JMenu mobDeveMenu = new JMenu("Select mobile device");
+    final JMenu mobDeveMenu = new JMenu("Devices");
 
     JMenuItem noMobDevItem = new JMenuItem("No connected devices");
     noMobDevItem.setEnabled(false);
@@ -235,72 +298,14 @@ public class AndroidEditor extends JavaEditor {
     java.util.Timer timer = new java.util.Timer();
     timer.schedule(task, 5000, 5000);
     
-    final JMenu wearDevMenu = new JMenu("Select wearable device");
-
-    JMenuItem noWearDevicesItem = new JMenuItem("No connected devices");
-    noWearDevicesItem.setEnabled(false);
-    wearDevMenu.add(noWearDevicesItem);
-    menu.add(wearDevMenu);    
+//    final JMenu wearDevMenu = new JMenu("Select wearable device");
+//
+//    JMenuItem noWearDevicesItem = new JMenuItem("No connected devices");
+//    noWearDevicesItem.setEnabled(false);
+//    wearDevMenu.add(noWearDevicesItem);
+//    menu.add(wearDevMenu);    
     
     menu.addSeparator();
-
-    final JMenu publishMenu = new JMenu("Build sketch as...");    
-    final JCheckBoxMenuItem fragmentItem = new JCheckBoxMenuItem("Regular app");
-    final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Live wallpaper");
-    final JCheckBoxMenuItem watchfaceItem = new JCheckBoxMenuItem("Watch face");
-    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard app");
-
-    fragmentItem.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.FRAGMENT, sketch);
-        fragmentItem.setState(true);
-        wallpaperItem.setState(false);
-        watchfaceItem.setSelected(false);
-        cardboardItem.setSelected(false);
-      }
-    });
-    wallpaperItem.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.WALLPAPER, sketch);
-        fragmentItem.setState(false);
-        wallpaperItem.setState(true);
-        watchfaceItem.setSelected(false);
-        cardboardItem.setSelected(false);
-      }
-    });
-    watchfaceItem.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.WATCHFACE, sketch);
-        fragmentItem.setState(false);
-        wallpaperItem.setState(false);
-        watchfaceItem.setSelected(true);
-        cardboardItem.setSelected(false);
-      }
-    });
-    cardboardItem.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.CARDBOARD, sketch);
-        fragmentItem.setState(false);
-        wallpaperItem.setState(false);
-        watchfaceItem.setSelected(false);
-        cardboardItem.setSelected(true);
-      }
-    });    
-    
-    fragmentItem.setState(true);
-    wallpaperItem.setState(false);
-    watchfaceItem.setSelected(false);
-    cardboardItem.setSelected(false);    
-
-    publishMenu.add(fragmentItem);
-    publishMenu.add(wallpaperItem);
-    publishMenu.add(watchfaceItem);
-    publishMenu.add(cardboardItem);
-    menu.add(publishMenu);     
     
     // TODO: The SDK selection menu will be removed once app publishing is fully
     // functional (correct SDK level can be inferred from app type (fragment, 
@@ -328,7 +333,7 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
     
-    item = new JMenuItem("Android SDK Manager");
+    item = new JMenuItem("SDK Manager");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         File file = androidMode.getSDK().getAndroidTool();
@@ -341,7 +346,7 @@ public class AndroidEditor extends JavaEditor {
     });
     menu.add(item);
 
-    item = new JMenuItem("Android AVD Manager");
+    item = new JMenuItem("AVD Manager");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         File file = androidMode.getSDK().getAndroidTool();
@@ -350,7 +355,7 @@ public class AndroidEditor extends JavaEditor {
     });
     menu.add(item);
 
-    item = new JMenuItem("Reset Connections");
+    item = new JMenuItem("Reset ADB");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
