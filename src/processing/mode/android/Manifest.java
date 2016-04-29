@@ -279,7 +279,7 @@ public class Manifest {
         XML serv = app.getChild("service");
         label = serv.getString("android:label");
         if (label.length() == 0) {
-          app.setString("android:label", className);
+          serv.setString("android:label", className);
         }       
       }
       
@@ -310,6 +310,8 @@ public class Manifest {
     
     File manifestFile = getManifestFile();
     
+    // Re-write from scratch every time for now
+    /*
     if (AndroidBuild.forceNewManifest) xml = null;
     if (manifestFile.exists() && !AndroidBuild.forceNewManifest) {
       try {
@@ -330,8 +332,10 @@ public class Manifest {
         }
       }
     }
-    
     if (xml == null) {
+    */
+    
+    
       writeBlankManifest(manifestFile);
       try {
         xml = new XML(manifestFile);
@@ -345,7 +349,7 @@ public class Manifest {
       } catch (SAXException e) {
         e.printStackTrace();
       }
-    }
+//    }
     if (xml == null) {
       Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
     }
