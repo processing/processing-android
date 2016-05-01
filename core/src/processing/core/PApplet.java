@@ -500,46 +500,6 @@ public class PApplet extends Object implements PConstants {
 
     sketchPath = surface.getFilesDir().getAbsolutePath();
 
-/*
-    container.initDimensions();
-    displayWidth = container.getWidth();
-    displayHeight = container.getHeight();
-
-    //Setting the default height and width to be fullscreen
-    width = displayWidth;
-    height = displayHeight;
-    println("setting width/height to " + width + " " + height);
-
-    handleSettings();
-    println("Handled setting");
-
-    int sw = sketchWidth();
-    int sh = sketchHeight();
-
-    String rendererName = sketchRenderer();
-    println("Renderer " + rendererName);
-    g = makeGraphics(sw, sh, rendererName, true);
-    println("Created renderer");
-    surface = g.createSurface(container, holder);
-    println("Created surface");
-
-    //set smooth level
-    if (smooth == 0) {
-      g.noSmooth();
-    } else {
-      g.smooth(smooth);
-    }
-
-    surface.initView(sw, sh);
-
-    finished = false; // just for clarity
-    // this will be cleared by draw() if it is not overridden
-    looping = true;
-    redraw = true;  // draw this guy once
-
-    sketchPath = surface.getFilesDir().getAbsolutePath();
-    */
-
     if (DEBUG) println("Done with init surface");
   }
 

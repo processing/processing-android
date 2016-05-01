@@ -74,7 +74,7 @@ public class PFragment extends Fragment implements AppComponent {
   @Override
   public void onStart() {
     super.onStart();
-    System.err.println("----> ON START: " + sketch);
+//    System.err.println("----> ON START: " + sketch);
     sketch.onStart();
   }
 
