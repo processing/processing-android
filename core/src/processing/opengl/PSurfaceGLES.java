@@ -374,10 +374,6 @@ public class PSurfaceGLES implements PSurface, PConstants {
       setEGLContextClientVersion(2);
       setPreserveEGLContextOnPause(true);
 
-      setFocusable(true);
-      setFocusableInTouchMode(true);
-      requestFocus();
-
       int quality = sketch.sketchQuality();
       if (1 < quality) {
         setEGLConfigChooser(getConfigChooser(quality));
@@ -385,6 +381,10 @@ public class PSurfaceGLES implements PSurface, PConstants {
       // The renderer can be set only once.
       setRenderer(getRenderer());
       setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
+      setFocusable(true);
+      setFocusableInTouchMode(true);
+      requestFocus();
     }
 
     @Override
