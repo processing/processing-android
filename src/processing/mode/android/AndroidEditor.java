@@ -75,6 +75,10 @@ public class AndroidEditor extends JavaEditor {
     @Override
     public void run() {
       if (androidMode == null || androidMode.getSDK() == null) return;
+      
+      if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+        Devices.enableBlueToothDebugging();
+      }
 
       final Devices devices = Devices.getInstance();
       java.util.List<Device> deviceList = devices.findMultiple(false);
@@ -143,6 +147,44 @@ public class AndroidEditor extends JavaEditor {
         }
       }
     }
+  }
+  
+  
+  class UpdateSDKListTask extends TimerTask {
+    
+    private JMenu sdkMenu;
+
+    public UpdateSDKListTask(JMenu sdkMenu) {
+      this.sdkMenu = sdkMenu;
+    }
+    
+    @Override
+    public void run() {
+      while (androidMode == null || androidMode.getSDK() == null) {
+        try {
+          Thread.sleep(3000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        updateSdkMenu(sdkMenu);        
+      }
+      
+      /*
+      new Thread() {
+        @Override
+        public void run() {
+          while(androidMode == null || androidMode.getSDK() == null) {
+            try {
+              Thread.sleep(3000);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+          }
+          updateSdkMenu(sdkMenu);
+        }
+      }.start();
+      */      
+    }    
   }
 
 
@@ -275,16 +317,6 @@ public class AndroidEditor extends JavaEditor {
     menu.add(watchfaceItem);
     
     menu.addSeparator();
-    
-
-    /*item = new JMenuItem("Signing Key Setup");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        new Keys(AndroidEditor.this);
-      }
-    });
-    item.setEnabled(false);
-    menu.add(item); */
 
     final JMenu mobDeveMenu = new JMenu("Devices");
 
@@ -292,42 +324,28 @@ public class AndroidEditor extends JavaEditor {
     noMobDevItem.setEnabled(false);
     mobDeveMenu.add(noMobDevItem);
     menu.add(mobDeveMenu);
-    
+  
     // start updating device menus
-    UpdateDeviceListTask task = new UpdateDeviceListTask(mobDeveMenu);
-    java.util.Timer timer = new java.util.Timer();
-    timer.schedule(task, 5000, 5000);
-    
-//    final JMenu wearDevMenu = new JMenu("Select wearable device");
-//
-//    JMenuItem noWearDevicesItem = new JMenuItem("No connected devices");
-//    noWearDevicesItem.setEnabled(false);
-//    wearDevMenu.add(noWearDevicesItem);
-//    menu.add(wearDevMenu);    
+    UpdateDeviceListTask devTask = new UpdateDeviceListTask(mobDeveMenu);
+    java.util.Timer devTimer = new java.util.Timer();
+    devTimer.schedule(devTask, 5000, 5000);
     
     menu.addSeparator();
     
     // TODO: The SDK selection menu will be removed once app publishing is fully
-    // functional (correct SDK level can be inferred from app type (fragment, 
-    // wallpaper, etc).
-    final JMenu sdkMenu = new JMenu("Select target SDK");
-    JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
-    defaultItem.setEnabled(false);
-    sdkMenu.add(defaultItem);
-
-    new Thread() {
-      @Override
-      public void run() {
-        while(androidMode == null || androidMode.getSDK() == null) {
-          try {
-            Thread.sleep(3000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-        updateSdkMenu(sdkMenu);
-      }
-    }.start();
+    // functional: correct minimum SDK level can be inferred from app type 
+    // (fragment, wallpaper, etc), and target SDK from the highest available in
+    // the SDK.
+    final JMenu sdkMenu = new JMenu("Target SDK");
+    
+    JMenuItem noAvailSDKItem = new JCheckBoxMenuItem("No available targets");
+    noAvailSDKItem.setEnabled(false);
+    sdkMenu.add(noAvailSDKItem);
+    menu.add(sdkMenu);
+    
+    UpdateSDKListTask sdkTask = new UpdateSDKListTask(sdkMenu);
+    java.util.Timer sdkTimer = new java.util.Timer();
+    sdkTimer.schedule(sdkTask, 500, 5000);
 
     menu.add(sdkMenu);
 
@@ -381,8 +399,8 @@ public class AndroidEditor extends JavaEditor {
       boolean savedTargetSet = false;
 
       for (final AndroidSDK.SDKTarget target : targets) {
-        if (target.version < 11) {
-          //We do not support API level less than 11
+        if (target.version < 19) {
+          //We do not support API level less than 19
           continue;
         }
         

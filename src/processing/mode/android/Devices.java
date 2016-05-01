@@ -26,6 +26,8 @@ class Devices {
 
   private static final Devices INSTANCE = new Devices();
 
+  private static final String BT_DEBUG_PORT = "4444";
+  
   private Device selectedDevice;
 
   public static Devices getInstance() {
@@ -56,6 +58,17 @@ class Devices {
     }
   }
 
+  public static void enableBlueToothDebugging() {
+    try {
+      // Enable debugging over bluetooth
+      // http://developer.android.com/training/wearables/apps/bt-debugging.html
+      AndroidSDK.runADB("forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
+      AndroidSDK.runADB("connect", "127.0.0.1:" + BT_DEBUG_PORT);
+    } catch (final Exception e) {
+      e.printStackTrace();
+    }    
+  }
+  
 
   private Devices() {
     if (processing.app.Base.DEBUG) {

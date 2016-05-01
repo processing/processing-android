@@ -52,6 +52,11 @@ class AndroidBuild extends JavaBuild {
   
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
+  static public final int min_sdk_fragment = 14; // Ice Cream Sandwich
+  static public final int min_sdk_wallpaper = 14;  
+  static public final int min_sdk_watchface = 21; // Lillipop
+  static public final int min_sdk_cardboard = 19; // Kitkat
+  
   static String sdkName = "5.0";
   static String sdkVersion = "21";  // Android 5.0 (Lollipop)
   static String sdkTarget = "android-" + sdkVersion;
