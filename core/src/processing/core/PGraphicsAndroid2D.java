@@ -155,8 +155,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   @Override
-  public PSurface createSurface(AppComponent container, SurfaceHolder holder) {  // ignore
-    return new PSurfaceAndroid2D(this, container, holder);
+  public PSurface createSurface(AppComponent component, SurfaceHolder holder) {  // ignore
+    return new PSurfaceAndroid2D(this, component, holder);
   }
 
 

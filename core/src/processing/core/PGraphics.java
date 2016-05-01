@@ -723,7 +723,7 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public PSurface createSurface(AppComponent container, SurfaceHolder holder) {  // ignore
+  public PSurface createSurface(AppComponent component, SurfaceHolder holder) {  // ignore
     return null;
   }
 

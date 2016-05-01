@@ -16,7 +16,7 @@ import processing.android.AppComponent;
  */
 public interface PSurface {
   public Activity getActivity();
-  public AppComponent getContainer();
+  public AppComponent getComponent();
 
   public void dispose();
 

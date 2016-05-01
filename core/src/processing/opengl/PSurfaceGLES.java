@@ -40,7 +40,7 @@ import android.os.Handler;
 public class PSurfaceGLES implements PSurface, PConstants {
   protected PApplet sketch;
   protected PGraphics graphics;
-  protected AppComponent container;
+  protected AppComponent component;
 
   protected Activity activity;
   protected WallpaperService wallpaper;
@@ -63,27 +63,27 @@ public class PSurfaceGLES implements PSurface, PConstants {
   }
 
 
-  public PSurfaceGLES(PGraphics graphics, AppComponent container, SurfaceHolder holder) {
+  public PSurfaceGLES(PGraphics graphics, AppComponent component, SurfaceHolder holder) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
-    this.container = container;
+    this.component = component;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
-    if (container.getKind() == AppComponent.FRAGMENT) {
-      PFragment frag = (PFragment)container;
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      PFragment frag = (PFragment)component;
       activity = frag.getActivity();
       surface = new SketchSurfaceViewGL(activity, null);
-    } else if (container.getKind() == AppComponent.WALLPAPER) {
-      wallpaper = (WallpaperService)container;
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
+      wallpaper = (WallpaperService)component;
       surface = new SketchSurfaceViewGL(wallpaper, holder);
-    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
-      watchface = (Gles2WatchFaceService)container;
+    } else if (component.getKind() == AppComponent.WATCHFACE_GLES) {
+      watchface = (Gles2WatchFaceService)component;
       surface = null;
     }
   }
 
   @Override
-  public AppComponent getContainer() {
-    return container;
+  public AppComponent getComponent() {
+    return component;
   }
 
 
@@ -112,11 +112,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public AssetManager getAssets() {
-    if (container.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       return activity.getAssets();
-    } else if (container.getKind() == AppComponent.WALLPAPER) {
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getBaseContext().getAssets();
-    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
+    } else if (component.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getBaseContext().getAssets();
     }
     return null;
@@ -124,14 +124,14 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void startActivity(Intent intent) {
-    if (container.getKind() == AppComponent.FRAGMENT) {
-      container.startActivity(intent);
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      component.startActivity(intent);
     }
   }
 
 
   public void setSystemUiVisibility(int visibility) {
-    int kind = container.getKind();
+    int kind = component.getKind();
     if (kind == AppComponent.FRAGMENT || kind == AppComponent.WALLPAPER) {
       surface.setSystemUiVisibility(visibility);
     }
@@ -139,9 +139,9 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void initView(int sketchWidth, int sketchHeight) {
-    if (container.getKind() == AppComponent.FRAGMENT) {
-      int displayWidth = container.getWidth();
-      int displayHeight = container.getHeight();
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      int displayWidth = component.getWidth();
+      int displayHeight = component.getHeight();
       View rootView;
       if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
         // If using the full screen, don't embed inside other layouts
@@ -166,9 +166,9 @@ public class PSurfaceGLES implements PSurface, PConstants {
         rootView = overallLayout;
       }
       setRootView(rootView);
-    } else if (container.getKind() == AppComponent.WALLPAPER) {
-      int displayWidth = container.getWidth();
-      int displayHeight = container.getHeight();
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
+      int displayWidth = component.getWidth();
+      int displayHeight = component.getHeight();
       View rootView;
       // Looks like a wallpaper can be larger than the screen res, and have an offset, need to
       // look more into that.
@@ -200,11 +200,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public String getName() {
-    if (container.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       return activity.getComponentName().getPackageName();
-    } else if (container.getKind() == AppComponent.WALLPAPER) {
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getPackageName();
-    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
+    } else if (component.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getPackageName();
     }
     return "";
@@ -212,7 +212,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void setOrientation(int which) {
-    if (container.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       if (which == PORTRAIT) {
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
       } else if (which == LANDSCAPE) {
@@ -223,11 +223,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public File getFilesDir() {
-    if (container.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       return activity.getFilesDir();
-    } else if (container.getKind() == AppComponent.WALLPAPER) {
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getFilesDir();
-    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
+    } else if (component.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getFilesDir();
     }
     return null;
@@ -235,7 +235,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public InputStream openFileInput(String filename) {
-    if (container.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       try {
         return activity.openFileInput(filename);
       } catch (FileNotFoundException e) {
@@ -248,11 +248,11 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public File getFileStreamPath(String path) {
-    if (container.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       return activity.getFileStreamPath(path);
-    } else if (container.getKind() == AppComponent.WALLPAPER) {
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
       return wallpaper.getFileStreamPath(path);
-    } else if (container.getKind() == AppComponent.WATCHFACE_GLES) {
+    } else if (component.getKind() == AppComponent.WATCHFACE_GLES) {
       return watchface.getFileStreamPath(path);
     }
     return null;
@@ -288,7 +288,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
   private void scheduleNextDraw() {
     handler.removeCallbacks(drawRunnable);
-    container.requestDraw();
+    component.requestDraw();
     int waitMillis = 1000 / 15;
     if (sketch != null) {
       final PSurfaceGLES glsurf = (PSurfaceGLES) sketch.surface;
@@ -300,7 +300,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
 //            int waitMillis = (int)PApplet.max(0, targetMillisPerFrame - actualMillisPerFrame);
       waitMillis = (int) targetMillisPerFrame;
     }
-    if (container.canDraw()) {
+    if (component.canDraw()) {
       handler.postDelayed(drawRunnable, waitMillis);
     }
   }
@@ -317,25 +317,25 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void startThread() {
-    if (container.getKind() == AppComponent.WATCHFACE_GLES) return;
+    if (component.getKind() == AppComponent.WATCHFACE_GLES) return;
     requestNextDraw();
   }
 
 
   public void pauseThread() {
-    if (container.getKind() == AppComponent.WATCHFACE_GLES) return;
+    if (component.getKind() == AppComponent.WATCHFACE_GLES) return;
     pauseNextDraw();
   }
 
 
   public void resumeThread() {
-    if (container.getKind() == AppComponent.WATCHFACE_GLES) return;
+    if (component.getKind() == AppComponent.WATCHFACE_GLES) return;
     scheduleNextDraw();
   }
 
 
   public boolean stopThread() {
-    if (container.getKind() == AppComponent.WATCHFACE_GLES) return true;
+    if (component.getKind() == AppComponent.WATCHFACE_GLES) return true;
     pauseNextDraw();
     return true;
   }

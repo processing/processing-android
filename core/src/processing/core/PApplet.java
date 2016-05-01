@@ -442,7 +442,7 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void initSurface(AppComponent container, SurfaceHolder holder) {
+  public void initSurface(AppComponent component, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     handleSettings();
@@ -454,7 +454,7 @@ public class PApplet extends Object implements PConstants {
     if (DEBUG) println("Renderer " + rendererName);
     g = makeGraphics(sw, sh, rendererName, true);
     if (DEBUG) println("Created renderer");
-    surface = g.createSurface(container, holder);
+    surface = g.createSurface(component, holder);
     if (DEBUG) println("Created surface");
 
     if (fullScreen) {
@@ -475,9 +475,9 @@ public class PApplet extends Object implements PConstants {
       surface.setSystemUiVisibility(visibility);
     }
 
-    container.initDimensions();
-    displayWidth = container.getWidth();
-    displayHeight = container.getHeight();
+    component.initDimensions();
+    displayWidth = component.getWidth();
+    displayHeight = component.getHeight();
     if (fullScreen) {
       // Setting the default height and width to be fullscreen
       width = displayWidth;
