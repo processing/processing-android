@@ -484,6 +484,9 @@ public class PApplet extends Object implements PConstants {
       height = displayHeight;
     }
 
+    // Now we now the right width/height size for the renderer
+    g.setSize(width, height);
+
     //set smooth level
     if (smooth == 0) {
       g.noSmooth();
@@ -491,6 +494,7 @@ public class PApplet extends Object implements PConstants {
       g.smooth(smooth);
     }
 
+    // Finalize surface initialization.
     surface.initView(width, height);
 
     finished = false; // just for clarity
