@@ -984,26 +984,17 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.os.Bundle;");
     writer.println("import android.view.View;");
     writer.println("import android.view.ViewGroup;");    
-    writer.println("import android.view.Window;");
-    writer.println("import android.view.WindowManager;");
     writer.println("import android.widget.FrameLayout;");
-    writer.println("import android.view.ViewGroup.LayoutParams;");
     writer.println("import android.app.FragmentTransaction;");
     writer.println("import processing.android.PFragment;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends Activity {");
-    writer.println("    PFragment fragment;");
     writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
-    writer.println("    int viewId = View.generateViewId();");
+    writer.println("    private static final int viewId = View.generateViewId();");
+    writer.println("    PFragment fragment;");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
     writer.println("        super.onCreate(savedInstanceState);");
-    writer.println("        Window window = getWindow();");
-    writer.println("        requestWindowFeature(Window.FEATURE_NO_TITLE);");
-    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,"
-        + "WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
-    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
-        + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
     writer.println("        FrameLayout frame = new FrameLayout(this);");
     writer.println("        frame.setId(viewId);");
     writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
