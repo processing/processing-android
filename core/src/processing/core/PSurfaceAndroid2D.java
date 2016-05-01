@@ -358,16 +358,12 @@ public class PSurfaceAndroid2D implements PSurface, PConstants {
         System.out.println("SketchSurfaceView2D.surfaceChanged() " + w + " " + h);
       }
 
-      sketch.displayHeight = w;
+      sketch.displayWidth = w;
       sketch.displayHeight = h;
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
-
-//    width = w;
-//    height = h;
-//
-//    g.setSize(w, h);
     }
+
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {

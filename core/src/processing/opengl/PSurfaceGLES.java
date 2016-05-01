@@ -528,7 +528,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
       // lib.init(iwidth, iheight);
 
        // Display width/height might change if the orientation changes.
-      sketch.displayHeight = iwidth;
+      sketch.displayWidth = iwidth;
       sketch.displayHeight = iheight;
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();

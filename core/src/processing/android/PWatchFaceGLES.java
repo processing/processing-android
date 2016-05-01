@@ -59,8 +59,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   private class GLEngine extends Gles2WatchFaceService.Engine {
-//    private static final long TICK_PERIOD_MILLIS = 100;
-//    private Handler timeTick;
 
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
@@ -74,39 +72,10 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
               .build());
       if (sketch != null) {
         sketch.initSurface(PWatchFaceGLES.this, null);
-//        graphics = sketch.g;
         sketch.start();
       }
-
-//      timeTick = new Handler(Looper.myLooper());
-//      startTimerIfNecessary();
-
     }
 
-    /*
-    private void startTimerIfNecessary() {
-      timeTick.removeCallbacks(timeRunnable);
-      if (isVisible() && !isInAmbientMode()) {
-        timeTick.post(timeRunnable);
-      }
-    }
-
-
-    private final Runnable timeRunnable = new Runnable() {
-      @Override
-      public void run() {
-        onSecondTick();
-        if (isVisible() && !isInAmbientMode()) {
-          timeTick.postDelayed(this, TICK_PERIOD_MILLIS);
-        }
-      }
-    };
-
-
-    private void onSecondTick() {
-      invalidateIfNecessary();
-    }
-*/
 
     private void invalidateIfNecessary() {
       if (isVisible() && !isInAmbientMode()) {
@@ -124,11 +93,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onGlSurfaceCreated(int width, int height) {
       super.onGlSurfaceCreated(width, height);
-//      graphics.setSize(width, height);
-//      sketch.g.setSize(width, height);
-//      sketch.surfaceChanged();
-
-      sketch.displayHeight = width;
+      sketch.displayWidth = width;
       sketch.displayHeight = height;
       sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
