@@ -289,19 +289,14 @@ public class PSurfaceGLES implements PSurface, PConstants {
   private void scheduleNextDraw() {
     handler.removeCallbacks(drawRunnable);
     component.requestDraw();
-    int waitMillis = 1000 / 15;
+    int targetMillis = 1000 / 15;
     if (sketch != null) {
       final PSurfaceGLES glsurf = (PSurfaceGLES) sketch.surface;
       float targetfps = glsurf.pgl.getFrameRate();
-      float targetMillisPerFrame = 1000 / targetfps;
-
-//            float actualFps = sketch.frameRate;
-//            float actualMillisPerFrame = 1000 / actualFps;
-//            int waitMillis = (int)PApplet.max(0, targetMillisPerFrame - actualMillisPerFrame);
-      waitMillis = (int) targetMillisPerFrame;
+      targetMillis = (int)(1000 / targetfps);
     }
     if (component.canDraw()) {
-      handler.postDelayed(drawRunnable, waitMillis);
+      handler.postDelayed(drawRunnable, targetMillis);
     }
   }
 
