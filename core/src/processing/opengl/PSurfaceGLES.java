@@ -167,6 +167,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
       }
       setRootView(rootView);
     } else if (component.getKind() == AppComponent.WALLPAPER) {
+      /*
       int displayWidth = component.getWidth();
       int displayHeight = component.getHeight();
       View rootView;
@@ -195,6 +196,8 @@ public class PSurfaceGLES implements PSurface, PConstants {
         rootView = overallLayout;
       }
       setRootView(rootView);
+      */
+      setRootView(getSurfaceView());
     }
   }
 
