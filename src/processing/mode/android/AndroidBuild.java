@@ -997,8 +997,8 @@ class AndroidBuild extends JavaBuild {
     writer.println("        super.onCreate(savedInstanceState);");
     writer.println("        FrameLayout frame = new FrameLayout(this);");
     writer.println("        frame.setId(viewId);");
-    writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
-        + "LayoutParams.MATCH_PARENT));");
+    writer.println("        setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, "
+        + "ViewGroup.LayoutParams.MATCH_PARENT));");
     writer.println("        PApplet sketch = new " + sketchClassName + "();");    
     writer.println("        if (savedInstanceState == null) {");
     writer.println("            fragment = new PFragment();");
