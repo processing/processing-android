@@ -2,10 +2,6 @@ float angle = 0;
 
 void setup() {
   fullScreen(P3D);
-  //size(800, 1280, P2D);
-  //size(640, 360, P3D);
-  //orientation(PORTRAIT);
-  //orientation(LANDSCAPE);
 }
 
 void draw() {
@@ -14,6 +10,6 @@ void draw() {
   translate(mouseX, mouseY);
   rotateX(angle);
   rotateY(angle);
-  box(width * 0.5);
+  box(100);
   angle += 0.01;
 }
