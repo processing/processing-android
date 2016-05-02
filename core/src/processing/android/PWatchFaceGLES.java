@@ -103,7 +103,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
-//      invalidate();
+      invalidateIfNecessary();
       // call new event handlers in sketch (?)
     }
 
@@ -116,7 +116,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
       } else {
         sketch.onPause();
       }
-//      startTimerIfNecessary();
     }
 
 
@@ -135,17 +134,8 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onDraw() {
       super.onDraw();
-
-      PApplet.println("Calling handleDraw: " + sketch.width + " " + sketch.height);
+//      PApplet.println("Calling handleDraw: " + sketch.width + " " + sketch.height);
       sketch.handleDraw();
-    }
-
-
-    @Override
-    public void onTouchEvent(MotionEvent event) {
-      PApplet.println("touch even:" + event.toString());
-      sketch.surfaceTouchEvent(event);
-      super.onTouchEvent(event);
     }
 
 
@@ -202,6 +192,14 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
           super.onTapCommand(tapType, x, y, eventTime);
           break;
       }
+    }
+
+
+    @Override
+    public void onTouchEvent(MotionEvent event) {
+      PApplet.println("touch even:" + event.toString());
+      sketch.surfaceTouchEvent(event);
+      super.onTouchEvent(event);
     }
 
     @Override

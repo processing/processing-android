@@ -50,6 +50,8 @@ class AndroidBuild extends JavaBuild {
   static public final int WATCHFACE = 2;
   static public final int CARDBOARD = 3;
   
+  // TODO: make package parameter in the config file, as well as the SDK version
+  // to download (latest, specific number)
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
   static public final int min_sdk_fragment = 14; // Ice Cream Sandwich

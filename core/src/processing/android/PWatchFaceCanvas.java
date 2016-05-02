@@ -4,12 +4,17 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.support.wearable.watchface.CanvasWatchFaceService;
+import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
+import android.graphics.Bitmap;
 import processing.core.PGraphicsAndroid2D;
+import processing.event.MouseEvent;
+
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
   private DisplayMetrics metrics;
@@ -69,6 +74,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
               .setAcceptsTapEvents(true)
               .build());
       if (sketch != null) {
+        PGraphicsAndroid2D.useBitmap = false;
         sketch.initSurface(PWatchFaceCanvas.this, null);
         sketch.start();
       }
@@ -83,7 +89,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
-//      invalidate();
+      invalidateIfNecessary();
       // call new event handlers in sketch (?)
     }
 
@@ -96,7 +102,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       } else {
         sketch.onPause();
       }
-//      startTimerIfNecessary();
     }
 
 
@@ -114,12 +119,86 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
     @Override
     public void onDraw(Canvas canvas, Rect bounds) {
-        super.onDraw(canvas, bounds);
-        PGraphicsAndroid2D g2 = (PGraphicsAndroid2D)sketch.g;
-        g2.canvas = canvas;
-        sketch.handleDraw();
-
-//        watchFace.draw(canvas, bounds);
+      super.onDraw(canvas, bounds);
+      PGraphicsAndroid2D g2 = (PGraphicsAndroid2D)sketch.g;
+      g2.canvas = canvas;
+      sketch.handleDraw();
     }
+
+    @Override
+    public void onTapCommand(
+            @TapType int tapType, int x, int y, long eventTime) {
+      switch (tapType) {
+        case WatchFaceService.TAP_TYPE_TOUCH:
+          // The system sends the first command, TAP_TYPE_TOUCH, when the user initially touches the screen
+//          if (withinTapRegion(x, y)) {
+//            // Provide visual feedback of touch event
+//            startTapHighlight(x, y, eventTime);
+//          }
+          sketch.postEvent(new MouseEvent(null, eventTime,
+                  MouseEvent.PRESS, 0,
+                  x, y, LEFT, 1));
+          invalidate();
+          break;
+
+
+        case WatchFaceService.TAP_TYPE_TAP:
+          // Before sending the next command, the system judges whether the contact is a single tap,
+          // which is the only gesture allowed. If the user immediately lifts their finger,
+          // the system determines that a single tap took place, and forwards a TAP_TYPE_TAP event
+          sketch.postEvent(new MouseEvent(null, eventTime,
+                  MouseEvent.RELEASE, 0,
+                  x, y, LEFT, 1));
+
+//          hideTapHighlight();
+//          if (withinTapRegion(x, y)) {
+//            // Implement the tap action
+//            // (e.g. show detailed step count)
+//            onWatchFaceTap();
+//          }
+
+
+          invalidate();
+          break;
+
+        case WatchFaceService.TAP_TYPE_TOUCH_CANCEL:
+          // If the user does not immediately lift their finger, the system forwards a
+          // TAP_TYPE_TOUCH_CANCEL event. Once the user has triggered a TAP_TYPE_TOUCH_CANCEL event,
+          // they cannot trigger a TAP_TYPE_TAP event until they make a new contact with the screen.
+          //hideTapHighlight();
+
+          // New type of event...
+          sketch.postEvent(new MouseEvent(null, eventTime,
+                  MouseEvent.RELEASE, 0,
+                  x, y, LEFT, 1));
+          invalidate();
+          break;
+
+        default:
+          super.onTapCommand(tapType, x, y, eventTime);
+          break;
+      }
+    }
+
+
+    @Override
+    public void onTouchEvent(MotionEvent event) {
+      PApplet.println("touch even:" + event.toString());
+      sketch.surfaceTouchEvent(event);
+      super.onTouchEvent(event);
+    }
+
+    @Override
+    public void onDestroy() {
+      super.onDestroy();
+      sketch.onDestroy();
+    }
+  }
+
+
+  @Override
+  public void onDestroy() {
+    sketch.onDestroy();
+    super.onDestroy();
   }
 }

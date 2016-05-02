@@ -605,8 +605,13 @@ public class PApplet extends Object implements PConstants {
   // TODO this is only used by A2D, when finishing up a draw. but if the
   // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
   public SurfaceHolder getSurfaceHolder() {
-    return surface.getSurfaceView().getHolder();
-//    return surfaceHolder;
+    SurfaceView view = surface.getSurfaceView();
+    if (view == null) {
+      // Watch faces don't have a surface view associated to them.
+      return null;
+    } else {
+      return view.getHolder();
+    }
   }
 
 

@@ -282,7 +282,7 @@ public class PSurfaceGLES implements PSurface, PConstants {
   private final Handler handler = new Handler();
   private final Runnable drawRunnable = new Runnable() {
     public void run() {
-      if (sketch != null) {
+      if (surface != null) {
         surface.requestRender();
       }
       scheduleNextDraw();
@@ -315,25 +315,21 @@ public class PSurfaceGLES implements PSurface, PConstants {
 
 
   public void startThread() {
-    if (component.getKind() == AppComponent.WATCHFACE_GLES) return;
     requestNextDraw();
   }
 
 
   public void pauseThread() {
-    if (component.getKind() == AppComponent.WATCHFACE_GLES) return;
     pauseNextDraw();
   }
 
 
   public void resumeThread() {
-    if (component.getKind() == AppComponent.WATCHFACE_GLES) return;
     scheduleNextDraw();
   }
 
 
   public boolean stopThread() {
-    if (component.getKind() == AppComponent.WATCHFACE_GLES) return true;
     pauseNextDraw();
     return true;
   }

@@ -42,6 +42,7 @@ import android.view.SurfaceHolder;
  * with the original (desktop) version of Processing.
  */
 public class PGraphicsAndroid2D extends PGraphics {
+  static public boolean useBitmap = true;
 
   public Canvas canvas;  // like g2 for PGraphicsJava2D
 
@@ -140,9 +141,11 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void allocate() {
-    if (bitmap != null) bitmap.recycle();
-    bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-    canvas = new Canvas(bitmap);
+    if (useBitmap) {
+      if (bitmap != null) bitmap.recycle();
+      bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+      canvas = new Canvas(bitmap);
+    }
 //    image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 //    canvas = (Graphics2D) image.getGraphics();
   }
@@ -203,6 +206,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void endDraw() {
+    if (bitmap == null) return;
+
     // hm, mark pixels as changed, because this will instantly do a full
     // copy of all the pixels to the surface.. so that's kind of a mess.
     //updatePixels();
@@ -214,15 +219,18 @@ public class PGraphicsAndroid2D extends PGraphics {
 //    }
 
     if (primaryGraphics) {
-      Canvas screen = null;
-      try {
-        screen = parent.getSurfaceHolder().lockCanvas(null);
-        if (screen != null) {
-          screen.drawBitmap(bitmap, new Matrix(), null);
-        }
-      } finally {
-        if (screen != null) {
-          parent.getSurfaceHolder().unlockCanvasAndPost(screen);
+      SurfaceHolder holder = parent.getSurfaceHolder();
+      if (holder != null) {
+        Canvas screen = null;
+        try {
+          screen = holder.lockCanvas(null);
+          if (screen != null) {
+            screen.drawBitmap(bitmap, new Matrix(), null);
+          }
+        } finally {
+          if (screen != null) {
+            parent.getSurfaceHolder().unlockCanvasAndPost(screen);
+          }
         }
       }
     } else {
@@ -1938,6 +1946,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void loadPixels() {
+    if (bitmap == null) return;
+
     if ((pixels == null) || (pixels.length != width * height)) {
       pixels = new int[width * height];
     }
@@ -1955,6 +1965,8 @@ public class PGraphicsAndroid2D extends PGraphics {
    */
   @Override
   public void updatePixels() {
+    if (bitmap == null) return;
+
 //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.setDataElements(0, 0, width, height, pixels);
     bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
@@ -1995,7 +2007,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public int get(int x, int y) {
-    if ((x < 0) || (y < 0) || (x >= width) || (y >= height)) return 0;
+    if ((bitmap == null) || (x < 0) || (y < 0) || (x >= width) || (y >= height)) return 0;
 //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.getDataElements(x, y, getset);
 //    return getset[0];
@@ -2030,7 +2042,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void set(int x, int y, int argb) {
-    if ((x < 0) || (y < 0) || (x >= width) || (y >= height)) return;
+    if ((bitmap == null) || (x < 0) || (y < 0) || (x >= width) || (y >= height)) return;
 //    getset[0] = argb;
 //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.setDataElements(x, y, getset);
@@ -2163,6 +2175,8 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void copy(int sx, int sy, int sw, int sh,
                    int dx, int dy, int dw, int dh) {
+    if (bitmap == null) return;
+
 //    Bitmap bitsy = Bitmap.createBitmap(image, sx, sy, sw, sh);
 //    rect.set(dx, dy, dx + dw, dy + dh);
 //    canvas.drawBitmap(bitsy,
