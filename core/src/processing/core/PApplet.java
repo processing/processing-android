@@ -40,7 +40,6 @@ import android.content.res.Configuration;
 import android.graphics.*;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.format.Time;
@@ -490,21 +489,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       throw new RuntimeException(message);
     }
 
-    if (fullScreen) {
-      int visibility;
-      if (SDK < 19) {
-        // Pre-4.4
-        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-      } else {
-        // 4.4 and higher. Equivalent to:
-        // View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-        // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-        // View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        // so this line can be build with SDK < 4.4
-        visibility = 256 | 512 | 1024 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4 | 2048 | 4096;
-      }
-      surfaceView.setSystemUiVisibility(visibility);
-    }
+    setFullScreenVisibility();
 
     // Getting the display metrics only after setting fullscreen mode
     DisplayMetrics dm = new DisplayMetrics();
@@ -639,7 +624,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     return rootView;
   }
 
-
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     if (DEBUG) System.out.println("configuration changed: " + newConfig);
@@ -647,9 +631,35 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
+  private void setFullScreenVisibility() {
+    if (fullScreen) {
+      int visibility;
+      if (SDK < 19) {
+        // Pre-4.4
+        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+      } else {
+        // 4.4 and higher. Integer instead of constants defined in View so it can
+        // build with SDK < 4.4
+        visibility = 256 |   // View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                     512 |   // View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                     1024 |  // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                     View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                     4 |     // View.SYSTEM_UI_FLAG_FULLSCREEN
+                     4096;   // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        // However, this visibility does not fix a bug where the navigation area
+        // turns black after resuming the app:
+        // https://code.google.com/p/android/issues/detail?id=170752
+
+        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4096;
+      }
+      surfaceView.setSystemUiVisibility(visibility);
+    }
+  }
+
   @Override
   public void onResume() {
     super.onResume();
+    setFullScreenVisibility();
 
     // TODO need to bring back app state here!
 //    surfaceView.onResume();
@@ -665,6 +675,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   @Override
   public void onPause() {
     super.onPause();
+    setFullScreenVisibility();
 
     // TODO need to save all application state here!
 //    System.out.println("PApplet.onPause() called");
@@ -4596,7 +4607,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     return json.save(saveFile(filename), options);
   }
 
-  
+
   /**
    * @webref input:files
    * @param input String to parse as a JSONArray
