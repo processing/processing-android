@@ -1,10 +1,10 @@
-package processing.mode.android;
 /* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2009-10 Ben Fry and Casey Reas
+ Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -19,4 +19,7 @@ package processing.mode.android;
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+package processing.mode.android;
+
 
