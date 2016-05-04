@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-15 The Processing Foundation
+  Copyright (c) 2012-16 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -2035,8 +2035,8 @@ public class PShapeOpenGL extends PShape {
       if (is2D() && parent != null) {
         ((PShapeOpenGL)parent).strokedTexture(stroke && image != null);
       }
-      
-      this.stroke = stroke;      
+
+      this.stroke = stroke;
     }
   }
 

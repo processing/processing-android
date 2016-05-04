@@ -3,7 +3,8 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2005-10 Ben Fry and Casey Reas
+  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2005-12 Ben Fry and Casey Reas
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,26 +25,26 @@ package processing.core;
 
 
 public interface PMatrix {
-  
+
   public void reset();
-  
+
   /**
    * Returns a copy of this PMatrix.
    */
-  public PMatrix get();  
+  public PMatrix get();
 
   /**
    * Copies the matrix contents into a float array.
    * If target is null (or not the correct size), a new array will be created.
    */
   public float[] get(float[] target);
-  
-  
+
+
   public void set(PMatrix src);
 
   public void set(float[] source);
 
-  public void set(float m00, float m01, float m02, 
+  public void set(float m00, float m01, float m02,
                   float m10, float m11, float m12);
 
   public void set(float m00, float m01, float m02, float m03,
@@ -51,9 +52,9 @@ public interface PMatrix {
                   float m20, float m21, float m22, float m23,
                   float m30, float m31, float m32, float m33);
 
-  
+
   public void translate(float tx, float ty);
-  
+
   public void translate(float tx, float ty, float tz);
 
   public void rotate(float angle);
@@ -71,12 +72,12 @@ public interface PMatrix {
   public void scale(float sx, float sy);
 
   public void scale(float x, float y, float z);
-  
+
   public void shearX(float angle);
-  
+
   public void shearY(float angle);
 
-  /** 
+  /**
    * Multiply this matrix by another.
    */
   public void apply(PMatrix source);
@@ -85,7 +86,7 @@ public interface PMatrix {
 
   public void apply(PMatrix3D source);
 
-  public void apply(float n00, float n01, float n02, 
+  public void apply(float n00, float n01, float n02,
                     float n10, float n11, float n12);
 
   public void apply(float n00, float n01, float n02, float n03,
@@ -100,7 +101,7 @@ public interface PMatrix {
 
   public void preApply(PMatrix3D left);
 
-  public void preApply(float n00, float n01, float n02, 
+  public void preApply(float n00, float n01, float n02,
                        float n10, float n11, float n12);
 
   public void preApply(float n00, float n01, float n02, float n03,
@@ -108,40 +109,40 @@ public interface PMatrix {
                        float n20, float n21, float n22, float n23,
                        float n30, float n31, float n32, float n33);
 
-  
-  /** 
-   * Multiply a PVector by this matrix. 
+
+  /**
+   * Multiply a PVector by this matrix.
    */
   public PVector mult(PVector source, PVector target);
-  
-  
-  /** 
-   * Multiply a multi-element vector against this matrix. 
+
+
+  /**
+   * Multiply a multi-element vector against this matrix.
    */
   public float[] mult(float[] source, float[] target);
-  
-  
+
+
 //  public float multX(float x, float y);
 //  public float multY(float x, float y);
-  
+
 //  public float multX(float x, float y, float z);
 //  public float multY(float x, float y, float z);
-//  public float multZ(float x, float y, float z);  
-  
-  
+//  public float multZ(float x, float y, float z);
+
+
   /**
    * Transpose this matrix.
    */
   public void transpose();
 
-  
+
   /**
    * Invert this matrix.
    * @return true if successful
    */
   public boolean invert();
-  
-  
+
+
   /**
    * @return the determinant of the matrix
    */

@@ -3,7 +3,8 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2006-10 Ben Fry and Casey Reas
+  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2006-12 Ben Fry and Casey Reas
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -238,7 +239,7 @@ public class PShape implements PConstants {
 
   /** True if contains 3D data */
   protected boolean is3D = false;
-  
+
   protected boolean perVertexStyles = false;
 
 

@@ -3,7 +3,8 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2004-10 Ben Fry and Casey Reas
+  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
   This library is free software; you can redistribute it and/or
@@ -34,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 
 import processing.opengl.PGL;
 import processing.opengl.PShader;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 
 
