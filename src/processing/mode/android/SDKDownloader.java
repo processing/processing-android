@@ -53,7 +53,10 @@ import java.util.zip.ZipFile;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-  private static final String PLATFORM_API_LEVEL = "22";
+  // Version and API level are both used to avoid ambiguity with preview versions,
+  // which might share the API level with the earlier stable platform.
+  private static final String PLATFORM_VERSION = "6.0";
+  private static final String PLATFORM_API_LEVEL = "23";
   
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
@@ -214,7 +217,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       NodeList platformList = doc.getElementsByTagName("sdk:platform");
       for(int i = 0; i < platformList.getLength(); i++) {
         Node platform = platformList.item(i);
-        if (((Element) platform).getElementsByTagName("sdk:api-level").item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
+        NodeList version = ((Element) platform).getElementsByTagName("sdk:version");
+        NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
+        if (version.item(0).getTextContent().equals(PLATFORM_VERSION) && level.item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
           Node archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
           Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
           urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
