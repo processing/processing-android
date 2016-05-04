@@ -73,6 +73,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //  static final public boolean DEBUG = true;
   static final public boolean DEBUG = false;
 
+  /** Default width and height for sketch when not specified */
+  static public final int DEFAULT_WIDTH = 100;
+  static public final int DEFAULT_HEIGHT = 100;
+
   // Convenience public constant holding the SDK version, akin to platform in Java mode
   static final public int SDK = android.os.Build.VERSION.SDK_INT;
 //  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
@@ -161,10 +165,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   public int[] pixels;
 
   /** width of this applet's associated PGraphics */
-  public int width;
+  public int width = DEFAULT_WIDTH;
 
   /** height of this applet's associated PGraphics */
-  public int height;
+  public int height = DEFAULT_HEIGHT;
 
   // can't call this because causes an ex, but could set elsewhere
   //final float screenDensity = getResources().getDisplayMetrics().density;
