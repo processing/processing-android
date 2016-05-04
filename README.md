@@ -11,6 +11,6 @@ the mode must to remain under the GPL.
 
 Please help us keep this code up to date and debugged by making fixes and submitting your pull requests here. The entire Processing project is developed by a tiny number of people working during their free time, and we could really use the help.
 
-The Processing developers
 
+The Processing developers
 4 May 2016
