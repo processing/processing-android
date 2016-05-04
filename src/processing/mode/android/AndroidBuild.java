@@ -38,7 +38,6 @@ import processing.app.Util;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
-import processing.mode.android.signing.JarSigner;
 import processing.mode.java.JavaBuild;
 
 import java.io.*;
