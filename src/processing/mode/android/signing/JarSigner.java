@@ -22,19 +22,44 @@
 package processing.mode.android.signing;
 
 import java.io.*;
+
 import java.security.*;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import sun.misc.BASE64Encoder;
+import sun.security.pkcs.ContentInfo;
+import sun.security.pkcs.PKCS7;
+import sun.security.pkcs.SignerInfo;
+import sun.security.x509.AlgorithmId;
+import sun.security.x509.X500Name;
 
 /**
  * Created by ibziy_000 on 17.08.2014.
  */
 public class JarSigner {
+  private static final String DIGEST_ALGORITHM = "SHA1";
+  private static final String DIGEST_ATTR = "SHA1-Digest";
+  private static final String DIGEST_MANIFEST_ATTR = "SHA1-Digest-Manifest";
+  private static SignatureOutputStream certFileContents = null;
+  private static byte[] buffer;
+
+  
   public static void signJar(File jarToSign, File outputJar, String alias, String keypass, String keystore, String storepass)
-      throws GeneralSecurityException, IOException, SignedJarBuilder.IZipEntryFilter.ZipAbortException {
+      throws GeneralSecurityException, IOException, SignedJarBuilder.IZipEntryFilter.ZipAbortException, NoSuchAlgorithmException {
 
-    PrivateKey mPrivateKey;
-    X509Certificate mCertificate;
-
+    PrivateKey privateKey = null;
+    X509Certificate x509Cert = null;
+    Manifest manifest = null;
+    
     KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
     FileInputStream fis = new FileInputStream(keystore);
     keyStore.load(fis, storepass.toCharArray());
@@ -43,15 +68,227 @@ public class JarSigner {
     KeyStore.PrivateKeyEntry entry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(
         alias, new KeyStore.PasswordProtection(keypass.toCharArray()));
     if (entry != null) {
-      mPrivateKey = entry.getPrivateKey();
-      mCertificate = (X509Certificate) entry.getCertificate();
+      privateKey = entry.getPrivateKey();
+      x509Cert = (X509Certificate) entry.getCertificate();
     } else {
       throw new KeyStoreException("Couldn't get key");
     }
+    
 
-    SignedJarBuilder builder = new SignedJarBuilder(
-        new FileOutputStream(outputJar, false), mPrivateKey, mCertificate);
-    builder.writeZip(new FileInputStream(jarToSign), null);
-    builder.close();
+//    SignedJarBuilder builder = new SignedJarBuilder(outStream, privateKey, x509Cert);
+    JarOutputStream outputStream = new JarOutputStream(new FileOutputStream(outputJar, false));
+    outputStream.setLevel(9);
+    if (privateKey != null && x509Cert != null) {
+      manifest = new Manifest();
+      Attributes main = manifest.getMainAttributes();
+      main.putValue("Manifest-Version", "1.0");
+      main.putValue("Created-By", "1.0 (Android)");      
+    } 
+    
+    writeZip(new FileInputStream(jarToSign), outputStream, manifest);
+    
+    closeJar(outputStream, manifest, privateKey, x509Cert);
   }
+  
+  private static void writeZip(InputStream input, JarOutputStream output, Manifest manifest)
+      throws IOException, NoSuchAlgorithmException {    
+    BASE64Encoder base64Encoder = new BASE64Encoder();
+    MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
+    buffer = new byte[4096];
+    
+    ZipInputStream zis = new ZipInputStream(input);
+
+    try {
+      // loop on the entries of the intermediary package and put them in the final package.
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        String name = entry.getName();
+
+        // do not take directories or anything inside a potential META-INF folder.
+        if (entry.isDirectory() || name.startsWith("META-INF/")) {
+          continue;
+        }
+
+        JarEntry newEntry;
+
+        // Preserve the STORED method of the input entry.
+        if (entry.getMethod() == JarEntry.STORED) {
+          newEntry = new JarEntry(entry);
+        } else {
+          // Create a new entry so that the compressed len is recomputed.
+          newEntry = new JarEntry(name);
+        }
+
+        writeEntry(output, zis, newEntry, messageDigest, manifest, base64Encoder);
+
+        zis.closeEntry();
+      }
+    } finally {
+      zis.close();
+    }
+  }
+
+  private static void writeEntry(JarOutputStream output, InputStream input, JarEntry entry, 
+      MessageDigest digest, Manifest manifest, BASE64Encoder encoder) throws IOException {
+    output.putNextEntry(entry);
+
+    // Write input stream to the jar output.
+    int count;
+    while ((count = input.read(buffer)) != -1) {
+      output.write(buffer, 0, count);
+
+      if (digest != null) digest.update(buffer, 0, count);
+    }
+
+    output.closeEntry();
+
+    if (manifest != null) {
+      Attributes attr = manifest.getAttributes(entry.getName());
+      if (attr == null) {
+        attr = new Attributes();
+        manifest.getEntries().put(entry.getName(), attr);
+      }
+      attr.putValue(DIGEST_ATTR, encoder.encode(digest.digest()));
+    }
+  }
+  
+  private static void closeJar(JarOutputStream outputStream, Manifest manifest, 
+      PrivateKey key, X509Certificate cert) 
+      throws IOException, GeneralSecurityException {
+    if (manifest != null) {
+      // write the manifest to the jar file
+      outputStream.putNextEntry(new JarEntry(JarFile.MANIFEST_NAME));
+      manifest.write(outputStream);
+
+      // CERT.SF
+      Signature signature = Signature.getInstance("SHA1with" + key.getAlgorithm());
+      signature.initSign(key);
+      outputStream.putNextEntry(new JarEntry("META-INF/CERT.SF"));
+      //Caching the SignatureOutputStream object for future use by the signature provider extensions.
+      certFileContents = new SignatureOutputStream(outputStream, signature);
+      writeSignatureFile(certFileContents, manifest);
+
+      // CERT.*
+      outputStream.putNextEntry(new JarEntry("META-INF/CERT." + key.getAlgorithm()));
+      writeSignature(outputStream, signature, cert, key);
+    }
+
+    outputStream.close();
+  }
+  
+  /** Writes a .SF file with a digest to the manifest. */
+  private static void writeSignatureFile(SignatureOutputStream out, Manifest manifest)
+      throws IOException, GeneralSecurityException {
+    Manifest sf = new Manifest();
+    Attributes main = sf.getMainAttributes();
+    main.putValue("Signature-Version", "1.0");
+    main.putValue("Created-By", "1.0 (Android)");
+
+    BASE64Encoder base64 = new BASE64Encoder();
+    MessageDigest md = MessageDigest.getInstance(DIGEST_ALGORITHM);
+    PrintStream print = new PrintStream(
+        new DigestOutputStream(new ByteArrayOutputStream(), md),
+        true, "UTF-8");
+
+    // Digest of the entire manifest
+    manifest.write(print);
+    print.flush();
+    main.putValue(DIGEST_MANIFEST_ATTR, base64.encode(md.digest()));
+
+    Map<String, Attributes> entries = manifest.getEntries();
+    for (Map.Entry<String, Attributes> entry : entries.entrySet()) {
+      // Digest of the manifest stanza for this entry.
+      print.print("Name: " + entry.getKey() + "\r\n");
+      for (Map.Entry<Object, Object> att : entry.getValue().entrySet()) {
+        print.print(att.getKey() + ": " + att.getValue() + "\r\n");
+      }
+      print.print("\r\n");
+      print.flush();
+
+      Attributes sfAttr = new Attributes();
+      sfAttr.putValue(DIGEST_ATTR, base64.encode(md.digest()));
+      sf.getEntries().put(entry.getKey(), sfAttr);
+    }
+
+    sf.write(out);
+
+    // A bug in the java.util.jar implementation of Android platforms
+    // up to version 1.6 will cause a spurious IOException to be thrown
+    // if the length of the signature file is a multiple of 1024 bytes.
+    // As a workaround, add an extra CRLF in this case.
+    if ((out.size() % 1024) == 0) {
+      out.write('\r');
+      out.write('\n');
+    }
+  }
+  
+  private static void writeSignature(JarOutputStream outputJar, 
+      Signature signature, X509Certificate publicKey, PrivateKey privateKey)
+    throws IOException, GeneralSecurityException{
+    writeSignatureBlock(outputJar, signature, publicKey, privateKey);
+  }
+  
+  /** Write the certificate file with a digital signature. */
+  private static void writeSignatureBlock(JarOutputStream outputJar, 
+      Signature signature, X509Certificate publicKey, PrivateKey privateKey)
+      throws IOException, GeneralSecurityException {
+    SignerInfo signerInfo = new SignerInfo(
+        new X500Name(publicKey.getIssuerX500Principal().getName()),
+        publicKey.getSerialNumber(),
+        AlgorithmId.get(DIGEST_ALGORITHM),
+        AlgorithmId.get(privateKey.getAlgorithm()),
+        signature.sign());
+
+    PKCS7 pkcs7 = new PKCS7(
+        new AlgorithmId[] { AlgorithmId.get(DIGEST_ALGORITHM) },
+        new ContentInfo(ContentInfo.DATA_OID, null),
+        new X509Certificate[] { publicKey },
+        new SignerInfo[] { signerInfo });
+
+    pkcs7.encodeSignedData(outputJar);
+  }  
+  
+  private static class SignatureOutputStream extends FilterOutputStream {
+    private Signature signature;
+    private int count = 0;
+    /** Some signature providers need to use the original message (CERT.SF) to provide
+     *a signature block. Caching it in the contents variable for future use.*/
+    private List<Byte> contents = new ArrayList<Byte>();
+
+    public SignatureOutputStream(OutputStream out, Signature sig) {
+      super(out);
+      signature = sig;
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+      try {
+        signature.update((byte) b);
+        contents.add((byte)b);
+      } catch (SignatureException e) {
+        throw new IOException("SignatureException: " + e);
+      }
+      super.write(b);
+      count++;
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+      try {
+        signature.update(b, off, len);
+        for (byte myByte: b) {
+          contents.add(myByte);
+        }
+      } catch (SignatureException e) {
+        throw new IOException("SignatureException: " + e);
+      }
+      super.write(b, off, len);
+      count += len;
+    }
+
+    public int size() {
+      return count;
+    }
+  }
+  
 }

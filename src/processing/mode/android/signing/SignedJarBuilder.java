@@ -107,14 +107,14 @@ public class SignedJarBuilder {
 //    }
   }
 
-  private JarOutputStream mOutputJar;
-  private PrivateKey mKey;
-  private X509Certificate mCertificate;
-  private Manifest mManifest;
-  private BASE64Encoder mBase64Encoder;
-  private MessageDigest mMessageDigest;
+  private JarOutputStream outputJar;
+  private PrivateKey privateKey;
+  private X509Certificate x509Cert;
+  private Manifest manifest;
+  private BASE64Encoder base64Encoder;
+  private MessageDigest messageDigest;
   private SignatureOutputStream certFileContents = null;
-  private byte[] mBuffer = new byte[4096];
+  private byte[] buffer = new byte[4096];
 
   /**
    * Classes which implement this interface provides a method to check whether a file should
@@ -170,19 +170,19 @@ public class SignedJarBuilder {
    */
   public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
       throws IOException, NoSuchAlgorithmException {
-    mOutputJar = new JarOutputStream(out);
-    mOutputJar.setLevel(9);
-    mKey = key;
-    mCertificate = certificate;
+    outputJar = new JarOutputStream(out);
+    outputJar.setLevel(9);
+    privateKey = key;
+    x509Cert = certificate;
 
-    if (mKey != null && mCertificate != null) {
-      mManifest = new Manifest();
-      Attributes main = mManifest.getMainAttributes();
+    if (privateKey != null && x509Cert != null) {
+      manifest = new Manifest();
+      Attributes main = manifest.getMainAttributes();
       main.putValue("Manifest-Version", "1.0");
       main.putValue("Created-By", "1.0 (Android)");
 
-      mBase64Encoder = new BASE64Encoder();
-      mMessageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
+      base64Encoder = new BASE64Encoder();
+      messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
     }
   }
 
@@ -261,26 +261,26 @@ public class SignedJarBuilder {
    * @throws GeneralSecurityException
    */
   public void close() throws IOException, GeneralSecurityException {
-    if (mManifest != null) {
+    if (manifest != null) {
       // write the manifest to the jar file
-      mOutputJar.putNextEntry(new JarEntry(JarFile.MANIFEST_NAME));
-      mManifest.write(mOutputJar);
+      outputJar.putNextEntry(new JarEntry(JarFile.MANIFEST_NAME));
+      manifest.write(outputJar);
 
       // CERT.SF
-      Signature signature = Signature.getInstance("SHA1with" + mKey.getAlgorithm());
-      signature.initSign(mKey);
-      mOutputJar.putNextEntry(new JarEntry("META-INF/CERT.SF"));
+      Signature signature = Signature.getInstance("SHA1with" + privateKey.getAlgorithm());
+      signature.initSign(privateKey);
+      outputJar.putNextEntry(new JarEntry("META-INF/CERT.SF"));
       //Caching the SignatureOutputStream object for future use by the signature provider extensions.
-      certFileContents = new SignatureOutputStream(mOutputJar, signature);
+      certFileContents = new SignatureOutputStream(outputJar, signature);
       writeSignatureFile(certFileContents);
 
       // CERT.*
-      mOutputJar.putNextEntry(new JarEntry("META-INF/CERT." + mKey.getAlgorithm()));
-      writeSignature(signature, mCertificate, mKey);
+      outputJar.putNextEntry(new JarEntry("META-INF/CERT." + privateKey.getAlgorithm()));
+      writeSignature(signature, x509Cert, privateKey);
     }
 
-    mOutputJar.close();
-    mOutputJar = null;
+    outputJar.close();
+    outputJar = null;
   }
 
   /**
@@ -288,9 +288,9 @@ public class SignedJarBuilder {
    * This does nothing if {@link #close()} was called successfully.
    */
   public void cleanUp() {
-    if (mOutputJar != null) {
+    if (outputJar != null) {
       try {
-        mOutputJar.close();
+        outputJar.close();
       } catch (IOException e) {
         // pass
       }
@@ -305,30 +305,30 @@ public class SignedJarBuilder {
    */
   private void writeEntry(InputStream input, JarEntry entry) throws IOException {
     // add the entry to the jar archive
-    mOutputJar.putNextEntry(entry);
+    outputJar.putNextEntry(entry);
 
     // read the content of the entry from the input stream, and write it into the archive.
     int count;
-    while ((count = input.read(mBuffer)) != -1) {
-      mOutputJar.write(mBuffer, 0, count);
+    while ((count = input.read(buffer)) != -1) {
+      outputJar.write(buffer, 0, count);
 
       // update the digest
-      if (mMessageDigest != null) {
-        mMessageDigest.update(mBuffer, 0, count);
+      if (messageDigest != null) {
+        messageDigest.update(buffer, 0, count);
       }
     }
 
     // close the entry for this file
-    mOutputJar.closeEntry();
+    outputJar.closeEntry();
 
-    if (mManifest != null) {
+    if (manifest != null) {
       // update the manifest for this entry.
-      Attributes attr = mManifest.getAttributes(entry.getName());
+      Attributes attr = manifest.getAttributes(entry.getName());
       if (attr == null) {
         attr = new Attributes();
-        mManifest.getEntries().put(entry.getName(), attr);
+        manifest.getEntries().put(entry.getName(), attr);
       }
-      attr.putValue(DIGEST_ATTR, mBase64Encoder.encode(mMessageDigest.digest()));
+      attr.putValue(DIGEST_ATTR, base64Encoder.encode(messageDigest.digest()));
     }
   }
 
@@ -347,11 +347,11 @@ public class SignedJarBuilder {
         true, "UTF-8");
 
     // Digest of the entire manifest
-    mManifest.write(print);
+    manifest.write(print);
     print.flush();
     main.putValue(DIGEST_MANIFEST_ATTR, base64.encode(md.digest()));
 
-    Map<String, Attributes> entries = mManifest.getEntries();
+    Map<String, Attributes> entries = manifest.getEntries();
     for (Map.Entry<String, Attributes> entry : entries.entrySet()) {
       // Digest of the manifest stanza for this entry.
       print.print("Name: " + entry.getKey() + "\r\n");
@@ -395,7 +395,7 @@ public class SignedJarBuilder {
         new X509Certificate[] { publicKey },
         new SignerInfo[] { signerInfo });
 
-    pkcs7.encodeSignedData(mOutputJar);
+    pkcs7.encodeSignedData(outputJar);
   }
 
 
