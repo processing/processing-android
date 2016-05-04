@@ -51,10 +51,10 @@ public class JarSigner {
   private static final String DIGEST_MANIFEST_ATTR = "SHA1-Digest-Manifest";
   private static SignatureOutputStream certFileContents = null;
   private static byte[] buffer;
-
   
-  public static void signJar(File jarToSign, File outputJar, String alias, String keypass, String keystore, String storepass)
-      throws GeneralSecurityException, IOException, SignedJarBuilder.IZipEntryFilter.ZipAbortException, NoSuchAlgorithmException {
+  public static void signJar(File jarToSign, File outputJar, String alias, 
+      String keypass, String keystore, String storepass)
+      throws GeneralSecurityException, IOException, NoSuchAlgorithmException {
 
     PrivateKey privateKey = null;
     X509Certificate x509Cert = null;
@@ -74,10 +74,8 @@ public class JarSigner {
       throw new KeyStoreException("Couldn't get key");
     }
     
-
-//    SignedJarBuilder builder = new SignedJarBuilder(outStream, privateKey, x509Cert);
-    JarOutputStream outputStream = new JarOutputStream(new FileOutputStream(outputJar, false));
-    outputStream.setLevel(9);
+    JarOutputStream signedJar = new JarOutputStream(new FileOutputStream(outputJar, false));
+    signedJar.setLevel(9);
     if (privateKey != null && x509Cert != null) {
       manifest = new Manifest();
       Attributes main = manifest.getMainAttributes();
@@ -85,9 +83,9 @@ public class JarSigner {
       main.putValue("Created-By", "1.0 (Android)");      
     } 
     
-    writeZip(new FileInputStream(jarToSign), outputStream, manifest);
+    writeZip(new FileInputStream(jarToSign), signedJar, manifest);
     
-    closeJar(outputStream, manifest, privateKey, x509Cert);
+    closeJar(signedJar, manifest, privateKey, x509Cert);
   }
   
   private static void writeZip(InputStream input, JarOutputStream output, Manifest manifest)
@@ -152,31 +150,31 @@ public class JarSigner {
     }
   }
   
-  private static void closeJar(JarOutputStream outputStream, Manifest manifest, 
+  private static void closeJar(JarOutputStream jar, Manifest manifest, 
       PrivateKey key, X509Certificate cert) 
       throws IOException, GeneralSecurityException {
     if (manifest != null) {
       // write the manifest to the jar file
-      outputStream.putNextEntry(new JarEntry(JarFile.MANIFEST_NAME));
-      manifest.write(outputStream);
+      jar.putNextEntry(new JarEntry(JarFile.MANIFEST_NAME));
+      manifest.write(jar);
 
       // CERT.SF
       Signature signature = Signature.getInstance("SHA1with" + key.getAlgorithm());
       signature.initSign(key);
-      outputStream.putNextEntry(new JarEntry("META-INF/CERT.SF"));
+      jar.putNextEntry(new JarEntry("META-INF/CERT.SF"));
       //Caching the SignatureOutputStream object for future use by the signature provider extensions.
-      certFileContents = new SignatureOutputStream(outputStream, signature);
+      certFileContents = new SignatureOutputStream(jar, signature);
       writeSignatureFile(certFileContents, manifest);
 
       // CERT.*
-      outputStream.putNextEntry(new JarEntry("META-INF/CERT." + key.getAlgorithm()));
-      writeSignature(outputStream, signature, cert, key);
+      jar.putNextEntry(new JarEntry("META-INF/CERT." + key.getAlgorithm()));
+      writeSignature(jar, signature, cert, key);
     }
 
-    outputStream.close();
+    jar.close();
   }
   
-  /** Writes a .SF file with a digest to the manifest. */
+  // Writes a .SF file with a digest to the manifest.
   private static void writeSignatureFile(SignatureOutputStream out, Manifest manifest)
       throws IOException, GeneralSecurityException {
     Manifest sf = new Manifest();
@@ -228,7 +226,7 @@ public class JarSigner {
     writeSignatureBlock(outputJar, signature, publicKey, privateKey);
   }
   
-  /** Write the certificate file with a digital signature. */
+  // Write the certificate file with a digital signature.
   private static void writeSignatureBlock(JarOutputStream outputJar, 
       Signature signature, X509Certificate publicKey, PrivateKey privateKey)
       throws IOException, GeneralSecurityException {
@@ -251,8 +249,6 @@ public class JarSigner {
   private static class SignatureOutputStream extends FilterOutputStream {
     private Signature signature;
     private int count = 0;
-    /** Some signature providers need to use the original message (CERT.SF) to provide
-     *a signature block. Caching it in the contents variable for future use.*/
     private List<Byte> contents = new ArrayList<Byte>();
 
     public SignatureOutputStream(OutputStream out, Signature sig) {
@@ -290,5 +286,4 @@ public class JarSigner {
       return count;
     }
   }
-  
 }
