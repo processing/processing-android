@@ -654,8 +654,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
         // However, this visibility does not fix a bug where the navigation area
         // turns black after resuming the app:
         // https://code.google.com/p/android/issues/detail?id=170752
-
-        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4096;
       }
       surfaceView.setSystemUiVisibility(visibility);
     }
