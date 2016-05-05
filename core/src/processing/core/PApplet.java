@@ -3,6 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
+  Copyright (c) 2012-16 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -36,7 +37,6 @@ import android.content.res.AssetManager;
 import android.graphics.*;
 import android.net.Uri;
 import android.text.format.Time;
-import android.util.*;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -96,8 +96,8 @@ public class PApplet extends Object implements PConstants {
 //  static final boolean THREAD_DEBUG = false;
 
   /** Default width and height for applet when not specified */
-//  static public final int DEFAULT_WIDTH = 100;
-//  static public final int DEFAULT_HEIGHT = 100;
+  static public final int DEFAULT_WIDTH = 100;
+  static public final int DEFAULT_HEIGHT = 100;
 
   /**
    * Minimum dimensions for the window holding an applet.
@@ -145,10 +145,10 @@ public class PApplet extends Object implements PConstants {
   public int[] pixels;
 
   /** width of this applet's associated PGraphics */
-  public int width;
+  public int width = DEFAULT_WIDTH;
 
   /** height of this applet's associated PGraphics */
-  public int height;
+  public int height = DEFAULT_HEIGHT;
 
   // can't call this because causes an ex, but could set elsewhere
   //final float screenDensity = getResources().getDisplayMetrics().density;
@@ -457,23 +457,7 @@ public class PApplet extends Object implements PConstants {
     surface = g.createSurface(component, holder);
     if (DEBUG) println("Created surface");
 
-    if (fullScreen) {
-      int visibility;
-      if (SDK < 19) {
-        // Pre-4.4
-        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-      } else {
-        // 4.4 and higher. Equivalent to:
-        // View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-        // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-        // View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        // so this line can be build with SDK < 4.4
-        // This results in the navigation bar being not visible, but can still be
-        // brought into view when swiping from the edges
-        visibility = 256 | 512 | 1024 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4 | 2048 | 4096;
-      }
-      surface.setSystemUiVisibility(visibility);
-    }
+    setFullScreenVisibility();
 
     component.initDimensions();
     displayWidth = component.getWidth();
@@ -508,10 +492,37 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  private void setFullScreenVisibility() {
+    if (fullScreen) {
+      int visibility;
+      if (SDK < 19) {
+        // Pre-4.4
+        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+      } else {
+        // 4.4 and higher. Integer instead of constants defined in View so it can
+        // build with SDK < 4.4
+        visibility = 256 |   // View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                     512 |   // View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                     1024 |  // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                     View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                     4 |     // View.SYSTEM_UI_FLAG_FULLSCREEN
+                     4096;   // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        // However, this visibility does not fix a bug where the navigation area
+        // turns black after resuming the app:
+        // https://code.google.com/p/android/issues/detail?id=170752
+
+        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | 4096;
+      }
+      surface.setSystemUiVisibility(visibility);
+    }
+  }
+
+
   public void onResume() {
     // TODO need to bring back app state here!
 //    surfaceView.onResume();
     if (DEBUG) System.out.println("PApplet.onResume() called");
+    setFullScreenVisibility();
 //    paused = false;
     handleMethods("resume");
     //start();  // kick the thread back on
@@ -1672,6 +1683,16 @@ public class PApplet extends Object implements PConstants {
 //      recorder.beginDraw();
 //    }
 
+    if (requestedNoLoop) {
+      // noLoop() was called in the previous frame, with a GL renderer, but now
+      // we are sure that the frame is properly displayed.
+      looping = false;
+      requestedNoLoop = false;
+      // We are done, we only need to finish the frame and exit.
+      g.endDraw();
+      return;
+    }
+
     long now = System.nanoTime();
 
     if (frameCount == 0) {
@@ -1778,9 +1799,21 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  // This auxiliary variable is used to implement a little hack that fixes
+  // https://github.com/processing/processing-android/issues/147
+  // on older devices where the last frame cannot be maintained after ending
+  // the rendering in GL. The trick consists in running one more frame after the
+  // noLoop() call, which ensures that the FBO layer is properly initialized
+  // and drawn with the contents of the previous frame.
+  private boolean requestedNoLoop = false;
+
   synchronized public void noLoop() {
     if (looping) {
-      looping = false;
+      if (g instanceof PGraphicsOpenGL) {
+        requestedNoLoop = true;
+      } else {
+        looping = false;
+      }
     }
   }
 

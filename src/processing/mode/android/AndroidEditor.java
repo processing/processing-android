@@ -3,7 +3,8 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2009-11 Ben Fry and Casey Reas
+ Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -147,44 +148,6 @@ public class AndroidEditor extends JavaEditor {
         }
       }
     }
-  }
-  
-  
-  class UpdateSDKListTask extends TimerTask {
-    
-    private JMenu sdkMenu;
-
-    public UpdateSDKListTask(JMenu sdkMenu) {
-      this.sdkMenu = sdkMenu;
-    }
-    
-    @Override
-    public void run() {
-      while (androidMode == null || androidMode.getSDK() == null) {
-        try {
-          Thread.sleep(3000);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        updateSdkMenu(sdkMenu);        
-      }
-      
-      /*
-      new Thread() {
-        @Override
-        public void run() {
-          while(androidMode == null || androidMode.getSDK() == null) {
-            try {
-              Thread.sleep(3000);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
-          }
-          updateSdkMenu(sdkMenu);
-        }
-      }.start();
-      */      
-    }    
   }
 
 
@@ -338,14 +301,23 @@ public class AndroidEditor extends JavaEditor {
     // the SDK.
     final JMenu sdkMenu = new JMenu("Target SDK");
     
-    JMenuItem noAvailSDKItem = new JCheckBoxMenuItem("No available targets");
-    noAvailSDKItem.setEnabled(false);
-    sdkMenu.add(noAvailSDKItem);
-    menu.add(sdkMenu);
-    
-    UpdateSDKListTask sdkTask = new UpdateSDKListTask(sdkMenu);
-    java.util.Timer sdkTimer = new java.util.Timer();
-    sdkTimer.schedule(sdkTask, 500, 5000);
+    JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
+    defaultItem.setEnabled(false);
+    sdkMenu.add(defaultItem);
+
+    new Thread() {
+      @Override
+      public void run() {
+        while(androidMode == null || androidMode.getSDK() == null) {
+          try {
+            Thread.sleep(3000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+        updateSdkMenu(sdkMenu);
+      }
+    }.start();
 
     menu.add(sdkMenu);
 
@@ -400,7 +372,7 @@ public class AndroidEditor extends JavaEditor {
 
       for (final AndroidSDK.SDKTarget target : targets) {
         if (target.version < 19) {
-          //We do not support API level less than 19
+          // TODO We do not support API level less than 19?
           continue;
         }
         

@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-15 The Processing Foundation
+  Copyright (c) 2012-16 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -12491,8 +12491,8 @@ public class PGraphicsOpenGL extends PGraphics {
         } else {
           texCache.setLastIndex(lastIndex, lastCache);
         }
+        prevTexImage = newTexImage;
       }
-      prevTexImage = newTexImage;
     }
 
     // -----------------------------------------------------------------

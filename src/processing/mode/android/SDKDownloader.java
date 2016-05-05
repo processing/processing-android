@@ -1,3 +1,24 @@
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
+ Part of the Processing project - http://processing.org
+
+ Copyright (c) 2014-16 The Processing Foundation
+ 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 2
+ as published by the Free Software Foundation.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software Foundation,
+ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 package processing.mode.android;
 
 import org.w3c.dom.Document;
@@ -32,7 +53,10 @@ import java.util.zip.ZipFile;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-  private static final String PLATFORM_API_LEVEL = "22";
+  // Version and API level are both used to avoid ambiguity with preview versions,
+  // which might share the API level with the earlier stable platform.
+  private static final String PLATFORM_VERSION = "6.0";
+  private static final String PLATFORM_API_LEVEL = "23";
   
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
@@ -191,9 +215,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
       // platform
       NodeList platformList = doc.getElementsByTagName("sdk:platform");
-      for(int i = 0; i < platformList.getLength(); i++) {
+      for (int i = 0; i < platformList.getLength(); i++) {
         Node platform = platformList.item(i);
-        if (((Element) platform).getElementsByTagName("sdk:api-level").item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
+        NodeList version = ((Element) platform).getElementsByTagName("sdk:version");
+        NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
+        if (version.item(0).getTextContent().equals(PLATFORM_VERSION) && level.item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
           Node archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
           Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
           urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
@@ -206,7 +232,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Node platformToolItem = doc.getElementsByTagName("sdk:platform-tool").item(0);
       Node archiveListItem = ((Element) platformToolItem).getElementsByTagName("sdk:archives").item(0);
       NodeList archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for(int i = 0; i < archiveList.getLength(); i++) {
+      for (int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if (hostOs.equals(requiredHostOs)) {
@@ -221,7 +247,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Node buildToolsItem = doc.getElementsByTagName("sdk:build-tool").item(doc.getElementsByTagName("sdk:build-tool").getLength()-1);
       archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
       archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for(int i = 0; i < archiveList.getLength(); i++) {
+      for (int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if (hostOs.equals(requiredHostOs)) {
@@ -236,7 +262,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Node toolsItem = doc.getElementsByTagName("sdk:tool").item(0);
       archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
       archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for(int i = 0; i < archiveList.getLength(); i++) {
+      for (int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if (hostOs.equals(requiredHostOs)) {
