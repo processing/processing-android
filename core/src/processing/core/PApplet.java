@@ -2145,6 +2145,16 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
       g.beginDraw();
 
+      if (requestedNoLoop) {
+        // noLoop() was called in the previous frame, with a GL renderer, but now
+        // we are sure that the frame is properly displayed.
+        looping = false;
+        requestedNoLoop = false;
+        // We are done, we only need to finish the frame and exit.
+        g.endDraw();
+        return;
+      }
+
       long now = System.nanoTime();
 
       if (frameCount == 0) {
@@ -2246,9 +2256,21 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   }
 
 
+  // This auxiliary variable is used to implement a little hack that fixes
+  // https://github.com/processing/processing-android/issues/147
+  // on older devices where the last frame cannot be maintained after ending
+  // the rendering in GL. The trick consists in running one more frame after the
+  // noLoop() call, which ensures that the FBO layer is properly initialized
+  // and drawn with the contents of the previous frame.
+  private boolean requestedNoLoop = false;
+
   synchronized public void noLoop() {
     if (looping) {
-      looping = false;
+      if (g instanceof PGraphicsOpenGL) {
+        requestedNoLoop = true;
+      } else {
+        looping = false;
+      }
     }
   }
 
