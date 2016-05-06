@@ -171,11 +171,11 @@ public class Manifest {
     writer.println("          android:versionName=\"1.0\">" + newLine);    
     
     // Publishing-specific features
+    // for now including this... we're wiring to a particular SDK version anyway...
+    writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);
     if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
-      // for now including this... we're wiring to a particular SDK version anyway...
-      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);  
-    } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
-      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);
+      // nothing special for fragments      
+    } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {      
       writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />" + newLine);
     } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {      
       writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />" + newLine);
