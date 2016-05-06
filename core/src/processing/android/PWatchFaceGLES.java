@@ -23,6 +23,8 @@
 package processing.android;
 
 import android.content.Intent;
+import android.os.Bundle;
+import android.view.WindowInsets;
 import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
@@ -55,7 +57,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   public int getKind() {
-    return WATCHFACE_GLES;
+    return WATCHFACE;
   }
 
   @Override
@@ -77,7 +79,9 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   public boolean canDraw() {
-    return engine.isVisible() && !engine.isInAmbientMode();
+    // The rendering loop should never call handleDraw() directly, it only needs to invalidate the
+    // screen
+    return false;
   }
 
   private class GLEngine extends Gles2WatchFaceService.Engine {
@@ -94,7 +98,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
               .build());
       if (sketch != null) {
         sketch.initSurface(PWatchFaceGLES.this, null);
-        sketch.start();
+        sketch.startSurface();
       }
     }
 
@@ -126,9 +130,26 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
       invalidateIfNecessary();
+      sketch.ambientMode = inAmbientMode;
       // call new event handlers in sketch (?)
     }
 
+    @Override
+    public void onPropertiesChanged(Bundle properties) {
+      super.onPropertiesChanged(properties);
+      sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+      sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
+    }
+
+    @Override
+    public void onApplyWindowInsets(WindowInsets insets) {
+      super.onApplyWindowInsets(insets);
+      sketch.isRound = insets.isRound();
+      sketch.insetLeft = insets.getSystemWindowInsetLeft();
+      sketch.insetRight = insets.getSystemWindowInsetRight();
+      sketch.insetTop = insets.getSystemWindowInsetTop();
+      sketch.insetBottom = insets.getSystemWindowInsetBottom();
+    }
 
     @Override
     public void onVisibilityChanged(boolean visible) {

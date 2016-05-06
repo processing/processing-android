@@ -29,8 +29,7 @@ import processing.core.PConstants;
 abstract public interface AppComponent extends PConstants {
   static public final int FRAGMENT  = 0;
   static public final int WALLPAPER = 1;
-  static public final int WATCHFACE_CANVAS = 2;
-  static public final int WATCHFACE_GLES = 3;
+  static public final int WATCHFACE = 2;
 
   public void initDimensions();
   public int getWidth();

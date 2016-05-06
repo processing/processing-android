@@ -75,4 +75,6 @@ public interface PSurface {
   public boolean stopThread();
 
   public boolean isStopped();
+
+  public void setFrameRate(float fps);
 }

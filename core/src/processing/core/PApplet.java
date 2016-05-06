@@ -272,8 +272,31 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
-  protected boolean windowFocused = false;
-  protected boolean viewFocused = false;
+  /**
+   * Use in watch faces to check if the device in in ambient mode or interactive mode.
+   */
+  public boolean ambientMode = false;
+
+  /**
+   * Indicates whether the watch face is round or not.
+   */
+  public boolean isRound = false;
+
+  /**
+   * Watch face insets
+   */
+  public int insetLeft, insetRight = 0;
+  public int insetTop, insetBottom = 0;
+
+  /**
+   * Use in watch faces to store information abou the device screen
+   * https://developer.android.com/training/wearables/watch-faces/drawing.html#Screen
+   */
+  public boolean lowBitAmbient = false;
+  public boolean burnInProtection = false;
+
+//  protected boolean windowFocused = false;
+//  protected boolean viewFocused = false;
 
   /**
    * true if the applet is online.
@@ -292,6 +315,9 @@ public class PApplet extends Object implements PConstants {
 
   protected boolean insideDraw;
 
+  /** Last time in nanoseconds that frameRate was checked */
+  protected long frameRateLastNanos = 0;
+
   /**
    * The current value of frames per second.
    * <P>
@@ -303,11 +329,11 @@ public class PApplet extends Object implements PConstants {
    */
   public float frameRate = 10;
   /** Last time in nanoseconds that frameRate was checked */
-  protected long frameRateLastNanos = 0;
-
-  /** As of release 0116, frameRate(60) is called as a default */
-  protected float frameRateTarget = 60;
-  protected long frameRatePeriod = 1000000000L / 60L;
+//  protected long frameRateLastNanos = 0;
+//
+//  /** As of release 0116, frameRate(60) is called as a default */
+//  protected float frameRateTarget = 60;
+//  protected long frameRatePeriod = 1000000000L / 60L;
 
   protected boolean looping;
 
@@ -492,6 +518,14 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void startSurface() {
+    surface.startThread();
+  }
+
+  public View getRootView() {
+    return surface.getRootView();
+  }
+
   private void setFullScreenVisibility() {
     if (fullScreen) {
       int visibility;
@@ -518,57 +552,38 @@ public class PApplet extends Object implements PConstants {
 
   public void onResume() {
     // TODO need to bring back app state here!
-//    surfaceView.onResume();
     if (DEBUG) System.out.println("PApplet.onResume() called");
     setFullScreenVisibility();
-//    paused = false;
     handleMethods("resume");
-    //start();  // kick the thread back on
     surface.resumeThread();
     resume();
-//    surfaceView.onResume();
   }
 
 
   public void onPause() {
     // TODO need to save all application state here!
-//    System.out.println("PApplet.onPause() called");
-//    paused = true;
     handleMethods("pause");
     surface.pauseThread();
     pause();  // handler for others to write
-//  synchronized (this) {
-//  paused = true;
-//}
-//    surfaceView.onPause();
   }
 
 
   public void onDestroy() {
-//    stop();
-    surface.stopThread();
     dispose();
     if (PApplet.DEBUG) {
       System.out.println("PApplet.onDestroy() called");
     }
-    //finish();
   }
 
 
   public void onStart() {
     start();
-//    tellPDE("onStart");
   }
 
 
   public void onStop() {
     stop();
-//    tellPDE("onStop");
   }
-
-//  private void tellPDE(final String message) {
-//    Log.i(surface.getName(), "PROCESSING " + message);
-//  }
 
 
   /**
@@ -740,15 +755,8 @@ public class PApplet extends Object implements PConstants {
    * PAppletGL needs to have a usable screen before getting things rolling.
    */
   public void start() {
-//    finished = false;
-//    paused = false; // unpause the thread
-
     resume();
-    surface.startThread();
-//    if (thread == null) {
-//      thread = new Thread(this, "Animation Thread");
-//      thread.start();
-//    }
+    surface.resumeThread();
   }
 
 
@@ -763,10 +771,8 @@ public class PApplet extends Object implements PConstants {
   public void stop() {
     // this used to shut down the sketch, but that code has
     // been moved to dispose()
-
-//    paused = true; // sleep the animation thread
     pause();
-    surface.stopThread();
+    surface.pauseThread();
 
     //TODO listeners
   }
@@ -1639,7 +1645,7 @@ public class PApplet extends Object implements PConstants {
       // If the user called the exit() function, the window should close,
       // rather than the sketch just halting.
       if (exitCalled) {
-        exit2();
+        exitActual();
       }
     }
   }
@@ -1653,22 +1659,8 @@ public class PApplet extends Object implements PConstants {
       surfaceReady = true;
     }
 
-    // canDraw = g != null && (looping || redraw);
     if (g == null) return;
     if (!looping && !redraw) return;
-//    System.out.println("looping/redraw = " + looping + " " + redraw);
-
-    // no longer in use by any of our renderers
-//    if (!g.canDraw()) {
-//      debug("g.canDraw() is false");
-//      // Don't draw if the renderer is not yet ready.
-//      // (e.g. OpenGL has to wait for a peer to be on screen)
-//      return;
-//    }
-
-    // Store the quality setting in case it's changed during draw and the
-    // drawing context needs to be re-built before the next frame.
-//    int pquality = g.smooth;
 
     if (insideDraw) {
       System.err.println("handleDraw() called before finishing");
@@ -1688,25 +1680,14 @@ public class PApplet extends Object implements PConstants {
       requestedNoLoop = false;
       // We are done, we only need to finish the frame and exit.
       g.endDraw();
+      insideDraw = false;
       return;
     }
 
     long now = System.nanoTime();
 
     if (frameCount == 0) {
-        // 3.0a5 should be no longer needed; handled by PSurface
-        //surface.checkDisplaySize();
-
-//        try {
-        //println("Calling setup()");
       setup();
-        //println("Done with setup()");
-
-//        } catch (RendererChangeException e) {
-//          // Give up, instead set the new renderer and re-attempt setup()
-//          return;
-//        }
-//      defaultSize = false;
 
     } else {  // frameCount > 0, meaning an actual draw()
       // update the current frameRate
@@ -1723,9 +1704,7 @@ public class PApplet extends Object implements PConstants {
       pmouseX = dmouseX;
       pmouseY = dmouseY;
 
-        //println("Calling draw()");
       draw();
-        //println("Done calling draw()");
 
       // dmouseX/Y is updated only once per frame (unlike emouseX/Y)
       dmouseX = mouseX;
@@ -1743,10 +1722,6 @@ public class PApplet extends Object implements PConstants {
       // (only do this once draw() has run, not just setup())
     }
     g.endDraw();
-
-//    if (pquality != g.smooth) {
-//      surface.setSmooth(g.smooth);
-//    }
 
 //    if (recorder != null) {
 //      recorder.endDraw();
@@ -2518,11 +2493,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void onBackPressed() {
-	  exit();
-  }
-
-
   protected void nativeKeyEvent(android.view.KeyEvent event) {
     // event.isPrintingKey() returns false for whitespace and others,
     // which is a problem if the space bar or tab key are used.
@@ -2720,10 +2690,12 @@ public class PApplet extends Object implements PConstants {
    *
    * ( end auto-generated )
    */
-  public void frameRate(float newRateTarget) {
-    frameRateTarget = newRateTarget;
-    frameRatePeriod = (long) (1000000000.0 / frameRateTarget);
-    g.setFrameRate(newRateTarget);
+  public void frameRate(float fps) {
+//
+//    frameRateTarget = newRateTarget;
+//    frameRatePeriod = (long) (1000000000.0 / frameRateTarget);
+//    g.setFrameRate(newRateTarget);
+    surface.setFrameRate(fps);
   }
 
 
@@ -2843,12 +2815,12 @@ public class PApplet extends Object implements PConstants {
     if (surface.isStopped()) {
       // exit immediately, stop() has already been called,
       // meaning that the main thread has long since exited
-      exit2();
+      exitActual();
 
     } else if (looping) {
       // stop() will be called as the thread exits
       finished = true;
-      // tell the code to call exit2() to do a System.exit()
+      // tell the code to call exitActual() to do a System.exit()
       // once the next draw() has completed
       exitCalled = true;
 
@@ -2858,12 +2830,12 @@ public class PApplet extends Object implements PConstants {
       dispose();
 
       // now get out
-      exit2();
+      exitActual();
     }
   }
 
 
-  void exit2() {
+  public void exitActual() {
     try {
       System.exit(0);
     } catch (SecurityException e) {
@@ -2887,8 +2859,13 @@ public class PApplet extends Object implements PConstants {
 //    thread = null;
 
     // call to shut down renderer, in case it needs it (pdf does)
-    if (surface != null) surface.dispose();
-    if (g != null) g.dispose();
+//    if (surface != null) surface.dispose();
+    if (surface != null && surface.stopThread()) {
+      if (g != null) {
+        g.dispose();
+        surface.dispose();
+      }
+    }
 
     handleMethods("dispose");
   }

@@ -93,18 +93,13 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
-      Log.d(TAG, "onCreate(SurfaceHolder)");
-
-
       sketch = createSketch();
-      System.out.println("initializing sketch " + sketch);
-
-      sketch.initSurface(PWallpaper.this, getSurfaceHolder());
-
-      // By default we don't get touch events, so enable them.
-      setTouchEventsEnabled(true);
-
-      sketch.start();
+      if (sketch != null) {
+        sketch.initSurface(PWallpaper.this, getSurfaceHolder());
+        sketch.startSurface();
+        // By default we don't get touch events, so enable them.
+        setTouchEventsEnabled(true);
+      }
     }
 
     @Override

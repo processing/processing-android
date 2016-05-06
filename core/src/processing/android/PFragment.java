@@ -65,8 +65,8 @@ public class PFragment extends Fragment implements AppComponent {
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(this, null);
-      sketch.start();
-      return sketch.surface.getRootView();
+      sketch.startSurface();
+      return sketch.getRootView();
     } else {
       return null;
     }
@@ -96,7 +96,6 @@ public class PFragment extends Fragment implements AppComponent {
   @Override
   public void onStart() {
     super.onStart();
-//    System.err.println("----> ON START: " + sketch);
     sketch.onStart();
   }
 
@@ -116,7 +115,7 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   public void onBackPressed() {
-    sketch.onBackPressed();
+    sketch.exit();
   }
 
 
@@ -133,6 +132,6 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
   public boolean canDraw() {
-    return true;
+    return sketch.isLooping();
   }
 }
