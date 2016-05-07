@@ -295,8 +295,11 @@ public class PApplet extends Object implements PConstants {
   public boolean lowBitAmbient = false;
   public boolean burnInProtection = false;
 
-//  protected boolean windowFocused = false;
-//  protected boolean viewFocused = false;
+  /**
+   * Offset for wallpapers, when user swipes across home screens.
+   */
+  public float offsetX = 0;
+  public float offsetY = 0;
 
   /**
    * true if the applet is online.
@@ -471,28 +474,24 @@ public class PApplet extends Object implements PConstants {
   public void initSurface(AppComponent component, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
-    handleSettings();
-
-    String rendererName = sketchRenderer();
-    // Dummy values for initialization, setSize() will be called later onSurfaceChanged()
-    int sw = 0;
-    int sh = 0;
-    if (DEBUG) println("Renderer " + rendererName);
-    g = makeGraphics(sw, sh, rendererName, true);
-    if (DEBUG) println("Created renderer");
-    surface = g.createSurface(component, holder);
-    if (DEBUG) println("Created surface");
-
-    setFullScreenVisibility();
-
     component.initDimensions();
     displayWidth = component.getWidth();
     displayHeight = component.getHeight();
+    handleSettings();
     if (fullScreen) {
       // Setting the default height and width to be fullscreen
       width = displayWidth;
       height = displayHeight;
     }
+
+    String rendererName = sketchRenderer();
+    if (DEBUG) println("Renderer " + rendererName);
+    g = makeGraphics(width, height, rendererName, true);
+    if (DEBUG) println("Created renderer");
+    surface = g.createSurface(component, holder);
+    if (DEBUG) println("Created surface");
+
+    setFullScreenVisibility();
 
     // Now we now the right width/height size for the renderer
     g.setSize(width, height);
@@ -1428,10 +1427,7 @@ public class PApplet extends Object implements PConstants {
 
     pg.setParent(this);
     pg.setPrimary(primary);
-    if (0 < w && 0 < h) {
-      pg.setSize(width, height);
-    }
-
+    pg.setSize(w, h);
     return pg;
   }
 

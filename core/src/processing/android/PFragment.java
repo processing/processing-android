@@ -25,32 +25,66 @@ package processing.android;
 import android.app.Fragment;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+
 import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
-
   private DisplayMetrics metrics;
+  private Point size;
   private PApplet sketch;
 
   public PFragment() {
   }
 
   public void initDimensions() {
+    /*
     metrics = new DisplayMetrics();
-    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+//    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+    WindowManager wm = getActivity().getWindowManager();
+    Display display = wm.getDefaultDisplay();
+    display.getRealMetrics(metrics);
+    */
+
+//    metrics = new DisplayMetrics();
+//    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+//    display.getRealMetrics(metrics); // API 17 or higher
+//    display.getRealSize(size);
+
+//    display.getMetrics(metrics);
+
+    size = new Point();
+    WindowManager wm = getActivity().getWindowManager();
+    Display display = wm.getDefaultDisplay();
+    if (Build.VERSION.SDK_INT >= 17) {
+      display.getRealSize(size);
+    } else if (Build.VERSION.SDK_INT >= 14) {
+      // Use undocumented methods getRawWidth, getRawHeight
+      try {
+        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
+        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
+      } catch (Exception e) {
+        display.getSize(size);
+      }
+    }
   }
 
   public int getWidth() {
-    return metrics.widthPixels;
+    return size.x;
+//    return metrics.widthPixels;
   }
 
   public int getHeight() {
-    return metrics.heightPixels;
+    return size.y;
+//    return metrics.heightPixels;
   }
 
   public int getKind() {

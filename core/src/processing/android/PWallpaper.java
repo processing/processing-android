@@ -29,16 +29,17 @@ import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
 import android.util.Log;
+import android.os.Build;
+import android.view.WindowManager;
+import android.view.Display;
+import android.graphics.Point;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
 
+  private Point size;
   private DisplayMetrics metrics;
-//  private PApplet deadSketch = null;
-//  private PApplet sketch = null;
   private PEngine engine;
-
-//  private final Handler handler = new Handler();
 
   public PWallpaper() {
   }
@@ -47,10 +48,26 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public void initDimensions() {
-    metrics = new DisplayMetrics();
+//    metrics = new DisplayMetrics();
 //    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-    WindowManager man = (WindowManager) getSystemService(WINDOW_SERVICE);
-    man.getDefaultDisplay().getMetrics(metrics);
+//    display.getRealMetrics(metrics); // API 17 or higher
+//    display.getRealSize(size);
+//    display.getMetrics(metrics);
+
+    size = new Point();
+    WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+    Display display = wm.getDefaultDisplay();
+    if (Build.VERSION.SDK_INT >= 17) {
+      display.getRealSize(size);
+    } else if (Build.VERSION.SDK_INT >= 14) {
+      // Use undocumented methods getRawWidth, getRawHeight
+      try {
+        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
+        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
+      } catch (Exception e) {
+        display.getSize(size);
+      }
+    }
   }
 
   public int getKind() {
@@ -58,11 +75,13 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public int getWidth() {
-    return metrics.widthPixels;
+    return size.x;
+//    return metrics.widthPixels;
   }
 
   public int getHeight() {
-    return metrics.heightPixels;
+    return size.y;
+//    return metrics.heightPixels;
   }
 
   public void setSketch(PApplet sketch) {
@@ -149,8 +168,8 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onOffsetsChanged(float xOffset, float yOffset,
                                  float xStep, float yStep, int xPixels, int yPixels) {
-//	  mOffset = xOffset;
-//	  drawFrame();
+      sketch.offsetX = xOffset;
+      sketch.offsetY = yOffset;
     }
 
     @Override

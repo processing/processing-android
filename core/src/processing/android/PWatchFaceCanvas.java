@@ -24,12 +24,15 @@ package processing.android;
 
 import android.content.Intent;
 import android.graphics.Canvas;
+import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.graphics.Rect;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
@@ -40,22 +43,42 @@ import processing.event.MouseEvent;
 
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
+  private Point size;
   private DisplayMetrics metrics;
   private PApplet sketch;
   private CEngine engine;
 
   public void initDimensions() {
-    metrics = new DisplayMetrics();
-    WindowManager man = (WindowManager) getSystemService(WINDOW_SERVICE);
-    man.getDefaultDisplay().getMetrics(metrics);
+//    metrics = new DisplayMetrics();
+//    WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+//    Display display = wm.getDefaultDisplay();
+//    display.getRealMetrics(metrics); // only API level 17 o higher
+//    display.getMetrics(metrics);
+
+    size = new Point();
+    WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+    Display display = wm.getDefaultDisplay();
+    if (Build.VERSION.SDK_INT >= 17) {
+      display.getRealSize(size);
+    } else if (Build.VERSION.SDK_INT >= 14) {
+      // Use undocumented methods getRawWidth, getRawHeight
+      try {
+        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
+        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
+      } catch (Exception e) {
+        display.getSize(size);
+      }
+    }
   }
 
   public int getWidth() {
-    return metrics.widthPixels;
+    return size.x;
+//    return metrics.widthPixels;
   }
 
   public int getHeight() {
-    return metrics.heightPixels;
+    return size.y;
+//    return metrics.heightPixels;
   }
 
   public int getKind() {
