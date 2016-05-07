@@ -52,6 +52,8 @@ import java.util.TimerTask;
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
 
+  private java.util.Timer updateDevicesTimer;
+
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
     super(base, path, state, mode);
@@ -232,9 +234,14 @@ public class AndroidEditor extends JavaEditor {
     menu.add(deviceMenu);
 
     // start updating device menus
+    // TODO: each Editor now runs its own, might be better to move this to Mode
     UpdateDeviceListTask task = new UpdateDeviceListTask(deviceMenu);
-    java.util.Timer timer = new java.util.Timer();
-    timer.schedule(task, 5000, 5000);
+    if (updateDevicesTimer == null) {
+      updateDevicesTimer = new java.util.Timer();
+    } else {
+      updateDevicesTimer.cancel();
+    }
+    updateDevicesTimer.schedule(task, 5000, 5000);
 
     menu.addSeparator();
 
@@ -467,6 +474,14 @@ public class AndroidEditor extends JavaEditor {
 //    return true;
 //  }
 
+
+  @Override
+  public void dispose() {
+    if (updateDevicesTimer != null) {
+      updateDevicesTimer.cancel();
+    }
+    super.dispose();
+  }
 
   public void statusError(String what) {
     super.statusError(what);
