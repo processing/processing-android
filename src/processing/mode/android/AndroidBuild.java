@@ -182,7 +182,7 @@ class AndroidBuild extends JavaBuild {
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
     // On Android, this init will throw a SketchException if there's a problem with size()
-    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());
+    preproc.initSketchSize(sketch.getMainProgram());
     preproc.initSketchSmooth(sketch.getMainProgram());
     
     sketchClassName = preprocess(srcFolder, manifest.getPackageName(), preproc, false);
@@ -199,7 +199,9 @@ class AndroidBuild extends JavaBuild {
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
 
-      writeMainClass(srcFolder, preproc.getRenderer(info.getSettings()));
+      // TODO: it would be great if we can just get the renderer from the SurfaceInfo
+      // object returned by initSketchSize()
+      writeMainClass(srcFolder, preproc.getRenderer(sketch.getMainProgram()));
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
 //      File proguardSrc = new File(sdk.getSdkFolder(), "tools/lib/proguard.cfg");
@@ -975,7 +977,6 @@ class AndroidBuild extends JavaBuild {
 
 
   private void writeMainClass(final File srcDirectory, String renderer) {
-    System.out.println("---------------> RENDERER: " + renderer);
     if (publishOption == FRAGMENT) {
       writeFragmentActivity(srcDirectory);
     } else if (publishOption == WALLPAPER) {
