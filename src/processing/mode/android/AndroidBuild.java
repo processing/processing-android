@@ -54,6 +54,12 @@ class AndroidBuild extends JavaBuild {
   // TODO: make package parameter in the config file, as well as the SDK version
   // to download (latest, specific number)
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
+  // We should start with either 16 (4.1) or 17 (4.2) because combined usage of
+  // all previous versions is less than 5%:
+  // http://developer.android.com/about/dashboards/index.html
+  // With 17, we have getRealSize and getRealMetrics:
+  // http://developer.android.com/reference/android/view/Display.html#getRealSize(android.graphics.Point)
+  // http://developer.android.com/reference/android/view/Display.html#getRealMetrics(android.util.DisplayMetrics)
   static final String basePackage = "processing.test";
   static public final int min_sdk_fragment = 14; // Ice Cream Sandwich
   static public final int min_sdk_wallpaper = 14;  
