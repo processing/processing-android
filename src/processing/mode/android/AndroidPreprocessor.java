@@ -390,17 +390,4 @@ public class AndroidPreprocessor extends PdePreprocessor {
       };    
   } 
   */
-  
-  private class SurfaceInfoAndroid extends SurfaceInfo {
-//    private String renderer;
-//    SurfaceInfoAndroid(SurfaceInfo info) {
-//
-//    }
-    String getRenderer() {
-      return renderer;
-    }
-    
-    
-  }
-  
 }
