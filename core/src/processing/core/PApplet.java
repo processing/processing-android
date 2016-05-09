@@ -54,6 +54,8 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.*;
 import android.app.Fragment;
+import android.view.WindowManager;
+import android.view.Display;
 
 import processing.data.*;
 import processing.event.*;
@@ -463,7 +465,28 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     activity = getActivity();
     View rootView;
 
+    Point size = new Point();
+    WindowManager wm = (WindowManager)activity.getSystemService(Context.WINDOW_SERVICE);
+    Display display = wm.getDefaultDisplay();
+    if (SDK >= 17) {
+      display.getRealSize(size);
+    } else if (SDK >= 14) {
+      // Use undocumented methods getRawWidth, getRawHeight
+      try {
+        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
+        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
+      } catch (Exception e) {
+        display.getSize(size);
+      }
+    }
+    displayWidth = size.x;
+    displayHeight = size.y;
     handleSettings();
+    if (fullScreen) {
+      // Setting the default height and width to be fullscreen
+      width = displayWidth;
+      height = displayHeight;
+    }
 
     // Get renderer name and class
     String rendererName = sketchRenderer();
@@ -477,15 +500,13 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     }
 
     // Dummy values for initialization, setSize() will be called later onSurfaceChanged()
-    int sw = 0;
-    int sh = 0;
     if (rendererName.equals(JAVA2D)) {
       // JAVA2D renderer
-      surfaceView = new SketchSurfaceView(activity, sw, sh,
+      surfaceView = new SketchSurfaceView(activity, width, height,
         (Class<? extends PGraphicsAndroid2D>) rendererClass);
     } else if (PGraphicsOpenGL.class.isAssignableFrom(rendererClass)) {
       // P2D, P3D, and any other PGraphicsOpenGL-based renderer
-      surfaceView = new SketchSurfaceViewGL(activity, sw, sh,
+      surfaceView = new SketchSurfaceViewGL(activity, width, height,
         (Class<? extends PGraphicsOpenGL>) rendererClass);
     } else {
       // Anything else
@@ -496,6 +517,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
     setFullScreenVisibility();
 
+    /*
     // Getting the display metrics only after setting fullscreen mode
     DisplayMetrics dm = new DisplayMetrics();
     activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -504,13 +526,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //    println("density is " + dm.density);
 //    println("densityDpi is " + dm.densityDpi);
     if (DEBUG) println("display metrics: " + dm);
-
-    if (fullScreen) {
-      // Setting the default height and width to be fullscreen
-      width = displayWidth;
-      height = displayHeight;
-    }
-
+    */
 
     //set smooth level
     if (smooth == 0) {
