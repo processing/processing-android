@@ -1102,12 +1102,13 @@ class AndroidBuild extends JavaBuild {
     final PrintWriter writer = PApplet.createWriter(mainServiceFile);
     writer.println("package " + manifest.getPackageName() +";");        
     writer.println("import android.os.Bundle;");
+    writer.println("import processing.core.PApplet;");
     writer.println("import processing.cardboard.PCardboard;");
     writer.println("public class MainActivity extends PCardboard {");
     writer.println("  @Override");
     writer.println("  public void onCreate(Bundle savedInstanceState) {");
     writer.println("    super.onCreate(savedInstanceState);");
-    writer.println("    CardboardSketch sketch = new CardboardSketch();");
+    writer.println("    PApplet sketch = new " + sketchClassName + "();");
     writer.println("    setSketch(sketch);");
     writer.println("    init(sketch);");
     writer.println("    setConvertTapIntoTrigger(true);");
