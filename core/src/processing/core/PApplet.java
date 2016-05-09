@@ -3361,6 +3361,14 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     // call to shut down renderer, in case it needs it (pdf does)
     if (g != null) g.dispose();
 
+    if (surfaceView != null) {
+      // As suggested in
+      // https://github.com/processing/processing-android/issues/213#issuecomment-217348480
+      surfaceView.getHolder().getSurface().release();
+      surfaceView = null;
+      activity = null;
+    }
+
     handleMethods("dispose");
   }
 
