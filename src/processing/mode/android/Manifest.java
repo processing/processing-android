@@ -181,7 +181,12 @@ public class Manifest {
       writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />" + newLine);
       writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />" + newLine);
-    } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {    
+    } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {          
+      writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />" + newLine);
+      writer.println("  <uses-permission android:name=\"android.permission.NFC\" />" + newLine);
+      writer.println("  <uses-permission android:name=\"android.permission.VIBRATE\" />" + newLine);
+      writer.println("  <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />" + newLine);
+      writer.println("  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.hardware.sensor.accelerometer\" android:required=\"true\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.hardware.sensor.gyroscope\" android:required=\"true\" />" + newLine);
       writer.println("  <uses-feature android:glEsVersion=\"0x00020000\" android:required=\"true\" />" + newLine);
@@ -244,7 +249,7 @@ public class Manifest {
       writer.println("</service> " + newLine);      
     } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {
       writer.println("<activity android:name=\".MainActivity\" " + newLine);
-      writer.println("          android:label=\"\" " + newLine); // insert pretty name
+//      writer.println("          android:label=\"\" " + newLine); // insert pretty name
       writer.println("          android:screenOrientation=\"landscape\" " + newLine);
       writer.println("          android:configChanges=\"orientation|keyboardHidden|screenSize\" > " + newLine);
       writer.println("  <intent-filter>" + newLine);

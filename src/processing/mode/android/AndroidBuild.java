@@ -229,6 +229,21 @@ class AndroidBuild extends JavaBuild {
         Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
       }
 
+      if (publishOption == CARDBOARD) {
+        // TODO: temporary hack until I find a better way to include the cardboard aar
+        // packages included in the cardboard SDK:
+        
+        File audioJarFile = mode.getContentFile("mode/cardboard-audio-classes.jar");
+        File commonJarFile = mode.getContentFile("mode/cardboard-common-classes.jar");
+        File coreJarFile = mode.getContentFile("mode/cardboard-core-classes.jar");
+        
+        Util.copyFile(audioJarFile, new File(libsFolder, "cardboard-audio-classes.jar"));
+        Util.copyFile(commonJarFile, new File(libsFolder, "cardboard-common-classes.jar"));
+        Util.copyFile(coreJarFile, new File(libsFolder, "cardboard-core-classes.jar"));
+      }
+
+      
+      
       // Copy the data folder (if one exists) to the project's 'assets' folder
       final File sketchDataFolder = sketch.getDataFolder();
       if (sketchDataFolder.exists()) {
