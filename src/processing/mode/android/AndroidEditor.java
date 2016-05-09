@@ -218,12 +218,11 @@ public class AndroidEditor extends JavaEditor {
     menu.add(item);
 
     menu.addSeparator();
-    
-//    final JMenu publishMenu = new JMenu("Build sketch as...");    
+     
     final JCheckBoxMenuItem fragmentItem = new JCheckBoxMenuItem("App");
     final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
     final JCheckBoxMenuItem watchfaceItem = new JCheckBoxMenuItem("Watch Face");
-//    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard app");
+    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard");
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -232,7 +231,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(true);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
-//        cardboardItem.setSelected(false);
+        cardboardItem.setSelected(false);
       }
     });
     wallpaperItem.addActionListener(new ActionListener() {
@@ -242,7 +241,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
-//        cardboardItem.setSelected(false);
+        cardboardItem.setSelected(false);
       }
     });
     watchfaceItem.addActionListener(new ActionListener() {
@@ -252,32 +251,29 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
-//        cardboardItem.setSelected(false);
+        cardboardItem.setSelected(false);
       }
     });
-//    cardboardItem.addActionListener(new ActionListener() {
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        AndroidBuild.setPublishOption(AndroidBuild.CARDBOARD, sketch);
-//        fragmentItem.setState(false);
-//        wallpaperItem.setState(false);
-//        watchfaceItem.setSelected(false);
-//        cardboardItem.setSelected(true);
-//      }
-//    });    
+    cardboardItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        AndroidBuild.setPublishOption(AndroidBuild.CARDBOARD, sketch);
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+        cardboardItem.setSelected(true);
+      }
+    });    
     
     fragmentItem.setState(true);
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
-//    cardboardItem.setSelected(false);    
+    cardboardItem.setSelected(false);    
 
-//    publishMenu.add(fragmentItem);
-//    publishMenu.add(wallpaperItem);
-//    publishMenu.add(watchfaceItem);
-//    publishMenu.add(cardboardItem);
     menu.add(fragmentItem);
     menu.add(wallpaperItem);
     menu.add(watchfaceItem);
+    menu.add(cardboardItem);
     
     menu.addSeparator();
 

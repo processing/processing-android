@@ -1007,32 +1007,32 @@ class AndroidBuild extends JavaBuild {
     writer.println("import processing.android.PFragment;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends Activity {");
-    writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
-    writer.println("    private static final int viewId = View.generateViewId();");
-    writer.println("    PFragment fragment;");
-    writer.println("    @Override");
-    writer.println("    protected void onCreate(Bundle savedInstanceState) {");
-    writer.println("        super.onCreate(savedInstanceState);");    
-    writer.println("        FrameLayout frame = new FrameLayout(this);");
-    writer.println("        frame.setId(viewId);");
-    writer.println("        setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, "
+    writer.println("  private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
+    writer.println("  private static final int viewId = View.generateViewId();");
+    writer.println("  PFragment fragment;");
+    writer.println("  @Override");
+    writer.println("  protected void onCreate(Bundle savedInstanceState) {");
+    writer.println("    super.onCreate(savedInstanceState);");    
+    writer.println("    FrameLayout frame = new FrameLayout(this);");
+    writer.println("    frame.setId(viewId);");
+    writer.println("    setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, "
         + "ViewGroup.LayoutParams.MATCH_PARENT));");
-    writer.println("        PApplet sketch = new " + sketchClassName + "();");    
-    writer.println("        if (savedInstanceState == null) {");
-    writer.println("            fragment = new PFragment();");
-    writer.println("            fragment.setSketch(sketch);");    
-    writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
-    writer.println("            ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
-    writer.println("        } else {");
-    writer.println("            fragment = (PFragment) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
-    writer.println("            fragment.setSketch(sketch);");
-    writer.println("        }");    
-    writer.println("    }");
-    writer.println("    @Override");
-    writer.println("    public void onBackPressed() {");
-    writer.println("        fragment.onBackPressed();");
-    writer.println("        super.onBackPressed();");
-    writer.println("    }");
+    writer.println("    PApplet sketch = new " + sketchClassName + "();");    
+    writer.println("    if (savedInstanceState == null) {");
+    writer.println("      fragment = new PFragment();");
+    writer.println("      fragment.setSketch(sketch);");    
+    writer.println("      FragmentTransaction ft = getFragmentManager().beginTransaction();");
+    writer.println("      ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
+    writer.println("    } else {");
+    writer.println("      fragment = (PFragment) getFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
+    writer.println("      fragment.setSketch(sketch);");
+    writer.println("    }");    
+    writer.println("  }");
+    writer.println("  @Override");
+    writer.println("  public void onBackPressed() {");
+    writer.println("    fragment.onBackPressed();");
+    writer.println("    super.onBackPressed();");
+    writer.println("  }");
     writer.println("}");
     writer.flush();
     writer.close();    
@@ -1047,11 +1047,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("import processing.android.PWallpaper;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWallpaper {");
-    writer.println("    @Override");
-    writer.println("    public PApplet createSketch() {");
-    writer.println("      PApplet sketch = new " + sketchClassName + "();");
-    writer.println("      return sketch;");
-    writer.println("    }");
+    writer.println("  @Override");
+    writer.println("  public PApplet createSketch() {");
+    writer.println("    PApplet sketch = new " + sketchClassName + "();");
+    writer.println("    return sketch;");
+    writer.println("  }");
     writer.println("}");
     writer.flush();
     writer.close();  
@@ -1066,11 +1066,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("import processing.android.PWatchFaceGLES;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWatchFaceGLES {");
-    writer.println("    public MainService() {");
-    writer.println("        super();");
-    writer.println("        PApplet sketch = new " + sketchClassName + "();");
-    writer.println("        setSketch(sketch);");
-    writer.println("    }");
+    writer.println("  public MainService() {");
+    writer.println("    super();");
+    writer.println("    PApplet sketch = new " + sketchClassName + "();");
+    writer.println("    setSketch(sketch);");
+    writer.println("  }");
     writer.println("}");
     writer.flush();
     writer.close();  
@@ -1085,11 +1085,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("import processing.android.PWatchFaceCanvas;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWatchFaceCanvas {");
-    writer.println("    public MainService() {");
-    writer.println("        super();");
-    writer.println("        PApplet sketch = new " + sketchClassName + "();");
-    writer.println("        setSketch(sketch);");
-    writer.println("    }");
+    writer.println("  public MainService() {");
+    writer.println("    super();");
+    writer.println("    PApplet sketch = new " + sketchClassName + "();");
+    writer.println("    setSketch(sketch);");
+    writer.println("  }");
     writer.println("}");
     writer.flush();
     writer.close();  
@@ -1097,9 +1097,25 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeCardboardActivity(final File srcDirectory) {
-    
+    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+        "MainActivity.java");    
+    final PrintWriter writer = PApplet.createWriter(mainServiceFile);
+    writer.println("package " + manifest.getPackageName() +";");        
+    writer.println("import android.os.Bundle;");
+    writer.println("import processing.cardboard.PCardboard;");
+    writer.println("public class MainActivity extends PCardboard {");
+    writer.println("  @Override");
+    writer.println("  public void onCreate(Bundle savedInstanceState) {");
+    writer.println("    super.onCreate(savedInstanceState);");
+    writer.println("    CardboardSketch sketch = new CardboardSketch();");
+    writer.println("    setSketch(sketch);");
+    writer.println("    init(sketch);");
+    writer.println("    setConvertTapIntoTrigger(true);");
+    writer.println("  }");
+    writer.println("}");
+    writer.flush();
+    writer.close();    
   }
-  
 
   private void writeResLayoutMainActivity(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
