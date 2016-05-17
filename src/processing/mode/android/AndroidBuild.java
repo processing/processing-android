@@ -233,16 +233,83 @@ class AndroidBuild extends JavaBuild {
         // TODO: temporary hack until I find a better way to include the cardboard aar
         // packages included in the cardboard SDK:
         
-        File audioJarFile = mode.getContentFile("mode/cardboard-audio-classes.jar");
-        File commonJarFile = mode.getContentFile("mode/cardboard-common-classes.jar");
-        File coreJarFile = mode.getContentFile("mode/cardboard-core-classes.jar");
+        ////////////////////////////////////////////////////////////////////////
+        // first step: unpack the cardboard packages in the project's 
+        // libs folder:        
+        File audioZipFile = mode.getContentFile("mode/cardboard_audio.zip");
+        File commonZipFile = mode.getContentFile("mode/cardboard_common.zip");
+        File coreZipFile = mode.getContentFile("mode/cardboard_core.zip");
+        AndroidMode.extractFolder(audioZipFile, libsFolder, true);        
+        AndroidMode.extractFolder(commonZipFile, libsFolder, true);        
+        AndroidMode.extractFolder(coreZipFile, libsFolder, true);
+        File audioLibsFolder = new File(libsFolder, "cardboard_audio");
+        File commonLibsFolder = new File(libsFolder, "cardboard_common");
+        File coreLibsFolder = new File(libsFolder, "cardboard_core");
+                
+        ////////////////////////////////////////////////////////////////////////
+        // second step: determine target id
+        String targetID = "";
         
-        Util.copyFile(audioJarFile, new File(libsFolder, "cardboard-audio-classes.jar"));
-        Util.copyFile(commonJarFile, new File(libsFolder, "cardboard-common-classes.jar"));
-        Util.copyFile(coreJarFile, new File(libsFolder, "cardboard-core-classes.jar"));
-      }
+        final String[] params = {
+          sdk.getAndroidToolPath(),
+          "list", "targets"
+        };
 
-      
+        ProcessHelper p = new ProcessHelper(params);
+        try {
+          final ProcessResult abiListResult = p.execute();
+          String id = null;
+          String platform = null;
+          String api = null;          
+          for (String line : abiListResult) {
+            if (line.indexOf("id:") == 0) {
+              String[] parts = line.substring(4).split("or");
+              if (parts.length == 2) {
+                id = parts[0];
+                platform = parts[1].replaceAll("\"", "").trim();
+              }
+//              System.out.println("***********");
+//              System.out.println("ID: " + id);
+//              System.out.println("PLATFORM: " + platform);
+            }
+              
+            String[] mapi = PApplet.match(line, "API\\slevel:\\s(\\S+)");
+            if (mapi != null) {
+              api = mapi[1];
+//              System.out.println("API: " + api);
+            }
+            
+            if (platform != null && platform.equals(sdkTarget) &&
+                api != null && api.equals(sdkVersion)) {
+              targetID = id;
+              break;
+            }            
+          }
+        } catch (InterruptedException e) {}
+        
+        System.out.println("TARGET ID: " + targetID);
+        
+        ////////////////////////////////////////////////////////////////////////
+        // third step: create library projects
+        boolean audioRes = createLibraryProject("cardboard_audio", targetID, 
+            audioLibsFolder.getAbsolutePath(), "com.google.vr.cardboard.vrtoolkit.vraudio");
+        boolean commonRes = createLibraryProject("cardboard_common", targetID, 
+            commonLibsFolder.getAbsolutePath(), "com.google.vr.cardboard");
+        boolean coreRes = createLibraryProject("cardboard_core", targetID, 
+            coreLibsFolder.getAbsolutePath(), "com.google.vrtoolkit.cardboard");
+
+        ////////////////////////////////////////////////////////////////////////
+        // fourth step: reference library projects from main project        
+        if (audioRes && commonRes && coreRes) {
+          System.out.println("Library projects created succesfully in " + libsFolder.toString());
+          audioRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/cardboard_audio");
+          commonRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/cardboard_common");
+          coreRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/cardboard_core");
+          if (audioRes && commonRes && coreRes) {
+            System.out.println("Library projects referenced succesfully!");  
+          }
+        }
+      }
       
       // Copy the data folder (if one exists) to the project's 'assets' folder
       final File sketchDataFolder = sketch.getDataFolder();
@@ -257,9 +324,66 @@ class AndroidBuild extends JavaBuild {
         Util.copyDir(sketchResFolder, resFolder);
       }
     }
+    
     return tmpFolder;
   }
 
+  
+  protected boolean createLibraryProject(String name, String target, 
+                                         String path, String pck) {
+    final String[] params = {
+        sdk.getAndroidToolPath(),
+        "create", "lib-project",
+        "--name", name,
+        "--target", target,
+        "--path", path,
+        "--package", pck
+    };
+
+    ProcessHelper p = new ProcessHelper(params);
+    ProcessResult pr;
+    try {
+      pr = p.execute();
+    } catch (InterruptedException | IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+
+    if (pr.succeeded()) {
+      return true;
+    } else {  
+      System.err.println(pr.getStderr());
+      Messages.showWarning("Failed to create library project", "Something wrong happened", null);
+      return false;
+    }    
+  }
+  
+  protected boolean referenceLibraryProject(String target, String path, String lib) {
+    final String[] params = {
+        sdk.getAndroidToolPath(),
+        "update", "project",
+        "--target", target,
+        "--path", path,
+        "--library", lib
+    };
+
+    ProcessHelper p = new ProcessHelper(params);
+    ProcessResult pr;
+    try {
+      pr = p.execute();
+    } catch (InterruptedException | IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+
+    if (pr.succeeded()) {
+      return true;
+    } else {  
+      System.err.println(pr.getStderr());
+      Messages.showWarning("Failed to add library project", "Something wrong happened", null);
+      return false;
+    }      
+  }
 
   /**
    * The Android dex util pukes on paths containing spaces, which will happen

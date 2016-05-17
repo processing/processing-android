@@ -75,8 +75,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private AndroidSDK sdk;
   private boolean cancelled;
   
-  private int totalSize = 0;
-  private static ZipFile zip;
+  private int totalSize = 0;  
 
   class SDKUrlHolder {
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
@@ -203,7 +202,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       inputStream.close();
       outputStream.close();
 
-      extractFolder(saveTo, unpackTo, setExec);
+      AndroidMode.extractFolder(saveTo, unpackTo, setExec);
     }
 
     private SDKUrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) throws ParserConfigurationException, IOException, SAXException {
@@ -399,54 +398,5 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     setResizable(false);
     setLocationRelativeTo(editor);
-  }
-
-  static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
-    int BUFFER = 2048;
-    zip = new ZipFile(file);
-    Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
-
-    // Process each entry
-    while (zipFileEntries.hasMoreElements()) {
-      // grab a zip file entry
-      ZipEntry entry = zipFileEntries.nextElement();
-      String currentEntry = entry.getName();
-      File destFile = new File(newPath, currentEntry);
-      //destFile = new File(newPath, destFile.getName());
-      File destinationParent = destFile.getParentFile();
-
-      // create the parent directory structure if needed
-      destinationParent.mkdirs();
-
-      String ext = PApplet.getExtension(currentEntry);
-      if (setExec && ext.equals("unknown")) {        
-        // On some OS X machines the android binaries loose their executable
-        // attribute, rendering the mode unusable
-        destFile.setExecutable(true);
-      }
-      
-      if (!entry.isDirectory()) {
-        // should preserve permissions
-        // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
-        BufferedInputStream is = new BufferedInputStream(zip
-            .getInputStream(entry));
-        int currentByte;
-        // establish buffer for writing file
-        byte data[] = new byte[BUFFER];
-
-        // write the current file to disk
-        FileOutputStream fos = new FileOutputStream(destFile);
-        BufferedOutputStream dest = new BufferedOutputStream(fos,
-            BUFFER);
-
-        // read and write until last byte is encountered
-        while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
-          dest.write(data, 0, currentByte);
-        }
-        dest.flush();
-        dest.close();
-        is.close();
-      }
-    }
   }
 }

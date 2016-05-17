@@ -32,13 +32,20 @@ import processing.app.SketchException;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
+import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 
 public class AndroidMode extends JavaMode {
@@ -301,7 +308,55 @@ public class AndroidMode extends JavaMode {
     }
   }
 
+  public static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
+    int BUFFER = 2048;
+    ZipFile zip = new ZipFile(file);
+    Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
 
+    // Process each entry
+    while (zipFileEntries.hasMoreElements()) {
+      // grab a zip file entry
+      ZipEntry entry = zipFileEntries.nextElement();
+      String currentEntry = entry.getName();
+      File destFile = new File(newPath, currentEntry);
+      //destFile = new File(newPath, destFile.getName());
+      File destinationParent = destFile.getParentFile();
+
+      // create the parent directory structure if needed
+      destinationParent.mkdirs();
+
+      String ext = PApplet.getExtension(currentEntry);
+      if (setExec && ext.equals("unknown")) {        
+        // On some OS X machines the android binaries loose their executable
+        // attribute, rendering the mode unusable
+        destFile.setExecutable(true);
+      }
+      
+      if (!entry.isDirectory()) {
+        // should preserve permissions
+        // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
+        BufferedInputStream is = new BufferedInputStream(zip
+            .getInputStream(entry));
+        int currentByte;
+        // establish buffer for writing file
+        byte data[] = new byte[BUFFER];
+
+        // write the current file to disk
+        FileOutputStream fos = new FileOutputStream(destFile);
+        BufferedOutputStream dest = new BufferedOutputStream(fos,
+            BUFFER);
+
+        // read and write until last byte is encountered
+        while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
+          dest.write(data, 0, currentByte);
+        }
+        dest.flush();
+        dest.close();
+        is.close();
+      }
+    }
+    zip.close();
+  }
 //  public void handleExport(Sketch sketch, )
 
 
