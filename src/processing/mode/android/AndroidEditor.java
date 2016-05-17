@@ -52,6 +52,8 @@ import java.util.TimerTask;
 public class AndroidEditor extends JavaEditor {
   private AndroidMode androidMode;
 
+  private java.util.Timer updateDevicesTimer;
+  
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
     super(base, path, state, mode);
@@ -285,9 +287,13 @@ public class AndroidEditor extends JavaEditor {
     menu.add(mobDeveMenu);
   
     // start updating device menus
-    UpdateDeviceListTask devTask = new UpdateDeviceListTask(mobDeveMenu);
-    java.util.Timer devTimer = new java.util.Timer();
-    devTimer.schedule(devTask, 5000, 5000);
+    UpdateDeviceListTask task = new UpdateDeviceListTask(mobDeveMenu);
+    if (updateDevicesTimer == null) {
+      updateDevicesTimer = new java.util.Timer();
+    } else {
+      updateDevicesTimer.cancel();
+    }
+    updateDevicesTimer.schedule(task, 5000, 5000);
     
     menu.addSeparator();
     
@@ -527,6 +533,14 @@ public class AndroidEditor extends JavaEditor {
 //  }
 
 
+  @Override
+  public void dispose() {
+    if (updateDevicesTimer != null) {
+      updateDevicesTimer.cancel();
+    }
+    super.dispose();
+  }  
+  
   public void statusError(String what) {
     super.statusError(what);
 //    new Exception("deactivating RUN").printStackTrace();
