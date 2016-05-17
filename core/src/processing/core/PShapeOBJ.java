@@ -23,10 +23,17 @@
 package processing.core;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
+ * This class is not part of the Processing API and should not be used
+ * directly. Instead, use loadShape() and methods like it, which will make
+ * use of this class. Using this class directly will cause your code to break
+ * when combined with future versions of Processing.
+ * <p>
  * OBJ loading implemented using code from Saito's OBJLoader library:
  * http://code.google.com/p/saitoobjloader/
  * and OBJReader from Ahmet Kizilay
@@ -39,17 +46,21 @@ public class PShapeOBJ extends PShape {
    * Initializes a new OBJ Object with the given filename.
    */
   public PShapeOBJ(PApplet parent, String filename) {
-    this(parent, parent.createReader(filename));
+    this(parent, parent.createReader(filename), getBasePath(parent, filename));
   }
 
-
   public PShapeOBJ(PApplet parent, BufferedReader reader) {
+    this(parent, reader, "");
+  }
+
+  public PShapeOBJ(PApplet parent, BufferedReader reader, String basePath) {
     ArrayList<OBJFace> faces = new ArrayList<OBJFace>();
     ArrayList<OBJMaterial> materials = new ArrayList<OBJMaterial>();
     ArrayList<PVector> coords = new ArrayList<PVector>();
     ArrayList<PVector> normals = new ArrayList<PVector>();
     ArrayList<PVector> texcoords = new ArrayList<PVector>();
-    parseOBJ(parent, reader, faces, materials, coords, normals, texcoords);
+    parseOBJ(parent, basePath, reader,
+             faces, materials, coords, normals, texcoords);
 
     // The OBJ geometry is stored with each face in a separate child shape.
     parent = null;
@@ -88,10 +99,10 @@ public class PShapeOBJ extends PShape {
     vertexCount = face.vertIdx.size();
     vertices = new float[vertexCount][12];
     for (int j = 0; j < face.vertIdx.size(); j++){
-      int vertIdx, normIdx;
-      PVector vert, norms;
+      int vertIdx, normIdx, texIdx;
+      PVector vert, norms, tex;
 
-      vert = norms = null;
+      vert = norms = tex = null;
 
       vertIdx = face.vertIdx.get(j).intValue() - 1;
       vert = coords.get(vertIdx);
@@ -100,6 +111,13 @@ public class PShapeOBJ extends PShape {
         normIdx = face.normIdx.get(j).intValue() - 1;
         if (-1 < normIdx) {
           norms = normals.get(normIdx);
+        }
+      }
+
+      if (j < face.texIdx.size()) {
+        texIdx = face.texIdx.get(j).intValue() - 1;
+        if (-1 < texIdx) {
+          tex = texcoords.get(texIdx);
         }
       }
 
@@ -118,23 +136,13 @@ public class PShapeOBJ extends PShape {
         vertices[j][PGraphics.NZ] = norms.z;
       }
 
+      if (tex != null) {
+        vertices[j][PGraphics.U] = tex.x;
+        vertices[j][PGraphics.V] = tex.y;
+      }
+
       if (mtl != null && mtl.kdMap != null) {
-        // This face is textured.
-        int texIdx;
-        PVector tex = null;
-
-        if (j < face.texIdx.size()) {
-          texIdx = face.texIdx.get(j).intValue() - 1;
-          if (-1 < texIdx) {
-            tex = texcoords.get(texIdx);
-          }
-        }
-
         image = mtl.kdMap;
-        if (tex != null) {
-          vertices[j][PGraphics.U] = tex.x;
-          vertices[j][PGraphics.V] = tex.y;
-        }
       }
     }
   }
@@ -164,14 +172,14 @@ public class PShapeOBJ extends PShape {
   }
 
 
-  static protected void parseOBJ(PApplet parent,
+  static protected void parseOBJ(PApplet parent, String path,
                                  BufferedReader reader,
                                  ArrayList<OBJFace> faces,
                                  ArrayList<OBJMaterial> materials,
                                  ArrayList<PVector> coords,
                                  ArrayList<PVector> normals,
                                  ArrayList<PVector> texcoords) {
-    Hashtable<String, Integer> mtlTable  = new Hashtable<String, Integer>();
+    Map<String, Integer> mtlTable  = new HashMap<String, Integer>();
     int mtlIdxCur = -1;
     boolean readv, readvn, readvt;
     try {
@@ -235,11 +243,16 @@ public class PShapeOBJ extends PShape {
             // Object name is ignored, for now.
           } else if (parts[0].equals("mtllib")) {
             if (parts[1] != null) {
-              BufferedReader mreader = parent.createReader(parts[1]);
-              if (mreader != null) {
-                parseMTL(parent, mreader, materials, mtlTable);
+              String fn = parts[1];
+              if (fn.indexOf(File.separator) == -1 && !path.equals("")) {
+                // Relative file name, adding the base path.
+                fn = path + File.separator + fn;
               }
-              mreader.close();
+              BufferedReader mreader = parent.createReader(fn);
+              if (mreader != null) {
+                parseMTL(parent, fn, path, mreader, materials, mtlTable);
+                mreader.close();
+              }
             }
           } else if (parts[0].equals("g")) {
             gname = 1 < parts.length ? parts[1] : "";
@@ -326,10 +339,10 @@ public class PShapeOBJ extends PShape {
   }
 
 
-  static protected void parseMTL(PApplet parent,
+  static protected void parseMTL(PApplet parent, String mtlfn, String path,
                                  BufferedReader reader,
                                  ArrayList<OBJMaterial> materials,
-                                 Hashtable<String, Integer> materialsHash) {
+                                 Map<String, Integer> materialsHash) {
     try {
       String line;
       OBJMaterial currentMtl = null;
@@ -342,35 +355,53 @@ public class PShapeOBJ extends PShape {
           if (parts[0].equals("newmtl")) {
             // Starting new material.
             String mtlname = parts[1];
-            currentMtl = new OBJMaterial(mtlname);
-            materialsHash.put(mtlname, new Integer(materials.size()));
-            materials.add(currentMtl);
-          } else if (parts[0].equals("map_Kd") && parts.length > 1) {
-            // Loading texture map.
-            String texname = parts[1];
-            currentMtl.kdMap = parent.loadImage(texname);
-          } else if (parts[0].equals("Ka") && parts.length > 3) {
-            // The ambient color of the material
-            currentMtl.ka.x = Float.valueOf(parts[1]).floatValue();
-            currentMtl.ka.y = Float.valueOf(parts[2]).floatValue();
-            currentMtl.ka.z = Float.valueOf(parts[3]).floatValue();
-          } else if (parts[0].equals("Kd") && parts.length > 3) {
-            // The diffuse color of the material
-            currentMtl.kd.x = Float.valueOf(parts[1]).floatValue();
-            currentMtl.kd.y = Float.valueOf(parts[2]).floatValue();
-            currentMtl.kd.z = Float.valueOf(parts[3]).floatValue();
-          } else if (parts[0].equals("Ks") && parts.length > 3) {
-            // The specular color weighted by the specular coefficient
-            currentMtl.ks.x = Float.valueOf(parts[1]).floatValue();
-            currentMtl.ks.y = Float.valueOf(parts[2]).floatValue();
-            currentMtl.ks.z = Float.valueOf(parts[3]).floatValue();
-          } else if ((parts[0].equals("d") ||
-                      parts[0].equals("Tr")) && parts.length > 1) {
-            // Reading the alpha transparency.
-            currentMtl.d = Float.valueOf(parts[1]).floatValue();
-          } else if (parts[0].equals("Ns") && parts.length > 1) {
-            // The specular component of the Phong shading model
-            currentMtl.ns = Float.valueOf(parts[1]).floatValue();
+            currentMtl = addMaterial(mtlname, materials, materialsHash);
+          } else {
+            if (currentMtl == null) {
+              currentMtl = addMaterial("material" + materials.size(),
+                                       materials, materialsHash);
+            }
+            if (parts[0].equals("map_Kd") && parts.length > 1) {
+              // Loading texture map.
+              String texname = parts[1];
+              if (texname.indexOf(File.separator) == -1 && !path.equals("")) {
+                // Relative file name, adding the base path.
+                texname = path + File.separator + texname;
+              }
+
+              File file = new File(parent.dataPath(texname));
+              if (file.exists()) {
+                currentMtl.kdMap = parent.loadImage(texname);
+              } else {
+                System.err.println("The texture map \"" + texname + "\" " +
+                  "in the materials definition file \"" + mtlfn + "\" " +
+                  "is missing or inaccessible, make sure " +
+                  "the URL is valid or that the file has been " +
+                  "added to your sketch and is readable.");
+              }
+            } else if (parts[0].equals("Ka") && parts.length > 3) {
+              // The ambient color of the material
+              currentMtl.ka.x = Float.valueOf(parts[1]).floatValue();
+              currentMtl.ka.y = Float.valueOf(parts[2]).floatValue();
+              currentMtl.ka.z = Float.valueOf(parts[3]).floatValue();
+            } else if (parts[0].equals("Kd") && parts.length > 3) {
+              // The diffuse color of the material
+              currentMtl.kd.x = Float.valueOf(parts[1]).floatValue();
+              currentMtl.kd.y = Float.valueOf(parts[2]).floatValue();
+              currentMtl.kd.z = Float.valueOf(parts[3]).floatValue();
+            } else if (parts[0].equals("Ks") && parts.length > 3) {
+              // The specular color weighted by the specular coefficient
+              currentMtl.ks.x = Float.valueOf(parts[1]).floatValue();
+              currentMtl.ks.y = Float.valueOf(parts[2]).floatValue();
+              currentMtl.ks.z = Float.valueOf(parts[3]).floatValue();
+            } else if ((parts[0].equals("d") ||
+                        parts[0].equals("Tr")) && parts.length > 1) {
+              // Reading the alpha transparency.
+              currentMtl.d = Float.valueOf(parts[1]).floatValue();
+            } else if (parts[0].equals("Ns") && parts.length > 1) {
+              // The specular component of the Phong shading model
+              currentMtl.ns = Float.valueOf(parts[1]).floatValue();
+            }
           }
         }
       }
@@ -379,6 +410,14 @@ public class PShapeOBJ extends PShape {
     }
   }
 
+  protected static OBJMaterial addMaterial(String mtlname,
+                                           ArrayList<OBJMaterial> materials,
+                                           Map<String, Integer> materialsHash) {
+    OBJMaterial currentMtl = new OBJMaterial(mtlname);
+    materialsHash.put(mtlname, Integer.valueOf(materials.size()));
+    materials.add(currentMtl);
+    return currentMtl;
+  }
 
   protected static int rgbaValue(PVector color) {
     return 0xFF000000 | ((int)(color.x * 255) << 16) |
@@ -410,6 +449,18 @@ public class PShapeOBJ extends PShape {
       matIdx = -1;
       name = "";
     }
+  }
+
+
+  static protected String getBasePath(PApplet parent, String filename) {
+    // Obtaining the path
+    File file = new File(parent.dataPath(filename));
+    if (!file.exists()) {
+      file = parent.sketchFile(filename);
+    }
+    String absolutePath = file.getAbsolutePath();
+    return absolutePath.substring(0,
+            absolutePath.lastIndexOf(File.separator));
   }
 
 
