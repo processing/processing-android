@@ -53,6 +53,9 @@ public class AndroidMode extends JavaMode {
   private File coreZipLocation;
   private AndroidRunner runner;
   
+  private boolean showBluetoothDebugMessage = true;
+  private boolean showWallpaperSelectMessage = true;
+  
   private boolean checkingSDK = false;
   private boolean userCancelledSDKSearch = false;
 
@@ -268,19 +271,19 @@ public class AndroidMode extends JavaMode {
 
   public void handleRunDevice(Sketch sketch, RunnerListener listener)
     throws SketchException, IOException {
-//    JavaBuild build = new JavaBuild(sketch);
-//    String appletClassName = build.build();
-//    if (appletClassName != null) {
-//      runtime = new Runner(build, listener);
-//      runtime.launch(true);
-//    }
-
-//    try {
-//      runSketchOnDevice(Environment.getInstance().getHardware(), "debug", this);
-//    } catch (final MonitorCanceled ok) {
-//      sketchStopped();
-//      statusNotice("Canceled.");
-//    }
+    
+    final Devices devices = Devices.getInstance();
+    java.util.List<Device> deviceList = devices.findMultiple(false);
+    if (deviceList.size() == 0) {
+      Messages.showWarning("No devices found!", 
+                           "Processing did not find any device where to run\n" +
+                           "your sketch on. Make sure that your handheld or\n" +
+                           "wearable is properly connected to the computer\n" +
+                           "and that USB or Bluetooth debugging is enabled.");
+      listener.statusHalt();
+      return;
+    }
+    
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this);
@@ -291,9 +294,32 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Running sketch on device...");
     runner = new AndroidRunner(build, listener);
     runner.launch(Devices.getInstance().getHardware());
+    
+    showPostBuildMessage();
   }
 
-
+  public void showSelectComponentMessage() {
+    if (showBluetoothDebugMessage && AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+      Messages.showMessage("Enable bluetooth debugging!",
+                           "Processing will access the wearable through the handheld paired to it.\n" +
+                           "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
+                           "http://developer.android.com/training/wearables/apps/bt-debugging.html");   
+      showBluetoothDebugMessage = false;
+    }            
+  }
+  
+  public void showPostBuildMessage() {
+    if (showWallpaperSelectMessage && AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
+      Messages.showMessage("Now select the wallpaper!",
+                           "Processing built and installed your sketch\n" +
+                           "as a live wallpaper on the selected device.\n" +
+                           "You need to open the wallpaper selector\n" + 
+                           "in order to set it as the new background.");   
+      showWallpaperSelectMessage = false;
+    }    
+  }
+  
+  
   public void handleStop(RunnerListener listener) {
     listener.statusNotice("");
     listener.stopIndeterminate();

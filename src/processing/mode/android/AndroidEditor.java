@@ -233,6 +233,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         cardboardItem.setSelected(false);
+        androidMode.showSelectComponentMessage();
       }
     });
     wallpaperItem.addActionListener(new ActionListener() {
@@ -243,6 +244,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
         cardboardItem.setSelected(false);
+        androidMode.showSelectComponentMessage();
       }
     });
     watchfaceItem.addActionListener(new ActionListener() {
@@ -253,6 +255,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
         cardboardItem.setSelected(false);
+        androidMode.showSelectComponentMessage();
       }
     });
     cardboardItem.addActionListener(new ActionListener() {
@@ -263,6 +266,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         cardboardItem.setSelected(true);
+        androidMode.showSelectComponentMessage();
       }
     });    
     
