@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import processing.app.ui.Editor;
+import processing.app.Messages;
 import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
@@ -74,6 +75,15 @@ public class AndroidRunner implements DeviceListener {
       // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
       Devices.killAdbServer();
+      return;
+    }
+    
+    if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE && !device.hasFeature("watch")) {
+      Messages.showWarning("Device is not a watch!", 
+                           "Processing built your sketch as a watch face, but\n" +
+                           "you selected a non-watch device to install it on.\n" +
+                           "Please select a watch device instead.");      
+      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
       return;
     }
 

@@ -31,7 +31,6 @@ import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
 import processing.app.Platform;
-import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
@@ -71,7 +70,7 @@ class AndroidBuild extends JavaBuild {
   static public final String target_api_level   = "22";  
   static public final String target_platform    = "android-" + target_api_level;
 
-  static int appComponent = FRAGMENT;
+  static public int appComponent = FRAGMENT;
   static boolean forceNewManifest = false;
   
   private final AndroidSDK sdk;
@@ -203,11 +202,6 @@ class AndroidBuild extends JavaBuild {
       // TODO: it would be great if we can just get the renderer from the SurfaceInfo
       // object returned by initSketchSize()
       writeMainClass(srcFolder, preproc.getRenderer(sketch.getMainProgram()));
-
-      // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
-//      File proguardSrc = new File(sdk.getSdkFolder(), "tools/lib/proguard.cfg");
-//      File proguardDst = new File(tmpFolder, "proguard.cfg");
-//      Base.copyFile(proguardSrc, proguardDst);
 
       final File libsFolder = mkdirs(tmpFolder, "libs");
       final File assetsFolder = mkdirs(tmpFolder, "assets");

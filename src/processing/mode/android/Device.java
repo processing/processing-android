@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
 class Device {
   private final Devices env;
   private final String id;
+  private final String features;
   private final Set<Integer> activeProcesses = new HashSet<Integer>();
   private final Set<DeviceListener> listeners = 
     Collections.synchronizedSet(new HashSet<DeviceListener>());
@@ -52,6 +53,17 @@ class Device {
   public Device(final Devices env, final String id) {
     this.env = env;
     this.id = id;
+    
+    // http://android.stackexchange.com/questions/82169/howto-get-devices-features-with-adb
+    String concat = ""; 
+    try {
+      final ProcessResult res = adb("shell", "getprop", "ro.build.characteristics");
+      for (String line : res) {
+        concat += "," + line.toLowerCase();     
+      }      
+    } catch (final Exception e) {
+    }
+    this.features = concat;
   }
 
   public void bringLauncherToFront() {
@@ -64,6 +76,10 @@ class Device {
     }
   }
 
+  public boolean hasFeature(String feature) {
+    return -1 < features.indexOf(feature);
+  }
+  
   public String getName() {
     String name = "";
 

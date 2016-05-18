@@ -300,7 +300,7 @@ public class AndroidMode extends JavaMode {
 
   public void showSelectComponentMessage() {
     if (showBluetoothDebugMessage && AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
-      Messages.showMessage("Enable bluetooth debugging!",
+      Messages.showMessage("Is Debugging over Bluetooth enabled?",
                            "Processing will access the wearable through the handheld paired to it.\n" +
                            "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
                            "http://developer.android.com/training/wearables/apps/bt-debugging.html");   
@@ -310,7 +310,7 @@ public class AndroidMode extends JavaMode {
   
   public void showPostBuildMessage() {
     if (showWallpaperSelectMessage && AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
-      Messages.showMessage("Now select the wallpaper!",
+      Messages.showMessage("Now select the wallpaper...",
                            "Processing built and installed your sketch\n" +
                            "as a live wallpaper on the selected device.\n" +
                            "You need to open the wallpaper selector\n" + 
