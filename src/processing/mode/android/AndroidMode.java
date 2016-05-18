@@ -270,7 +270,7 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunDevice(Sketch sketch, RunnerListener listener)
-    throws SketchException, IOException {
+    throws SketchException, IOException {    
     
     final Devices devices = Devices.getInstance();
     java.util.List<Device> deviceList = devices.findMultiple(false);
@@ -280,7 +280,7 @@ public class AndroidMode extends JavaMode {
                            "your sketch on. Make sure that your handheld or\n" +
                            "wearable is properly connected to the computer\n" +
                            "and that USB or Bluetooth debugging is enabled.");
-      listener.statusHalt();
+      listener.statusError("No devices found.");
       return;
     }
     
