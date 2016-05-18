@@ -44,6 +44,7 @@ class AndroidSDK {
   private final File folder;
   private final File tools;
   private final File platforms;
+  private final File targetPlatform;
   private final File platformTools;
   private final File androidTool;
 
@@ -59,7 +60,8 @@ class AndroidSDK {
     "If you want to download the SDK manually, you can visit <br>"+
     "http://developer.android.com/sdk/installing/index.html <br>" +
     "and select the stand-alone SDK tools. Make sure to install <br>"+
-    "the SDK platform for API 21 (Android 5.0) or higher.";
+    "the SDK platform for Android " + AndroidBuild.target_sdk_version + 
+    " (API level " + AndroidBuild.target_api_level + ") or higher.";
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
@@ -83,6 +85,12 @@ class AndroidSDK {
     platforms = new File(folder, "platforms");
     if (!platforms.exists()) {
       throw new BadSDKException("There is no platforms folder in " + folder);
+    }
+    
+    targetPlatform = new File(platforms, AndroidBuild.target_platform);
+    if (!targetPlatform.exists()) {
+      throw new BadSDKException("There is no Android " + 
+                                AndroidBuild.target_sdk_version + " in " + platforms.getAbsolutePath());
     }
 
     androidTool = findAndroidTool(tools);

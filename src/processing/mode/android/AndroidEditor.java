@@ -44,7 +44,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.TimerTask;
 
 
@@ -79,7 +78,7 @@ public class AndroidEditor extends JavaEditor {
     public void run() {
       if (androidMode == null || androidMode.getSDK() == null) return;
       
-      if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+      if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
         Devices.enableBlueToothDebugging();
       }
 
@@ -297,6 +296,7 @@ public class AndroidEditor extends JavaEditor {
     
     menu.addSeparator();
     
+    /*
     // TODO: The SDK selection menu will be removed once app publishing is fully
     // functional: correct minimum SDK level can be inferred from app type 
     // (fragment, wallpaper, etc), and target SDK from the highest available in
@@ -322,8 +322,9 @@ public class AndroidEditor extends JavaEditor {
     }.start();
 
     menu.add(sdkMenu);
-
+    
     menu.addSeparator();
+    */
     
     item = new JMenuItem("SDK Manager");
     item.addActionListener(new ActionListener() {
@@ -359,6 +360,7 @@ public class AndroidEditor extends JavaEditor {
     return menu;
   }
 
+  /*
   private void updateSdkMenu(final JMenu sdkMenu) {
     try {
       ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
@@ -394,7 +396,7 @@ public class AndroidEditor extends JavaEditor {
         item.addChangeListener(new ChangeListener() {
           @Override
           public void stateChanged(ChangeEvent e) {
-            if (target.name.equals(AndroidBuild.sdkName)) item.setState(true);
+            if (target.name.equals(AndroidBuild.target_sdk_version)) item.setState(true);
             else item.setState(false);
           }
         });
@@ -423,7 +425,7 @@ public class AndroidEditor extends JavaEditor {
       e.printStackTrace();
     }
   }
-
+*/
 
   /**
    * Uses the main help menu, and adds a few extra options. If/when there's

@@ -39,11 +39,8 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
-import processing.mode.java.preproc.SurfaceInfo;
-
 import java.io.*;
 import java.security.Permission;
-
 
 class AndroidBuild extends JavaBuild {
   static public final int FRAGMENT  = 0;
@@ -51,26 +48,30 @@ class AndroidBuild extends JavaBuild {
   static public final int WATCHFACE = 2;
   static public final int CARDBOARD = 3;
   
-  // TODO: make package parameter in the config file, as well as the SDK version
-  // to download (latest, specific number)
+  // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
-  // We should start with either 16 (4.1) or 17 (4.2) because combined usage of
-  // all previous versions is less than 5%:
+  static final String basePackage = "processing.test";
+  
+  // Minimum SDK levels required for each app component
+  // https://source.android.com/source/build-numbers.html
+  // We should use 17 (4.2) as minimum for fragment and wallpaper at some point, 
+  // once combined usage of all previous versions is falls below 5%:
   // http://developer.android.com/about/dashboards/index.html
-  // With 17, we have getRealSize and getRealMetrics:
+  // because 17 give us getRealSize and getRealMetrics:
   // http://developer.android.com/reference/android/view/Display.html#getRealSize(android.graphics.Point)
   // http://developer.android.com/reference/android/view/Display.html#getRealMetrics(android.util.DisplayMetrics)
-  static final String basePackage = "processing.test";
-  static public final int min_sdk_fragment = 14; // Ice Cream Sandwich
-  static public final int min_sdk_wallpaper = 14;  
-  static public final int min_sdk_watchface = 21; // Lillipop
-  static public final int min_sdk_cardboard = 19; // Kitkat
+  // which allows us to exactly determine the size of the screen.
+  static public final String min_sdk_fragment  = "16"; // Jelly Bean (4.1)
+  static public final String min_sdk_wallpaper = "16"; // 
+  static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
+  static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
   
-  static String sdkName = "5.0";
-  static String sdkVersion = "21";  // Android 5.0 (Lollipop)
-  static String sdkTarget = "android-" + sdkVersion;
+  // Hard-coded target SDK, no longer user-selected.
+  static public final String target_sdk_version = "5.1"; // Lollipop
+  static public final String target_api_level   = "22";  
+  static public final String target_platform    = "android-" + target_api_level;
 
-  static int publishOption = FRAGMENT;
+  static int appComponent = FRAGMENT;
   static boolean forceNewManifest = false;
   
   private final AndroidSDK sdk;
@@ -95,8 +96,8 @@ class AndroidBuild extends JavaBuild {
   }
 
   public static void setPublishOption(int opt, Sketch sketch) {
-    if (publishOption != opt) {
-      publishOption = opt;
+    if (appComponent != opt) {
+      appComponent = opt;
       forceNewManifest = true;
     } else {
       forceNewManifest = false;
@@ -104,12 +105,12 @@ class AndroidBuild extends JavaBuild {
   }
   
   public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
-    sdkName = target.name;
-    sdkVersion = Integer.toString(target.version);
-    sdkTarget = "android-" + sdkVersion;
-
-    Preferences.set("android.sdk.version", sdkVersion);
-    Preferences.set("android.sdk.name", target.name);
+//    sdkName = target.name;
+//    sdkVersion = Integer.toString(target.version);
+//    sdkTarget = "android-" + sdkVersion;
+//
+//    Preferences.set("android.sdk.version", target_);
+//    Preferences.set("android.sdk.name", target.name);
   }
 
   /**
@@ -173,7 +174,7 @@ class AndroidBuild extends JavaBuild {
     }
 
     manifest = new Manifest(sketch);
-    manifest.setSdkTarget(sdkVersion);
+    manifest.setSdkTarget(target_api_level);
     forceNewManifest = false;
     
     // grab code from current editing window (GUI only)
@@ -220,7 +221,7 @@ class AndroidBuild extends JavaBuild {
       copyLibraries(libsFolder, assetsFolder);
       copyCodeFolder(libsFolder);
       
-      if (publishOption == WATCHFACE) {
+      if (appComponent == WATCHFACE) {
         // TODO: temporary hack until I find a better way to include the wearable aar
         // package included in the SDK:
         
@@ -229,7 +230,7 @@ class AndroidBuild extends JavaBuild {
         Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
       }
 
-      if (publishOption == CARDBOARD) {
+      if (appComponent == CARDBOARD) {
         // TODO: temporary hack until I find a better way to include the cardboard aar
         // packages included in the cardboard SDK:
         
@@ -279,15 +280,13 @@ class AndroidBuild extends JavaBuild {
 //              System.out.println("API: " + api);
             }
             
-            if (platform != null && platform.equals(sdkTarget) &&
-                api != null && api.equals(sdkVersion)) {
+            if (platform != null && platform.equals(target_platform) &&
+                api != null && api.equals(target_api_level)) {
               targetID = id;
               break;
             }            
           }
         } catch (InterruptedException e) {}
-        
-        System.out.println("TARGET ID: " + targetID);
         
         ////////////////////////////////////////////////////////////////////////
         // third step: create library projects
@@ -773,13 +772,13 @@ class AndroidBuild extends JavaBuild {
 
     // Try to parse anything else we might know about
     for (final String line : errLines) {
-      if (line.contains("Unable to resolve target '" + sdkTarget + "'")) {
+      if (line.contains("Unable to resolve target '" + target_platform + "'")) {
         System.err.println("Use the Android SDK Manager (under the Android");
         System.err.println("menu) to install the SDK platform and ");
-        System.err.println("Google APIs for Android " + sdkName +
-                           " (API " + sdkVersion + ")");
+        System.err.println("Google APIs for Android " + target_sdk_version +
+                           " (API " + target_api_level + ")");
         skex = new SketchException("Please install the SDK platform and " +
-                                   "Google APIs for API " + sdkVersion);
+                                   "Google APIs for API " + target_api_level);
       }
     }
     // Stack trace is not relevant, just the message.
@@ -925,7 +924,7 @@ class AndroidBuild extends JavaBuild {
 
   private void writeProjectProps(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("target=" + sdkTarget);
+    writer.println("target=" + target_platform);
     writer.println();
     // http://stackoverflow.com/questions/4821043/includeantruntime-was-not-set-for-android-ant-script
     writer.println("# Suppress the javac task warnings about \"includeAntRuntime\"");
@@ -964,7 +963,7 @@ class AndroidBuild extends JavaBuild {
     File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
     writeResLayoutMainActivity(mainActivityLayoutFile);
 
-    if (publishOption == WALLPAPER) {
+    if (appComponent == WALLPAPER) {
       File xmlFolder = mkdirs(resFolder, "xml");
       File mainServiceWallpaperFile = new File(xmlFolder, "wallpaper.xml");
       writeResXMLWallpaper(mainServiceWallpaperFile);
@@ -1051,7 +1050,7 @@ class AndroidBuild extends JavaBuild {
     }
 
     
-    if (publishOption == WATCHFACE) {
+    if (appComponent == WATCHFACE) {
       File xmlFolder = mkdirs(resFolder, "xml");
       File mainServiceWatchFaceFile = new File(xmlFolder, "watch_face.xml");
       writeResXMLWatchFace(mainServiceWatchFaceFile);      
@@ -1126,17 +1125,17 @@ class AndroidBuild extends JavaBuild {
 
 
   private void writeMainClass(final File srcDirectory, String renderer) {
-    if (publishOption == FRAGMENT) {
+    if (appComponent == FRAGMENT) {
       writeFragmentActivity(srcDirectory);
-    } else if (publishOption == WALLPAPER) {
+    } else if (appComponent == WALLPAPER) {
       writeWallpaperService(srcDirectory);
-    } else if (publishOption == WATCHFACE) {
+    } else if (appComponent == WATCHFACE) {
       if (renderer != null && (renderer.equals("P2D") || renderer.equals("P3D"))) {
         writeWatchFaceGLESService(srcDirectory);  
       } else {
         writeWatchFaceCanvasService(srcDirectory);  
       }      
-    } else if (publishOption == CARDBOARD) {
+    } else if (appComponent == CARDBOARD) {
       writeCardboardActivity(srcDirectory);
     }
   }

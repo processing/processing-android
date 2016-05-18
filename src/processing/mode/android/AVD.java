@@ -79,7 +79,7 @@ public class AVD {
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
     new AVD("Processing-0" + Base.getRevision(),
-            "android-" + AndroidBuild.sdkVersion);
+            AndroidBuild.target_platform);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
   public AVD(final String name, final String target) {
@@ -203,7 +203,7 @@ public class AVD {
 	  }
 	} catch (InterruptedException e) {}
 
-	if (preferredAbi.get(AndroidBuild.sdkVersion) == null) {
+	if (preferredAbi.get(AndroidBuild.target_api_level) == null) {
 	  return false;
 	}
 
@@ -214,7 +214,7 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN,
-      "--abi", preferredAbi.get(AndroidBuild.sdkVersion)
+      "--abi", preferredAbi.get(AndroidBuild.target_api_level)
     };
 
     // Set the list to null so that exists() will check again
@@ -267,7 +267,7 @@ public class AVD {
 //      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
       Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
                                  String.format(AVD_CREATE_SECONDARY,
-                                               AndroidBuild.sdkVersion), null);
+                                               AndroidBuild.target_api_level), null);
     }
     return false;
   }

@@ -200,9 +200,9 @@ public class AndroidMode extends JavaMode {
 
     String path = sdk.getSdkFolder().getAbsolutePath() + File.separator + 
                   "platforms" + File.separator + "android-";
-    String ver = AndroidBuild.sdkVersion;
-    String name = AndroidBuild.sdkName;
-    String androidJarPath = path + ver + File.separator + "android.jar";    
+    String level = AndroidBuild.target_api_level;
+    String name = AndroidBuild.target_sdk_version;
+    String androidJarPath = path + level + File.separator + "android.jar";    
     if (!new File(androidJarPath).exists()) {
       // Try again using SDK name, I have seen the SDK stored as platforms/android-x.y.z
       androidJarPath = path + name + File.separator + "android.jar";

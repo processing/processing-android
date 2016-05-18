@@ -30,7 +30,6 @@ import org.xml.sax.SAXException;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
-import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -47,9 +46,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {

@@ -95,7 +95,7 @@ public class Manifest {
   public void setSdkTarget(String version) {
     XML usesSdk = xml.getChild("uses-sdk");
     if (usesSdk != null) { 
-      usesSdk.setString("android:minSdkVersion", "15");
+//      usesSdk.setString("android:minSdkVersion", "15");
       usesSdk.setString("android:targetSdkVersion", version);
       save();
     }    
@@ -148,6 +148,7 @@ public class Manifest {
   }
 */
 
+  // TODO: needs to be converted into a template file...
   private void writeBlankManifest(final File file) {
     char newLine = '\n';
         
@@ -172,16 +173,20 @@ public class Manifest {
     
     // Publishing-specific features
     // for now including this... we're wiring to a particular SDK version anyway...
-    writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.sdkVersion + "\" />" + newLine);
-    if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
-      // nothing special for fragments      
-    } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {      
+    
+//    writer.println("  <uses-sdk android:targetSdkVersion=\"" + AndroidBuild.target_api_level + "\" />" + newLine);
+    if (AndroidBuild.appComponent == AndroidBuild.FRAGMENT) {
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_fragment + "\" />" + newLine);
+    } else if (AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_wallpaper + "\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />" + newLine);
-    } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {      
+    } else if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_watchface + "\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />" + newLine);
       writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />" + newLine);
-    } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {          
+    } else if (AndroidBuild.appComponent == AndroidBuild.CARDBOARD) {
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_cardboard + "\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.NFC\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.VIBRATE\" />" + newLine);
@@ -192,18 +197,14 @@ public class Manifest {
       writer.println("  <uses-feature android:glEsVersion=\"0x00020000\" android:required=\"true\" />" + newLine);
     }
     
-//    writer.println("  <uses-sdk android:minSdkVersion=\"\" />");  // insert sdk version
-//    writer.println("  <application android:label=\"@string/app_name\"");
     writer.println("  <application android:label=\"\" " + newLine);  // insert pretty name
     writer.println("               android:icon=\"@drawable/icon\" " + newLine);
-    if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+    if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
       writer.println("               android:supportsRtl=\"true\" " + newLine);
-      // android:theme="@android:style/Theme.DeviceDefault">
     }
     writer.println("               android:debuggable=\"true\">" + newLine);
 
-
-    if (AndroidBuild.publishOption == AndroidBuild.FRAGMENT) {
+    if (AndroidBuild.appComponent == AndroidBuild.FRAGMENT) {
       // turns out label is not required for the activity, so nixing it
 //    writer.println("    <activity android:name=\"\"");  // insert class name prefixed w/ dot
 ////    writer.println("              android:label=\"@string/app_name\">");  // pretty name
@@ -220,7 +221,7 @@ public class Manifest {
       writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />" + newLine);
       writer.println("      </intent-filter>" + newLine);
       writer.println("    </activity>" + newLine); 
-    } else if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER) {
+    } else if (AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
       writer.println("    <service android:name=\".MainService\" " + newLine);
       writer.println("             android:label=\"\" " + newLine); // insert pretty name
       writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
@@ -230,7 +231,7 @@ public class Manifest {
       writer.println("    <meta-data android:name=\"android.service.wallpaper\" " + newLine);
       writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
       writer.println("  </service>" + newLine);  
-    } else if (AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+    } else if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
       writer.println("<service android:name=\".MainService\" " + newLine);
       writer.println("         android:label=\"\" " + newLine); // insert pretty name
       writer.println("         android:permission=\"android.permission.BIND_WALLPAPER\"> " + newLine);
@@ -247,7 +248,7 @@ public class Manifest {
       writer.println("     <category android:name=\"com.google.android.wearable.watchface.category.WATCH_FACE\" /> " + newLine);
       writer.println("   </intent-filter> " + newLine);
       writer.println("</service> " + newLine);      
-    } else if (AndroidBuild.publishOption == AndroidBuild.CARDBOARD) {
+    } else if (AndroidBuild.appComponent == AndroidBuild.CARDBOARD) {
       writer.println("<activity android:name=\".MainActivity\" " + newLine);
 //      writer.println("          android:label=\"\" " + newLine); // insert pretty name
       writer.println("          android:screenOrientation=\"landscape\" " + newLine);
@@ -293,8 +294,8 @@ public class Manifest {
         app.setString("android:label", className);
       }      
       
-      if (AndroidBuild.publishOption == AndroidBuild.WALLPAPER ||
-          AndroidBuild.publishOption == AndroidBuild.WATCHFACE) {
+      if (AndroidBuild.appComponent == AndroidBuild.WALLPAPER ||
+          AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
         XML serv = app.getChild("service");
         label = serv.getString("android:label");
         if (label.length() == 0) {
