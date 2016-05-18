@@ -49,11 +49,6 @@ import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-  // Version and API level are both used to avoid ambiguity with preview versions,
-  // which might share the API level with the earlier stable platform.
-  private static final String PLATFORM_VERSION = "6.0";
-  private static final String PLATFORM_API_LEVEL = "23";
-  
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
   private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
@@ -74,6 +69,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private int totalSize = 0;  
 
   class SDKUrlHolder {
+    public String platformVersion;
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
     public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
     public int totalSize = 0;
@@ -128,7 +124,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
-
+        
         // usb driver
         if (Platform.isWindows()) {
           File usbDriverFolder = new File(extrasFolder, "google");
@@ -142,6 +138,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
         tempFolder.delete();
 
+        // Normalize platform folder to android-<API LEVEL>
+        File expectedPath = new File(platformsFolder, "android-" + AndroidBuild.target_sdk);
+        File actualPath = new File(platformsFolder, "android-" + downloadUrls.platformVersion);
+        if (!expectedPath.exists()) {
+          if (actualPath.exists()) {
+            actualPath.renameTo(expectedPath);
+          } else {
+            throw new IOException("Error unpacking platform to " + actualPath.getAbsolutePath());
+          }
+        }
+        
         // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
         Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());        
@@ -209,14 +216,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Document doc = db.parse(new URL(repositoryUrl).openStream());
 
       // platform
+      String platformDescription = "Android SDK Platform " +  AndroidBuild.target_sdk;
       NodeList platformList = doc.getElementsByTagName("sdk:platform");
       for (int i = 0; i < platformList.getLength(); i++) {
         Node platform = platformList.item(i);
         NodeList version = ((Element) platform).getElementsByTagName("sdk:version");
         NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
-        if (version.item(0).getTextContent().equals(PLATFORM_VERSION) && level.item(0).getTextContent().equals(PLATFORM_API_LEVEL)) {
+        NodeList desc = ((Element) platform).getElementsByTagName("sdk:description");
+        // API level and platform description are both used to avoid ambiguity with 
+        // preview versions, which might share the API level with the earlier stable 
+        // platform, but use the letter codename in their description.        
+        if (level.item(0).getTextContent().equals( AndroidBuild.target_sdk) && 
+            desc.item(0).getTextContent().equals(platformDescription)) {
           Node archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
           Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
+          urlHolder.platformVersion = version.item(0).getTextContent();
           urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
           urlHolder.platformFilename = urlHolder.platformUrl.split("/")[urlHolder.platformUrl.split("/").length-1];
           urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());

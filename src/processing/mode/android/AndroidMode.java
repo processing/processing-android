@@ -39,6 +39,8 @@ import processing.mode.java.JavaMode;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -201,8 +203,16 @@ public class AndroidMode extends JavaMode {
       return "";
     }
 
-    String path = sdk.getSdkFolder().getAbsolutePath() + File.separator + 
-                  "platforms" + File.separator + "android-";
+    /*
+    Path path = Paths.get(sdk.getSdkFolder().getAbsolutePath(), 
+                          "platforms", AndroidBuild.target_platform, 
+                          "android.jar").toAbsolutePath();
+        
+//    String path = new File().getAbsolutePath(); 
+//        
+//        
+//        sdk.getSdkFolder().getAbsolutePath() + File.separator + 
+//                  "platforms" + File.separator + "android-";
     String level = AndroidBuild.target_api_level;
     String name = AndroidBuild.target_sdk_version;
     String androidJarPath = path + level + File.separator + "android.jar";    
@@ -214,9 +224,10 @@ public class AndroidMode extends JavaMode {
         return "";        
       }
     }
+    */
     
-    String processingAndroidCoreJarPath = new File(getFolder(), "android-core.zip").getAbsolutePath();
-    return androidJarPath + File.pathSeparatorChar + processingAndroidCoreJarPath;
+    String coreJarPath = new File(getFolder(), "android-core.zip").getAbsolutePath();
+    return sdk.getAndroidJarPath().getAbsolutePath() + File.pathSeparatorChar + coreJarPath;
   }
 
 

@@ -66,9 +66,8 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
   
   // Hard-coded target SDK, no longer user-selected.
-  static public final String target_sdk_version = "5.1"; // Lollipop
-  static public final String target_api_level   = "22";  
-  static public final String target_platform    = "android-" + target_api_level;
+  static public final String target_sdk      = "22";  // Lollipop (5.1)
+  static public final String target_platform = "android-" + target_sdk;
 
   static public int appComponent = FRAGMENT;
   static boolean forceNewManifest = false;
@@ -173,7 +172,7 @@ class AndroidBuild extends JavaBuild {
     }
 
     manifest = new Manifest(sketch);
-    manifest.setSdkTarget(target_api_level);
+    manifest.setSdkTarget(target_sdk);
     forceNewManifest = false;
     
     // grab code from current editing window (GUI only)
@@ -275,7 +274,7 @@ class AndroidBuild extends JavaBuild {
             }
             
             if (platform != null && platform.equals(target_platform) &&
-                api != null && api.equals(target_api_level)) {
+                api != null && api.equals(target_sdk)) {
               targetID = id;
               break;
             }            
@@ -769,10 +768,9 @@ class AndroidBuild extends JavaBuild {
       if (line.contains("Unable to resolve target '" + target_platform + "'")) {
         System.err.println("Use the Android SDK Manager (under the Android");
         System.err.println("menu) to install the SDK platform and ");
-        System.err.println("Google APIs for Android " + target_sdk_version +
-                           " (API " + target_api_level + ")");
+        System.err.println("Google APIs for Android " + target_sdk);
         skex = new SketchException("Please install the SDK platform and " +
-                                   "Google APIs for API " + target_api_level);
+                                   "Google APIs for Android " + target_sdk);
       }
     }
     // Stack trace is not relevant, just the message.

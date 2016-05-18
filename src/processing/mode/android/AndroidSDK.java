@@ -45,6 +45,7 @@ class AndroidSDK {
   private final File tools;
   private final File platforms;
   private final File targetPlatform;
+  private final File androidJar;
   private final File platformTools;
   private final File androidTool;
 
@@ -60,8 +61,7 @@ class AndroidSDK {
     "If you want to download the SDK manually, you can visit <br>"+
     "http://developer.android.com/sdk/installing/index.html <br>" +
     "and select the stand-alone SDK tools. Make sure to install <br>"+
-    "the SDK platform for Android " + AndroidBuild.target_sdk_version + 
-    " (API level " + AndroidBuild.target_api_level + ") or higher.";
+    "the SDK platform for API " + AndroidBuild.target_sdk + ".";
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
@@ -90,9 +90,15 @@ class AndroidSDK {
     targetPlatform = new File(platforms, AndroidBuild.target_platform);
     if (!targetPlatform.exists()) {
       throw new BadSDKException("There is no Android " + 
-                                AndroidBuild.target_sdk_version + " in " + platforms.getAbsolutePath());
+                                AndroidBuild.target_sdk + " in " + platforms.getAbsolutePath());
     }
 
+    androidJar = new File(targetPlatform, "android.jar");
+    if (!androidJar.exists()) {
+      throw new BadSDKException("android.jar for plaform " + 
+                                AndroidBuild.target_sdk + " is missing from " + targetPlatform.getAbsolutePath());
+    }
+    
     androidTool = findAndroidTool(tools);
 
     String path = Platform.getenv("PATH");
@@ -182,6 +188,11 @@ class AndroidSDK {
   }
 
 
+  public File getAndroidJarPath() {
+    return androidJar;  
+  }
+  
+  
   public File getPlatformToolsFolder() {
     return platformTools;
   }

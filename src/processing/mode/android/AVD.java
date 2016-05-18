@@ -203,7 +203,7 @@ public class AVD {
 	  }
 	} catch (InterruptedException e) {}
 
-	if (preferredAbi.get(AndroidBuild.target_api_level) == null) {
+	if (preferredAbi.get(AndroidBuild.target_sdk) == null) {
 	  return false;
 	}
 
@@ -214,7 +214,7 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", DEFAULT_SKIN,
-      "--abi", preferredAbi.get(AndroidBuild.target_api_level)
+      "--abi", preferredAbi.get(AndroidBuild.target_sdk)
     };
 
     // Set the list to null so that exists() will check again
@@ -267,7 +267,7 @@ public class AVD {
 //      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
       Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
                                  String.format(AVD_CREATE_SECONDARY,
-                                               AndroidBuild.target_api_level), null);
+                                               AndroidBuild.target_sdk), null);
     }
     return false;
   }
