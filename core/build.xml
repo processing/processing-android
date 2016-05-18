@@ -6,8 +6,12 @@
   <!-- path to the main processing repo --> 
   <property name="processing.dir" value="../../processing" />
 
+  <!-- path to the core library -->
   <property name="core.jar.path" value="../android-core.zip" />
 
+  <!-- Android platform to build the core library -->
+  <property name="android.platform" value="android-23" />
+  
   <!-- oh ant, you're so cute and convoluted -->
   <target name="build" depends="sdk_chatter,actual_build" />
 
@@ -16,10 +20,10 @@
   </target>
 
   <target name="sdk_whining">
-    <available file="${env.ANDROID_SDK}/platforms/android-21/android.jar"
+    <available file="${env.ANDROID_SDK}/platforms/${android.platform}/android.jar"
 	       property="andoid-jar-present" />
     <fail unless="andoid-jar-present" 
-	  message="Android SDK 21 could not be found in ${env.ANDROID_SDK}/platforms/android-21/android.jar" />
+	  message="Android SDK could not be found in ${env.ANDROID_SDK}/platforms/${android.platform}/android.jar" />
   </target>
 
   <target name="actual_build" if="env.ANDROID_SDK">
@@ -33,7 +37,7 @@
 	   target="1.7" 
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
-	   bootclasspath="${env.ANDROID_SDK}/platforms/android-21/android.jar;
+	   bootclasspath="${env.ANDROID_SDK}/platforms/${android.platform}/android.jar;
 	                  library/wearable-1.3.0-classes.jar"
 	   srcdir="src" destdir="bin" />
 
