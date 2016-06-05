@@ -763,6 +763,8 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
+  static final String ICON_192 = "icon-192.png";
+  static final String ICON_144 = "icon-144.png";
   static final String ICON_96 = "icon-96.png";
   static final String ICON_72 = "icon-72.png";
   static final String ICON_48 = "icon-48.png";
@@ -783,18 +785,24 @@ class AndroidBuild extends JavaBuild {
     File localIcon48 = new File(sketchFolder, ICON_48);
     File localIcon72 = new File(sketchFolder, ICON_72);
     File localIcon96 = new File(sketchFolder, ICON_96);
+    File localIcon144 = new File(sketchFolder, ICON_144);
+    File localIcon192 = new File(sketchFolder, ICON_192);
 
 //    File drawableFolder = new File(resFolder, "drawable");
 //    drawableFolder.mkdirs()
+    File buildIcon36 = new File(resFolder, "drawable-ldpi/icon.png");    
     File buildIcon48 = new File(resFolder, "drawable/icon.png");
-    File buildIcon36 = new File(resFolder, "drawable-ldpi/icon.png");
     File buildIcon72 = new File(resFolder, "drawable-hdpi/icon.png");
     File buildIcon96 = new File(resFolder, "drawable-xhdpi/icon.png");
+    File buildIcon144 = new File(resFolder, "drawable-xxhdpi/icon.png");
+    File buildIcon192 = new File(resFolder, "drawable-xxxhdpi/icon.png");
 
     if (!localIcon36.exists() &&
         !localIcon48.exists() &&
         !localIcon72.exists() &&
-        !localIcon96.exists()) {
+        !localIcon96.exists() &&
+        !localIcon144.exists() &&
+        !localIcon192.exists()) {
       try {
         // if no icons are in the sketch folder, then copy all the defaults
         if (buildIcon36.getParentFile().mkdirs()) {
@@ -817,6 +825,16 @@ class AndroidBuild extends JavaBuild {
         } else {
           System.err.println("Could not create \"drawable-xhdpi\" folder.");
         }
+        if (buildIcon144.getParentFile().mkdirs()) {
+          Util.copyFile(mode.getContentFile("icons/" + ICON_144), buildIcon144);
+        } else {
+          System.err.println("Could not create \"drawable-xxhdpi\" folder.");
+        }        
+        if (buildIcon192.getParentFile().mkdirs()) {
+          Util.copyFile(mode.getContentFile("icons/" + ICON_192), buildIcon192);
+        } else {
+          System.err.println("Could not create \"drawable-xxxhdpi\" folder.");
+        }        
       } catch (IOException e) {
         e.printStackTrace();
         //throw new SketchException("Could not get Android icons");
