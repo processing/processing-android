@@ -49,19 +49,20 @@ class AndroidSDK {
   private final File platformTools;
   private final File androidTool;
 
+  static final String DOWNLOAD_URL ="https://developer.android.com/studio/index.html#downloads";
+  
   private static final String ANDROID_SDK_PRIMARY =
     "Is the Android SDK installed?";
 
   private static final String ANDROID_SDK_SECONDARY =
-    "The Android SDK does not appear to be installed, <br>" +
-    "because the ANDROID_SDK variable is not set. <br>" +
-    "If it is installed, click “Locate SDK path” to select the <br>" +
-    "location of the SDK, or “Download SDK” to let <br>" +
-    "Processing download the SDK automatically.<br><br>" +
-    "If you want to download the SDK manually, you can visit <br>"+
-    "http://developer.android.com/sdk/installing/index.html <br>" +
-    "and select the stand-alone SDK tools. Make sure to install <br>"+
-    "the SDK platform for API " + AndroidBuild.target_sdk + ".";
+      "The Android SDK does not appear to be installed, <br>" +
+      "because the ANDROID_SDK variable is not set. <br>" +
+      "If it is installed, click “Locate SDK path” to select the <br>" +
+      "location of the SDK, or “Download SDK” to let <br>" +
+      "Processing download the SDK automatically.<br><br>" +
+      "If you want to download the SDK manually, you can get <br>"+
+      "the command line tools from <a href=\"" + DOWNLOAD_URL + "\">here</a>. Make sure to install<br>" +
+      "the SDK platform for API " + AndroidBuild.target_sdk + ".";
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
