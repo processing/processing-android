@@ -91,10 +91,13 @@ public class AVD {
 
   private void initializeAbiList() {
 	  if (abiList.size() == 0) {
-		  //The order in this list determines the preference of one abi over the other
-		  abiList.add("armeabi");
-		  abiList.add("x86");
-		  abiList.add("x86_64");
+		  // The order in this list determines the preference of one abi over the other
+      abiList.add("default/x86");
+      abiList.add("google_apis/x86");
+		  abiList.add("default/x86_64");		        
+      abiList.add("google_apis/x86_64");
+      abiList.add("default/armeabi-v7a");
+      abiList.add("google_apis/armeabi-v7a");      
 	  }
   }
 
@@ -170,42 +173,67 @@ public class AVD {
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
 
-	final String[] list_abi = {
-	  sdk.getAndroidToolPath(),
-	  "list", "targets"
-	};
+    final String[] list_abi = {
+        sdk.getAndroidToolPath(),
+        "list", "targets"
+      };
 
-	ProcessHelper p = new ProcessHelper(list_abi);
-	try {
-	  final ProcessResult abiListResult = p.execute();
-	  String api = null;
-	  String abi = null;
-	  for (String line : abiListResult) {
-		String[] m = PApplet.match(line, "API\\slevel:\\s(\\S+)");
-		if (m != null) {
-		  api = m[1];
-		}
+    ProcessHelper p = new ProcessHelper(list_abi);
+    try {
+      final ProcessResult abiListResult = p.execute();
+      
+      String api = null;
+      String[] abis = null;
+      for (String line : abiListResult) {        
+        line = line.trim();
+        if (line.equals("")) continue;
 
-		m = PApplet.match(line, "Tag\\/ABIs\\s:\\sdefault\\/(\\S+)");
-		if (m != null) {
-		  abi = m[1];
+        if (-1 < line.indexOf("API level")) {
+          api = line.split(":")[1];
+          api = api.trim();
+        }
+        
+        if (-1 < line.indexOf("Tag/ABIs")) {
+          String str = line.split(":")[1];
+          abis = str.split(",");
+          for (int i = 0; i < abis.length; i++) {
+            abis[i] = abis[i].trim();  
+          }
+        }
 
-		  if (api != null && abi != null) {
-			if (preferredAbi.get(api) == null) {
-			  preferredAbi.put(api, abi);
-			} else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
-			  preferredAbi.put(api, abi);
-			}
-			api = null;
-			abi = null;
-		  }
-		}
-	  }
-	} catch (InterruptedException e) {}
-
-	if (preferredAbi.get(AndroidBuild.sdkVersion) == null) {
-	  return false;
-	}
+        if (api != null && abis != null) {
+          for (String abi: abis) {
+            if (preferredAbi.get(api) == null) {
+              preferredAbi.put(api, abi);
+            } else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
+              preferredAbi.put(api, abi);
+            }            
+          }
+          api = null;
+          abis = null; 
+        }
+        
+//        String[] m = PApplet.match(line, "API\\slevel:\\s(\\S+)");
+//        if (m != null) {
+//          api = m[1];
+//        }
+//
+//        m = PApplet.match(line, "Tag\\/ABIs\\s:\\sdefault\\/(\\S+)");
+//        if (m != null) {
+//          abi = m[1];
+//
+//          if (api != null && abi != null) {
+//            if (preferredAbi.get(api) == null) {
+//              preferredAbi.put(api, abi);
+//            } else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
+//              preferredAbi.put(api, abi);
+//            }
+//            api = null;
+//            abi = null;
+//          }
+//        }
+      }
+    } catch (InterruptedException e) {}
 
     final String[] params = {
       sdk.getAndroidToolPath(),
@@ -216,29 +244,24 @@ public class AVD {
       "-s", DEFAULT_SKIN,
       "--abi", preferredAbi.get(AndroidBuild.sdkVersion)
     };
-
+        
     // Set the list to null so that exists() will check again
     avdList = null;
 
     p = new ProcessHelper(params);
     try {
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
-//      System.out.println("CREATE AVD STARTING");
       final ProcessResult createAvdResult = p.execute("no");
-//      System.out.println("CREATE AVD HAS COMPLETED");
       if (createAvdResult.succeeded()) {
         return true;
       }
       if (createAvdResult.toString().contains("Target id is not valid")) {
         // They didn't install the Google APIs
         Messages.showWarningTiered("Android Error", AVD_TARGET_PRIMARY, AVD_TARGET_SECONDARY, null);
-//        throw new IOException("Missing required SDK components");
       } else {
         // Just generally not working
-//        Base.showWarning("Android Error", AVD_CREATE_ERROR, null);
         Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
         System.out.println(createAvdResult);
-//        throw new IOException("Error creating the AVD");
       }
       //System.err.println(createAvdResult);
     } catch (final InterruptedException ie) { }
@@ -250,21 +273,16 @@ public class AVD {
   static public boolean ensureProperAVD(final AndroidSDK sdk) {
     try {
       if (defaultAVD.exists(sdk)) {
-//        System.out.println("the avd exists");
         return true;
       }
-//      if (badList.contains(defaultAVD)) {
       if (defaultAVD.badness()) {
-//        Base.showWarning("Android Error", AVD_CANNOT_LOAD, null);
         Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
         return false;
       }
       if (defaultAVD.create(sdk)) {
-//        System.out.println("the avd was created");
         return true;
       }
     } catch (final Exception e) {
-//      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
       Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
                                  String.format(AVD_CREATE_SECONDARY,
                                                AndroidBuild.sdkVersion), null);

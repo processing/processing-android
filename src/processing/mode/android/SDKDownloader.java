@@ -51,6 +51,10 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+// http://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml
+// http://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml
+// http://dl-ssl.google.com/android/repository/sys-img/android-wear/android-wear-sys-img.xml
+
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String PLATFORM_API_LEVEL = "23";
@@ -58,6 +62,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
   private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
+  private static final String URL_SYS_IMAGES = "https://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml";
+  private static final String URL_SYS_IMAGES_FOLDER = "http://dl-ssl.google.com/android/repository/sys-img/android/";
+  private static final String SYSTEM_IMAGE = "Intel x86 Atom System Image";
+//  private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
 
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -77,8 +85,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   class SDKUrlHolder {
     public String platformVersion;
-    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
-    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, sysImgUrl, sysImgTag, toolsUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, sysImgFilename, toolsFilename;
     public int totalSize = 0;
   }
 
@@ -104,6 +112,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
+      File sysImgFolder = new File(sdkFolder, "system-images");
+      if (!sysImgFolder.exists()) sysImgFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if(!extrasFolder.exists()) extrasFolder.mkdir();
 
@@ -112,7 +122,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, Platform.getName());
+        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, URL_SYS_IMAGES, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
@@ -132,13 +142,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
 
+        // system images
+        File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
+        File tmp = new File(sysImgFolder, "android-" + PLATFORM_API_LEVEL);
+        if (!tmp.exists()) tmp.mkdir();
+        File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
+        if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
+        downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false);
+        
         // usb driver
         if (Platform.isWindows()) {
           File usbDriverFolder = new File(extrasFolder, "google");
           File downloadedFolder = new File(tempFolder, "latest_usb_driver_windows.zip");
           downloadAndUnpack(URL_USB_DRIVER, downloadedFolder, usbDriverFolder, false);
         }
-
+        
         if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
@@ -215,7 +233,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       extractFolder(saveTo, unpackTo, setExec);
     }
 
-    private SDKUrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) throws ParserConfigurationException, IOException, SAXException {
+    private SDKUrlHolder getDownloadUrls(String repositoryUrl, 
+        String repositorySysImgUrlString, String requiredHostOs) 
+        throws ParserConfigurationException, IOException, SAXException {
       SDKUrlHolder urlHolder = new SDKUrlHolder();
 
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -225,7 +245,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // platform
       String platformDescription = "Android SDK Platform " +  PLATFORM_API_LEVEL;
       NodeList platformList = doc.getElementsByTagName("sdk:platform");
-      for(int i = 0; i < platformList.getLength(); i++) {
+      for (int i = 0; i < platformList.getLength(); i++) {
         Node platform = platformList.item(i);
         NodeList version = ((Element) platform).getElementsByTagName("sdk:version");
         NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
@@ -248,7 +268,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Node platformToolItem = doc.getElementsByTagName("sdk:platform-tool").item(0);
       Node archiveListItem = ((Element) platformToolItem).getElementsByTagName("sdk:archives").item(0);
       NodeList archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for(int i = 0; i < archiveList.getLength(); i++) {
+      for (int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if (hostOs.equals(requiredHostOs)) {
@@ -263,7 +283,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Node buildToolsItem = doc.getElementsByTagName("sdk:build-tool").item(doc.getElementsByTagName("sdk:build-tool").getLength()-1);
       archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
       archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for(int i = 0; i < archiveList.getLength(); i++) {
+      for (int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if (hostOs.equals(requiredHostOs)) {
@@ -278,13 +298,37 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       Node toolsItem = doc.getElementsByTagName("sdk:tool").item(0);
       archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
       archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for(int i = 0; i < archiveList.getLength(); i++) {
+      for (int i = 0; i < archiveList.getLength(); i++) {
         Node archive = archiveList.item(i);
         String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
         if (hostOs.equals(requiredHostOs)) {
           urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
           urlHolder.toolsUrl = URL_REPOSITORY_FOLDER + urlHolder.toolsFilename;
           urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
+          break;
+        }
+      }
+      
+      // system image
+      Document docSysImg = db.parse(new URL(repositorySysImgUrlString).openStream());
+      NodeList sysImgList = docSysImg.getElementsByTagName("sdk:system-image");
+      for (int i = 0; i < sysImgList.getLength(); i++) {
+        Node img = sysImgList.item(i);
+        NodeList level = ((Element) img).getElementsByTagName("sdk:api-level");
+        NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
+        NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
+        // Only considering nodes without a codename, which correspond to the platform
+        // pre-releases.        
+        if (level.item(0).getTextContent().equals(PLATFORM_API_LEVEL) &&
+            desc.item(0).getTextContent().equals(SYSTEM_IMAGE) && 
+            codename.item(0) == null) {          
+          NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
+          urlHolder.sysImgTag = tag.item(0).getTextContent();          
+          archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
+          Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
+          urlHolder.sysImgFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
+          urlHolder.sysImgUrl = URL_SYS_IMAGES_FOLDER + urlHolder.sysImgFilename;
+          urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
           break;
         }
       }
