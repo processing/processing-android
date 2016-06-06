@@ -861,7 +861,17 @@ class AndroidBuild extends JavaBuild {
           if (new File(resFolder, "drawable-xhdpi").mkdirs()) {
             Util.copyFile(localIcon96, buildIcon96);
           }
+        }        
+        if (localIcon144.exists()) {
+          if (new File(resFolder, "drawable-xxhdpi").mkdirs()) {
+            Util.copyFile(localIcon144, buildIcon144);
+          }
         }
+        if (localIcon192.exists()) {
+          if (new File(resFolder, "drawable-xxxhdpi").mkdirs()) {
+            Util.copyFile(localIcon192, buildIcon192);
+          }
+        }       
       } catch (IOException e) {
         System.err.println("Problem while copying icons.");
         e.printStackTrace();
