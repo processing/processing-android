@@ -30,7 +30,6 @@ import org.xml.sax.SAXException;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
-import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -57,15 +56,11 @@ import java.util.zip.ZipFile;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-  private static final String PLATFORM_API_LEVEL = "23";
+  public static final String PLATFORM_API_LEVEL = "23";
   
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
   private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
-  private static final String URL_SYS_IMAGES = "https://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml";
-  private static final String URL_SYS_IMAGES_FOLDER = "http://dl-ssl.google.com/android/repository/sys-img/android/";
-  private static final String SYSTEM_IMAGE = "Intel x86 Atom System Image";
-//  private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
 
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -81,12 +76,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private boolean cancelled;
   
   private int totalSize = 0;
-  private static ZipFile zip;
 
   class SDKUrlHolder {
     public String platformVersion;
-    public String platformToolsUrl, buildToolsUrl, platformUrl, sysImgUrl, sysImgTag, toolsUrl;
-    public String platformToolsFilename, buildToolsFilename, platformFilename, sysImgFilename, toolsFilename;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
     public int totalSize = 0;
   }
 
@@ -122,7 +116,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, URL_SYS_IMAGES, Platform.getName());
+        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
@@ -142,14 +136,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
 
-        // system images
-        File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
-        File tmp = new File(sysImgFolder, "android-" + PLATFORM_API_LEVEL);
-        if (!tmp.exists()) tmp.mkdir();
-        File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
-        if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
-        downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false);
-        
         // usb driver
         if (Platform.isWindows()) {
           File usbDriverFolder = new File(extrasFolder, "google");
@@ -230,11 +216,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       inputStream.close();
       outputStream.close();
 
-      extractFolder(saveTo, unpackTo, setExec);
+      AndroidMode.extractFolder(saveTo, unpackTo, setExec);
     }
 
-    private SDKUrlHolder getDownloadUrls(String repositoryUrl, 
-        String repositorySysImgUrlString, String requiredHostOs) 
+    private SDKUrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) 
         throws ParserConfigurationException, IOException, SAXException {
       SDKUrlHolder urlHolder = new SDKUrlHolder();
 
@@ -305,30 +290,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
           urlHolder.toolsUrl = URL_REPOSITORY_FOLDER + urlHolder.toolsFilename;
           urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-          break;
-        }
-      }
-      
-      // system image
-      Document docSysImg = db.parse(new URL(repositorySysImgUrlString).openStream());
-      NodeList sysImgList = docSysImg.getElementsByTagName("sdk:system-image");
-      for (int i = 0; i < sysImgList.getLength(); i++) {
-        Node img = sysImgList.item(i);
-        NodeList level = ((Element) img).getElementsByTagName("sdk:api-level");
-        NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
-        NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
-        // Only considering nodes without a codename, which correspond to the platform
-        // pre-releases.        
-        if (level.item(0).getTextContent().equals(PLATFORM_API_LEVEL) &&
-            desc.item(0).getTextContent().equals(SYSTEM_IMAGE) && 
-            codename.item(0) == null) {          
-          NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
-          urlHolder.sysImgTag = tag.item(0).getTextContent();          
-          archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
-          Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-          urlHolder.sysImgFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-          urlHolder.sysImgUrl = URL_SYS_IMAGES_FOLDER + urlHolder.sysImgFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
           break;
         }
       }
@@ -459,54 +420,5 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     setResizable(false);
     setLocationRelativeTo(editor);
-  }
-
-  static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
-    int BUFFER = 2048;
-    zip = new ZipFile(file);
-    Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
-
-    // Process each entry
-    while (zipFileEntries.hasMoreElements()) {
-      // grab a zip file entry
-      ZipEntry entry = zipFileEntries.nextElement();
-      String currentEntry = entry.getName();
-      File destFile = new File(newPath, currentEntry);
-      //destFile = new File(newPath, destFile.getName());
-      File destinationParent = destFile.getParentFile();
-
-      // create the parent directory structure if needed
-      destinationParent.mkdirs();
-
-      String ext = PApplet.getExtension(currentEntry);
-      if (setExec && ext.equals("unknown")) {        
-        // On some OS X machines the android binaries loose their executable
-        // attribute, rendering the mode unusable
-        destFile.setExecutable(true);
-      }
-      
-      if (!entry.isDirectory()) {
-        // should preserve permissions
-        // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
-        BufferedInputStream is = new BufferedInputStream(zip
-            .getInputStream(entry));
-        int currentByte;
-        // establish buffer for writing file
-        byte data[] = new byte[BUFFER];
-
-        // write the current file to disk
-        FileOutputStream fos = new FileOutputStream(destFile);
-        BufferedOutputStream dest = new BufferedOutputStream(fos,
-            BUFFER);
-
-        // read and write until last byte is encountered
-        while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
-          dest.write(data, 0, currentByte);
-        }
-        dest.flush();
-        dest.close();
-        is.close();
-      }
-    }
   }
 }

@@ -27,6 +27,7 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 
+import java.awt.Frame;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +75,7 @@ public class AVD {
 //  static ArrayList<String> skinList;
 
   private Map<String, String> preferredAbi = new HashMap<>(30);
-  private static List<String> abiList = new ArrayList<>();
+  private List<String> abiList = new ArrayList<>();
 
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
@@ -85,7 +86,6 @@ public class AVD {
   public AVD(final String name, final String target) {
     this.name = name;
     this.target = target;
-
     initializeAbiList();
   }
 
@@ -93,11 +93,8 @@ public class AVD {
 	  if (abiList.size() == 0) {
 		  // The order in this list determines the preference of one abi over the other
       abiList.add("default/x86");
-      abiList.add("google_apis/x86");
 		  abiList.add("default/x86_64");		        
-      abiList.add("google_apis/x86_64");
-      abiList.add("default/armeabi-v7a");
-      abiList.add("google_apis/armeabi-v7a");      
+      abiList.add("default/armeabi-v7a");     
 	  }
   }
 
@@ -170,9 +167,9 @@ public class AVD {
     return false;
   }
 
-
-  protected boolean create(final AndroidSDK sdk) throws IOException {
-
+  
+  protected void initTargets(final AndroidSDK sdk) throws IOException {
+    preferredAbi.clear();
     final String[] list_abi = {
         sdk.getAndroidToolPath(),
         "list", "targets"
@@ -203,6 +200,7 @@ public class AVD {
 
         if (api != null && abis != null) {
           for (String abi: abis) {
+            if (abiList.indexOf(abi) == -1) continue;
             if (preferredAbi.get(api) == null) {
               preferredAbi.put(api, abi);
             } else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
@@ -233,7 +231,17 @@ public class AVD {
 //          }
 //        }
       }
-    } catch (InterruptedException e) {}
+    } catch (InterruptedException e) {}  
+  }  
+  
+  protected boolean noTargets(final AndroidSDK sdk) throws IOException {
+    initTargets(sdk); 
+    return preferredAbi.size() == 0;    
+  }
+  
+
+  protected boolean create(final AndroidSDK sdk) throws IOException {
+    initTargets(sdk); 
 
     final String[] params = {
       sdk.getAndroidToolPath(),
@@ -248,7 +256,7 @@ public class AVD {
     // Set the list to null so that exists() will check again
     avdList = null;
 
-    p = new ProcessHelper(params);
+    ProcessHelper p = new ProcessHelper(params);
     try {
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
       final ProcessResult createAvdResult = p.execute("no");
@@ -270,7 +278,8 @@ public class AVD {
   }
 
 
-  static public boolean ensureProperAVD(final AndroidSDK sdk) {
+  static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
+      final AndroidSDK sdk) {
     try {
       if (defaultAVD.exists(sdk)) {
         return true;
@@ -279,6 +288,12 @@ public class AVD {
         Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
         return false;
       }
+      if (defaultAVD.noTargets(sdk)) {
+        boolean res = AndroidSDK.locateSysImage(window, mode);
+        if (!res) {
+          return false;  
+        }
+      }        
       if (defaultAVD.create(sdk)) {
         return true;
       }
