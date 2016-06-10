@@ -256,7 +256,8 @@ public class AndroidMode extends JavaMode {
 //      runtime.launch(false);
 //    }
 //  }
-  public void handleRunEmulator(Sketch sketch, RunnerListener listener) throws SketchException, IOException {
+  public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
+      RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this);
@@ -264,7 +265,7 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Building Android project...");
     build.build("debug");
         
-    boolean avd = AVD.ensureProperAVD(sdk);
+    boolean avd = AVD.ensureProperAVD(editor, this, sdk);
     if (!avd) {
       SketchException se =
         new SketchException("Could not create a virtual device for the emulator.");

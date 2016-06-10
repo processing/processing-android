@@ -27,6 +27,7 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 
+import java.awt.Frame;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,7 +88,7 @@ public class AVD {
 
   /** Default virtual wear device used by Processing. */
   static public final AVD wearAVD =
-    new AVD("Wear-Processing-0" + Base.getRevision(),
+    new AVD("Processing-Wear-0" + Base.getRevision(),
             AndroidBuild.target_platform, "android-wear", WEAR_SKIN);  
   
   public AVD(final String name, final String target, 
@@ -283,7 +284,8 @@ public class AVD {
 
 
 
-  static public boolean ensureProperAVD(final AndroidSDK sdk) {
+  static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
+      final AndroidSDK sdk) {
     try {
       
       if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
@@ -291,8 +293,11 @@ public class AVD {
           return true;
         }
         if (wearAVD.badness()) {
-          Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
-          return false;
+          boolean res = AndroidSDK.locateSysImage(window, mode, true);
+          if (!res) {
+            Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+            return false;
+          }
         }
         if (wearAVD.create(sdk)) {
           return true;
@@ -302,8 +307,11 @@ public class AVD {
           return true;
         }
         if (defaultAVD.badness()) {
-          Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
-          return false;
+          boolean res = AndroidSDK.locateSysImage(window, mode, false);
+          if (!res) {
+            Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+            return false;
+          }
         }
         if (defaultAVD.create(sdk)) {
           return true;

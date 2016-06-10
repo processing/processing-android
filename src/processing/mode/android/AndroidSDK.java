@@ -64,6 +64,22 @@ class AndroidSDK {
       "the command line tools from <a href=\"" + DOWNLOAD_URL + "\">here</a>. Make sure to install<br>" +
       "the SDK platform for API " + AndroidBuild.target_sdk + ".";
     
+  private static final String ANDROID_SYS_IMAGE_PRIMARY =
+      "Download emulator?";
+
+  private static final String ANDROID_SYS_IMAGE_SECONDARY =
+      "The emulator does not appear to be installed, <br>" +
+      "Do you want Processing to download and install it now? <br>" +
+      "Otherwise, you will need to do it through SDK manager.";
+
+  private static final String ANDROID_SYS_IMAGE_WEAR_PRIMARY =
+      "Download watch emulator?";
+
+  private static final String ANDROID_SYS_IMAGE_WEAR_SECONDARY =
+      "The watch emulator does not appear to be installed, <br>" +
+      "Do you want Processing to download and install it now? <br>" +
+      "Otherwise, you will need to do it through SDK manager.";    
+    
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
 
@@ -284,6 +300,19 @@ class AndroidSDK {
       throw new CancelException("User canceled attempt to find SDK"); 
     }
   }
+  
+  static public boolean locateSysImage(final Frame window, 
+      final AndroidMode androidMode, boolean wear)
+      throws BadSDKException, CancelException, IOException {
+    final int result = showDownloadSysImageDialog(window, wear);
+    if (result == JOptionPane.YES_OPTION) {
+      return downloadSysImage(window, androidMode, wear);
+    } else if (result == JOptionPane.NO_OPTION) {
+      return false;
+    } else {
+      return false; 
+    }
+  }
 
   static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
       throws BadSDKException, CancelException {
@@ -298,6 +327,22 @@ class AndroidSDK {
       throw new BadSDKException("SDK could not be downloaded");
     }
     return sdk;
+  }
+  
+  static public boolean downloadSysImage(final Frame editor, 
+      final AndroidMode androidMode, final boolean wear) 
+      throws BadSDKException, CancelException {
+    final SysImageDownloader downloader = new SysImageDownloader(editor, androidMode, wear);    
+    downloader.run(); // This call blocks until the SDK download complete, or user cancels.
+    
+    if (downloader.cancelled()) {
+      throw new CancelException("User canceled emulator download");  
+    } 
+    boolean res = downloader.getResult();
+    if (!res) {
+      throw new BadSDKException("Emulator could not be downloaded");
+    }
+    return res;
   }
 
   static public int showLocateDialog(Frame editor) {
@@ -335,6 +380,43 @@ class AndroidSDK {
       return JOptionPane.CLOSED_OPTION;
     }
   }
+  
+  
+  static public int showDownloadSysImageDialog(Frame editor, boolean wear) {
+    String msg1 = wear ? ANDROID_SYS_IMAGE_WEAR_PRIMARY : ANDROID_SYS_IMAGE_PRIMARY;
+    String msg2 = wear ? ANDROID_SYS_IMAGE_WEAR_SECONDARY : ANDROID_SYS_IMAGE_SECONDARY;
+    
+    JOptionPane pane =
+        new JOptionPane("<html> " +
+            "<head> <style type=\"text/css\">"+
+            "b { font: 13pt \"Lucida Grande\" }"+
+            "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+            "</style> </head>" +
+            "<b>" + msg1 + "</b>" +
+            "<p>" + msg2 + "</p>",
+            JOptionPane.QUESTION_MESSAGE);
+
+    String[] options = new String[] { "Yes", "No" };
+    pane.setOptions(options);
+
+    // highlight the safest option ala apple hig
+    pane.setInitialValue(options[0]);
+
+    JDialog dialog = pane.createDialog(editor, null);
+    dialog.setTitle("");
+    dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
+    dialog.setVisible(true);
+
+    Object result = pane.getValue();
+    if (result == options[0]) {
+      return JOptionPane.YES_OPTION;
+    } else if (result == options[1]) {
+      return JOptionPane.NO_OPTION;
+    } else {
+      return JOptionPane.CLOSED_OPTION;
+    }
+  }
+  
 
   // this was banished from Base because it encourages bad practice.
   // TODO figure out a better way to handle the above.

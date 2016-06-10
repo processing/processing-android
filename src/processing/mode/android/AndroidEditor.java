@@ -572,7 +572,7 @@ public class AndroidEditor extends JavaEditor {
         startIndeterminate();
         prepareRun();
         try {
-          androidMode.handleRunEmulator(sketch, AndroidEditor.this);
+          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this);
         } catch (SketchException e) {
           statusError(e);
         } catch (IOException e) {

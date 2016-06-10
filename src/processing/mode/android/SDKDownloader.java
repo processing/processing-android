@@ -52,12 +52,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String URL_REPOSITORY = "https://dl-ssl.google.com/android/repository/repository-11.xml";
   private static final String URL_REPOSITORY_FOLDER = "http://dl-ssl.google.com/android/repository/";
   private static final String URL_USB_DRIVER = "https://dl-ssl.google.com//android/repository/latest_usb_driver_windows.zip";
-  private static final String URL_SYS_IMAGES = "https://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml";
-  private static final String URL_SYS_IMAGES_FOLDER = "http://dl-ssl.google.com/android/repository/sys-img/android/";
-  private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
-  private static final String URL_SYS_IMAGES_WEAR_FOLDER = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
-  private static final String SYSTEM_IMAGE = "Intel x86 Atom System Image";  
-  private static final String SYSTEM_IMAGE_WEAR = "Android Wear Intel x86 Atom System Image";
   
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -77,9 +71,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   class SDKUrlHolder {
     public String platformVersion;
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
-    public String sysImgUrl, sysImgTag, sysImgWearUrl, sysImgWearTag;
     public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
-    public String sysImgFilename, sysImgWearFilename;
     public int totalSize = 0;
   }
 
@@ -90,11 +82,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     @Override
     protected Object doInBackground() throws Exception {
-      
-      
-//      File modeDirectory = new File(folder, getTypeName());
-//      
-//      File modeFolder = new File(Base.getSketchbookModesFolder() + "/AndroidMode");
 
       File modeFolder = mode.getFolder();
       
@@ -105,8 +92,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
-      File sysImgFolder = new File(sdkFolder, "system-images");
-      if (!sysImgFolder.exists()) sysImgFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if(!extrasFolder.exists()) extrasFolder.mkdir();
 
@@ -115,8 +100,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, 
-            URL_SYS_IMAGES, URL_SYS_IMAGES_WEAR, Platform.getName());
+        SDKUrlHolder downloadUrls = getDownloadUrls(URL_REPOSITORY, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
@@ -135,22 +119,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
-        
-        // system images
-        File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
-        File tmp = new File(sysImgFolder, "android-" + AndroidBuild.target_sdk);
-        if (!tmp.exists()) tmp.mkdir();
-        File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
-        if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
-        downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false);  
-
-        // wear system images
-        File downloadedSysImgWear = new File(tempFolder, downloadUrls.sysImgWearFilename);
-        tmp = new File(sysImgFolder, "android-" + AndroidBuild.target_sdk);
-        if (!tmp.exists()) tmp.mkdir();
-        File sysImgWearFinalFolder = new File(tmp, downloadUrls.sysImgWearTag);
-        if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir();
-        downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);
         
         // usb driver
         if (Platform.isWindows()) {
@@ -235,9 +203,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       AndroidMode.extractFolder(saveTo, unpackTo, setExec);
     }
 
-    private SDKUrlHolder getDownloadUrls(String repositoryUrl, 
-        String repositorySysImgUrlString, String repositorySysImgWearUrlString, 
-        String requiredHostOs) 
+    private SDKUrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) 
         throws ParserConfigurationException, IOException, SAXException {
       SDKUrlHolder urlHolder = new SDKUrlHolder();
 
@@ -311,55 +277,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           break;
         }
       }
-      
-      // system image
-      Document docSysImg = db.parse(new URL(repositorySysImgUrlString).openStream());
-      NodeList sysImgList = docSysImg.getElementsByTagName("sdk:system-image");
-      for (int i = 0; i < sysImgList.getLength(); i++) {
-        Node img = sysImgList.item(i);
-        NodeList level = ((Element) img).getElementsByTagName("sdk:api-level");
-        NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
-        NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
-        // Only considering nodes without a codename, which correspond to the platform
-        // pre-releases.        
-        if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
-            desc.item(0).getTextContent().equals(SYSTEM_IMAGE) && 
-            codename.item(0) == null) {          
-          NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
-          urlHolder.sysImgTag = tag.item(0).getTextContent();          
-          archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
-          Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-          urlHolder.sysImgFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-          urlHolder.sysImgUrl = URL_SYS_IMAGES_FOLDER + urlHolder.sysImgFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
-          break;
-        }
-      }      
-
-      // wear system image
-      Document docSysImgWear = db.parse(new URL(repositorySysImgWearUrlString).openStream());
-      NodeList sysImgWearList = docSysImgWear.getElementsByTagName("sdk:system-image");
-      for (int i = 0; i < sysImgWearList.getLength(); i++) {
-        Node img = sysImgWearList.item(i);
-        NodeList level = ((Element) img).getElementsByTagName("sdk:api-level");
-        NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
-        NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
-        // Only considering nodes without a codename, which correspond to the platform
-        // pre-releases.        
-        if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
-            desc.item(0).getTextContent().equals(SYSTEM_IMAGE_WEAR) && 
-            codename.item(0) == null) {          
-          NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
-          urlHolder.sysImgWearTag = tag.item(0).getTextContent();          
-          archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
-          Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-          urlHolder.sysImgWearFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-          urlHolder.sysImgWearUrl = URL_SYS_IMAGES_WEAR_FOLDER + urlHolder.sysImgWearFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
-          break;
-        }
-      }        
-      
       
       return urlHolder;
     }
