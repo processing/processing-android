@@ -260,7 +260,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   }
 
   public SysImageDownloader(Frame editor, AndroidMode mode, boolean wear) {
-    super(editor, "SDK download", true);
+    super(editor, "Emulator download", true);
     this.editor = editor;
     this.mode = mode;
     this.wear = wear;
