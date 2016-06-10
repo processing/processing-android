@@ -59,10 +59,12 @@ public class AVD {
   static private final String AVD_TARGET_SECONDARY =
     "Please re-read the installation instructions for Processing<br>" +
     "found at http://android.processing.org and try again.";
-
-  static final String DEFAULT_SKIN = "WVGA800";
+  
   static final String DEFAULT_SDCARD_SIZE = "64M";
-
+  
+  static final String DEFAULT_SKIN = "WVGA800";
+  static final String WEAR_SKIN = "AndroidWearSquare";
+  
   /** Name of this avd. */
   protected String name;
 
@@ -74,30 +76,37 @@ public class AVD {
 //  static ArrayList<String> skinList;
 
   private Map<String, String> preferredAbi = new HashMap<>(30);
-  private static List<String> abiList = new ArrayList<>();
+  private List<String> abiList = new ArrayList<>();
+  private String skin;
 
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
     new AVD("Processing-0" + Base.getRevision(),
-            AndroidBuild.target_platform);
+            AndroidBuild.target_platform, "default", DEFAULT_SKIN);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
-  public AVD(final String name, final String target) {
+  /** Default virtual wear device used by Processing. */
+  static public final AVD wearAVD =
+    new AVD("Wear-Processing-0" + Base.getRevision(),
+            AndroidBuild.target_platform, "android-wear", WEAR_SKIN);  
+  
+  public AVD(final String name, final String target, 
+      final String tag, final String skin) {
     this.name = name;
     this.target = target;
-
-    initializeAbiList();
+    this.skin = skin;
+    initializeAbiList(tag);
   }
 
-  private void initializeAbiList() {
+  private void initializeAbiList(String tag) {
     if (abiList.size() == 0) {
       // The order in this list determines the preference of one abi over the other
-      abiList.add("default/x86");
-      abiList.add("google_apis/x86");
-      abiList.add("default/x86_64");            
-      abiList.add("google_apis/x86_64");
-      abiList.add("default/armeabi-v7a");
-      abiList.add("google_apis/armeabi-v7a");      
+      abiList.add(tag + "/x86");
+      abiList.add(tag + "/x86_64");
+      abiList.add(tag + "/armeabi-v7a");
+//    abiList.add("google_apis/x86");      
+//    abiList.add("google_apis/x86_64");      
+//    abiList.add("google_apis/armeabi-v7a");      
     }
   }
 
@@ -241,10 +250,13 @@ public class AVD {
       "-n", name,
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
-      "-s", DEFAULT_SKIN,
+      "-s", skin,
       "--abi", preferredAbi.get(AndroidBuild.target_sdk)
     };
         
+    //sdk/tools/android create avd -n "Wear-Processing-0254" -t android-23 -c 64M -s AndroidWearSquare --abi android-wear/x86
+    
+    
     // Set the list to null so that exists() will check again
     avdList = null;
 
@@ -273,22 +285,32 @@ public class AVD {
 
   static public boolean ensureProperAVD(final AndroidSDK sdk) {
     try {
-      if (defaultAVD.exists(sdk)) {
-//        System.out.println("the avd exists");
-        return true;
+      
+      if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+        if (wearAVD.exists(sdk)) {
+          return true;
+        }
+        if (wearAVD.badness()) {
+          Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+          return false;
+        }
+        if (wearAVD.create(sdk)) {
+          return true;
+        }    
+      } else {
+        if (defaultAVD.exists(sdk)) {
+          return true;
+        }
+        if (defaultAVD.badness()) {
+          Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+          return false;
+        }
+        if (defaultAVD.create(sdk)) {
+          return true;
+        }
       }
-//      if (badList.contains(defaultAVD)) {
-      if (defaultAVD.badness()) {
-//        Base.showWarning("Android Error", AVD_CANNOT_LOAD, null);
-        Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
-        return false;
-      }
-      if (defaultAVD.create(sdk)) {
-//        System.out.println("the avd was created");
-        return true;
-      }
+      
     } catch (final Exception e) {
-//      Base.showWarning("Android Error", AVD_CREATE_ERROR, e);
       Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
                                  String.format(AVD_CREATE_SECONDARY,
                                                AndroidBuild.target_sdk), null);

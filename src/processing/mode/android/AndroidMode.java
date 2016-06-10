@@ -39,8 +39,6 @@ import processing.mode.java.JavaMode;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-//import java.nio.file.Path;
-//import java.nio.file.Paths;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -265,7 +263,7 @@ public class AndroidMode extends JavaMode {
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
-
+        
     boolean avd = AVD.ensureProperAVD(sdk);
     if (!avd) {
       SketchException se =
@@ -276,7 +274,7 @@ public class AndroidMode extends JavaMode {
 
     listener.statusNotice("Running sketch on emulator...");
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getEmulator());
+    runner.launch(Devices.getInstance().getEmulator(build.usesGPU()));
   }
 
 

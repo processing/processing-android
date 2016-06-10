@@ -72,6 +72,8 @@ class AndroidBuild extends JavaBuild {
   static public int appComponent = FRAGMENT;
   static boolean forceNewManifest = false;
   
+  private String renderer = "";
+  
   private final AndroidSDK sdk;
   private final File coreZipFile;
 
@@ -200,7 +202,8 @@ class AndroidBuild extends JavaBuild {
 
       // TODO: it would be great if we can just get the renderer from the SurfaceInfo
       // object returned by initSketchSize()
-      writeMainClass(srcFolder, preproc.getRenderer(sketch.getMainProgram()));
+      renderer = preproc.getRenderer(sketch.getMainProgram());
+      writeMainClass(srcFolder, renderer);
 
       final File libsFolder = mkdirs(tmpFolder, "libs");
       final File assetsFolder = mkdirs(tmpFolder, "assets");
@@ -405,6 +408,11 @@ class AndroidBuild extends JavaBuild {
       throw new IOException("Cannot create temp dir " + tmp + " to build android sketch");
     }
     return tmp;
+  }
+  
+  
+  protected boolean usesGPU() {
+    return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
   }
 
 
@@ -1150,7 +1158,7 @@ class AndroidBuild extends JavaBuild {
     } else if (appComponent == WALLPAPER) {
       writeWallpaperService(srcDirectory);
     } else if (appComponent == WATCHFACE) {
-      if (renderer != null && (renderer.equals("P2D") || renderer.equals("P3D"))) {
+      if (usesGPU()) {
         writeWatchFaceGLESService(srcDirectory);  
       } else {
         writeWatchFaceCanvasService(srcDirectory);  

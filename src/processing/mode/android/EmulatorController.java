@@ -57,7 +57,7 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch() throws IOException {
+  synchronized public void launch(boolean gpu) throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
       throw new IllegalStateException(illegal);
@@ -70,14 +70,24 @@ class EmulatorController {
     }
 
     // See http://developer.android.com/guide/developing/tools/emulator.html
+    String avdName;
+    if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+      avdName = AVD.wearAVD.name;
+    } else {
+      avdName = AVD.defaultAVD.name;
+    }
+    
+    String gpuFlag = gpu ? "on" : "off";
     final String[] cmd = new String[] {
       "emulator",
-      "-avd", AVD.defaultAVD.name,
+      "-avd", avdName,
       "-port", portString,
 //      "-no-boot-anim",  // does this do anything?
       // http://code.google.com/p/processing/issues/detail?id=1059
-//      "-gpu", "on"  // enable OpenGL
+      "-gpu", gpuFlag  // enable OpenGL
     };
+    
+    
     //System.err.println("EmulatorController: Launching emulator");
     if (Base.DEBUG) {
       System.out.println(processing.core.PApplet.join(cmd, " "));

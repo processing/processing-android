@@ -111,10 +111,10 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator() {
+  public Future<Device> getEmulator(final boolean gpu) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator();
+        return blockingGetEmulator(gpu);
       }
     };
     final FutureTask<Device> task =
@@ -124,7 +124,7 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator() {
+  private final Device blockingGetEmulator(final boolean gpu) {
 //    System.out.println("going looking for emulator");
     Device emu = find(true);
     if (emu != null) {
@@ -138,7 +138,7 @@ class Devices {
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
 //        System.out.println("not running, gonna launch");
-        emuController.launch(); // this blocks until emulator boots
+        emuController.launch(gpu); // this blocks until emulator boots
 //        System.out.println("not just gonna, we've done the launch");
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");

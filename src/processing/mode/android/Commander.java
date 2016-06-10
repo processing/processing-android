@@ -219,7 +219,7 @@ public class Commander implements RunnerListener {
         if (task == RUN) {
           AndroidRunner runner = new AndroidRunner(build, this);
           runner.launch(runArg_EMULATOR.equals(device) ?
-              Devices.getInstance().getEmulator() :
+              Devices.getInstance().getEmulator(build.usesGPU()) :
               Devices.getInstance().getHardware());
         }
 
