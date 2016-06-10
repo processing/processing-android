@@ -55,7 +55,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String URL_SYS_IMAGES = "https://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml";
   private static final String URL_SYS_IMAGES_FOLDER = "http://dl-ssl.google.com/android/repository/sys-img/android/";
   private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
-  private static final String URL_SYS_IMAGES_WEAR_FOLDER = "https://dl-ssl.google.com/android/repository/sys-img/android-wear";
+  private static final String URL_SYS_IMAGES_WEAR_FOLDER = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
   private static final String SYSTEM_IMAGE = "Intel x86 Atom System Image";  
   private static final String SYSTEM_IMAGE_WEAR = "Android Wear Intel x86 Atom System Image";
   
@@ -150,7 +150,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         if (!tmp.exists()) tmp.mkdir();
         File sysImgWearFinalFolder = new File(tmp, downloadUrls.sysImgWearTag);
         if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir();
-        downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);
+        downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);
         
         // usb driver
         if (Platform.isWindows()) {
@@ -336,7 +336,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
       }      
 
-      // system image
+      // wear system image
       Document docSysImgWear = db.parse(new URL(repositorySysImgWearUrlString).openStream());
       NodeList sysImgWearList = docSysImgWear.getElementsByTagName("sdk:system-image");
       for (int i = 0; i < sysImgWearList.getLength(); i++) {
@@ -354,7 +354,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
           Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
           urlHolder.sysImgWearFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-          urlHolder.sysImgWearUrl = URL_SYS_IMAGES_WEAR_FOLDER + urlHolder.sysImgFilename;
+          urlHolder.sysImgWearUrl = URL_SYS_IMAGES_WEAR_FOLDER + urlHolder.sysImgWearFilename;
           urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
           break;
         }
