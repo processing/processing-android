@@ -23,14 +23,14 @@
 package processing.android;
 
 import android.service.wallpaper.WallpaperService;
-import android.util.DisplayMetrics;
+//import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
 import android.util.Log;
 import android.os.Build;
-import android.view.WindowManager;
+//import android.view.WindowManager;
 import android.view.Display;
 import android.graphics.Point;
 
@@ -38,7 +38,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
 
   private Point size;
-  private DisplayMetrics metrics;
+//  private DisplayMetrics metrics;
   private PEngine engine;
 
   public PWallpaper() {
@@ -116,6 +116,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       if (sketch != null) {
         sketch.initSurface(PWallpaper.this, getSurfaceHolder());
         sketch.startSurface();
+        sketch.preview = isPreview();
         // By default we don't get touch events, so enable them.
         setTouchEventsEnabled(true);
       }

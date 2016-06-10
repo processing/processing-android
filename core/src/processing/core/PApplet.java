@@ -302,6 +302,11 @@ public class PApplet extends Object implements PConstants {
   public float offsetY = 0;
 
   /**
+   * Indicates if the wallpaper is in preview mode.
+   */
+  public boolean preview = false;
+
+  /**
    * true if the applet is online.
    * <P>
    * This can be used to test how the applet should behave
