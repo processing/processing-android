@@ -69,8 +69,8 @@ class AndroidBuild extends JavaBuild {
   static public final String target_sdk      = "23";  // Marshmallow (6.0)
   static public final String target_platform = "android-" + target_sdk;
 
-  static public int appComponent = FRAGMENT;
-  static boolean forceNewManifest = false;
+  private int appComponent = FRAGMENT;
+  static boolean forceNewManifest = false; // TODO: this is just temporary, need to remove
   
   private String renderer = "";
   
@@ -88,30 +88,22 @@ class AndroidBuild extends JavaBuild {
   private File buildFile;
 
 
-  public AndroidBuild(final Sketch sketch, final AndroidMode mode) {
+  public AndroidBuild(final Sketch sketch, final AndroidMode mode, final int appComp) {
     super(sketch);
 
+    appComponent = appComp;
     sdk = mode.getSDK();
     coreZipFile = mode.getCoreZipLocation();
   }
-
-  public static void setPublishOption(int opt, Sketch sketch) {
-    if (appComponent != opt) {
-      appComponent = opt;
-      forceNewManifest = true;
-    } else {
-      forceNewManifest = false;
-    }
-  }
   
-  public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
+//  public static void setSdkTarget(AndroidSDK.SDKTarget target, Sketch sketch) {
 //    sdkName = target.name;
 //    sdkVersion = Integer.toString(target.version);
 //    sdkTarget = "android-" + sdkVersion;
 //
 //    Preferences.set("android.sdk.version", target_);
 //    Preferences.set("android.sdk.name", target.name);
-  }
+//  }
 
   /**
    * Build into temporary folders (needed for the Windows 8.3 bugs in the Android SDK).
@@ -173,7 +165,7 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
-    manifest = new Manifest(sketch);
+    manifest = new Manifest(sketch, appComponent);
     manifest.setSdkTarget(target_sdk);
     forceNewManifest = false;
     
@@ -217,7 +209,7 @@ class AndroidBuild extends JavaBuild {
       copyLibraries(libsFolder, assetsFolder);
       copyCodeFolder(libsFolder);
       
-      if (appComponent == WATCHFACE) {
+      if (getAppComponent() == WATCHFACE) {
         // TODO: temporary hack until I find a better way to include the wearable aar
         // package included in the SDK:
         
@@ -226,7 +218,7 @@ class AndroidBuild extends JavaBuild {
         Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
       }
 
-      if (appComponent == CARDBOARD) {
+      if (getAppComponent() == CARDBOARD) {
         // TODO: temporary hack until I find a better way to include the cardboard aar
         // packages included in the cardboard SDK:
         
@@ -410,6 +402,23 @@ class AndroidBuild extends JavaBuild {
     return tmp;
   }
   
+  public boolean isWear() {
+    return appComponent == WATCHFACE;
+  }  
+  
+  
+  public int getAppComponent() {
+    return appComponent;
+  }
+  
+  public void setAppComponent(int opt) {
+    if (appComponent != opt) {
+      appComponent = opt;
+      forceNewManifest = true;
+    } else {
+      forceNewManifest = false;
+    }
+  }  
   
   protected boolean usesGPU() {
     return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
@@ -965,7 +974,8 @@ class AndroidBuild extends JavaBuild {
     File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
     writeResLayoutMainActivity(mainActivityLayoutFile);
 
-    if (appComponent == WALLPAPER) {
+    int comp = getAppComponent();
+    if (comp == WALLPAPER) {
       File xmlFolder = mkdirs(resFolder, "xml");
       File mainServiceWallpaperFile = new File(xmlFolder, "wallpaper.xml");
       writeResXMLWallpaper(mainServiceWallpaperFile);
@@ -1078,7 +1088,7 @@ class AndroidBuild extends JavaBuild {
     }
 
     
-    if (appComponent == WATCHFACE) {
+    if (comp == WATCHFACE) {
       File xmlFolder = mkdirs(resFolder, "xml");
       File mainServiceWatchFaceFile = new File(xmlFolder, "watch_face.xml");
       writeResXMLWatchFace(mainServiceWatchFaceFile);      
@@ -1153,17 +1163,18 @@ class AndroidBuild extends JavaBuild {
 
 
   private void writeMainClass(final File srcDirectory, String renderer) {
-    if (appComponent == FRAGMENT) {
+    int comp = getAppComponent();
+    if (comp == FRAGMENT) {
       writeFragmentActivity(srcDirectory);
-    } else if (appComponent == WALLPAPER) {
+    } else if (comp == WALLPAPER) {
       writeWallpaperService(srcDirectory);
-    } else if (appComponent == WATCHFACE) {
+    } else if (comp == WATCHFACE) {
       if (usesGPU()) {
         writeWatchFaceGLESService(srcDirectory);  
       } else {
         writeWatchFaceCanvasService(srcDirectory);  
       }      
-    } else if (appComponent == CARDBOARD) {
+    } else if (comp == CARDBOARD) {
       writeCardboardActivity(srcDirectory);
     }
   }

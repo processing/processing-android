@@ -260,12 +260,13 @@ public class AndroidMode extends JavaMode {
       RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this);
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
+
         
-    boolean avd = AVD.ensureProperAVD(editor, this, sdk);
+    boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
       SketchException se =
         new SketchException("Could not create a virtual device for the emulator.");
@@ -275,11 +276,13 @@ public class AndroidMode extends JavaMode {
 
     listener.statusNotice("Running sketch on emulator...");
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getEmulator(build.usesGPU()));
+    runner.launch(Devices.getInstance().getEmulator(build.isWear(), build.usesGPU()), 
+        build.isWear());
   }
 
 
-  public void handleRunDevice(Sketch sketch, RunnerListener listener)
+  public void handleRunDevice(Sketch sketch, AndroidEditor editor, 
+      RunnerListener listener)
     throws SketchException, IOException {    
     
     final Devices devices = Devices.getInstance();
@@ -296,20 +299,20 @@ public class AndroidMode extends JavaMode {
     
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this);
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
 
     listener.statusNotice("Running sketch on device...");
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getHardware());
+    runner.launch(Devices.getInstance().getHardware(), build.isWear());
     
-    showPostBuildMessage();
+    showPostBuildMessage(build.getAppComponent());
   }
 
-  public void showSelectComponentMessage() {
-    if (showBluetoothDebugMessage && AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+  public void showSelectComponentMessage(int appComp) {
+    if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
       Messages.showMessage("Is Debugging over Bluetooth enabled?",
                            "Processing will access the wearable through the handheld paired to it.\n" +
                            "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
@@ -318,8 +321,8 @@ public class AndroidMode extends JavaMode {
     }            
   }
   
-  public void showPostBuildMessage() {
-    if (showWallpaperSelectMessage && AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
+  public void showPostBuildMessage(int appComp) {
+    if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
       Messages.showMessage("Now select the wallpaper...",
                            "Processing built and installed your sketch\n" +
                            "as a live wallpaper on the selected device.\n" +

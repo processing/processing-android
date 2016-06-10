@@ -59,7 +59,7 @@ public class AndroidRunner implements DeviceListener {
   }
 
 
-  public void launch(Future<Device> deviceFuture) {
+  public void launch(Future<Device> deviceFuture, boolean wear) {
 //    try {
 //      runSketchOnDevice(Devices.getInstance().getEmulator(), "debug", AndroidEditor.this);
 //    } catch (final MonitorCanceled ok) {
@@ -78,7 +78,7 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     
-    if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE && !device.hasFeature("watch")) {
+    if (wear && !device.hasFeature("watch")) {
       Messages.showWarning("Device is not a watch!", 
                            "Processing built your sketch as a watch face, but\n" +
                            "you selected a non-watch device to install it on.\n" +

@@ -52,6 +52,8 @@ public class Manifest {
 
 //  private Editor editor;
   private Sketch sketch;
+  
+  private int appComp;
 
   // entries we care about from the manifest file
 //  private String packageName;
@@ -65,8 +67,9 @@ public class Manifest {
 //    this.sketch = editor.getSketch();
 //    load();
 //  }
-  public Manifest(Sketch sketch) {
+  public Manifest(Sketch sketch, int appComp) {
     this.sketch = sketch;
+    this.appComp = appComp;
     load();
   }
 
@@ -149,7 +152,7 @@ public class Manifest {
 */
 
   // TODO: needs to be converted into a template file...
-  private void writeBlankManifest(final File file) {
+  private void writeBlankManifest(final File file, final int appComp) {
     char newLine = '\n';
         
     final PrintWriter writer = PApplet.createWriter(file);
@@ -175,17 +178,17 @@ public class Manifest {
     // for now including this... we're wiring to a particular SDK version anyway...
     
 //    writer.println("  <uses-sdk android:targetSdkVersion=\"" + AndroidBuild.target_api_level + "\" />" + newLine);
-    if (AndroidBuild.appComponent == AndroidBuild.FRAGMENT) {
+    if (appComp == AndroidBuild.FRAGMENT) {
       writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_fragment + "\" />" + newLine);
-    } else if (AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
+    } else if (appComp == AndroidBuild.WALLPAPER) {
       writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_wallpaper + "\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />" + newLine);
-    } else if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+    } else if (appComp == AndroidBuild.WATCHFACE) {
       writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_watchface + "\" />" + newLine);
       writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />" + newLine);
       writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />" + newLine);
-    } else if (AndroidBuild.appComponent == AndroidBuild.CARDBOARD) {
+    } else if (appComp == AndroidBuild.CARDBOARD) {
       writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_cardboard + "\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />" + newLine);
       writer.println("  <uses-permission android:name=\"android.permission.NFC\" />" + newLine);
@@ -199,12 +202,12 @@ public class Manifest {
     
     writer.println("  <application android:label=\"\" " + newLine);  // insert pretty name
     writer.println("               android:icon=\"@drawable/icon\" " + newLine);
-    if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+    if (appComp == AndroidBuild.WATCHFACE) {
       writer.println("               android:supportsRtl=\"true\" " + newLine);
     }
     writer.println("               android:debuggable=\"true\">" + newLine);
 
-    if (AndroidBuild.appComponent == AndroidBuild.FRAGMENT) {
+    if (appComp == AndroidBuild.FRAGMENT) {
       // turns out label is not required for the activity, so nixing it
 //    writer.println("    <activity android:name=\"\"");  // insert class name prefixed w/ dot
 ////    writer.println("              android:label=\"@string/app_name\">");  // pretty name
@@ -221,7 +224,7 @@ public class Manifest {
       writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />" + newLine);
       writer.println("      </intent-filter>" + newLine);
       writer.println("    </activity>" + newLine); 
-    } else if (AndroidBuild.appComponent == AndroidBuild.WALLPAPER) {
+    } else if (appComp == AndroidBuild.WALLPAPER) {
       writer.println("    <service android:name=\".MainService\" " + newLine);
       writer.println("             android:label=\"\" " + newLine); // insert pretty name
       writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
@@ -231,7 +234,7 @@ public class Manifest {
       writer.println("    <meta-data android:name=\"android.service.wallpaper\" " + newLine);
       writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
       writer.println("  </service>" + newLine);  
-    } else if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+    } else if (appComp == AndroidBuild.WATCHFACE) {
       writer.println("<service android:name=\".MainService\" " + newLine);
       writer.println("         android:label=\"\" " + newLine); // insert pretty name
       writer.println("         android:permission=\"android.permission.BIND_WALLPAPER\"> " + newLine);
@@ -248,7 +251,7 @@ public class Manifest {
       writer.println("     <category android:name=\"com.google.android.wearable.watchface.category.WATCH_FACE\" /> " + newLine);
       writer.println("   </intent-filter> " + newLine);
       writer.println("</service> " + newLine);      
-    } else if (AndroidBuild.appComponent == AndroidBuild.CARDBOARD) {
+    } else if (appComp == AndroidBuild.CARDBOARD) {
       writer.println("<activity android:name=\".MainActivity\" " + newLine);
 //      writer.println("          android:label=\"\" " + newLine); // insert pretty name
       writer.println("          android:screenOrientation=\"landscape\" " + newLine);
@@ -294,8 +297,7 @@ public class Manifest {
         app.setString("android:label", className);
       }      
       
-      if (AndroidBuild.appComponent == AndroidBuild.WALLPAPER ||
-          AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+      if (appComp == AndroidBuild.WALLPAPER || appComp == AndroidBuild.WATCHFACE) {
         XML serv = app.getChild("service");
         label = serv.getString("android:label");
         if (label.length() == 0) {
@@ -356,7 +358,7 @@ public class Manifest {
     */
     
     
-      writeBlankManifest(manifestFile);
+      writeBlankManifest(manifestFile, appComp);
       try {
         xml = new XML(manifestFile);
       } catch (FileNotFoundException e) {

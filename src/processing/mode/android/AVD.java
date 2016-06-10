@@ -294,12 +294,18 @@ public class AVD {
     return false;
   }
 
-
+  static public String getPort(boolean wear) {
+    if (wear) {
+      return EmulatorController.WEAR_PORT;
+    } else {
+      return EmulatorController.DEFAULT_PORT;
+    }
+  }
 
   static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
-      final AndroidSDK sdk) {
+      final AndroidSDK sdk, boolean wear) {
     try {      
-      if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+      if (wear) {
         if (wearAVD.exists(sdk)) {
           return true;
         }

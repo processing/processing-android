@@ -53,11 +53,14 @@ public class Permissions extends JFrame {
 
 //  Editor editor;
   Sketch sketch;
+  
+  int appComp;
 
 
-  public Permissions(Sketch sketch) {
+  public Permissions(Sketch sketch, int appComp) {
   //public Permissions(Editor editor) {
     super("Android Permissions Selector");
+    this.appComp = appComp;
     this.sketch = sketch;
 //    this.editor = editor;
 
@@ -293,7 +296,7 @@ public class Permissions extends JFrame {
     setLocation((screen.width - windowSize.width) / 2,
                 (screen.height - windowSize.height) / 2);
 
-    Manifest mf = new Manifest(sketch);
+    Manifest mf = new Manifest(sketch, appComp);
     setSelections(mf.getPermissions());
 
     // show the window and get to work
@@ -333,7 +336,7 @@ public class Permissions extends JFrame {
 
   protected void saveSelections() {
     String[] sel = getSelections();
-    Manifest mf = new Manifest(sketch);
+    Manifest mf = new Manifest(sketch, appComp);
     mf.setPermissions(sel);
   }
 

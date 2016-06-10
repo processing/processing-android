@@ -32,6 +32,9 @@ import processing.core.PApplet;
 
 
 class EmulatorController {
+  public final static String DEFAULT_PORT = "5566";
+  public final static String WEAR_PORT = "5576";
+  
   public static enum State {
     NOT_RUNNING, WAITING_FOR_BOOT, RUNNING
   }
@@ -44,7 +47,7 @@ class EmulatorController {
   }
 
   
-  private void setState(final State state) {
+  public void setState(final State state) {
     if (processing.app.Base.DEBUG) {
       //System.out.println("Emulator state: " + state);
       new Exception("setState(" + state + ") called").printStackTrace(System.out);
@@ -57,21 +60,30 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(boolean gpu) throws IOException {
+  synchronized public void launch(boolean wear, boolean gpu) throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
       throw new IllegalStateException(illegal);
     }
 
-    String portString = Preferences.get("android.emulator.port");
-    if (portString == null) {
-      portString = "5566";
-      Preferences.set("android.emulator.port", portString);
+    String portString = null;
+    if (wear) {
+      portString = Preferences.get("android.emulator.wear.port");
+      if (portString == null) {
+        portString = WEAR_PORT;
+        Preferences.set("android.emulator.wear.port", portString);
+      }
+    } else {
+      portString = Preferences.get("android.emulator.port");
+      if (portString == null) {
+        portString = DEFAULT_PORT;
+        Preferences.set("android.emulator.port", portString);
+      }
     }
 
     // See http://developer.android.com/guide/developing/tools/emulator.html
     String avdName;
-    if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+    if (wear) {
       avdName = AVD.wearAVD.name;
     } else {
       avdName = AVD.defaultAVD.name;
@@ -198,9 +210,14 @@ class EmulatorController {
   
   // whoever called them "design patterns" certainly wasn't a f*king designer.
   
-  public static EmulatorController getInstance() {
-    return INSTANCE;
+  public static EmulatorController getInstance(boolean wear) {
+    if (wear) {
+      return INSTANCE_WEAR;
+    } else {
+      return INSTANCE;
+    }
   }
 
   private static final EmulatorController INSTANCE = new EmulatorController();
+  private static final EmulatorController INSTANCE_WEAR = new EmulatorController();
 }

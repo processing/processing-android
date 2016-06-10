@@ -49,6 +49,8 @@ import java.util.TimerTask;
 
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
+  private int appComponent = AndroidBuild.FRAGMENT;
+  
   private AndroidMode androidMode;
 
   private java.util.Timer updateDevicesTimer;
@@ -78,7 +80,7 @@ public class AndroidEditor extends JavaEditor {
     public void run() {
       if (androidMode == null || androidMode.getSDK() == null) return;
       
-      if (AndroidBuild.appComponent == AndroidBuild.WATCHFACE) {
+      if (appComponent == AndroidBuild.WATCHFACE) {
         Devices.enableBlueToothDebugging();
       }
 
@@ -213,7 +215,7 @@ public class AndroidEditor extends JavaEditor {
     item = new JMenuItem("Sketch Permissions");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        new Permissions(sketch);
+        new Permissions(sketch, appComponent);
       }
     });
     menu.add(item);
@@ -228,45 +230,45 @@ public class AndroidEditor extends JavaEditor {
     fragmentItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.FRAGMENT, sketch);
+        appComponent = AndroidBuild.FRAGMENT;
         fragmentItem.setState(true);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         cardboardItem.setSelected(false);
-        androidMode.showSelectComponentMessage();
+        androidMode.showSelectComponentMessage(AndroidBuild.FRAGMENT);
       }
     });
     wallpaperItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.WALLPAPER, sketch);
+        appComponent = AndroidBuild.WALLPAPER;
         fragmentItem.setState(false);
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
         cardboardItem.setSelected(false);
-        androidMode.showSelectComponentMessage();
+        androidMode.showSelectComponentMessage(AndroidBuild.WALLPAPER);
       }
     });
     watchfaceItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.WATCHFACE, sketch);
+        appComponent = AndroidBuild.WATCHFACE;
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
         cardboardItem.setSelected(false);
-        androidMode.showSelectComponentMessage();
+        androidMode.showSelectComponentMessage(AndroidBuild.WATCHFACE);
       }
     });
     cardboardItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        AndroidBuild.setPublishOption(AndroidBuild.CARDBOARD, sketch);
+        appComponent = AndroidBuild.CARDBOARD;
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         cardboardItem.setSelected(true);
-        androidMode.showSelectComponentMessage();
+        androidMode.showSelectComponentMessage(AndroidBuild.CARDBOARD);
       }
     });    
     
@@ -614,7 +616,7 @@ public class AndroidEditor extends JavaEditor {
           startIndeterminate();
           prepareRun();
           try {
-            androidMode.handleRunDevice(sketch, AndroidEditor.this);
+            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
           } catch (SketchException e) {
             statusError(e);
           } catch (IOException e) {
@@ -647,7 +649,7 @@ public class AndroidEditor extends JavaEditor {
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
-          AndroidBuild build = new AndroidBuild(sketch, androidMode);
+          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
@@ -694,7 +696,7 @@ public class AndroidEditor extends JavaEditor {
       public void run() {
         startIndeterminate();
         statusNotice("Exporting signed package...");
-        AndroidBuild build = new AndroidBuild(sketch, androidMode);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
@@ -715,5 +717,9 @@ public class AndroidEditor extends JavaEditor {
         stopIndeterminate();
       }
     }.start();
+  }
+  
+  public int getAppComponent() {
+    return appComponent;
   }
 }

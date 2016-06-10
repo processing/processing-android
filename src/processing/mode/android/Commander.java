@@ -50,7 +50,12 @@ public class Commander implements RunnerListener {
   static final String runArg_EMULATOR = "e";
   static final String targetArg = "--target";
   static final String targetArg_DEBUG = "debug";
-  static final String targetArg_RELEASE = "release";
+  static final String targetArg_RELEASE = "release";  
+  static final String componentArg = "--component";
+  static final String targetArg_FRAGMENT = "fragment";
+  static final String targetArg_WALLPAPER = "wallpaper";
+  static final String targetArg_WATCHFACE = "watchface";
+  static final String targetArg_CARDBOARD = "cardboard";  
   static final String sketchArg = "--sketch=";
   static final String forceArg = "--force";
   static final String outputArg = "--output=";
@@ -75,6 +80,8 @@ public class Commander implements RunnerListener {
 
   private String outputPath = null;
   private File outputFolder = null;
+  
+  private int appComponent = AndroidBuild.FRAGMENT;
 
   private boolean force = false; // replace that no good output folder
   private String device = runArg_DEVICE;
@@ -118,6 +125,17 @@ public class Commander implements RunnerListener {
         // mode already set to HELP
       } else if (arg.startsWith(targetArg)) {
         target = extractValue(arg, targetArg, targetArg_DEBUG);
+      } else if (arg.startsWith(componentArg)) {
+        String compStr = extractValue(arg, targetArg, targetArg_FRAGMENT);
+        if (compStr.equals(targetArg_FRAGMENT)) {
+          appComponent = AndroidBuild.FRAGMENT;
+        } else if (compStr.equals(targetArg_WALLPAPER)) {
+          appComponent = AndroidBuild.WALLPAPER;
+        } else if (compStr.equals(targetArg_WATCHFACE)) {
+          appComponent = AndroidBuild.WATCHFACE;
+        } else if (compStr.equals(targetArg_CARDBOARD)) {
+          appComponent = AndroidBuild.CARDBOARD;
+        }
       } else if (arg.equals(buildArg)) {
         task = BUILD;
       } else if (arg.startsWith(runArg)) {
@@ -190,14 +208,15 @@ public class Commander implements RunnerListener {
   private void execute() {
     if (processing.app.Base.DEBUG) {
       systemOut.println("Build status: ");
-      systemOut.println("Sketch:   " + sketchPath);
-      systemOut.println("Output:   " + outputPath);
-      systemOut.println("Force:    " + force);
-      systemOut.println("Target:   " + target);
+      systemOut.println("Sketch:    " + sketchPath);
+      systemOut.println("Output:    " + outputPath);
+      systemOut.println("Force:     " + force);
+      systemOut.println("Target:    " + target);
+      systemOut.println("Component: " + appComponent);
       systemOut.println("==== Task ====");
-      systemOut.println("--build:  " + (task == BUILD));
-      systemOut.println("--run:    " + (task == RUN));
-      systemOut.println("--export: " + (task == EXPORT));
+      systemOut.println("--build:   " + (task == BUILD));
+      systemOut.println("--run:     " + (task == RUN));
+      systemOut.println("--export:  " + (task == EXPORT));
       systemOut.println();
     }
 
@@ -213,20 +232,20 @@ public class Commander implements RunnerListener {
     try {
       sketch = new Sketch(pdePath, androidMode);
       if (task == BUILD || task == RUN) {
-        AndroidBuild build = new AndroidBuild(sketch, androidMode);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         build.build(target);
 
         if (task == RUN) {
           AndroidRunner runner = new AndroidRunner(build, this);
           runner.launch(runArg_EMULATOR.equals(device) ?
-              Devices.getInstance().getEmulator(build.usesGPU()) :
-              Devices.getInstance().getHardware());
+              Devices.getInstance().getEmulator(build.isWear(), build.usesGPU()) :
+              Devices.getInstance().getHardware(), build.isWear());
         }
 
         success = true;
 
       } else if (task == EXPORT) {
-        AndroidBuild build = new AndroidBuild(sketch, androidMode);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         build.exportProject();
 
         success = true;

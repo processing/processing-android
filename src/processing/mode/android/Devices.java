@@ -111,34 +111,34 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator(final boolean gpu) {
+  public Future<Device> getEmulator(final boolean wear, final boolean gpu) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator(gpu);
+        return blockingGetEmulator(wear, gpu);
       }
     };
-    final FutureTask<Device> task =
-      new FutureTask<Device>(androidFinder);
+    final FutureTask<Device> task = new FutureTask<Device>(androidFinder);
     deviceLaunchThread.execute(task);
     return task;
   }
 
 
-  private final Device blockingGetEmulator(final boolean gpu) {
+  private final Device blockingGetEmulator(final boolean wear, final boolean gpu) {
 //    System.out.println("going looking for emulator");
-    Device emu = find(true);
+    String port = AVD.getPort(wear);
+    Device emu = find(true, port);
     if (emu != null) {
 //      System.out.println("found emu " + emu);
       return emu;
     }
 //    System.out.println("no emu found");
 
-    EmulatorController emuController = EmulatorController.getInstance();
+    EmulatorController emuController = EmulatorController.getInstance(wear);
 //    System.out.println("checking emulator state");
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
 //        System.out.println("not running, gonna launch");
-        emuController.launch(gpu); // this blocks until emulator boots
+        emuController.launch(wear, gpu); // this blocks until emulator boots
 //        System.out.println("not just gonna, we've done the launch");
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");
@@ -148,6 +148,7 @@ class Devices {
     } else {
       System.out.println("Emulator is " + emuController.getState() +
                          ", which is not expected.");
+
     }
 //    System.out.println("and now we're out");
 
@@ -161,7 +162,7 @@ class Devices {
                            emuController.getState() + ")");
         return null;
       }
-      emu = find(true);
+      emu = find(true, port);
       if (emu != null) {
         //        System.err.println("AndroidEnvironment: returning " + emu.getId()
         //            + " from loop.");
@@ -178,10 +179,11 @@ class Devices {
   }
 
 
-  private Device find(final boolean wantEmulator) {
+  private Device find(final boolean wantEmulator, final String port) {
     refresh();
     synchronized (devices) {
       for (final Device device : devices.values()) {
+        if (port != null && device.getName().indexOf(port) == -1) continue;
         final boolean isEmulator = device.getId().contains("emulator");
         if ((isEmulator && wantEmulator) || (!isEmulator && !wantEmulator)) {
           return device;
@@ -229,7 +231,7 @@ class Devices {
   }
 
   private final Device blockingGetHardware() {
-    Device hardware = find(false);
+    Device hardware = find(false, null);
     if (hardware != null) {
       return hardware;
     }
@@ -239,7 +241,7 @@ class Devices {
       } catch (final InterruptedException e) {
         return null;
       }
-      hardware = find(false);
+      hardware = find(false, null);
       if (hardware != null) {
         return hardware;
       }
