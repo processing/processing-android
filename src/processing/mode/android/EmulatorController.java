@@ -74,10 +74,10 @@ class EmulatorController {
         Preferences.set("android.emulator.wear.port", portString);
       }
     } else {
-      portString = Preferences.get("android.emulator.port");
+      portString = Preferences.get("android.emulator.default.port");
       if (portString == null) {
         portString = DEFAULT_PORT;
-        Preferences.set("android.emulator.port", portString);
+        Preferences.set("android.emulator.default.port", portString);
       }
     }
 
