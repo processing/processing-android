@@ -260,7 +260,8 @@ public class AndroidMode extends JavaMode {
       RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
+    AndroidBuild build = new AndroidBuild(sketch, this, 
+        editor.getAppComponent(), true);
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -299,7 +300,8 @@ public class AndroidMode extends JavaMode {
     
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
+    AndroidBuild build = new AndroidBuild(sketch, this, 
+        editor.getAppComponent(), false);
 
     listener.statusNotice("Building Android project...");
     build.build("debug");

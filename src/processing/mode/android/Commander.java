@@ -228,16 +228,17 @@ public class Commander implements RunnerListener {
     checkOrQuit(outputFolder.mkdirs(), "Could not create the output folder.", false);
 
     boolean success = false;
-
+    
     try {
+      boolean runOnEmu = runArg_EMULATOR.equals(device);
       sketch = new Sketch(pdePath, androidMode);
       if (task == BUILD || task == RUN) {
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, runOnEmu);
         build.build(target);
 
         if (task == RUN) {
           AndroidRunner runner = new AndroidRunner(build, this);
-          runner.launch(runArg_EMULATOR.equals(device) ?
+          runner.launch(runOnEmu ?
               Devices.getInstance().getEmulator(build.isWear(), build.usesGPU()) :
               Devices.getInstance().getHardware(), build.isWear());
         }
@@ -245,7 +246,7 @@ public class Commander implements RunnerListener {
         success = true;
 
       } else if (task == EXPORT) {
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
         build.exportProject();
 
         success = true;

@@ -69,6 +69,7 @@ class AndroidBuild extends JavaBuild {
   static public final String target_sdk      = "23";  // Marshmallow (6.0)
   static public final String target_platform = "android-" + target_sdk;
 
+  private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
   static boolean forceNewManifest = false; // TODO: this is just temporary, need to remove
   
@@ -88,9 +89,11 @@ class AndroidBuild extends JavaBuild {
   private File buildFile;
 
 
-  public AndroidBuild(final Sketch sketch, final AndroidMode mode, final int appComp) {
+  public AndroidBuild(final Sketch sketch, final AndroidMode mode, 
+      final int appComp, final boolean emu) {
     super(sketch);
 
+    runOnEmulator = emu;
     appComponent = appComp;
     sdk = mode.getSDK();
     coreZipFile = mode.getCoreZipLocation();

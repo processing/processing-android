@@ -649,7 +649,7 @@ public class AndroidEditor extends JavaEditor {
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
-          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
+          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
@@ -696,7 +696,7 @@ public class AndroidEditor extends JavaEditor {
       public void run() {
         startIndeterminate();
         statusNotice("Exporting signed package...");
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
