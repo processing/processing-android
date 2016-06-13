@@ -464,7 +464,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("    <uses-permission android:name=\"android.permission.WAKE_LOCK\"/>");
     writer.println("    <application");
     writer.println("        android:allowBackup=\"true\"");
-    writer.println("        android:icon=\"@mipmap/drawable\"");
+    writer.println("        android:icon=\"@drawable/icon\"");
     writer.println("        android:label=\"" + className + "\"");
     writer.println("        android:supportsRtl=\"true\"");
     writer.println("        android:theme=\"@android:style/Theme.Translucent.NoTitleBar\"");
@@ -492,10 +492,10 @@ class AndroidBuild extends JavaBuild {
     writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
     writer.println("    android:layout_width=\"match_parent\"");
     writer.println("    android:layout_height=\"match_parent\"");
-    writer.println("    android:paddingBottom=\"@dimen/activity_vertical_margin\"");
-    writer.println("    android:paddingLeft=\"@dimen/activity_horizontal_margin\"");
-    writer.println("    android:paddingRight=\"@dimen/activity_horizontal_margin\"");
-    writer.println("    android:paddingTop=\"@dimen/activity_vertical_margin\"");
+    writer.println("    android:paddingBottom=\"16dp\"");
+    writer.println("    android:paddingLeft=\"16dp\"");
+    writer.println("    android:paddingRight=\"16dp\"");
+    writer.println("    android:paddingTop=\"16dp\"");
     writer.println("    tools:context=\"" + getPackageName() + ".HandheldActivity\">");
     writer.println("</RelativeLayout>");
     writer.flush();
