@@ -317,6 +317,7 @@ public class AndroidMode extends JavaMode {
     if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
       Messages.showMessage("Is Debugging over Bluetooth enabled?",
                            "Processing will access the wearable through the handheld paired to it.\n" +
+                           "Your watch won't show up the device list, select the paired handheld.\n" +
                            "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
                            "http://developer.android.com/training/wearables/apps/bt-debugging.html");   
       showBluetoothDebugMessage = false;

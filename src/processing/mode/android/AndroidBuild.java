@@ -27,7 +27,6 @@ import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 
-import antlr.Utils;
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
@@ -389,9 +388,9 @@ class AndroidBuild extends JavaBuild {
     //   layout
     //     activity_handheld.xml (the layout for the dummy activity)
     //   xml
-    //     wereable_app_desc.xml (version and path info of the wereable app)
+    //     wearable_app_desc.xml (version and path info of the wearable app)
     //   raw
-    //     wereable-apk (copied from the build process conducted in the wear folder)
+    //     wearable-apk (copied from the build process conducted in the wear folder)
     
     
     // Create source folder, and dummy handheld activity
@@ -418,21 +417,20 @@ class AndroidBuild extends JavaBuild {
     File sketchFolder = sketch.getFolder();
     writeIconFiles(sketchFolder, resFolder);    
 
-    // Copy the wereable apk
+    // Copy the wearable apk
     String apkName = sketch.getName().toLowerCase() + "_debug";
     File rawFolder = mkdirs(resFolder, "raw");
-    File wearApk = new File(wearFolder, "bin/" + apkName + ".apk"); // should be an argument, to support the release situation.
+    File wearApk = new File(wearFolder, "bin/" + apkName + ".apk"); // TODO TODO should be an argument, to support the release situation.
     Util.copyFile(wearApk, new File(rawFolder, apkName + ".apk"));
         
     // Create dummy layout/activity_handheld.xml 
     File layoutFile = new File(resFolder, "layout/activity_handheld.xml");
     writeHandheldLayout(layoutFile);
     
-    // Create the wereable app description
+    // Create the wearable app description
     File wearDescFile = new File(resFolder, "xml/wearable_app_desc.xml");
     writeWearableDescription(wearDescFile, apkName, "1", "1.0");
     
-    System.exit(1);
     return tmpFolder;
   }
   

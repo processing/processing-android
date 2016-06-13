@@ -120,6 +120,11 @@ public class AndroidEditor extends JavaEditor {
         }
 
         for (final Device device : deviceList) {
+          if (device.hasFeature("watch")) {
+            // Don't include the watch devices to the list, they get their watch
+            // faces through the handheld they are paired with.
+            continue;
+          }
           final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
           deviceItem.setEnabled(true);
 

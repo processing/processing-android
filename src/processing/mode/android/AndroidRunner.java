@@ -78,14 +78,14 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     
-    if (wear && !device.hasFeature("watch")) {
-      Messages.showWarning("Device is not a watch!", 
-                           "Processing built your sketch as a watch face, but\n" +
-                           "you selected a non-watch device to install it on.\n" +
-                           "Please select a watch device instead.");      
-      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
-      return;
-    }
+//    if (wear && !device.hasFeature("watch")) {
+//      Messages.showWarning("Device is not a watch!", 
+//                           "Processing built your sketch as a watch face, but\n" +
+//                           "you selected a non-watch device to install it on.\n" +
+//                           "Please select a watch device instead.");      
+//      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
+//      return;
+//    }
 
     device.addListener(this);
 
