@@ -326,6 +326,10 @@ class AndroidBuild extends JavaBuild {
   }
 
   
+  public File createHandheldProject() throws IOException, SketchException {
+    return null;
+  }
+  
   protected boolean createLibraryProject(String name, String target, 
                                          String path, String pck) {
     final String[] params = {
@@ -506,9 +510,9 @@ class AndroidBuild extends JavaBuild {
     File keyStore = AndroidKeyStore.getKeyStore();
     if (keyStore == null) return null;
 
-    File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-unsigned.apk");
+    File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName().toLowerCase() + "_release_unsigned.apk");
     if (!unsignedPackage.exists()) return null;
-    File signedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed.apk");
+    File signedPackage = new File(projectFolder, "bin/" + sketch.getName().toLowerCase() + "_release_signed.apk");
 
     JarSigner.signJar(unsignedPackage, signedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
 
@@ -570,7 +574,7 @@ class AndroidBuild extends JavaBuild {
     File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0];
     String zipalignPath = buildToolsFolder.getAbsolutePath() + "/zipalign";
 
-    File alignedPackage = new File(projectFolder, "bin/" + sketch.getName() + "-release-signed-aligned.apk");
+    File alignedPackage = new File(projectFolder, "bin/" + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
 
     String[] args = {
         zipalignPath, "-v", "-f", "4",
@@ -797,8 +801,8 @@ class AndroidBuild extends JavaBuild {
 
 
   String getPathForAPK() {
-    String suffix = target.equals("release") ? "release-unsigned" : "debug";
-    String apkName = "bin/" + sketch.getName() + "-" + suffix + ".apk";
+    String suffix = target.equals("release") ? "release_unsigned" : "debug";
+    String apkName = "bin/" + sketch.getName().toLowerCase() + "_" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (!apkFile.exists()) {
       return null;
