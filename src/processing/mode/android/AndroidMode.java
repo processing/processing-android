@@ -257,15 +257,15 @@ public class AndroidMode extends JavaMode {
 //    }
 //  }
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener) throws SketchException, IOException {
+      RunnerListener listener, boolean resetManifest) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this, 
         editor.getAppComponent(), true);
+    if (resetManifest) build.resetManifest();
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
-
         
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
@@ -283,7 +283,7 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunDevice(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener)
+      RunnerListener listener, boolean resetManifest)
     throws SketchException, IOException {    
     
     final Devices devices = Devices.getInstance();
@@ -302,6 +302,7 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this, 
         editor.getAppComponent(), false);
+    if (resetManifest) build.resetManifest();
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -317,7 +318,7 @@ public class AndroidMode extends JavaMode {
     if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
       Messages.showMessage("Is Debugging over Bluetooth enabled?",
                            "Processing will access the wearable through the handheld paired to it.\n" +
-                           "Your watch won't show up the device list, select the paired handheld.\n" +
+                           "Your watch won't show up in the device list, select the paired handheld.\n" +
                            "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
                            "http://developer.android.com/training/wearables/apps/bt-debugging.html");   
       showBluetoothDebugMessage = false;

@@ -50,6 +50,7 @@ import java.util.TimerTask;
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
   private int appComponent = AndroidBuild.FRAGMENT;
+  private boolean resetManifest = false;
   
   private AndroidMode androidMode;
 
@@ -74,6 +75,18 @@ public class AndroidEditor extends JavaEditor {
 
     public UpdateDeviceListTask(JMenu deviceMenu) {
       this.deviceMenu = deviceMenu;
+    }
+    
+    private Device selectFirstNonWatchDevice(java.util.List<Device> deviceList) {
+      for (Device device : deviceList) {
+        if (device.hasFeature("watch")) {
+          // Don't include the watch devices to the list, they get their watch
+          // faces through the handheld they are paired with.
+          continue;
+        }
+        return device;
+      }
+      return null;
     }
 
     @Override
@@ -101,8 +114,8 @@ public class AndroidEditor extends JavaEditor {
         deviceMenu.removeAll();
 
         if (selectedDevice == null) {
-          selectedDevice = deviceList.get(0);
-          devices.setSelectedDevice(selectedDevice);
+          selectedDevice = selectFirstNonWatchDevice(deviceList);
+          devices.setSelectedDevice(selectedDevice);  
         } else {
           // check if selected device is still connected
           boolean found = false;
@@ -114,8 +127,8 @@ public class AndroidEditor extends JavaEditor {
           }
 
           if (!found) {
-            selectedDevice = deviceList.get(0);
-            devices.setSelectedDevice(selectedDevice);
+            selectedDevice = selectFirstNonWatchDevice(deviceList);
+            devices.setSelectedDevice(selectedDevice);  
           }
         }
 
@@ -235,7 +248,7 @@ public class AndroidEditor extends JavaEditor {
     fragmentItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        appComponent = AndroidBuild.FRAGMENT;
+        setAppComponent(AndroidBuild.FRAGMENT);
         fragmentItem.setState(true);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
@@ -246,7 +259,7 @@ public class AndroidEditor extends JavaEditor {
     wallpaperItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        appComponent = AndroidBuild.WALLPAPER;
+        setAppComponent(AndroidBuild.WALLPAPER);
         fragmentItem.setState(false);
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
@@ -257,7 +270,7 @@ public class AndroidEditor extends JavaEditor {
     watchfaceItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        appComponent = AndroidBuild.WATCHFACE;
+        setAppComponent(AndroidBuild.WATCHFACE);
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
@@ -268,7 +281,7 @@ public class AndroidEditor extends JavaEditor {
     cardboardItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        appComponent = AndroidBuild.CARDBOARD;
+        setAppComponent(AndroidBuild.CARDBOARD);
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
@@ -438,6 +451,13 @@ public class AndroidEditor extends JavaEditor {
   }
 */
 
+  private void setAppComponent(int opt) {
+    if (appComponent != opt) {
+      appComponent = opt;
+      resetManifest = true;
+    }
+  }  
+  
   /**
    * Uses the main help menu, and adds a few extra options. If/when there's
    * Android-specific documentation, we'll switch to that.
@@ -579,7 +599,9 @@ public class AndroidEditor extends JavaEditor {
         startIndeterminate();
         prepareRun();
         try {
-          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this);
+          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this,
+              resetManifest);
+          resetManifest = false;
         } catch (SketchException e) {
           statusError(e);
         } catch (IOException e) {
@@ -621,7 +643,9 @@ public class AndroidEditor extends JavaEditor {
           startIndeterminate();
           prepareRun();
           try {
-            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
+            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this,
+                resetManifest);
+            resetManifest = false;
           } catch (SketchException e) {
             statusError(e);
           } catch (IOException e) {

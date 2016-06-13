@@ -130,7 +130,7 @@ class AndroidBuild extends JavaBuild {
         }
       }
       
-      File folder = createHandheldProject(wearFolder);
+      File folder = createHandheldProject(wearFolder, null);
       if (folder != null) {
         if (!antBuild()) {
           return null;
@@ -357,7 +357,7 @@ class AndroidBuild extends JavaBuild {
   // This creates the special activity project only needed to serve as the
   // (invisible) app on the handheld that allows to uninstall the watchface
   // from the watch.  
-  public File createHandheldProject(File wearFolder) 
+  public File createHandheldProject(File wearFolder, File wearPackage) 
       throws IOException, SketchException {
     // According to these instructions:
     // https://developer.android.com/training/wearables/apps/packaging.html#PackageManually
@@ -418,9 +418,22 @@ class AndroidBuild extends JavaBuild {
     writeIconFiles(sketchFolder, resFolder);    
 
     // Copy the wearable apk
-    String apkName = sketch.getName().toLowerCase() + "_debug";
+    String apkName = "";
+    if (wearPackage == null) {
+      String suffix = target.equals("release") ? "release_unsigned" : "debug";    
+      apkName = sketch.getName().toLowerCase() + "_" + suffix;
+    } else {
+      String name = wearPackage.getName();      
+      int dot = name.lastIndexOf('.');
+      if (dot == -1) {
+        apkName = name;
+      } else {
+        apkName = name.substring(0, dot);
+      }
+    }
+    
     File rawFolder = mkdirs(resFolder, "raw");
-    File wearApk = new File(wearFolder, "bin/" + apkName + ".apk"); // TODO TODO should be an argument, to support the release situation.
+    File wearApk = new File(wearFolder, "bin/" + apkName + ".apk");
     Util.copyFile(wearApk, new File(rawFolder, apkName + ".apk"));
         
     // Create dummy layout/activity_handheld.xml 
@@ -597,12 +610,16 @@ class AndroidBuild extends JavaBuild {
     return appComponent;
   }
   
-  public void setAppComponent(int opt) {
-    if (appComponent != opt) {
-      appComponent = opt;
-      resetManifest = true;
-    }
-  }  
+//  public void setAppComponent(int opt) {
+//    if (appComponent != opt) {
+//      appComponent = opt;
+//      resetManifest = true;
+//    }
+//  }
+  
+  public void resetManifest() {
+    resetManifest = true;
+  }
   
   protected boolean usesGPU() {
     return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
@@ -662,20 +679,14 @@ class AndroidBuild extends JavaBuild {
     // this will set debuggable to true in the .xml file
     target = "debug";
     
-    if (appComponent == WATCHFACE && !runOnEmulator) {
+    if (appComponent == WATCHFACE) {
       // We are building a watchface not to run on the emulator. We need the
       // handheld app:
-      // https://developer.android.com/training/wearables/apps/creating.html
-      // so the watchface can be uninstalled from the phone, and can be
-      // published on Google Play.
       File wearFolder = createProject(true);
-      if (wearFolder != null) {
-        if (!antBuild()) {
-          return null;
-        }
-      }
+      if (wearFolder == null) return null;
+      if (!antBuild()) return null; 
       
-      File projectFolder = createHandheldProject(wearFolder);
+      File projectFolder = createHandheldProject(wearFolder, null);
       if (projectFolder != null) {
         File exportFolder = createExportFolder();
         Util.copyDir(projectFolder, exportFolder);
@@ -694,16 +705,35 @@ class AndroidBuild extends JavaBuild {
   }
 
   public File exportPackage(String keyStorePassword) throws Exception {
-    // TODO TODO
-    File projectFolder = build("release");
-    if (projectFolder == null) return null;
+    File projectFolder = null;
+    if (appComponent == WATCHFACE) {
+      this.target = "release";
+      // We need to sign and align the wearable and handheld apps:      
+      File wearFolder = createProject(true);
+      if (wearFolder == null) return null;
+      if (!antBuild()) return null;      
+      File signedWearPackage = signPackage(wearFolder, keyStorePassword);
+      if (signedWearPackage == null) return null;
+      
+      // Handheld package
+      projectFolder = createHandheldProject(wearFolder, signedWearPackage);
+      if (projectFolder == null) return null;
+      if (!antBuild()) return null;
+      
+      File signedPackage = signPackage(projectFolder, keyStorePassword);
+      if (signedPackage == null) return null;       
+    } else {
+      projectFolder = build("release");
+      if (projectFolder == null) return null;
 
-    File signedPackage = signPackage(projectFolder, keyStorePassword);
-    if (signedPackage == null) return null;
-
+      File signedPackage = signPackage(projectFolder, keyStorePassword);
+      if (signedPackage == null) return null;
+    }
+    
+    // Final export folder
     File exportFolder = createExportFolder();
     Util.copyDir(projectFolder, exportFolder);
-    return new File(exportFolder, "/bin/");
+    return new File(exportFolder, "/bin/");     
   }
 
   private File signPackage(File projectFolder, String keyStorePassword) throws Exception {
