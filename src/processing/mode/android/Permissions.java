@@ -296,7 +296,7 @@ public class Permissions extends JFrame {
     setLocation((screen.width - windowSize.width) / 2,
                 (screen.height - windowSize.height) / 2);
 
-    Manifest mf = new Manifest(sketch, appComp);
+    Manifest mf = new Manifest(sketch, appComp, false);
     setSelections(mf.getPermissions());
 
     // show the window and get to work
@@ -336,7 +336,7 @@ public class Permissions extends JFrame {
 
   protected void saveSelections() {
     String[] sel = getSelections();
-    Manifest mf = new Manifest(sketch, appComp);
+    Manifest mf = new Manifest(sketch, appComp, false);
     mf.setPermissions(sel);
   }
 

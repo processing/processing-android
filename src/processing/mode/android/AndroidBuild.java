@@ -208,7 +208,7 @@ class AndroidBuild extends JavaBuild {
     preproc.initSketchSize(sketch.getMainProgram());
     preproc.initSketchSmooth(sketch.getMainProgram());
     
-    sketchClassName = preprocess(srcFolder, manifest.getPackageName(), preproc, false);
+    sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
     if (sketchClassName != null) {
       File tempManifest = new File(tmpFolder, "AndroidManifest.xml");
       manifest.writeBuild(tempManifest, sketchClassName, target.equals("debug"));
@@ -220,7 +220,7 @@ class AndroidBuild extends JavaBuild {
       writeLocalProps(new File(tmpFolder, "local.properties"));
 
       final File resFolder = new File(tmpFolder, "res");
-      writeRes(resFolder, sketchClassName);
+      writeRes(resFolder);
 
       // TODO: it would be great if we can just get the renderer from the SurfaceInfo
       // object returned by initSketchSize()
@@ -394,70 +394,124 @@ class AndroidBuild extends JavaBuild {
     //     wereable-apk (copied from the build process conducted in the wear folder)
     
     
+    // Create source folder, and dummy handheld activity
     srcFolder = new File(tmpFolder, "src");
-    binFolder = srcFolder;
-        
-/*
-// Filename: HandheldActivity.java
-package processing.test.watchface; <--- package name
-
-import android.app.Activity;
-import android.os.Bundle;
-
-public class HandheldActivity extends Activity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_handheld);
-        finish();
-    }
-}    
- */
+    binFolder = srcFolder;  
+    File activityFile = new File(new File(srcFolder, getPackageName().replace(".", "/")),
+        "HandheldActivity.java");
+    writeHandheldActivity(activityFile);
     
+    // Create manifest file
+    File manifestFile = new File(tmpFolder, "AndroidManifest.xml");
+    writeHandheldManifest(manifestFile, sketchClassName, "1", "1.0");
+
+    // Write property and build files.
+    writeAntProps(new File(tmpFolder, "ant.properties"));
+    buildFile = new File(tmpFolder, "build.xml");
+    writeBuildXML(buildFile, sketch.getName());
+    writeProjectProps(new File(tmpFolder, "project.properties"));
+    writeLocalProps(new File(tmpFolder, "local.properties"));
+
     final File resFolder = new File(tmpFolder, "res");
-
-    // Copy icons for hanheld app
-    // ...
     
+    // Write icons for handheld app
+    File sketchFolder = sketch.getFolder();
+    writeIconFiles(sketchFolder, resFolder);    
+
+    // Copy the wereable apk
+    String apkName = sketch.getName().toLowerCase() + "_debug";
+    File rawFolder = mkdirs(resFolder, "raw");
+    File wearApk = new File(wearFolder, "bin/" + apkName + ".apk"); // should be an argument, to support the release situation.
+    Util.copyFile(wearApk, new File(rawFolder, apkName + ".apk"));
+        
     // Create dummy layout/activity_handheld.xml 
-    // ...
-/*    
-    <?xml version="1.0" encoding="utf-8"?>
-    <RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        tools:context="processing.test.watchface.HandheldActivity">
-    </RelativeLayout>
-*/    
+    File layoutFile = new File(resFolder, "layout/activity_handheld.xml");
+    writeHandheldLayout(layoutFile);
     
     // Create the wereable app description
-    File xmlFolder = mkdirs(resFolder, "xml");
-/*
-// filename: wearable_app_desc.xml 
-<wearableApp package="processing.test.watchface">
-  <versionCode>1</versionCode>
-  <versionName>1.0</versionName>
-  <rawPathResId>watchface_release_signed_aligned</rawPathResId> <-- apk name
-</wearableApp>    
- */
-    
-    // Copy the wereable apk
-    File rawFolder = mkdirs(resFolder, "raw");
-    File wearApk = new File(wearFolder, "bin/" + sketch.getName().toLowerCase() + "_debug.apk"); // should be an argument, to support the release situation.
-    Util.copyFile(wearApk, new File(rawFolder, sketch.getName().toLowerCase() + "_debug.apk"));
-    
-    
-    // Finally Create build.xml, manifest file, property files
+    File wearDescFile = new File(resFolder, "xml/wearable_app_desc.xml");
+    writeWearableDescription(wearDescFile, apkName, "1", "1.0");
     
     System.exit(1);
-    
     return tmpFolder;
+  }
+  
+  private void writeHandheldActivity(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("package " + getPackageName() + ";");
+    writer.println("import android.app.Activity;");
+    writer.println("import android.os.Bundle;");
+    writer.println("public class HandheldActivity extends Activity {");
+    writer.println("    @Override");
+    writer.println("    protected void onCreate(Bundle savedInstanceState) {");
+    writer.println("        super.onCreate(savedInstanceState);");
+    writer.println("        setContentView(R.layout.activity_handheld);");
+    writer.println("        finish();");
+    writer.println("    }");
+    writer.println("}"); 
+    writer.flush();
+    writer.close();    
+  }
+  
+  private void writeHandheldManifest(final File file, final String className, 
+      final String versionCode, String versionName) {
+    final PrintWriter writer = PApplet.createWriter(file);    
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");    
+    writer.println("<manifest package=\"" + getPackageName() + "\"");
+    writer.println("          android:versionCode=\"" +versionCode + "\" android:versionName=\"" + versionName +"\"");    
+    writer.println("          xmlns:android=\"http://schemas.android.com/apk/res/android\">");
+    writer.println("    <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\"/>");
+    writer.println("    <uses-permission android:name=\"android.permission.WAKE_LOCK\"/>");
+    writer.println("    <application");
+    writer.println("        android:allowBackup=\"true\"");
+    writer.println("        android:icon=\"@mipmap/drawable\"");
+    writer.println("        android:label=\"" + className + "\"");
+    writer.println("        android:supportsRtl=\"true\"");
+    writer.println("        android:theme=\"@android:style/Theme.Translucent.NoTitleBar\"");
+    writer.println("        android:noHistory=\"true\"");
+    writer.println("        android:excludeFromRecents=\"true\">");
+    writer.println("        <meta-data android:name=\"com.google.android.wearable.beta.app\"");
+    writer.println("                   android:resource=\"@xml/wearable_app_desc\"/>");
+    writer.println("        <activity android:name=\".HandheldActivity\">");
+    writer.println("            <intent-filter>");
+    writer.println("                <action android:name=\"android.intent.action.MAIN\"/>");
+    writer.println("                <category android:name=\"android.intent.category.LAUNCHER\"/>");
+    writer.println("            </intent-filter>");
+    writer.println("        </activity>");
+    writer.println("    </application>");
+    writer.println("</manifest>");    
+    writer.flush();
+    writer.close();
+  }  
+    
+  private void writeHandheldLayout(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    writer.println("<RelativeLayout");
+    writer.println("    xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
+    writer.println("    android:layout_width=\"match_parent\"");
+    writer.println("    android:layout_height=\"match_parent\"");
+    writer.println("    android:paddingBottom=\"@dimen/activity_vertical_margin\"");
+    writer.println("    android:paddingLeft=\"@dimen/activity_horizontal_margin\"");
+    writer.println("    android:paddingRight=\"@dimen/activity_horizontal_margin\"");
+    writer.println("    android:paddingTop=\"@dimen/activity_vertical_margin\"");
+    writer.println("    tools:context=\"" + getPackageName() + ".HandheldActivity\">");
+    writer.println("</RelativeLayout>");
+    writer.flush();
+    writer.close();    
+  }
+  
+  private void writeWearableDescription(final File file, final String apkName,
+      final String versionCode, String versionName) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<wearableApp package=\"" + getPackageName() + "\">");
+    writer.println("  <versionCode>" + versionCode + "</versionCode>");
+    writer.println("  <versionName>" + versionName + "</versionName>");
+    writer.println("  <rawPathResId>" + apkName + "</rawPathResId>");
+    writer.println("</wearableApp>");
+    writer.flush();
+    writer.close();
   }
   
   protected boolean createLibraryProject(String name, String target, 
@@ -1135,8 +1189,7 @@ public class HandheldActivity extends Activity {
   static final String ICON_WATCHFACE_CIRCULAR = "preview_circular.png";
   static final String ICON_WATCHFACE_RECTANGULAR = "preview_rectangular.png";  
   
-  private void writeRes(File resFolder,
-                        String className) throws SketchException {
+  private void writeRes(File resFolder) throws SketchException {
     File layoutFolder = mkdirs(resFolder, "layout");
     File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
     writeResLayoutMainActivity(mainActivityLayoutFile);
@@ -1155,8 +1208,74 @@ public class HandheldActivity extends Activity {
 //    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
 //    writeResLayoutMainFragment(mainFragmentLayoutFile);
 
-    // write the icon files
     File sketchFolder = sketch.getFolder();
+    writeIconFiles(sketchFolder, resFolder);
+    
+    if (comp == WATCHFACE) {
+      File xmlFolder = mkdirs(resFolder, "xml");
+      File mainServiceWatchFaceFile = new File(xmlFolder, "watch_face.xml");
+      writeResXMLWatchFace(mainServiceWatchFaceFile);      
+      
+      // write the preview files
+      File localPrevCircle = new File(sketchFolder, ICON_WATCHFACE_CIRCULAR);
+      File localPrevRect = new File(sketchFolder, ICON_WATCHFACE_RECTANGULAR);
+      
+      File buildPrevCircle = new File(resFolder, "drawable/" + ICON_WATCHFACE_CIRCULAR);
+      File buildPrevRect = new File(resFolder, "drawable/" + ICON_WATCHFACE_RECTANGULAR);
+      
+      if (!localPrevCircle.exists()) {
+//        if (buildPrevCircle.getParentFile().mkdirs()) {
+          try {
+            Util.copyFile(mode.getContentFile("icons/" + ICON_WATCHFACE_CIRCULAR), buildPrevCircle);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        } else {
+//          System.err.println("Could not create \"drawable\" folder.");
+//        }        
+      } else {
+//        if (new File(resFolder, "drawable").mkdirs()) {
+          try {
+            Util.copyFile(localPrevCircle, buildPrevCircle);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        }        
+      }
+
+      if (!localPrevRect.exists())  {
+//        if (buildPrevRect.getParentFile().mkdirs()) {
+          try {
+            Util.copyFile(mode.getContentFile("icons/" + ICON_WATCHFACE_RECTANGULAR), buildPrevRect);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        } else {
+//          System.err.println("Could not create \"drawable\" folder.");
+//        }        
+      } else {
+//        if (new File(resFolder, "drawable").mkdirs()) {
+          try {
+            Util.copyFile(localPrevCircle, buildPrevRect);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+//        }        
+      }     
+    }
+    
+//    final File valuesFolder = mkdirs(resFolder, "values");
+//    final File stringsFile = new File(valuesFolder, "strings.xml");
+//    writeResValuesStrings(stringsFile, className);
+  }
+
+  
+  private void writeIconFiles(File sketchFolder, File resFolder) {
+    // write the icon files
     File localIcon36 = new File(sketchFolder, ICON_36);
     File localIcon48 = new File(sketchFolder, ICON_48);
     File localIcon72 = new File(sketchFolder, ICON_72);
@@ -1252,73 +1371,8 @@ public class HandheldActivity extends Activity {
         System.err.println("Problem while copying icons.");
         e.printStackTrace();
       }
-    }
-
-    
-    if (comp == WATCHFACE) {
-      File xmlFolder = mkdirs(resFolder, "xml");
-      File mainServiceWatchFaceFile = new File(xmlFolder, "watch_face.xml");
-      writeResXMLWatchFace(mainServiceWatchFaceFile);      
-      
-      // write the preview files
-      File localPrevCircle = new File(sketchFolder, ICON_WATCHFACE_CIRCULAR);
-      File localPrevRect = new File(sketchFolder, ICON_WATCHFACE_RECTANGULAR);
-      
-      File buildPrevCircle = new File(resFolder, "drawable/" + ICON_WATCHFACE_CIRCULAR);
-      File buildPrevRect = new File(resFolder, "drawable/" + ICON_WATCHFACE_RECTANGULAR);
-      
-      if (!localPrevCircle.exists()) {
-//        if (buildPrevCircle.getParentFile().mkdirs()) {
-          try {
-            Util.copyFile(mode.getContentFile("icons/" + ICON_WATCHFACE_CIRCULAR), buildPrevCircle);
-          } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-//        } else {
-//          System.err.println("Could not create \"drawable\" folder.");
-//        }        
-      } else {
-//        if (new File(resFolder, "drawable").mkdirs()) {
-          try {
-            Util.copyFile(localPrevCircle, buildPrevCircle);
-          } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-//        }        
-      }
-
-      if (!localPrevRect.exists())  {
-//        if (buildPrevRect.getParentFile().mkdirs()) {
-          try {
-            Util.copyFile(mode.getContentFile("icons/" + ICON_WATCHFACE_RECTANGULAR), buildPrevRect);
-          } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-//        } else {
-//          System.err.println("Could not create \"drawable\" folder.");
-//        }        
-      } else {
-//        if (new File(resFolder, "drawable").mkdirs()) {
-          try {
-            Util.copyFile(localPrevCircle, buildPrevRect);
-          } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-//        }        
-      }     
-    }
-    
-    
-    
-//    final File valuesFolder = mkdirs(resFolder, "values");
-//    final File stringsFile = new File(valuesFolder, "strings.xml");
-//    writeResValuesStrings(stringsFile, className);
+    }    
   }
-
 
   private File mkdirs(final File parent, final String name) throws SketchException {
     final File result = new File(parent, name);
@@ -1348,10 +1402,10 @@ public class HandheldActivity extends Activity {
 
   
   private void writeFragmentActivity(final File srcDirectory) {
-    File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+    File mainActivityFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
-    writer.println("package " + manifest.getPackageName() +";");
+    writer.println("package " + getPackageName() +";");
     writer.println("import android.app.Activity;");
     writer.println("import android.os.Bundle;");    
     writer.println("import android.view.View;");
@@ -1394,10 +1448,10 @@ public class HandheldActivity extends Activity {
   
   
   private void writeWallpaperService(final File srcDirectory) {
-    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+    File mainServiceFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainService.java");
     final PrintWriter writer = PApplet.createWriter(mainServiceFile);
-    writer.println("package " + manifest.getPackageName() +";");    
+    writer.println("package " + getPackageName() +";");    
     writer.println("import processing.android.PWallpaper;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWallpaper {");
@@ -1413,10 +1467,10 @@ public class HandheldActivity extends Activity {
   
   
   private void writeWatchFaceGLESService(final File srcDirectory) {
-    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+    File mainServiceFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainService.java");
     final PrintWriter writer = PApplet.createWriter(mainServiceFile);
-    writer.println("package " + manifest.getPackageName() +";");    
+    writer.println("package " + getPackageName() +";");    
     writer.println("import processing.android.PWatchFaceGLES;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWatchFaceGLES {");
@@ -1432,10 +1486,10 @@ public class HandheldActivity extends Activity {
 
   
   private void writeWatchFaceCanvasService(final File srcDirectory) {
-    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+    File mainServiceFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainService.java");
     final PrintWriter writer = PApplet.createWriter(mainServiceFile);
-    writer.println("package " + manifest.getPackageName() +";");    
+    writer.println("package " + getPackageName() +";");    
     writer.println("import processing.android.PWatchFaceCanvas;");
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainService extends PWatchFaceCanvas {");
@@ -1451,10 +1505,10 @@ public class HandheldActivity extends Activity {
   
   
   private void writeCardboardActivity(final File srcDirectory) {
-    File mainServiceFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
+    File mainServiceFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainActivity.java");    
     final PrintWriter writer = PApplet.createWriter(mainServiceFile);
-    writer.println("package " + manifest.getPackageName() +";");        
+    writer.println("package " + getPackageName() +";");        
     writer.println("import android.os.Bundle;");
     writer.println("import processing.core.PApplet;");
     writer.println("import processing.cardboard.PCardboard;");
