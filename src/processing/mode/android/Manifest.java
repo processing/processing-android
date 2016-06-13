@@ -67,13 +67,31 @@ public class Manifest {
 //    this.sketch = editor.getSketch();
 //    load();
 //  }
-  public Manifest(Sketch sketch, int appComp) {
+  public Manifest(Sketch sketch, int appComp, boolean forceNew) {
     this.sketch = sketch;
     this.appComp = appComp;
-    load();
+    load(forceNew);
   }
 
 
+  public void reset(int appComp) {
+    File manifestFile = getManifestFile();
+    writeBlankManifest(manifestFile, appComp);
+    try {
+      xml = new XML(manifestFile);
+    } catch (FileNotFoundException e) {
+      System.err.println("Could not read " + manifestFile.getAbsolutePath());
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ParserConfigurationException e) {
+      e.printStackTrace();
+    } catch (SAXException e) {
+      e.printStackTrace();
+    }    
+  }
+  
+  
   private String defaultPackageName() {
 //    Sketch sketch = editor.getSketch();
     return AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();
@@ -324,60 +342,50 @@ public class Manifest {
   }
 
 
-  protected void load() {
-//    Sketch sketch = editor.getSketch();
-//    File manifestFile = new File(sketch.getFolder(), MANIFEST_XML);
-//    XMLElement xml = null;
-    
-    
-    File manifestFile = getManifestFile();
-    
-    // Re-write from scratch every time for now
-    /*
-    if (AndroidBuild.forceNewManifest) xml = null;
-    if (manifestFile.exists() && !AndroidBuild.forceNewManifest) {
-      try {
-        xml = new XML(manifestFile);
-      } catch (Exception e) {
-        e.printStackTrace();
-        System.err.println("Problem reading AndroidManifest.xml, creating a new version");
+  protected void load(boolean forceNew) {
+//  Sketch sketch = editor.getSketch();
+//  File manifestFile = new File(sketch.getFolder(), MANIFEST_XML);
+//  XMLElement xml = null;
+  File manifestFile = getManifestFile();
+  if (!forceNew && manifestFile.exists()) {
+    try {
+      xml = new XML(manifestFile);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println("Problem reading AndroidManifest.xml, creating a new version");
 
-        // remove the old manifest file, rename it with date stamp
-        long lastModified = manifestFile.lastModified();
-        String stamp = AndroidMode.getDateStamp(lastModified);
-        File dest = new File(sketch.getFolder(), MANIFEST_XML + "." + stamp);
-        boolean moved = manifestFile.renameTo(dest);
-        if (!moved) {
-          System.err.println("Could not move/rename " + manifestFile.getAbsolutePath());
-          System.err.println("You'll have to move or remove it before continuing.");
-          return;
-        }
+      // remove the old manifest file, rename it with date stamp
+      long lastModified = manifestFile.lastModified();
+      String stamp = AndroidMode.getDateStamp(lastModified);
+      File dest = new File(sketch.getFolder(), MANIFEST_XML + "." + stamp);
+      boolean moved = manifestFile.renameTo(dest);
+      if (!moved) {
+        System.err.println("Could not move/rename " + manifestFile.getAbsolutePath());
+        System.err.println("You'll have to move or remove it before continuing.");
+        return;
       }
     }
-    if (xml == null) {
-    */
-    
-    
-      writeBlankManifest(manifestFile, appComp);
-      try {
-        xml = new XML(manifestFile);
-      } catch (FileNotFoundException e) {
-        System.err.println("Could not read " + manifestFile.getAbsolutePath());
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (ParserConfigurationException e) {
-        e.printStackTrace();
-      } catch (SAXException e) {
-        e.printStackTrace();
-      }
-//    }
-    if (xml == null) {
-      Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
-    }
-//    return xml;
   }
-
+  if (xml == null) {
+    writeBlankManifest(manifestFile, appComp);
+    try {
+      xml = new XML(manifestFile);
+    } catch (FileNotFoundException e) {
+      System.err.println("Could not read " + manifestFile.getAbsolutePath());
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ParserConfigurationException e) {
+      e.printStackTrace();
+    } catch (SAXException e) {
+      e.printStackTrace();
+    }
+  }
+  if (xml == null) {
+    Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
+  }
+//  return xml;
+}
 
   protected void save() {
     save(getManifestFile());

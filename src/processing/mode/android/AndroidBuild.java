@@ -27,6 +27,7 @@ import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 
+import antlr.Utils;
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
@@ -71,7 +72,7 @@ class AndroidBuild extends JavaBuild {
 
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
-  static boolean forceNewManifest = false; // TODO: this is just temporary, need to remove
+  private boolean resetManifest = false;
   
   private String renderer = "";
   
@@ -116,13 +117,36 @@ class AndroidBuild extends JavaBuild {
    */
   public File build(String target) throws IOException, SketchException {
     this.target = target;
-    File folder = createProject();
-    if (folder != null) {
-      if (!antBuild()) {
-        return null;
+    
+    if (appComponent == WATCHFACE && !runOnEmulator) {
+      // We are building a watchface not to run on the emulator. We need the
+      // handheld app:
+      // https://developer.android.com/training/wearables/apps/creating.html
+      // so the watchface can be uninstalled from the phone, and can be
+      // published on Google Play.
+      File wearFolder = createProject(true);
+      if (wearFolder != null) {
+        if (!antBuild()) {
+          return null;
+        }
       }
-    }
-    return folder;
+      
+      File folder = createHandheldProject(wearFolder);
+      if (folder != null) {
+        if (!antBuild()) {
+          return null;
+        }
+      }
+      return folder;      
+    } else {
+      File folder = createProject(false);
+      if (folder != null) {
+        if (!antBuild()) {
+          return null;
+        }
+      }
+      return folder;      
+    }    
   }
 
 
@@ -153,8 +177,11 @@ class AndroidBuild extends JavaBuild {
    * Populates the 'src' folder with Java code, and 'libs' folder with the
    * libraries and code folder contents. Also copies data folder to 'assets'.
    */
-  public File createProject() throws IOException, SketchException {
+  public File createProject(boolean wear) throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
+    if (wear) {
+      tmpFolder = new File(tmpFolder, "wear");
+    }
 
     // Create the 'src' folder with the preprocessed code.
 //    final File srcFolder = new File(tmpFolder, "src");
@@ -168,9 +195,9 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
-    manifest = new Manifest(sketch, appComponent);
+    manifest = new Manifest(sketch, appComponent, resetManifest);    
     manifest.setSdkTarget(target_sdk);
-    forceNewManifest = false;
+    resetManifest = false;
     
     // grab code from current editing window (GUI only)
 //    prepareExport(null);
@@ -328,9 +355,109 @@ class AndroidBuild extends JavaBuild {
     return tmpFolder;
   }
 
-  
-  public File createHandheldProject() throws IOException, SketchException {
-    return null;
+  // This creates the special activity project only needed to serve as the
+  // (invisible) app on the handheld that allows to uninstall the watchface
+  // from the watch.  
+  public File createHandheldProject(File wearFolder) 
+      throws IOException, SketchException {
+    // According to these instructions:
+    // https://developer.android.com/training/wearables/apps/packaging.html#PackageManually
+    // we need to:
+    // 1. Include all the permissions declared in the manifest file of the 
+    //    wearable app in the manifest file of the mobile app    
+    // 2. Ensure that both the wearable and mobile APKs have the same package name 
+    //    and version number.
+    // 3. Copy the signed wearable app to your handheld project's res/raw directory. 
+    //    We'll refer to the APK as wearable_app.apk.
+    // 4. Create a res/xml/wearable_app_desc.xml file that contains the version 
+    //    and path information of the wearable app. For example:
+    // 5. Add a meta-data tag to your handheld app's <application> tag to reference 
+    //    the wearable_app_desc.xml file.
+    
+    // So, let's start by using the parent folder as the project file
+    tmpFolder = wearFolder.getParentFile();
+    
+    // Now, we need to create the folder structure for the handheld project:
+    // src
+    //   package-name (same to wear app)
+    //     HandheldActivity.java (this will be a dummy activity that quits right after starting up).
+    // res
+    //   drawable containing the app icon in 42x42 res
+    //   drawable-hdpi (all the others res up to xxxhdpi)
+    //   ...
+    //   drawable-xxxhdpi
+    //   layout
+    //     activity_handheld.xml (the layout for the dummy activity)
+    //   xml
+    //     wereable_app_desc.xml (version and path info of the wereable app)
+    //   raw
+    //     wereable-apk (copied from the build process conducted in the wear folder)
+    
+    
+    srcFolder = new File(tmpFolder, "src");
+    binFolder = srcFolder;
+        
+/*
+// Filename: HandheldActivity.java
+package processing.test.watchface; <--- package name
+
+import android.app.Activity;
+import android.os.Bundle;
+
+public class HandheldActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_handheld);
+        finish();
+    }
+}    
+ */
+    
+    final File resFolder = new File(tmpFolder, "res");
+
+    // Copy icons for hanheld app
+    // ...
+    
+    // Create dummy layout/activity_handheld.xml 
+    // ...
+/*    
+    <?xml version="1.0" encoding="utf-8"?>
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        tools:context="processing.test.watchface.HandheldActivity">
+    </RelativeLayout>
+*/    
+    
+    // Create the wereable app description
+    File xmlFolder = mkdirs(resFolder, "xml");
+/*
+// filename: wearable_app_desc.xml 
+<wearableApp package="processing.test.watchface">
+  <versionCode>1</versionCode>
+  <versionName>1.0</versionName>
+  <rawPathResId>watchface_release_signed_aligned</rawPathResId> <-- apk name
+</wearableApp>    
+ */
+    
+    // Copy the wereable apk
+    File rawFolder = mkdirs(resFolder, "raw");
+    File wearApk = new File(wearFolder, "bin/" + sketch.getName().toLowerCase() + "_debug.apk"); // should be an argument, to support the release situation.
+    Util.copyFile(wearApk, new File(rawFolder, sketch.getName().toLowerCase() + "_debug.apk"));
+    
+    
+    // Finally Create build.xml, manifest file, property files
+    
+    System.exit(1);
+    
+    return tmpFolder;
   }
   
   protected boolean createLibraryProject(String name, String target, 
@@ -421,9 +548,7 @@ class AndroidBuild extends JavaBuild {
   public void setAppComponent(int opt) {
     if (appComponent != opt) {
       appComponent = opt;
-      forceNewManifest = true;
-    } else {
-      forceNewManifest = false;
+      resetManifest = true;
     }
   }  
   
@@ -482,22 +607,42 @@ class AndroidBuild extends JavaBuild {
 
 
   public File exportProject() throws IOException, SketchException {
-//    File projectFolder = build("debug");
-//    if (projectFolder == null) {
-//      return null;
-//    }
     // this will set debuggable to true in the .xml file
     target = "debug";
-    File projectFolder = createProject();
-    if (projectFolder != null) {
-      File exportFolder = createExportFolder();
-      Util.copyDir(projectFolder, exportFolder);
-      return exportFolder;
-    }
-    return null;
+    
+    if (appComponent == WATCHFACE && !runOnEmulator) {
+      // We are building a watchface not to run on the emulator. We need the
+      // handheld app:
+      // https://developer.android.com/training/wearables/apps/creating.html
+      // so the watchface can be uninstalled from the phone, and can be
+      // published on Google Play.
+      File wearFolder = createProject(true);
+      if (wearFolder != null) {
+        if (!antBuild()) {
+          return null;
+        }
+      }
+      
+      File projectFolder = createHandheldProject(wearFolder);
+      if (projectFolder != null) {
+        File exportFolder = createExportFolder();
+        Util.copyDir(projectFolder, exportFolder);
+        return exportFolder;
+      }
+      return null;      
+    } else {
+      File projectFolder = createProject(false);
+      if (projectFolder != null) {
+        File exportFolder = createExportFolder();
+        Util.copyDir(projectFolder, exportFolder);
+        return exportFolder;
+      }
+      return null;
+    }    
   }
 
   public File exportPackage(String keyStorePassword) throws Exception {
+    // TODO TODO
     File projectFolder = build("release");
     if (projectFolder == null) return null;
 
@@ -723,6 +868,8 @@ class AndroidBuild extends JavaBuild {
       // p.executeTarget(p.getDefaultTarget());
       p.executeTarget(target);
 //      editor.statusNotice("Finished building sketch.");
+      
+      renameAPK();
       return true;
 
     } catch (final BuildException e) {
@@ -812,8 +959,21 @@ class AndroidBuild extends JavaBuild {
     }
     return apkFile.getAbsolutePath();
   }
+  
+  
+  private void renameAPK() {
+    String suffix = target.equals("release") ? "release-unsigned" : "debug";
+    String apkName = "bin/" + sketch.getName() + "-" + suffix + ".apk";
+    final File apkFile = new File(tmpFolder, apkName);
+    if (apkFile.exists()) {
+      String suffixNew = target.equals("release") ? "release_unsigned" : "debug";
+      String apkNameNew = "bin/" + sketch.getName().toLowerCase() + "_" + suffixNew + ".apk";
+      final File apkFileNew = new File(tmpFolder, apkNameNew);
+      apkFile.renameTo(apkFileNew);
+    }
+  }
 
-
+  
   private void writeAntProps(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
     writer.println("application-package=" + getPackageName());
