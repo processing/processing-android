@@ -37,7 +37,6 @@ import processing.app.Util;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
-import processing.data.XML;
 import processing.mode.java.JavaBuild;
 import java.io.*;
 import java.security.Permission;

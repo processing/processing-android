@@ -487,7 +487,36 @@ public class Permissions extends JFrame {
       "WRITE_SETTINGS", "Allows an application to read or write the system settings.",
       "WRITE_SYNC_SETTINGS", "Allows applications to write the sync settings.",
       "WRITE_VOICEMAIL", "Allows an application to modify and remove existing voicemails in the system."
-    };
+  };
+  
+  // Dangerous permissions that need runtime approval:
+  // https://developer.android.com/guide/topics/security/permissions.html#normal-dangerous
+  public static final String[] dangerous = {
+      "READ_CALENDAR",
+      "WRITE_CALENDAR",
+      "CAMERA",
+      "READ_CONTACTS",
+      "WRITE_CONTACTS",
+      "GET_ACCOUNTS",
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_COARSE_LOCATION",
+      "RECORD_AUDIO",
+      "READ_PHONE_STATE",
+      "CALL_PHONE",
+      "READ_CALL_LOG",
+      "WRITE_CALL_LOG",
+      "ADD_VOICEMAIL",
+      "USE_SIP",
+      "PROCESS_OUTGOING_CALLS",
+      "BODY_SENSORS",
+      "SEND_SMS",
+      "RECEIVE_SMS",
+      "READ_SMS",
+      "RECEIVE_WAP_PUSH",
+      "RECEIVE_MMS",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE"      
+  };
 
   static String[] title;
   static String[] description;
