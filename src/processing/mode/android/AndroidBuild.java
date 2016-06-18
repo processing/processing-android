@@ -37,6 +37,7 @@ import processing.app.Util;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
+import processing.data.XML;
 import processing.mode.java.JavaBuild;
 import java.io.*;
 import java.security.Permission;
@@ -71,7 +72,7 @@ class AndroidBuild extends JavaBuild {
 
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
-  private boolean resetManifest = false;
+  private boolean rewriteManifest = false;
   
   private String renderer = "";
   
@@ -194,9 +195,9 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
-    manifest = new Manifest(sketch, appComponent, resetManifest);    
+    manifest = new Manifest(sketch, appComponent, rewriteManifest);    
     manifest.setSdkTarget(target_sdk);
-    resetManifest = false;
+    rewriteManifest = false;
     
     // grab code from current editing window (GUI only)
 //    prepareExport(null);
@@ -401,9 +402,13 @@ class AndroidBuild extends JavaBuild {
     writeHandheldActivity(activityFile);
     
     // Create manifest file
+    String[] permissions = manifest.getPermissions();
     File manifestFile = new File(tmpFolder, "AndroidManifest.xml");
-    writeHandheldManifest(manifestFile, sketchClassName, "1", "1.0");
-
+    for (String perm: permissions) {
+      System.out.println(perm);
+    }
+    writeHandheldManifest(manifestFile, sketchClassName, "1", "1.0", permissions);
+    
     // Write property and build files.
     writeAntProps(new File(tmpFolder, "ant.properties"));
     buildFile = new File(tmpFolder, "build.xml");
@@ -465,14 +470,20 @@ class AndroidBuild extends JavaBuild {
   }
   
   private void writeHandheldManifest(final File file, final String className, 
-      final String versionCode, String versionName) {
+      final String versionCode, String versionName, String[] permissions) {
     final PrintWriter writer = PApplet.createWriter(file);    
     writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");    
     writer.println("<manifest package=\"" + getPackageName() + "\"");
     writer.println("          android:versionCode=\"" +versionCode + "\" android:versionName=\"" + versionName +"\"");    
     writer.println("          xmlns:android=\"http://schemas.android.com/apk/res/android\">");
-    writer.println("    <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\"/>");
-    writer.println("    <uses-permission android:name=\"android.permission.WAKE_LOCK\"/>");
+//    writer.println("    <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\"/>");
+//    writer.println("    <uses-permission android:name=\"android.permission.WAKE_LOCK\"/>");
+
+    for (String name: permissions) {
+      if (name.equals("WAKE_LOCK") || name.equals("PROVIDE_BACKGROUND")) continue;
+      writer.println("    <uses-permission android:name=\"android.permission." + name + "\"/>");
+    }
+    
     writer.println("    <application");
     writer.println("        android:allowBackup=\"true\"");
     writer.println("        android:icon=\"@drawable/icon\"");
@@ -618,7 +629,7 @@ class AndroidBuild extends JavaBuild {
 //  }
   
   public void resetManifest() {
-    resetManifest = true;
+    rewriteManifest = true;
   }
   
   protected boolean usesGPU() {

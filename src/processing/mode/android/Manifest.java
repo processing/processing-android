@@ -74,22 +74,22 @@ public class Manifest {
   }
 
 
-  public void reset(int appComp) {
-    File manifestFile = getManifestFile();
-    writeBlankManifest(manifestFile, appComp);
-    try {
-      xml = new XML(manifestFile);
-    } catch (FileNotFoundException e) {
-      System.err.println("Could not read " + manifestFile.getAbsolutePath());
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ParserConfigurationException e) {
-      e.printStackTrace();
-    } catch (SAXException e) {
-      e.printStackTrace();
-    }    
-  }
+//  public void reset(int appComp) {
+//    File manifestFile = getManifestFile();
+//    writeBlankManifest(manifestFile, appComp);
+//    try {
+//      xml = new XML(manifestFile);
+//    } catch (FileNotFoundException e) {
+//      System.err.println("Could not read " + manifestFile.getAbsolutePath());
+//      e.printStackTrace();
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (ParserConfigurationException e) {
+//      e.printStackTrace();
+//    } catch (SAXException e) {
+//      e.printStackTrace();
+//    }    
+//  }
   
   
   private String defaultPackageName() {
@@ -347,7 +347,7 @@ public class Manifest {
 //  File manifestFile = new File(sketch.getFolder(), MANIFEST_XML);
 //  XMLElement xml = null;
   File manifestFile = getManifestFile();
-  if (!forceNew && manifestFile.exists()) {
+  if (manifestFile.exists()) {
     try {
       xml = new XML(manifestFile);
     } catch (Exception e) {
@@ -366,10 +366,20 @@ public class Manifest {
       }
     }
   }
+  
+  String[] permissionNames = null;
+  if (xml != null && forceNew) {
+    permissionNames = getPermissions();
+    xml = null;
+  }
+  
   if (xml == null) {
     writeBlankManifest(manifestFile, appComp);
     try {
       xml = new XML(manifestFile);
+      if (permissionNames != null) {
+        setPermissions(permissionNames);
+      }
     } catch (FileNotFoundException e) {
       System.err.println("Could not read " + manifestFile.getAbsolutePath());
       e.printStackTrace();
