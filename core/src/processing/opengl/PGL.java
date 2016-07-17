@@ -408,6 +408,8 @@ public abstract class PGL {
 
 
   public void dispose() {
+    graphics = null;
+    sketch = null;
     destroyFBOLayer();
   }
 

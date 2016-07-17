@@ -719,6 +719,7 @@ public class PGraphics extends PImage implements PConstants {
    * endRaw(), in order to shut things off.
    */
   public void dispose() {  // ignore
+    parent = null;
   }
 
 
