@@ -40,9 +40,11 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.*;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 //import android.text.format.Time;
@@ -5725,6 +5727,19 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     return new File(sketchPath(where));
   }
 
+  public File getSDCardDirectoryFile(String where) {
+	  String state = Environment.getExternalStorageState();
+	  if (Environment.MEDIA_MOUNTED.equals(state)) {
+		  return new File(new File(
+				  Environment.getExternalStorageDirectory() + "/Processing",
+				  getPackageName()),
+				  where);
+	  } else {
+		  //If external storage is not available, fall back to internal storage.
+		  Log.i(getComponentName().getPackageName(), "External storage not available, falling back to internal.");
+		  return new File(sketchPath(where));
+	  }
+  }
 
   /**
    * Returns a path inside the applet folder to save to. Like sketchPath(),
@@ -5741,11 +5756,12 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    */
   public String savePath(String where) {
     if (where == null) return null;
-//    System.out.println("filename before sketchpath is " + where);
-    String filename = sketchPath(where);
-//    System.out.println("filename after sketchpath is " + filename);
+    File filename = getSDCardDirectoryFile(where);
     createPath(filename);
-    return filename;
+    //Notify the Gallery fot the new file
+    MediaScannerConnection.scanFile(this,
+    		new String[] { filename.getPath() }, new String[] { "image/*" }, null);
+    return filename.getAbsolutePath();
   }
 
 
