@@ -2,5 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="var" path="ANDROID_LIB"/>
+	<classpathentry kind="lib" path="library/android-support-v4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -36,6 +36,7 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ConfigurationInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.*;
@@ -43,6 +44,7 @@ import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 //import android.text.format.Time;
 import android.util.*;
 import android.view.LayoutInflater;
@@ -761,15 +763,18 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
   @Override
   public void onDestroy() {
-//    stop();
+    super.onDestroy();
     dispose();
+    exit2();
     if (PApplet.DEBUG) {
       System.out.println("PApplet.onDestroy() called");
     }
-    super.onDestroy();
-    //finish();
   }
 
+
+  public void onPermissionsGranted() {
+
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -1180,6 +1185,11 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     return windowColor;
   }
 
+
+  public boolean checkPermission(String permission) {
+    int check = ContextCompat.checkSelfPermission(activity, permission);
+    return check == PackageManager.PERMISSION_GRANTED;
+  }
 
 
   public void orientation(int which) {
@@ -3337,7 +3347,10 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
   void exit2() {
     try {
-      System.exit(0);
+      if (activity != null) {
+        activity.finishAffinity();
+      }
+//      System.exit(0);
     } catch (SecurityException e) {
       // don't care about applet security exceptions
     }
@@ -3366,7 +3379,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       // https://github.com/processing/processing-android/issues/213#issuecomment-217348480
       surfaceView.getHolder().getSurface().release();
       surfaceView = null;
-      activity = null;
+//      activity = null;
     }
 
     handleMethods("dispose");
