@@ -43,7 +43,7 @@ import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.format.Time;
+//import android.text.format.Time;
 import android.util.*;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -3080,7 +3080,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   // getting the time
 
 
-  static protected Time time = new Time();
+//  static protected Time time = new Time();
 
   /**
    * Get the number of milliseconds since the applet started.
@@ -3094,16 +3094,16 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
   /** Seconds position of the current time. */
   static public int second() {
-    //return Calendar.getInstance().get(Calendar.SECOND);
-    time.setToNow();
-    return time.second;
+    return Calendar.getInstance().get(Calendar.SECOND);
+//    time.setToNow();
+//    return time.second;
   }
 
   /** Minutes position of the current time. */
   static public int minute() {
-    //return Calendar.getInstance().get(Calendar.MINUTE);
-    time.setToNow();
-    return time.minute;
+    return Calendar.getInstance().get(Calendar.MINUTE);
+//    time.setToNow();
+//    return time.minute;
   }
 
   /**
@@ -3114,9 +3114,9 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    * if (yankeeHour == 0) yankeeHour = 12;</PRE>
    */
   static public int hour() {
-    //return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-    time.setToNow();
-    return time.hour;
+    return Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+//    time.setToNow();
+//    return time.hour;
   }
 
   /**
@@ -3126,9 +3126,9 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    * or day of the year (1..365) then use java's Calendar.get()
    */
   static public int day() {
-    //return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-    time.setToNow();
-    return time.monthDay;
+    return Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+//    time.setToNow();
+//    return time.monthDay;
   }
 
   /**
@@ -3136,18 +3136,18 @@ public class PApplet extends Fragment implements PConstants, Runnable {
    */
   static public int month() {
     // months are number 0..11 so change to colloquial 1..12
-    //return Calendar.getInstance().get(Calendar.MONTH) + 1;
-    time.setToNow();
-    return time.month + 1;
+    return Calendar.getInstance().get(Calendar.MONTH) + 1;
+//    time.setToNow();
+//    return time.month + 1;
   }
 
   /**
    * Get the current year.
    */
   static public int year() {
-    //return Calendar.getInstance().get(Calendar.YEAR);
-    time.setToNow();
-    return time.year;
+    return Calendar.getInstance().get(Calendar.YEAR);
+//    time.setToNow();
+//    return time.year;
   }
 
 
