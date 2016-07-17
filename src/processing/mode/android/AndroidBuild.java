@@ -43,7 +43,6 @@ import processing.mode.java.JavaBuild;
 import java.io.*;
 import java.security.Permission;
 
-
 class AndroidBuild extends JavaBuild {
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
@@ -171,7 +170,8 @@ class AndroidBuild extends JavaBuild {
 
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder, sketchClassName);
-      writeMainActivity(srcFolder);
+      String[] permissions = manifest.getPermissions();
+      writeMainActivity(srcFolder, permissions);
 
 
       // new location for SDK Tools 17: /opt/android/tools/proguard/proguard-android.txt
@@ -186,6 +186,10 @@ class AndroidBuild extends JavaBuild {
 //      PApplet.saveStream(new File(libsFolder, "processing-core.jar"), input);
       Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
 
+      // Copy the compatibility package, needed for the permission handling
+      File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+      Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));
+      
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
       copyLibraries(libsFolder, assetsFolder);
@@ -893,7 +897,7 @@ class AndroidBuild extends JavaBuild {
   }
 
 
-  private void writeMainActivity(final File srcDirectory) {
+  private void writeMainActivity(final File srcDirectory, String[] permissions) {
     File mainActivityFile = new File(new File(srcDirectory, manifest.getPackageName().replace(".", "/")),
         "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
@@ -904,25 +908,32 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.view.WindowManager;");
     writer.println("import android.widget.FrameLayout;");
     writer.println("import android.view.ViewGroup.LayoutParams;");
-    writer.println("import  android.app.FragmentTransaction;");
+    writer.println("import android.app.FragmentTransaction;");
+    
+    writer.println("import android.content.pm.PackageManager;");
+    writer.println("import android.support.v4.app.ActivityCompat;");
+    writer.println("import android.support.v4.content.ContextCompat;");
+    writer.println("import java.util.ArrayList;");
+    writer.println("import android.app.AlertDialog;");
+    writer.println("import android.content.DialogInterface;");
+    writer.println("import android.Manifest;");
+    
     writer.println("import processing.core.PApplet;");
     writer.println("public class MainActivity extends Activity {");
     writer.println("    PApplet fragment;");
     writer.println("    private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
+    writer.println("    private static final int REQUEST_PERMISSIONS = 1;");
     writer.println("    int viewId = 0x1000;");
     writer.println("    @Override");
     writer.println("    protected void onCreate(Bundle savedInstanceState) {");
     writer.println("        super.onCreate(savedInstanceState);");
     writer.println("        Window window = getWindow();");
     writer.println("        requestWindowFeature(Window.FEATURE_NO_TITLE);");
-    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,"
-        + "WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
-    writer.println("window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,"
-        + "WindowManager.LayoutParams.FLAG_FULLSCREEN);");
+    writer.println("        window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);");
+    writer.println("        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);");
     writer.println("        FrameLayout frame = new FrameLayout(this);");
     writer.println("        frame.setId(viewId);");
-    writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, "
-        + "LayoutParams.MATCH_PARENT));");
+    writer.println("        setContentView(frame, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));");
     writer.println("        if (savedInstanceState == null) {");
     writer.println("            fragment = new " + sketchClassName + "();");
     writer.println("            FragmentTransaction ft = getFragmentManager().beginTransaction();");
@@ -936,6 +947,61 @@ class AndroidBuild extends JavaBuild {
     writer.println("        fragment.onBackPressed();");
     writer.println("        super.onBackPressed();");
     writer.println("    }");
+
+    // Requesting permissions from user when the app resumes.
+    // Nice example on how to handle user response
+    // http://stackoverflow.com/a/35495855   
+    // More on permission in Android 23:
+    // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
+    writer.println("    @Override");
+    writer.println("    public void onResume() {");
+    writer.println("        super.onResume();");    
+    writer.println("        ArrayList<String> needed = new ArrayList<String>();");
+    writer.println("        int check;");
+    writer.println("        boolean danger = false;");
+    for (String p: permissions) {
+      for (String d: Permissions.dangerous) {
+        if (d.equals(p)) {          
+          writer.println("        check = ContextCompat.checkSelfPermission(this, Manifest.permission." + p + ");");
+          writer.println("        if (check != PackageManager.PERMISSION_GRANTED) {");
+          writer.println("          needed.add(Manifest.permission." + p + ");");
+          writer.println("        } else {");
+          writer.println("          danger = true;");
+          writer.println("        }");         
+        }
+      }
+    }
+    writer.println("        if (!needed.isEmpty()) {");
+    writer.println("          ActivityCompat.requestPermissions(this, needed.toArray(new String[needed.size()]), REQUEST_PERMISSIONS);");
+    writer.println("        } else if (danger) {");
+    writer.println("          fragment.onPermissionsGranted();");
+    writer.println("        }");
+    writer.println("    }");    
+    
+    // The event handler for the permission result
+    writer.println("    @Override");
+    writer.println("    public void onRequestPermissionsResult(int requestCode,");
+    writer.println("                                           String permissions[], int[] grantResults) {");      
+    writer.println("      if (requestCode == REQUEST_PERMISSIONS) {");      
+    writer.println("        if (grantResults.length > 0) {");
+    writer.println("          for (int i = 0; i < grantResults.length; i++) {");
+    writer.println("            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
+    writer.println("              AlertDialog.Builder builder = new AlertDialog.Builder(this);");
+    writer.println("              builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
+    writer.println("                     .setCancelable(false)");
+    writer.println("                     .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+    writer.println("                          public void onClick(DialogInterface dialog, int id) {}");
+    writer.println("                     });");
+    writer.println("              AlertDialog alert = builder.create();");
+    writer.println("              alert.show();");
+    writer.println("              finishAffinity();");
+    writer.println("            }");
+    writer.println("          }");
+    writer.println("          fragment.onPermissionsGranted();");
+    writer.println("        }");
+    writer.println("      }");    
+    writer.println("    }");
+    
     writer.println("}");
     writer.flush();
     writer.close();
