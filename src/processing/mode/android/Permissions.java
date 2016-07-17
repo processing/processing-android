@@ -466,6 +466,34 @@ public class Permissions extends JFrame {
     "WRITE_SYNC_SETTINGS", "Allows applications to write the sync settings."
   };
   
+  // Dangerous permissions that need runtime approval:
+  // https://developer.android.com/guide/topics/security/permissions.html#normal-dangerous
+  public static final String[] dangerous = {
+    "READ_CALENDAR",
+    "WRITE_CALENDAR",
+    "CAMERA",
+    "READ_CONTACTS",
+    "WRITE_CONTACTS",
+    "GET_ACCOUNTS",
+    "ACCESS_FINE_LOCATION",
+    "ACCESS_COARSE_LOCATION",
+    "RECORD_AUDIO",
+    "READ_PHONE_STATE",
+    "CALL_PHONE",
+    "READ_CALL_LOG",
+    "WRITE_CALL_LOG",
+    "ADD_VOICEMAIL",
+    "USE_SIP",
+    "PROCESS_OUTGOING_CALLS",
+    "SEND_SMS",
+    "RECEIVE_SMS",
+    "READ_SMS",
+    "RECEIVE_WAP_PUSH",
+    "RECEIVE_MMS",
+    "READ_EXTERNAL_STORAGE",
+    "WRITE_EXTERNAL_STORAGE"      
+  };  
+  
   static String[] title;
   static String[] description;
   static int count;
