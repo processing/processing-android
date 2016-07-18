@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import processing.app.ui.Editor;
-import processing.app.Messages;
 import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
