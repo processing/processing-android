@@ -31,7 +31,7 @@ import android.graphics.Rect;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.util.DisplayMetrics;
+//import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -44,7 +44,7 @@ import processing.event.MouseEvent;
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
   private Point size;
-  private DisplayMetrics metrics;
+//  private DisplayMetrics metrics;
   private PApplet sketch;
   private CEngine engine;
 
@@ -91,6 +91,10 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
+  }
+
+  public void onPermissionsGranted() {
+
   }
 
   @Override

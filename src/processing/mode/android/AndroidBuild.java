@@ -233,6 +233,10 @@ class AndroidBuild extends JavaBuild {
 //      PApplet.saveStream(new File(libsFolder, "processing-core.jar"), input);
       Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
 
+      // Copy the compatibility package, needed for the permission handling
+      File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+      Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
+      
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
       copyLibraries(libsFolder, assetsFolder);
@@ -399,6 +403,11 @@ class AndroidBuild extends JavaBuild {
     File activityFile = new File(new File(srcFolder, getPackageName().replace(".", "/")),
         "HandheldActivity.java");
     writeHandheldActivity(activityFile);
+        
+    // Copy the compatibility package, needed for the permission handling
+    final File libsFolder = mkdirs(tmpFolder, "libs");
+    File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+    Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
     
     // Create manifest file
     String[] permissions = manifest.getPermissions();
@@ -1423,8 +1432,9 @@ class AndroidBuild extends JavaBuild {
 
   private void writeMainClass(final File srcDirectory, String renderer) {
     int comp = getAppComponent();
+    String[] permissions = manifest.getPermissions();
     if (comp == FRAGMENT) {
-      writeFragmentActivity(srcDirectory);
+      writeFragmentActivity(srcDirectory, permissions);
     } else if (comp == WALLPAPER) {
       writeWallpaperService(srcDirectory);
     } else if (comp == WATCHFACE) {
@@ -1439,7 +1449,7 @@ class AndroidBuild extends JavaBuild {
   }
 
   
-  private void writeFragmentActivity(final File srcDirectory) {
+  private void writeFragmentActivity(final File srcDirectory, String[] permissions) {
     File mainActivityFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
@@ -1452,8 +1462,18 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.app.FragmentTransaction;");
     writer.println("import processing.android.PFragment;");
     writer.println("import processing.core.PApplet;");
+    
+    writer.println("import android.content.pm.PackageManager;");
+    writer.println("import android.support.v4.app.ActivityCompat;");
+    writer.println("import android.support.v4.content.ContextCompat;");
+    writer.println("import java.util.ArrayList;");
+    writer.println("import android.app.AlertDialog;");
+    writer.println("import android.content.DialogInterface;");
+    writer.println("import android.Manifest;"); 
+    
     writer.println("public class MainActivity extends Activity {");
     writer.println("  private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
+    writer.println("    private static final int REQUEST_PERMISSIONS = 1;");    
     writer.println("  private static final int viewId = View.generateViewId();");
     writer.println("  PFragment fragment;");
     writer.println("  @Override");
@@ -1479,6 +1499,61 @@ class AndroidBuild extends JavaBuild {
     writer.println("    fragment.onBackPressed();");
     writer.println("    super.onBackPressed();");
     writer.println("  }");
+    
+    // Requesting permissions from user when the app resumes.
+    // Nice example on how to handle user response
+    // http://stackoverflow.com/a/35495855   
+    // More on permission in Android 23:
+    // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
+    writer.println("    @Override");
+    writer.println("    public void onResume() {");
+    writer.println("        super.onResume();");    
+    writer.println("        ArrayList<String> needed = new ArrayList<String>();");
+    writer.println("        int check;");
+    writer.println("        boolean danger = false;");
+    for (String p: permissions) {
+      for (String d: Permissions.dangerous) {
+        if (d.equals(p)) {          
+          writer.println("        check = ContextCompat.checkSelfPermission(this, Manifest.permission." + p + ");");
+          writer.println("        if (check != PackageManager.PERMISSION_GRANTED) {");
+          writer.println("          needed.add(Manifest.permission." + p + ");");
+          writer.println("        } else {");
+          writer.println("          danger = true;");
+          writer.println("        }");         
+        }
+      }
+    }
+    writer.println("        if (!needed.isEmpty()) {");
+    writer.println("          ActivityCompat.requestPermissions(this, needed.toArray(new String[needed.size()]), REQUEST_PERMISSIONS);");
+    writer.println("        } else if (danger) {");
+    writer.println("          fragment.onPermissionsGranted();");
+    writer.println("        }");
+    writer.println("    }");    
+    
+    // The event handler for the permission result
+    writer.println("    @Override");
+    writer.println("    public void onRequestPermissionsResult(int requestCode,");
+    writer.println("                                           String permissions[], int[] grantResults) {");      
+    writer.println("      if (requestCode == REQUEST_PERMISSIONS) {");      
+    writer.println("        if (grantResults.length > 0) {");
+    writer.println("          for (int i = 0; i < grantResults.length; i++) {");
+    writer.println("            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
+    writer.println("              AlertDialog.Builder builder = new AlertDialog.Builder(this);");
+    writer.println("              builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
+    writer.println("                     .setCancelable(false)");
+    writer.println("                     .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+    writer.println("                          public void onClick(DialogInterface dialog, int id) {}");
+    writer.println("                     });");
+    writer.println("              AlertDialog alert = builder.create();");
+    writer.println("              alert.show();");
+    writer.println("              finishAffinity();");
+    writer.println("            }");
+    writer.println("          }");
+    writer.println("          fragment.onPermissionsGranted();");
+    writer.println("        }");
+    writer.println("      }");    
+    writer.println("    }");    
+    
     writer.println("}");
     writer.flush();
     writer.close();    

@@ -31,7 +31,7 @@ import android.view.WindowInsets;
 import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.util.DisplayMetrics;
+//import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
@@ -42,7 +42,7 @@ import android.graphics.Rect;
 
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
   private Point size;
-  private DisplayMetrics metrics;
+//  private DisplayMetrics metrics;
   private PApplet sketch;
   private GLEngine engine;
 
@@ -89,6 +89,11 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
   }
+
+  public void onPermissionsGranted() {
+
+  }
+
 
   @Override
   public Engine onCreateEngine() {

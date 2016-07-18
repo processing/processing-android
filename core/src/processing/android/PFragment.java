@@ -28,7 +28,6 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,7 +37,7 @@ import android.view.WindowManager;
 import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
-  private DisplayMetrics metrics;
+//  private DisplayMetrics metrics;
   private Point size;
   private PApplet sketch;
 
@@ -150,6 +149,11 @@ public class PFragment extends Fragment implements AppComponent {
 
   public void onBackPressed() {
     sketch.exit();
+  }
+
+
+  public void onPermissionsGranted() {
+    sketch.onPermissionsGranted();
   }
 
 

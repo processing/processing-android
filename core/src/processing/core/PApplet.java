@@ -33,9 +33,11 @@ import java.util.regex.*;
 import java.util.zip.*;
 
 import android.content.*;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.*;
 import android.net.Uri;
+import android.support.v4.content.ContextCompat;
 import android.text.format.Time;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -590,6 +592,11 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void onPermissionsGranted() {
+
+  }
+
+
   /**
    * @param method "size" or "fullScreen"
    * @param args parameters passed to the function so we can show the user
@@ -744,6 +751,17 @@ public class PApplet extends Object implements PConstants {
 
   public void orientation(int which) {
     surface.setOrientation(which);
+  }
+
+
+  public boolean checkPermission(String permission) {
+    Context context = surface.getContext();
+    if (context != null) {
+      int check = ContextCompat.checkSelfPermission(context, permission);
+      return check == PackageManager.PERMISSION_GRANTED;
+    } else {
+      return false;
+    }
   }
 
 

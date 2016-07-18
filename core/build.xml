@@ -38,7 +38,8 @@
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
 	   bootclasspath="${env.ANDROID_SDK}/platforms/${android.platform}/android.jar;
-	                  library/wearable-1.3.0-classes.jar"
+	                  library/wearable-1.3.0-classes.jar;
+	                  library/android-support-v4.jar"
 	   srcdir="src" destdir="bin" />
 
     <!-- Copy the shaders to the bin folder. 
