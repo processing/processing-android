@@ -33,6 +33,7 @@ import android.app.ActivityManager.MemoryInfo;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
+import android.view.SurfaceHolder;
 
 
 /**
@@ -208,17 +209,21 @@ public class PGraphicsAndroid2D extends PGraphics {
 //    }
 
     if (primaryGraphics) {
-      Canvas screen = null;
-      try {
-        screen = parent.getSurfaceHolder().lockCanvas(null);
-        if (screen != null) {
-          screen.drawBitmap(bitmap, new Matrix(), null);
-        }
-      } finally {
-        if (screen != null) {
-          parent.getSurfaceHolder().unlockCanvasAndPost(screen);
+      SurfaceHolder holder = parent.getSurfaceHolder();
+      if (holder != null) {
+        Canvas screen = null;
+        try {
+          screen = holder.lockCanvas(null);
+          if (screen != null) {
+            screen.drawBitmap(bitmap, new Matrix(), null);
+          }
+        } finally {
+          if (screen != null) {
+            holder.unlockCanvasAndPost(screen);
+          }
         }
       }
+
     } else {
       // TODO this is probably overkill for most tasks...
       loadPixels();

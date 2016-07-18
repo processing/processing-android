@@ -785,8 +785,11 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   // TODO this is only used by A2D, when finishing up a draw. but if the
   // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
   public SurfaceHolder getSurfaceHolder() {
-    return surfaceView.getHolder();
-//    return surfaceHolder;
+    if (surfaceView != null) {
+      return surfaceView.getHolder();
+    } else {
+      return null;
+    }
   }
 
 
