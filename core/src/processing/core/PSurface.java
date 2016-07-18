@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.InputStream;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.view.SurfaceView;
@@ -37,6 +38,7 @@ import processing.android.AppComponent;
  * handling
  */
 public interface PSurface {
+  public Context getContext();
   public Activity getActivity();
   public AppComponent getComponent();
 

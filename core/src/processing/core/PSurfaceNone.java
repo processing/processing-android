@@ -23,6 +23,7 @@
 package processing.core;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
@@ -60,6 +61,18 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   protected float frameRateTarget = 60;
   protected long frameRatePeriod = 1000000000L / 60L;
+
+  @Override
+  public Context getContext() {
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      return activity;
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
+      return wallpaper;
+    } else if (component.getKind() == AppComponent.WATCHFACE) {
+      return watchface;
+    }
+    return null;
+  }
 
   @Override
   public Activity getActivity() {
