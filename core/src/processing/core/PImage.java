@@ -257,9 +257,24 @@ public class PImage implements PConstants, Cloneable {
     if (pixels == null || pixels.length != width*height) {
       pixels = new int[width*height];
     }
+
     if (bitmap != null) {
-      bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+      if (modified) {
+        // The pixels array has been used to do color manipulations, so
+        // the bitmap should be updated
+        if (!bitmap.isMutable()) {
+          // create a mutable version of this bitmap
+          bitmap = bitmap.copy(Config.ARGB_8888, true);
+        }
+        bitmap.setPixels(pixels, 0, width, mx1, my1, mx2 - mx1, my2 - my1);
+        modified = false;
+      } else {
+        // Get wherever it is in the bitmap right now, we assume is the most
+        // up-to-date version of the image.
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+      }
     }
+
     setLoaded();
   }
 
