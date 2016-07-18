@@ -46,9 +46,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 // http://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml
 // http://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml
@@ -265,6 +262,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       }
 
       // build-tools
+      NodeList buildToolList = doc.getElementsByTagName("sdk:build-tool");
+      for (int i = 0; i < buildToolList.getLength(); i++) {
+        Node buildTool = buildToolList.item(i);
+        NodeList revision = ((Element) buildTool).getElementsByTagName("sdk:revision");
+        NodeList major = ((Element) revision).getElementsByTagName("sdk:major");
+        NodeList minor = ((Element) revision).getElementsByTagName("sdk:minor");
+        NodeList micro = ((Element) revision).getElementsByTagName("sdk:micro");
+        
+        
+      }
+      
       Node buildToolsItem = doc.getElementsByTagName("sdk:build-tool").item(doc.getElementsByTagName("sdk:build-tool").getLength()-1);
       archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
       archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
