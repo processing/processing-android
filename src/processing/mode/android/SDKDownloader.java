@@ -30,6 +30,7 @@ import org.xml.sax.SAXException;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
+import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -223,87 +224,132 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = dbf.newDocumentBuilder();
       Document doc = db.parse(new URL(repositoryUrl).openStream());
-
-      // platform
-      String platformDescription = "Android SDK Platform " +  PLATFORM_API_LEVEL;
-      NodeList platformList = doc.getElementsByTagName("sdk:platform");
-      for (int i = 0; i < platformList.getLength(); i++) {
-        Node platform = platformList.item(i);
+      Node archiveListItem;
+      NodeList archiveList;
+      Node archiveItem;
+      
+      // -----------------------------------------------------------------------
+      // platform      
+      Node platform = getLatestPlatform(doc.getElementsByTagName("sdk:platform"));
+      if (platform != null) {
         NodeList version = ((Element) platform).getElementsByTagName("sdk:version");
-        NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
-        NodeList desc = ((Element) platform).getElementsByTagName("sdk:description");
-        // API level and platform description are both used to avoid ambiguity with 
-        // preview versions, which might share the API level with the earlier stable 
-        // platform, but use the letter codename in their description.        
-        if (level.item(0).getTextContent().equals(PLATFORM_API_LEVEL) && 
-            desc.item(0).getTextContent().equals(platformDescription)) {
-          Node archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
-          Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-          urlHolder.platformVersion = version.item(0).getTextContent();
-          urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-          urlHolder.platformFilename = urlHolder.platformUrl.split("/")[urlHolder.platformUrl.split("/").length-1];
-          urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
-        }
+        archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
+        archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
+        urlHolder.platformVersion = version.item(0).getTextContent();
+        urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
+        urlHolder.platformFilename = urlHolder.platformUrl.split("/")[urlHolder.platformUrl.split("/").length-1];
+        urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());        
       }
 
+      // Difference between platform tools, build tools, and SDK tools: 
+      // http://stackoverflow.com/questions/19911762/what-is-android-sdk-build-tools-and-which-version-should-be-used
+      // Always get the latest!
+      
+      // -----------------------------------------------------------------------
       // platform-tools
-      Node platformToolItem = doc.getElementsByTagName("sdk:platform-tool").item(0);
-      Node archiveListItem = ((Element) platformToolItem).getElementsByTagName("sdk:archives").item(0);
-      NodeList archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for (int i = 0; i < archiveList.getLength(); i++) {
-        Node archive = archiveList.item(i);
-        String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-        if (hostOs.equals(requiredHostOs)) {
-          urlHolder.platformToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-          urlHolder.platformToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.platformToolsFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-          break;
+      Node platformToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:platform-tool"));
+      if (platformToolsItem != null) {
+        archiveListItem = ((Element) platformToolsItem).getElementsByTagName("sdk:archives").item(0);
+        archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
+        for (int i = 0; i < archiveList.getLength(); i++) {
+          Node archive = archiveList.item(i);
+          String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
+          if (hostOs.equals(requiredHostOs)) {
+            urlHolder.platformToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+            urlHolder.platformToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.platformToolsFilename;
+            urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
+            break;
+          }
         }
       }
 
+      // -----------------------------------------------------------------------
       // build-tools
-      NodeList buildToolList = doc.getElementsByTagName("sdk:build-tool");
-      for (int i = 0; i < buildToolList.getLength(); i++) {
-        Node buildTool = buildToolList.item(i);
-        NodeList revision = ((Element) buildTool).getElementsByTagName("sdk:revision");
-        NodeList major = ((Element) revision).getElementsByTagName("sdk:major");
-        NodeList minor = ((Element) revision).getElementsByTagName("sdk:minor");
-        NodeList micro = ((Element) revision).getElementsByTagName("sdk:micro");
-        
-        
+      Node buildToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:build-tool"));
+      if (buildToolsItem != null) {
+        archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
+        archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
+        for (int i = 0; i < archiveList.getLength(); i++) {
+          Node archive = archiveList.item(i);
+          String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
+          if (hostOs.equals(requiredHostOs)) {
+            urlHolder.buildToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+            urlHolder.buildToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.buildToolsFilename;
+            urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
+            break;
+          }
+        }
       }
       
-      Node buildToolsItem = doc.getElementsByTagName("sdk:build-tool").item(doc.getElementsByTagName("sdk:build-tool").getLength()-1);
-      archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
-      archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for (int i = 0; i < archiveList.getLength(); i++) {
-        Node archive = archiveList.item(i);
-        String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-        if (hostOs.equals(requiredHostOs)) {
-          urlHolder.buildToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-          urlHolder.buildToolsUrl = URL_REPOSITORY_FOLDER + urlHolder.buildToolsFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-          break;
-        }
-      }
-
+      // -----------------------------------------------------------------------
       // tools
-      Node toolsItem = doc.getElementsByTagName("sdk:tool").item(0);
-      archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
-      archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-      for (int i = 0; i < archiveList.getLength(); i++) {
-        Node archive = archiveList.item(i);
-        String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-        if (hostOs.equals(requiredHostOs)) {
-          urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-          urlHolder.toolsUrl = URL_REPOSITORY_FOLDER + urlHolder.toolsFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-          break;
+      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"));
+      if (toolsItem != null) {
+        archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
+        archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
+        for (int i = 0; i < archiveList.getLength(); i++) {
+          Node archive = archiveList.item(i);
+          String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
+          if (hostOs.equals(requiredHostOs)) {
+            urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+            urlHolder.toolsUrl = URL_REPOSITORY_FOLDER + urlHolder.toolsFilename;
+            urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
+            break;
+          }
         }
       }
-
+      
       return urlHolder;
     }
+  }
+  
+  private Node getLatestPlatform(NodeList platformList) {
+    Node latest = null;
+    int maxRevision = -1;
+    String platformDescription = "Android SDK Platform " +  PLATFORM_API_LEVEL;    
+    for (int i = 0; i < platformList.getLength(); i++) {
+      Node platform = platformList.item(i);
+      
+      NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
+      NodeList desc = ((Element) platform).getElementsByTagName("sdk:description");
+      NodeList revision = ((Element) platform).getElementsByTagName("sdk:revision");
+      // API level and platform description are both used to avoid ambiguity with 
+      // preview versions, which might share the API level with the earlier stable 
+      // platform, but use the letter codename in their description.        
+      if (level.item(0).getTextContent().equals(PLATFORM_API_LEVEL) && 
+          desc.item(0).getTextContent().equals(platformDescription)) {
+        int intRevision = PApplet.parseInt(revision.item(0).getTextContent());
+        if (maxRevision < intRevision) {
+          latest = platform;
+          maxRevision = intRevision;
+        }
+      }
+    }
+    return latest;
+  }
+  
+  private Node getLatestToolItem(NodeList list) {
+    Node latest = null;
+    int maxMajor = -1;
+    int maxMinor = -1;
+    int maxMicro = -1; 
+    for (int i = 0; i < list.getLength(); i++) {
+      Node item = list.item(i);
+      Node revision = ((Element)item).getElementsByTagName("sdk:revision").item(0);        
+      NodeList major = ((Element)revision).getElementsByTagName("sdk:major");
+      NodeList minor = ((Element)revision).getElementsByTagName("sdk:minor");
+      NodeList micro = ((Element)revision).getElementsByTagName("sdk:micro");        
+      int intMajor = PApplet.parseInt(major.item(0).getTextContent());
+      int intMinor = PApplet.parseInt(minor.item(0).getTextContent());
+      int intMicro = PApplet.parseInt(micro.item(0).getTextContent());
+      if (maxMajor <= intMajor && maxMinor <= intMinor && maxMicro <= intMicro) {        
+        latest = item;
+        maxMajor = intMajor;
+        maxMinor = intMinor;
+        maxMicro = intMicro;
+      }
+    }
+    return latest;
   }
 
   @Override
