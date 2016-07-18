@@ -20,6 +20,7 @@ void setup() {
   size(200, 200);
   frameRate(30);
   img = loadImage("end.jpg");
+  img.loadPixels();
 }
 
 void draw() {

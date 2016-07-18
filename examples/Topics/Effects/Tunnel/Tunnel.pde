@@ -24,7 +24,7 @@ int[][] shadeTable;
 int w, h;
 
 void setup() {
-  size(640, 360);
+  size(640, 360, P2D);
   
   // Load texture 512 x 512
   textureImg = loadImage("red_smoke.jpg");

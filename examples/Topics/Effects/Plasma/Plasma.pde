@@ -11,7 +11,7 @@ int pixelSize=2;
 PGraphics pg;
 
 void setup(){
-  size(640, 360);
+  size(640, 360, P2D);
   // Create buffered image for plasma effect
   pg = createGraphics(160, 90, P2D);
   colorMode(HSB);
