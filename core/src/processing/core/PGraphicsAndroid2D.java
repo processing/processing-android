@@ -143,8 +143,6 @@ public class PGraphicsAndroid2D extends PGraphics {
     if (bitmap != null) bitmap.recycle();
     bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
     canvas = new Canvas(bitmap);
-//    image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-//    canvas = (Graphics2D) image.getGraphics();
   }
 
 
@@ -448,7 +446,7 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void endShape(int mode) {
     if (shape == POINTS && stroke && vertexCount > 0) {
-      Matrix m = canvas.getMatrix();
+      Matrix m = getMatrixImp();
       if (strokeWeight == 1 && m.isIdentity()) {
         if (screenPoint == null) {
           screenPoint = new float[2];
@@ -1516,12 +1514,8 @@ public class PGraphicsAndroid2D extends PGraphics {
     if (target == null) {
       target = new PMatrix2D();
     }
-//    canvas.getTransform().getMatrix(transform);
-    Matrix m = new Matrix();
-    canvas.getMatrix(m);
+    Matrix m = getMatrixImp();
     m.getValues(transform);
-//    target.set((float) transform[0], (float) transform[2], (float) transform[4],
-//               (float) transform[1], (float) transform[3], (float) transform[5]);
     target.set((float) transform[0], (float) transform[1], (float) transform[2],
                (float) transform[3], (float) transform[4], (float) transform[5]);
     return target;
@@ -1564,6 +1558,11 @@ public class PGraphicsAndroid2D extends PGraphics {
     getMatrix((PMatrix2D) null).print();
   }
 
+
+  protected Matrix getMatrixImp() {
+    return parent.getSurfaceView().getMatrix();
+//    return canvas.getMatrix();
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -1609,7 +1608,7 @@ public class PGraphicsAndroid2D extends PGraphics {
     }
     screenPoint[0] = x;
     screenPoint[1] = y;
-    canvas.getMatrix().mapPoints(screenPoint);
+    getMatrixImp().mapPoints(screenPoint);
     return screenPoint[0];
   }
 
@@ -1623,7 +1622,7 @@ public class PGraphicsAndroid2D extends PGraphics {
     }
     screenPoint[0] = x;
     screenPoint[1] = y;
-    canvas.getMatrix().mapPoints(screenPoint);
+    getMatrixImp().mapPoints(screenPoint);
     return screenPoint[1];
   }
 
@@ -2046,35 +2045,31 @@ public class PGraphicsAndroid2D extends PGraphics {
     }
 
     if (src.bitmap == null) {
-      // hopefully this will do the work to figure out what's on/offscreen
-      // in spite of the offset and stride that's been provided
-      canvas.drawBitmap(src.pixels, 0, src.width,
-                        x, y, src.width, src.height, false, null);
-      // hasAlpha is set to false since we don't want blending.
-      // however that may be incorrect if it winds up copying only the RGB
-      // (without the A) portion of the pixels.
+      src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      src.modified = true;
+    }
 
-    } else {  // src.bitmap != null
-      if (src.width != src.bitmap.getWidth() ||
-          src.height != src.bitmap.getHeight()) {
+    if (src.width != src.bitmap.getWidth() ||
+        src.height != src.bitmap.getHeight()) {
+      src.bitmap.recycle();
+      src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      src.modified = true;
+    }
+    if (src.modified) {
+      if (!src.bitmap.isMutable()) {
         src.bitmap.recycle();
         src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
-        src.modified = true;
       }
-      if (src.modified) {
-        if (!src.bitmap.isMutable()) {
-          src.bitmap.recycle();
-          src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
-        }
-        src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
-        src.modified = false;
-      }
-      // set() happens in screen coordinates, so need to clear the ctm
-      canvas.save(Canvas.MATRIX_SAVE_FLAG);
-      canvas.setMatrix(null);  // set to identity
-      canvas.drawBitmap(src.bitmap, x, y, null);
-      canvas.restore();
+      src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
+      src.modified = false;
     }
+
+    // set() happens in screen coordinates, so need to clear the ctm
+    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+    canvas.setMatrix(null);  // set to identity
+    canvas.drawBitmap(src.bitmap, x, y, null);
+    canvas.restore();
+
   }
 
 
