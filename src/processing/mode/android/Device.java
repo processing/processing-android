@@ -272,7 +272,7 @@ class Device {
 
   void initialize() throws IOException, InterruptedException {
     adb("logcat", "-c");
-    final String[] cmd = generateAdbCommand("logcat");
+    final String[] cmd = generateAdbCommand("logcat", "-v", "brief");
     final String title = PApplet.join(cmd, ' ');
     logcat = Runtime.getRuntime().exec(cmd);
     ProcessRegistry.watch(logcat);
