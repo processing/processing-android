@@ -27,7 +27,7 @@ void setup() {
 
   // Create blank surfaces to draw on
   for (int i = 0; i < spriteFrames.length; i++)  {
-    spriteFrames[i] = createGraphics(width, height, JAVA2D);
+    spriteFrames[i] = createGraphics(width, height);
   }   
 }
 

@@ -20,7 +20,7 @@ PGraphics pg;
 int[][] vy,vx; 
 
 void setup() {
-  size(640, 360);
+  size(640, 360, P2D);
   pg = createGraphics(160, 90, P2D);    
   vy = new int[numBlobs][pg.height];
   vx = new int[numBlobs][pg.width];

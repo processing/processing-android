@@ -28,6 +28,7 @@ void setup(){
   
   // Create buffered image for 3d cube
   pg = createGraphics(width, height, P3D);
+  pg.loadPixels();
 
   calc1 = new int[width];
   calc3 = new int[width];

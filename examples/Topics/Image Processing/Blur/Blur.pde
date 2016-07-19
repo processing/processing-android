@@ -18,6 +18,7 @@ img.loadPixels();
 
 // Create an opaque image of the same size as the original
 PImage edgeImg = createImage(img.width, img.height, RGB);
+edgeImg.loadPixels();
 
 // Loop through every pixel in the image.
 for (int y = 1; y < img.height-1; y++) { // Skip top and bottom edges
