@@ -765,7 +765,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   public void onDestroy() {
     super.onDestroy();
     dispose();
-    exit2();
     if (PApplet.DEBUG) {
       System.out.println("PApplet.onDestroy() called");
     }
@@ -3005,7 +3004,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
 
   public void onBackPressed() {
-	  exit();
+    exit();
   }
 
 
@@ -3338,6 +3337,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     try {
       if (activity != null) {
         activity.finishAffinity();
+        activity = null;
       }
 //      System.exit(0);
     } catch (SecurityException e) {
@@ -3368,7 +3368,6 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       // https://github.com/processing/processing-android/issues/213#issuecomment-217348480
       surfaceView.getHolder().getSurface().release();
       surfaceView = null;
-//      activity = null;
     }
 
     handleMethods("dispose");
