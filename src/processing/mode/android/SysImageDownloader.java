@@ -52,8 +52,14 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private static final String URL_SYS_IMAGES_FOLDER = "http://dl-ssl.google.com/android/repository/sys-img/android/";
   private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
   private static final String URL_SYS_IMAGES_WEAR_FOLDER = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
-  private static final String SYSTEM_IMAGE = "Intel x86 Atom System Image";  
-  private static final String SYSTEM_IMAGE_WEAR = "Android Wear Intel x86 Atom System Image";
+  
+  private static final String SYSTEM_IMAGE_MACOSX = "Intel x86 Atom System Image";  
+  private static final String SYSTEM_IMAGE_WINDOWS = "ARM EABI v7a System Image";
+  private static final String SYSTEM_IMAGE_LINUX = "ARM EABI v7a System Image";
+  
+  private static final String SYSTEM_IMAGE_WEAR_MACOSX = "Android Wear Intel x86 Atom System Image";
+  private static final String SYSTEM_IMAGE_WEAR_WINDOWS = "Android Wear ARM EABI v7a System Image";
+  private static final String SYSTEM_IMAGE_WEAR_LINUX = "Android Wear ARM EABI v7a System Image";
   
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -206,6 +212,14 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       
       if (wear) {
         // wear system image
+        String systemImage = "";
+        if (Platform.isMacOS()) {
+          systemImage = SYSTEM_IMAGE_WEAR_MACOSX;
+        } else if (Platform.isWindows()) {
+          systemImage = SYSTEM_IMAGE_WEAR_WINDOWS;
+        } else if (Platform.isLinux()) {
+          systemImage = SYSTEM_IMAGE_WEAR_LINUX;
+        }         
         Document docSysImgWear = db.parse(new URL(repositoryUrl).openStream());
         NodeList sysImgWearList = docSysImgWear.getElementsByTagName("sdk:system-image");
         for (int i = 0; i < sysImgWearList.getLength(); i++) {
@@ -216,7 +230,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           // Only considering nodes without a codename, which correspond to the platform
           // pre-releases.        
           if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
-              desc.item(0).getTextContent().equals(SYSTEM_IMAGE_WEAR) && 
+              desc.item(0).getTextContent().equals(systemImage) && 
               codename.item(0) == null) {          
             NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
             urlHolder.sysImgWearTag = tag.item(0).getTextContent();          
@@ -230,6 +244,14 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         }        
       } else {
         // default system image
+        String systemImage = "";
+        if (Platform.isMacOS()) {
+          systemImage = SYSTEM_IMAGE_MACOSX;
+        } else if (Platform.isWindows()) {
+          systemImage = SYSTEM_IMAGE_WINDOWS;
+        } else if (Platform.isLinux()) {
+          systemImage = SYSTEM_IMAGE_LINUX;
+        }        
         Document docSysImg = db.parse(new URL(repositoryUrl).openStream());
         NodeList sysImgList = docSysImg.getElementsByTagName("sdk:system-image");
         for (int i = 0; i < sysImgList.getLength(); i++) {
@@ -240,7 +262,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           // Only considering nodes without a codename, which correspond to the platform
           // pre-releases.        
           if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
-              desc.item(0).getTextContent().equals(SYSTEM_IMAGE) && 
+              desc.item(0).getTextContent().equals(systemImage) && 
               codename.item(0) == null) {          
             NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
             urlHolder.sysImgTag = tag.item(0).getTextContent();          
