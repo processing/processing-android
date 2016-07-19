@@ -100,6 +100,10 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     return true;
   }
 
+  public void dispose() {
+    engine = null;
+  }
+
   public void onPermissionsGranted() {
 
   }

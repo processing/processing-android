@@ -105,9 +105,33 @@ public class PSurfaceNone implements PSurface, PConstants {
   public void dispose() {
     sketch = null;
     graphics = null;
-    component = null;
-    activity = null;
-    view = null;
+
+    if (activity != null) {
+      // In API level 21 you can do
+      // activity.releaseInstance();
+      // to ask the app to free up its memory.
+      // https://developer.android.com/reference/android/app/Activity.html#releaseInstance()
+      // but seems redundant to call it here, since dispose() is triggered by
+      // the onDestroy() handler, which means that the app is already
+      // being destroyed.
+
+      activity = null;
+    }
+
+    if (view != null) {
+      view.destroyDrawingCache();
+      view = null;
+    }
+
+    if (component != null) {
+      component.dispose();
+      component = null;
+    }
+
+    if (surface != null) {
+      surface.getHolder().getSurface().release();
+      surface = null;
+    }
   }
 
   @Override
@@ -219,6 +243,17 @@ public class PSurfaceNone implements PSurface, PConstants {
     int kind = component.getKind();
     if (kind == AppComponent.FRAGMENT || kind == AppComponent.WALLPAPER) {
       surface.setSystemUiVisibility(visibility);
+    }
+  }
+
+  @Override
+  public void finish() {
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      activity.finish();
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
+      wallpaper.stopSelf();
+    } else if (component.getKind() == AppComponent.WATCHFACE) {
+      watchface.stopSelf();
     }
   }
 
@@ -356,14 +391,7 @@ public class PSurfaceNone implements PSurface, PConstants {
         beforeTime = System.nanoTime();
       }
 
-      if (sketch != null) {
-        sketch.dispose();  // call to shutdown libs?
-        // If the user called the exit() function, the window should close,
-        // rather than the sketch just halting.
-        if (sketch.exitCalled) {
-          sketch.exitActual();
-        }
-      }
+      finish();
     }
   }
 }

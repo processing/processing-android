@@ -94,6 +94,10 @@ public class PFragment extends Fragment implements AppComponent {
     this.sketch = sketch;
   }
 
+  public void dispose() {
+    sketch = null;
+  }
+
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     if (sketch != null) {
@@ -121,8 +125,8 @@ public class PFragment extends Fragment implements AppComponent {
 
   @Override
   public void onDestroy() {
-    sketch.onDestroy();
     super.onDestroy();
+    sketch.onDestroy();
   }
 
 
@@ -147,9 +151,9 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
 
-  public void onBackPressed() {
-    sketch.exit();
-  }
+//  public void onBackPressed() {
+//    sketch.exit();
+//  }
 
 
   public void onPermissionsGranted() {

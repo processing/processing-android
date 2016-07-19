@@ -2823,14 +2823,14 @@ public class PApplet extends Object implements PConstants {
     die(what);
   }
 
+  /*
+   // No need for these two, as explicit app exit is not required on Android, read
+   // this discussion:
+   // http://stackoverflow.com/questions/2033914/quitting-an-application-is-that-frowned-upon/2034238
 
-  /**
-   * Call to safely exit the sketch when finished. For instance,
-   * to render a single frame, save it, and quit.
-   */
+   // Call to safely exit the sketch when finished. For instance,
+   // to render a single frame, save it, and quit.
   public void exit() {
-//    println("exit() called");
-//    if (thread == null) {
     if (surface.isStopped()) {
       // exit immediately, stop() has already been called,
       // meaning that the main thread has long since exited
@@ -2853,7 +2853,6 @@ public class PApplet extends Object implements PConstants {
     }
   }
 
-
   public void exitActual() {
     try {
       System.exit(0);
@@ -2861,6 +2860,7 @@ public class PApplet extends Object implements PConstants {
       // don't care about applet security exceptions
     }
   }
+  */
 
   /**
    * Called to dispose of resources and shut down the sketch.

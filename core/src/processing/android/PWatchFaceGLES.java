@@ -90,6 +90,11 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     this.sketch = sketch;
   }
 
+  public void dispose() {
+    sketch = null;
+    engine = null;
+  }
+
   public void onPermissionsGranted() {
 
   }
@@ -282,7 +287,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
   @Override
   public void onDestroy() {
-    sketch.onDestroy();
     super.onDestroy();
+    sketch.onDestroy();
   }
 }

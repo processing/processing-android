@@ -78,5 +78,7 @@ public interface PSurface {
 
   public boolean isStopped();
 
+  public void finish();
+
   public void setFrameRate(float fps);
 }

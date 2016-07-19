@@ -1494,11 +1494,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("      fragment.setSketch(sketch);");
     writer.println("    }");    
     writer.println("  }");
-    writer.println("  @Override");
-    writer.println("  public void onBackPressed() {");
-    writer.println("    fragment.onBackPressed();");
-    writer.println("    super.onBackPressed();");
-    writer.println("  }");
+//    writer.println("  @Override");
+//    writer.println("  public void onBackPressed() {");
+//    writer.println("    fragment.onBackPressed();");
+//    writer.println("    super.onBackPressed();");
+//    writer.println("  }");
     
     // Requesting permissions from user when the app resumes.
     // Nice example on how to handle user response

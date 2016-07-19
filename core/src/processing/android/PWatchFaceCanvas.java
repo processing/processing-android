@@ -93,6 +93,11 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     this.sketch = sketch;
   }
 
+  public void dispose() {
+    sketch = null;
+    engine = null;
+  }
+
   public void onPermissionsGranted() {
 
   }
@@ -266,7 +271,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
   @Override
   public void onDestroy() {
-    sketch.onDestroy();
     super.onDestroy();
+    sketch.onDestroy();
   }
 }
