@@ -38,7 +38,6 @@ import android.content.res.AssetManager;
 import android.graphics.*;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
-import android.text.format.Time;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -47,7 +46,6 @@ import processing.android.AppComponent;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
-
 
 public class PApplet extends Object implements PConstants {
 
