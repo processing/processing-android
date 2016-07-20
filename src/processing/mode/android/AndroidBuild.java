@@ -1618,8 +1618,8 @@ class AndroidBuild extends JavaBuild {
     // More on permission in Android 23:
     // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
     writer.println("  @Override");
-    writer.println("  public void onResume() {");
-    writer.println("    super.onResume();");    
+    writer.println("  public void onStart() {");
+    writer.println("    super.onStart();");    
     writer.println("    ArrayList<String> needed = new ArrayList<String>();");
     writer.println("    int check;");
     writer.println("    boolean danger = false;");
@@ -1654,11 +1654,12 @@ class AndroidBuild extends JavaBuild {
     writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
     writer.println("                   .setCancelable(false)");
     writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-    writer.println("                        public void onClick(DialogInterface dialog, int id) {}");
+    writer.println("                        public void onClick(DialogInterface dialog, int id) {");
+    writer.println("                          finish();");    
+    writer.println("                        }");
     writer.println("                   });");
     writer.println("            AlertDialog alert = builder.create();");
     writer.println("            alert.show();");
-    writer.println("            finishAffinity();");
     writer.println("          }");
     writer.println("        }");
     writer.println("        onPermissionsGranted();");
@@ -1744,11 +1745,12 @@ class AndroidBuild extends JavaBuild {
     writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
     writer.println("                   .setCancelable(false)");
     writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-    writer.println("                        public void onClick(DialogInterface dialog, int id) {}");
+    writer.println("                        public void onClick(DialogInterface dialog, int id) {");
+    writer.println("                          stopSelf();"); 
+    writer.println("                        }");
     writer.println("                   });");
     writer.println("            AlertDialog alert = builder.create();");
     writer.println("            alert.show();");
-    writer.println("            stopSelf();");
     writer.println("          }");
     writer.println("        }");
     writer.println("        onPermissionsGranted();");
@@ -1766,23 +1768,37 @@ class AndroidBuild extends JavaBuild {
     writer.println("        onRequestPermissionsResult(resultCode, outPermissions, grantResults);");
     writer.println("      }");
     writer.println("    };");
-    writer.println("  Intent permIntent = new Intent(this, PermissionRequestActivity.class);");
-    writer.println("  permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);");
-    writer.println("  permIntent.putExtra(KEY_PERMISSIONS, permissions);");
-    writer.println("  permIntent.putExtra(KEY_REQUEST_CODE, requestCode);");
-    writer.println("  TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);");
-    writer.println("  stackBuilder.addNextIntent(permIntent);");
-    writer.println("  PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);");
-    writer.println("  NotificationCompat.Builder builder = new NotificationCompat.Builder(this)");
-    writer.println("      .setContentTitle(\"Request\")");
-    writer.println("      .setContentText(\"Permissions\")");
-    writer.println("      .setOngoing(true)");
-    writer.println("      .setAutoCancel(true)");
-    writer.println("      .setWhen(0)");
-    writer.println("      .setContentIntent(permPendingIntent)");
-    writer.println("      .setStyle(null);");
-    writer.println("    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);");
-    writer.println("    notificationManager.notify(requestCode, builder.build());");
+    writer.println("    final Intent permIntent = new Intent(this, PermissionRequestActivity.class);");
+    writer.println("    permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);");
+    writer.println("    permIntent.putExtra(KEY_PERMISSIONS, permissions);");
+    writer.println("    permIntent.putExtra(KEY_REQUEST_CODE, requestCode);");
+    writer.println("    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);");
+//    writer.println("  TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);");
+//    writer.println("  stackBuilder.addNextIntent(permIntent);");
+//    writer.println("  PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);");
+//    writer.println("  NotificationCompat.Builder builder = new NotificationCompat.Builder(this)");
+//    writer.println("      .setSmallIcon(R.drawable.icon)");
+//    writer.println("      .setContentTitle(\"Requesting permissions\")");
+//    writer.println("      .setContentText(\"The app need permissions to work properly\")");
+//    writer.println("      .setOngoing(true)");
+//    writer.println("      .setAutoCancel(true)");
+//    writer.println("      .setWhen(0)");
+//    writer.println("      .setContentIntent(permPendingIntent)");
+//    writer.println("      .setStyle(null);");
+//    writer.println("    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);");
+//    writer.println("    notificationManager.notify(requestCode, builder.build());");
+    
+//    writer.println("    AlertDialog.Builder builder = new AlertDialog.Builder(this);");
+//    writer.println("    builder.setMessage(\"The app needs some permissions to run.\")");
+//    writer.println("            .setCancelable(false)");
+//    writer.println("            .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+//    writer.println("              public void onClick(DialogInterface dialog, int id) {");
+//    writer.println("                startActivity(permIntent);");
+//    writer.println("              }");
+//    writer.println("             });");
+//    writer.println("    AlertDialog alert = builder.create();");
+//    writer.println("    alert.show();");
+    writer.println("    startActivity(permIntent);");    
     writer.println("  }");
       
     // Activity that triggers the ActivityCompat.requestPermissions() call
