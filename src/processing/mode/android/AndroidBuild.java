@@ -954,8 +954,8 @@ class AndroidBuild extends JavaBuild {
     // More on permission in Android 23:
     // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
     writer.println("    @Override");
-    writer.println("    public void onResume() {");
-    writer.println("        super.onResume();");    
+    writer.println("    public void onStart() {");
+    writer.println("        super.onStart();");
     writer.println("        ArrayList<String> needed = new ArrayList<String>();");
     writer.println("        int check;");
     writer.println("        boolean danger = false;");
@@ -990,11 +990,12 @@ class AndroidBuild extends JavaBuild {
     writer.println("              builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
     writer.println("                     .setCancelable(false)");
     writer.println("                     .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-    writer.println("                          public void onClick(DialogInterface dialog, int id) {}");
+    writer.println("                          public void onClick(DialogInterface dialog, int id) {");
+    writer.println("                              finish();");    
+    writer.println("                          }");
     writer.println("                     });");
     writer.println("              AlertDialog alert = builder.create();");
     writer.println("              alert.show();");
-    writer.println("              finishAffinity();");
     writer.println("            }");
     writer.println("          }");
     writer.println("          fragment.onPermissionsGranted();");
