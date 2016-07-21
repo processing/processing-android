@@ -254,9 +254,9 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
     @Override
     public void onTouchEvent(MotionEvent event) {
+      super.onTouchEvent(event);
       PApplet.println("touch even:" + event.toString());
       sketch.surfaceTouchEvent(event);
-      super.onTouchEvent(event);
     }
 
     @Override

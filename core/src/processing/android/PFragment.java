@@ -138,8 +138,8 @@ public class PFragment extends Fragment implements AppComponent {
 
   @Override
   public void onStop() {
-    sketch.onStop();
     super.onStop();
+    sketch.onStop();
   }
 
 

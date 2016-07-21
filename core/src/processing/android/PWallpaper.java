@@ -167,10 +167,10 @@ public class PWallpaper extends WallpaperService implements AppComponent {
      */
     @Override
     public void onTouchEvent(MotionEvent event) {
+      super.onTouchEvent(event);
       if (sketch != null) {
         sketch.surfaceTouchEvent(event);
       }
-      super.onTouchEvent(event);
     }
 
     @Override
