@@ -1772,7 +1772,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("    permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);");
     writer.println("    permIntent.putExtra(KEY_PERMISSIONS, permissions);");
     writer.println("    permIntent.putExtra(KEY_REQUEST_CODE, requestCode);");
-    writer.println("    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);");
+    writer.println("    permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);");
 //    writer.println("  TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);");
 //    writer.println("  stackBuilder.addNextIntent(permIntent);");
 //    writer.println("  PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);");
