@@ -91,8 +91,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   public void dispose() {
-    sketch = null;
-    engine = null;
   }
 
   public void onPermissionsGranted() {

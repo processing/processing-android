@@ -94,8 +94,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
   public void dispose() {
-    sketch = null;
-    engine = null;
   }
 
   public void onPermissionsGranted() {

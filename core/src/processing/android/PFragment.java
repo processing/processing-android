@@ -95,7 +95,6 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
   public void dispose() {
-    sketch = null;
   }
 
   @Override
