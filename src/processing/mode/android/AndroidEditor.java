@@ -27,6 +27,7 @@ import processing.app.Messages;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Preferences;
+import processing.app.Settings;
 import processing.app.SketchException;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -49,19 +50,29 @@ import java.util.TimerTask;
 
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
-  private int appComponent = AndroidBuild.FRAGMENT;
+  private int appComponent;
+  
+  private Settings settings;
   private boolean resetManifest = false;
   
   private AndroidMode androidMode;
 
   private java.util.Timer updateDevicesTimer;
   
+  private JCheckBoxMenuItem fragmentItem;
+  private JCheckBoxMenuItem wallpaperItem;
+  private JCheckBoxMenuItem watchfaceItem;
+  private JCheckBoxMenuItem cardboardItem;
+    
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
     super(base, path, state, mode);
+    
+    loadModeSettings();
+    
     androidMode = (AndroidMode) mode;
     androidMode.resetUserSelection();
-    androidMode.checkSDK(this);
+    androidMode.checkSDK(this);    
   }  
 
   @Override
@@ -240,10 +251,10 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
      
-    final JCheckBoxMenuItem fragmentItem = new JCheckBoxMenuItem("App");
-    final JCheckBoxMenuItem wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
-    final JCheckBoxMenuItem watchfaceItem = new JCheckBoxMenuItem("Watch Face");
-    final JCheckBoxMenuItem cardboardItem = new JCheckBoxMenuItem("Cardboard");
+    fragmentItem = new JCheckBoxMenuItem("App");
+    wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
+    watchfaceItem = new JCheckBoxMenuItem("Watch Face");
+    cardboardItem = new JCheckBoxMenuItem("Cardboard");
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -289,11 +300,11 @@ public class AndroidEditor extends JavaEditor {
         androidMode.showSelectComponentMessage(AndroidBuild.CARDBOARD);
       }
     });    
-    
-    fragmentItem.setState(true);
+       
+    fragmentItem.setState(false);
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
-    cardboardItem.setSelected(false);    
+    cardboardItem.setSelected(false);
 
     menu.add(fragmentItem);
     menu.add(wallpaperItem);
@@ -455,6 +466,17 @@ public class AndroidEditor extends JavaEditor {
     if (appComponent != opt) {
       appComponent = opt;
       resetManifest = true;
+      
+      if (appComponent == AndroidBuild.FRAGMENT) {
+        settings.set("component", "app");  
+      } else if (appComponent == AndroidBuild.WALLPAPER) {
+        settings.set("component", "wallpaper");
+      } else if (appComponent == AndroidBuild.WATCHFACE) {
+        settings.set("component", "watchface");
+      } else if (appComponent == AndroidBuild.CARDBOARD) {
+        settings.set("component", "cardboard");
+      }
+      settings.save();
     }
   }  
   
@@ -750,5 +772,64 @@ public class AndroidEditor extends JavaEditor {
   
   public int getAppComponent() {
     return appComponent;
+  }
+  
+  private void loadModeSettings() {
+    File sketchProps = new File(sketch.getCodeFolder(), "sketch.properties");    
+    try {
+      settings = new Settings(sketchProps);
+      boolean save = false;
+      String component;
+      if (!sketchProps.exists()) {
+        component = AndroidBuild.DEFAULT_COMPONENT;
+        settings.set("component", component);
+        settings.set("basePackage", AndroidBuild.DEFAULT_BASE_PACKAGE);
+        settings.set("version", AndroidBuild.DEFAULT_VERSION);
+        settings.set("prettyVersion", AndroidBuild.DEFAULT_PRETTY_VERSION);
+        save = true;
+      } else {
+        component = settings.get("component");
+        if (component == null) {
+          component = AndroidBuild.DEFAULT_COMPONENT;
+          settings.set("component", component);
+          save = true;
+        }
+        String basePackage = settings.get("basePackage");
+        if (basePackage == null) {
+          basePackage = AndroidBuild.DEFAULT_BASE_PACKAGE;
+          settings.set("basePackage", basePackage);
+          save = true;
+        }
+        String version = settings.get("version");
+        if (version == null) {
+          version = AndroidBuild.DEFAULT_VERSION;
+          settings.set("version", version);
+          save = true;
+        }        
+        String prettyVersion = settings.get("prettyVersion");
+        if (prettyVersion == null) {
+          prettyVersion = AndroidBuild.DEFAULT_PRETTY_VERSION;
+          settings.set("version", prettyVersion);
+          save = true;
+        }          
+      }
+      if (save) settings.save();
+      
+      if (component.equals("app")) {
+        appComponent = AndroidBuild.FRAGMENT;
+        fragmentItem.setState(true);
+      } else if (component.equals("wallpaper")) {
+        appComponent = AndroidBuild.WALLPAPER;
+        wallpaperItem.setState(true);
+      } else if (component.equals("watchface")) {
+        appComponent = AndroidBuild.WATCHFACE;
+        watchfaceItem.setState(true);
+      } else if (component.equals("cardboard")) {
+        appComponent = AndroidBuild.CARDBOARD;
+        cardboardItem.setState(true);
+      }  
+    } catch (IOException e) {
+      System.err.println("While creating " + sketchProps + ": " + e.getMessage());
+    }   
   }
 }

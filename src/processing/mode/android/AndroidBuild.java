@@ -47,6 +47,11 @@ class AndroidBuild extends JavaBuild {
   static public final int WATCHFACE = 2;
   static public final int CARDBOARD = 3;
   
+  static public final String DEFAULT_COMPONENT = "app";
+  static public final String DEFAULT_BASE_PACKAGE = "processing.test";
+  static public final String DEFAULT_VERSION = "1";
+  static public final String DEFAULT_PRETTY_VERSION = "1.0";
+  
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
   static final String basePackage = "processing.test";
@@ -196,6 +201,9 @@ class AndroidBuild extends JavaBuild {
 
     manifest = new Manifest(sketch, appComponent, rewriteManifest);    
     manifest.setSdkTarget(target_sdk);
+    
+    
+    
     rewriteManifest = false;
     
     // grab code from current editing window (GUI only)
