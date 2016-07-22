@@ -96,6 +96,10 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   public void dispose() {
   }
 
+  public void requestPermissions() {
+
+  }
+
   public void onPermissionsGranted() {
 
   }
@@ -131,6 +135,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
         PGraphicsAndroid2D.useBitmap = false;
         sketch.initSurface(PWatchFaceCanvas.this, null);
         sketch.startSurface();
+        requestPermissions();
       }
     }
 

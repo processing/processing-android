@@ -248,6 +248,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void finish() {
+    if (component == null) return;
+
     if (component.getKind() == AppComponent.FRAGMENT) {
       activity.finish();
     } else if (component.getKind() == AppComponent.WALLPAPER) {

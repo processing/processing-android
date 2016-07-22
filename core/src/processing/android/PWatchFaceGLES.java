@@ -93,10 +93,13 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   public void dispose() {
   }
 
-  public void onPermissionsGranted() {
+  public void requestPermissions() {
 
   }
 
+  public void onPermissionsGranted() {
+
+  }
 
   @Override
   public Engine onCreateEngine() {
@@ -129,6 +132,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
       if (sketch != null) {
         sketch.initSurface(PWatchFaceGLES.this, null);
         sketch.startSurface();
+        requestPermissions();
       }
     }
 

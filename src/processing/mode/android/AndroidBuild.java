@@ -1599,7 +1599,7 @@ class AndroidBuild extends JavaBuild {
     writer.println("import android.support.v4.app.ActivityCompat;");
     writer.println("import android.support.v4.content.ContextCompat;");
     writer.println("import java.util.ArrayList;");
-    writer.println("import android.app.AlertDialog;");
+//    writer.println("import android.app.AlertDialog;");
     writer.println("import android.content.DialogInterface;");
     writer.println("import android.Manifest;");     
   }
@@ -1648,21 +1648,24 @@ class AndroidBuild extends JavaBuild {
     writer.println("                                         String permissions[], int[] grantResults) {");      
     writer.println("    if (requestCode == REQUEST_PERMISSIONS) {");      
     writer.println("      if (grantResults.length > 0) {");
-    writer.println("        for (int i = 0; i < grantResults.length; i++) {");
+    writer.println("        boolean granted = true;");    
+    writer.println("        for (int i = 0; i < grantResults.length; i++) {");    
     writer.println("          if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
-    writer.println("            AlertDialog.Builder builder = new AlertDialog.Builder(this);");
-    writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
-    writer.println("                   .setCancelable(false)");
-    writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-    writer.println("                        public void onClick(DialogInterface dialog, int id) {");
-    writer.println("                          finish();");    
-    writer.println("                        }");
-    writer.println("                   });");
-    writer.println("            AlertDialog alert = builder.create();");
-    writer.println("            alert.show();");
+    writer.println("            granted = false;");
+    writer.println("            break;"); 
+//    writer.println("            AlertDialog.Builder builder = new AlertDialog.Builder(this);");
+//    writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
+//    writer.println("                   .setCancelable(false)");
+//    writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+//    writer.println("                        public void onClick(DialogInterface dialog, int id) {");
+//    writer.println("                          finish();");    
+//    writer.println("                        }");
+//    writer.println("                   });");
+//    writer.println("            AlertDialog alert = builder.create();");
+//    writer.println("            alert.show();");
     writer.println("          }");
     writer.println("        }");
-    writer.println("        onPermissionsGranted();");
+    writer.println("        if (granted) onPermissionsGranted();");
     writer.println("      }");
     writer.println("    }");    
     writer.println("  }");   
@@ -1673,7 +1676,7 @@ class AndroidBuild extends JavaBuild {
     
     writer.println("import android.app.Activity;");    
     writer.println("import java.util.ArrayList;");
-    writer.println("import android.app.AlertDialog;");
+//    writer.println("import android.app.AlertDialog;");
     writer.println("import android.content.DialogInterface;");
     writer.println("import android.Manifest;");
     writer.println("import android.content.pm.PackageManager;");
@@ -1701,129 +1704,135 @@ class AndroidBuild extends JavaBuild {
   }
   
   private void writeServicePermissionHandlers(final PrintWriter writer, String[] permissions) {
-    if (permissions.length == 0) return;
-
     // https://developer.android.com/training/articles/wear-permissions.html
-    
-    // Inspired by PermissionHelper.java from Michael von Glasow:
-    // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/utils/PermissionHelper.java
-    // Example of use:
-    // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/PasvLocListenerService.java
-    writer.println("  @Override");
-    writer.println("  public void onCreate() {");
-    writer.println("    super.onCreate();");    
-    writer.println("    ArrayList<String> needed = new ArrayList<String>();");
-    writer.println("    int check;");
-    writer.println("    boolean danger = false;");
-    for (String p: permissions) {
-      for (String d: Permissions.dangerous) {
-        if (d.equals(p)) {
-          writer.println("    check = ContextCompat.checkSelfPermission(this, Manifest.permission." + p + ");");
-          writer.println("    if (check != PackageManager.PERMISSION_GRANTED) {");
-          writer.println("      needed.add(Manifest.permission." + p + ");");
-          writer.println("    } else {");
-          writer.println("      danger = true;");
-          writer.println("    }");
+    if (permissions.length > 0) {
+      // Inspired by PermissionHelper.java from Michael von Glasow:
+      // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/utils/PermissionHelper.java
+      // Example of use:
+      // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/PasvLocListenerService.java
+      writer.println("  @Override");
+      writer.println("  public void requestPermissions() {");
+//      writer.println("    super.onCreate();");    
+      writer.println("    ArrayList<String> needed = new ArrayList<String>();");
+      writer.println("    int check;");
+      writer.println("    boolean danger = false;");
+      for (String p: permissions) {
+        for (String d: Permissions.dangerous) {
+          if (d.equals(p)) {
+            writer.println("    check = ContextCompat.checkSelfPermission(this, Manifest.permission." + p + ");");
+            writer.println("    if (check != PackageManager.PERMISSION_GRANTED) {");
+            writer.println("      needed.add(Manifest.permission." + p + ");");
+            writer.println("    } else {");
+            writer.println("      danger = true;");
+            writer.println("    }");
+          }
         }
       }
-    }
-    writer.println("    if (!needed.isEmpty()) {");
-    writer.println("      requestPermissions(needed.toArray(new String[needed.size()]), REQUEST_PERMISSIONS);");
-    writer.println("    } else if (danger) {");
-    writer.println("      onPermissionsGranted();");
-    writer.println("    }");
-    writer.println("  }");
-    
-    // The event handler for the permission result
-    writer.println("  public void onRequestPermissionsResult(int requestCode,");
-    writer.println("                                         String permissions[], int[] grantResults) {");      
-    writer.println("    if (requestCode == REQUEST_PERMISSIONS) {");      
-    writer.println("      if (grantResults.length > 0) {");
-    writer.println("        for (int i = 0; i < grantResults.length; i++) {");
-    writer.println("          if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
-    writer.println("            AlertDialog.Builder builder = new AlertDialog.Builder(this);");
-    writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
-    writer.println("                   .setCancelable(false)");
-    writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-    writer.println("                        public void onClick(DialogInterface dialog, int id) {");
-    writer.println("                          stopSelf();"); 
-    writer.println("                        }");
-    writer.println("                   });");
-    writer.println("            AlertDialog alert = builder.create();");
-    writer.println("            alert.show();");
-    writer.println("          }");
-    writer.println("        }");
-    writer.println("        onPermissionsGranted();");
-    writer.println("      }");
-    writer.println("    }");    
-    writer.println("  }");       
-    
-    // requestPermissions() method for services
-    writer.println("  public void requestPermissions(String[] permissions, int requestCode) {");
-    writer.println("    ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {");
-    writer.println("    @Override");
-    writer.println("      protected void onReceiveResult (int resultCode, Bundle resultData) {");
-    writer.println("        String[] outPermissions = resultData.getStringArray(KEY_PERMISSIONS);");
-    writer.println("        int[] grantResults = resultData.getIntArray(KEY_GRANT_RESULTS);");
-    writer.println("        onRequestPermissionsResult(resultCode, outPermissions, grantResults);");
-    writer.println("      }");
-    writer.println("    };");
-    writer.println("    final Intent permIntent = new Intent(this, PermissionRequestActivity.class);");
-    writer.println("    permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);");
-    writer.println("    permIntent.putExtra(KEY_PERMISSIONS, permissions);");
-    writer.println("    permIntent.putExtra(KEY_REQUEST_CODE, requestCode);");
-    writer.println("    permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);");
-//    writer.println("  TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);");
-//    writer.println("  stackBuilder.addNextIntent(permIntent);");
-//    writer.println("  PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);");
-//    writer.println("  NotificationCompat.Builder builder = new NotificationCompat.Builder(this)");
-//    writer.println("      .setSmallIcon(R.drawable.icon)");
-//    writer.println("      .setContentTitle(\"Requesting permissions\")");
-//    writer.println("      .setContentText(\"The app need permissions to work properly\")");
-//    writer.println("      .setOngoing(true)");
-//    writer.println("      .setAutoCancel(true)");
-//    writer.println("      .setWhen(0)");
-//    writer.println("      .setContentIntent(permPendingIntent)");
-//    writer.println("      .setStyle(null);");
-//    writer.println("    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);");
-//    writer.println("    notificationManager.notify(requestCode, builder.build());");
-    
-//    writer.println("    AlertDialog.Builder builder = new AlertDialog.Builder(this);");
-//    writer.println("    builder.setMessage(\"The app needs some permissions to run.\")");
-//    writer.println("            .setCancelable(false)");
-//    writer.println("            .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-//    writer.println("              public void onClick(DialogInterface dialog, int id) {");
-//    writer.println("                startActivity(permIntent);");
-//    writer.println("              }");
-//    writer.println("             });");
-//    writer.println("    AlertDialog alert = builder.create();");
-//    writer.println("    alert.show();");
-    writer.println("    startActivity(permIntent);");    
-    writer.println("  }");
+      writer.println("    if (!needed.isEmpty()) {");
+      writer.println("      requestPermissions(needed.toArray(new String[needed.size()]), REQUEST_PERMISSIONS);");
+      writer.println("    } else if (danger) {");
+      writer.println("      onPermissionsGranted();");
+      writer.println("    }");
+      writer.println("  }");
       
+      // The event handler for the permission result
+      writer.println("  public void onRequestPermissionsResult(int requestCode,");
+      writer.println("                                         String permissions[], int[] grantResults) {");      
+      writer.println("    if (requestCode == REQUEST_PERMISSIONS) {");      
+      writer.println("      if (grantResults.length > 0) {");
+      writer.println("        boolean granted = true;");
+      writer.println("        for (int i = 0; i < grantResults.length; i++) {");
+      writer.println("          if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
+      writer.println("            granted = false;");
+      writer.println("            break;");
+//      writer.println("            AlertDialog.Builder builder = new.Builder(this);");
+//      writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
+//      writer.println("                   .setCancelable(false)");
+//      writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+//      writer.println("                        public void onClick(DialogInterface dialog, int id) {");
+//      writer.println("                          stopSelf();"); 
+//      writer.println("                        }");
+//      writer.println("                   });");
+//      writer.println("            AlertDialog alert = builder.create();");
+//      writer.println("            alert.show();");
+      writer.println("          }");
+      writer.println("        }");
+      writer.println("        if (granted) onPermissionsGranted();");
+      writer.println("      }");
+      writer.println("    }");    
+      writer.println("  }");       
+      
+      // requestPermissions() method for services
+      writer.println("  public void requestPermissions(String[] permissions, int requestCode) {");
+      writer.println("    ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {");
+      writer.println("    @Override");
+      writer.println("      protected void onReceiveResult (int resultCode, Bundle resultData) {");
+      writer.println("        String[] outPermissions = resultData.getStringArray(KEY_PERMISSIONS);");
+      writer.println("        int[] grantResults = resultData.getIntArray(KEY_GRANT_RESULTS);");
+      writer.println("        onRequestPermissionsResult(resultCode, outPermissions, grantResults);");
+      writer.println("      }");
+      writer.println("    };");
+      writer.println("    final Intent permIntent = new Intent(this, PermissionRequestActivity.class);");
+      writer.println("    permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);");
+      writer.println("    permIntent.putExtra(KEY_PERMISSIONS, permissions);");
+      writer.println("    permIntent.putExtra(KEY_REQUEST_CODE, requestCode);");
+      writer.println("    permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);");
+//      writer.println("  TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);");
+//      writer.println("  stackBuilder.addNextIntent(permIntent);");
+//      writer.println("  PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);");
+//      writer.println("  NotificationCompat.Builder builder = new NotificationCompat.Builder(this)");
+//      writer.println("      .setSmallIcon(R.drawable.icon)");
+//      writer.println("      .setContentTitle(\"Requesting permissions\")");
+//      writer.println("      .setContentText(\"The app need permissions to work properly\")");
+//      writer.println("      .setOngoing(true)");
+//      writer.println("      .setAutoCancel(true)");
+//      writer.println("      .setWhen(0)");
+//      writer.println("      .setContentIntent(permPendingIntent)");
+//      writer.println("      .setStyle(null);");
+//      writer.println("    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);");
+//      writer.println("    notificationManager.notify(requestCode, builder.build());");
+      
+//      writer.println("    AlertDialog.Builder builder = new AlertDialog.Builder(this);");
+//      writer.println("    builder.setMessage(\"The app needs some permissions to run.\")");
+//      writer.println("            .setCancelable(false)");
+//      writer.println("            .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+//      writer.println("              public void onClick(DialogInterface dialog, int id) {");
+//      writer.println("                startActivity(permIntent);");
+//      writer.println("              }");
+//      writer.println("             });");
+//      writer.println("    AlertDialog alert = builder.create();");
+//      writer.println("    alert.show();");
+      writer.println("    startActivity(permIntent);");    
+      writer.println("  }");
+    }
+    
     // Activity that triggers the ActivityCompat.requestPermissions() call
+    // (still needs the class declaration because it is the maninfest file)
     writer.println("  public static class PermissionRequestActivity extends Activity {");
-    writer.println("    ResultReceiver resultReceiver;");
-    writer.println("    String[] permissions;");
-    writer.println("    int requestCode;");
-    writer.println("    @Override");
-    writer.println("    protected void onStart() {");
-    writer.println("      super.onStart();");
-    writer.println("      resultReceiver = this.getIntent().getParcelableExtra(KEY_RESULT_RECEIVER);");
-    writer.println("      permissions = this.getIntent().getStringArrayExtra(KEY_PERMISSIONS);");
-    writer.println("      requestCode = this.getIntent().getIntExtra(KEY_REQUEST_CODE, 0);");
-    writer.println("      ActivityCompat.requestPermissions(this, permissions, requestCode);");
-    writer.println("    }");    
-    writer.println("    @Override");
-    writer.println("    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {");
-    writer.println("      Bundle resultData = new Bundle();");
-    writer.println("      resultData.putStringArray(KEY_PERMISSIONS, permissions);");
-    writer.println("      resultData.putIntArray(KEY_GRANT_RESULTS, grantResults);");
-    writer.println("      resultReceiver.send(requestCode, resultData);");
-    writer.println("      finish();");
-    writer.println("    }");
+    if (permissions.length > 0) {
+      writer.println("    ResultReceiver resultReceiver;");
+      writer.println("    String[] permissions;");
+      writer.println("    int requestCode;");
+      writer.println("    @Override");
+      writer.println("    protected void onStart() {");
+      writer.println("      super.onStart();");
+      writer.println("      resultReceiver = this.getIntent().getParcelableExtra(KEY_RESULT_RECEIVER);");
+      writer.println("      permissions = this.getIntent().getStringArrayExtra(KEY_PERMISSIONS);");
+      writer.println("      requestCode = this.getIntent().getIntExtra(KEY_REQUEST_CODE, 0);");
+      writer.println("      ActivityCompat.requestPermissions(this, permissions, requestCode);");
+      writer.println("    }");    
+      writer.println("    @Override");
+      writer.println("    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {");
+      writer.println("      Bundle resultData = new Bundle();");
+      writer.println("      resultData.putStringArray(KEY_PERMISSIONS, permissions);");
+      writer.println("      resultData.putIntArray(KEY_GRANT_RESULTS, grantResults);");
+      writer.println("      resultReceiver.send(requestCode, resultData);");
+      writer.println("      finish();");
+      writer.println("    }");
+    }
     writer.println("  }");    
   }
+ 
 
   private void writeResLayoutMainActivity(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);

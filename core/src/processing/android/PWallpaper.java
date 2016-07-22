@@ -103,6 +103,10 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   public void dispose() {
   }
 
+  public void requestPermissions() {
+
+  }
+
   public void onPermissionsGranted() {
 
   }
@@ -126,6 +130,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
         sketch.preview = isPreview();
         // By default we don't get touch events, so enable them.
         setTouchEventsEnabled(true);
+        if (!sketch.preview) requestPermissions();
       }
     }
 

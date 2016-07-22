@@ -263,7 +263,8 @@ public class Manifest {
       writer.println("      </intent-filter>" + newLine);
       writer.println("    <meta-data android:name=\"android.service.wallpaper\" " + newLine);
       writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
-      writer.println("  </service>" + newLine);  
+      writer.println("  </service>" + newLine);        
+      writer.println("  <activity android:name=\".MainService$PermissionRequestActivity\" ></activity>" + newLine);
     } else if (appComp == AndroidBuild.WATCHFACE) {
       writer.println("<service android:name=\".MainService\" " + newLine);
       writer.println("         android:label=\"\" " + newLine); // insert pretty name
@@ -280,7 +281,8 @@ public class Manifest {
       writer.println("     <action android:name=\"android.service.wallpaper.WallpaperService\" /> " + newLine);
       writer.println("     <category android:name=\"com.google.android.wearable.watchface.category.WATCH_FACE\" /> " + newLine);
       writer.println("   </intent-filter> " + newLine);
-      writer.println("</service> " + newLine);      
+      writer.println("</service> " + newLine);
+      writer.println("  <activity android:name=\".MainService$PermissionRequestActivity\" ></activity>" + newLine);
     } else if (appComp == AndroidBuild.CARDBOARD) {
       writer.println("<activity android:name=\".MainActivity\" " + newLine);
 //      writer.println("          android:label=\"\" " + newLine); // insert pretty name
