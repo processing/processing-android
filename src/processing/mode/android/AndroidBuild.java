@@ -1674,9 +1674,9 @@ class AndroidBuild extends JavaBuild {
   }
   
   private void writeServicePermissionImports(final PrintWriter writer, String[] permissions) {
-    if (permissions.length == 0) return;
+    writer.println("import android.app.Activity;");
     
-    writer.println("import android.app.Activity;");    
+    if (permissions.length == 0) return;
     writer.println("import java.util.ArrayList;");
 //    writer.println("import android.app.AlertDialog;");
     writer.println("import android.content.DialogInterface;");
