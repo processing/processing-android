@@ -783,9 +783,6 @@ public class AndroidEditor extends JavaEditor {
       if (!sketchProps.exists()) {
         component = AndroidBuild.DEFAULT_COMPONENT;
         settings.set("component", component);
-        settings.set("basePackage", AndroidBuild.DEFAULT_BASE_PACKAGE);
-        settings.set("version", AndroidBuild.DEFAULT_VERSION);
-        settings.set("prettyVersion", AndroidBuild.DEFAULT_PRETTY_VERSION);
         save = true;
       } else {
         component = settings.get("component");
@@ -794,24 +791,6 @@ public class AndroidEditor extends JavaEditor {
           settings.set("component", component);
           save = true;
         }
-        String basePackage = settings.get("basePackage");
-        if (basePackage == null) {
-          basePackage = AndroidBuild.DEFAULT_BASE_PACKAGE;
-          settings.set("basePackage", basePackage);
-          save = true;
-        }
-        String version = settings.get("version");
-        if (version == null) {
-          version = AndroidBuild.DEFAULT_VERSION;
-          settings.set("version", version);
-          save = true;
-        }        
-        String prettyVersion = settings.get("prettyVersion");
-        if (prettyVersion == null) {
-          prettyVersion = AndroidBuild.DEFAULT_PRETTY_VERSION;
-          settings.set("version", prettyVersion);
-          save = true;
-        }          
       }
       if (save) settings.save();
       

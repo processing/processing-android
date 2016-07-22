@@ -106,6 +106,18 @@ public class Manifest {
   }
 
 
+  public String getVersionCode() {
+    String code = xml.getString("android:versionCode");
+    return code.length() == 0 ? "1" : code;
+  }
+  
+  
+  public String getVersionName() {
+    String name = xml.getString("android:versionName");
+    return name.length() == 0 ? "1.0" : name;
+  }
+  
+  
   public void setPackageName(String packageName) {
 //    this.packageName = packageName;
     // this is the package attribute in the root <manifest> object
@@ -382,8 +394,14 @@ public class Manifest {
   }
   
   String[] permissionNames = null;
+  String pkgName = null;
+  String versionCode = null;
+  String versionName = null;
   if (xml != null && forceNew) {
-    permissionNames = getPermissions();
+    permissionNames = getPermissions();    
+    pkgName = getPackageName();
+    versionCode = getVersionCode();
+    versionName = getVersionName();
     xml = null;
   }
   
@@ -394,6 +412,15 @@ public class Manifest {
       if (permissionNames != null) {
         setPermissions(permissionNames);
       }
+      if (pkgName != null) {
+        xml.setString("package", pkgName);
+      }
+      if (versionCode != null) {
+        xml.setString("android:versionCode", versionCode);
+      }
+      if (versionName != null) {
+        xml.setString("android:versionName", versionName);
+      }       
     } catch (FileNotFoundException e) {
       System.err.println("Could not read " + manifestFile.getAbsolutePath());
       e.printStackTrace();
