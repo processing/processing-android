@@ -41,9 +41,9 @@ import processing.event.MouseEvent;
 import android.graphics.Rect;
 
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
+  private PApplet sketch;
   private Point size;
 //  private DisplayMetrics metrics;
-  private PApplet sketch;
   private GLEngine engine;
 
   public void initDimensions() {
@@ -98,7 +98,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   public void onPermissionsGranted() {
-
+    sketch.onPermissionsGranted();
   }
 
   @Override
@@ -118,7 +118,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   private class GLEngine extends Gles2WatchFaceService.Engine {
-
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
@@ -290,6 +289,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   @Override
   public void onDestroy() {
     super.onDestroy();
-    sketch.onDestroy();
+    engine.onDestroy();
   }
 }

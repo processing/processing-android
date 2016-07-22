@@ -43,9 +43,9 @@ import processing.event.MouseEvent;
 
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
+  private PApplet sketch;
   private Point size;
 //  private DisplayMetrics metrics;
-  private PApplet sketch;
   private CEngine engine;
 
   public void initDimensions() {
@@ -101,7 +101,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
   public void onPermissionsGranted() {
-
+    sketch.onPermissionsGranted();
   }
 
   @Override
@@ -275,6 +275,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   @Override
   public void onDestroy() {
     super.onDestroy();
-    sketch.onDestroy();
+    engine.onDestroy();
   }
 }

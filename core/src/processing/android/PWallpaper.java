@@ -85,7 +85,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public void setSketch(PApplet sketch) {
-     engine.sketch = sketch;
+//    engine.sketch = sketch;
   }
 
   public PApplet createSketch() {
@@ -108,7 +108,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public void onPermissionsGranted() {
-
+    engine.sketch.onPermissionsGranted();
   }
 
   @Override
@@ -118,8 +118,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public class PEngine extends Engine {
-    private PApplet sketch = null;
-
+    private PApplet sketch;
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
