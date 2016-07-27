@@ -238,20 +238,22 @@ class AndroidBuild extends JavaBuild {
       // Copy the compatibility package, needed for the permission handling
       File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
       Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
+
+//    if (getAppComponent() == WATCHFACE) {
+      // The wear jar is needed even when the app is not a watch face, because on
+      // devices with android < 5 the dependencies of the PWatchFace* classes
+      // cannot be resolved.
+      // TODO: temporary hack until I find a better way to include the wearable aar
+      // package included in the SDK:      
+      File wearJarFile = mode.getContentFile("mode/wearable-1.3.0-classes.jar");
+      System.out.println(wearJarFile.toString());
+      Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
+//    }      
       
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
       copyLibraries(libsFolder, assetsFolder);
       copyCodeFolder(libsFolder);
-      
-      if (getAppComponent() == WATCHFACE) {
-        // TODO: temporary hack until I find a better way to include the wearable aar
-        // package included in the SDK:
-        
-        File wearJarFile = mode.getContentFile("mode/wearable-1.3.0-classes.jar");
-        System.out.println(wearJarFile.toString());
-        Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
-      }
 
       if (getAppComponent() == CARDBOARD) {
         // TODO: temporary hack until I find a better way to include the cardboard aar
