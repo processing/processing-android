@@ -259,7 +259,7 @@ public class Manifest {
       // activity/android:name should be the full name (package + class name) of
       // the actual activity class. or the package can be replaced by a single
       // dot as a prefix as an easier shorthand.
-      writer.println("    <activity android:name=\".MainActivity\">" + newLine);
+      writer.println("    <activity android:name=\".MainActivity\" " + newLine);
       writer.println("              android:theme=\"@android:style/Theme.NoTitleBar\">" + newLine);
       writer.println("      <intent-filter>" + newLine);
       writer.println("        <action android:name=\"android.intent.action.MAIN\" />" + newLine);
