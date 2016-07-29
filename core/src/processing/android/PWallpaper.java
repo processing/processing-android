@@ -37,9 +37,9 @@ import android.graphics.Point;
 public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
 
-  private Point size;
+  protected Point size;
 //  private DisplayMetrics metrics;
-  private PEngine engine;
+  protected PEngine engine;
 
   public PWallpaper() {
   }

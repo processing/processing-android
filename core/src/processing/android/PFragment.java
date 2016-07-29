@@ -22,7 +22,8 @@
 
 package processing.android;
 
-import android.app.Fragment;
+//import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -38,8 +39,8 @@ import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
 //  private DisplayMetrics metrics;
-  private Point size;
-  private PApplet sketch;
+  protected Point size;
+  protected PApplet sketch;
 
   public PFragment() {
   }

@@ -43,10 +43,10 @@ import processing.event.MouseEvent;
 
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
-  private PApplet sketch;
-  private Point size;
+  protected PApplet sketch;
+  protected Point size;
 //  private DisplayMetrics metrics;
-  private CEngine engine;
+  protected CEngine engine;
 
   public void initDimensions() {
 //    metrics = new DisplayMetrics();

@@ -41,10 +41,10 @@ import processing.event.MouseEvent;
 import android.graphics.Rect;
 
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
-  private PApplet sketch;
-  private Point size;
+  protected PApplet sketch;
+  protected Point size;
 //  private DisplayMetrics metrics;
-  private GLEngine engine;
+  protected GLEngine engine;
 
   public void initDimensions() {
 //    metrics = new DisplayMetrics();
