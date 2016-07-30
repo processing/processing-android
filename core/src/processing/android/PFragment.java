@@ -99,9 +99,10 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
   @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+  public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                           Bundle savedInstanceState) {
     if (sketch != null) {
-      sketch.initSurface(this, null);
+      sketch.initSurface(inflater, container, savedInstanceState, this, null);
       sketch.startSurface();
       return sketch.getRootView();
     } else {

@@ -37,11 +37,14 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.*;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import processing.android.AppComponent;
 import processing.data.*;
 import processing.event.*;
@@ -53,6 +56,11 @@ public class PApplet extends Object implements PConstants {
    * The surface this sketch draws to.
    */
   public PSurface surface;
+
+  /**
+   * The view group containing the surface view of the PApplet.
+   */
+  public int parentLayout = -1;
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
@@ -451,7 +459,7 @@ public class PApplet extends Object implements PConstants {
 
   int smooth = 1;  // default smoothing (whatever that means for the renderer)
 
-  boolean fullScreen = false;
+  public boolean fullScreen = false;
 
   // Background default needs to be different from the default value in
   // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
@@ -477,13 +485,21 @@ public class PApplet extends Object implements PConstants {
 
 
   public void initSurface(AppComponent component, SurfaceHolder holder) {
+    parentLayout = -1;
+    initSurface(null, null,  null, component, holder);
+  }
+
+  public void initSurface(LayoutInflater inflater, ViewGroup container,
+                          Bundle savedInstanceState,
+                          AppComponent component, SurfaceHolder holder) {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     component.initDimensions();
     displayWidth = component.getWidth();
     displayHeight = component.getHeight();
     handleSettings();
-    if (fullScreen) {
+
+    if (fullScreen && parentLayout == -1) {
       // Setting the default height and width to be fullscreen
       width = displayWidth;
       height = displayHeight;
@@ -496,11 +512,6 @@ public class PApplet extends Object implements PConstants {
     surface = g.createSurface(component, holder);
     if (DEBUG) println("Created surface");
 
-    setFullScreenVisibility();
-
-    // Now we now the right width/height size for the renderer
-    g.setSize(width, height);
-
     //set smooth level
     if (smooth == 0) {
       g.noSmooth();
@@ -508,8 +519,15 @@ public class PApplet extends Object implements PConstants {
       g.smooth(smooth);
     }
 
-    // Finalize surface initialization.
-    surface.initView(width, height);
+    if (parentLayout == -1) {
+      setFullScreenVisibility();
+      // Now we now the right width/height size for the renderer
+//      g.setSize(width, height); // do need this?
+      // Finalize surface initialization.
+      surface.initView(width, height);
+    } else {
+      surface.initView(inflater, container, savedInstanceState);
+    }
 
     finished = false; // just for clarity
     // this will be cleared by draw() if it is not overridden

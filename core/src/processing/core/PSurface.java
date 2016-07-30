@@ -29,8 +29,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import processing.android.AppComponent;
 
 /*
@@ -53,6 +56,7 @@ public interface PSurface {
   public SurfaceView getSurfaceView();
 
   public void initView(int sketchWidth, int sketchHeight);
+  public void initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
 
   public void startActivity(Intent intent);
 

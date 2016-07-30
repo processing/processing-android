@@ -27,11 +27,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
+import android.os.Bundle;
 import android.service.wallpaper.WallpaperService;
 import android.support.wearable.watchface.WatchFaceService;
+import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -169,6 +172,34 @@ public class PSurfaceNone implements PSurface, PConstants {
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       setRootView(getSurfaceView());
     }
+  }
+
+  @Override
+  public void initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
+    ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
+    LinearLayout.LayoutParams gp =
+      new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                    LayoutParams.WRAP_CONTENT);
+
+    LinearLayout.LayoutParams vp = new
+      LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                                LayoutParams.MATCH_PARENT);
+    vp.weight = 1.0f;
+
+//    LinearLayout layout = new LinearLayout(activity);
+    View view = getSurfaceView();
+    view.setLayoutParams(vp);
+//    layout.addView(getSurfaceView(), lp2);
+
+
+
+//    layout.setBackgroundColor(0xFFFF0000);
+    rootView.addView(view, gp);
+
+//    System.out.println("------------------------------->" + container.getId());
+//    System.exit(1);
+    setRootView(rootView);
   }
 
   @Override

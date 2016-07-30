@@ -102,13 +102,18 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
 
 
     // part of SurfaceHolder.Callback
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+    public void surfaceChanged(SurfaceHolder holder, int format, int iwidth, int iheight) {
       if (PApplet.DEBUG) {
-        System.out.println("SketchSurfaceView2D.surfaceChanged() " + w + " " + h);
+        System.out.println("SketchSurfaceView.surfaceChanged() " + iwidth + " " + iheight);
       }
 
-      sketch.displayWidth = w;
-      sketch.displayHeight = h;
+      if (sketch.fullScreen) {
+        sketch.displayWidth = iwidth;
+        sketch.displayHeight = iheight;
+      }
+      sketch.width = iwidth;
+      sketch.height = iheight;
+
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
     }

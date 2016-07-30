@@ -274,14 +274,22 @@ public class PSurfaceGLES extends PSurfaceNone {
     }
 
     public void onSurfaceChanged(GL10 igl, int iwidth, int iheight) {
+      if (PApplet.DEBUG) {
+        System.out.println("AndroidRenderer.onSurfaceChanged() " + iwidth + " " + iheight);
+      }
+
       pgl.getGL(igl);
 
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
-       // Display width/height might change if the orientation changes.
-      sketch.displayWidth = iwidth;
-      sketch.displayHeight = iheight;
+      if (sketch.fullScreen) {
+        sketch.displayWidth = iwidth;
+        sketch.displayHeight = iheight;
+      }
+      sketch.width = iwidth;
+      sketch.height = iheight;
+
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
     }
