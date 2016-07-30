@@ -112,35 +112,35 @@ public class PFragment extends Fragment implements AppComponent {
   @Override
   public void onResume() {
     super.onResume();
-    sketch.onResume();
+    if (sketch != null) sketch.onResume();
   }
 
 
   @Override
   public void onPause() {
     super.onPause();
-    sketch.onPause();
+    if (sketch != null) sketch.onPause();
   }
 
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    sketch.onDestroy();
+    if (sketch != null) sketch.onDestroy();
   }
 
 
   @Override
   public void onStart() {
     super.onStart();
-    sketch.onStart();
+    if (sketch != null) sketch.onStart();
   }
 
 
   @Override
   public void onStop() {
     super.onStop();
-    sketch.onStop();
+    if (sketch != null) sketch.onStop();
   }
 
 
@@ -157,7 +157,7 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   public void onPermissionsGranted() {
-    sketch.onPermissionsGranted();
+    if (sketch != null) sketch.onPermissionsGranted();
   }
 
 
@@ -174,6 +174,7 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
   public boolean canDraw() {
+    if (sketch == null) return false;
     return sketch.isLooping();
   }
 }

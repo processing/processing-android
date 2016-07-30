@@ -108,7 +108,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public void onPermissionsGranted() {
-    engine.sketch.onPermissionsGranted();
+    if (engine != null) engine.onPermissionsGranted();
   }
 
   @Override
@@ -172,16 +172,16 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onTouchEvent(MotionEvent event) {
       super.onTouchEvent(event);
-      if (sketch != null) {
-        sketch.surfaceTouchEvent(event);
-      }
+      if (sketch != null) sketch.surfaceTouchEvent(event);
     }
 
     @Override
     public void onOffsetsChanged(float xOffset, float yOffset,
                                  float xStep, float yStep, int xPixels, int yPixels) {
-      sketch.offsetX = xOffset;
-      sketch.offsetY = yOffset;
+      if (sketch != null) {
+        sketch.offsetX = xOffset;
+        sketch.offsetY = yOffset;
+      }
     }
 
     @Override
@@ -215,7 +215,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 //      }
 //
       super.onDestroy();
-      sketch.onDestroy();
+      if (sketch != null) sketch.onDestroy();
+    }
+
+    public void onPermissionsGranted() {
+      if (sketch != null) sketch.onPermissionsGranted();
     }
   }
 }

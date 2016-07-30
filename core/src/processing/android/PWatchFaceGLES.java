@@ -98,7 +98,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   public void onPermissionsGranted() {
-    sketch.onPermissionsGranted();
+    if (sketch != null) sketch.onPermissionsGranted();
   }
 
   @Override
@@ -108,7 +108,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   public void requestDraw() {
-    engine.invalidateIfNecessary();
+    if (engine != null) engine.invalidateIfNecessary();
   }
 
   public boolean canDraw() {
@@ -152,10 +152,12 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onGlSurfaceCreated(int width, int height) {
       super.onGlSurfaceCreated(width, height);
-      sketch.displayWidth = width;
-      sketch.displayHeight = height;
-      sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
-      sketch.surfaceChanged();
+      if (sketch != null) {
+        sketch.displayWidth = width;
+        sketch.displayHeight = height;
+        sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
+        sketch.surfaceChanged();
+      }
     }
 
 
@@ -163,34 +165,40 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
       invalidateIfNecessary();
-      sketch.ambientMode = inAmbientMode;
+      if (sketch != null) sketch.ambientMode = inAmbientMode;
       // call new event handlers in sketch (?)
     }
 
     @Override
     public void onPropertiesChanged(Bundle properties) {
       super.onPropertiesChanged(properties);
-      sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
-      sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
+      if (sketch != null) {
+        sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+        sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
+      }
     }
 
     @Override
     public void onApplyWindowInsets(WindowInsets insets) {
       super.onApplyWindowInsets(insets);
-      sketch.isRound = insets.isRound();
-      sketch.insetLeft = insets.getSystemWindowInsetLeft();
-      sketch.insetRight = insets.getSystemWindowInsetRight();
-      sketch.insetTop = insets.getSystemWindowInsetTop();
-      sketch.insetBottom = insets.getSystemWindowInsetBottom();
+      if (sketch != null) {
+        sketch.isRound = insets.isRound();
+        sketch.insetLeft = insets.getSystemWindowInsetLeft();
+        sketch.insetRight = insets.getSystemWindowInsetRight();
+        sketch.insetTop = insets.getSystemWindowInsetTop();
+        sketch.insetBottom = insets.getSystemWindowInsetBottom();
+      }
     }
 
     @Override
     public void onVisibilityChanged(boolean visible) {
       super.onVisibilityChanged(visible);
-      if (visible) {
-        sketch.onResume();
-      } else {
-        sketch.onPause();
+      if (sketch != null) {
+        if (visible) {
+          sketch.onResume();
+        } else {
+          sketch.onPause();
+        }
       }
     }
 
@@ -211,7 +219,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public void onDraw() {
       super.onDraw();
 //      PApplet.println("Calling handleDraw: " + sketch.width + " " + sketch.height);
-      sketch.handleDraw();
+      if (sketch != null) sketch.handleDraw();
     }
 
 
@@ -275,13 +283,13 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public void onTouchEvent(MotionEvent event) {
       super.onTouchEvent(event);
       PApplet.println("touch even:" + event.toString());
-      sketch.surfaceTouchEvent(event);
+      if (sketch != null) sketch.surfaceTouchEvent(event);
     }
 
     @Override
     public void onDestroy() {
       super.onDestroy();
-      sketch.onDestroy();
+      if (sketch != null) sketch.onDestroy();
     }
   }
 
@@ -289,6 +297,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   @Override
   public void onDestroy() {
     super.onDestroy();
-    engine.onDestroy();
+    if (engine != null) engine.onDestroy();
   }
 }
