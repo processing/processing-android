@@ -32,8 +32,8 @@ abstract public interface AppComponent extends PConstants {
   static public final int WATCHFACE = 2;
 
   public void initDimensions();
-  public int getWidth();
-  public int getHeight();
+  public int getDisplayWidth();
+  public int getDisplayHeight();
   public int getKind();
   public void setSketch(PApplet sketch);
 
