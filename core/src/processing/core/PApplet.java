@@ -495,8 +495,8 @@ public class PApplet extends Object implements PConstants {
     if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
 
     component.initDimensions();
-    displayWidth = component.getWidth();
-    displayHeight = component.getHeight();
+    displayWidth = component.getDisplayWidth();
+    displayHeight = component.getDisplayHeight();
     handleSettings();
 
     if (fullScreen && parentLayout == -1) {
@@ -526,7 +526,8 @@ public class PApplet extends Object implements PConstants {
       // Finalize surface initialization.
       surface.initView(width, height);
     } else {
-      surface.initView(inflater, container, savedInstanceState);
+      surface.initView(inflater, container, savedInstanceState,
+                       fullScreen, width, height);
     }
 
     finished = false; // just for clarity
@@ -575,7 +576,9 @@ public class PApplet extends Object implements PConstants {
   public void onResume() {
     // TODO need to bring back app state here!
     if (DEBUG) System.out.println("PApplet.onResume() called");
-    setFullScreenVisibility();
+    if (parentLayout == -1) {
+      setFullScreenVisibility();
+    }
     handleMethods("resume");
     surface.resumeThread();
     resume();

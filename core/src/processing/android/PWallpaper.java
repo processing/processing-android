@@ -74,12 +74,12 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     return WALLPAPER;
   }
 
-  public int getWidth() {
+  public int getDisplayWidth() {
     return size.x;
 //    return metrics.widthPixels;
   }
 
-  public int getHeight() {
+  public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
   }
