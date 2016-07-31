@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.service.wallpaper.WallpaperService;
 import android.support.wearable.watchface.WatchFaceService;
@@ -105,6 +106,23 @@ public class PSurfaceNone implements PSurface, PConstants {
   }
 
   @Override
+  public View getResource(int id) {
+    return activity.findViewById(id);
+  }
+
+  @Override
+  public Rect getVisibleFrame() {
+    Rect frame = new Rect();
+    if (view != null) {
+      // According to the docs:
+      // https://developer.android.com/reference/android/view/View.html#getWindowVisibleDisplayFrame(android.graphics.Rect)
+      // don't use in performance critical code like drawing.
+      view.getWindowVisibleDisplayFrame(frame);
+    }
+    return frame;
+  }
+
+  @Override
   public void dispose() {
     sketch = null;
     graphics = null;
@@ -150,8 +168,8 @@ public class PSurfaceNone implements PSurface, PConstants {
   @Override
   public void initView(int sketchWidth, int sketchHeight) {
     if (component.getKind() == AppComponent.FRAGMENT) {
-      int displayWidth = component.getWidth();
-      int displayHeight = component.getHeight();
+      int displayWidth = component.getDisplayWidth();
+      int displayHeight = component.getDisplayHeight();
       View rootView;
       if (sketchWidth == displayWidth && sketchHeight == displayHeight) {
         rootView = getSurfaceView();
@@ -175,30 +193,32 @@ public class PSurfaceNone implements PSurface, PConstants {
   }
 
   @Override
-  public void initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+  public void initView(LayoutInflater inflater, ViewGroup container,
+                       Bundle savedInstanceState,
+                       boolean sketchFullScreen,
+                       int sketchWidth, int sketchHeight) {
     // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
     ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
-    LinearLayout.LayoutParams gp =
-      new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                    LayoutParams.WRAP_CONTENT);
+    RelativeLayout.LayoutParams gp =
+      new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                      LayoutParams.WRAP_CONTENT);
+    gp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
-    LinearLayout.LayoutParams vp = new
-      LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                                LayoutParams.MATCH_PARENT);
-    vp.weight = 1.0f;
-
-//    LinearLayout layout = new LinearLayout(activity);
     View view = getSurfaceView();
-    view.setLayoutParams(vp);
-//    layout.addView(getSurfaceView(), lp2);
+    if (sketch.fullScreen) {
+      LinearLayout.LayoutParams vp;
+      vp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                                         LayoutParams.MATCH_PARENT);
+      vp.weight = 1.0f;
+      view.setLayoutParams(vp);
+      rootView.addView(view, gp);
+    } else {
+      LinearLayout layout = new LinearLayout(activity);
+      layout.addView(view, sketchWidth, sketchHeight);
+      rootView.addView(layout, gp);
+    }
 
-
-
-//    layout.setBackgroundColor(0xFFFF0000);
-    rootView.addView(view, gp);
-
-//    System.out.println("------------------------------->" + container.getId());
-//    System.exit(1);
+    rootView.setBackgroundColor(sketch.sketchWindowColor());
     setRootView(rootView);
   }
 

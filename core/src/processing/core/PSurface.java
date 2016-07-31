@@ -29,6 +29,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
@@ -47,16 +48,22 @@ public interface PSurface {
 
   public void dispose();
 
-  public View getRootView();
-
   public String getName();
 
-  public void setRootView(View view);
+  public View getResource(int id);
+
+  public Rect getVisibleFrame();
 
   public SurfaceView getSurfaceView();
 
+  public View getRootView();
+  public void setRootView(View view);
+
   public void initView(int sketchWidth, int sketchHeight);
-  public void initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
+  public void initView(LayoutInflater inflater, ViewGroup container,
+                       Bundle savedInstanceState,
+                       boolean sketchFullScreen,
+                       int sketchWidth, int sketchHeight);
 
   public void startActivity(Intent intent);
 
