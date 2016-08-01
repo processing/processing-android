@@ -36,6 +36,7 @@ abstract public interface AppComponent extends PConstants {
   public int getDisplayHeight();
   public int getKind();
   public void setSketch(PApplet sketch);
+  public PApplet getSketch();
 
   public void startActivity(Intent intent);
 

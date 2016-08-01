@@ -88,6 +88,10 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 //    engine.sketch = sketch;
   }
 
+  public PApplet getSketch() {
+    return engine.sketch;
+  }
+
   public PApplet createSketch() {
     return new PApplet();
   }

@@ -90,6 +90,10 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     this.sketch = sketch;
   }
 
+  public PApplet getSketch() {
+    return sketch;
+  }
+
   public void dispose() {
   }
 

@@ -93,6 +93,10 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     this.sketch = sketch;
   }
 
+  public PApplet getSketch() {
+    return sketch;
+  }
+
   public void dispose() {
   }
 

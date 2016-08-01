@@ -95,6 +95,10 @@ public class PFragment extends Fragment implements AppComponent {
     this.sketch = sketch;
   }
 
+  public PApplet getSketch() {
+    return sketch;
+  }
+
   public void dispose() {
   }
 
