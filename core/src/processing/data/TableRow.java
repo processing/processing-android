@@ -22,6 +22,8 @@
 
 package processing.data;
 
+import java.io.PrintWriter;
+
 /**
  * @webref data:composite
  * @see Table
@@ -131,4 +133,10 @@ public interface TableRow {
   public int getColumnType(int column);
 
   public int[] getColumnTypes();
+
+  public String getColumnTitle(int column);
+  public String[] getColumnTitles();
+
+  public void write(PrintWriter writer);
+  public void print();
 }
