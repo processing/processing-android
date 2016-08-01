@@ -3,7 +3,6 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2013-16 The Processing Foundation
   Copyright (c) 2011-13 Ben Fry and Casey Reas
   Copyright (c) 2006-11 Ben Fry
 
@@ -26,6 +25,7 @@ package processing.data;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -61,6 +62,7 @@ import processing.core.PConstants;
  */
 public class Table {
   protected int rowCount;
+  protected int allocCount;
 
 //  protected boolean skipEmptyRows = true;
 //  protected boolean skipCommentLines = true;
@@ -154,12 +156,40 @@ public class Table {
 
 
   public Table(Iterable<TableRow> rows) {
-    boolean typed = false;
-    for (TableRow row : rows) {
-      if (!typed) {
-        setColumnTypes(row.getColumnTypes());
+    init();
+
+    int row = 0;
+    int alloc = 10;
+
+    for (TableRow incoming : rows) {
+      if (row == 0) {
+        setColumnTypes(incoming.getColumnTypes());
+        setColumnTitles(incoming.getColumnTitles());
+        // Do this after setting types, otherwise it'll attempt to parse the
+        // allocated but empty rows, and drive CATEGORY columns nutso.
+        setRowCount(alloc);
+        // sometimes more columns than titles (and types?)
+        setColumnCount(incoming.getColumnCount());
+
+      } else if (row == alloc) {
+        // Far more efficient than re-allocating all columns and doing a copy
+        alloc *= 2;
+        setRowCount(alloc);
       }
-      addRow(row);
+
+      //addRow(row);
+//      try {
+      setRow(row++, incoming);
+//      } catch (ArrayIndexOutOfBoundsException aioobe) {
+//        for (int i = 0; i < incoming.getColumnCount(); i++) {
+//          System.out.format("[%d] %s%n", i, incoming.getString(i));
+//        }
+//        throw aioobe;
+//      }
+    }
+    // Shrink the table to only the rows that were used
+    if (row != alloc) {
+      setRowCount(row);
     }
   }
 
@@ -273,7 +303,7 @@ public class Table {
 
 
   static final String[] loadExtensions = { "csv", "tsv", "ods", "bin" };
-  static final String[] saveExtensions = { "csv", "tsv", "html", "bin" };
+  static final String[] saveExtensions = { "csv", "tsv", "ods", "bin", "html" };
 
   static public String extensionOptions(boolean loading, String filename, String options) {
     String extension = PApplet.checkExtension(filename);
@@ -295,19 +325,18 @@ public class Table {
 
 
   protected void parse(InputStream input, String options) throws IOException {
-    //init();
-
-    boolean awfulCSV = false;
+//    boolean awfulCSV = false;
     boolean header = false;
     String extension = null;
     boolean binary = false;
+    String encoding = "UTF-8";
 
     String worksheet = null;
     final String sheetParam = "worksheet=";
 
     String[] opts = null;
     if (options != null) {
-      opts = PApplet.splitTokens(options, " ,");
+      opts = PApplet.trim(PApplet.split(options, ','));
       for (String opt : opts) {
         if (opt.equals("tsv")) {
           extension = "tsv";
@@ -316,8 +345,9 @@ public class Table {
         } else if (opt.equals("ods")) {
           extension = "ods";
         } else if (opt.equals("newlines")) {
-          awfulCSV = true;
-          extension = "csv";
+          //awfulCSV = true;
+          //extension = "csv";
+          throw new IllegalArgumentException("The 'newlines' option is no longer necessary.");
         } else if (opt.equals("bin")) {
           binary = true;
           extension = "bin";
@@ -327,6 +357,8 @@ public class Table {
           worksheet = opt.substring(sheetParam.length());
         } else if (opt.startsWith("dictionary=")) {
           // ignore option, this is only handled by PApplet
+        } else if (opt.startsWith("encoding=")) {
+          encoding = opt.substring(9);
         } else {
           throw new IllegalArgumentException("'" + opt + "' is not a valid option for loading a Table");
         }
@@ -341,17 +373,21 @@ public class Table {
       loadBinary(input);
 
     } else if (extension.equals("ods")) {
-      odsParse(input, worksheet);
+      odsParse(input, worksheet, header);
 
     } else {
-      BufferedReader reader = PApplet.createReader(input);
-      if (awfulCSV) {
+      InputStreamReader isr = new InputStreamReader(input, encoding);
+      BufferedReader reader = new BufferedReader(isr);
+      /*
+       if (awfulCSV) {
         parseAwfulCSV(reader, header);
       } else if ("tsv".equals(extension)) {
         parseBasic(reader, header, true);
       } else if ("csv".equals(extension)) {
         parseBasic(reader, header, false);
       }
+      */
+      parseBasic(reader, header, "tsv".equals(extension));
     }
   }
 
@@ -370,16 +406,16 @@ public class Table {
           setRowCount(row << 1);
         }
         if (row == 0 && header) {
-          setColumnTitles(tsv ? PApplet.split(line, '\t') : splitLineCSV(line));
+          setColumnTitles(tsv ? PApplet.split(line, '\t') : splitLineCSV(line, reader));
           header = false;
         } else {
-          setRow(row, tsv ? PApplet.split(line, '\t') : splitLineCSV(line));
+          setRow(row, tsv ? PApplet.split(line, '\t') : splitLineCSV(line, reader));
           row++;
         }
 
-        // this is problematic unless we're going to calculate rowCount first
         if (row % 10000 == 0) {
         /*
+        // this is problematic unless we're going to calculate rowCount first
         if (row < rowCount) {
           int pct = (100 * row) / rowCount;
           if (pct != prev) {  // also prevents "0%" from showing up
@@ -411,11 +447,16 @@ public class Table {
 //  }
 
 
+  /*
   protected void parseAwfulCSV(BufferedReader reader,
                                boolean header) throws IOException {
     char[] c = new char[100];
     int count = 0;
     boolean insideQuote = false;
+
+    int alloc = 100;
+    setRowCount(100);
+
     int row = 0;
     int col = 0;
     int ch;
@@ -461,14 +502,23 @@ public class Table {
           }
           setString(row, col, new String(c, 0, count));
           count = 0;
-          if (row == 0 && header) {
+          row++;
+          if (row == 1 && header) {
             // Use internal row removal (efficient because only one row).
             removeTitleRow();
             // Un-set the header variable so that next time around, we don't
             // just get stuck into a loop, removing the 0th row repeatedly.
             header = false;
+            // Reset the number of rows (removeTitleRow() won't reset our local 'row' counter)
+            row = 0;
           }
-          row++;
+//          if (row % 1000 == 0) {
+//            PApplet.println(PApplet.nfc(row));
+//          }
+          if (row == alloc) {
+            alloc *= 2;
+            setRowCount(alloc);
+          }
           col = 0;
 
         } else if (ch == ',') {
@@ -490,8 +540,191 @@ public class Table {
     if (count > 0) {
       setString(row, col, new String(c, 0, count));
     }
+    row++;  // set row to row count (the current row index + 1)
+    if (alloc != row) {
+      setRowCount(row);  // shrink to the actual size
+    }
+  }
+  */
+
+
+  static class CommaSeparatedLine {
+    char[] c;
+    String[] pieces;
+    int pieceCount;
+
+//    int offset;
+    int start; //, stop;
+
+    String[] handle(String line, BufferedReader reader) throws IOException {
+//      PApplet.println("handle() called for: " + line);
+      start = 0;
+      pieceCount = 0;
+      c = line.toCharArray();
+
+      // get tally of number of columns and allocate the array
+      int cols = 1;  // the first comma indicates the second column
+      boolean quote = false;
+      for (int i = 0; i < c.length; i++) {
+        if (!quote && (c[i] == ',')) {
+          cols++;
+        } else if (c[i] == '\"') {
+          // double double quotes (escaped quotes like "") will simply toggle
+          // this back and forth, so it should remain accurate
+          quote = !quote;
+        }
+      }
+      pieces = new String[cols];
+
+//      while (offset < c.length) {
+//        start = offset;
+      while (start < c.length) {
+        boolean enough = ingest();
+        while (!enough) {
+          // found a newline inside the quote, grab another line
+          String nextLine = reader.readLine();
+//          System.out.println("extending to " + nextLine);
+          if (nextLine == null) {
+//            System.err.println(line);
+            throw new IOException("Found a quoted line that wasn't terminated properly.");
+          }
+          // for simplicity, not bothering to skip what's already been read
+          // from c (and reset the offset to 0), opting to make a bigger array
+          // with both lines.
+          char[] temp = new char[c.length + 1 + nextLine.length()];
+          PApplet.arrayCopy(c, temp, c.length);
+          // NOTE: we're converting to \n here, which isn't perfect
+          temp[c.length] = '\n';
+          nextLine.getChars(0, nextLine.length(), temp, c.length + 1);
+//          c = temp;
+          return handle(new String(temp), reader);
+          //System.out.println("  full line is now " + new String(c));
+          //stop = nextComma(c, offset);
+          //System.out.println("stop is now " + stop);
+          //enough = ingest();
+        }
+      }
+
+      // Make any remaining entries blanks instead of nulls. Empty columns from
+      // CSV are always "" not null, so this handles successive commas in a line
+      for (int i = pieceCount; i < pieces.length; i++) {
+        pieces[i] = "";
+      }
+//      PApplet.printArray(pieces);
+      return pieces;
+    }
+
+    protected void addPiece(int start, int stop, boolean quotes) {
+      if (quotes) {
+        int dest = start;
+        for (int i = start; i < stop; i++) {
+          if (c[i] == '\"') {
+            ++i;  // step over the quote
+          }
+          if (i != dest) {
+            c[dest] = c[i];
+          }
+          dest++;
+        }
+        pieces[pieceCount++] = new String(c, start, dest - start);
+
+      } else {
+        pieces[pieceCount++] = new String(c, start, stop - start);
+      }
+    }
+
+    /**
+     * Returns the next comma (not inside a quote) in the specified array.
+     * @param c array to search
+     * @param index offset at which to start looking
+     * @return index of the comma, or -1 if line ended inside an unclosed quote
+     */
+    protected boolean ingest() {
+      boolean hasEscapedQuotes = false;
+      // not possible
+//      if (index == c.length) {  // we're already at the end
+//        return c.length;
+//      }
+      boolean quoted = c[start] == '\"';
+      if (quoted) {
+        start++; // step over the quote
+      }
+      int i = start;
+      while (i < c.length) {
+//        PApplet.println(c[i] + " i=" + i);
+        if (c[i] == '\"') {
+          // if this fella started with a quote
+          if (quoted) {
+            if (i == c.length-1) {
+              // closing quote for field; last field on the line
+              addPiece(start, i, hasEscapedQuotes);
+              start = c.length;
+              return true;
+
+            } else if (c[i+1] == '\"') {
+              // an escaped quote inside a quoted field, step over it
+              hasEscapedQuotes = true;
+              i += 2;
+
+            } else if (c[i+1] == ',') {
+              // that was our closing quote, get outta here
+              addPiece(start, i, hasEscapedQuotes);
+              start = i+2;
+              return true;
+            }
+
+          } else {  // not a quoted line
+            if (i == c.length-1) {
+              // we're at the end of the line, can't have an unescaped quote
+              throw new RuntimeException("Unterminated quote at end of line");
+
+            } else if (c[i+1] == '\"') {
+              // step over this crummy quote escape
+              hasEscapedQuotes = true;
+              i += 2;
+
+            } else {
+              throw new RuntimeException("Unterminated quoted field mid-line");
+            }
+          }
+        } else if (!quoted && c[i] == ',') {
+          addPiece(start, i, hasEscapedQuotes);
+          start = i+1;
+          return true;
+
+        } else if (!quoted && i == c.length-1) {
+          addPiece(start, c.length, hasEscapedQuotes);
+          start = c.length;
+          return true;
+
+        } else {  // nothing all that interesting
+          i++;
+        }
+      }
+//      if (!quote && (c[i] == ',')) {
+//        // found a comma, return this location
+//        return i;
+//      } else if (c[i] == '\"') {
+//        // if it's a quote, then either the next char is another quote,
+//        // or if this is a quoted entry, it better be a comma
+//        quote = !quote;
+//      }
+//    }
+
+      // if still inside a quote, indicate that another line should be read
+      if (quoted) {
+        return false;
+      }
+
+//    // made it to the end of the array with no new comma
+//    return c.length;
+
+      throw new RuntimeException("not sure how...");
+    }
   }
 
+
+  CommaSeparatedLine csl;
 
   /**
    * Parse a line of text as comma-separated values, returning each value as
@@ -500,63 +733,77 @@ public class Table {
    * @param line line of text to be parsed
    * @return an array of the individual values formerly separated by commas
    */
-  static protected String[] splitLineCSV(String line) {
-    char[] c = line.toCharArray();
-    int rough = 1;  // at least one
-    boolean quote = false;
-    for (int i = 0; i < c.length; i++) {
-      if (!quote && (c[i] == ',')) {
-        rough++;
-      } else if (c[i] == '\"') {
-        quote = !quote;
-      }
+  protected String[] splitLineCSV(String line, BufferedReader reader) throws IOException {
+    if (csl == null) {
+      csl = new CommaSeparatedLine();
     }
-    String[] pieces = new String[rough];
-    int pieceCount = 0;
-    int offset = 0;
-    while (offset < c.length) {
-      int start = offset;
-      int stop = nextComma(c, offset);
-      offset = stop + 1;  // next time around, need to step over the comment
-      if (c[start] == '\"' && c[stop-1] == '\"') {
-        start++;
-        stop--;
-      }
-      int i = start;
-      int ii = start;
-      while (i < stop) {
-        if (c[i] == '\"') {
-          i++;  // skip over pairs of double quotes become one
-        }
-        if (i != ii) {
-          c[ii] = c[i];
-        }
-        i++;
-        ii++;
-      }
-      String s = new String(c, start, ii - start);
-      pieces[pieceCount++] = s;
-    }
-    // make any remaining entries blanks instead of nulls
-    for (int i = pieceCount; i < pieces.length; i++) {
-      pieces[i] = "";
-
-    }
-    return pieces;
+    return csl.handle(line, reader);
   }
 
 
+  /**
+   * Returns the next comma (not inside a quote) in the specified array.
+   * @param c array to search
+   * @param index offset at which to start looking
+   * @return index of the comma, or -1 if line ended inside an unclosed quote
+   */
+  /*
   static protected int nextComma(char[] c, int index) {
-    boolean quote = false;
+    if (index == c.length) {  // we're already at the end
+      return c.length;
+    }
+    boolean quoted = c[index] == '\"';
+    if (quoted) {
+      index++; // step over the quote
+    }
     for (int i = index; i < c.length; i++) {
+      if (c[i] == '\"') {
+        // if this fella started with a quote
+        if (quoted) {
+          if (i == c.length-1) {
+            //return -1;  // ran out of chars
+            // closing quote for field; last field on the line
+            return c.length;
+          } else if (c[i+1] == '\"') {
+            // an escaped quote inside a quoted field, step over it
+            i++;
+          } else if (c[i+1] == ',') {
+            // that's our closing quote, get outta here
+            return i+1;
+          }
+
+        } else {  // not a quoted line
+          if (i == c.length-1) {
+            // we're at the end of the line, can't have an unescaped quote
+            //return -1;  // ran out of chars
+            throw new RuntimeException("Unterminated quoted field at end of line");
+          } else if (c[i+1] == '\"') {
+            // step over this crummy quote escape
+            ++i;
+          } else {
+            throw new RuntimeException("Unterminated quoted field mid-line");
+          }
+        }
+      } else if (!quoted && c[i] == ',') {
+        return i;
+      }
       if (!quote && (c[i] == ',')) {
+        // found a comma, return this location
         return i;
       } else if (c[i] == '\"') {
+        // if it's a quote, then either the next char is another quote,
+        // or if this is a quoted entry, it better be a comma
         quote = !quote;
       }
     }
+    // if still inside a quote, indicate that another line should be read
+    if (quote) {
+      return -1;
+    }
+    // made it to the end of the array with no new comma
     return c.length;
   }
+  */
 
 
   /**
@@ -579,7 +826,7 @@ public class Table {
   }
 
 
-  protected void odsParse(InputStream input, String worksheet) {
+  protected void odsParse(InputStream input, String worksheet, boolean header) {
     try {
       InputStream contentStream = odsFindContentXML(input);
       XML xml = new XML(contentStream);
@@ -595,7 +842,7 @@ public class Table {
       for (XML sheet : sheets) {
 //        System.out.println(sheet.getAttribute("table:name"));
         if (worksheet == null || worksheet.equals(sheet.getString("table:name"))) {
-          odsParseSheet(sheet);
+          odsParseSheet(sheet, header);
           found = true;
           if (worksheet == null) {
             break;  // only read the first sheet
@@ -626,7 +873,7 @@ public class Table {
    * Parses a single sheet of XML from this file.
    * @param The XML object for a single worksheet from the ODS file
    */
-  private void odsParseSheet(XML sheet) {
+  private void odsParseSheet(XML sheet, boolean header) {
     // Extra <p> or <a> tags inside the text tag for the cell will be stripped.
     // Different from showing formulas, and not quite the same as 'save as
     // displayed' option when saving from inside OpenOffice. Only time we
@@ -675,7 +922,7 @@ public class Table {
               cellData = textpContent;  // nothing fancy, the text is in the text:p element
             } else {
               XML[] textpKids = textp.getChildren();
-              StringBuffer cellBuffer = new StringBuffer();
+              StringBuilder cellBuffer = new StringBuilder();
               for (XML kid : textpKids) {
                 String kidName = kid.getName();
                 if (kidName == null) {
@@ -723,18 +970,24 @@ public class Table {
           }
         }
       }
-      if (rowNotNull && rowRepeat > 1) {
-        String[] rowStrings = getStringRow(rowIndex);
-        for (int r = 1; r < rowRepeat; r++) {
-          addRow(rowStrings);
+      if (header) {
+        removeTitleRow();  // efficient enough on the first row
+        header = false;  // avoid infinite loop
+
+      } else {
+        if (rowNotNull && rowRepeat > 1) {
+          String[] rowStrings = getStringRow(rowIndex);
+          for (int r = 1; r < rowRepeat; r++) {
+            addRow(rowStrings);
+          }
         }
+        rowIndex += rowRepeat;
       }
-      rowIndex += rowRepeat;
     }
   }
 
 
-  private void odsAppendNotNull(XML kid, StringBuffer buffer) {
+  private void odsAppendNotNull(XML kid, StringBuilder buffer) {
     String content = kid.getContent();
     if (content != null) {
       buffer.append(content);
@@ -916,7 +1169,7 @@ public class Table {
       throw new IllegalArgumentException("No extension specified for saving this Table");
     }
 
-    String[] opts = PApplet.splitTokens(options, ", ");
+    String[] opts = PApplet.trim(PApplet.split(options, ','));
     // Only option for save is the extension, so we can safely grab the last
     extension = opts[opts.length - 1];
     boolean found = false;
@@ -935,6 +1188,13 @@ public class Table {
       writeCSV(writer);
     } else if (extension.equals("tsv")) {
       writeTSV(writer);
+    } else if (extension.equals("ods")) {
+      try {
+        saveODS(output);
+      } catch (IOException e) {
+        e.printStackTrace();
+        return false;
+      }
     } else if (extension.equals("html")) {
       writeHTML(writer);
     } else if (extension.equals("bin")) {
@@ -983,12 +1243,18 @@ public class Table {
 
   protected void writeCSV(PrintWriter writer) {
     if (columnTitles != null) {
-      for (int col = 0; col < columns.length; col++) {
+      for (int col = 0; col < getColumnCount(); col++) {
         if (col != 0) {
           writer.print(',');
         }
-        if (columnTitles[col] != null) {
-          writeEntryCSV(writer, columnTitles[col]);
+        try {
+          if (columnTitles[col] != null) {  // col < columnTitles.length &&
+            writeEntryCSV(writer, columnTitles[col]);
+          }
+        } catch (ArrayIndexOutOfBoundsException e) {
+          PApplet.printArray(columnTitles);
+          PApplet.printArray(columns);
+          throw e;
         }
       }
       writer.println();
@@ -1051,28 +1317,51 @@ public class Table {
 
 
   protected void writeHTML(PrintWriter writer) {
-    writer.println("<html>");
+    writer.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">");
+//    writer.println("<!DOCTYPE html>");
+//    writer.println("<meta charset=\"utf-8\">");
 
+    writer.println("<html>");
     writer.println("<head>");
     writer.println("  <meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />");
     writer.println("</head>");
 
     writer.println("<body>");
     writer.println("  <table>");
+
+    if (hasColumnTitles()) {
+      writer.println("  <tr>");
+      for (String entry : getColumnTitles()) {
+        writer.print("      <th>");
+        if (entry != null) {
+          writeEntryHTML(writer, entry);
+        }
+        writer.println("</th>");
+      }
+      writer.println("  </tr>");
+    }
+
     for (int row = 0; row < getRowCount(); row++) {
       writer.println("    <tr>");
       for (int col = 0; col < getColumnCount(); col++) {
         String entry = getString(row, col);
         writer.print("      <td>");
-        writeEntryHTML(writer, entry);
-        writer.println("      </td>");
+        if (entry != null) {
+          // probably not a great idea to mess w/ the export
+//          if (entry.startsWith("<") && entry.endsWith(">")) {
+//            writer.print(entry);
+//          } else {
+          writeEntryHTML(writer, entry);
+//          }
+        }
+        writer.println("</td>");
       }
       writer.println("    </tr>");
     }
     writer.println("  </table>");
     writer.println("</body>");
 
-    writer.println("</hmtl>");
+    writer.println("</html>");
     writer.flush();
   }
 
@@ -1086,20 +1375,220 @@ public class Table {
         writer.print("&gt;");
       } else if (c == '&') {
         writer.print("&amp;");
-      } else if (c == '\'') {
-        writer.print("&apos;");
+//      } else if (c == '\'') {  // only in XML
+//        writer.print("&apos;");
       } else if (c == '"') {
         writer.print("&quot;");
 
-      // not necessary with UTF-8?
-//      } else if (c < 32 || c > 127) {
-//        writer.print("&#");
-//        writer.print((int) c);
-//        writer.print(';');
+      } else if (c < 32 || c > 127) {  // keep in ASCII or Tidy complains
+        writer.print("&#");
+        writer.print((int) c);
+        writer.print(';');
 
       } else {
         writer.print(c);
       }
+    }
+  }
+
+
+  protected void saveODS(OutputStream os) throws IOException {
+    ZipOutputStream zos = new ZipOutputStream(os);
+
+    final String xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+
+    ZipEntry entry = new ZipEntry("META-INF/manifest.xml");
+    String[] lines = new String[] {
+      xmlHeader,
+      "<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">",
+      "  <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.spreadsheet\" manifest:version=\"1.2\" manifest:full-path=\"/\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"meta.xml\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"settings.xml\"/>",
+      "</manifest:manifest>"
+    };
+    zos.putNextEntry(entry);
+    zos.write(PApplet.join(lines, "\n").getBytes());
+    zos.closeEntry();
+
+    /*
+    entry = new ZipEntry("meta.xml");
+    lines = new String[] {
+      xmlHeader,
+      "<office:document-meta office:version=\"1.0\"" +
+      " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" />"
+    };
+    zos.putNextEntry(entry);
+    zos.write(PApplet.join(lines, "\n").getBytes());
+    zos.closeEntry();
+
+    entry = new ZipEntry("meta.xml");
+    lines = new String[] {
+      xmlHeader,
+      "<office:document-settings office:version=\"1.0\"" +
+      " xmlns:config=\"urn:oasis:names:tc:opendocument:xmlns:config:1.0\"" +
+      " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\"" +
+      " xmlns:ooo=\"http://openoffice.org/2004/office\"" +
+      " xmlns:xlink=\"http://www.w3.org/1999/xlink\" />"
+    };
+    zos.putNextEntry(entry);
+    zos.write(PApplet.join(lines, "\n").getBytes());
+    zos.closeEntry();
+
+    entry = new ZipEntry("settings.xml");
+    lines = new String[] {
+      xmlHeader,
+      "<office:document-settings office:version=\"1.0\"" +
+      " xmlns:config=\"urn:oasis:names:tc:opendocument:xmlns:config:1.0\"" +
+      " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\"" +
+      " xmlns:ooo=\"http://openoffice.org/2004/office\"" +
+      " xmlns:xlink=\"http://www.w3.org/1999/xlink\" />"
+    };
+    zos.putNextEntry(entry);
+    zos.write(PApplet.join(lines, "\n").getBytes());
+    zos.closeEntry();
+
+    entry = new ZipEntry("styles.xml");
+    lines = new String[] {
+      xmlHeader,
+      "<office:document-styles office:version=\"1.0\"" +
+      " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" />"
+    };
+    zos.putNextEntry(entry);
+    zos.write(PApplet.join(lines, "\n").getBytes());
+    zos.closeEntry();
+    */
+
+    final String[] dummyFiles = new String[] {
+      "meta.xml", "settings.xml", "styles.xml"
+    };
+    lines = new String[] {
+      xmlHeader,
+      "<office:document-meta office:version=\"1.0\"" +
+      " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" />"
+    };
+    byte[] dummyBytes = PApplet.join(lines, "\n").getBytes();
+    for (String filename : dummyFiles) {
+      entry = new ZipEntry(filename);
+      zos.putNextEntry(entry);
+      zos.write(dummyBytes);
+      zos.closeEntry();
+    }
+
+    //
+
+    entry = new ZipEntry("mimetype");
+    zos.putNextEntry(entry);
+    zos.write("application/vnd.oasis.opendocument.spreadsheet".getBytes());
+    zos.closeEntry();
+
+    //
+
+    entry = new ZipEntry("content.xml");
+    zos.putNextEntry(entry);
+    //lines = new String[] {
+    writeUTF(zos, new String[] {
+      xmlHeader,
+      "<office:document-content" +
+        " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\"" +
+        " xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\"" +
+        " xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\"" +
+        " office:version=\"1.2\">",
+     "  <office:body>",
+     "    <office:spreadsheet>",
+     "      <table:table table:name=\"Sheet1\" table:print=\"false\">"
+    });
+    //zos.write(PApplet.join(lines, "\n").getBytes());
+
+    byte[] rowStart = "        <table:table-row>\n".getBytes();
+    byte[] rowStop = "        </table:table-row>\n".getBytes();
+
+    if (hasColumnTitles()) {
+      zos.write(rowStart);
+      for (int i = 0; i < getColumnCount(); i++) {
+        saveStringODS(zos, columnTitles[i]);
+      }
+      zos.write(rowStop);
+    }
+
+    for (TableRow row : rows()) {
+      zos.write(rowStart);
+      for (int i = 0; i < getColumnCount(); i++) {
+        if (columnTypes[i] == STRING || columnTypes[i] == CATEGORY) {
+          saveStringODS(zos, row.getString(i));
+        } else {
+          saveNumberODS(zos, row.getString(i));
+        }
+      }
+      zos.write(rowStop);
+    }
+
+    //lines = new String[] {
+    writeUTF(zos, new String[] {
+      "      </table:table>",
+      "    </office:spreadsheet>",
+      "  </office:body>",
+      "</office:document-content>"
+    });
+    //zos.write(PApplet.join(lines, "\n").getBytes());
+    zos.closeEntry();
+
+    zos.flush();
+    zos.close();
+  }
+
+
+  void saveStringODS(OutputStream output, String text) throws IOException {
+    // At this point, I should have just used the XML library. But this does
+    // save us from having to create the entire document in memory again before
+    // writing to the file. So while it's dorky, the outcome is still useful.
+    StringBuilder sanitized = new StringBuilder();
+    if (text != null) {
+      char[] array = text.toCharArray();
+      for (char c : array) {
+        if (c == '&') {
+          sanitized.append("&amp;");
+        } else if (c == '\'') {
+          sanitized.append("&apos;");
+        } else if (c == '"') {
+          sanitized.append("&quot;");
+        } else if (c == '<') {
+          sanitized.append("&lt;");
+        } else if (c == '>') {
+          sanitized.append("&rt;");
+        } else if (c < 32 || c > 127) {
+          sanitized.append("&#" + ((int) c) + ";");
+        } else {
+          sanitized.append(c);
+        }
+      }
+    }
+
+    writeUTF(output,
+             "          <table:table-cell office:value-type=\"string\">",
+             "            <text:p>" + sanitized + "</text:p>",
+             "          </table:table-cell>");
+  }
+
+
+  void saveNumberODS(OutputStream output, String text) throws IOException {
+    writeUTF(output,
+             "          <table:table-cell office:value-type=\"float\" office:value=\"" + text + "\">",
+             "            <text:p>" + text + "</text:p>",
+             "          </table:table-cell>");
+  }
+
+
+  static Charset utf8;
+
+  static void writeUTF(OutputStream output, String... lines) throws IOException {
+    if (utf8 == null) {
+      utf8 = Charset.forName("UTF-8");
+    }
+    for (String str : lines) {
+      output.write(str.getBytes(utf8));
+      output.write('\n');
     }
   }
 
@@ -1164,7 +1653,12 @@ public class Table {
           output.writeDouble(row.getDouble(col));
           break;
         case CATEGORY:
-          output.writeInt(columnCategories[col].index(row.getString(col)));
+          String peace = row.getString(col);
+          if (peace.equals(missingString)) {
+            output.writeInt(missingCategory);
+          } else {
+            output.writeInt(columnCategories[col].index(peace));
+          }
           break;
         }
       }
@@ -1395,6 +1889,7 @@ public class Table {
     }
   }
 
+
   /**
    * @webref table:method
    * @brief Gets the number of columns in a table
@@ -1435,14 +1930,10 @@ public class Table {
   }
 
 
-  /**
-   * Set the data type for a column so that using it is more efficient.
-   * @param column the column to change
-   * @param columnType One of int, long, float, double, or String.
-   */
-  public void setColumnType(int column, String columnType) {
+  static int parseColumnType(String columnType) {
+    columnType = columnType.toLowerCase();
     int type = -1;
-    if (columnType.equals("String")) {
+    if (columnType.equals("string")) {
       type = STRING;
     } else if (columnType.equals("int")) {
       type = INT;
@@ -1457,7 +1948,17 @@ public class Table {
     } else {
       throw new IllegalArgumentException("'" + columnType + "' is not a valid column type.");
     }
-    setColumnType(column, type);
+    return type;
+  }
+
+
+  /**
+   * Set the data type for a column so that using it is more efficient.
+   * @param column the column to change
+   * @param columnType One of int, long, float, double, string, or category.
+   */
+  public void setColumnType(int column, String columnType) {
+    setColumnType(column, parseColumnType(columnType));
   }
 
 
@@ -1478,7 +1979,7 @@ public class Table {
         int[] intData = new int[rowCount];
         for (int row = 0; row < rowCount; row++) {
           String s = getString(row, column);
-          intData[row] = PApplet.parseInt(s, missingInt);
+          intData[row] = (s == null) ? missingInt : PApplet.parseInt(s, missingInt);
         }
         columns[column] = intData;
         break;
@@ -1488,7 +1989,7 @@ public class Table {
         for (int row = 0; row < rowCount; row++) {
           String s = getString(row, column);
           try {
-            longData[row] = Long.parseLong(s);
+            longData[row] = (s == null) ? missingLong : Long.parseLong(s);
           } catch (NumberFormatException nfe) {
             longData[row] = missingLong;
           }
@@ -1500,7 +2001,7 @@ public class Table {
         float[] floatData = new float[rowCount];
         for (int row = 0; row < rowCount; row++) {
           String s = getString(row, column);
-          floatData[row] = PApplet.parseFloat(s, missingFloat);
+          floatData[row] = (s == null) ? missingFloat : PApplet.parseFloat(s, missingFloat);
         }
         columns[column] = floatData;
         break;
@@ -1510,7 +2011,7 @@ public class Table {
         for (int row = 0; row < rowCount; row++) {
           String s = getString(row, column);
           try {
-            doubleData[row] = Double.parseDouble(s);
+            doubleData[row] = (s == null) ? missingDouble : Double.parseDouble(s);
           } catch (NumberFormatException nfe) {
             doubleData[row] = missingDouble;
           }
@@ -1559,6 +2060,7 @@ public class Table {
 
 
   public void setColumnTypes(int[] types) {
+    ensureColumn(types.length - 1);
     for (int col = 0; col < types.length; col++) {
       setColumnType(col, types[col]);
     }
@@ -1574,6 +2076,7 @@ public class Table {
    * @param dictionary
    */
   public void setColumnTypes(final Table dictionary) {
+    ensureColumn(dictionary.getRowCount() - 1);
     int titleCol = 0;
     int typeCol = 1;
     if (dictionary.hasColumnTitles()) {
@@ -1810,13 +2313,16 @@ public class Table {
    * @param source a reference to the original row to be duplicated
    */
   public TableRow addRow(TableRow source) {
-    int row = rowCount;
+    return setRow(rowCount, source);
+  }
+
+
+  public TableRow setRow(int row, TableRow source) {
     // Make sure there are enough columns to add this data
     ensureBounds(row, source.getColumnCount() - 1);
 
-    for (int col = 0; col < columns.length; col++) {
+    for (int col = 0; col < Math.min(source.getColumnCount(), columns.length); col++) {
       switch (columnTypes[col]) {
-      case CATEGORY:
       case INT:
         setInt(row, col, source.getInt(col));
         break;
@@ -1832,6 +2338,14 @@ public class Table {
       case STRING:
         setString(row, col, source.getString(col));
         break;
+      case CATEGORY:
+        int index = source.getInt(col);
+        setInt(row, col, index);
+        if (!columnCategories[col].hasCategory(index)) {
+          columnCategories[col].setCategory(index, source.getString(col));
+        }
+        break;
+
       default:
         throw new RuntimeException("no types");
       }
@@ -1846,6 +2360,15 @@ public class Table {
   public TableRow addRow(Object[] columnData) {
     setRow(getRowCount(), columnData);
     return new RowPointer(this, rowCount - 1);
+  }
+
+
+  public void addRows(Table source) {
+    int index = getRowCount();
+    setRowCount(index + source.getRowCount());
+    for (TableRow row : source.rows()) {
+      setRow(index++, row);
+    }
   }
 
 
@@ -2084,7 +2607,12 @@ public class Table {
         if (piece == null) {
           indexData[row] = missingCategory;
         } else {
-          indexData[row] = columnCategories[col].index(String.valueOf(piece));
+          String peace = String.valueOf(piece);
+          if (peace.equals(missingString)) {  // missingString might be null
+            indexData[row] = missingCategory;
+          } else {
+            indexData[row] = columnCategories[col].index(peace);
+          }
         }
         break;
       default:
@@ -2258,6 +2786,27 @@ public class Table {
 
     public int[] getColumnTypes() {
       return table.getColumnTypes();
+    }
+
+    public String getColumnTitle(int column) {
+      return table.getColumnTitle(column);
+    }
+
+    public String[] getColumnTitles() {
+      return table.getColumnTitles();
+    }
+
+    public void print() {
+      write(new PrintWriter(System.out));
+    }
+
+    public void write(PrintWriter writer) {
+      for (int i = 0 ; i < getColumnCount(); i++) {
+        if (i != 0) {
+          writer.print('\t');
+        }
+        writer.print(getString(i));
+      }
     }
   }
 
@@ -2917,10 +3466,18 @@ public class Table {
         return missingString;
       }
       return columnCategories[column].key(cat);
-    } else {
-      return String.valueOf(Array.get(columns[column], row));
+    } else if (columnTypes[column] == FLOAT) {
+      if (Float.isNaN(getFloat(row, column))) {
+        return null;
+      }
+    } else if (columnTypes[column] == DOUBLE) {
+      if (Double.isNaN(getFloat(row, column))) {
+        return null;
+      }
     }
+    return String.valueOf(Array.get(columns[column], row));
   }
+
 
   /**
    * @param columnName title of the column to reference
@@ -2930,6 +3487,9 @@ public class Table {
   }
 
 
+  /**
+   * Treat entries with this string as "missing". Also used for categorial.
+   */
   public void setMissingString(String value) {
     missingString = value;
   }
@@ -3222,7 +3782,7 @@ public class Table {
   /**
    * Return a list of rows that contain the String passed in. If there are no
    * matches, a zero length array will be returned (not a null array).
-   * @param what the String to match
+   * @param regexp the String to match
    * @param column ID number of the column to search
    */
   public int[] matchRowIndices(String regexp, int column) {
@@ -3356,9 +3916,18 @@ public class Table {
   public void replace(String orig, String replacement, int col) {
     if (columnTypes[col] == STRING) {
       String[] stringData = (String[]) columns[col];
-      for (int row = 0; row < rowCount; row++) {
-        if (stringData[row].equals(orig)) {
-          stringData[row] = replacement;
+
+      if (orig != null) {
+        for (int row = 0; row < rowCount; row++) {
+          if (orig.equals(stringData[row])) {
+            stringData[row] = replacement;
+          }
+        }
+      } else {  // null is a special case (and faster anyway)
+        for (int row = 0; row < rowCount; row++) {
+          if (stringData[row] == null) {
+            stringData[row] = replacement;
+          }
         }
       }
     }
@@ -3373,9 +3942,9 @@ public class Table {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-  public void replaceAll(String orig, String replacement) {
+  public void replaceAll(String regex, String replacement) {
     for (int col = 0; col < columns.length; col++) {
-      replaceAll(orig, replacement, col);
+      replaceAll(regex, replacement, col);
     }
   }
 
@@ -3398,7 +3967,7 @@ public class Table {
   /**
    * Run String.replaceAll() on all entries in a column.
    * Only works with columns that are already String values.
-   * @param what the String to match
+   * @param regex the String to match
    * @param columnName title of the column to search
    */
   public void replaceAll(String regex, String replacement, String columnName) {
@@ -3549,7 +4118,7 @@ public class Table {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-  class HashMapBlows {
+  static class HashMapBlows {
     HashMap<String,Integer> dataToIndex = new HashMap<String, Integer>();
     ArrayList<String> indexToData = new ArrayList<String>();
 
@@ -3559,6 +4128,7 @@ public class Table {
       read(input);
     }
 
+    /** gets the index, and creates one if it doesn't already exist. */
     int index(String key) {
       Integer value = dataToIndex.get(key);
       if (value != null) {
@@ -3573,6 +4143,18 @@ public class Table {
 
     String key(int index) {
       return indexToData.get(index);
+    }
+
+    boolean hasCategory(int index) {
+      return index < size() && indexToData.get(index) != null;
+    }
+
+    void setCategory(int index, String name) {
+      while (indexToData.size() <= index) {
+        indexToData.add(null);
+      }
+      indexToData.set(index, name);
+      dataToIndex.put(name, index);
     }
 
     int size() {
@@ -3596,9 +4178,11 @@ public class Table {
 
     void read(DataInputStream input) throws IOException {
       int count = input.readInt();
+      //System.out.println("found " + count + " entries in category map");
       dataToIndex = new HashMap<String, Integer>(count);
       for (int i = 0; i < count; i++) {
         String str = input.readUTF();
+        //System.out.println(i + " " + str);
         dataToIndex.put(str, i);
         indexToData.add(str);
       }
@@ -4046,7 +4630,7 @@ public class Table {
     int prev = -1;
     int row = 0;
     while ((line = reader.readLine()) != null) {
-      convertRow(output, tsv ? PApplet.split(line, '\t') : splitLineCSV(line));
+      convertRow(output, tsv ? PApplet.split(line, '\t') : splitLineCSV(line, reader));
       row++;
 
       if (row % 10000 == 0) {
@@ -4128,7 +4712,12 @@ public class Table {
         }
         break;
       case CATEGORY:
-        output.writeInt(columnCategories[col].index(pieces[col]));
+        String peace = pieces[col];
+        if (peace.equals(missingString)) {
+          output.writeInt(missingCategory);
+        } else {
+          output.writeInt(columnCategories[col].index(peace));
+        }
         break;
       }
     }
@@ -4194,4 +4783,20 @@ public class Table {
     }
   }
   */
+
+
+  /** Make a copy of the current table */
+  public Table copy() {
+    return new Table(rows());
+  }
+
+
+  public void write(PrintWriter writer) {
+    writeTSV(writer);
+  }
+
+
+  public void print() {
+    writeTSV(new PrintWriter(System.out));
+  }
 }
