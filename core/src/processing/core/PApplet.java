@@ -126,7 +126,7 @@ public class PApplet extends Object implements PConstants {
    */
 //  static public class RendererChangeException extends RuntimeException { }
 
-  protected boolean surfaceReady;
+//  protected boolean surfaceReady;
 
   /**
    * Set true when the surface dimensions have changed, so that the PGraphics
@@ -1692,12 +1692,19 @@ public class PApplet extends Object implements PConstants {
   public void handleDraw() {
     //debug("handleDraw() " + g + " " + looping + " " + redraw + " valid:" + this.isValid() + " visible:" + this.isVisible());
 
-    if (surfaceChanged) {
-      surfaceChanged = false;
-      surfaceReady = true;
+    if (g == null) return;
+
+    if (!surfaceChanged && parentLayout != -1) {
+      // When using a parent layout, don't start drawing until the sketch
+      // has been properly sized.
+      return;
     }
 
-    if (g == null) return;
+//    if (surfaceChanged) {
+//      surfaceChanged = false;
+//      surfaceReady = true;
+//    }
+
     if (!looping && !redraw) return;
 
     if (insideDraw) {
