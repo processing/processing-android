@@ -466,6 +466,7 @@ public class PApplet extends Object implements PConstants {
   // https://github.com/processing/processing/issues/2297
   int windowColor = 0xffDDDDDD;
 
+  PStyle savedStyle;
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
@@ -574,12 +575,20 @@ public class PApplet extends Object implements PConstants {
 
 
   public void onResume() {
-    // TODO need to bring back app state here!
     if (DEBUG) System.out.println("PApplet.onResume() called");
     if (parentLayout == -1) {
       setFullScreenVisibility();
     }
+
+    // TODO need to bring back app state here!
+    // At least we restore the current style.
+    if (savedStyle != null) {
+      g.style(savedStyle);
+      savedStyle = null;
+    }
+
     handleMethods("resume");
+
     surface.resumeThread();
     resume();
   }
@@ -587,7 +596,12 @@ public class PApplet extends Object implements PConstants {
 
   public void onPause() {
     // TODO need to save all application state here!
+    // At least we save the current style.
+    savedStyle = new PStyle();
+    g.getStyle(savedStyle);
+
     handleMethods("pause");
+
     surface.pauseThread();
     pause();  // handler for others to write
   }
