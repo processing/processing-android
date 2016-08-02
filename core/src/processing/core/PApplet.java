@@ -584,6 +584,7 @@ public class PApplet extends Object implements PConstants {
     // At least we restore the current style.
     if (savedStyle != null && g != null) {
       g.style(savedStyle);
+      savedStyle = null;
     }
 
     handleMethods("resume");
@@ -699,9 +700,6 @@ public class PApplet extends Object implements PConstants {
 
   public void surfaceChanged() {
     surfaceChanged = true;
-    if (savedStyle != null && g != null) {
-      g.style(savedStyle);
-    }
   }
 
 
