@@ -128,16 +128,16 @@ public class PGraphicsAndroid2D extends PGraphics {
    *
    * Note that this will nuke any cameraMode() settings.
    */
-  @Override
-  public void setSize(int iwidth, int iheight) {  // ignore
-    width = iwidth;
-    height = iheight;
-    width1 = width - 1;
-    height1 = height - 1;
-
-    allocate();
-    reapplySettings();
-  }
+//  @Override
+//  public void setSize(int iwidth, int iheight) {  // ignore
+//    width = iwidth;
+//    height = iheight;
+//    width1 = width - 1;
+//    height1 = height - 1;
+//
+//    allocate();
+//    reapplySettings();
+//  }
 
 
   @Override

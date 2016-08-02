@@ -590,8 +590,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public void setSize(int iwidth, int iheight) {
-    width = iwidth;
-    height = iheight;
+    super.setSize(iwidth, iheight);
+
     updatePixelSize();
 
     // init perspective projection based on new dimensions

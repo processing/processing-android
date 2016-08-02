@@ -582,9 +582,8 @@ public class PApplet extends Object implements PConstants {
 
     // TODO need to bring back app state here!
     // At least we restore the current style.
-    if (savedStyle != null) {
+    if (savedStyle != null && g != null) {
       g.style(savedStyle);
-      savedStyle = null;
     }
 
     handleMethods("resume");
@@ -597,8 +596,10 @@ public class PApplet extends Object implements PConstants {
   public void onPause() {
     // TODO need to save all application state here!
     // At least we save the current style.
-    savedStyle = new PStyle();
-    g.getStyle(savedStyle);
+    if (g != null) {
+      savedStyle = new PStyle();
+      g.getStyle(savedStyle);
+    }
 
     handleMethods("pause");
 
@@ -698,6 +699,9 @@ public class PApplet extends Object implements PConstants {
 
   public void surfaceChanged() {
     surfaceChanged = true;
+    if (savedStyle != null && g != null) {
+      g.style(savedStyle);
+    }
   }
 
 
