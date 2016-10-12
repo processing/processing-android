@@ -1410,7 +1410,7 @@ public class PShapeOpenGL extends PShape {
       }
       break;
     }
-    matrix.apply(transform);
+    matrix.preApply(transform);
     pushTransform();
     if (tessellated) applyMatrixImpl(transform);
   }
