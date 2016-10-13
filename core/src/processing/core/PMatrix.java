@@ -97,13 +97,27 @@ public interface PMatrix {
   /**
    * Apply another matrix to the left of this one.
    */
+  public void preApply(PMatrix left);
+
+  /**
+   * Apply another matrix to the left of this one.
+   */
   public void preApply(PMatrix2D left);
 
+  /**
+   * Apply another matrix to the left of this one. 3D only.
+   */
   public void preApply(PMatrix3D left);
 
+  /**
+   * Apply another matrix to the left of this one.
+   */
   public void preApply(float n00, float n01, float n02,
                        float n10, float n11, float n12);
 
+  /**
+   * Apply another matrix to the left of this one. 3D only.
+   */
   public void preApply(float n00, float n01, float n02, float n03,
                        float n10, float n11, float n12, float n13,
                        float n20, float n21, float n22, float n23,
@@ -111,13 +125,18 @@ public interface PMatrix {
 
 
   /**
-   * Multiply a PVector by this matrix.
+   * Multiply source by this matrix, and return the result.
+   * The result will be stored in target if target is non-null, and target
+   * will then be the matrix returned. This improves performance if you reuse
+   * target, so it's recommended if you call this many times in draw().
    */
   public PVector mult(PVector source, PVector target);
 
 
   /**
    * Multiply a multi-element vector against this matrix.
+   * Supplying and recycling a target array improves performance, so it's
+   * recommended if you call this many times in draw().
    */
   public float[] mult(float[] source, float[] target);
 
@@ -131,13 +150,14 @@ public interface PMatrix {
 
 
   /**
-   * Transpose this matrix.
+   * Transpose this matrix; rows become columns and columns rows.
    */
   public void transpose();
 
 
   /**
-   * Invert this matrix.
+   * Invert this matrix. Will not necessarily succeed, because some matrices
+   * map more than one point to the same image point, and so are irreversible.
    * @return true if successful
    */
   public boolean invert();

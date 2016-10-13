@@ -247,6 +247,18 @@ public class PMatrix2D implements PMatrix {
   /**
    * Apply another matrix to the left of this one.
    */
+  public void preApply(PMatrix source) {
+    if (source instanceof PMatrix2D) {
+      preApply((PMatrix2D) source);
+    } else if (source instanceof PMatrix3D) {
+      preApply((PMatrix3D) source);
+    }
+  }
+
+
+  /**
+   * Apply another matrix to the left of this one.
+   */
   public void preApply(PMatrix2D left) {
     preApply(left.m00, left.m01, left.m02,
              left.m10, left.m11, left.m12);
