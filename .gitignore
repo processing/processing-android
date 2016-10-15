@@ -8,3 +8,5 @@ release
 .DS_Store
 /sdk/
 /temp/
+
+build/**

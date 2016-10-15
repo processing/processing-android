@@ -1,0 +1,89 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
+    }
+}
+
+apply plugin: 'java'
+
+
+
+allprojects {
+    apply plugin: 'java'
+    // Find location of Android-17 android jar relative to ANDROID_HOME
+    ext.android_23 = "$sdkdir/platforms/android-23"
+
+    repositories {
+        //jcenter()
+        mavenCentral()
+        flatDir { dirs 'core/library', android_23 }
+    }
+
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.7
+
+}
+
+
+
+dependencies {
+    compile name: 'android'
+    compile project(":core")
+    compile group: 'org.processing', name: 'core', version: '3.2.1'
+    compile group: 'org.processing', name: 'pde', version: '3.2.1'
+    compile group: 'org.processing', name: 'java-mode', version: '3.2.1'
+
+
+
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/']
+        }
+    }
+}
+
+
+
+
+import java.nio.file.Files
+import org.zeroturnaround.zip.ZipUtil
+import org.apache.commons.io.FileUtils
+import static java.nio.file.StandardCopyOption.*;
+
+
+
+task dist {
+    try {
+        def root = "$buildDir/zip/AndroidMode"
+        // Copy assets to build dir
+        FileUtils.copyDirectory(file("examples"), file("$root/examples"))
+        FileUtils.copyDirectory(file("icons"), file("$root/icons"))
+        FileUtils.copyDirectory(file("mode"), file("$root/mode"))
+        FileUtils.copyDirectory(file("theme"), file("$root/theme"))
+
+        Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
+                file("$root/mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
+
+
+        Files.copy(file("core/build/libs/android-core.zip").toPath(),
+                file("$root/android-core.zip").toPath(), REPLACE_EXISTING);
+
+        Files.copy(file("mode.properties").toPath(),
+                file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+
+
+        ZipUtil.pack(file("$buildDir/zip"), new File("AndroidMode.zip"))
+    } catch (Exception ex) {
+        logger.error ex.getMessage()
+    }
+}
+
+dist.dependsOn build
