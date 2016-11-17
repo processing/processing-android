@@ -4215,12 +4215,21 @@ public class Table {
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-
+  /**
+   * Sorts (orders) a table based on the values in a column.
+   *
+   * @webref table:method
+   * @brief Orders a table based on the values in a column
+   * @param columnName the name of the column to sort
+   * @see Table#trim()
+   */
   public void sort(String columnName) {
     sort(getColumnIndex(columnName), false);
   }
 
-
+  /**
+   * @param column the column ID, e.g. 0, 1, 2
+   */
   public void sort(int column) {
     sort(column, false);
   }
@@ -4419,19 +4428,52 @@ public class Table {
 
   public FloatDict getFloatDict(int keyColumn, int valueColumn) {
     return new FloatDict(getStringColumn(keyColumn),
-                       getFloatColumn(valueColumn));
+                         getFloatColumn(valueColumn));
   }
 
 
   public StringDict getStringDict(String keyColumnName, String valueColumnName) {
     return new StringDict(getStringColumn(keyColumnName),
-                         getStringColumn(valueColumnName));
+                          getStringColumn(valueColumnName));
   }
 
 
   public StringDict getStringDict(int keyColumn, int valueColumn) {
     return new StringDict(getStringColumn(keyColumn),
                           getStringColumn(valueColumn));
+  }
+
+
+  public Map<String, TableRow> getRowMap(String columnName) {
+    int col = getColumnIndex(columnName);
+    return (col == -1) ? null : getRowMap(col);
+  }
+
+
+  /**
+   * Return a mapping that connects the entry from a column back to the row
+   * from which it came. For instance:
+   * <pre>
+   * Table t = loadTable("country-data.tsv", "header");
+   * // use the contents of the 'country' column to index the table
+   * Map<String, TableRow> lookup = t.getRowMap("country");
+   * // get the row that has "us" in the "country" column:
+   * TableRow usRow = lookup.get("us");
+   * // get an entry from the 'population' column
+   * int population = usRow.getInt("population");
+   * </pre>
+   */
+  public Map<String, TableRow> getRowMap(int column) {
+    Map<String, TableRow> outgoing = new HashMap<>();
+    for (int row = 0; row < getRowCount(); row++) {
+      String id = getString(row, column);
+      outgoing.put(id, new RowPointer(this, row));
+    }
+//    for (TableRow row : rows()) {
+//      String id = row.getString(column);
+//      outgoing.put(id, row);
+//    }
+    return outgoing;
   }
 
 

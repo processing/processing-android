@@ -33,6 +33,9 @@ import org.xml.sax.*;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.*;
 import javax.xml.transform.stream.*;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 
 import processing.core.PApplet;
 
@@ -42,7 +45,6 @@ import processing.core.PApplet;
  * representing a single node of an XML tree.
  *
  * @webref data:composite
- * @see PApplet#createXML(String)
  * @see PApplet#loadXML(String)
  * @see PApplet#parseXML(String)
  * @see PApplet#saveXML(XML, String)
@@ -82,7 +84,9 @@ public class XML implements Serializable {
 
 
   /**
-   * Advanced users only; see loadXML() in PApplet.
+   * Advanced users only; use loadXML() in PApplet. This is not a supported
+   * function and is subject to change. It is available simply for users that
+   * would like to handle the exceptions in a particular way.
    *
    * @nowebref
    */
@@ -92,7 +96,7 @@ public class XML implements Serializable {
 
 
   /**
-   * Advanced users only; see loadXML() in PApplet.
+   * Advanced users only; use loadXML() in PApplet.
    *
    * @nowebref
    */
@@ -109,19 +113,31 @@ public class XML implements Serializable {
 
 
   /**
-   * Shouldn't be part of main p5 reference, this is for advanced users.
-   * Note that while it doesn't accept anything but UTF-8, this is preserved
-   * so that we have some chance of implementing that in the future.
+   * Unlike the loadXML() method in PApplet, this version works with files
+   * that are not in UTF-8 format.
    *
    * @nowebref
    */
   public XML(InputStream input, String options) throws IOException, ParserConfigurationException, SAXException {
-    this(PApplet.createReader(input), options);
+    //this(PApplet.createReader(input), options);  // won't handle non-UTF8
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+    try {
+      // Prevent 503 errors from www.w3.org
+      factory.setAttribute("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    } catch (IllegalArgumentException e) {
+      // ignore this; Android doesn't like it
+    }
+
+    factory.setExpandEntityReferences(false);
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    Document document = builder.parse(new InputSource(input));
+    node = document.getDocumentElement();
   }
 
 
   /**
-   * Advanced users only; see loadXML() in PApplet.
+   * Advanced users only; use loadXML() in PApplet.
    *
    * @nowebref
    */
@@ -131,11 +147,17 @@ public class XML implements Serializable {
 
 
   /**
-   * Advanced users only; see loadXML() in PApplet.
+   * Advanced users only; use loadXML() in PApplet.
+   *
+   * Added extra code to handle \u2028 (Unicode NLF), which is sometimes
+   * inserted by web browsers (Safari?) and not distinguishable from a "real"
+   * LF (or CRLF) in some text editors (i.e. TextEdit on OS X). Only doing
+   * this for XML (and not all Reader objects) because LFs are essential.
+   * https://github.com/processing/processing/issues/2100
    *
    * @nowebref
    */
-  public XML(Reader reader, String options) throws IOException, ParserConfigurationException, SAXException {
+  public XML(final Reader reader, String options) throws IOException, ParserConfigurationException, SAXException {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
     // Prevent 503 errors from www.w3.org
@@ -164,17 +186,24 @@ public class XML implements Serializable {
     //    builder = new SAXBuilder();
     //    builder.setValidation(validating);
 
-//      print(dataPath("1broke.html"), System.out);
+    Document document = builder.parse(new InputSource(new Reader() {
+      @Override
+      public int read(char[] cbuf, int off, int len) throws IOException {
+        int count = reader.read(cbuf, off, len);
+        for (int i = 0; i < count; i++) {
+          if (cbuf[off+i] == '\u2028') {
+            cbuf[off+i] = '\n';
+          }
+        }
+        return count;
+      }
 
-//      Document document = builder.parse(dataPath("1_alt.html"));
-    Document document = builder.parse(new InputSource(reader));
+      @Override
+      public void close() throws IOException {
+        reader.close();
+      }
+    }));
     node = document.getDocumentElement();
-//    name = node.getNodeName();
-
-//      NodeList nodeList = document.getDocumentElement().getChildNodes();
-//      for (int i = 0; i < nodeList.getLength(); i++) {
-//      }
-//      print(createWriter("data/1_alt_reparse.html"), document.getDocumentElement(), 0);
   }
 
 
@@ -202,7 +231,18 @@ public class XML implements Serializable {
   protected XML(XML parent, Node node) {
     this.node = node;
     this.parent = parent;
-//    this.name = node.getNodeName();
+
+    for (String attr : parent.listAttributes()) {
+      if (attr.startsWith("xmlns")) {
+        // Copy namespace attributes to the kids, otherwise this XML
+        // can no longer be printed (or manipulated in most ways).
+        // Only do this when it's an Element, otherwise it's trying to set
+        // attributes on text notes (interstitial content).
+        if (node instanceof Element) {
+          setString(attr, parent.getString(attr));
+        }
+      }
+    }
   }
 
 
@@ -231,6 +271,11 @@ public class XML implements Serializable {
 //  protected boolean save(OutputStream output) {
 //    return write(PApplet.createWriter(output));
 //  }
+
+
+  public boolean save(File file) {
+    return save(file, null);
+  }
 
 
   public boolean save(File file, String options) {
@@ -408,7 +453,7 @@ public class XML implements Serializable {
    * Get a child by its name or path.
    *
    * @param name element name or path/to/element
-   * @return the first matching element
+   * @return the first matching element or null if no match
    */
   public XML getChild(String name) {
     if (name.length() > 0 && name.charAt(0) == '/') {
@@ -550,6 +595,25 @@ public class XML implements Serializable {
   }
 
 
+  public void trim() {
+    try {
+      XPathFactory xpathFactory = XPathFactory.newInstance();
+      XPathExpression xpathExp =
+        xpathFactory.newXPath().compile("//text()[normalize-space(.) = '']");
+      NodeList emptyTextNodes = (NodeList)
+        xpathExp.evaluate(node, XPathConstants.NODESET);
+
+      // Remove each empty text node from document.
+      for (int i = 0; i < emptyTextNodes.getLength(); i++) {
+        Node emptyTextNode = emptyTextNodes.item(i);
+        emptyTextNode.getParentNode().removeChild(emptyTextNode);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+
 //  /** Remove whitespace nodes. */
 //  public void trim() {
 //////    public static boolean isWhitespace(XML xml) {
@@ -670,8 +734,14 @@ public class XML implements Serializable {
 
 
   public String getString(String name, String defaultValue) {
-    Node attr = node.getAttributes().getNamedItem(name);
-    return (attr == null) ? defaultValue : attr.getNodeValue();
+    NamedNodeMap attrs = node.getAttributes();
+    if (attrs != null) {
+      Node attr = attrs.getNamedItem(name);
+      if (attr != null) {
+        return attr.getNodeValue();
+      }
+    }
+    return defaultValue;
   }
 
 
@@ -1035,16 +1105,29 @@ public class XML implements Serializable {
       String outgoing = stringWriter.toString();
 
       // Add the XML declaration to the top if it's not there already
-      if (!outgoing.startsWith(decl)) {
-        return decl + sep + outgoing;
-      } else {
+      if (outgoing.startsWith(decl)) {
+        int declen = decl.length();
+        int seplen = sep.length();
+        if (outgoing.length() > declen + seplen &&
+            !outgoing.substring(declen, declen + seplen).equals(sep)) {
+          // make sure there's a line break between the XML decl and the code
+          return outgoing.substring(0, decl.length()) +
+            sep + outgoing.substring(decl.length());
+        }
         return outgoing;
+      } else {
+        return decl + sep + outgoing;
       }
 
     } catch (Exception e) {
       e.printStackTrace();
     }
     return null;
+  }
+
+
+  public void print() {
+    PApplet.println(format(2));
   }
 
 
