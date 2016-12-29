@@ -987,11 +987,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("          for (int i = 0; i < grantResults.length; i++) {");
     writer.println("            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
     writer.println("              AlertDialog.Builder builder = new AlertDialog.Builder(this);");
-    writer.println("              builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
+    writer.println("              builder.setMessage(\"Some permissions needed by the app were not granted, so it might not work as intended.\")");
     writer.println("                     .setCancelable(false)");
     writer.println("                     .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
     writer.println("                          public void onClick(DialogInterface dialog, int id) {");
-    writer.println("                              finish();");    
+//    writer.println("                              finish();");    
     writer.println("                          }");
     writer.println("                     });");
     writer.println("              AlertDialog alert = builder.create();");
