@@ -3335,7 +3335,8 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 
   void exit2() {
     try {
-      System.exit(0);
+      activity.finish();
+//      System.exit(0);
     } catch (SecurityException e) {
       // don't care about applet security exceptions
     }
@@ -3364,11 +3365,11 @@ public class PApplet extends Fragment implements PConstants, Runnable {
       // https://github.com/processing/processing-android/issues/213#issuecomment-217348480
       surfaceView.getHolder().getSurface().release();
       surfaceView = null;
-      
+
       // In API level 21 you can do
       // activity.releaseInstance();
       // to ask the app to free up its memory.
-      
+
       activity = null;
     }
 
