@@ -230,7 +230,7 @@ public class Manifest {
 //      activity.setString("android:name", "." + className);  // this has to be right
 
       PrintWriter writer = PApplet.createWriter(file);
-      writer.print(mf.toString());
+      writer.print(mf.format(2));
       writer.flush();
 //    mf.write(writer);
       writer.close();
@@ -298,7 +298,7 @@ public class Manifest {
   protected void save(File file) {
     PrintWriter writer = PApplet.createWriter(file);
 //    xml.write(writer);
-    writer.print(xml.toString());
+    writer.print(xml.format(2));
     writer.flush();
     writer.close();
   }
