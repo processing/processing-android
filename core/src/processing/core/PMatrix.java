@@ -97,8 +97,16 @@ public interface PMatrix {
   /**
    * Apply another matrix to the left of this one.
    */
+  public void preApply(PMatrix left);
+
+  /**
+   * Apply another matrix to the left of this one.
+   */
   public void preApply(PMatrix2D left);
 
+  /**
+   * Apply another matrix to the left of this one. 3D only.
+   */
   public void preApply(PMatrix3D left);
 
   public void preApply(float n00, float n01, float n02,

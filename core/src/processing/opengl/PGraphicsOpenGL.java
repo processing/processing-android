@@ -224,6 +224,12 @@ public class PGraphicsOpenGL extends PGraphics {
   /** Aspect ratio of camera's view. */
   public float cameraAspect;
 
+  /** Default camera properties. */
+  public float defCameraFOV;
+  public float defCameraX, defCameraY, defCameraZ;
+  public float defCameraNear, defCameraFar;
+  public float defCameraAspect;
+
   /** Distance between camera eye and center. */
   protected float eyeDist;
 
@@ -594,13 +600,21 @@ public class PGraphicsOpenGL extends PGraphics {
     updatePixelSize();
 
     // init perspective projection based on new dimensions
-    cameraFOV = 60 * DEG_TO_RAD; // at least for now
-    cameraX = width / 2.0f;
-    cameraY = height / 2.0f;
-    cameraZ = cameraY / ((float) Math.tan(cameraFOV / 2.0f));
-    cameraNear = cameraZ / 10.0f;
-    cameraFar = cameraZ * 10.0f;
-    cameraAspect = (float) width / (float) height;
+    defCameraFOV = 60 * DEG_TO_RAD; // at least for now
+    defCameraX = width / 2.0f;
+    defCameraY = height / 2.0f;
+    defCameraZ = defCameraY / ((float) Math.tan(defCameraFOV / 2.0f));
+    defCameraNear = defCameraZ / 10.0f;
+    defCameraFar = defCameraZ * 10.0f;
+    defCameraAspect = (float) width / (float) height;
+
+    cameraFOV = defCameraFOV;
+    cameraX = defCameraX;
+    cameraY = defCameraY;
+    cameraZ = defCameraZ;
+    cameraNear = defCameraNear;
+    cameraFar = defCameraFar;
+    cameraAspect = defCameraAspect;
 
     sized = true;
   }
@@ -4334,7 +4348,8 @@ public class PGraphicsOpenGL extends PGraphics {
    */
   @Override
   public void camera() {
-    camera(cameraX, cameraY, cameraZ, cameraX, cameraY, 0, 0, 1, 0);
+    camera(defCameraX, defCameraY, defCameraZ, defCameraX, defCameraY,
+           0, 0, 1, 0);
   }
 
 
@@ -4398,6 +4413,10 @@ public class PGraphicsOpenGL extends PGraphics {
   public void camera(float eyeX, float eyeY, float eyeZ,
                      float centerX, float centerY, float centerZ,
                      float upX, float upY, float upZ) {
+    cameraX = eyeX;
+    cameraY = eyeY;
+    cameraZ = eyeZ;
+
     // Calculating Z vector
     float z0 = eyeX - centerX;
     float z1 = eyeY - centerY;
@@ -4555,7 +4574,7 @@ public class PGraphicsOpenGL extends PGraphics {
    */
   @Override
   public void perspective() {
-    perspective(cameraFOV, cameraAspect, cameraNear, cameraFar);
+    perspective(defCameraFOV, defCameraAspect, defCameraNear, defCameraFar);
   }
 
 
@@ -4583,6 +4602,11 @@ public class PGraphicsOpenGL extends PGraphics {
                       float znear, float zfar) {
     // Flushing geometry with a different perspective configuration.
     flush();
+
+    cameraFOV = 2 * (float) Math.atan2(top, znear);
+    cameraAspect = left / bottom;
+    cameraNear = znear;
+    cameraFar = zfar;
 
     float n2 = 2 * znear;
     float w = right - left;
@@ -6819,6 +6843,8 @@ public class PGraphicsOpenGL extends PGraphics {
     normalX = normalY = 0;
     normalZ = 1;
 
+    pgl.clearDepthStencil();
+
     // Clear depth and stencil buffers.
     pgl.depthMask(true);
     pgl.clearDepth(1);
@@ -8378,9 +8404,9 @@ public class PGraphicsOpenGL extends PGraphics {
         int i1 = 3 * i + 1;
         int i2 = 3 * i + 2;
 
-        addEdge(i0, i1,  true, false);
+        addEdge(i0, i1, true, false);
         addEdge(i1, i2, false, false);
-        addEdge(i2, i0, false,  false);
+        addEdge(i2, i0, false, false);
         closeEdge(i2, i0);
       }
     }
@@ -8391,9 +8417,9 @@ public class PGraphicsOpenGL extends PGraphics {
         int i1 = i;
         int i2 = i + 1;
 
-        addEdge(i0, i1,  true, false);
+        addEdge(i0, i1, true, false);
         addEdge(i1, i2, false, false);
-        addEdge(i2, i0, false,  false);
+        addEdge(i2, i0, false, false);
         closeEdge(i2, i0);
       }
     }
@@ -8410,9 +8436,9 @@ public class PGraphicsOpenGL extends PGraphics {
           i2 = i - 1;
         }
 
-        addEdge(i0, i1,  true, false);
+        addEdge(i0, i1, true, false);
         addEdge(i1, i2, false, false);
-        addEdge(i2, i0, false,  false);
+        addEdge(i2, i0, false, false);
         closeEdge(i2, i0);
       }
     }
@@ -8424,10 +8450,10 @@ public class PGraphicsOpenGL extends PGraphics {
         int i2 = 4 * i + 2;
         int i3 = 4 * i + 3;
 
-        addEdge(i0, i1,  true, false);
+        addEdge(i0, i1, true, false);
         addEdge(i1, i2, false, false);
-        addEdge(i2, i3, false,  false);
-        addEdge(i3, i0, false,  false);
+        addEdge(i2, i3, false, false);
+        addEdge(i3, i0, false, false);
         closeEdge(i3, i0);
       }
     }
@@ -8439,10 +8465,10 @@ public class PGraphicsOpenGL extends PGraphics {
         int i2 = 2 * qd + 1;
         int i3 = 2 * qd;
 
-        addEdge(i0, i1,  true, false);
+        addEdge(i0, i1, true, false);
         addEdge(i1, i2, false, false);
-        addEdge(i2, i3, false,  false);
-        addEdge(i3, i0, false,  true);
+        addEdge(i2, i3, false, false);
+        addEdge(i3, i0, false, false);
         closeEdge(i3, i0);
       }
     }
