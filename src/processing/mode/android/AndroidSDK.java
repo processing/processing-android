@@ -21,6 +21,7 @@
 
 package processing.mode.android;
 
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.ProcessHelper;
@@ -429,8 +430,15 @@ class AndroidSDK {
   private static final String ADB_DAEMON_MSG_1 = "daemon not running";
   private static final String ADB_DAEMON_MSG_2 = "daemon started successfully";
 
+  public static boolean adbDisabled = false;
+  
   public static ProcessResult runADB(final String... cmd)
-  throws InterruptedException, IOException {
+    throws InterruptedException, IOException {
+    
+    if (adbDisabled) {
+      throw new IOException("adb is currently disabled");
+    }
+    
     final String[] adbCmd;
     if (!cmd[0].equals("adb")) {
       adbCmd = PApplet.splice(cmd, "adb", 0);
@@ -441,29 +449,37 @@ class AndroidSDK {
     if (processing.app.Base.DEBUG) {
       PApplet.printArray(adbCmd);
     }
-//    try {
-    ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
-    // Ignore messages about starting up an adb daemon
-    String out = adbResult.getStdout();
-    if (out.contains(ADB_DAEMON_MSG_1) && out.contains(ADB_DAEMON_MSG_2)) {
-      StringBuilder sb = new StringBuilder();
-      for (String line : out.split("\n")) {
-        if (!out.contains(ADB_DAEMON_MSG_1) &&
-            !out.contains(ADB_DAEMON_MSG_2)) {
-          sb.append(line).append("\n");
+    try {
+      ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
+      // Ignore messages about starting up an adb daemon
+      String out = adbResult.getStdout();
+      if (out.contains(ADB_DAEMON_MSG_1) && out.contains(ADB_DAEMON_MSG_2)) {
+        StringBuilder sb = new StringBuilder();
+        for (String line : out.split("\n")) {
+          if (!out.contains(ADB_DAEMON_MSG_1) &&
+              !out.contains(ADB_DAEMON_MSG_2)) {
+            sb.append(line).append("\n");
+          }
         }
+        return new ProcessResult(adbResult.getCmd(),
+                                 adbResult.getResult(),
+                                 sb.toString(),
+                                 adbResult.getStderr(),
+                                 adbResult.getTime());
       }
-      return new ProcessResult(adbResult.getCmd(),
-                               adbResult.getResult(),
-                               sb.toString(),
-                               adbResult.getStderr(),
-                               adbResult.getTime());
+      return adbResult;
+    } catch (IOException ioe) {
+      if (-1 < ioe.getMessage().indexOf("Permission denied")) {
+        Messages.showWarning("Trouble with adb!",
+            "Could not run the adb tool from the Android SDK.\n" +
+            "One possibility is that its executable permission\n" +
+            "is not properly set. You can try setting this\n" +
+            "permission manually, or re-installing the SDK.\n\n" +
+            "The mode will be disabled until this problem is fixed.\n");
+        adbDisabled = true;
+      }
+      throw ioe;
     }
-    return adbResult;
-//    } catch (IOException ioe) {
-//      ioe.printStackTrace();
-//      throw ioe;
-//    }
   }
 
   static class SDKTarget {
