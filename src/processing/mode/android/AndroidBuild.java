@@ -978,30 +978,32 @@ class AndroidBuild extends JavaBuild {
     writer.println("        }");
     writer.println("    }");    
     
-    // The event handler for the permission result
-    writer.println("    @Override");
-    writer.println("    public void onRequestPermissionsResult(int requestCode,");
-    writer.println("                                           String permissions[], int[] grantResults) {");      
-    writer.println("      if (requestCode == REQUEST_PERMISSIONS) {");      
-    writer.println("        if (grantResults.length > 0) {");
-    writer.println("          for (int i = 0; i < grantResults.length; i++) {");
-    writer.println("            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
-    writer.println("              AlertDialog.Builder builder = new AlertDialog.Builder(this);");
-    writer.println("              builder.setMessage(\"Some permissions needed by the app were not granted, so it might not work as intended.\")");
-    writer.println("                     .setCancelable(false)");
-    writer.println("                     .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-    writer.println("                          public void onClick(DialogInterface dialog, int id) {");
-//    writer.println("                              finish();");    
-    writer.println("                          }");
-    writer.println("                     });");
-    writer.println("              AlertDialog alert = builder.create();");
-    writer.println("              alert.show();");
-    writer.println("            }");
-    writer.println("          }");
-    writer.println("          fragment.onPermissionsGranted();");
-    writer.println("        }");
-    writer.println("      }");    
-    writer.println("    }");
+    if (Integer.parseInt(sdkVersion) >= 23) {
+      // The event handler for the permission result
+      writer.println("    @Override");
+      writer.println("    public void onRequestPermissionsResult(int requestCode,");
+      writer.println("                                           String permissions[], int[] grantResults) {");      
+      writer.println("      if (requestCode == REQUEST_PERMISSIONS) {");      
+      writer.println("        if (grantResults.length > 0) {");
+      writer.println("          for (int i = 0; i < grantResults.length; i++) {");
+      writer.println("            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
+      writer.println("              AlertDialog.Builder builder = new AlertDialog.Builder(this);");
+      writer.println("              builder.setMessage(\"Some permissions needed by the app were not granted, so it might not work as intended.\")");
+      writer.println("                     .setCancelable(false)");
+      writer.println("                     .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
+      writer.println("                          public void onClick(DialogInterface dialog, int id) {");
+//      writer.println("                              finish();");    
+      writer.println("                          }");
+      writer.println("                     });");
+      writer.println("              AlertDialog alert = builder.create();");
+      writer.println("              alert.show();");
+      writer.println("            }");
+      writer.println("          }");
+      writer.println("          fragment.onPermissionsGranted();");
+      writer.println("        }");
+      writer.println("      }");    
+      writer.println("    }");    
+    }
     
     writer.println("}");
     writer.flush();
