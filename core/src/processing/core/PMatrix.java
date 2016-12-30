@@ -119,13 +119,18 @@ public interface PMatrix {
 
 
   /**
-   * Multiply a PVector by this matrix.
+   * Multiply source by this matrix, and return the result.
+   * The result will be stored in target if target is non-null, and target
+   * will then be the matrix returned. This improves performance if you reuse
+   * target, so it's recommended if you call this many times in draw().
    */
   public PVector mult(PVector source, PVector target);
 
 
   /**
    * Multiply a multi-element vector against this matrix.
+   * Supplying and recycling a target array improves performance, so it's
+   * recommended if you call this many times in draw().
    */
   public float[] mult(float[] source, float[] target);
 
