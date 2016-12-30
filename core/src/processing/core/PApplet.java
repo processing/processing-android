@@ -446,6 +446,7 @@ public class PApplet extends Fragment implements PConstants, Runnable {
   // https://github.com/processing/processing/issues/2297
   int windowColor = 0xffDDDDDD;
 
+  PStyle savedStyle;
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
@@ -686,6 +687,14 @@ public class PApplet extends Fragment implements PConstants, Runnable {
 //    surfaceView.onResume();
     if (DEBUG) System.out.println("PApplet.onResume() called");
     paused = false;
+
+    // TODO need to bring back app state here!
+    // At least we restore the current style.
+    if (savedStyle != null && g != null) {
+      g.style(savedStyle);
+      savedStyle = null;
+    }
+
     handleMethods("resume");
     //start();  // kick the thread back on
     resume();
@@ -699,7 +708,12 @@ public class PApplet extends Fragment implements PConstants, Runnable {
     setFullScreenVisibility();
 
     // TODO need to save all application state here!
-//    System.out.println("PApplet.onPause() called");
+    // At least we save the current style.
+    if (g != null) {
+      savedStyle = new PStyle();
+      g.getStyle(savedStyle);
+    }
+
     paused = true;
     handleMethods("pause");
     pause();  // handler for others to write
