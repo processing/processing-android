@@ -27,7 +27,6 @@ package processing.core;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.*;
