@@ -5323,7 +5323,7 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void backgroundImpl() {
     flush();
     pgl.clearBackground(backgroundR, backgroundG, backgroundB, backgroundA,
-                        !hints[DISABLE_DEPTH_MASK]);
+                        !hints[DISABLE_DEPTH_MASK], true);
     loaded = false;
   }
 
