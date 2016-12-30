@@ -55,12 +55,14 @@ public class IntList implements Iterable<Integer> {
     data = new int[10];
   }
 
+
   /**
    * @nowebref
    */
   public IntList(int length) {
     data = new int[length];
   }
+
 
   /**
    * @nowebref
@@ -71,13 +73,48 @@ public class IntList implements Iterable<Integer> {
     System.arraycopy(source, 0, data, 0, count);
   }
 
+
   /**
+   * Construct an IntList from an iterable pile of objects.
+   * For instance, a float array, an array of strings, who knows).
+   * Un-parseable or null values will be set to 0.
    * @nowebref
    */
-  public IntList(Iterable<Integer> iter) {
+  public IntList(Iterable<Object> iter) {
     this(10);
-    for (int v : iter) {
-      append(v);
+    for (Object o : iter) {
+      if (o == null) {
+        append(0);  // missing value default
+      } else if (o instanceof Number) {
+        append(((Number) o).intValue());
+      } else {
+        append(PApplet.parseInt(o.toString().trim()));
+      }
+    }
+    crop();
+  }
+
+
+  /**
+   * Construct an IntList from a random pile of objects.
+   * Un-parseable or null values will be set to zero.
+   */
+  public IntList(Object... items) {
+    final int missingValue = 0;  // nuts, can't be last/final/second arg
+
+    count = items.length;
+    data = new int[count];
+    int index = 0;
+    for (Object o : items) {
+      int value = missingValue;
+      if (o != null) {
+        if (o instanceof Number) {
+          value = ((Number) o).intValue();
+        } else {
+          value = PApplet.parseInt(o.toString().trim(), missingValue);
+        }
+      }
+      data[index++] = value;
     }
   }
 
@@ -152,6 +189,9 @@ public class IntList implements Iterable<Integer> {
    * @brief Get an entry at a particular index
    */
   public int get(int index) {
+    if (index >= this.count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
     return data[index];
   }
 
@@ -173,6 +213,22 @@ public class IntList implements Iterable<Integer> {
       count = index+1;
     }
     data[index] = what;
+  }
+
+
+  /** Just an alias for append(), but matches pop() */
+  public void push(int value) {
+    append(value);
+  }
+
+
+  public int pop() {
+    if (count == 0) {
+      throw new RuntimeException("Can't call pop() on an empty list");
+    }
+    int value = get(count-1);
+    count--;
+    return value;
   }
 
 
@@ -257,6 +313,14 @@ public class IntList implements Iterable<Integer> {
   }
 
 
+  /** Add this value, but only if it's not already in the list. */
+  public void appendUnique(int value) {
+    if (!hasValue(value)) {
+      append(value);
+    }
+  }
+
+
 //  public void insert(int index, int value) {
 //    if (index+1 > count) {
 //      if (index+1 < data.length) {
@@ -285,6 +349,11 @@ public class IntList implements Iterable<Integer> {
 //      count++;
 //    }
 //  }
+
+
+  public void insert(int index, int value) {
+    insert(index, new int[] { value });
+  }
 
 
   // same as splice
@@ -421,12 +490,24 @@ public class IntList implements Iterable<Integer> {
     data[index]++;
   }
 
+
+  private void boundsProblem(int index, String method) {
+    final String msg = String.format("The list size is %d. " +
+      "You cannot %s() to element %d.", count, method, index);
+    throw new ArrayIndexOutOfBoundsException(msg);
+  }
+
+
   /**
    * @webref intlist:method
    * @brief Add to a value
    */
   public void add(int index, int amount) {
-    data[index] += amount;
+    if (index < count) {
+      data[index] += amount;
+    } else {
+      boundsProblem(index, "add");
+    }
   }
 
   /**
@@ -434,7 +515,11 @@ public class IntList implements Iterable<Integer> {
    * @brief Subtract from a value
    */
   public void sub(int index, int amount) {
-    data[index] -= amount;
+    if (index < count) {
+      data[index] -= amount;
+    } else {
+      boundsProblem(index, "sub");
+    }
   }
 
   /**
@@ -442,7 +527,11 @@ public class IntList implements Iterable<Integer> {
    * @brief Multiply a value
    */
   public void mult(int index, int amount) {
-    data[index] *= amount;
+    if (index < count) {
+      data[index] *= amount;
+    } else {
+      boundsProblem(index, "mult");
+    }
   }
 
   /**
@@ -450,7 +539,11 @@ public class IntList implements Iterable<Integer> {
    * @brief Divide a value
    */
   public void div(int index, int amount) {
-    data[index] /= amount;
+    if (index < count) {
+      data[index] /= amount;
+    } else {
+      boundsProblem(index, "div");
+    }
   }
 
 
@@ -591,7 +684,7 @@ public class IntList implements Iterable<Integer> {
 
   /**
    * @webref intlist:method
-   * @brief Reverse sort, orders values by first digit
+   * @brief Reverse the order of the list elements
    */
   public void reverse() {
     int ii = count - 1;
@@ -658,6 +751,7 @@ public class IntList implements Iterable<Integer> {
   }
 
 
+  @Override
   public Iterator<Integer> iterator() {
 //  public Iterator<Integer> valueIterator() {
     return new Iterator<Integer>() {
@@ -665,6 +759,7 @@ public class IntList implements Iterable<Integer> {
 
       public void remove() {
         IntList.this.remove(index);
+        index--;
       }
 
       public Integer next() {
@@ -691,7 +786,8 @@ public class IntList implements Iterable<Integer> {
 
 
   /**
-   * Copy as many values as possible into the specified array.
+   * Copy values into the specified array. If the specified array is null or
+   * not the same size, a new array will be allocated.
    * @param array
    */
   public int[] array(int[] array) {
@@ -792,17 +888,23 @@ public class IntList implements Iterable<Integer> {
   }
 
 
+  public void print() {
+    for (int i = 0; i < count; i++) {
+      System.out.format("[%d] %d%n", i, data[i]);
+    }
+  }
+
+
+  /**
+   * Return this dictionary as a String in JSON format.
+   */
+  public String toJSON() {
+    return "[ " + join(", ") + " ]";
+  }
+
+
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append(getClass().getSimpleName() + " size=" + size() + " [ ");
-    for (int i = 0; i < size(); i++) {
-      if (i != 0) {
-        sb.append(", ");
-      }
-      sb.append(i + ": " + data[i]);
-    }
-    sb.append(" ]");
-    return sb.toString();
+    return getClass().getSimpleName() + " size=" + size() + " " + toJSON();
   }
 }
