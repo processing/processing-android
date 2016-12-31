@@ -41,6 +41,7 @@ import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import java.io.*;
 import java.security.Permission;
+import java.util.HashMap;
 
 import javax.swing.ImageIcon;
 
@@ -1496,8 +1497,6 @@ class AndroidBuild extends JavaBuild {
 
   
   private void writeFragmentActivity(final File srcDirectory, String[] permissions) {
-
-    
     String permissionsStr = "";
     for (String p: permissions) {
       permissionsStr += (0 < permissionsStr.length()?",":"") + "Manifest.permission." + p;  
@@ -1507,6 +1506,14 @@ class AndroidBuild extends JavaBuild {
     String JAVA_TEMPLATE = "FragmentActivity.java.tmpl";
     File javaTemplate = mode.getContentFile("templates/" + JAVA_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());
+    replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@permissions@@", permissionsStr);
+    createSourceFromTemplate(javaTemplate, javaFile, replaceMap);
+    
+    /*
     PrintWriter pw = PApplet.createWriter(javaFile);    
     String lines[] = PApplet.loadStrings(javaTemplate);
     for (int i = 0; i < lines.length; i++) {
@@ -1533,7 +1540,7 @@ class AndroidBuild extends JavaBuild {
     pw.flush();
     pw.close();
     
-    
+    */
     
     
     /*
@@ -1584,8 +1591,27 @@ class AndroidBuild extends JavaBuild {
     */
   }
   
-  private void createSourceFromTemplate(final File javaTemplate, final File javaFile  ) {
-    
+  private void createSourceFromTemplate(final File javaTemplate, final File javaFile, 
+                                        final HashMap<String, String> replaceMap) {
+    PrintWriter pw = PApplet.createWriter(javaFile);    
+    String lines[] = PApplet.loadStrings(javaTemplate);
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf("@@") != -1) {
+        StringBuilder sb = new StringBuilder(lines[i]);
+        int index = 0;
+        for (String key: replaceMap.keySet()) {
+          String val = replaceMap.get(key);
+          while ((index = sb.indexOf(key)) != -1) {
+            sb.replace(index, index + key.length(), val);
+          }          
+        }    
+        lines[i] = sb.toString();
+      }
+      // explicit newlines to avoid Windows CRLF
+      pw.print(lines[i] + "\n");
+    }
+    pw.flush();
+    pw.close();    
   }
   
   
