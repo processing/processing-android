@@ -301,6 +301,10 @@ class Devices {
    * @throws IOException
    */
   public static List<String> list() {
+    if (AndroidSDK.adbDisabled) {
+      return Collections.emptyList();
+    }
+    
     ProcessResult result;
     try {
 //      System.out.println("listing devices 00");
