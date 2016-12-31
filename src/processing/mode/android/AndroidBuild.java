@@ -31,6 +31,7 @@ import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
 import processing.app.Platform;
+import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
@@ -40,6 +41,8 @@ import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import java.io.*;
 import java.security.Permission;
+
+import javax.swing.ImageIcon;
 
 class AndroidBuild extends JavaBuild {
   static public final int FRAGMENT  = 0;
@@ -1493,6 +1496,47 @@ class AndroidBuild extends JavaBuild {
 
   
   private void writeFragmentActivity(final File srcDirectory, String[] permissions) {
+
+    
+    String permissionsStr = "";
+    for (String p: permissions) {
+      permissionsStr += (0 < permissionsStr.length()?",":"") + "Manifest.permission." + p;  
+    }
+    permissionsStr = "{" + permissionsStr + "}";
+
+    String JAVA_TEMPLATE = "FragmentActivity.java.tmpl";
+    File javaTemplate = mode.getContentFile("templates/" + JAVA_TEMPLATE);    
+    File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
+    PrintWriter pw = PApplet.createWriter(javaFile);    
+    String lines[] = PApplet.loadStrings(javaTemplate);
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf("@@") != -1) {
+        StringBuilder sb = new StringBuilder(lines[i]);
+        int index = 0;
+        while ((index = sb.indexOf("@@package_name@@")) != -1) {
+          sb.replace(index, index + "@@package_name@@".length(),
+                     getPackageName());
+        }
+        while ((index = sb.indexOf("@@sketch_class_name@@")) != -1) {
+          sb.replace(index, index + "@@sketch_class_name@@".length(),
+                     sketchClassName);
+        }
+        while ((index = sb.indexOf("@@permissions@@")) != -1) {
+          sb.replace(index, index + "@@permissions@@".length(),
+                     permissionsStr);
+        }        
+        lines[i] = sb.toString();
+      }
+      // explicit newlines to avoid Windows CRLF
+      pw.print(lines[i] + "\n");
+    }
+    pw.flush();
+    pw.close();
+    
+    
+    
+    
+    /*
     File mainActivityFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
         "MainActivity.java");
     final PrintWriter writer = PApplet.createWriter(mainActivityFile);
@@ -1537,6 +1581,11 @@ class AndroidBuild extends JavaBuild {
     writer.println("}");
     writer.flush();
     writer.close();    
+    */
+  }
+  
+  private void createSourceFromTemplate(final File javaTemplate, final File javaFile  ) {
+    
   }
   
   
