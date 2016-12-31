@@ -90,7 +90,8 @@
       <zipfileset dir="." prefix="AndroidMode">
 	<include name="android-core.zip" />
 	<include name="mode.properties" />	
-	<include name="mode/**" />	
+	<include name="mode/**" />
+	<include name="templates/**" />	
 	<include name="examples/**" />
 	<include name="icons/**" />
 	<include name="theme/**" />
