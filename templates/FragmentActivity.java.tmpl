@@ -80,8 +80,16 @@ public class MainActivity extends AppCompatActivity {
     if (requestCode == REQUEST_PERMISSIONS) {      
       if (grantResults.length > 0) {
         boolean granted = true;    
-        for (int i = 0; i < grantResults.length; i++) {    
+        for (int i = 0; i < grantResults.length; i++) {              
           if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Some permissions needed by the app were not granted, so it might not work as intended.")
+              .setCancelable(false)
+              .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) { }
+              });  
+            AlertDialog alert = builder.create();
+            alert.show();
             granted = false;
             break; 
           }
