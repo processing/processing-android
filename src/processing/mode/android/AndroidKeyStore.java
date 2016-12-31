@@ -22,7 +22,9 @@
 package processing.mode.android;
 
 import processing.app.Messages;
-
+import processing.app.exec.ProcessHelper;
+import processing.app.exec.ProcessResult;
+import processing.core.PApplet;
 import java.io.File;
 
 
@@ -63,10 +65,8 @@ public class AndroidKeyStore {
         parseDnameField(commonName), parseDnameField(organizationalUnit), parseDnameField(organizationName),
         parseDnameField(locality), parseDnameField(state), parseDnameField(country));
 
-    String[] args = {
-        System.getProperty("java.home")
-            + System.getProperty("file.separator") + "bin"
-            + System.getProperty("file.separator") + "keytool", "-genkey",
+    ProcessHelper ph = new ProcessHelper(new String[] {
+        "keytool", "-genkey",
         "-keystore", getKeyStoreLocation().getAbsolutePath(),
         "-alias", ALIAS_STRING,
         "-keyalg", "RSA",
@@ -75,12 +75,26 @@ public class AndroidKeyStore {
         "-keypass", password,
         "-storepass", password,
         "-dname", dname
-    };
-
-    Process generation = Runtime.getRuntime().exec(args);
-    generation.waitFor();
-
-    if (getKeyStore() == null) throw new Exception();
+      });
+    
+    try {
+      ProcessResult result = ph.execute();
+      if (result.succeeded()) {
+        if (getKeyStore() == null) {
+          Messages.showWarning("Well, this is unexpected...",
+              "The keystore was succesfully cretated but cannot be found.\n" +
+              "Perhaps was it deleted accidentally?");
+        }
+      } else {
+        String[] lines = PApplet.split(result.getStderr(), '\n');
+        System.err.println("The keystore could not be created, due to the following error:");
+        for (String line: lines) {
+          System.err.println(line);
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }          
   }
 
   public static boolean resetKeyStore() {
