@@ -52,6 +52,7 @@ class AndroidBuild extends JavaBuild {
   
   static private final String FRAGMENT_ACTIVITY_TEMPLATE = "FragmentActivity.java.tmpl";
   static private final String WALLPAPER_SERVICE_TEMPLATE = "WallpaperService.java.tmpl";
+  static private final String WATCHFACE_GLES_SERVICE_TEMPLATE = "WatchFaceGLESService.java.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -1510,7 +1511,7 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeWallpaperService(final File srcDirectory, String[] permissions) {    
-    File javaTemplate = mode.getContentFile("templates/" + WALLPAPER_SERVICE_TEMPLATE);    
+    File javaTemplate = mode.getContentFile("templates/" + WALLPAPER_SERVICE_TEMPLATE);
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainService.java");
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
@@ -1523,24 +1524,15 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeWatchFaceGLESService(final File srcDirectory, String[] permissions) {
-    File mainServiceFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
-        "MainService.java");
-    final PrintWriter writer = PApplet.createWriter(mainServiceFile);
-    writer.println("package " + getPackageName() +";");    
-    writer.println("import processing.android.PWatchFaceGLES;");
-    writer.println("import processing.core.PApplet;");
-    writeServicePermissionImports(writer, permissions);
-    writer.println("public class MainService extends PWatchFaceGLES {");
-    writeServicePermissionConstants(writer, permissions);
-    writer.println("  public MainService() {");
-    writer.println("    super();");
-    writer.println("    PApplet sketch = new " + sketchClassName + "();");
-    writer.println("    setSketch(sketch);");
-    writer.println("  }");
-    writeServicePermissionHandlers(writer, permissions);    
-    writer.println("}");
-    writer.flush();
-    writer.close();  
+    File javaTemplate = mode.getContentFile("templates/" + WATCHFACE_GLES_SERVICE_TEMPLATE);
+    File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainService.java");
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());
+    replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
+    
+    createSourceFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
 
   
@@ -1883,7 +1875,7 @@ class AndroidBuild extends JavaBuild {
   private String generatePermissionsString(final String[] permissions) {
     String permissionsStr = "";
     for (String p: permissions) {
-      permissionsStr += (0 < permissionsStr.length()?",":"") + "Manifest.permission." + p;  
+      permissionsStr += (0 < permissionsStr.length()?",":"") + (p.indexOf("permission") == -1?"Manifest.permission.":"") + p;  
     }
     permissionsStr = "{" + permissionsStr + "}";   
     return permissionsStr;
