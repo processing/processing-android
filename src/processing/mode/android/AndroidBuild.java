@@ -31,7 +31,6 @@ import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
 import processing.app.Platform;
-import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
@@ -43,8 +42,6 @@ import java.io.*;
 import java.security.Permission;
 import java.util.HashMap;
 
-import javax.swing.ImageIcon;
-
 class AndroidBuild extends JavaBuild {
   static public final int FRAGMENT  = 0;
   static public final int WALLPAPER = 1;
@@ -52,6 +49,9 @@ class AndroidBuild extends JavaBuild {
   static public final int CARDBOARD = 3;
   
   static public final String DEFAULT_COMPONENT = "app";
+  
+  static private final String FRAGMENT_ACTIVITY_TEMPLATE = "FragmentActivity.java.tmpl";
+  static private final String WALLPAPER_SERVICE_TEMPLATE = "WallpaperService.java.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -1496,144 +1496,29 @@ class AndroidBuild extends JavaBuild {
   }
 
   
-  private void writeFragmentActivity(final File srcDirectory, String[] permissions) {
-    String permissionsStr = "";
-    for (String p: permissions) {
-      permissionsStr += (0 < permissionsStr.length()?",":"") + "Manifest.permission." + p;  
-    }
-    permissionsStr = "{" + permissionsStr + "}";
-
-    String JAVA_TEMPLATE = "FragmentActivity.java.tmpl";
-    File javaTemplate = mode.getContentFile("templates/" + JAVA_TEMPLATE);    
+  private void writeFragmentActivity(final File srcDirectory, String[] permissions) {    
+    File javaTemplate = mode.getContentFile("templates/" + FRAGMENT_ACTIVITY_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@permissions@@", permissionsStr);
+    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
+    
     createSourceFromTemplate(javaTemplate, javaFile, replaceMap);
-    
-    /*
-    PrintWriter pw = PApplet.createWriter(javaFile);    
-    String lines[] = PApplet.loadStrings(javaTemplate);
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf("@@") != -1) {
-        StringBuilder sb = new StringBuilder(lines[i]);
-        int index = 0;
-        while ((index = sb.indexOf("@@package_name@@")) != -1) {
-          sb.replace(index, index + "@@package_name@@".length(),
-                     getPackageName());
-        }
-        while ((index = sb.indexOf("@@sketch_class_name@@")) != -1) {
-          sb.replace(index, index + "@@sketch_class_name@@".length(),
-                     sketchClassName);
-        }
-        while ((index = sb.indexOf("@@permissions@@")) != -1) {
-          sb.replace(index, index + "@@permissions@@".length(),
-                     permissionsStr);
-        }        
-        lines[i] = sb.toString();
-      }
-      // explicit newlines to avoid Windows CRLF
-      pw.print(lines[i] + "\n");
-    }
-    pw.flush();
-    pw.close();
-    
-    */
-    
-    
-    /*
-    File mainActivityFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
-        "MainActivity.java");
-    final PrintWriter writer = PApplet.createWriter(mainActivityFile);
-    writer.println("package " + getPackageName() +";");
-    writer.println("import android.os.Bundle;");
-    writer.println("import android.view.View;");
-    writer.println("import android.view.ViewGroup;");
-    writer.println("import android.widget.FrameLayout;");
-    writer.println("import android.support.v7.app.AppCompatActivity;");
-    writer.println("import android.support.v4.app.FragmentManager;");
-    writer.println("import android.support.v4.app.FragmentTransaction;");
-    writer.println("import processing.android.PFragment;");
-    writer.println("import processing.core.PApplet;");
-    writeActivityPermissionImports(writer, permissions);
-    writer.println("public class MainActivity extends AppCompatActivity {");
-    writer.println("  private static final String MAIN_FRAGMENT_TAG = \"main_fragment\";");
-    writeActivityPermissionConstants(writer, permissions);
-    writer.println("  private static final int viewId = View.generateViewId();");
-    writer.println("  PFragment fragment;");
-    writer.println("  @Override");
-    writer.println("  protected void onCreate(Bundle savedInstanceState) {");
-    writer.println("    super.onCreate(savedInstanceState);");
-    writer.println("    FrameLayout frame = new FrameLayout(this);");
-    writer.println("    frame.setId(viewId);");
-    writer.println("    setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));");
-    writer.println("    PApplet sketch = new " + sketchClassName + "();");
-    writer.println("    if (savedInstanceState == null) {");
-    writer.println("      fragment = new PFragment();");
-    writer.println("      fragment.setSketch(sketch);");
-    writer.println("      FragmentManager fm = getSupportFragmentManager();");
-    writer.println("      FragmentTransaction ft = fm.beginTransaction();");
-    writer.println("      ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();");
-    writer.println("    } else {");
-    writer.println("      fragment = (PFragment) getSupportFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);");
-    writer.println("      fragment.setSketch(sketch);");
-    writer.println("    }");
-    writer.println("  }");
-    writer.println("  protected void onPermissionsGranted() {");
-    writer.println("    fragment.onPermissionsGranted();");
-    writer.println("  }");
-    writeActivityPermissionHandlers(writer, permissions);
-    writer.println("}");
-    writer.flush();
-    writer.close();    
-    */
-  }
-  
-  private void createSourceFromTemplate(final File javaTemplate, final File javaFile, 
-                                        final HashMap<String, String> replaceMap) {
-    PrintWriter pw = PApplet.createWriter(javaFile);    
-    String lines[] = PApplet.loadStrings(javaTemplate);
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf("@@") != -1) {
-        StringBuilder sb = new StringBuilder(lines[i]);
-        int index = 0;
-        for (String key: replaceMap.keySet()) {
-          String val = replaceMap.get(key);
-          while ((index = sb.indexOf(key)) != -1) {
-            sb.replace(index, index + key.length(), val);
-          }          
-        }    
-        lines[i] = sb.toString();
-      }
-      // explicit newlines to avoid Windows CRLF
-      pw.print(lines[i] + "\n");
-    }
-    pw.flush();
-    pw.close();    
   }
   
   
-  private void writeWallpaperService(final File srcDirectory, String[] permissions) {
-    File mainServiceFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")),
-        "MainService.java");
-    final PrintWriter writer = PApplet.createWriter(mainServiceFile);
-    writer.println("package " + getPackageName() +";");    
-    writer.println("import processing.android.PWallpaper;");
-    writer.println("import processing.core.PApplet;");
-    writeServicePermissionImports(writer, permissions);
-    writer.println("public class MainService extends PWallpaper {");
-    writeServicePermissionConstants(writer, permissions);
-    writer.println("  @Override");
-    writer.println("  public PApplet createSketch() {");
-    writer.println("    PApplet sketch = new " + sketchClassName + "();");
-    writer.println("    return sketch;");
-    writer.println("  }");
-    writeServicePermissionHandlers(writer, permissions);
-    writer.println("}");
-    writer.flush();
-    writer.close();  
+  private void writeWallpaperService(final File srcDirectory, String[] permissions) {    
+    File javaTemplate = mode.getContentFile("templates/" + WALLPAPER_SERVICE_TEMPLATE);    
+    File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainService.java");
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());
+    replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
+    
+    createSourceFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
   
   
@@ -1994,6 +1879,38 @@ class AndroidBuild extends JavaBuild {
     writer.flush();
     writer.close();     
   }
+  
+  private String generatePermissionsString(final String[] permissions) {
+    String permissionsStr = "";
+    for (String p: permissions) {
+      permissionsStr += (0 < permissionsStr.length()?",":"") + "Manifest.permission." + p;  
+    }
+    permissionsStr = "{" + permissionsStr + "}";   
+    return permissionsStr;
+  }
+  
+  private void createSourceFromTemplate(final File javaTemplate, final File javaFile, 
+      final HashMap<String, String> replaceMap) {
+    PrintWriter pw = PApplet.createWriter(javaFile);    
+    String lines[] = PApplet.loadStrings(javaTemplate);
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf("@@") != -1) {
+        StringBuilder sb = new StringBuilder(lines[i]);
+        int index = 0;
+        for (String key: replaceMap.keySet()) {
+          String val = replaceMap.get(key);
+          while ((index = sb.indexOf(key)) != -1) {
+            sb.replace(index, index + key.length(), val);
+          }          
+        }    
+        lines[i] = sb.toString();
+      }
+      // explicit newlines to avoid Windows CRLF
+      pw.print(lines[i] + "\n");
+    }
+    pw.flush();
+    pw.close();    
+  }  
   
 /*
   private void writeResLayoutMainFragment(final File file) {

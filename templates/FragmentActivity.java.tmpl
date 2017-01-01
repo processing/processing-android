@@ -52,6 +52,11 @@ public class MainActivity extends AppCompatActivity {
     fragment.onPermissionsGranted();
   }
   
+  // Requesting permissions from user when the app resumes.
+  // Nice example on how to handle user response
+  // http://stackoverflow.com/a/35495855   
+  // More on permission in Android 23:
+  // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en  
   @Override
   public void onStart() {
     super.onStart();    
