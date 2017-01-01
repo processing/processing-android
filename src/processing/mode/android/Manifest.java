@@ -143,7 +143,9 @@ public class Manifest {
     int count = elements.length;
     String[] names = new String[count];
     for (int i = 0; i < count; i++) {
-      names[i] = elements[i].getString("android:name").substring(PERMISSION_PREFIX.length());
+      String tmp = elements[i].getString("android:name");
+      int idx = tmp.lastIndexOf(".");
+      names[i] = tmp.substring(idx + 1);
     }
     return names;
   }
@@ -226,7 +228,6 @@ public class Manifest {
     } else if (appComp == AndroidBuild.WATCHFACE) {
       writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_watchface + "\" />");
       writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />");
-      writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />");
       writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />");
     } else if (appComp == AndroidBuild.CARDBOARD) {
       writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_cardboard + "\" />");
