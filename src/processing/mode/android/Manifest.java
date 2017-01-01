@@ -195,13 +195,11 @@ public class Manifest {
 
   // TODO: needs to be converted into a template file...
   private void writeBlankManifest(final File file, final int appComp) {
-    char newLine = '\n';
-        
     final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + newLine);
-    writer.println("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" " + newLine);
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    writer.println("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" ");
 //    writer.println("          package=\"" + defaultPackageName() + "\" ");
-    writer.println("          package=\"\" " + newLine);
+    writer.println("          package=\"\" ");
     
     // Tempting to use 'preferExternal' here, but might annoy some users.
     // 'auto' at least enables it to be moved back and forth
@@ -212,42 +210,42 @@ public class Manifest {
     // This is just a number (like the Processing 'revision'). It should
     // increment with each release. Perhaps P5 should do this automatically
     // with each build or read/write of the manifest file?
-    writer.println("          android:versionCode=\"1\" " + newLine);
+    writer.println("          android:versionCode=\"1\" ");
     // This is the version number/name seen by users
-    writer.println("          android:versionName=\"1.0\">" + newLine);    
+    writer.println("          android:versionName=\"1.0\">");    
     
     // Publishing-specific features
     // for now including this... we're wiring to a particular SDK version anyway...
     
-//    writer.println("  <uses-sdk android:targetSdkVersion=\"" + AndroidBuild.target_api_level + "\" />" + newLine);
+//    writer.println("  <uses-sdk android:targetSdkVersion=\"" + AndroidBuild.target_api_level + "\" />");
     if (appComp == AndroidBuild.FRAGMENT) {
-      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_fragment + "\" />" + newLine);
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_fragment + "\" />");
     } else if (appComp == AndroidBuild.WALLPAPER) {
-      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_wallpaper + "\" />" + newLine);
-      writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />" + newLine);
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_wallpaper + "\" />");
+      writer.println("  <uses-feature android:name=\"android.software.live_wallpaper\" />");
     } else if (appComp == AndroidBuild.WATCHFACE) {
-      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_watchface + "\" />" + newLine);
-      writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />" + newLine);
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_watchface + "\" />");
+      writer.println("  <uses-feature android:name=\"android.hardware.type.watch\" />");
+      writer.println("  <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\" />");
+      writer.println("  <uses-permission android:name=\"android.permission.WAKE_LOCK\" />");
     } else if (appComp == AndroidBuild.CARDBOARD) {
-      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_cardboard + "\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"android.permission.NFC\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"android.permission.VIBRATE\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />" + newLine);
-      writer.println("  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />" + newLine);
-      writer.println("  <uses-feature android:name=\"android.hardware.sensor.accelerometer\" android:required=\"true\" />" + newLine);
-      writer.println("  <uses-feature android:name=\"android.hardware.sensor.gyroscope\" android:required=\"true\" />" + newLine);
-      writer.println("  <uses-feature android:glEsVersion=\"0x00020000\" android:required=\"true\" />" + newLine);
+      writer.println("  <uses-sdk android:minSdkVersion=\"" + AndroidBuild.min_sdk_cardboard + "\" />");
+      writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />");
+      writer.println("  <uses-permission android:name=\"android.permission.NFC\" />");
+      writer.println("  <uses-permission android:name=\"android.permission.VIBRATE\" />");
+      writer.println("  <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />");
+      writer.println("  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />");
+      writer.println("  <uses-feature android:name=\"android.hardware.sensor.accelerometer\" android:required=\"true\" />");
+      writer.println("  <uses-feature android:name=\"android.hardware.sensor.gyroscope\" android:required=\"true\" />");
+      writer.println("  <uses-feature android:glEsVersion=\"0x00020000\" android:required=\"true\" />");
     }
     
-    writer.println("  <application android:label=\"\" " + newLine);  // insert pretty name
-    writer.println("               android:icon=\"@drawable/icon\" " + newLine);
+    writer.println("  <application android:label=\"\" ");  // insert pretty name
+    writer.println("               android:icon=\"@drawable/icon\" ");
     if (appComp == AndroidBuild.WATCHFACE) {
-      writer.println("               android:supportsRtl=\"true\" " + newLine);
+      writer.println("               android:supportsRtl=\"true\" ");
     }
-    writer.println("               android:debuggable=\"true\">" + newLine);
+    writer.println("               android:debuggable=\"true\">");
 
     if (appComp == AndroidBuild.FRAGMENT) {
       // turns out label is not required for the activity, so nixing it
@@ -259,56 +257,56 @@ public class Manifest {
       // activity/android:name should be the full name (package + class name) of
       // the actual activity class. or the package can be replaced by a single
       // dot as a prefix as an easier shorthand.
-      writer.println("    <activity android:name=\".MainActivity\" " + newLine);
-      writer.println("              android:theme=\"@style/Theme.AppCompat.Light.NoActionBar.FullScreen\">" + newLine);
-      writer.println("      <intent-filter>" + newLine);
-      writer.println("        <action android:name=\"android.intent.action.MAIN\" />" + newLine);
-      writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />" + newLine);
-      writer.println("      </intent-filter>" + newLine);
-      writer.println("    </activity>" + newLine); 
+      writer.println("    <activity android:name=\".MainActivity\" ");
+      writer.println("              android:theme=\"@style/Theme.AppCompat.Light.NoActionBar.FullScreen\">");
+      writer.println("      <intent-filter>");
+      writer.println("        <action android:name=\"android.intent.action.MAIN\" />");
+      writer.println("        <category android:name=\"android.intent.category.LAUNCHER\" />");
+      writer.println("      </intent-filter>");
+      writer.println("    </activity>"); 
     } else if (appComp == AndroidBuild.WALLPAPER) {
-      writer.println("    <service android:name=\".MainService\" " + newLine);
-      writer.println("             android:label=\"\" " + newLine); // insert pretty name
-      writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >" + newLine);
-      writer.println("      <intent-filter>" + newLine);
-      writer.println("         <action android:name=\"android.service.wallpaper.WallpaperService\" />" + newLine);
-      writer.println("      </intent-filter>" + newLine);
-      writer.println("    <meta-data android:name=\"android.service.wallpaper\" " + newLine);
-      writer.println("               android:resource=\"@xml/wallpaper\" />" + newLine);
-      writer.println("  </service>" + newLine);        
-      writer.println("  <activity android:name=\".MainService$PermissionRequestActivity\" ></activity>" + newLine);
+      writer.println("    <service android:name=\".MainService\" ");
+      writer.println("             android:label=\"\" "); // insert pretty name
+      writer.println("             android:permission=\"android.permission.BIND_WALLPAPER\" >");
+      writer.println("      <intent-filter>");
+      writer.println("         <action android:name=\"android.service.wallpaper.WallpaperService\" />");
+      writer.println("      </intent-filter>");
+      writer.println("    <meta-data android:name=\"android.service.wallpaper\" ");
+      writer.println("               android:resource=\"@xml/wallpaper\" />");
+      writer.println("  </service>");        
+      writer.println("  <activity android:name=\".MainService$PermissionRequestActivity\" ></activity>");
     } else if (appComp == AndroidBuild.WATCHFACE) {
-      writer.println("<service android:name=\".MainService\" " + newLine);
-      writer.println("         android:label=\"\" " + newLine); // insert pretty name
-      writer.println("         android:permission=\"android.permission.BIND_WALLPAPER\"> " + newLine);
-      writer.println("   <meta-data android:name=\"android.service.wallpaper\" " + newLine);
-      writer.println("              android:resource=\"@xml/watch_face\" /> " + newLine);
-      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.preview\" " + newLine);
-      writer.println("              android:resource=\"@drawable/preview_rectangular\" /> " + newLine);
-      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.preview_circular\" " + newLine);
-      writer.println("              android:resource=\"@drawable/preview_circular\" /> " + newLine);
-      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.companionConfigurationAction\" " + newLine);
-      writer.println("              android:value=\"com.catinean.simpleandroidwatchface.CONFIG_DIGITAL\" /> " + newLine);
-      writer.println("   <intent-filter> " + newLine);
-      writer.println("     <action android:name=\"android.service.wallpaper.WallpaperService\" /> " + newLine);
-      writer.println("     <category android:name=\"com.google.android.wearable.watchface.category.WATCH_FACE\" /> " + newLine);
-      writer.println("   </intent-filter> " + newLine);
-      writer.println("</service> " + newLine);
-      writer.println("  <activity android:name=\".MainService$PermissionRequestActivity\" ></activity>" + newLine);
+      writer.println("<service android:name=\".MainService\" ");
+      writer.println("         android:label=\"\" "); // insert pretty name
+      writer.println("         android:permission=\"android.permission.BIND_WALLPAPER\"> ");
+      writer.println("   <meta-data android:name=\"android.service.wallpaper\" ");
+      writer.println("              android:resource=\"@xml/watch_face\" /> ");
+      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.preview\" ");
+      writer.println("              android:resource=\"@drawable/preview_rectangular\" /> ");
+      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.preview_circular\" ");
+      writer.println("              android:resource=\"@drawable/preview_circular\" /> ");
+      writer.println("   <meta-data android:name=\"com.google.android.wearable.watchface.companionConfigurationAction\" ");
+      writer.println("              android:value=\"com.catinean.simpleandroidwatchface.CONFIG_DIGITAL\" /> ");
+      writer.println("   <intent-filter> ");
+      writer.println("     <action android:name=\"android.service.wallpaper.WallpaperService\" /> ");
+      writer.println("     <category android:name=\"com.google.android.wearable.watchface.category.WATCH_FACE\" /> ");
+      writer.println("   </intent-filter> ");
+      writer.println("</service> ");
+      writer.println("  <activity android:name=\".MainService$PermissionRequestActivity\" ></activity>");
     } else if (appComp == AndroidBuild.CARDBOARD) {
-      writer.println("<activity android:name=\".MainActivity\" " + newLine);
-//      writer.println("          android:label=\"\" " + newLine); // insert pretty name
-      writer.println("          android:screenOrientation=\"landscape\" " + newLine);
-      writer.println("          android:configChanges=\"orientation|keyboardHidden|screenSize\" > " + newLine);
-      writer.println("  <intent-filter>" + newLine);
-      writer.println("    <action android:name=\"android.intent.action.MAIN\" /> " + newLine);
-      writer.println("    <category android:name=\"android.intent.category.LAUNCHER\" /> " + newLine);
-      writer.println("    <category android:name=\"com.google.intent.category.CARDBOARD\" /> " + newLine);
-      writer.println("  </intent-filter>" + newLine);
-      writer.println("</activity>" + newLine); 
+      writer.println("<activity android:name=\".MainActivity\" ");
+//      writer.println("          android:label=\"\" "); // insert pretty name
+      writer.println("          android:screenOrientation=\"landscape\" ");
+      writer.println("          android:configChanges=\"orientation|keyboardHidden|screenSize\" > ");
+      writer.println("  <intent-filter>");
+      writer.println("    <action android:name=\"android.intent.action.MAIN\" /> ");
+      writer.println("    <category android:name=\"android.intent.category.LAUNCHER\" /> ");
+      writer.println("    <category android:name=\"com.google.intent.category.CARDBOARD\" /> ");
+      writer.println("  </intent-filter>");
+      writer.println("</activity>"); 
     }
-    writer.println("  </application>" + newLine);
-    writer.println("</manifest>" + newLine);
+    writer.println("  </application>");
+    writer.println("</manifest>");
     writer.flush();
     writer.close();
   }
