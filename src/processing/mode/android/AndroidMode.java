@@ -353,12 +353,16 @@ public class AndroidMode extends JavaMode {
     }
   }
 
+  public static void createFileFromTemplate(final File tmplFile, final File destFile) {
+    createFileFromTemplate(tmplFile, destFile, null);
+  }
+  
   public static void createFileFromTemplate(final File tmplFile, final File destFile, 
       final HashMap<String, String> replaceMap) {
     PrintWriter pw = PApplet.createWriter(destFile);    
     String lines[] = PApplet.loadStrings(tmplFile);
     for (int i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf("@@") != -1) {
+      if (lines[i].indexOf("@@") != -1 && replaceMap != null) {
         StringBuilder sb = new StringBuilder(lines[i]);
         int index = 0;
         for (String key: replaceMap.keySet()) {

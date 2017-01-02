@@ -39,7 +39,6 @@ import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import java.io.*;
-import java.security.Permission;
 import java.util.HashMap;
 
 class AndroidBuild extends JavaBuild {
@@ -56,6 +55,13 @@ class AndroidBuild extends JavaBuild {
   static private final String CARDBOARD_ACTIVITY_TEMPLATE = "CardboardActivity.java.tmpl";
   static private final String HANDHELD_ACTIVITY_TEMPLATE = "HandheldActivity.java.tmpl";
   static private final String HANDHELD_MANIFEST_TEMPLATE = "HandheldManifest.xml.tmpl";
+  static private final String HANDHELD_LAYOUT_TEMPLATE = "HandheldLayout.xml.tmpl";
+  static private final String WEARABLE_DESCRIPTION_TEMPLATE = "WearableDescription.xml.tmpl";
+  static private final String LAYOUT_ACTIVITY_TEMPLATE = "LayoutActivity.xml.tmpl";
+  static private final String STYLES_FRAGMENT_TEMPLATE = "StylesFragment.xml.tmpl";
+  static private final String XML_WALLPAPER_TEMPLATE = "XMLWallpaper.xml.tmpl";
+  static private final String STRINGS_WALLPAPER_TEMPLATE = "StringsWallpaper.xml.tmpl";
+  static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -403,6 +409,7 @@ class AndroidBuild extends JavaBuild {
     return tmpFolder;
   }
 
+  
   // This creates the special activity project only needed to serve as the
   // (invisible) app on the handheld that allows to uninstall the watchface
   // from the watch.  
@@ -457,7 +464,7 @@ class AndroidBuild extends JavaBuild {
 //    for (String perm: permissions) {
 //      System.out.println(perm);
 //    }
-    writeHandheldManifest(tmpFolder, sketchClassName, "1", "1.0", permissions);
+    writeHandheldManifest(tmpFolder, "1", "1.0", permissions);
     
     // Write property and build files.
     writeAntProps(new File(tmpFolder, "ant.properties"));
@@ -492,15 +499,14 @@ class AndroidBuild extends JavaBuild {
     Util.copyFile(wearApk, new File(rawFolder, apkName + ".apk"));
         
     // Create dummy layout/activity_handheld.xml 
-    File layoutFile = new File(resFolder, "layout/activity_handheld.xml");
-    writeHandheldLayout(layoutFile);
+    writeHandheldLayout(resFolder);
     
-    // Create the wearable app description
-    File wearDescFile = new File(resFolder, "xml/wearable_app_desc.xml");
-    writeWearableDescription(wearDescFile, apkName, "1", "1.0");
+    // Create the wearable app description    
+    writeWearableDescription(resFolder, apkName, "1", "1.0");
     
     return tmpFolder;
   }
+  
   
   private void writeHandheldActivity() {
     File javaTemplate = mode.getContentFile("templates/" + HANDHELD_ACTIVITY_TEMPLATE);
@@ -512,15 +518,15 @@ class AndroidBuild extends JavaBuild {
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);   
   }
   
-  private void writeHandheldManifest(final File tmpFolder, final String className, 
-    final String versionCode, String versionName, String[] permissions) {
-    
+  
+  private void writeHandheldManifest(final File tmpFolder, String versionCode, String versionName, 
+      String[] permissions) {    
     File xmlTemplate = mode.getContentFile("templates/" + HANDHELD_MANIFEST_TEMPLATE);
     File xmlFile = new File(tmpFolder, "AndroidManifest.xml");
     
     String usesPermissions = "";
     for (String name: permissions) {
-      if (name.equals("WAKE_LOCK") || name.equals("PROVIDE_BACKGROUND")) continue;
+      if (name.equals("WAKE_LOCK")) continue;
       usesPermissions += "    <uses-permission android:name=\"android.permission." + name + "\"/>\n"; 
     }
     
@@ -528,40 +534,58 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@version_code@@", versionCode);
     replaceMap.put("@@version_name@@", versionName);
-    replaceMap.put("@@class_name@@", className);
+    replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@uses_permissions@@", usesPermissions);
         
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
   }  
+  
+  
+  private void writeHandheldLayout(final File resFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + HANDHELD_LAYOUT_TEMPLATE);    
+    File xmlFile = new File(resFolder, "layout/activity_handheld.xml");
     
-  private void writeHandheldLayout(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<RelativeLayout");
-    writer.println("    xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
-    writer.println("    android:layout_width=\"match_parent\"");
-    writer.println("    android:layout_height=\"match_parent\"");
-    writer.println("    android:paddingBottom=\"16dp\"");
-    writer.println("    android:paddingLeft=\"16dp\"");
-    writer.println("    android:paddingRight=\"16dp\"");
-    writer.println("    android:paddingTop=\"16dp\"");
-    writer.println("    tools:context=\"" + getPackageName() + ".HandheldActivity\">");
-    writer.println("</RelativeLayout>");
-    writer.flush();
-    writer.close();    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());    
+
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);    
+//    final PrintWriter writer = PApplet.createWriter(file);    
+//    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+//    writer.println("<RelativeLayout");
+//    writer.println("    xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+//    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
+//    writer.println("    android:layout_width=\"match_parent\"");
+//    writer.println("    android:layout_height=\"match_parent\"");
+//    writer.println("    android:paddingBottom=\"16dp\"");
+//    writer.println("    android:paddingLeft=\"16dp\"");
+//    writer.println("    android:paddingRight=\"16dp\"");
+//    writer.println("    android:paddingTop=\"16dp\"");
+//    writer.println("    tools:context=\"" + getPackageName() + ".HandheldActivity\">");
+//    writer.println("</RelativeLayout>");
+//    writer.flush();
+//    writer.close();    
   }
   
-  private void writeWearableDescription(final File file, final String apkName,
+  private void writeWearableDescription(final File resFolder, final String apkName,
       final String versionCode, String versionName) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<wearableApp package=\"" + getPackageName() + "\">");
-    writer.println("  <versionCode>" + versionCode + "</versionCode>");
-    writer.println("  <versionName>" + versionName + "</versionName>");
-    writer.println("  <rawPathResId>" + apkName + "</rawPathResId>");
-    writer.println("</wearableApp>");
-    writer.flush();
-    writer.close();
+    File xmlTemplate = mode.getContentFile("templates/" + WEARABLE_DESCRIPTION_TEMPLATE);
+    File xmlFile = new File(resFolder, "xml/wearable_app_desc.xml");
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());
+    replaceMap.put("@@version_code@@", versionCode);
+    replaceMap.put("@@version_name@@", versionName);
+    replaceMap.put("@@apk_name@@", apkName);
+
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);  
+//    final PrintWriter writer = PApplet.createWriter(file);
+//    writer.println("<wearableApp package=\"" + getPackageName() + "\">");
+//    writer.println("  <versionCode>" + versionCode + "</versionCode>");
+//    writer.println("  <versionName>" + versionName + "</versionName>");
+//    writer.println("  <rawPathResId>" + apkName + "</rawPathResId>");
+//    writer.println("</wearableApp>");
+//    writer.flush();
+//    writer.close();
   }
   
   protected boolean createLibraryProject(String name, String target, 
@@ -812,32 +836,7 @@ class AndroidBuild extends JavaBuild {
     }*/
   }
 
-  /*private boolean verifySignedPackage(File signedPackage) throws Exception {
-    String[] args = {
-        "-verify", signedPackage.getCanonicalPath()
-    };
-
-    PrintStream defaultPrintStream = System.out;
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream printStream = new PrintStream(baos);
-    System.setOut(printStream);
-
-    SystemExitControl.forbidSystemExitCall();
-    try {
-      JarSigner.main(args);
-    } catch (SystemExitControl.ExitTrappedException ignored) { }
-    SystemExitControl.enableSystemExitCall();
-
-    System.setOut(defaultPrintStream);
-    String result = baos.toString();
-
-    baos.close();
-    printStream.close();
-
-    return result.contains("verified");
-  } */
-
+  
   private File zipalignPackage(File signedPackage, File projectFolder) throws IOException, InterruptedException {
 
     File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0];
@@ -1174,25 +1173,21 @@ class AndroidBuild extends JavaBuild {
   static final String ICON_WATCHFACE_RECTANGULAR = "preview_rectangular.png";  
   
   private void writeRes(File resFolder) throws SketchException {
-    File layoutFolder = mkdirs(resFolder, "layout");
-    File mainActivityLayoutFile = new File(layoutFolder, "main.xml");
-    writeResLayoutMainActivity(mainActivityLayoutFile);
+    File layoutFolder = mkdirs(resFolder, "layout");    
+    writeResLayoutMainActivity(layoutFolder);
 
     int comp = getAppComponent();
     if (comp == FRAGMENT) {
-      File valuesFolder = mkdirs(resFolder, "values");
-      File mainStylesFile = new File(valuesFolder, "styles.xml");
-      writeResStylesFragment(mainStylesFile); 
+      File valuesFolder = mkdirs(resFolder, "values");      
+      writeResStylesFragment(valuesFolder); 
     }
     
     if (comp == WALLPAPER) {
-      File xmlFolder = mkdirs(resFolder, "xml");
-      File mainServiceWallpaperFile = new File(xmlFolder, "wallpaper.xml");
-      writeResXMLWallpaper(mainServiceWallpaperFile);
+      File xmlFolder = mkdirs(resFolder, "xml");      
+      writeResXMLWallpaper(xmlFolder);
             
-      File valuesFolder = mkdirs(resFolder, "values");
-      File mainServiceStringFile = new File(valuesFolder, "strings.xml");
-      writeResStringsWallpaper(mainServiceStringFile);      
+      File valuesFolder = mkdirs(resFolder, "values");      
+      writeResStringsWallpaper(valuesFolder);      
     }
     
 //    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
@@ -1202,9 +1197,8 @@ class AndroidBuild extends JavaBuild {
     writeIconFiles(sketchFolder, resFolder);
     
     if (comp == WATCHFACE) {
-      File xmlFolder = mkdirs(resFolder, "xml");
-      File mainServiceWatchFaceFile = new File(xmlFolder, "watch_face.xml");
-      writeResXMLWatchFace(mainServiceWatchFaceFile);      
+      File xmlFolder = mkdirs(resFolder, "xml");      
+      writeResXMLWatchFace(xmlFolder);      
       
       // write the preview files
       File localPrevCircle = new File(sketchFolder, ICON_WATCHFACE_CIRCULAR);
@@ -1460,67 +1454,98 @@ class AndroidBuild extends JavaBuild {
   }
 
   
-  private void writeResLayoutMainActivity(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
-    writer.println("    android:id=\"@+id/fragment\"");
-    writer.println("    android:name=\"." + sketchClassName + "\"");
-    writer.println("    tools:layout=\"@layout/fragment_main\"");
-    writer.println("    android:layout_width=\"match_parent\"");
-    writer.println("    android:layout_height=\"match_parent\" />");
-    writer.flush();
-    writer.close();
+  private void writeResLayoutMainActivity(final File layoutFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + LAYOUT_ACTIVITY_TEMPLATE);
+    File xmlFile = new File(layoutFolder, "main.xml");
+        
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@sketch_class_name@@",sketchClassName);
+        
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
+    
+    
+//    final PrintWriter writer = PApplet.createWriter(file);
+//    writer.println("<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+//    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
+//    writer.println("    android:id=\"@+id/fragment\"");
+//    writer.println("    android:name=\"." + sketchClassName + "\"");
+//    writer.println("    tools:layout=\"@layout/fragment_main\"");
+//    writer.println("    android:layout_width=\"match_parent\"");
+//    writer.println("    android:layout_height=\"match_parent\" />");
+//    writer.flush();
+//    writer.close();
   }
   
   
-  private void writeResStylesFragment(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<resources>");
-    writer.println("<style name=\"Theme.AppCompat.Light.NoActionBar.FullScreen\" parent=\"@style/Theme.AppCompat.Light\">");
-    writer.println("    <item name=\"windowNoTitle\">true</item>");
-    writer.println("    <item name=\"windowActionBar\">false</item>");
-    writer.println("    <item name=\"android:windowFullscreen\">true</item>");
-    writer.println("    <item name=\"android:windowContentOverlay\">@null</item>");
-    writer.println("</style>");
-    writer.println("</resources>");
-    writer.flush();
-    writer.close();    
+  private void writeResStylesFragment(final File valuesFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + STYLES_FRAGMENT_TEMPLATE);
+    File xmlFile = new File(valuesFolder, "styles.xml");
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
+    
+    
+//    final PrintWriter writer = PApplet.createWriter(file);
+//    writer.println("<resources>");
+//    writer.println("<style name=\"Theme.AppCompat.Light.NoActionBar.FullScreen\" parent=\"@style/Theme.AppCompat.Light\">");
+//    writer.println("    <item name=\"windowNoTitle\">true</item>");
+//    writer.println("    <item name=\"windowActionBar\">false</item>");
+//    writer.println("    <item name=\"android:windowFullscreen\">true</item>");
+//    writer.println("    <item name=\"android:windowContentOverlay\">@null</item>");
+//    writer.println("</style>");
+//    writer.println("</resources>");
+//    writer.flush();
+//    writer.close();    
   }
   
 
-  private void writeResXMLWallpaper(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("    android:thumbnail=\"@drawable/icon\"");
-    writer.println("    android:description=\"@string/app_name\" />");
-    writer.flush();
-    writer.close();    
+  private void writeResXMLWallpaper(final File xmlFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + XML_WALLPAPER_TEMPLATE);
+    File xmlFile = new File(xmlFolder, "wallpaper.xml");
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
+        
+//    final PrintWriter writer = PApplet.createWriter(file);
+//    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+//    writer.println("    android:thumbnail=\"@drawable/icon\"");
+//    writer.println("    android:description=\"@string/app_name\" />");
+//    writer.flush();
+//    writer.close();    
   }
   
   
-  private void writeResStringsWallpaper(final File file) {
-     final PrintWriter writer = PApplet.createWriter(file);
-     writer.println("<resources>");
-     writer.println("  <string name=\"app_name\">" + sketchClassName + "</string>");
-     writer.println("</resources>");
-     writer.flush();
-     writer.close();    
+  private void writeResStringsWallpaper(final File valuesFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + STRINGS_WALLPAPER_TEMPLATE);
+    File xmlFile = new File(valuesFolder, "strings.xml");
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@sketch_class_name@@",sketchClassName);
+        
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
+    
+//     final PrintWriter writer = PApplet.createWriter(file);
+//     writer.println("<resources>");
+//     writer.println("  <string name=\"app_name\">" + sketchClassName + "</string>");
+//     writer.println("</resources>");
+//     writer.flush();
+//     writer.close();    
   }
   
   
-  private void writeResXMLWatchFace(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\" />");
-    writer.flush();
-    writer.close();     
+  private void writeResXMLWatchFace(final File xmlFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + XML_WATCHFACE_TEMPLATE);
+    File xmlFile = new File(xmlFolder, "watch_face.xml");
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
+    
+//    final PrintWriter writer = PApplet.createWriter(file);
+//    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\" />");
+//    writer.flush();
+//    writer.close();     
   }
   
   
   private String generatePermissionsString(final String[] permissions) {
     String permissionsStr = "";
     for (String p: permissions) {
-      permissionsStr += (0 < permissionsStr.length()?",":"") + (p.indexOf("permission") == -1?"Manifest.permission.":"") + p;  
+      permissionsStr += (0 < permissionsStr.length()?",":"") + 
+                        (p.indexOf("permission") == -1?"Manifest.permission.":"") + p;  
     }
     permissionsStr = "{" + permissionsStr + "}";   
     return permissionsStr;
@@ -1768,6 +1793,31 @@ class AndroidBuild extends JavaBuild {
     }
   }
   
+  private boolean verifySignedPackage(File signedPackage) throws Exception {
+    String[] args = {
+        "-verify", signedPackage.getCanonicalPath()
+    };
+
+    PrintStream defaultPrintStream = System.out;
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream printStream = new PrintStream(baos);
+    System.setOut(printStream);
+
+    SystemExitControl.forbidSystemExitCall();
+    try {
+      JarSigner.main(args);
+    } catch (SystemExitControl.ExitTrappedException ignored) { }
+    SystemExitControl.enableSystemExitCall();
+
+    System.setOut(defaultPrintStream);
+    String result = baos.toString();
+
+    baos.close();
+    printStream.close();
+
+    return result.contains("verified");
+  }
   */
 }
 
