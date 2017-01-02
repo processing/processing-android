@@ -1,0 +1,7 @@
+Collection of utility scripts that I put here for the lack of a better place.
+
+perm-parse.py: generates the array of permissions for a given SDK level, to be pasted in
+Permissions.java
+
+wear-update.sh: downloads the wearable aar file from a known maven repository, and 
+extracts the classes jar and copies it inside core/library
