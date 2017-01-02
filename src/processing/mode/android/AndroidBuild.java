@@ -82,6 +82,8 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
   static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
   
+  static public final String wear_version = "1.4.0";
+  
   // Hard-coded target SDK, no longer user-selected.
   static public final String target_sdk      = "23";  // Marshmallow (6.0)
   static public final String target_platform = "android-" + target_sdk;
@@ -334,9 +336,9 @@ class AndroidBuild extends JavaBuild {
       // cannot be resolved.
       // TODO: temporary hack until I find a better way to include the wearable aar
       // package included in the SDK:      
-      File wearJarFile = mode.getContentFile("mode/wearable-1.3.0-classes.jar");
+      File wearJarFile = mode.getContentFile("mode/wearable-" + wear_version + "-classes.jar");
       System.out.println(wearJarFile.toString());
-      Util.copyFile(wearJarFile, new File(libsFolder, "wearable-1.3.0-classes.jar"));
+      Util.copyFile(wearJarFile, new File(libsFolder, "wearable" + wear_version + "classes.jar"));
 //    }      
       
       // Copy any imported libraries (their libs and assets),
