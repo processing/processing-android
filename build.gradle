@@ -65,7 +65,9 @@ task dist {
 
         Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
                    file("$root/mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
-
+        Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
+                   file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
+                   
         Files.copy(file("core/build/libs/android-core.zip").toPath(),
                    file("$root/android-core.zip").toPath(), REPLACE_EXISTING);
 
