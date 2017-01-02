@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package=""
+          android:versionCode="1"
+          android:versionName="1.0">              
+    <uses-sdk android:minSdkVersion="@@min_sdk@@" />
+    <uses-feature android:name="android.software.live_wallpaper" />       
+    <application android:label=""
+                 android:icon="@drawable/icon"
+                 android:debuggable="true">
+        <service android:name=".MainService"
+                   android:label=""
+                   android:permission="android.permission.BIND_WALLPAPER"
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" 
+                       android:resource="@xml/wallpaper" />
+        </service>        
+        <activity android:name=".MainService$PermissionRequestActivity" ></activity>
+    </application>
+</manifest>

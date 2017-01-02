@@ -23,7 +23,6 @@
 package processing.mode.android;
 
 import org.xml.sax.SAXException;
-
 import processing.app.Messages;
 import processing.app.Sketch;
 import processing.core.PApplet;
@@ -35,6 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 
 
 public class Manifest {
@@ -44,16 +44,26 @@ public class Manifest {
     "Errors occurred while reading or writing " + MANIFEST_XML + ",\n" +
     "which means lots of things are likely to stop working properly.\n" +
     "To prevent losing any data, it's recommended that you use “Save As”\n" +
-    "to save a separate copy of your sketch, and the restart Processing.";
-  static final String MULTIPLE_ACTIVITIES =
-    "Processing only supports a single Activity in the AndroidManifest.xml\n" +
-    "file. Only the first activity entry will be updated, and you better \n" +
-    "hope that's the right one, smartypants.";
+    "to save a separate copy of your sketch, and then restart Processing.";
+//  static final String MULTIPLE_ACTIVITIES =
+//    "Processing only supports a single Activity in the AndroidManifest.xml\n" +
+//    "file. Only the first activity entry will be updated, and you better \n" +
+//    "hope that's the right one, smartypants.";
 
+  
+  static private final String[] MANIFEST_TEMPLATE = {
+    "FragmentManifest.xml.tmpl",
+    "WallpaperManifest.xml.tmpl",
+    "WatchFaceManifest.xml.tmpl",
+    "CardboardManifest.xml.tmpl",
+  };
+  
 //  private Editor editor;
   private Sketch sketch;
   
   private int appComp;
+  
+  private File modeFolder;
 
   // entries we care about from the manifest file
 //  private String packageName;
@@ -67,9 +77,10 @@ public class Manifest {
 //    this.sketch = editor.getSketch();
 //    load();
 //  }
-  public Manifest(Sketch sketch, int appComp, boolean forceNew) {
+  public Manifest(Sketch sketch, int appComp, File folder, boolean forceNew) {
     this.sketch = sketch;
     this.appComp = appComp;
+    this.modeFolder = folder;
     load(forceNew);
   }
 
@@ -196,7 +207,24 @@ public class Manifest {
 */
 
   // TODO: needs to be converted into a template file...
-  private void writeBlankManifest(final File file, final int appComp) {
+  private void writeBlankManifest(final File xmlFile, final int appComp) {
+    File xmlTemplate = new File(modeFolder, "templates/" + MANIFEST_TEMPLATE[appComp]);
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
+    if (appComp == AndroidBuild.FRAGMENT) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);
+    } else if (appComp == AndroidBuild.WALLPAPER) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_wallpaper);
+    } else if (appComp == AndroidBuild.WATCHFACE) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);
+    } else if (appComp == AndroidBuild.CARDBOARD) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_cardboard);
+    }
+        
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
+    
+    
+    /*
     final PrintWriter writer = PApplet.createWriter(file);
     writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
     writer.println("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" ");
@@ -310,6 +338,7 @@ public class Manifest {
     writer.println("</manifest>");
     writer.flush();
     writer.close();
+    */
   }
 
 
@@ -356,7 +385,7 @@ public class Manifest {
 //      activity.setString("android:name", "." + className);  // this has to be right
 
       PrintWriter writer = PApplet.createWriter(file);
-      writer.print(mf.format(2));
+      writer.print(mf.format(4));
       writer.flush();
 //    mf.write(writer);
       writer.close();
@@ -448,7 +477,7 @@ public class Manifest {
   protected void save(File file) {
     PrintWriter writer = PApplet.createWriter(file);
 //    xml.write(writer);
-    writer.print(xml.format(2));
+    writer.print(xml.format(4));
     writer.flush();
     writer.close();
   }

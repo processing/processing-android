@@ -211,7 +211,7 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
-    manifest = new Manifest(sketch, appComponent, rewriteManifest);    
+    manifest = new Manifest(sketch, appComponent, mode.getFolder(), rewriteManifest);    
     manifest.setSdkTarget(target_sdk);
     rewriteManifest = false;
     

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package=""
+          android:versionCode="1"
+          android:versionName="1.0">              
+    <uses-sdk android:minSdkVersion="@@min_sdk@@" />
+    <uses-feature android:name="android.hardware.type.watch" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />     
+    <application android:label=""
+                 android:icon="@drawable/icon"
+                 android:supportsRtl="true"
+                 android:debuggable="true">
+        <service android:name=".MainService"
+                 android:label=""
+                 android:permission="android.permission.BIND_WALLPAPER">
+            <meta-data android:name="android.service.wallpaper"
+                       android:resource="@xml/watch_face" />
+            <meta-data android:name="com.google.android.wearable.watchface.preview"
+                       android:resource="@drawable/preview_rectangular" />
+            <meta-data android:name="com.google.android.wearable.watchface.preview_circular"
+                       android:resource="@drawable/preview_circular" />
+            <meta-data android:name="com.google.android.wearable.watchface.companionConfigurationAction"
+                       android:value="com.catinean.simpleandroidwatchface.CONFIG_DIGITAL" />
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+        <activity android:name=".MainService$PermissionRequestActivity" ></activity>       
+    </application>
+</manifest>
