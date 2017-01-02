@@ -2,37 +2,43 @@ apply plugin: 'java'
 
 buildscript {
     repositories {
-        mavenCentral()
+//        mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath group: 'commons-io', name: 'commons-io', version: '2.5'
         classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
 
-
     }
 }
 
-// Find location of Android-23 android jar relative to ANDROID_HOME
-def android_23 = "$sdkdir/platforms/android-23"
+// Find location of android jar relative to ANDROID_HOME
+def android_platform = "$sdkdir/platforms/android-$sdkver"
 
+// Check to see if required API exists
+// TODO: Look for any higher SDK and use it.
+if (!file(android_platform).exists()) {
+    logger.error "Android SDK $sdkver could not be found in $sdkdir"
+}
 
 repositories {
         //jcenter()
-        flatDir {dirs 'library', android_23}
+        flatDir {dirs 'library', android_platform}
 }
-
-// Check to see if API 23 exists
-// TODO: Look for any 23+ SDK and use it.
-if (!file(android_23).exists()) {
-    logger.error "Android SDK 23 could not be found in $sdkdir"
-}
-
-
 
 dependencies {
     compile name: 'android'
+    
+    // android-support-v4.jar is in $sdkdir/extras/android/support/v4 
     compile name: 'android-support-v4'
-    compile name: 'wearable-1.3.0-classes'
+    
+    // Could not find the source of the wearable aars in Android Studio, so far
+    // these two repositories seem to have up-to-date versions:
+    // http://mvn.sibext.com/com/google/android/support/wearable/
+    // http://uiq3.sourceforge.net/Repository/com/google/android/support/wearable/
+    // MavenCentral and JCenter don't seem to have any wearable file.
+    // Use the wear-update script to create a new wearable-$version-classes jar
+    compile name: 'wearable-1.4.0-classes'
 }
 
 sourceSets {
@@ -40,34 +46,42 @@ sourceSets {
         java {
             srcDirs = ['src/']
         }
+        resources {
+            srcDirs = ['src/']
+        }        
     }
 }
 
 
 // Create Jar
-jar {
+jar {    
     manifest {
         attributes(
                 "Manifest-Version": "1.0",
                 "Gradle-Version": "$gradle.gradleVersion"
         )
     }
+    
 
 }
 
 import groovy.util.AntBuilder
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.*;
 
-import org.apache.commons.io.FileUtils
+//import org.apache.commons.io.FileUtils
+//import org.zeroturnaround.zip.ZipUtil
 
-import org.zeroturnaround.zip.ZipUtil
 
 task dist {
     doLast {
-        // Copy shaders to build dir
-        FileUtils.copyDirectory(file("src/assets"), file("$buildDir/zip/assets"))
-        FileUtils.copyDirectory(file("$buildDir/classes/main"), file("$buildDir/zip/"))
-
-        ZipUtil.pack(file("$buildDir/zip"), new File("$buildDir/libs/android-core.zip"))
+        // make copy of jar file as zip
+        Files.copy(file("$buildDir/libs/core.jar").toPath(),
+                   file("$buildDir/libs/android-core.zip").toPath(), REPLACE_EXISTING);
+                        
+        //FileUtils.copyDirectory(file("src/assets"), file("$buildDir/zip/assets"))
+        //FileUtils.copyDirectory(file("$buildDir/classes/main"), file("$buildDir/zip/"))
+        //ZipUtil.pack(file("$buildDir/zip"), new File("$buildDir/libs/android-core.zip"))
     }
 }
 

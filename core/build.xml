@@ -11,7 +11,10 @@
 
   <!-- Android platform to build the core library -->
   <property name="android.platform" value="android-23" />
-  
+
+  <!-- Wear version to build the core library -->
+  <property name="wear.version" value="1.4.0" />	
+	
   <!-- oh ant, you're so cute and convoluted -->
   <target name="build" depends="sdk_chatter,actual_build" />
 
@@ -38,8 +41,8 @@
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
 	   bootclasspath="${env.ANDROID_SDK}/platforms/${android.platform}/android.jar;
-	                  library/wearable-1.3.0-classes.jar;
-	                  library/android-support-v4.jar"
+    	              library/android-support-v4.jar;
+	                  library/wearable-${wear.version}-classes.jar"
 	   srcdir="src" destdir="bin" />
 
     <!-- Copy the shaders to the bin folder. 
