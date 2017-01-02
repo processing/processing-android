@@ -10,3 +10,4 @@ release
 /temp/
 
 build/**
+.gradle
