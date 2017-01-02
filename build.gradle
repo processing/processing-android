@@ -34,9 +34,9 @@ allprojects {
 dependencies {
     compile name: 'android'
     compile project(":core")
-    compile group: 'org.processing', name: 'core', version: '3.2.1'
-    compile group: 'org.processing', name: 'pde', version: '3.2.1'
-    compile group: 'org.processing', name: 'java-mode', version: '3.2.1'
+    compile group: 'org.processing', name: 'core', version: '3.2.3'
+    compile group: 'org.processing', name: 'pde', version: '3.2.3'
+    compile group: 'org.processing', name: 'java-mode', version: '3.2.3'
 
 
 
@@ -64,6 +64,7 @@ task dist {
     try {
         def root = "$buildDir/zip/AndroidMode"
         // Copy assets to build dir
+        FileUtils.copyDirectory(file("templates"), file("$root/templates"))
         FileUtils.copyDirectory(file("examples"), file("$root/examples"))
         FileUtils.copyDirectory(file("icons"), file("$root/icons"))
         FileUtils.copyDirectory(file("mode"), file("$root/mode"))
@@ -72,15 +73,18 @@ task dist {
         Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
                 file("$root/mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
 
-
         Files.copy(file("core/build/libs/android-core.zip").toPath(),
                 file("$root/android-core.zip").toPath(), REPLACE_EXISTING);
 
         Files.copy(file("mode.properties").toPath(),
                 file("$root/mode.properties").toPath(), REPLACE_EXISTING);
 
-
-        ZipUtil.pack(file("$buildDir/zip"), new File("AndroidMode.zip"))
+        ZipUtil.pack(file("$buildDir/zip"), new File("release/AndroidMode.zip"))        
+        Files.copy(file("mode.properties").toPath(),
+                file("release/AndroidMode.txt").toPath(), REPLACE_EXISTING);
+        Files.copy(file("core/build/libs/android-core.zip").toPath(),
+                file("android-core.zip").toPath(), REPLACE_EXISTING);
+                                        
     } catch (Exception ex) {
         logger.error ex.getMessage()
     }
