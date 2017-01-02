@@ -54,6 +54,8 @@ class AndroidBuild extends JavaBuild {
   static private final String WALLPAPER_SERVICE_TEMPLATE = "WallpaperService.java.tmpl";
   static private final String WATCHFACE_SERVICE_TEMPLATE = "WatchFaceService.java.tmpl";
   static private final String CARDBOARD_ACTIVITY_TEMPLATE = "CardboardActivity.java.tmpl";
+  static private final String HANDHELD_ACTIVITY_TEMPLATE = "HandheldActivity.java.tmpl";
+  static private final String HANDHELD_MANIFEST_TEMPLATE = "HandheldManifest.xml.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -443,9 +445,7 @@ class AndroidBuild extends JavaBuild {
     // Create source folder, and dummy handheld activity
     srcFolder = new File(tmpFolder, "src");
     binFolder = srcFolder;  
-    File activityFile = new File(new File(srcFolder, getPackageName().replace(".", "/")),
-        "HandheldActivity.java");
-    writeHandheldActivity(activityFile);
+    writeHandheldActivity();
         
     // Copy the compatibility package, needed for the permission handling
     final File libsFolder = mkdirs(tmpFolder, "libs");
@@ -453,12 +453,11 @@ class AndroidBuild extends JavaBuild {
     Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
     
     // Create manifest file
-    String[] permissions = manifest.getPermissions();
-    File manifestFile = new File(tmpFolder, "AndroidManifest.xml");
-    for (String perm: permissions) {
-      System.out.println(perm);
-    }
-    writeHandheldManifest(manifestFile, sketchClassName, "1", "1.0", permissions);
+    String[] permissions = manifest.getPermissions();    
+//    for (String perm: permissions) {
+//      System.out.println(perm);
+//    }
+    writeHandheldManifest(tmpFolder, sketchClassName, "1", "1.0", permissions);
     
     // Write property and build files.
     writeAntProps(new File(tmpFolder, "ant.properties"));
@@ -503,58 +502,36 @@ class AndroidBuild extends JavaBuild {
     return tmpFolder;
   }
   
-  private void writeHandheldActivity(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("package " + getPackageName() + ";");
-    writer.println("import android.app.Activity;");
-    writer.println("import android.os.Bundle;");
-    writer.println("public class HandheldActivity extends Activity {");
-    writer.println("    @Override");
-    writer.println("    protected void onCreate(Bundle savedInstanceState) {");
-    writer.println("        super.onCreate(savedInstanceState);");
-    writer.println("        setContentView(R.layout.activity_handheld);");
-    writer.println("        finish();");
-    writer.println("    }");
-    writer.println("}"); 
-    writer.flush();
-    writer.close();    
+  private void writeHandheldActivity() {
+    File javaTemplate = mode.getContentFile("templates/" + HANDHELD_ACTIVITY_TEMPLATE);
+    File javaFile = new File(new File(srcFolder, getPackageName().replace(".", "/")), "HandheldActivity.java");
+    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());
+    
+    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);   
   }
   
-  private void writeHandheldManifest(final File file, final String className, 
-      final String versionCode, String versionName, String[] permissions) {
-    final PrintWriter writer = PApplet.createWriter(file);    
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");    
-    writer.println("<manifest package=\"" + getPackageName() + "\"");
-    writer.println("          android:versionCode=\"" +versionCode + "\" android:versionName=\"" + versionName +"\"");    
-    writer.println("          xmlns:android=\"http://schemas.android.com/apk/res/android\">");
-//    writer.println("    <uses-permission android:name=\"com.google.android.permission.PROVIDE_BACKGROUND\"/>");
-//    writer.println("    <uses-permission android:name=\"android.permission.WAKE_LOCK\"/>");
-
+  private void writeHandheldManifest(final File tmpFolder, final String className, 
+    final String versionCode, String versionName, String[] permissions) {
+    
+    File xmlTemplate = mode.getContentFile("templates/" + HANDHELD_MANIFEST_TEMPLATE);
+    File xmlFile = new File(tmpFolder, "AndroidManifest.xml");
+    
+    String usesPermissions = "";
     for (String name: permissions) {
       if (name.equals("WAKE_LOCK") || name.equals("PROVIDE_BACKGROUND")) continue;
-      writer.println("    <uses-permission android:name=\"android.permission." + name + "\"/>");
+      usesPermissions += "    <uses-permission android:name=\"android.permission." + name + "\"/>\n"; 
     }
     
-    writer.println("    <application");
-    writer.println("        android:allowBackup=\"true\"");
-    writer.println("        android:icon=\"@drawable/icon\"");
-    writer.println("        android:label=\"" + className + "\"");
-    writer.println("        android:supportsRtl=\"true\"");
-    writer.println("        android:theme=\"@android:style/Theme.Translucent.NoTitleBar\"");
-    writer.println("        android:noHistory=\"true\"");
-    writer.println("        android:excludeFromRecents=\"true\">");
-    writer.println("        <meta-data android:name=\"com.google.android.wearable.beta.app\"");
-    writer.println("                   android:resource=\"@xml/wearable_app_desc\"/>");
-    writer.println("        <activity android:name=\".HandheldActivity\">");
-    writer.println("            <intent-filter>");
-    writer.println("                <action android:name=\"android.intent.action.MAIN\"/>");
-    writer.println("                <category android:name=\"android.intent.category.LAUNCHER\"/>");
-    writer.println("            </intent-filter>");
-    writer.println("        </activity>");
-    writer.println("    </application>");
-    writer.println("</manifest>");    
-    writer.flush();
-    writer.close();
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@version_code@@", versionCode);
+    replaceMap.put("@@version_name@@", versionName);
+    replaceMap.put("@@class_name@@", className);
+    replaceMap.put("@@uses_permissions@@", usesPermissions);
+        
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
   }  
     
   private void writeHandheldLayout(final File file) {
@@ -879,89 +856,6 @@ class AndroidBuild extends JavaBuild {
     if (alignedPackage.exists()) return alignedPackage;
     return null;
   }
-
-  /*
-  // SDK tools 17 have a problem where 'dex' won't pick up the libs folder
-  // (which contains our friend processing-core.jar) unless your current
-  // working directory is the same as the build file. So this is an unpleasant
-  // workaround, at least until things are fixed or we hear of a better way.
-  // This was fixed in SDK 19 (and Processing revision 0205) so we've now
-  // disabled this portion of the code.
-  protected boolean antBuild_dexworkaround() throws SketchException {
-    try {
-//      ProcessHelper helper = new ProcessHelper(tmpFolder, new String[] { "ant", target });
-      // Windows doesn't include full paths, so make 'em happen.
-      String cp = System.getProperty("java.class.path");
-      String[] cpp = PApplet.split(cp, File.pathSeparatorChar);
-      for (int i = 0; i < cpp.length; i++) {
-        cpp[i] = new File(cpp[i]).getAbsolutePath();
-      }
-      cp = PApplet.join(cpp, File.pathSeparator);
-
-      // Since Ant may or may not be installed, call it from the .jar file,
-      // though hopefully 'java' is in the classpath.. Given what we do in
-      // processing.mode.java.runner (and it that it works), should be ok.
-      String[] cmd = new String[] {
-        "java",
-        "-cp", cp, //System.getProperty("java.class.path"),
-        "org.apache.tools.ant.Main", target
-//        "ant", target
-      };
-      ProcessHelper helper = new ProcessHelper(tmpFolder, cmd);
-      ProcessResult pr = helper.execute();
-      if (pr.getResult() != 0) {
-//        System.err.println("mo builds, mo problems");
-        System.err.println(pr.getStderr());
-        System.out.println(pr.getStdout());
-        // the actual javac errors and whatnot go to stdout
-        antBuildProblems(pr.getStdout(), pr.getStderr());
-        return false;
-      }
-
-    } catch (InterruptedException e) {
-      return false;
-
-    } catch (IOException e) {
-      e.printStackTrace();
-      return false;
-    }
-    return true;
-  }
-  */
-
-
-  /*
-  public class HopefullyTemporaryWorkaround extends org.apache.tools.ant.Main {
-
-    protected void exit(int exitCode) {
-      // I want to exit, but let's not System.exit()
-      System.out.println("gonna exit");
-      System.out.flush();
-      System.err.flush();
-    }
-  }
-
-
-  protected boolean antBuild() throws SketchException {
-    String[] cmd = new String[] {
-      "-main", "processing.mode.android.HopefullyTemporaryWorkaround",
-      "-Duser.dir=" + tmpFolder.getAbsolutePath(),
-      "-logfile", "/Users/fry/Desktop/ant-log.txt",
-      "-verbose",
-      "-help",
-//      "debug"
-    };
-    HopefullyTemporaryWorkaround.main(cmd);
-    return true;
-//    ProcessResult listResult =
-//      new ProcessHelper("ant", "debug", tmpFolder).execute();
-//    if (listResult.succeeded()) {
-//      boolean badness = false;
-//      for (String line : listResult) {
-//      }
-//    }
-  }
-  */
 
 
   protected boolean antBuild() throws SketchException {
@@ -1507,7 +1401,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
-    createSourceFromTemplate(javaTemplate, javaFile, replaceMap);
+    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
   
   
@@ -1520,7 +1414,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
-    createSourceFromTemplate(javaTemplate, javaFile, replaceMap); 
+    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
   
   
@@ -1534,7 +1428,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
-    createSourceFromTemplate(javaTemplate, javaFile, replaceMap);     
+    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
 
   
@@ -1548,7 +1442,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
-    createSourceFromTemplate(javaTemplate, javaFile, replaceMap); 
+    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }  
   
   
@@ -1562,70 +1456,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
-    createSourceFromTemplate(javaTemplate, javaFile, replaceMap); 
-  }
-
-  
-  private void writeActivityPermissionHandlers(final PrintWriter writer, String[] permissions) {
-    if (permissions.length == 0) return;
-    
-    // Requesting permissions from user when the app resumes.
-    // Nice example on how to handle user response
-    // http://stackoverflow.com/a/35495855   
-    // More on permission in Android 23:
-    // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
-    writer.println("  @Override");
-    writer.println("  public void onStart() {");
-    writer.println("    super.onStart();");    
-    writer.println("    ArrayList<String> needed = new ArrayList<String>();");
-    writer.println("    int check;");
-    writer.println("    boolean danger = false;");
-    for (String p: permissions) {
-      for (String d: Permissions.dangerous) {
-        if (d.equals(p)) {
-          writer.println("    check = ContextCompat.checkSelfPermission(this, Manifest.permission." + p + ");");
-          writer.println("    if (check != PackageManager.PERMISSION_GRANTED) {");
-          writer.println("      needed.add(Manifest.permission." + p + ");");
-          writer.println("    } else {");
-          writer.println("      danger = true;");
-          writer.println("    }");
-        }
-      }
-    }
-    writer.println("    if (!needed.isEmpty()) {");
-    writer.println("      ActivityCompat.requestPermissions(this, needed.toArray(new String[needed.size()]), REQUEST_PERMISSIONS);");
-    writer.println("    } else if (danger) {");
-    writer.println("      onPermissionsGranted();");
-    writer.println("    }");
-    writer.println("  }");    
-    
-    // The event handler for the permission result
-    writer.println("  @Override");
-    writer.println("  public void onRequestPermissionsResult(int requestCode,");
-    writer.println("                                         String permissions[], int[] grantResults) {");      
-    writer.println("    if (requestCode == REQUEST_PERMISSIONS) {");      
-    writer.println("      if (grantResults.length > 0) {");
-    writer.println("        boolean granted = true;");    
-    writer.println("        for (int i = 0; i < grantResults.length; i++) {");    
-    writer.println("          if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {");
-    writer.println("            granted = false;");
-    writer.println("            break;"); 
-//    writer.println("            AlertDialog.Builder builder = new AlertDialog.Builder(this);");
-//    writer.println("            builder.setMessage(\"The app cannot run without these permissions, will quit now.\")");
-//    writer.println("                   .setCancelable(false)");
-//    writer.println("                   .setPositiveButton(\"OK\", new DialogInterface.OnClickListener() {");
-//    writer.println("                        public void onClick(DialogInterface dialog, int id) {");
-//    writer.println("                          finish();");    
-//    writer.println("                        }");
-//    writer.println("                   });");
-//    writer.println("            AlertDialog alert = builder.create();");
-//    writer.println("            alert.show();");
-    writer.println("          }");
-    writer.println("        }");
-    writer.println("        if (granted) onPermissionsGranted();");
-    writer.println("      }");
-    writer.println("    }");    
-    writer.println("  }");   
+    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
 
   
@@ -1694,75 +1525,8 @@ class AndroidBuild extends JavaBuild {
     permissionsStr = "{" + permissionsStr + "}";   
     return permissionsStr;
   }
-  
-  
-  private void createSourceFromTemplate(final File javaTemplate, final File javaFile, 
-      final HashMap<String, String> replaceMap) {
-    PrintWriter pw = PApplet.createWriter(javaFile);    
-    String lines[] = PApplet.loadStrings(javaTemplate);
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf("@@") != -1) {
-        StringBuilder sb = new StringBuilder(lines[i]);
-        int index = 0;
-        for (String key: replaceMap.keySet()) {
-          String val = replaceMap.get(key);
-          while ((index = sb.indexOf(key)) != -1) {
-            sb.replace(index, index + key.length(), val);
-          }          
-        }    
-        lines[i] = sb.toString();
-      }
-      // explicit newlines to avoid Windows CRLF
-      pw.print(lines[i] + "\n");
-    }
-    pw.flush();
-    pw.close();    
-  }  
-  
-  
-/*
-  private void writeResLayoutMainFragment(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("              android:orientation=\"vertical\"");
-    writer.println("              android:layout_width=\"fill_parent\"");
-    writer.println("              android:layout_height=\"fill_parent\">");
-    writer.println("</LinearLayout>");
-  }
-*/
+ 
 
-  // This recommended to be a string resource so that it can be localized.
-  // nah.. we're gonna be messing with it in the GUI anyway...
-  // people can edit themselves if they need to
-//  private static void writeResValuesStrings(final File file,
-//                                            final String className) {
-//    final PrintWriter writer = PApplet.createWriter(file);
-//    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-//    writer.println("<resources>");
-//    writer.println("  <string name=\"app_name\">" + className + "</string>");
-//    writer.println("</resources>");
-//    writer.flush();
-//    writer.close();
-//  }
-
-/*
-  private void copySupportV4(File libsFolder) throws SketchException {
-    File sdkLocation = sdk.getSdkFolder();
-    File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
-    if (!supportV4Jar.exists()) {
-      SketchException sketchException =
-          new SketchException("Please install support repository from SDK manager");
-      throw sketchException;
-    } else {
-      try {
-        Base.copyFile(supportV4Jar, new File(libsFolder, "android-support-v4.jar"));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-*/
   /**
    * For each library, copy .jar and .zip files to the 'libs' folder,
    * and copy anything else to the 'assets' folder.
@@ -1804,54 +1568,8 @@ class AndroidBuild extends JavaBuild {
       }
     }
   }
-//  private void copyLibraries(final File libsFolder,
-//                             final File assetsFolder) throws IOException {
-//    // Copy any libraries to the 'libs' folder
-//    for (Library library : getImportedLibraries()) {
-//      File libraryFolder = new File(library.getPath());
-//      // in the list is a File object that points the
-//      // library sketch's "library" folder
-//      final File exportSettings = new File(libraryFolder, "export.txt");
-//      final HashMap<String, String> exportTable =
-//        Base.readSettings(exportSettings);
-//      final String androidList = exportTable.get("android");
-//      String exportList[] = null;
-//      if (androidList != null) {
-//        exportList = PApplet.splitTokens(androidList, ", ");
-//      } else {
-//        exportList = libraryFolder.list();
-//      }
-//      for (int i = 0; i < exportList.length; i++) {
-//        exportList[i] = PApplet.trim(exportList[i]);
-//        if (exportList[i].equals("") || exportList[i].equals(".")
-//            || exportList[i].equals("..")) {
-//          continue;
-//        }
-//
-//        final File exportFile = new File(libraryFolder, exportList[i]);
-//        if (!exportFile.exists()) {
-//          System.err.println("File " + exportList[i] + " does not exist");
-//        } else if (exportFile.isDirectory()) {
-//          System.err.println("Ignoring sub-folder \"" + exportList[i] + "\"");
-//        } else {
-//          final String name = exportFile.getName();
-//          final String lcname = name.toLowerCase();
-//          if (lcname.endsWith(".zip") || lcname.endsWith(".jar")) {
-//            // As of r4 of the Android SDK, it looks like .zip files
-//            // are ignored in the libs folder, so rename to .jar
-//            final String jarName =
-//              name.substring(0, name.length() - 4) + ".jar";
-//            Base.copyFile(exportFile, new File(libsFolder, jarName));
-//          } else {
-//            // just copy other files over directly
-//            Base.copyFile(exportFile, new File(assetsFolder, name));
-//          }
-//        }
-//      }
-//    }
-//  }
 
-
+  
   private void copyCodeFolder(final File libsFolder) throws IOException {
     // Copy files from the 'code' directory into the 'libs' folder
     final File codeFolder = sketch.getCodeFolder();
@@ -1880,8 +1598,181 @@ class AndroidBuild extends JavaBuild {
     //rm(tempBuildFolder);
     tmpFolder.deleteOnExit();
   }
+  
+  
+  // Some leftovers from earlier versions of the mode, probably should remove at some point...
+  /*
+  // SDK tools 17 have a problem where 'dex' won't pick up the libs folder
+  // (which contains our friend processing-core.jar) unless your current
+  // working directory is the same as the build file. So this is an unpleasant
+  // workaround, at least until things are fixed or we hear of a better way.
+  // This was fixed in SDK 19 (and Processing revision 0205) so we've now
+  // disabled this portion of the code.
+  protected boolean antBuild_dexworkaround() throws SketchException {
+    try {
+//      ProcessHelper helper = new ProcessHelper(tmpFolder, new String[] { "ant", target });
+      // Windows doesn't include full paths, so make 'em happen.
+      String cp = System.getProperty("java.class.path");
+      String[] cpp = PApplet.split(cp, File.pathSeparatorChar);
+      for (int i = 0; i < cpp.length; i++) {
+        cpp[i] = new File(cpp[i]).getAbsolutePath();
+      }
+      cp = PApplet.join(cpp, File.pathSeparator);
+
+      // Since Ant may or may not be installed, call it from the .jar file,
+      // though hopefully 'java' is in the classpath.. Given what we do in
+      // processing.mode.java.runner (and it that it works), should be ok.
+      String[] cmd = new String[] {
+        "java",
+        "-cp", cp, //System.getProperty("java.class.path"),
+        "org.apache.tools.ant.Main", target
+//        "ant", target
+      };
+      ProcessHelper helper = new ProcessHelper(tmpFolder, cmd);
+      ProcessResult pr = helper.execute();
+      if (pr.getResult() != 0) {
+//        System.err.println("mo builds, mo problems");
+        System.err.println(pr.getStderr());
+        System.out.println(pr.getStdout());
+        // the actual javac errors and whatnot go to stdout
+        antBuildProblems(pr.getStdout(), pr.getStderr());
+        return false;
+      }
+
+    } catch (InterruptedException e) {
+      return false;
+
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+    return true;
+  }
+
+  public class HopefullyTemporaryWorkaround extends org.apache.tools.ant.Main {
+
+    protected void exit(int exitCode) {
+      // I want to exit, but let's not System.exit()
+      System.out.println("gonna exit");
+      System.out.flush();
+      System.err.flush();
+    }
+  }
+
+
+  protected boolean antBuild() throws SketchException {
+    String[] cmd = new String[] {
+      "-main", "processing.mode.android.HopefullyTemporaryWorkaround",
+      "-Duser.dir=" + tmpFolder.getAbsolutePath(),
+      "-logfile", "/Users/fry/Desktop/ant-log.txt",
+      "-verbose",
+      "-help",
+//      "debug"
+    };
+    HopefullyTemporaryWorkaround.main(cmd);
+    return true;
+//    ProcessResult listResult =
+//      new ProcessHelper("ant", "debug", tmpFolder).execute();
+//    if (listResult.succeeded()) {
+//      boolean badness = false;
+//      for (String line : listResult) {
+//      }
+//    }
+  }
+  
+   private void copyLibraries(final File libsFolder,
+                             final File assetsFolder) throws IOException {
+    // Copy any libraries to the 'libs' folder
+    for (Library library : getImportedLibraries()) {
+      File libraryFolder = new File(library.getPath());
+      // in the list is a File object that points the
+      // library sketch's "library" folder
+      final File exportSettings = new File(libraryFolder, "export.txt");
+      final HashMap<String, String> exportTable =
+        Base.readSettings(exportSettings);
+      final String androidList = exportTable.get("android");
+      String exportList[] = null;
+      if (androidList != null) {
+        exportList = PApplet.splitTokens(androidList, ", ");
+      } else {
+        exportList = libraryFolder.list();
+      }
+      for (int i = 0; i < exportList.length; i++) {
+        exportList[i] = PApplet.trim(exportList[i]);
+        if (exportList[i].equals("") || exportList[i].equals(".")
+            || exportList[i].equals("..")) {
+          continue;
+        }
+
+        final File exportFile = new File(libraryFolder, exportList[i]);
+        if (!exportFile.exists()) {
+          System.err.println("File " + exportList[i] + " does not exist");
+        } else if (exportFile.isDirectory()) {
+          System.err.println("Ignoring sub-folder \"" + exportList[i] + "\"");
+        } else {
+          final String name = exportFile.getName();
+          final String lcname = name.toLowerCase();
+          if (lcname.endsWith(".zip") || lcname.endsWith(".jar")) {
+            // As of r4 of the Android SDK, it looks like .zip files
+            // are ignored in the libs folder, so rename to .jar
+            final String jarName =
+              name.substring(0, name.length() - 4) + ".jar";
+            Base.copyFile(exportFile, new File(libsFolder, jarName));
+          } else {
+            // just copy other files over directly
+            Base.copyFile(exportFile, new File(assetsFolder, name));
+          }
+        }
+      }
+    }
+  } 
+  
+  private void writeResLayoutMainFragment(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+    writer.println("              android:orientation=\"vertical\"");
+    writer.println("              android:layout_width=\"fill_parent\"");
+    writer.println("              android:layout_height=\"fill_parent\">");
+    writer.println("</LinearLayout>");
+  }
+
+
+  // This recommended to be a string resource so that it can be localized.
+  // nah.. we're gonna be messing with it in the GUI anyway...
+  // people can edit themselves if they need to
+  private static void writeResValuesStrings(final File file,
+                                            final String className) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    writer.println("<resources>");
+    writer.println("  <string name=\"app_name\">" + className + "</string>");
+    writer.println("</resources>");
+    writer.flush();
+    writer.close();
+  }
+
+  private void copySupportV4(File libsFolder) throws SketchException {
+    File sdkLocation = sdk.getSdkFolder();
+    File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
+    if (!supportV4Jar.exists()) {
+      SketchException sketchException =
+          new SketchException("Please install support repository from SDK manager");
+      throw sketchException;
+    } else {
+      try {
+        Base.copyFile(supportV4Jar, new File(libsFolder, "android-support-v4.jar"));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+  
+  */
 }
 
+/*
+// How to prevent the System.exit() call, could be useful...
 // http://www.avanderw.co.za/preventing-calls-to-system-exit-in-java/
 class SystemExitControl {
 
@@ -1905,3 +1796,4 @@ class SystemExitControl {
     System.setSecurityManager(null);
   }
 }
+*/

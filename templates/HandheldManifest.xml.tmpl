@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>    
+<manifest package="@@package_name@@"
+          android:versionCode="@@version_code@@" android:versionName="@@version_name@@"    
+          xmlns:android="http://schemas.android.com/apk/res/android">
+    @@uses_permissions@@
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
+        android:label="@@class_name@@"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:noHistory="true"
+        android:excludeFromRecents="true">
+        <meta-data android:name="com.google.android.wearable.beta.app"
+                   android:resource="@xml/wearable_app_desc"/>
+        <activity android:name=".HandheldActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>   

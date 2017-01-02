@@ -41,9 +41,11 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -351,6 +353,29 @@ public class AndroidMode extends JavaMode {
     }
   }
 
+  public static void createFileFromTemplate(final File tmplFile, final File destFile, 
+      final HashMap<String, String> replaceMap) {
+    PrintWriter pw = PApplet.createWriter(destFile);    
+    String lines[] = PApplet.loadStrings(tmplFile);
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf("@@") != -1) {
+        StringBuilder sb = new StringBuilder(lines[i]);
+        int index = 0;
+        for (String key: replaceMap.keySet()) {
+          String val = replaceMap.get(key);
+          while ((index = sb.indexOf(key)) != -1) {
+            sb.replace(index, index + key.length(), val);
+          }          
+        }    
+        lines[i] = sb.toString();
+      }
+      // explicit newlines to avoid Windows CRLF
+      pw.print(lines[i] + "\n");
+    }
+    pw.flush();
+    pw.close();    
+  }    
+  
   public static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
     int BUFFER = 2048;
     ZipFile zip = new ZipFile(file);
@@ -400,64 +425,4 @@ public class AndroidMode extends JavaMode {
     }
     zip.close();
   }
-//  public void handleExport(Sketch sketch, )
-
-
-  /*
-  protected void buildReleaseForExport(Sketch sketch, String target) throws MonitorCanceled {
-//    final IndeterminateProgressMonitor monitor =
-//      new IndeterminateProgressMonitor(this,
-//                                       "Building and exporting...",
-//                                       "Creating project...");
-    try {
-      AndroidBuild build = new AndroidBuild(sketch, sdk);
-      File tempFolder = null;
-      try {
-        tempFolder = build.createProject(target, getCoreZipLocation());
-        if (tempFolder == null) {
-          return;
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (SketchException se) {
-        se.printStackTrace();
-      }
-      try {
-        if (monitor.isCanceled()) {
-          throw new MonitorCanceled();
-        }
-        monitor.setNote("Building release version...");
-//        if (!build.antBuild("release")) {
-//          return;
-//        }
-
-        if (monitor.isCanceled()) {
-          throw new MonitorCanceled();
-        }
-
-        // If things built successfully, copy the contents to the export folder
-        File exportFolder = build.createExportFolder();
-        if (exportFolder != null) {
-          Base.copyDir(tempFolder, exportFolder);
-          listener.statusNotice("Done with export.");
-          Base.openFolder(exportFolder);
-        } else {
-          listener.statusError("Could not copy files to export folder.");
-        }
-      } catch (IOException e) {
-        listener.statusError(e);
-
-      } finally {
-        build.cleanup();
-      }
-    } finally {
-      monitor.close();
-    }
-  }
-
-
-  @SuppressWarnings("serial")
-  private static class MonitorCanceled extends Exception {
-  }
-  */
 }
