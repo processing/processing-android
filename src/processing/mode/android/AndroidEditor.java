@@ -244,7 +244,7 @@ public class AndroidEditor extends JavaEditor {
     item = new JMenuItem("Sketch Permissions");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        new Permissions(sketch, appComponent);
+        new Permissions(sketch, appComponent, androidMode.getFolder());
       }
     });
     menu.add(item);

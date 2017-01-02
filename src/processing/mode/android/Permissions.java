@@ -26,6 +26,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -55,13 +56,16 @@ public class Permissions extends JFrame {
   Sketch sketch;
   
   int appComp;
+  
+  File modeFolder;
 
 
-  public Permissions(Sketch sketch, int appComp) {
+  public Permissions(Sketch sketch, int appComp, File modeFolder) {
   //public Permissions(Editor editor) {
     super("Android Permissions Selector");
     this.appComp = appComp;
     this.sketch = sketch;
+    this.modeFolder = modeFolder;
 //    this.editor = editor;
 
 //    XMLElement xml =
@@ -296,7 +300,7 @@ public class Permissions extends JFrame {
     setLocation((screen.width - windowSize.width) / 2,
                 (screen.height - windowSize.height) / 2);
 
-    Manifest mf = new Manifest(sketch, appComp, false);
+    Manifest mf = new Manifest(sketch, appComp, modeFolder, false);
     setSelections(mf.getPermissions());
 
     // show the window and get to work
@@ -336,7 +340,7 @@ public class Permissions extends JFrame {
 
   protected void saveSelections() {
     String[] sel = getSelections();
-    Manifest mf = new Manifest(sketch, appComp, false);
+    Manifest mf = new Manifest(sketch, appComp, modeFolder, false);
     mf.setPermissions(sel);
   }
 

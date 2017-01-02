@@ -77,10 +77,10 @@ public class Manifest {
 //    this.sketch = editor.getSketch();
 //    load();
 //  }
-  public Manifest(Sketch sketch, int appComp, File folder, boolean forceNew) {
+  public Manifest(Sketch sketch, int appComp, File modeFolder, boolean forceNew) {
     this.sketch = sketch;
     this.appComp = appComp;
-    this.modeFolder = folder;
+    this.modeFolder = modeFolder;
     load(forceNew);
   }
 
