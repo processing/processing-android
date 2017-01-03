@@ -1,5 +1,8 @@
 Collection of utility scripts that I put here for the lack of a better place.
 
+compat-update.sh: generates the appcompat zip file containing the appcompat v7 package
+found in the Android SDK's extras folder
+
 perm-parse.py: generates the array of permissions for a given SDK level, to be pasted in
 Permissions.java
 
