@@ -1,7 +1,11 @@
-Collection of utility scripts that I put here for the lack of a better place.
+Collection of utility scripts that I put here for the lack of a better place. They 
+probably should become tasks/targets in the gradle/ant build scripts at some point.
 
 compat-update.sh: generates the appcompat zip file containing the appcompat v7 package
 found in the Android SDK's extras folder
+
+gvrsdk-update.sh: downloads the Google VR SDK and generates all required packages and jar
+files needed to build and run cardboard sketches from Processing
 
 perm-parse.py: generates the array of permissions for a given SDK level, to be pasted in
 Permissions.java
