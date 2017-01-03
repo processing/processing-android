@@ -44,20 +44,25 @@
   <target name="dist" depends="build" description="Creates distribution package">
     <mkdir dir="dist/tmp/cardboard" />
     
-   	<!-- copy library files (jar and gstreamer natives) -->
+   	<!-- copy library files (jar and natives) -->
   	<copy todir="dist/tmp/cardboard/library">
   		<fileset dir="library" />
-	</copy>
+	  </copy>
     
   	<!-- copy examples -->
   	<copy todir="dist/tmp/cardboard/examples">
   		<fileset dir="examples" />
-	</copy>
+	  </copy>
 
   	<!-- copy source -->
     <copy todir="dist/tmp/cardboard/src">
   		<fileset dir="src" />
-	</copy>	
+	  </copy>	
+
+  	<!-- copy GVR SDK (needed by the mode to build the carboard app) -->
+    <copy todir="dist/tmp/cardboard/gvrsdk">
+  		<fileset dir="gvrsdk" />
+	  </copy>	
   	
     <!-- copy properties -->
     <copy file="library.properties" tofile="dist/tmp/cardboard/library.properties" />

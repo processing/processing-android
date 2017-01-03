@@ -353,9 +353,9 @@ class AndroidBuild extends JavaBuild {
         ////////////////////////////////////////////////////////////////////////
         // first step: unpack the cardboard packages in the project's 
         // libs folder:        
-        File audioZipFile = mode.getContentFile("libraries/cardboard/library/cardboard_audio.zip");
-        File commonZipFile = mode.getContentFile("libraries/cardboard/library/cardboard_common.zip");
-        File coreZipFile = mode.getContentFile("libraries/cardboard/library/cardboard_core.zip");
+        File audioZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/cardboard_audio.zip");
+        File commonZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/cardboard_common.zip");
+        File coreZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/cardboard_core.zip");
         AndroidMode.extractFolder(audioZipFile, libsFolder, true);        
         AndroidMode.extractFolder(commonZipFile, libsFolder, true);        
         AndroidMode.extractFolder(coreZipFile, libsFolder, true);
