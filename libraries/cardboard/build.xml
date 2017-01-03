@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<project name="Processing Cardboard Library" default="build">
+
+  <property name="processing.dir" value="../../../processing" />
+  <property environment="env"/>
+
+  <target name="clean" description="Clean the build directories">
+    <delete dir="bin" />
+    <delete file="library/cardboard.jar" />
+  </target>
+
+  <target name="build" depends="sdk_chatter,compile" description="Build cardboard library for Processing Android" >
+  	<jar basedir="bin" destfile="library/cardboard.jar" />
+  </target>
+
+  <target name="sdk_chatter" unless="env.ANDROID_SDK">
+    <echo message="ANDROID_SDK not set, skipping build." />
+  </target>
+
+  <target name="compile" description="Compile sources">
+    <condition property="core-built">
+      <available file="../../android-core.zip" />
+    </condition>
+    <fail unless="core-built" message="Please build the core library first and make sure it sits in ../../android-core.zip" />
+
+    <mkdir dir="bin" />
+    <javac source="1.7"
+	   target="1.7" 
+	   srcdir="src" destdir="bin"
+	   encoding="UTF-8"
+	   includeAntRuntime="false"
+	   classpath="lib/cardboard-audio-classes.jar;
+	              lib/cardboard-common-classes.jar;
+	              lib/cardboard-core-classes.jar;
+	              ../../android-core.zip;
+	              ${env.ANDROID_SDK}/platforms/android-23/android.jar"
+	   nowarn="true"
+	   compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
+      <compilerclasspath path="../../../processing/java/mode/org.eclipse.jdt.core.jar;
+                               ../../../processing/java/mode/jdtCompilerAdapter.jar" />
+    </javac>
+  </target>
+
+  <target name="dist" depends="build" description="Creates distribution package">
+    <mkdir dir="dist/tmp/cardboard" />
+    
+   	<!-- copy library files (jar and gstreamer natives) -->
+  	<copy todir="dist/tmp/cardboard/library">
+  		<fileset dir="library" />
+	</copy>
+    
+  	<!-- copy examples -->
+  	<copy todir="dist/tmp/cardboard/examples">
+  		<fileset dir="examples" />
+	</copy>
+
+  	<!-- copy source -->
+    <copy todir="dist/tmp/cardboard/src">
+  		<fileset dir="src" />
+	</copy>	
+  	
+    <!-- copy properties -->
+    <copy file="library.properties" tofile="dist/tmp/cardboard/library.properties" />
+    
+    <!-- create the java reference of the library -->
+    <!--
+    <mkdir dir="dist/tmp/video_android/reference" />
+	<javadoc bottom="Processing video library by The Processing Foundation. (c) 2011-14"
+			classpath="../processing/core/library/core.jar;bin" 
+			destdir="dist/tmp/video_android/reference"
+			verbose="false" 
+			stylesheetfile="resources/stylesheet.css" 
+			doctitle="Javadocs: Video library for Android"
+			public="true" version="false" 
+			windowtitle="Javadocs: Video library for Android">
+ 		<link href="http://java.sun.com/javase/6/docs/api/" />
+		<link href="http://github.com/omerjerk" />
+		<taglet name="ExampleTaglet" path="resources/code" />
+ 		<fileset dir="dist/tmp/video/src" defaultexcludes="yes"> 
+			<include name="**/*"/>
+		</fileset>
+	</javadoc>    -->
+        
+    <!-- create zip package -->
+    <delete file="dist/cardboard.zip"/>
+	<zip destfile="dist/cardboard.zip"
+  		basedir="dist/tmp"
+  		excludes="**/.DS_Store"
+	/>
+	
+	<!-- copy properties to use by download manager -->
+    <copy file="library.properties" tofile="dist/cardboard.txt" />
+	
+	<delete dir="dist/tmp" />
+  </target>
+</project>

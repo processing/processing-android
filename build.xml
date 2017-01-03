@@ -10,17 +10,12 @@
   <property name="mode.dist.path" value="release/AndroidMode.zip" />
   <property name="tools.jar.path" value="mode/tools.jar" />
   
-  <target name="clean" description="Clean the build directories">
+  <target name="clean" depends="subprojects-clean" description="Clean the build directories">
     <delete dir="bin" />
     <delete file="${mode.jar.path}" />
-
-    <!-- clean the core.jar project for Android -->
-    <subant buildpath="core" target="clean"/>
   </target>
 
-  <target name="compile" description="Compile sources">
-    <!-- build the core.jar file for Android -->
-    <subant buildpath="core" target="build"/>
+  <target name="compile" depends="subprojects-build" description="Compile sources">
 
     <condition property="core-built">
       <available file="${processing.dir}/core/library/core.jar" />
@@ -42,12 +37,12 @@
 	   encoding="UTF-8" 
 	   includeAntRuntime="false"
  	   classpath="${processing.dir}/core/library/core.jar;
- 	          ${processing.dir}/java/mode/JavaMode.jar; 
-		      ${processing.dir}/java/mode/antlr.jar;
-		      ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
-		      ${processing.dir}/app/pde.jar;
-		      ${processing.dir}/app/lib/ant.jar;
-		      ${processing.dir}/app/lib/ant-launcher.jar"
+ 	              ${processing.dir}/java/mode/JavaMode.jar; 
+      		      ${processing.dir}/java/mode/antlr.jar;
+		            ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
+                ${processing.dir}/app/pde.jar;
+                ${processing.dir}/app/lib/ant.jar;
+                ${processing.dir}/app/lib/ant-launcher.jar"
 	   debug="on">
       <src path="src" />
     </javac>
@@ -88,43 +83,35 @@
 
     <zip destfile="${mode.dist.path}">
       <zipfileset dir="." prefix="AndroidMode">
-	<include name="android-core.zip" />
-	<include name="mode.properties" />	
-	<include name="mode/**" />
-	<include name="templates/**" />	
-	<include name="examples/**" />
-	<include name="icons/**" />
-	<include name="theme/**" />
-	<exclude name="**/._*" />
+	      <include name="android-core.zip" />
+        <include name="mode.properties" />	
+        <include name="mode/**" />
+        <include name="templates/**" />	
+        <include name="examples/**" />
+        <include name="icons/**" />
+        <include name="theme/**" />
+        <include name="libraries/**" />        
+        <exclude name="**/._*" />
       </zipfileset>
     </zip>
 
     <copy file="mode.properties" 
-	  tofile="release/AndroidMode.txt" />
+          tofile="release/AndroidMode.txt" />
   </target>
 
-
-  <target name="upload" depends="dist" description="Upload to processing.org">
-
-    <!-- Technically more cross-platform compatible, but requires 
-	 extra jars in the ant libsfolder. Which is... not. -->
-<!--
-    <scp todir="${user}@processing.org:/var/www/web/download/">
-      <fileset dir="release">
-	<include name="AndroidMode.txt" />
-	<include name="AndroidMode.zip" />
-      </fileset>
-    </scp>
--->
-
-    <exec executable="scp">
-      <arg value="release/AndroidMode.txt" />
-      <arg value="${user.name}@processing.org:/var/www/android/" />
-    </exec>
-    <exec executable="scp">
-      <arg value="release/AndroidMode.zip" />
-      <arg value="${user.name}@processing.org:/var/www/android/" />
-    </exec>
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- Subprojects: Core, Libraries -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+  
+  <target name="subprojects-clean">
+    <subant buildpath="core" target="clean"/>
+    <subant buildpath="libraries/cardboard" target="clean"/>    
   </target>
+    
+  <target name="subprojects-build">
+    <subant buildpath="core" target="build"/>
+    <subant buildpath="libraries/cardboard" target="build"/>    
+  </target>
+  
 
 </project>
