@@ -12,8 +12,6 @@ buildscript {
 
 apply plugin: 'java'
 
-
-
 allprojects {
     apply plugin: 'java'
     // Find location of android jar relative to ANDROID_HOME
@@ -29,11 +27,10 @@ allprojects {
     targetCompatibility = 1.7
 }
 
-
-
 dependencies {
     compile name: 'android'
     compile project(":core")
+    compile project(":libraries:cardboard")
     compile group: 'org.processing', name: 'core', version: '3.2.3'
     compile group: 'org.processing', name: 'pde', version: '3.2.3'
     compile group: 'org.processing', name: 'java-mode', version: '3.2.3'
@@ -47,7 +44,6 @@ sourceSets {
     }
 }
 
-
 import java.nio.file.Files
 import org.zeroturnaround.zip.ZipUtil
 import org.apache.commons.io.FileUtils
@@ -56,6 +52,7 @@ import static java.nio.file.StandardCopyOption.*;
 task dist {
     try {
         def root = "$buildDir/zip/AndroidMode"
+        
         // Copy assets to build dir
         FileUtils.copyDirectory(file("templates"), file("$root/templates"))
         FileUtils.copyDirectory(file("examples"), file("$root/examples"))
@@ -77,9 +74,6 @@ task dist {
         ZipUtil.pack(file("$buildDir/zip"), new File("release/AndroidMode.zip"))        
         Files.copy(file("mode.properties").toPath(),
                 file("release/AndroidMode.txt").toPath(), REPLACE_EXISTING);
-        Files.copy(file("core/build/libs/android-core.zip").toPath(),
-                file("android-core.zip").toPath(), REPLACE_EXISTING);
-                                        
     } catch (Exception ex) {
         logger.error ex.getMessage()
     }

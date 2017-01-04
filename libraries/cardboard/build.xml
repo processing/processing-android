@@ -30,8 +30,8 @@
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
 	   classpath="lib/gvr-base.jar;
-                lib/gvr-common.jar;
-                lib/gvr-audio.jar;
+                  lib/gvr-common.jar;
+                  lib/gvr-audio.jar;
 	              ../../android-core.zip;
 	              ${env.ANDROID_SDK}/platforms/android-23/android.jar"
 	   nowarn="true"
