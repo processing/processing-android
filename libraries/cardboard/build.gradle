@@ -1,29 +1,11 @@
-apply plugin: 'java'
-
 buildscript {
     repositories {
-//        mavenCentral()
         jcenter()
     }
     dependencies {
         classpath group: 'commons-io', name: 'commons-io', version: '2.5'
         classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
     }
-}
-
-// Find location of android jar relative to ANDROID_HOME
-def android_platform = "$sdkdir/platforms/android-$sdkver"
-def core_libs_path = "../../core/build/libs"
-
-// Check to see if required API exists
-// TODO: Look for any higher SDK and use it.
-if (!file(android_platform).exists()) {
-    logger.error "Android SDK $sdkver could not be found in $sdkdir"
-}
-
-repositories {
-        //jcenter()
-        flatDir {dirs 'lib', core_libs_path, android_platform}
 }
 
 dependencies {
@@ -45,7 +27,6 @@ sourceSets {
     }
 }
 
-// Create Jar
 jar {    
     manifest {
         attributes(
@@ -56,7 +37,7 @@ jar {
 }
 
 clean.doFirst {
-//    delete "$core_jar_path"
+    delete "library/cardboard.jar"
 }
 
 import groovy.util.AntBuilder
@@ -65,12 +46,9 @@ import static java.nio.file.StandardCopyOption.*;
 
 task dist {
     doLast {
-        // make copy of jar file as zip
-//        Files.copy(file("$buildDir/libs/core.jar").toPath(),
-//                   file("$buildDir/libs/android-core.zip").toPath(), REPLACE_EXISTING);
-                   
-//        Files.copy(file("$buildDir/libs/core.jar").toPath(),
-//                   file("$core_jar_path").toPath(), REPLACE_EXISTING);                   
+        // make copy of jar file to library folder
+        Files.copy(file("$buildDir/libs/cardboard.jar").toPath(),
+                   file("library/cardboard.jar").toPath(), REPLACE_EXISTING);             
     }
 }
 

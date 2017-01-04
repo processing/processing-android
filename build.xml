@@ -90,7 +90,12 @@
         <include name="examples/**" />
         <include name="icons/**" />
         <include name="theme/**" />
-        <include name="libraries/**" />        
+        <include name="libraries/cardboard/library.properties" />        
+        <include name="libraries/cardboard/examples/**" />
+        <include name="libraries/cardboard/gvrsdk/**" />
+        <include name="libraries/cardboard/lib/**" />
+        <include name="libraries/cardboard/library/**" />
+        <include name="libraries/cardboard/src/**" />        
         <exclude name="**/._*" />
       </zipfileset>
     </zip>

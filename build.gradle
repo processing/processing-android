@@ -1,26 +1,27 @@
+apply plugin: 'java'
+
 buildscript {
     repositories {
-        //mavenCentral()
         jcenter()
     }
-
     dependencies {
         classpath group: 'commons-io', name: 'commons-io', version: '2.5'
         classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
     }
 }
 
-apply plugin: 'java'
-
 allprojects {
     apply plugin: 'java'
-    // Find location of android jar relative to ANDROID_HOME
+    
     ext.android_platform = "$sdkdir/platforms/android-$sdkver"
+    ext.core_jar_path = "$rootDir/android-core.zip"
 
     repositories {
         jcenter()
-        //mavenCentral()
-        flatDir { dirs 'core/library', android_platform}
+        flatDir dirs: "$rootDir/core/library"
+        flatDir dirs: "$rootDir/core/build/libs"
+        flatDir dirs: "$rootDir/libraries/cardboard/lib"
+        flatDir dirs: android_platform
     }
 
     sourceCompatibility = 1.7
@@ -70,10 +71,23 @@ task dist {
 
         Files.copy(file("mode.properties").toPath(),
                    file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+        
+        FileUtils.copyDirectory(file("libraries/cardboard/examples"), 
+                                file("$root/libraries/cardboard/examples"))
+        FileUtils.copyDirectory(file("libraries/cardboard/gvrsdk"), 
+                                file("$root/libraries/cardboard/gvrsdk"))
+        FileUtils.copyDirectory(file("libraries/cardboard/lib"), 
+                                file("$root/libraries/cardboard/lib"))    
+        FileUtils.copyDirectory(file("libraries/cardboard/library"), 
+                                file("$root/libraries/cardboard/library"))
+        FileUtils.copyDirectory(file("libraries/cardboard/src"), 
+                                file("$root/libraries/cardboard/src"))
+        Files.copy(file("libraries/cardboard/library.properties").toPath(),
+                   file("$root/libraries/cardboard/library.properties").toPath(), REPLACE_EXISTING);                             
 
         ZipUtil.pack(file("$buildDir/zip"), new File("release/AndroidMode.zip"))        
         Files.copy(file("mode.properties").toPath(),
-                file("release/AndroidMode.txt").toPath(), REPLACE_EXISTING);
+                   file("release/AndroidMode.txt").toPath(), REPLACE_EXISTING);
     } catch (Exception ex) {
         logger.error ex.getMessage()
     }
