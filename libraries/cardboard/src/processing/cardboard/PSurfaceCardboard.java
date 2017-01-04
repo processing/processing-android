@@ -195,7 +195,6 @@ public class PSurfaceCardboard extends PSurfaceGLES {
 
   @Override
   public boolean stopThread() {
-    glview.onPause();
     running = false;
     return true;
   }
