@@ -340,9 +340,9 @@ class AndroidBuild extends JavaBuild {
       // cannot be resolved.
       // TODO: temporary hack until I find a better way to include the wearable aar
       // package included in the SDK:      
-      File wearJarFile = mode.getContentFile("mode/wearable-" + wear_version + "-classes.jar");
+      File wearJarFile = mode.getContentFile("mode/wearable-" + wear_version + ".jar");
       System.out.println(wearJarFile.toString());
-      Util.copyFile(wearJarFile, new File(libsFolder, "wearable" + wear_version + "classes.jar"));
+      Util.copyFile(wearJarFile, new File(libsFolder, "wearable-" + wear_version + ".jar"));
 //    }      
       
       // Copy any imported libraries (their libs and assets),

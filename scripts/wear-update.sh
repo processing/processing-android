@@ -28,8 +28,8 @@ wget http://uiq3.sourceforge.net/Repository/com/google/android/support/wearable/
 # https://developer.android.com/studio/projects/android-library.html
 
 unzip wearable-$version.aar -d wearable
-cp wearable/classes.jar ../core/library/wearable-$version-classes.jar
-cp wearable/classes.jar ../mode/wearable-$version-classes.jar
+cp wearable/classes.jar ../core/library/wearable-$version.jar
+cp wearable/classes.jar ../mode/wearable-$version.jar
 
 # Remove left over files
 rm -Rf wearable

@@ -3,6 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="var" path="ANDROID_LIB"/>
 	<classpathentry kind="lib" path="library/android-support-v4.jar"/>
-	<classpathentry kind="lib" path="library/wearable-1.4.0-classes.jar"/>
+	<classpathentry kind="lib" path="library/wearable-1.4.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

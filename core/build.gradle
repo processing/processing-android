@@ -37,8 +37,8 @@ dependencies {
     // http://mvn.sibext.com/com/google/android/support/wearable/
     // http://uiq3.sourceforge.net/Repository/com/google/android/support/wearable/
     // MavenCentral and JCenter don't seem to have any wearable file.
-    // Use the wear-update script to create a new wearable-$version-classes jar
-    compile name: 'wearable-1.4.0-classes'
+    // Use the wear-update script to create a new wearable-$version jar
+    compile name: 'wearable-1.4.0'
 }
 
 sourceSets {

@@ -42,7 +42,7 @@
 	   includeAntRuntime="false"
 	   bootclasspath="${env.ANDROID_SDK}/platforms/${android.platform}/android.jar;
     	              library/android-support-v4.jar;
-	                  library/wearable-${wear.version}-classes.jar"
+	                  library/wearable-${wear.version}.jar"
 	   srcdir="src" destdir="bin" />
 
     <!-- Copy the shaders to the bin folder. 
