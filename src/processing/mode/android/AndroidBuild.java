@@ -38,6 +38,7 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
+import processing.mode.java.preproc.SurfaceInfo;
 
 import java.io.*;
 import java.util.HashMap;
@@ -228,7 +229,7 @@ class AndroidBuild extends JavaBuild {
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
     // On Android, this init will throw a SketchException if there's a problem with size()
-    preproc.initSketchSize(sketch.getMainProgram());
+    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());
     preproc.initSketchSmooth(sketch.getMainProgram());
     
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
@@ -245,9 +246,7 @@ class AndroidBuild extends JavaBuild {
       final File resFolder = new File(tmpFolder, "res");
       writeRes(resFolder);
 
-      // TODO: it would be great if we can just get the renderer from the SurfaceInfo
-      // object returned by initSketchSize()
-      renderer = preproc.getRenderer(sketch.getMainProgram());
+      renderer = info.getRenderer();
       writeMainClass(srcFolder, renderer);
 
       final File libsFolder = mkdirs(tmpFolder, "libs");

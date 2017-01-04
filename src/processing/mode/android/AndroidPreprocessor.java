@@ -26,24 +26,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 //import java.io.Writer;
 import java.util.List;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
-
 import processing.app.*;
 import processing.core.PApplet;
-import processing.data.StringList;
 import processing.mode.java.preproc.PdePreprocessor;
-//import processing.mode.java.preproc.PreprocessorResult;
 import processing.mode.java.preproc.SurfaceInfo;
-//import antlr.RecognitionException;
-//import antlr.TokenStreamException;
 
 
 public class AndroidPreprocessor extends PdePreprocessor {
-  static private final Pattern VOID_SETUP_REGEX =
-      Pattern.compile("(?:^|\\s|;)void\\s+setup\\s*\\(", Pattern.MULTILINE);
-  static private final Pattern CLOSING_BRACE = Pattern.compile("\\}");  
-  
   protected Sketch sketch;
   protected String packageName;
 
@@ -83,84 +72,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
     sketchRenderer = surfaceInfo.getRenderer();*/
     return surfaceInfo;
   }
-  
-  public String getRenderer(String code) {
-    String uncommented = scrubComments(code);
-    MatchResult setupMatch = findInCurrentScope(VOID_SETUP_REGEX, uncommented);
-    String searchArea = null;
-    if (setupMatch != null) {
-      int start = uncommented.indexOf("{", setupMatch.end());
-      if (start >= 0) {
-        // Find a closing brace
-        MatchResult match = findInCurrentScope(CLOSING_BRACE, uncommented, start);
-        if (match != null) {
-          searchArea = uncommented.substring(start + 1, match.end() - 1);
-        } else {
-          return null;
-        }
-      }
-    }    
-    String[] sizeContents = matchMethod("size", searchArea);
-    String[] fullContents = matchMethod("fullScreen", searchArea);
-    if (sizeContents != null) {
-      StringList args = breakCommas(sizeContents[1]);
-      return (args.size() >= 3) ? args.get(2).trim() : null;
-    }    
-    if (fullContents != null) {
-      StringList args = breakCommas(fullContents[1]);
-      if (args.size() > 0) {  // might have no args
-        String args0 = args.get(0).trim();
-        if (args.size() == 1) {
-          // could be either fullScreen(1) or fullScreen(P2D), figure out which
-          if (args0.equals("SPAN") || PApplet.parseInt(args0, -1) != -1) {
-            // it's the display parameter, not the renderer
-          } else {
-            return args0;
-          }
-        } else if (args.size() == 2) {
-          return args0;
-        } else {
-          return null;
-        }
-      }
-    }
-    return null;
-  }
 
-  static private StringList breakCommas(String contents) {
-    StringList outgoing = new StringList();
-
-    boolean insideQuote = false;
-    // The current word being read
-    StringBuilder current = new StringBuilder();
-    char[] chars = contents.toCharArray();
-    for (int i = 0; i < chars.length; i++) {
-      char c = chars[i];
-      if (insideQuote) {
-        current.append(c);
-        if (c == '\"') {
-          insideQuote = false;
-        }
-      } else {
-        if (c == ',') {
-          if (current.length() != 0) {
-            outgoing.append(current.toString());
-            current.setLength(0);
-          }
-        } else {
-          current.append(c);
-          if (c == '\"') {
-            insideQuote = true;
-          }
-        }
-      }
-    }
-    if (current.length() != 0) {
-      outgoing.append(current.toString());
-    }
-    return outgoing;
-  }  
-  
 
   public String[] initSketchSmooth(String code) throws SketchException {
     String[] info = parseSketchSmooth(code, true);
