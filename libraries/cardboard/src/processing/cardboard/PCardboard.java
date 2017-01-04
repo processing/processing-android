@@ -22,8 +22,8 @@
 
 package processing.cardboard;
 
-import com.google.vrtoolkit.cardboard.CardboardActivity;
-import com.google.vrtoolkit.cardboard.Eye;
+import com.google.vr.sdk.base.GvrActivity;
+import com.google.vr.sdk.base.Eye;
 
 import android.content.Intent;
 import android.util.DisplayMetrics;
@@ -31,7 +31,7 @@ import processing.android.AppComponent;
 import processing.core.PApplet;
 
 // http://pastebin.com/6wPgFYhq
-public class PCardboard extends CardboardActivity implements AppComponent {
+public class PCardboard extends GvrActivity implements AppComponent {
   public static final String STEREO = "processing.cardboard.PGraphicsCardboardStereo";
   public static final String MONO = "processing.cardboard.PGraphicsCardboardMono";
 
@@ -40,7 +40,7 @@ public class PCardboard extends CardboardActivity implements AppComponent {
   public static final int MONOCULAR = Eye.Type.MONOCULAR;
 
   static public final int CARDBOARD = 3;
-  
+
   private DisplayMetrics metrics;
   private PApplet sketch;
 
@@ -67,14 +67,14 @@ public class PCardboard extends CardboardActivity implements AppComponent {
   public int getKind() {
       return CARDBOARD;
   }
-  
+
   public void dispose() {
-  }  
-  
+  }
+
   public void onPermissionsGranted() {
 
   }
-  
+
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
   }
@@ -129,7 +129,7 @@ public class PCardboard extends CardboardActivity implements AppComponent {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    sketch.onDestroy();    
+    sketch.onDestroy();
   }
 
 

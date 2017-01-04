@@ -22,9 +22,9 @@
 
 package processing.cardboard;
 
-import com.google.vrtoolkit.cardboard.Eye;
-import com.google.vrtoolkit.cardboard.HeadTransform;
-import com.google.vrtoolkit.cardboard.Viewport;
+import com.google.vr.sdk.base.Eye;
+import com.google.vr.sdk.base.HeadTransform;
+import com.google.vr.sdk.base.Viewport;
 
 import processing.core.PMatrix3D;
 import processing.opengl.PGL;
@@ -44,11 +44,13 @@ public class PGraphicsCardboard extends PGraphics3D {
   private PMatrix3D perspectiveMatrix;
 
 
+  @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
     return new PGLES(pg);
   }
 
 
+  @Override
   public void beginDraw() {
     super.beginDraw();
     pgl.viewport(viewPort.x, viewPort.y, viewPort.width, viewPort.height);

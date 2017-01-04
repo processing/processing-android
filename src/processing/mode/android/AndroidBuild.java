@@ -38,6 +38,7 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
+
 import java.io.*;
 import java.util.HashMap;
 
@@ -59,6 +60,7 @@ class AndroidBuild extends JavaBuild {
   static private final String WEARABLE_DESCRIPTION_TEMPLATE = "WearableDescription.xml.tmpl";
   static private final String LAYOUT_ACTIVITY_TEMPLATE = "LayoutActivity.xml.tmpl";
   static private final String STYLES_FRAGMENT_TEMPLATE = "StylesFragment.xml.tmpl";
+  static private final String STYLES_CARDBOARD_TEMPLATE = "StylesCardboard.xml.tmpl";
   static private final String XML_WALLPAPER_TEMPLATE = "XMLWallpaper.xml.tmpl";
   static private final String STRINGS_WALLPAPER_TEMPLATE = "StringsWallpaper.xml.tmpl";
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
@@ -82,12 +84,15 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
   static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
   
-  static public final String wear_version = "1.4.0";
-  
   // Hard-coded target SDK, no longer user-selected.
   static public final String target_sdk      = "23";  // Marshmallow (6.0)
   static public final String target_platform = "android-" + target_sdk;
 
+  // Versions of Wear and VR in use 
+  static public final String wear_version = "1.4.0";
+  static public final String gvr_version = "1.10.0";
+  
+  
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
   private boolean rewriteManifest = false;
@@ -353,44 +358,44 @@ class AndroidBuild extends JavaBuild {
         ////////////////////////////////////////////////////////////////////////
         // first step: unpack the cardboard packages in the project's 
         // libs folder:        
-        File audioZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/cardboard_audio.zip");
-        File commonZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/cardboard_common.zip");
-        File coreZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/cardboard_core.zip");
-        AndroidMode.extractFolder(audioZipFile, libsFolder, true);        
+        File baseZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/" + gvr_version + "/vr_base.zip");
+        File commonZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/" + gvr_version + "/vr_common.zip");
+        File audioZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/" + gvr_version + "/vr_audio.zip");
+        AndroidMode.extractFolder(baseZipFile, libsFolder, true);
         AndroidMode.extractFolder(commonZipFile, libsFolder, true);        
-        AndroidMode.extractFolder(coreZipFile, libsFolder, true);
-        File audioLibsFolder = new File(libsFolder, "cardboard_audio");
-        File commonLibsFolder = new File(libsFolder, "cardboard_common");
-        File coreLibsFolder = new File(libsFolder, "cardboard_core");
-        
+        AndroidMode.extractFolder(audioZipFile, libsFolder, true);        
+        File baseLibsFolder = new File(libsFolder, "vr_base");
+        File commonLibsFolder = new File(libsFolder, "vr_common");
+        File audioLibsFolder = new File(libsFolder, "vr_audio");
+
         ////////////////////////////////////////////////////////////////////////
         // second step: create library projects
-        boolean audioRes = createLibraryProject("cardboard_audio", targetID, 
-            audioLibsFolder.getAbsolutePath(), "com.google.vr.cardboard.vrtoolkit.vraudio");
-        boolean commonRes = createLibraryProject("cardboard_common", targetID, 
-            commonLibsFolder.getAbsolutePath(), "com.google.vr.cardboard");
-        boolean coreRes = createLibraryProject("cardboard_core", targetID, 
-            coreLibsFolder.getAbsolutePath(), "com.google.vrtoolkit.cardboard");
+        boolean baseRes = createLibraryProject("vr_base", targetID, 
+            baseLibsFolder.getAbsolutePath(), "com.google.vr.sdk.base");
+        boolean commonRes = createLibraryProject("vr_common", targetID, 
+            commonLibsFolder.getAbsolutePath(), "com.google.vr.cardboard");        
+        boolean audioRes = createLibraryProject("vr_audio", targetID, 
+            audioLibsFolder.getAbsolutePath(), "com.google.vr.sdk.audio");
 
         ////////////////////////////////////////////////////////////////////////
         // third step: reference library projects from main project        
-        if (audioRes && commonRes && coreRes) {
-          System.out.println("Library projects created succesfully in " + libsFolder.toString());
-          audioRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/cardboard_audio");
-          commonRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/cardboard_common");
-          coreRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/cardboard_core");
-          if (audioRes && commonRes && coreRes) {
+        if (baseRes && commonRes && audioRes) {
+          System.out.println("Library projects created succesfully in " + libsFolder.toString());          
+          baseRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/vr_base");
+          commonRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/vr_common");
+          audioRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/vr_audio");
+          if (baseRes && commonRes && audioRes) {
             System.out.println("Library projects referenced succesfully!");
             // Finally, re-write the build files so they use org.eclipse.jdt.core.JDTCompilerAdapter
             // instead of com.sun.tools.javac.Main
             // TODO: use the build file generated by the android tools, and 
             // add the custom section redefining the target
-            File audioBuildFile = new File(audioLibsFolder, "build.xml");
-            writeBuildXML(audioBuildFile, "cardboard_audio");
+            File baseBuildFile = new File(baseLibsFolder, "build.xml");
+            writeBuildXML(baseBuildFile, "vr_base");
             File commonBuildFile = new File(commonLibsFolder, "build.xml");
-            writeBuildXML(commonBuildFile, "cardboard_common");
-            File coreBuildFile = new File(coreLibsFolder, "build.xml");
-            writeBuildXML(coreBuildFile, "cardboard_core");            
+            writeBuildXML(commonBuildFile, "vr_common");            
+            File audioBuildFile = new File(audioLibsFolder, "build.xml");
+            writeBuildXML(audioBuildFile, "vr_audio");          
           }
         }
       }
@@ -1029,124 +1034,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@project_name@@", projectName);
     replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
-    
-    
-    
-//    final PrintWriter writer = PApplet.createWriter(file);
-//    writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-//
-//    writer.println("<project name=\"" + projectName + "\" default=\"help\">");
-//
-//    writer.println("  <property file=\"local.properties\" />");
-//    writer.println("  <property file=\"ant.properties\" />");
-//
-//    writer.println("  <property environment=\"env\" />");
-//    writer.println("  <condition property=\"sdk.dir\" value=\"${env.ANDROID_HOME}\">");
-//    writer.println("       <isset property=\"env.ANDROID_HOME\" />");
-//    writer.println("  </condition>");
-//
-//    writer.println("  <property name=\"jdt.core\" value=\"" + Base.getToolsFolder() + "/../modes/java/mode/org.eclipse.jdt.core.jar\" />");
-//    writer.println("  <property name=\"jdtCompilerAdapter\" value=\"" + Base.getToolsFolder() + "/../modes/java/mode/jdtCompilerAdapter.jar\" />");
-//    writer.println("  <property name=\"build.compiler\" value=\"org.eclipse.jdt.core.JDTCompilerAdapter\" />");
-//
-//    writer.println("  <mkdir dir=\"bin\" />");
-//
-//    writer.println("  <echo message=\"${build.compiler}\" />");
-//
-//// Override target from main android build file
-//    writer.println("    <target name=\"-compile\" depends=\"-pre-build, -build-setup, -code-gen, -pre-compile\">");
-//    writer.println("        <do-only-if-manifest-hasCode elseText=\"hasCode = false. Skipping...\">");
-//    writer.println("            <path id=\"project.javac.classpath\">");
-//    writer.println("                <path refid=\"project.all.jars.path\" />");
-//    writer.println("                <path refid=\"tested.project.classpath\" />");
-//    writer.println("                <path path=\"${java.compiler.classpath}\" />");
-//    writer.println("            </path>");
-//    writer.println("            <javac encoding=\"${java.encoding}\"");
-//    writer.println("                    source=\"${java.source}\" target=\"${java.target}\"");
-//    writer.println("                    debug=\"true\" extdirs=\"\" includeantruntime=\"false\"");
-//    writer.println("                    destdir=\"${out.classes.absolute.dir}\"");
-//    writer.println("                    bootclasspathref=\"project.target.class.path\"");
-//    writer.println("                    verbose=\"${verbose}\"");
-//    writer.println("                    classpathref=\"project.javac.classpath\"");
-//    writer.println("                    fork=\"${need.javac.fork}\">");
-//    writer.println("                <src path=\"${source.absolute.dir}\" />");
-//    writer.println("                <src path=\"${gen.absolute.dir}\" />");
-//    writer.println("                <compilerarg line=\"${java.compilerargs}\" />");
-//    writer.println("                <compilerclasspath path=\"${jdtCompilerAdapter};${jdt.core}\" />");
-//    writer.println("            </javac>");
-//
-//    writer.println("            <if condition=\"${build.is.instrumented}\">");
-//    writer.println("                <then>");
-//    writer.println("                    <echo level=\"info\">Instrumenting classes from ${out.absolute.dir}/classes...</echo>");
-//
-//
-//    writer.println("                    <getemmafilter");
-//    writer.println("                            appPackage=\"${project.app.package}\"");
-//    writer.println("                            libraryPackagesRefId=\"project.library.packages\"");
-//    writer.println("                            filterOut=\"emma.default.filter\"/>");
-//
-//
-//    writer.println("                    <property name=\"emma.coverage.absolute.file\" location=\"${out.absolute.dir}/coverage.em\" />");
-//
-//
-//    writer.println("                    <emma enabled=\"true\">");
-//    writer.println("                        <instr verbosity=\"${verbosity}\"");
-//    writer.println("                               mode=\"overwrite\"");
-//    writer.println("                               instrpath=\"${out.absolute.dir}/classes\"");
-//    writer.println("                               outdir=\"${out.absolute.dir}/classes\"");
-//    writer.println("                               metadatafile=\"${emma.coverage.absolute.file}\">");
-//    writer.println("                            <filter excludes=\"${emma.default.filter}\" />");
-//    writer.println("                            <filter value=\"${emma.filter}\" />");
-//    writer.println("                        </instr>");
-//    writer.println("                    </emma>");
-//    writer.println("                </then>");
-//    writer.println("            </if>");
-//
-//    writer.println("            <if condition=\"${project.is.library}\">");
-//    writer.println("                <then>");
-//    writer.println("                    <echo level=\"info\">Creating library output jar file...</echo>");
-//    writer.println("                    <property name=\"out.library.jar.file\" location=\"${out.absolute.dir}/classes.jar\" />");
-//    writer.println("                    <if>");
-//    writer.println("                        <condition>");
-//    writer.println("                            <length string=\"${android.package.excludes}\" trim=\"true\" when=\"greater\" length=\"0\" />");
-//    writer.println("                        </condition>");
-//    writer.println("                        <then>");
-//    writer.println("                            <echo level=\"info\">Custom jar packaging exclusion: ${android.package.excludes}</echo>");
-//    writer.println("                        </then>");
-//    writer.println("                    </if>");
-//
-//    writer.println("                    <propertybyreplace name=\"project.app.package.path\" input=\"${project.app.package}\" replace=\".\" with=\"/\" />");
-//
-//    writer.println("                    <jar destfile=\"${out.library.jar.file}\">");
-//    writer.println("                        <fileset dir=\"${out.classes.absolute.dir}\"");
-//    writer.println("                                includes=\"**/*.class\"");
-//    writer.println("                                excludes=\"${project.app.package.path}/R.class ${project.app.package.path}/R$*.class ${project.app.package.path}/BuildConfig.class\"/>");
-//    writer.println("                        <fileset dir=\"${source.absolute.dir}\" excludes=\"**/*.java ${android.package.excludes}\" />");
-//    writer.println("                    </jar>");
-//    writer.println("                </then>");
-//    writer.println("            </if>");
-//
-//    writer.println("        </do-only-if-manifest-hasCode>");
-//    writer.println("    </target>");
-//
-//
-//
-//
-//
-//    writer.println("  <loadproperties srcFile=\"project.properties\" />");
-//
-//    writer.println("  <fail message=\"sdk.dir is missing. Make sure to generate local.properties using 'android update project'\" unless=\"sdk.dir\" />");
-//
-//    writer.println("  <import file=\"custom_rules.xml\" optional=\"true\" />");
-//
-//    writer.println("  <!-- version-tag: 1 -->");  // should this be 'custom' instead of 1?
-//    writer.println("  <import file=\"${sdk.dir}/tools/ant/build.xml\" />");
-//
-//    writer.println("</project>");
-//    writer.flush();
-//    writer.close();
-
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);
   }
 
   private void writeProjectProps(final File file) {
@@ -1193,7 +1081,7 @@ class AndroidBuild extends JavaBuild {
     int comp = getAppComponent();
     if (comp == FRAGMENT) {
       File valuesFolder = mkdirs(resFolder, "values");      
-      writeResStylesFragment(valuesFolder); 
+      writeResStylesFragment(valuesFolder);
     }
     
     if (comp == WALLPAPER) {
@@ -1203,6 +1091,11 @@ class AndroidBuild extends JavaBuild {
       File valuesFolder = mkdirs(resFolder, "values");      
       writeResStringsWallpaper(valuesFolder);      
     }
+    
+    if (comp == CARDBOARD) {
+      File valuesFolder = mkdirs(resFolder, "values");      
+      writeResStylesCardboard(valuesFolder);  
+    }    
     
 //    File mainFragmentLayoutFile = new File(layoutFolder, "fragment_main.xml");
 //    writeResLayoutMainFragment(mainFragmentLayoutFile);
@@ -1476,38 +1369,20 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@",sketchClassName);
         
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
-    
-    
-//    final PrintWriter writer = PApplet.createWriter(file);
-//    writer.println("<fragment xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-//    writer.println("    xmlns:tools=\"http://schemas.android.com/tools\"");
-//    writer.println("    android:id=\"@+id/fragment\"");
-//    writer.println("    android:name=\"." + sketchClassName + "\"");
-//    writer.println("    tools:layout=\"@layout/fragment_main\"");
-//    writer.println("    android:layout_width=\"match_parent\"");
-//    writer.println("    android:layout_height=\"match_parent\" />");
-//    writer.flush();
-//    writer.close();
   }
   
   
   private void writeResStylesFragment(final File valuesFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + STYLES_FRAGMENT_TEMPLATE);
     File xmlFile = new File(valuesFolder, "styles.xml");
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile); 
+  }
+  
+  
+  private void writeResStylesCardboard(final File valuesFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + STYLES_CARDBOARD_TEMPLATE);
+    File xmlFile = new File(valuesFolder, "styles.xml");
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
-    
-    
-//    final PrintWriter writer = PApplet.createWriter(file);
-//    writer.println("<resources>");
-//    writer.println("<style name=\"Theme.AppCompat.Light.NoActionBar.FullScreen\" parent=\"@style/Theme.AppCompat.Light\">");
-//    writer.println("    <item name=\"windowNoTitle\">true</item>");
-//    writer.println("    <item name=\"windowActionBar\">false</item>");
-//    writer.println("    <item name=\"android:windowFullscreen\">true</item>");
-//    writer.println("    <item name=\"android:windowContentOverlay\">@null</item>");
-//    writer.println("</style>");
-//    writer.println("</resources>");
-//    writer.flush();
-//    writer.close();    
   }
   
 
@@ -1515,13 +1390,6 @@ class AndroidBuild extends JavaBuild {
     File xmlTemplate = mode.getContentFile("templates/" + XML_WALLPAPER_TEMPLATE);
     File xmlFile = new File(xmlFolder, "wallpaper.xml");
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
-        
-//    final PrintWriter writer = PApplet.createWriter(file);
-//    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-//    writer.println("    android:thumbnail=\"@drawable/icon\"");
-//    writer.println("    android:description=\"@string/app_name\" />");
-//    writer.flush();
-//    writer.close();    
   }
   
   
@@ -1532,14 +1400,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@sketch_class_name@@",sketchClassName);
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
-    
-//     final PrintWriter writer = PApplet.createWriter(file);
-//     writer.println("<resources>");
-//     writer.println("  <string name=\"app_name\">" + sketchClassName + "</string>");
-//     writer.println("</resources>");
-//     writer.flush();
-//     writer.close();    
+    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);  
   }
   
   
@@ -1547,11 +1408,6 @@ class AndroidBuild extends JavaBuild {
     File xmlTemplate = mode.getContentFile("templates/" + XML_WATCHFACE_TEMPLATE);
     File xmlFile = new File(xmlFolder, "watch_face.xml");
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
-    
-//    final PrintWriter writer = PApplet.createWriter(file);
-//    writer.println("<wallpaper xmlns:android=\"http://schemas.android.com/apk/res/android\" />");
-//    writer.flush();
-//    writer.close();     
   }
   
   

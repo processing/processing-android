@@ -27,6 +27,7 @@ import processing.android.AppComponent;
 import processing.core.PSurface;
 
 public class PGraphicsCardboardMono extends PGraphicsCardboard {
+  @Override
   public PSurface createSurface(AppComponent component, SurfaceHolder holder) {  // ignore
     return new PSurfaceCardboard(this, component, holder, false);
   }

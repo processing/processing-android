@@ -29,9 +29,9 @@
 	   srcdir="src" destdir="bin"
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
-	   classpath="lib/cardboard-audio-classes.jar;
-	              lib/cardboard-common-classes.jar;
-	              lib/cardboard-core-classes.jar;
+	   classpath="lib/vr_base-classes.jar;
+                lib/vr_common-classes.jar;
+	              lib/vr_audio-classes.jar;
 	              ../../android-core.zip;
 	              ${env.ANDROID_SDK}/platforms/android-23/android.jar"
 	   nowarn="true"

@@ -27,11 +27,12 @@ import java.io.InputStream;
 
 import javax.microedition.khronos.egl.EGLConfig;
 
-import com.google.vrtoolkit.cardboard.CardboardActivity;
-import com.google.vrtoolkit.cardboard.CardboardView;
-import com.google.vrtoolkit.cardboard.Eye;
-import com.google.vrtoolkit.cardboard.HeadTransform;
-import com.google.vrtoolkit.cardboard.Viewport;
+import com.google.vr.sdk.base.GvrActivity;
+import com.google.vr.sdk.base.GvrView;
+import com.google.vr.sdk.base.AndroidCompat;
+import com.google.vr.sdk.base.Eye;
+import com.google.vr.sdk.base.HeadTransform;
+import com.google.vr.sdk.base.Viewport;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -53,8 +54,8 @@ import android.view.WindowManager;
 public class PSurfaceCardboard extends PSurfaceGLES {
   protected GLCardboardSurfaceView glview;
   protected PGraphicsCardboard pgc;
-  
-  protected CardboardActivity cardboard;
+
+  protected GvrActivity cardboard;
   protected AndroidCardboardStereoRenderer renderer;
 
   public PSurfaceCardboard(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
@@ -62,45 +63,59 @@ public class PSurfaceCardboard extends PSurfaceGLES {
     this.graphics = graphics;
     this.component = component;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
-    
-    cardboard = (CardboardActivity)component;
+
+    cardboard = (GvrActivity)component;
     pgc = (PGraphicsCardboard)graphics;
 
     glview = new GLCardboardSurfaceView(cardboard);
-    glview.setVRModeEnabled(vr);
+    glview.setStereoModeEnabled(vr);
     if (vr) {
       glview.setDistortionCorrectionEnabled(true);
       glview.setNeckModelEnabled(true);
-//      glview.setElectronicDisplayStabilizationEnabled(true);      
+//      glview.setElectronicDisplayStabilizationEnabled(true);
     }
-    cardboard.setCardboardView(glview);
+
+    // Enable Cardboard-trigger feedback with Daydream headsets. This is a simple way of supporting
+    // Daydream controller input for basic interactions using the existing Cardboard trigger API.
+    glview.enableCardboardTriggerEmulation();
+
+    if (glview.setAsyncReprojectionEnabled(true)) {
+      // Async reprojection decouples the app framerate from the display framerate,
+      // allowing immersive interaction even at the throttled clockrates set by
+      // sustained performance mode.
+      AndroidCompat.setSustainedPerformanceMode(cardboard, true);
+    }
+    cardboard.setGvrView(glview);
 
     surface = null;
   }
-  
+
   @Override
   public Context getContext() {
     return cardboard;
   }
-  
+
   @Override
   public Activity getActivity() {
     return cardboard;
   }
-  
+
   @Override
   public void finish() {
     cardboard.finish();
   }
-  
+
+  @Override
   public AssetManager getAssets() {
     return cardboard.getAssets();
   }
 
+  @Override
   public void startActivity(Intent intent) {
     cardboard.startActivity(intent);
   }
 
+  @Override
   public void initView(int sketchWidth, int sketchHeight) {
     Window window = cardboard.getWindow();
 
@@ -118,10 +133,12 @@ public class PSurfaceCardboard extends PSurfaceGLES {
     window.setContentView(glview);
   }
 
+  @Override
   public String getName() {
     return cardboard.getComponentName().getPackageName();
   }
 
+  @Override
   public void setOrientation(int which) {
     if (component.getKind() == AppComponent.FRAGMENT) {
       if (which == PORTRAIT) {
@@ -132,18 +149,22 @@ public class PSurfaceCardboard extends PSurfaceGLES {
     }
   }
 
+  @Override
   public File getFilesDir() {
     return cardboard.getFilesDir();
   }
 
+  @Override
   public InputStream openFileInput(String filename) {
     return null;
   }
 
+  @Override
   public File getFileStreamPath(String path) {
     return cardboard.getFileStreamPath(path);
   }
 
+  @Override
   public void dispose() {
 //    surface.onDestroy();
   }
@@ -186,7 +207,7 @@ public class PSurfaceCardboard extends PSurfaceGLES {
 
   ///////////////////////////////////////////////////////////
 
-  public class GLCardboardSurfaceView extends CardboardView {
+  public class GLCardboardSurfaceView extends GvrView {
     public GLCardboardSurfaceView(Context context) {
       super(context);
 
@@ -250,19 +271,19 @@ public class PSurfaceCardboard extends PSurfaceGLES {
       return super.onKeyUp(code, event);
     }
   }
-  
+
   ///////////////////////////////////////////////////////////
 
-  // Android specific classes (Renderer, ConfigChooser)  
+  // Android specific classes (Renderer, ConfigChooser)
 
 
   public AndroidCardboardStereoRenderer getCardboardStereoRenderer() {
     renderer = new AndroidCardboardStereoRenderer();
     return renderer;
-  }  
+  }
 
 
-  protected class AndroidCardboardStereoRenderer implements CardboardView.StereoRenderer {
+  protected class AndroidCardboardStereoRenderer implements GvrView.StereoRenderer {
     public AndroidCardboardStereoRenderer() {
 
     }
