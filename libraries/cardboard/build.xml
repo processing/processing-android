@@ -29,9 +29,9 @@
 	   srcdir="src" destdir="bin"
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
-	   classpath="lib/vr_base-classes.jar;
-                lib/vr_common-classes.jar;
-	              lib/vr_audio-classes.jar;
+	   classpath="lib/gvr-base.jar;
+                lib/gvr-common.jar;
+                lib/gvr-audio.jar;
 	              ../../android-core.zip;
 	              ${env.ANDROID_SDK}/platforms/android-23/android.jar"
 	   nowarn="true"
