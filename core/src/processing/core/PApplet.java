@@ -601,7 +601,12 @@ public class PApplet extends Object implements PConstants {
     handleMethods("resume");
 
     surface.resumeThread();
-    resume();
+    if (0 < frameCount) {
+      // Don't call resume() when the app is starting and setup() has not been
+      // called yet
+      // https://github.com/processing/processing-android/issues/274
+      resume();
+    }
   }
 
 
