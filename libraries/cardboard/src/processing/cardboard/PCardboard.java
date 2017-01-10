@@ -63,6 +63,10 @@ public class PCardboard extends GvrActivity implements AppComponent {
   public int getDisplayHeight() {
     return metrics.heightPixels;
   }
+  
+  public float getDisplayDensity() {
+    return metrics.density;
+  } 
 
   public int getKind() {
       return CARDBOARD;

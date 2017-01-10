@@ -24,6 +24,7 @@ package processing.android;
 
 //import android.app.Fragment;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -38,7 +39,7 @@ import android.view.WindowManager;
 import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
-//  private DisplayMetrics metrics;
+  private DisplayMetrics metrics;
   protected Point size;
   protected PApplet sketch;
 
@@ -46,24 +47,15 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
   public void initDimensions() {
-    /*
-    metrics = new DisplayMetrics();
-//    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
     WindowManager wm = getActivity().getWindowManager();
     Display display = wm.getDefaultDisplay();
-    display.getRealMetrics(metrics);
-    */
+    metrics = new DisplayMetrics();
+    display.getMetrics(metrics);
 
-//    metrics = new DisplayMetrics();
-//    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
 //    display.getRealMetrics(metrics); // API 17 or higher
 //    display.getRealSize(size);
 
-//    display.getMetrics(metrics);
-
     size = new Point();
-    WindowManager wm = getActivity().getWindowManager();
-    Display display = wm.getDefaultDisplay();
     if (Build.VERSION.SDK_INT >= 17) {
       display.getRealSize(size);
     } else if (Build.VERSION.SDK_INT >= 14) {
@@ -85,6 +77,10 @@ public class PFragment extends Fragment implements AppComponent {
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
+  }
+
+  public float getDisplayDensity() {
+    return metrics.density;
   }
 
   public int getKind() {

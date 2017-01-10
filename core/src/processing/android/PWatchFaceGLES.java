@@ -31,6 +31,7 @@ import android.view.WindowInsets;
 import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.util.DisplayMetrics;
 //import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -43,18 +44,19 @@ import android.graphics.Rect;
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
   protected PApplet sketch;
   protected Point size;
-//  private DisplayMetrics metrics;
+  private DisplayMetrics metrics;
   protected GLEngine engine;
 
   public void initDimensions() {
-//    metrics = new DisplayMetrics();
-//    WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-//    Display display = wm.getDefaultDisplay();
-//    display.getMetrics(metrics);
-
-    size = new Point();
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();
+    metrics = new DisplayMetrics();
+    display.getMetrics(metrics);
+
+//  display.getRealMetrics(metrics); // API 17 or higher
+//  display.getRealSize(size);
+
+    size = new Point();
     if (Build.VERSION.SDK_INT >= 17) {
       display.getRealSize(size);
     } else if (Build.VERSION.SDK_INT >= 14) {
@@ -76,6 +78,10 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
+  }
+
+  public float getDisplayDensity() {
+    return metrics.density;
   }
 
   public int getKind() {

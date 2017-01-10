@@ -34,6 +34,7 @@ abstract public interface AppComponent extends PConstants {
   public void initDimensions();
   public int getDisplayWidth();
   public int getDisplayHeight();
+  public float getDisplayDensity();
   public int getKind();
   public void setSketch(PApplet sketch);
   public PApplet getSketch();

@@ -31,6 +31,7 @@ import android.graphics.Rect;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.util.DisplayMetrics;
 //import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -45,19 +46,19 @@ import processing.event.MouseEvent;
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
   protected PApplet sketch;
   protected Point size;
-//  private DisplayMetrics metrics;
+  private DisplayMetrics metrics;
   protected CEngine engine;
 
   public void initDimensions() {
-//    metrics = new DisplayMetrics();
-//    WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-//    Display display = wm.getDefaultDisplay();
-//    display.getRealMetrics(metrics); // only API level 17 o higher
-//    display.getMetrics(metrics);
-
-    size = new Point();
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();
+    metrics = new DisplayMetrics();
+    display.getMetrics(metrics);
+
+//  display.getRealMetrics(metrics); // API 17 or higher
+//  display.getRealSize(size);
+
+    size = new Point();
     if (Build.VERSION.SDK_INT >= 17) {
       display.getRealSize(size);
     } else if (Build.VERSION.SDK_INT >= 14) {
@@ -79,6 +80,10 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
+  }
+
+  public float getDisplayDensity() {
+    return metrics.density;
   }
 
   public int getKind() {

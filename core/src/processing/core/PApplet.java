@@ -160,7 +160,15 @@ public class PApplet extends Object implements PConstants {
   public int height = DEFAULT_HEIGHT;
 
   // can't call this because causes an ex, but could set elsewhere
-  //final float screenDensity = getResources().getDisplayMetrics().density;
+  /** The logical density of the display from getDisplayMetrics().density
+   * According to Android's documentation:
+   * This is a scaling factor for the Density Independent Pixel unit,
+   * where one DIP is one pixel on an approximately 160 dpi screen
+   * (for example a 240x320, 1.5"x2" screen), providing the baseline of the
+   * system's display. Thus on a 160dpi screen this density value will be 1;
+   * on a 120 dpi screen it would be .75; etc.
+   */
+  public float displayDensity = 1;
 
   /** absolute x position of input on screen */
   public int mouseX;
@@ -499,6 +507,8 @@ public class PApplet extends Object implements PConstants {
     component.initDimensions();
     displayWidth = component.getDisplayWidth();
     displayHeight = component.getDisplayHeight();
+    displayDensity = component.getDisplayDensity();
+
     handleSettings();
 
     if (fullScreen && parentLayout == -1) {

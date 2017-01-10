@@ -28,6 +28,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.os.Build;
 //import android.view.WindowManager;
@@ -38,7 +39,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
 
   protected Point size;
-//  private DisplayMetrics metrics;
+  private DisplayMetrics metrics;
   protected PEngine engine;
 
   public PWallpaper() {
@@ -48,15 +49,15 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public void initDimensions() {
-//    metrics = new DisplayMetrics();
-//    getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-//    display.getRealMetrics(metrics); // API 17 or higher
-//    display.getRealSize(size);
-//    display.getMetrics(metrics);
-
-    size = new Point();
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();
+    metrics = new DisplayMetrics();
+    display.getMetrics(metrics);
+
+//    display.getRealMetrics(metrics); // API 17 or higher
+//    display.getRealSize(size);
+
+    size = new Point();
     if (Build.VERSION.SDK_INT >= 17) {
       display.getRealSize(size);
     } else if (Build.VERSION.SDK_INT >= 14) {
@@ -82,6 +83,10 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
+  }
+
+  public float getDisplayDensity() {
+    return metrics.density;
   }
 
   public void setSketch(PApplet sketch) {
