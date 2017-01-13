@@ -87,6 +87,7 @@ public class AndroidRunner implements DeviceListener {
 //    }
 
     device.addListener(this);
+    device.setPackageName(build.getPackageName());
 
 //  if (listener.isHalted()) {
 ////  if (monitor.isCanceled()) {

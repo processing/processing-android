@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 class Device {
   private final Devices env;
   private final String id;
-  private final String features;
+  private final String features;  
   private final Set<Integer> activeProcesses = new HashSet<Integer>();
   private final Set<DeviceListener> listeners = 
     Collections.synchronizedSet(new HashSet<DeviceListener>());
@@ -47,6 +47,8 @@ class Device {
 //  public static final String APP_STARTED = "android.device.app.started";
 //  public static final String APP_ENDED = "android.device.app.ended";
 
+  private String packageName = "";
+  
   // mutable state
   private Process logcat;
 
@@ -196,6 +198,10 @@ class Device {
     return id.startsWith("emulator");
   }
 
+  public void setPackageName(String pkgName) {
+    packageName = pkgName;
+  }
+  
   // I/Process ( 9213): Sending signal. PID: 9213 SIG: 9
   private static final Pattern SIG = Pattern
       .compile("PID:\\s+(\\d+)\\s+SIG:\\s+(\\d+)");
@@ -205,12 +211,47 @@ class Device {
   private class LogLineProcessor implements LineProcessor {
     public void processLine(final String line) {
       final LogEntry entry = new LogEntry(line);
+//      System.err.println("***************************************************");
+//      System.out.println(line);
+//      System.err.println(activeProcesses);
+//      System.err.println(entry.message);
+      
       if (entry.message.startsWith("PROCESSING")) {
+        // Old start/stop process detection, does not seem to work anymore. 
+        // Should be ok to remove at some point.
         if (entry.message.contains("onStart")) {
           startProc(entry.source, entry.pid);
         } else if (entry.message.contains("onStop")) {
           endProc(entry.pid);
         }
+      } else if (packageName != null && !packageName.equals("") &&
+                 entry.message.contains("Start proc") &&                  
+                 entry.message.contains(packageName)) {
+        // Sample message string from logcat when starting process:
+        // "Start proc 29318:processing.test.sketch001/u0a403 for activity processing.test.sketch001/.MainActivity"
+        try {
+          int idx0 = entry.message.indexOf("Start proc") + 11;
+          int idx1 = entry.message.indexOf(packageName) - 1;
+          String pidStr = entry.message.substring(idx0, idx1);
+          int pid = Integer.parseInt(pidStr);
+          startProc(entry.source, pid);
+        } catch (Exception ex) {
+          System.err.println("AndroidDevice: cannot find process id, console output will be disabled.");
+        }        
+      } else if (packageName != null && !packageName.equals("") &&
+                 entry.message.contains("Killing") &&                
+                 entry.message.contains(packageName)) { 
+        // Sample message string from logcat when stopping process:      
+        // "Killing 31360:processing.test.test1/u0a403 (adj 900): remove task"
+        try {
+          int idx0 = entry.message.indexOf("Killing") + 8;
+          int idx1 = entry.message.indexOf(packageName) - 1;
+          String pidStr = entry.message.substring(idx0, idx1);
+          int pid = Integer.parseInt(pidStr);
+          endProc(pid);
+        } catch (Exception ex) {
+          System.err.println("AndroidDevice: cannot find process id, console output will continue. " + packageName);
+        }        
       } else if (entry.source.equals("Process")) {
         handleCrash(entry);
       } else if (activeProcesses.contains(entry.pid)) {
