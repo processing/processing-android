@@ -46,6 +46,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import procesing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
 import processing.data.*;
 import processing.event.*;
@@ -159,7 +160,6 @@ public class PApplet extends Object implements PConstants {
   /** height of this applet's associated PGraphics */
   public int height = DEFAULT_HEIGHT;
 
-  // can't call this because causes an ex, but could set elsewhere
   /** The logical density of the display from getDisplayMetrics().density
    * According to Android's documentation:
    * This is a scaling factor for the Density Independent Pixel unit,
@@ -9669,6 +9669,11 @@ public class PApplet extends Object implements PConstants {
    */
   public Object getNative() {
     return g.getNative();
+  }
+
+
+  public void setNative(Object nativeObject) {
+    g.setNative(nativeObject);
   }
 
 

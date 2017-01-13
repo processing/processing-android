@@ -21,12 +21,22 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.core;
+package procesing.a2d;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
 import processing.android.AppComponent;
+import processing.core.PApplet;
+import processing.core.PFont;
+import processing.core.PGraphics;
+import processing.core.PImage;
+import processing.core.PMatrix;
+import processing.core.PMatrix2D;
+import processing.core.PMatrix3D;
+import processing.core.PShape;
+import processing.core.PShapeSVG;
+import processing.core.PSurface;
 import processing.data.XML;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -1045,20 +1055,23 @@ public class PGraphicsAndroid2D extends PGraphics {
   protected void imageImpl(PImage src,
                            float x1, float y1, float x2, float y2,
                            int u1, int v1, int u2, int v2) {
-    if (src.bitmap != null && src.bitmap.isRecycled()) {
+    Bitmap bitmap = (Bitmap)src.getNative();
+
+    if (bitmap != null && bitmap.isRecycled()) {
       // Let's make sure it is recreated
-      src.bitmap = null;
+      bitmap = null;
     }
 
-    if (src.bitmap == null && src.format == ALPHA) {
+    if (bitmap == null && src.format == ALPHA) {
       // create an alpha bitmap for this feller
-      src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
       int[] px = new int[src.pixels.length];
       for (int i = 0; i < px.length; i++) {
         px[i] = src.pixels[i] << 24 | 0xFFFFFF;
       }
-      src.bitmap.setPixels(px, 0, src.width, 0, 0, src.width, src.height);
-      src.modified = false;
+      bitmap.setPixels(px, 0, src.width, 0, 0, src.width, src.height);
+      modified = false;
+      src.setNative(bitmap);
     }
 
     // this version's not usable because it doesn't allow you to set output w/h
@@ -1069,23 +1082,26 @@ public class PGraphicsAndroid2D extends PGraphics {
 //                        src.format == ARGB, tint ? tintPaint : null);
 //    } else {
 
-    if (src.bitmap == null ||
-        src.width != src.bitmap.getWidth() ||
-        src.height != src.bitmap.getHeight()) {
-      if (src.bitmap != null) src.bitmap.recycle();
-      src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
-      src.modified = true;
+    if (bitmap == null ||
+        src.width != bitmap.getWidth() ||
+        src.height != bitmap.getHeight()) {
+      if (bitmap != null) bitmap.recycle();
+      bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      modified = true;
+      src.setNative(bitmap);
     }
-    if (src.modified) {
+
+    if (src.isModified()) {
       //System.out.println("mutable, recycled = " + who.bitmap.isMutable() + ", " + who.bitmap.isRecycled());
-      if (!src.bitmap.isMutable()) {
-        src.bitmap.recycle();
-        src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      if (!bitmap.isMutable()) {
+        bitmap.recycle();
+        bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+        src.setNative(bitmap);
       }
       if (src.pixels != null) {
-        src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
+        bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
       }
-      src.modified = false;
+      src.setModified(false);
     }
 
     if (imageImplSrcRect == null) {
@@ -1099,7 +1115,7 @@ public class PGraphicsAndroid2D extends PGraphics {
     //System.out.println(PApplet.hex(fillPaint.getColor()));
     //canvas.drawBitmap(who.bitmap, imageImplSrcRect, imageImplDstRect, fillPaint);
     //      System.out.println("drawing lower, tint = " + tint + " " + PApplet.hex(tintPaint.getColor()));
-    canvas.drawBitmap(src.bitmap, imageImplSrcRect, imageImplDstRect, tint ? tintPaint : null);
+    canvas.drawBitmap(bitmap, imageImplSrcRect, imageImplDstRect, tint ? tintPaint : null);
 
     // If the OS things the memory is low, then recycles bitmaps automatically...
     // but I don't think it is particularly efficient, as the bitmaps are stored
@@ -1110,8 +1126,8 @@ public class PGraphicsAndroid2D extends PGraphics {
     ActivityManager activityManager = (ActivityManager) activity.getSystemService(android.content.Context.ACTIVITY_SERVICE);
     activityManager.getMemoryInfo(mi);
     if (mi.lowMemory) {
-      src.bitmap.recycle();
-      src.bitmap = null;
+      bitmap.recycle();
+      src.setNative(null);
     }
   }
 
@@ -1339,7 +1355,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 //                            textFont.smooth ?
 //                            RenderingHints.VALUE_ANTIALIAS_ON :
 //                            RenderingHints.VALUE_ANTIALIAS_OFF);
-    fillPaint.setAntiAlias(textFont.smooth);
+    fillPaint.setAntiAlias(textFont.isSmooth());
 
     //System.out.println("setting frac metrics");
     //g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
@@ -2067,28 +2083,32 @@ public class PGraphicsAndroid2D extends PGraphics {
       throw new RuntimeException("set() not available for ALPHA images");
     }
 
-    if (src.bitmap == null) {
-      src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
-      src.modified = true;
+    Bitmap bitmap = (Bitmap)src.getNative();
+    if (bitmap == null) {
+      bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      src.setNative(bitmap);
+      src.setModified();
     }
-    if (src.width != src.bitmap.getWidth() ||
-      src.height != src.bitmap.getHeight()) {
-      src.bitmap.recycle();
-      src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
-      src.modified = true;
+    if (src.width != bitmap.getWidth() ||
+      src.height != bitmap.getHeight()) {
+      bitmap.recycle();
+      bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+      src.setNative(bitmap);
+      src.setModified();
     }
-    if (src.modified) {
-      if (!src.bitmap.isMutable()) {
-        src.bitmap.recycle();
-        src.bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+    if (src.isModified()) {
+      if (!bitmap.isMutable()) {
+        bitmap.recycle();
+        bitmap = Bitmap.createBitmap(src.width, src.height, Config.ARGB_8888);
+        setNative(bitmap);
       }
-      src.bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
-      src.modified = false;
+      bitmap.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height);
+      src.setModified(false);
     }
     // set() happens in screen coordinates, so need to clear the ctm
     canvas.save(Canvas.MATRIX_SAVE_FLAG);
     canvas.setMatrix(null);  // set to identity
-    canvas.drawBitmap(src.bitmap, x, y, null);
+    canvas.drawBitmap(bitmap, x, y, null);
     canvas.restore();
   }
 

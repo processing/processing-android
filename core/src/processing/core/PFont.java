@@ -426,6 +426,11 @@ public class PFont implements PConstants {
   }
 
 
+  public boolean isSmooth() {
+    return smooth;
+  }
+
+
   public void setSubsetting() {
     subsetting = true;
   }

@@ -208,6 +208,13 @@ public class PImage implements PConstants, Cloneable {
   }
 
 
+  public void setNative(Object nativeObject) {
+    Bitmap bitmap = (Bitmap) nativeObject;
+    this.bitmap = bitmap;
+  }
+
+
+
   //////////////////////////////////////////////////////////////
 
   // MARKING IMAGE AS MODIFIED / FOR USE w/ GET/SET

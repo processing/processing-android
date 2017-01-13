@@ -20,7 +20,7 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.core;
+package procesing.a2d;
 
 import android.content.Context;
 
@@ -31,6 +31,9 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import processing.android.AppComponent;
 import processing.android.PFragment;
+import processing.core.PApplet;
+import processing.core.PGraphics;
+import processing.core.PSurfaceNone;
 
 public class PSurfaceAndroid2D extends PSurfaceNone {
 
