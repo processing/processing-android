@@ -20,7 +20,7 @@
   Boston, MA  02111-1307  USA
 */
 
-package procesing.a2d;
+package processing.a2d;
 
 import android.content.Context;
 

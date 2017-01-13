@@ -38,7 +38,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 import android.view.WindowManager;
-import procesing.a2d.PGraphicsAndroid2D;
+import processing.a2d.PGraphicsAndroid2D;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 

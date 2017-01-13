@@ -1,4 +1,4 @@
-package procesing.a2d;
+package processing.a2d;
 
 import android.graphics.Shader;
 import processing.core.PGraphics;
