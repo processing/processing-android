@@ -250,9 +250,6 @@ public class PApplet extends Object implements PConstants {
 
   public boolean mousePressed;
 
-  public AndroidTouchEvent.PPointer[] touches = new AndroidTouchEvent.PPointer[0];
-
-
 //  public MouseEvent mouseEvent;
 
 //  public MotionEvent motionEvent;
@@ -1953,9 +1950,9 @@ public class PApplet extends Object implements PConstants {
       Event e = eventQueue.remove();
 
       switch (e.getFlavor()) {
-      case Event.TOUCH:
-        handleTouchEvent((TouchEvent) e);
-        break;
+//      case Event.TOUCH:
+//        handleTouchEvent((TouchEvent) e);
+//        break;
       case Event.MOUSE:
         handleMouseEvent((MouseEvent) e);
         break;
@@ -2076,82 +2073,107 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-   // ******************** NOT CURRENTLY IN USE ********************
-   // Take action based on a motion event.
-   // Internally updates mouseX, mouseY, mousePressed, and mouseEvent.
-   // Then it calls the event type with no params,
-   // i.e. mousePressed() or mouseReleased() that the user may have
-   // overloaded to do something more useful.
-  protected void handleTouchEvent(TouchEvent event) {
-    AndroidTouchEvent ate = (AndroidTouchEvent)event;
-    touches = ate.getTouches();
-  }
+  /*
+  // ******************** NOT CURRENTLY IN USE ********************
+  // this class is hiding inside PApplet for now,
+  // until I have a chance to get the API right inside TouchEvent.
+  class AndroidTouchEvent extends TouchEvent {
+    int action;
+    int numPointers;
+    float[] motionX, motionY;
+    float[] motionPressure;
+    int[] mouseX, mouseY;
 
+    AndroidTouchEvent(Object nativeObject, long millis, int action, int modifiers) {
+      super(nativeObject, millis, action, modifiers);
+    }
 
-  // Added in API 11, so defined here: Constant Value: 4096 (0x00001000)
-  static final int META_CTRL_ON = 4096;
-  // Added in API 11, so defined here: 65536 (0x00010000)
-  static final int META_META_ON = 65536;
+//    void setAction(int action) {
+//      this.action = action;
+//    }
 
-  int motionPointerId;
+    void setNumPointers(int n) {
+      numPointers = n;
+      motionX = new float[n];
+      motionY = new float[n];
+      motionPressure = new float[n];
+      mouseX = new int[n];
+      mouseY = new int[n];
+    }
 
-
-
-
-  Object motionLock = new Object();
-  AndroidTouchEvent[] motionEventQueue;
-  int motionEventCount;
-  protected void enqueueMotionEvent(MotionEvent event, int modifiers) {
-    synchronized (motionLock) {
-      // on first run, allocate array for motion events
-      if (motionEventQueue == null) {
-        motionEventQueue = new AndroidTouchEvent[20];
-        for (int i = 0; i < motionEventQueue.length; i++) {
-          motionEventQueue[i] = new AndroidTouchEvent(event, event.getEventTime(),
-                                                      event.getAction(), modifiers);
-        }
+    void setPointers(MotionEvent event) {
+      for (int ptIdx = 0; ptIdx < numPointers; ptIdx++) {
+        motionX[ptIdx] = event.getX(ptIdx);
+        motionY[ptIdx] = event.getY(ptIdx);
+        motionPressure[ptIdx] = event.getPressure(ptIdx);  // should this be constrained?
+        mouseX[ptIdx] = (int) motionX[ptIdx];  //event.getRawX();
+        mouseY[ptIdx] = (int) motionY[ptIdx];  //event.getRawY();
       }
-      // allocate more PMotionEvent objects if we're out
-      int historyCount = event.getHistorySize();
-//      println("motion: " + motionEventCount + " " + historyCount + " " + motionEventQueue.length);
-      if (motionEventCount + historyCount >= motionEventQueue.length) {
-        int atLeast = motionEventCount + historyCount + 1;
-        AndroidTouchEvent[] temp = new AndroidTouchEvent[max(atLeast, motionEventCount << 1)];
-        if (PApplet.DEBUG) {
-          println("motion: " + motionEventCount + " " + historyCount + " " + motionEventQueue.length);
-          println("allocating " + temp.length + " entries for motion events");
-        }
-        System.arraycopy(motionEventQueue, 0, temp, 0, motionEventCount);
-        motionEventQueue = temp;
-        for (int i = motionEventCount; i < motionEventQueue.length; i++) {
-          motionEventQueue[i] = new AndroidTouchEvent(event, event.getEventTime(),
-                                                      event.getAction(), modifiers);
-        }
+    }
+
+    // Sets the pointers for the historical event histIdx
+    void setPointers(MotionEvent event, int hisIdx) {
+      for (int ptIdx = 0; ptIdx < numPointers; ptIdx++) {
+        motionX[ptIdx] = event.getHistoricalX(ptIdx, hisIdx);
+        motionY[ptIdx] = event.getHistoricalY(ptIdx, hisIdx);
+        motionPressure[ptIdx] = event.getHistoricalPressure(ptIdx, hisIdx);  // should this be constrained?
+        mouseX[ptIdx] = (int) motionX[ptIdx];  //event.getRawX();
+        mouseY[ptIdx] = (int) motionY[ptIdx];  //event.getRawY();
       }
-
-      // this will be the last event in the list
-      AndroidTouchEvent pme = motionEventQueue[motionEventCount + historyCount];
-//      pme.setAction(event.getAction());
-      pme.setNumPointers(event.getPointerCount());
-      pme.setPointers(event);
-
-      // historical events happen before the 'current' values
-      if (pme.getAction() == MotionEvent.ACTION_MOVE && historyCount > 0) {
-        for (int i = 0; i < historyCount; i++) {
-          AndroidTouchEvent hist = motionEventQueue[motionEventCount++];
-//          hist.setAction(event.getAction());
-          hist.setNumPointers(event.getPointerCount());
-          hist.setPointers(event, i);
-        }
-      }
-
-      // now step over the last one that we used to assign 'pme'
-      // if historyCount is 0, this just steps over the last
-      motionEventCount++;
-
-      postEvent(pme);
     }
   }
+
+//  Object motionLock = new Object();
+//  AndroidTouchEvent[] motionEventQueue;
+//  int motionEventCount;
+//
+//  protected void enqueueMotionEvent(MotionEvent event) {
+//    synchronized (motionLock) {
+//      // on first run, allocate array for motion events
+//      if (motionEventQueue == null) {
+//        motionEventQueue = new AndroidTouchEvent[20];
+//        for (int i = 0; i < motionEventQueue.length; i++) {
+//          motionEventQueue[i] = new AndroidTouchEvent();
+//        }
+//      }
+//      // allocate more PMotionEvent objects if we're out
+//      int historyCount = event.getHistorySize();
+////      println("motion: " + motionEventCount + " " + historyCount + " " + motionEventQueue.length);
+//      if (motionEventCount + historyCount >= motionEventQueue.length) {
+//        int atLeast = motionEventCount + historyCount + 1;
+//        AndroidTouchEvent[] temp = new AndroidTouchEvent[max(atLeast, motionEventCount << 1)];
+//        if (PApplet.DEBUG) {
+//          println("motion: " + motionEventCount + " " + historyCount + " " + motionEventQueue.length);
+//          println("allocating " + temp.length + " entries for motion events");
+//        }
+//        System.arraycopy(motionEventQueue, 0, temp, 0, motionEventCount);
+//        motionEventQueue = temp;
+//        for (int i = motionEventCount; i < motionEventQueue.length; i++) {
+//          motionEventQueue[i] = new AndroidTouchEvent();
+//        }
+//      }
+//
+//      // this will be the last event in the list
+//      AndroidTouchEvent pme = motionEventQueue[motionEventCount + historyCount];
+//      pme.setAction(event.getAction());
+//      pme.setNumPointers(event.getPointerCount());
+//      pme.setPointers(event);
+//
+//      // historical events happen before the 'current' values
+//      if (pme.action == MotionEvent.ACTION_MOVE && historyCount > 0) {
+//        for (int i = 0; i < historyCount; i++) {
+//          AndroidTouchEvent hist = motionEventQueue[motionEventCount++];
+//          hist.setAction(event.getAction());
+//          hist.setNumPointers(event.getPointerCount());
+//          hist.setPointers(event, i);
+//        }
+//      }
+//
+//      // now step over the last one that we used to assign 'pme'
+//      // if historyCount is 0, this just steps over the last
+//      motionEventCount++;
+//    }
+//  }
 //
 //
 //  protected void dequeueMotionEvents() {
@@ -2164,6 +2186,178 @@ public class PApplet extends Object implements PConstants {
 //  }
 
 
+   // ******************** NOT CURRENTLY IN USE ********************
+   // Take action based on a motion event.
+   // Internally updates mouseX, mouseY, mousePressed, and mouseEvent.
+   // Then it calls the event type with no params,
+   // i.e. mousePressed() or mouseReleased() that the user may have
+   // overloaded to do something more useful.
+  protected void handleMotionEvent(AndroidTouchEvent pme) {
+    pmotionX = emotionX;
+    pmotionY = emotionY;
+    motionX = pme.motionX[0];
+    motionY = pme.motionY[0];
+    motionPressure = pme.motionPressure[0];
+
+    // replace previous mouseX/Y with the last from the event handlers
+    pmouseX = emouseX;
+    pmouseY = emouseY;
+    mouseX = pme.mouseX[0];
+    mouseY = pme.mouseY[0];
+
+    // *** because removed from PApplet
+    boolean firstMotion = false;
+    // this used to only be called on mouseMoved and mouseDragged
+    // change it back if people run into trouble
+    if (firstMotion) {
+      pmouseX = mouseX;
+      pmouseY = mouseY;
+      dmouseX = mouseX;  // set it as the first value to be used inside draw() too
+      dmouseY = mouseY;
+
+      pmotionX = motionX;
+      pmotionY = motionY;
+      dmotionX = motionX;
+      dmotionY = motionY;
+
+      firstMotion = false;
+    }
+
+    // TODO implement method handling for registry of motion/mouse events
+//    MouseEvent me = new MouseEvent(nativeObject, millis, action, modifiers, x, y, button, clickCount);
+//    handleMethods("mouseEvent", new Object[] { mouseEvent });
+//    handleMethods("motionEvent", new Object[] { motionEvent });
+
+    if (ppointersX.length < numPointers) {
+      ppointersX = new float[numPointers];
+      ppointersY = new float[numPointers];
+      ppointersPressure = new float[numPointers];
+    }
+    arrayCopy(pointersX, ppointersX);
+    arrayCopy(pointersY, ppointersY);
+    arrayCopy(pointersPressure, ppointersPressure);
+
+    numPointers = pme.numPointers;
+    if (pointersX.length < numPointers) {
+      pointersX = new float[numPointers];
+      pointersY = new float[numPointers];
+      pointersPressure = new float[numPointers];
+    }
+    arrayCopy(pme.motionX, pointersX);
+    arrayCopy(pme.motionY, pointersY);
+    arrayCopy(pme.motionPressure, pointersPressure);
+
+    // Triggering the appropriate event methods
+    if (pme.action == MotionEvent.ACTION_DOWN || (!mousePressed && numPointers == 1)) {
+      // First pointer is down
+      mousePressed = true;
+      onePointerGesture = true;
+      twoPointerGesture = false;
+      downMillis = millis();
+      downX = pointersX[0];
+      downY = pointersY[0];
+
+      mousePressed();
+      pressEvent();
+
+    } else if ((pme.action == MotionEvent.ACTION_POINTER_DOWN  && numPointers == 2) ||
+               (pme.action == MotionEvent.ACTION_POINTER_2_DOWN) || // 2.3 seems to use this action constant (supposedly deprecated) instead of ACTION_POINTER_DOWN
+               (pnumPointers == 1 && numPointers == 2)) {           // 2.1 just uses MOVE as the action constant, so the only way to know we have a new pointer is to compare the counters.
+
+      // An additional pointer is down (we keep track of multitouch only for 2 pointers)
+      onePointerGesture = false;
+      twoPointerGesture = true;
+
+    } else if ((pme.action == MotionEvent.ACTION_POINTER_UP && numPointers == 2) ||
+               (pme.action == MotionEvent.ACTION_POINTER_2_UP) || // 2.1 doesn't use the ACTION_POINTER_UP constant, but this one, apparently deprecated in newer versions of the SDK.
+               (twoPointerGesture && numPointers < 2)) {          // Sometimes it seems that it doesn't generate the up event.
+      // A previously detected pointer is up
+
+      twoPointerGesture = false; // Not doing a 2-pointer gesture anymore, but neither a 1-pointer.
+
+    } else if (pme.action == MotionEvent.ACTION_MOVE) {
+      // Pointer motion
+
+      if (onePointerGesture) {
+        if (mousePressed) {
+          mouseDragged();
+          dragEvent();
+        } else {  // TODO is this physically possible? (perhaps with alt input devices...)
+          mouseMoved();
+          moveEvent();
+        }
+      } else if (twoPointerGesture) {
+        float d0 = PApplet.dist(ppointersX[0], ppointersY[0], ppointersX[1], ppointersY[1]);
+        float d1 = PApplet.dist(pointersX[0], pointersY[0], pointersX[1], pointersY[1]);
+
+        if (0 < d0 && 0 < d1) {
+          float centerX = 0.5f * (pointersX[0] + pointersX[1]);
+          float centerY = 0.5f * (pointersY[0] + pointersY[1]);
+
+          zoomEvent(centerX, centerY, d0, d1);
+        }
+      }
+
+    } else if (pme.action == MotionEvent.ACTION_UP) {
+      // Final pointer is up
+      mousePressed = false;
+
+      float upX = pointersX[0];
+      float upY = pointersY[0];
+      float gestureLength = PApplet.dist(downX, downY, upX, upY);
+
+      int upMillis = millis();
+      int gestureTime = upMillis - downMillis;
+
+      if (onePointerGesture) {
+        // First, lets determine if this 1-pointer event is a tap
+        boolean tap = gestureLength <= MAX_TAP_DISP && gestureTime <= MAX_TAP_DURATION;
+        if (tap) {
+          mouseClicked();
+          tapEvent(downX, downY);
+        } else if (MIN_SWIPE_LENGTH <= gestureLength && gestureTime <= MAX_SWIPE_DURATION) {
+          mouseReleased();
+          swipeEvent(downX, downY, upX, upY);
+        } else {
+          mouseReleased();
+          releaseEvent();
+        }
+
+      } else {
+        mouseReleased();
+        releaseEvent();
+      }
+      onePointerGesture = twoPointerGesture = false;
+
+    } else if (pme.action == MotionEvent.ACTION_CANCEL) {
+      // Current gesture is canceled.
+      onePointerGesture = twoPointerGesture = false;
+      mousePressed = false;
+      mouseReleased();
+      releaseEvent();
+
+    } else {
+      //System.out.println("Unknown MotionEvent action: " + action);
+    }
+
+    pnumPointers = numPointers;
+
+    if (pme.action == MotionEvent.ACTION_MOVE) {
+      emotionX = motionX;
+      emotionY = motionY;
+      emouseX = mouseX;
+      emouseY = mouseY;
+    }
+  }
+  */
+
+
+  // Added in API 11, so defined here: Constant Value: 4096 (0x00001000)
+  static final int META_CTRL_ON = 4096;
+  // Added in API 11, so defined here: 65536 (0x00010000)
+  static final int META_META_ON = 65536;
+
+  int motionPointerId;
 
 
   /**
@@ -2172,24 +2366,7 @@ public class PApplet extends Object implements PConstants {
    * If noLoop() has been called, then events will happen immediately.
    */
   protected void nativeMotionEvent(android.view.MotionEvent motionEvent) {
-    int metaState = motionEvent.getMetaState();
-    int modifiers = 0;
-    if ((metaState & android.view.KeyEvent.META_SHIFT_ON) != 0) {
-      modifiers |= Event.SHIFT;
-    }
-    if ((metaState & META_CTRL_ON) != 0) {
-      modifiers |= Event.CTRL;
-    }
-    if ((metaState & META_META_ON) != 0) {
-      modifiers |= Event.META;
-    }
-    if ((metaState & android.view.KeyEvent.META_ALT_ON) != 0) {
-      modifiers |= Event.ALT;
-    }
-
-    // Handling multitouch
-//    int nump = motionEvent.getPointerCount();
-    enqueueMotionEvent(motionEvent, modifiers);
+//    enqueueMotionEvent(event);
 //
 //    // this will be the last event in the list
 //    AndroidTouchEvent pme = motionEventQueue[motionEventCount + historyCount];
@@ -2215,8 +2392,20 @@ public class PApplet extends Object implements PConstants {
     // http://android-developers.blogspot.com/2010/06/making-sense-of-multitouch.html
     // http://www.techrepublic.com/blog/app-builder/use-androids-gesture-detector-to-translate-a-swipe-into-an-event/1577
 
-
-    // Regular events (mouse)
+    int metaState = motionEvent.getMetaState();
+    int modifiers = 0;
+    if ((metaState & android.view.KeyEvent.META_SHIFT_ON) != 0) {
+      modifiers |= Event.SHIFT;
+    }
+    if ((metaState & META_CTRL_ON) != 0) {
+      modifiers |= Event.CTRL;
+    }
+    if ((metaState & META_META_ON) != 0) {
+      modifiers |= Event.META;
+    }
+    if ((metaState & android.view.KeyEvent.META_ALT_ON) != 0) {
+      modifiers |= Event.ALT;
+    }
 
     int clickCount = 1;  // not really set... (i.e. not catching double taps)
     int index;
@@ -2251,6 +2440,7 @@ public class PApplet extends Object implements PConstants {
       }
       break;
     }
+    //postEvent(pme);
   }
 
 
