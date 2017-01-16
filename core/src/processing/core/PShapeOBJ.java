@@ -23,6 +23,7 @@
 package processing.core;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,17 +46,20 @@ public class PShapeOBJ extends PShape {
    * Initializes a new OBJ Object with the given filename.
    */
   public PShapeOBJ(PApplet parent, String filename) {
-    this(parent, parent.createReader(filename));
+    this(parent, parent.createReader(filename), getBasePath(parent, filename));
   }
 
-
   public PShapeOBJ(PApplet parent, BufferedReader reader) {
+    this(parent, reader, "");
+  }
+
+  public PShapeOBJ(PApplet parent, BufferedReader reader, String basePath) {
     ArrayList<OBJFace> faces = new ArrayList<OBJFace>();
     ArrayList<OBJMaterial> materials = new ArrayList<OBJMaterial>();
     ArrayList<PVector> coords = new ArrayList<PVector>();
     ArrayList<PVector> normals = new ArrayList<PVector>();
     ArrayList<PVector> texcoords = new ArrayList<PVector>();
-    parseOBJ(parent, reader,
+    parseOBJ(parent, basePath, reader,
              faces, materials, coords, normals, texcoords);
 
     // The OBJ geometry is stored with each face in a separate child shape.
@@ -168,7 +172,7 @@ public class PShapeOBJ extends PShape {
   }
 
 
-  static protected void parseOBJ(PApplet parent,
+  static protected void parseOBJ(PApplet parent, String path,
                                  BufferedReader reader,
                                  ArrayList<OBJFace> faces,
                                  ArrayList<OBJMaterial> materials,
@@ -238,12 +242,15 @@ public class PShapeOBJ extends PShape {
           } else if (parts[0].equals("o")) {
             // Object name is ignored, for now.
           } else if (parts[0].equals("mtllib")) {
-
             if (parts[1] != null) {
               String fn = parts[1];
+              if (fn.indexOf(File.separator) == -1 && !path.equals("")) {
+                // Relative file name, adding the base path.
+                fn = path + File.separator + fn;
+              }
               BufferedReader mreader = parent.createReader(fn);
               if (mreader != null) {
-                parseMTL(parent, fn, mreader, materials, mtlTable);
+                parseMTL(parent, fn, path, mreader, materials, mtlTable);
                 mreader.close();
               }
             }
@@ -332,7 +339,7 @@ public class PShapeOBJ extends PShape {
   }
 
 
-  static protected void parseMTL(PApplet parent, String mtlfn,
+  static protected void parseMTL(PApplet parent, String mtlfn, String path,
                                  BufferedReader reader,
                                  ArrayList<OBJMaterial> materials,
                                  Map<String, Integer> materialsHash) {
@@ -357,8 +364,15 @@ public class PShapeOBJ extends PShape {
             if (parts[0].equals("map_Kd") && parts.length > 1) {
               // Loading texture map.
               String texname = parts[1];
-              currentMtl.kdMap = parent.loadImage(texname);
-              if (currentMtl.kdMap == null) {
+              if (texname.indexOf(File.separator) == -1 && !path.equals("")) {
+                // Relative file name, adding the base path.
+                texname = path + File.separator + texname;
+              }
+
+              File file = new File(parent.dataPath(texname));
+              if (file.exists()) {
+                currentMtl.kdMap = parent.loadImage(texname);
+              } else {
                 System.err.println("The texture map \"" + texname + "\" " +
                   "in the materials definition file \"" + mtlfn + "\" " +
                   "is missing or inaccessible, make sure " +
@@ -435,6 +449,18 @@ public class PShapeOBJ extends PShape {
       matIdx = -1;
       name = "";
     }
+  }
+
+
+  static protected String getBasePath(PApplet parent, String filename) {
+    // Obtaining the path
+    File file = new File(parent.dataPath(filename));
+    if (!file.exists()) {
+      file = parent.sketchFile(filename);
+    }
+    String absolutePath = file.getAbsolutePath();
+    return absolutePath.substring(0,
+            absolutePath.lastIndexOf(File.separator));
   }
 
 
