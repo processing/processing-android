@@ -46,6 +46,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
 import processing.data.*;
@@ -2388,6 +2389,22 @@ public class PApplet extends Object implements PConstants {
                                keAction, keModifiers, key, keyCode);
 
     postEvent(ke);
+  }
+
+
+  public void openKeyboard() {
+    View view = surface.getRootView();
+    Context context = surface.getContext();
+    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+  }
+
+
+  public void closeKeyboard() {
+    View view = surface.getRootView();
+    Context context = surface.getContext();
+    InputMethodManager imm =(InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
   }
 
 
