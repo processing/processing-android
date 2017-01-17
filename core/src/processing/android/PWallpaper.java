@@ -188,7 +188,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     public void onOffsetsChanged(float xOffset, float yOffset,
                                  float xStep, float yStep, int xPixels, int yPixels) {
       if (sketch != null) {
-        sketch.offsetX = xOffset;
+        sketch.displayOffset = xOffset;
         sketch.offsetY = yOffset;
       }
     }
