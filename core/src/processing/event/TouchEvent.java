@@ -75,8 +75,8 @@ public class TouchEvent extends Event {
  }
 
 
- public PPointer getPointer(int idx) {
-   PPointer pt = new PPointer();
+ public Pointer getPointer(int idx) {
+   Pointer pt = new Pointer();
    pt.id = pointerId[idx];
    pt.x = pointerX[idx];
    pt.y = pointerY[idx];
@@ -116,11 +116,11 @@ public class TouchEvent extends Event {
  }
 
 
- public PPointer[] getTouches(PPointer[] touches) {
+ public Pointer[] getTouches(Pointer[] touches) {
    if (touches == null || touches.length != numPointers) {
-     touches = new PPointer[numPointers];
+     touches = new Pointer[numPointers];
      for (int idx = 0; idx < numPointers; idx++) {
-       touches[idx] = new PPointer();
+       touches[idx] = new Pointer();
      }
    }
    for (int idx = 0; idx < numPointers; idx++) {
@@ -134,7 +134,7 @@ public class TouchEvent extends Event {
  }
 
 
-  public class PPointer {
+  public class Pointer {
     public int id;
     public float x, y;
     public float size;

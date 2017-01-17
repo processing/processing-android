@@ -195,7 +195,7 @@ public class PApplet extends Object implements PConstants {
   public boolean touchPressed;
 
 
-  public TouchEvent.PPointer[] touches = new TouchEvent.PPointer[0];
+  public TouchEvent.Pointer[] touches = new TouchEvent.Pointer[0];
 
 
   /**
