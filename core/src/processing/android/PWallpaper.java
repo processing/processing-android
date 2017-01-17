@@ -189,7 +189,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
                                  float xStep, float yStep, int xPixels, int yPixels) {
       if (sketch != null) {
         sketch.displayOffset = xOffset;
-        sketch.offsetY = yOffset;
       }
     }
 
