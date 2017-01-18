@@ -223,6 +223,12 @@ public class PApplet extends Object implements PConstants {
 
 
   /**
+   * ID of the most recently touch pointer gone up or down.
+   */
+  protected int touchPointerId;
+
+
+  /**
    * Last key pressed.
    * <P>
    * If it's a coded key, i.e. UP/DOWN/CTRL/SHIFT/ALT,
@@ -2039,6 +2045,8 @@ public class PApplet extends Object implements PConstants {
 
 
   protected void handleTouchEvent(TouchEvent event) {
+    touches = event.getTouches(touches);
+
     switch (event.getAction()) {
     case TouchEvent.START:
       touchPressed = true;
@@ -2064,8 +2072,6 @@ public class PApplet extends Object implements PConstants {
       touchCancelled(event);
       break;
     }
-
-    touches = event.getTouches(touches);
   }
 
 
@@ -2121,6 +2127,9 @@ public class PApplet extends Object implements PConstants {
     case MotionEvent.ACTION_DOWN:
       paction = TouchEvent.START;
       break;
+    case MotionEvent.ACTION_POINTER_DOWN:
+      paction = TouchEvent.START;
+      break;
     case MotionEvent.ACTION_MOVE:
       paction = TouchEvent.MOVE;
       break;
@@ -2134,6 +2143,10 @@ public class PApplet extends Object implements PConstants {
       // Covers any other action value, including ACTION_CANCEL
       paction = TouchEvent.CANCEL;
       break;
+    }
+
+    if (paction == TouchEvent.START || paction == TouchEvent.END) {
+      touchPointerId = event.getPointerId(0);
     }
 
     int pointerCount = event.getPointerCount();
