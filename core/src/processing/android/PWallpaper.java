@@ -133,18 +133,24 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
-      if (sketch == null) {
+      if (sketch == null || isPreview()) {
+        // Creating the sketch for the first time, this means that we are
+        // in preview mode
         sketch = createSketch();
         sketch.initSurface(PWallpaper.this, getSurfaceHolder());
         sketch.startSurface();
         // By default we don't get touch events, so enable them.
         setTouchEventsEnabled(true);
       } else {
-//        sketch.onPause();
+        // Sketch already exists, so we are launching the "real" wallpaper.
+        // Since the containing process is still the same, we don't want to
+        // recreate the sketch and all associated resources (renderer, etc) not
+        // only to keep resource usage/starting times low, but also because
+        // otherwise strange things might happen (e.g.: static variables in places
+        // like PConstants are zeroed when the preview instance is disposed, but
+        // still accessed by the new instance).
         sketch.resetSurface(PWallpaper.this, getSurfaceHolder());
-        sketch.frameCount = 0;
         sketch.startSurface();
-        PApplet.println("Restarting sketch", sketch.isLooping());
       }
       if (sketch != null) {
         sketch.preview = isPreview();
@@ -155,13 +161,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onSurfaceCreated(SurfaceHolder surfaceHolder) {
       super.onSurfaceCreated(surfaceHolder);
-//      Log.d(TAG, "onSurfaceCreated()");
     }
 
     @Override
     public void onSurfaceChanged(final SurfaceHolder holder, final int format,
                                  final int width, final int height) {
-//      Log.d(TAG, "onSurfaceChanged()");
       if (sketch != null) {
         sketch.g.setSize(width, height);
       }
@@ -170,19 +174,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
     @Override
     public void onVisibilityChanged(boolean visible) {
-//      if (LoggerConfig.ON) {
-//        Log.d(TAG, "onVisibilityChanged(" + visible + ")");
-//      }
-//
-      if (!isPreview()) {
-        if (sketch != null) {
-          if (visible) {
-            PApplet.println("resuming sketch", sketch.frameCount);
-            sketch.onResume();
-          } else {
-            PApplet.println("pausing sketch", sketch.frameCount);
-            sketch.onPause();
-          }
+      if (!isPreview() && sketch != null) {
+        if (visible) {
+          sketch.onResume();
+        } else {
+          sketch.onPause();
         }
       }
       super.onVisibilityChanged(visible);
@@ -217,20 +213,9 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
     @Override
     public void onDestroy() {
-      // Called right before the engine is going away.
-//      if (LoggerConfig.ON) {
-//        Log.d(TAG, "onDestroy()");
-//      }
-//
       super.onDestroy();
-      if (sketch != null)  {
-        if (isPreview()) {
-//          PApplet.println("Pausing sketch");
-//          sketch.onPause();
-        } else {
-          PApplet.println("Destroying sketch");
-          sketch.onDestroy();
-        }
+      if (!isPreview() && sketch != null) {
+        sketch.onDestroy();
       }
     }
 

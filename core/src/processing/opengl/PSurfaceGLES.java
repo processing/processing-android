@@ -80,7 +80,6 @@ public class PSurfaceGLES extends PSurfaceNone {
   public void dispose() {
     super.dispose();
     if (glsurf != null) {
-      PApplet.println("dispose surface");
       glsurf.dispose();
       glsurf = null;
     }
@@ -152,8 +151,6 @@ public class PSurfaceGLES extends PSurfaceNone {
     public void dispose() {
       super.destroyDrawingCache();
       super.onDetachedFromWindow();
-//       don't think i want to call stop() from here, since it might be swapping renderers
-//            stop();
     }
 
 

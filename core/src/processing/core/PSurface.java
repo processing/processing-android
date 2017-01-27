@@ -87,6 +87,8 @@ public interface PSurface {
 
   public boolean stopThread();
 
+  public boolean stopThread(boolean killProc);
+
   public boolean isStopped();
 
   public void finish();

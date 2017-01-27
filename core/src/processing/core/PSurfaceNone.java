@@ -66,6 +66,8 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected float frameRateTarget = 60;
   protected long frameRatePeriod = 1000000000L / 60L;
 
+  protected boolean killProcAfterStop = true;
+
   @Override
   public Context getContext() {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -299,7 +301,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void finish() {
-    if (sketch == null || component == null) return;
+    if (component == null) return;
 
     if (component.getKind() == AppComponent.FRAGMENT) {
       activity.finish();
@@ -349,6 +351,12 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public boolean stopThread() {
+    return stopThread(true);
+  }
+
+  @Override
+  public boolean stopThread(boolean killProc) {
+    killProcAfterStop = killProc;
     if (thread == null) {
       return false;
     }
@@ -409,7 +417,8 @@ public class PSurfaceNone implements PSurface, PConstants {
       // un-pause the sketch and get rolling
       sketch.start();
 
-      while ((Thread.currentThread() == thread) && (sketch != null && !sketch.finished)) {
+      while ((Thread.currentThread() == thread) &&
+             (sketch != null && !sketch.finished)) {
         checkPause();
         callDraw();
 
@@ -444,8 +453,7 @@ public class PSurfaceNone implements PSurface, PConstants {
         beforeTime = System.nanoTime();
       }
 
-//      PApplet.println("Sketch is finished", sketch.frameCount);
-      finish();
+      if (killProcAfterStop) finish();
     }
   }
 }

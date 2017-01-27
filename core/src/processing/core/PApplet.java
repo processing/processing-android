@@ -504,9 +504,6 @@ public class PApplet extends Object implements PConstants {
 
     if (parentLayout == -1) {
       setFullScreenVisibility();
-      // Now we now the right width/height size for the renderer
-//      g.setSize(width, height); // do need this?
-      // Finalize surface initialization.
       surface.initView(width, height);
     } else {
       surface.initView(inflater, container, savedInstanceState,
@@ -524,18 +521,37 @@ public class PApplet extends Object implements PConstants {
   }
 
   public void resetSurface(AppComponent component, SurfaceHolder holder) {
-    if (surface != null) surface.dispose();
+    parentLayout = -1;
+    resetSurface(null, null,  null, component, holder);
+  }
+
+  public void resetSurface(LayoutInflater inflater, ViewGroup container,
+                           Bundle savedInstanceState,
+                           AppComponent component, SurfaceHolder holder) {
+    if (surface != null) {
+      // Don't kill the process (activity or service) after stopping the
+      // animation thread, otherwise the app will just quit. This in particular
+      // is needed by live wallpapers (since the preview and real wallpaper are
+      // the same service process).
+      surface.stopThread(false);
+      surface.dispose();
+    }
     surface = g.createSurface(component, holder);
+
     if (parentLayout == -1) {
       setFullScreenVisibility();
-      // Now we now the right width/height size for the renderer
-//      g.setSize(width, height); // do need this?
-      // Finalize surface initialization.
       surface.initView(width, height);
     } else {
-//      surface.initView(inflater, container, savedInstanceState,
-//                       fullScreen, width, height);
+      surface.initView(inflater, container, savedInstanceState,
+                       fullScreen, width, height);
     }
+
+    // Reset frame count to start from setup() again
+    frameCount = 0;
+
+    finished = false;
+    looping = true;
+    redraw = true;
   }
 
 
