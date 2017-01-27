@@ -523,6 +523,21 @@ public class PApplet extends Object implements PConstants {
     if (DEBUG) println("Done with init surface");
   }
 
+  public void resetSurface(AppComponent component, SurfaceHolder holder) {
+    if (surface != null) surface.dispose();
+    surface = g.createSurface(component, holder);
+    if (parentLayout == -1) {
+      setFullScreenVisibility();
+      // Now we now the right width/height size for the renderer
+//      g.setSize(width, height); // do need this?
+      // Finalize surface initialization.
+      surface.initView(width, height);
+    } else {
+//      surface.initView(inflater, container, savedInstanceState,
+//                       fullScreen, width, height);
+    }
+  }
+
 
   public void startSurface() {
     surface.startThread();
@@ -2745,9 +2760,9 @@ public class PApplet extends Object implements PConstants {
 
     // call to shut down renderer, in case it needs it (pdf does)
 //    if (surface != null) surface.dispose();
-    if (surface != null && surface.stopThread()) {
+    if (surface != null && surface.stopThread()) { // TODO stopping the thread for good?
       if (g != null) {
-        g.dispose();
+        g.dispose(); // TODO this would call PSurface.finish(), and so quit activity... but shouldn't
         surface.dispose();
       }
     }

@@ -299,7 +299,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void finish() {
-    if (component == null) return;
+    if (sketch == null || component == null) return;
 
     if (component.getKind() == AppComponent.FRAGMENT) {
       activity.finish();
@@ -409,7 +409,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       // un-pause the sketch and get rolling
       sketch.start();
 
-      while ((Thread.currentThread() == thread) && !sketch.finished) {
+      while ((Thread.currentThread() == thread) && (sketch != null && !sketch.finished)) {
         checkPause();
         callDraw();
 
@@ -444,6 +444,7 @@ public class PSurfaceNone implements PSurface, PConstants {
         beforeTime = System.nanoTime();
       }
 
+//      PApplet.println("Sketch is finished", sketch.frameCount);
       finish();
     }
   }

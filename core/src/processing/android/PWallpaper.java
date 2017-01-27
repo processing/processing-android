@@ -38,6 +38,8 @@ import android.graphics.Point;
 public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
 
+  private PApplet sketch;
+
   protected Point size;
   private DisplayMetrics metrics;
   protected PEngine engine;
@@ -94,7 +96,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public PApplet getSketch() {
-    return engine.sketch;
+    return sketch;
   }
 
   public PApplet createSketch() {
@@ -127,17 +129,25 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public class PEngine extends Engine {
-    private PApplet sketch;
+
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
-      sketch = createSketch();
-      if (sketch != null) {
+      if (sketch == null) {
+        sketch = createSketch();
         sketch.initSurface(PWallpaper.this, getSurfaceHolder());
         sketch.startSurface();
-        sketch.preview = isPreview();
         // By default we don't get touch events, so enable them.
         setTouchEventsEnabled(true);
+      } else {
+//        sketch.onPause();
+        sketch.resetSurface(PWallpaper.this, getSurfaceHolder());
+        sketch.frameCount = 0;
+        sketch.startSurface();
+        PApplet.println("Restarting sketch", sketch.isLooping());
+      }
+      if (sketch != null) {
+        sketch.preview = isPreview();
         if (!sketch.preview) requestPermissions();
       }
     }
@@ -145,17 +155,17 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onSurfaceCreated(SurfaceHolder surfaceHolder) {
       super.onSurfaceCreated(surfaceHolder);
-      Log.d(TAG, "onSurfaceCreated()");
+//      Log.d(TAG, "onSurfaceCreated()");
     }
 
     @Override
     public void onSurfaceChanged(final SurfaceHolder holder, final int format,
                                  final int width, final int height) {
-      super.onSurfaceChanged(holder, format, width, height);
-      Log.d(TAG, "onSurfaceChanged()");
+//      Log.d(TAG, "onSurfaceChanged()");
       if (sketch != null) {
         sketch.g.setSize(width, height);
       }
+      super.onSurfaceChanged(holder, format, width, height);
     }
 
     @Override
@@ -164,14 +174,18 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 //        Log.d(TAG, "onVisibilityChanged(" + visible + ")");
 //      }
 //
-      super.onVisibilityChanged(visible);
-      if (sketch != null) {
-        if (visible) {
-          sketch.onResume();
-        } else {
-          sketch.onPause();
+      if (!isPreview()) {
+        if (sketch != null) {
+          if (visible) {
+            PApplet.println("resuming sketch", sketch.frameCount);
+            sketch.onResume();
+          } else {
+            PApplet.println("pausing sketch", sketch.frameCount);
+            sketch.onPause();
+          }
         }
       }
+      super.onVisibilityChanged(visible);
     }
 
     /*
@@ -198,21 +212,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       // call, you should no longer try to access this surface. If you have a rendering thread that
       // directly accesses the surface, you must ensure that thread is no longer touching the
       // Surface before returning from this function.
-      /*
-      PApplet sketchToDestroy = null;
-      if (deadSketch != null) {
-        sketchToDestroy = deadSketch;
-      } else {
-        handler.removeCallbacks(drawRunnable);
-        System.out.println("Removed handler draw callback!!!!!!!!!!!!!!!!");
-        sketchToDestroy = sketch;
-      }
-
-      if (sketchToDestroy != null) {
-        System.out.println("Pausing sketch on surface destroy " + sketchToDestroy);
-        sketchToDestroy.onPause();
-      }
-      */
+      super.onSurfaceDestroyed(holder);
     }
 
     @Override
@@ -223,7 +223,15 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 //      }
 //
       super.onDestroy();
-      if (sketch != null) sketch.onDestroy();
+      if (sketch != null)  {
+        if (isPreview()) {
+//          PApplet.println("Pausing sketch");
+//          sketch.onPause();
+        } else {
+          PApplet.println("Destroying sketch");
+          sketch.onDestroy();
+        }
+      }
     }
 
     public void onPermissionsGranted() {

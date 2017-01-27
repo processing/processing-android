@@ -48,7 +48,7 @@ import processing.core.PSurfaceNone;
 
 public class PSurfaceGLES extends PSurfaceNone {
   public PGLES pgl;
-  private GLSurfaceView glsurf;
+  private SketchSurfaceViewGL glsurf;
 
   /** The renderer object driving the rendering loop, analogous to the
    * GLEventListener in JOGL */
@@ -73,13 +73,17 @@ public class PSurfaceGLES extends PSurfaceNone {
       watchface = (Gles2WatchFaceService)component;
       surface = null;
     }
-    glsurf = (GLSurfaceView)surface;
+    glsurf = (SketchSurfaceViewGL)surface;
   }
 
   @Override
   public void dispose() {
     super.dispose();
-    glsurf = null;
+    if (glsurf != null) {
+      PApplet.println("dispose surface");
+      glsurf.dispose();
+      glsurf = null;
+    }
   }
 
   ///////////////////////////////////////////////////////////
@@ -145,12 +149,12 @@ public class PSurfaceGLES extends PSurfaceNone {
       }
     }
 
-//    public void onDestroy() {
-//      super.destroyDrawingCache();
-//      super.onDetachedFromWindow();
-      // don't think i want to call stop() from here, since it might be swapping renderers
-      //      stop();
-//    }
+    public void dispose() {
+      super.destroyDrawingCache();
+      super.onDetachedFromWindow();
+//       don't think i want to call stop() from here, since it might be swapping renderers
+//            stop();
+    }
 
 
     @Override
@@ -265,14 +269,17 @@ public class PSurfaceGLES extends PSurfaceNone {
 
 
   protected class AndroidRenderer implements Renderer {
+
     public AndroidRenderer() {
     }
 
+    @Override
     public void onDrawFrame(GL10 igl) {
       pgl.getGL(igl);
       sketch.handleDraw();
     }
 
+    @Override
     public void onSurfaceChanged(GL10 igl, int iwidth, int iheight) {
       if (PApplet.DEBUG) {
         System.out.println("AndroidRenderer.onSurfaceChanged() " + iwidth + " " + iheight);
@@ -294,6 +301,7 @@ public class PSurfaceGLES extends PSurfaceNone {
       sketch.surfaceChanged();
     }
 
+    @Override
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {
       pgl.init(igl);
     }
