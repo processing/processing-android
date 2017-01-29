@@ -680,7 +680,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   // Android only
-  public PSurface createSurface(AppComponent component, SurfaceHolder holder) {  // ignore
+  public PSurface createSurface(AppComponent component, SurfaceHolder holder, boolean reset) {  // ignore
+    if (reset) pgl.resetFBOLayer();
     return new PSurfaceGLES(this, component, holder);
   }
 
@@ -876,7 +877,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     private void disposeNative() {
-      if (pgl != null) {
+      if (pgl != null && pgl.contextIsCurrent(context)) {
         if (glName != 0) {
           intBuffer.put(0, glName);
           pgl.deleteTextures(1, intBuffer);
@@ -950,7 +951,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     private void disposeNative() {
-      if (pgl != null) {
+      if (pgl != null && pgl.contextIsCurrent(context)) {
         if (glId != 0) {
           intBuffer.put(0, glId);
           pgl.deleteBuffers(1, intBuffer);
@@ -1030,7 +1031,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     private void disposeNative() {
-      if (pgl != null) {
+      if (pgl != null && pgl.contextIsCurrent(context)) {
         if (glFragment != 0) {
           pgl.deleteShader(glFragment);
           glFragment = 0;
@@ -1145,7 +1146,7 @@ public class PGraphicsOpenGL extends PGraphics {
     }
 
     private void disposeNative() {
-      if (pgl != null) {
+      if (pgl != null && pgl.contextIsCurrent(context)) {
         if (glFbo != 0) {
           intBuffer.put(0, glFbo);
           pgl.deleteFramebuffers(1, intBuffer);

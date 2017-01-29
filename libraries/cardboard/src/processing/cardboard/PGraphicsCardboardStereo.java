@@ -28,7 +28,8 @@ import processing.core.PSurface;
 
 public class PGraphicsCardboardStereo extends PGraphicsCardboard {
   @Override
-  public PSurface createSurface(AppComponent component, SurfaceHolder holder) {  // ignore
+  public PSurface createSurface(AppComponent component, SurfaceHolder holder, boolean reset) {  // ignore
+    if (reset) pgl.resetFBOLayer();
     return new PSurfaceCardboard(this, component, holder, true);
   }
 }

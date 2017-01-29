@@ -492,7 +492,7 @@ public class PApplet extends Object implements PConstants {
     if (DEBUG) println("Renderer " + rendererName);
     g = makeGraphics(width, height, rendererName, true);
     if (DEBUG) println("Created renderer");
-    surface = g.createSurface(component, holder);
+    surface = g.createSurface(component, holder, false);
     if (DEBUG) println("Created surface");
 
     //set smooth level
@@ -536,7 +536,7 @@ public class PApplet extends Object implements PConstants {
       surface.stopThread(false);
       surface.dispose();
     }
-    surface = g.createSurface(component, holder);
+    surface = g.createSurface(component, holder, true);
 
     if (parentLayout == -1) {
       setFullScreenVisibility();
