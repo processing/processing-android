@@ -26,7 +26,6 @@ package processing.opengl;
 
 import processing.android.AppComponent;
 import processing.core.*;
-
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -48,6 +47,43 @@ public class PGraphicsOpenGL extends PGraphics {
   protected WeakHashMap<PFont, FontTexture> fontMap;
 
   // ........................................................
+
+  // Disposal of native resources
+  // Using the technique alternative to finalization described in:
+  // http://www.oracle.com/technetwork/articles/java/finalization-137655.html
+  private static ReferenceQueue<Object> refQueue = new ReferenceQueue<>();
+  private static List<Disposable<? extends Object>> reachableWeakReferences =
+    new LinkedList<>();
+
+  static final private int MAX_DRAIN_GLRES_ITERATIONS = 10;
+
+  static void drainRefQueueBounded() {
+    int iterations = 0;
+    while (iterations < MAX_DRAIN_GLRES_ITERATIONS) {
+      Disposable<? extends Object> res =
+        (Disposable<? extends Object>) refQueue.poll();
+      if (res == null) {
+        break;
+      }
+      res.dispose();
+      ++iterations;
+    }
+  }
+
+  private static abstract class Disposable<T> extends WeakReference<T> {
+    protected Disposable(T obj) {
+      super(obj, refQueue);
+      drainRefQueueBounded();
+      reachableWeakReferences.add(this);
+    }
+
+    public void dispose() {
+      reachableWeakReferences.remove(this);
+      disposeNative();
+    }
+
+    abstract public void disposeNative();
+  }
 
   // Basic rendering parameters:
 
@@ -829,42 +865,16 @@ public class PGraphicsOpenGL extends PGraphics {
 
   //////////////////////////////////////////////////////////////
 
-  // RESOURCE HANDLING
-  // Using the technique alternative to finalization described in:
-  // http://www.oracle.com/technetwork/articles/java/finalization-137655.html
 
-  static final private int MAX_DRAIN_GLRES_ITERATIONS = 10;
-
-  protected static class GLResourceTexture extends WeakReference<Texture> {
+  protected static class GLResourceTexture extends Disposable<Texture> {
     int glName;
 
     private PGL pgl;
     private int context;
 
-    static private ReferenceQueue<Texture> refQueue = new ReferenceQueue<Texture>();
-    static private List<GLResourceTexture> refList = new ArrayList<GLResourceTexture>();
-
-    static void drainRefQueueBounded() {
-      ReferenceQueue<Texture> refQueue = GLResourceTexture.referenceQueue();
-      int iterations = 0;
-      while (iterations < MAX_DRAIN_GLRES_ITERATIONS) {
-        GLResourceTexture res = (GLResourceTexture)refQueue.poll();
-        if (res == null) {
-          break;
-        }
-        res.dispose();
-        ++iterations;
-      }
-    }
-
-    static ReferenceQueue<Texture> referenceQueue() {
-      return refQueue;
-    }
-
     public GLResourceTexture(Texture tex) {
-      super(tex, refQueue);
+      super(tex);
 
-      drainRefQueueBounded();
 
       pgl = tex.pg.getPrimaryPGL();
       pgl.genTextures(1, intBuffer);
@@ -872,12 +882,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
       this.glName = tex.glName;
       this.context = tex.context;
-
-      refList.add(this);
     }
 
-    private void disposeNative() {
-      if (pgl != null && pgl.contextIsCurrent(context)) {
+    @Override
+    public void disposeNative() {
+      if (pgl != null) {
         if (glName != 0) {
           intBuffer.put(0, glName);
           pgl.deleteTextures(1, intBuffer);
@@ -887,13 +896,11 @@ public class PGraphicsOpenGL extends PGraphics {
       }
     }
 
-    void dispose() {
-      refList.remove(this);
-      disposeNative();
-    }
-
     @Override
     public boolean equals(Object obj) {
+      if (!(obj instanceof GLResourceTexture)) {
+        return false;
+      }
       GLResourceTexture other = (GLResourceTexture)obj;
       return other.glName == glName &&
              other.context == context;
@@ -909,36 +916,14 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-  protected static class GLResourceVertexBuffer extends WeakReference<VertexBuffer> {
+  protected static class GLResourceVertexBuffer extends Disposable<VertexBuffer> {
     int glId;
 
     private PGL pgl;
     private int context;
 
-    static private ReferenceQueue<VertexBuffer> refQueue = new ReferenceQueue<VertexBuffer>();
-    static private List<GLResourceVertexBuffer> refList = new ArrayList<GLResourceVertexBuffer>();
-
-    static void drainRefQueueBounded() {
-      ReferenceQueue<VertexBuffer> refQueue = GLResourceVertexBuffer.referenceQueue();
-      int iterations = 0;
-      while (iterations < MAX_DRAIN_GLRES_ITERATIONS) {
-        GLResourceVertexBuffer res = (GLResourceVertexBuffer)refQueue.poll();
-        if (res == null) {
-          break;
-        }
-        res.dispose();
-        ++iterations;
-      }
-    }
-
-    static ReferenceQueue<VertexBuffer> referenceQueue() {
-      return refQueue;
-    }
-
     public GLResourceVertexBuffer(VertexBuffer vbo) {
-      super(vbo, refQueue);
-
-      drainRefQueueBounded();
+      super(vbo);
 
       pgl = vbo.pgl.graphics.getPrimaryPGL();
       pgl.genBuffers(1, intBuffer);
@@ -946,12 +931,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
       this.glId = vbo.glId;
       this.context = vbo.context;
-
-      refList.add(this);
     }
 
-    private void disposeNative() {
-      if (pgl != null && pgl.contextIsCurrent(context)) {
+    @Override
+    public void disposeNative() {
+      if (pgl != null) {
         if (glId != 0) {
           intBuffer.put(0, glId);
           pgl.deleteBuffers(1, intBuffer);
@@ -961,13 +945,11 @@ public class PGraphicsOpenGL extends PGraphics {
       }
     }
 
-    void dispose() {
-      refList.remove(this);
-      disposeNative();
-    }
-
     @Override
     public boolean equals(Object obj) {
+      if (!(obj instanceof GLResourceVertexBuffer)) {
+        return false;
+      }
       GLResourceVertexBuffer other = (GLResourceVertexBuffer)obj;
       return other.glId == glId &&
              other.context == context;
@@ -983,7 +965,7 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-  protected static class GLResourceShader extends WeakReference<PShader> {
+  protected static class GLResourceShader extends Disposable<PShader> {
     int glProgram;
     int glVertex;
     int glFragment;
@@ -991,30 +973,8 @@ public class PGraphicsOpenGL extends PGraphics {
     private PGL pgl;
     private int context;
 
-    static private ReferenceQueue<PShader> refQueue = new ReferenceQueue<PShader>();
-    static private List<GLResourceShader> refList = new ArrayList<GLResourceShader>();
-
-    static void drainRefQueueBounded() {
-      ReferenceQueue<PShader> refQueue = GLResourceShader.referenceQueue();
-      int iterations = 0;
-      while (iterations < MAX_DRAIN_GLRES_ITERATIONS) {
-        GLResourceShader res = (GLResourceShader)refQueue.poll();
-        if (res == null) {
-          break;
-        }
-        res.dispose();
-        ++iterations;
-      }
-    }
-
-    static ReferenceQueue<PShader> referenceQueue() {
-      return refQueue;
-    }
-
     public GLResourceShader(PShader sh) {
-      super(sh, refQueue);
-
-      drainRefQueueBounded();
+      super(sh);
 
       this.pgl = sh.pgl.graphics.getPrimaryPGL();
       sh.glProgram = pgl.createProgram();
@@ -1026,12 +986,11 @@ public class PGraphicsOpenGL extends PGraphics {
       this.glFragment = sh.glFragment;
 
       this.context = sh.context;
-
-      refList.add(this);
     }
 
-    private void disposeNative() {
-      if (pgl != null && pgl.contextIsCurrent(context)) {
+    @Override
+    public void disposeNative() {
+      if (pgl != null) {
         if (glFragment != 0) {
           pgl.deleteShader(glFragment);
           glFragment = 0;
@@ -1048,13 +1007,11 @@ public class PGraphicsOpenGL extends PGraphics {
       }
     }
 
-    void dispose() {
-      refList.remove(this);
-      disposeNative();
-    }
-
     @Override
     public boolean equals(Object obj) {
+      if (!(obj instanceof GLResourceShader)) {
+        return false;
+      }
       GLResourceShader other = (GLResourceShader)obj;
       return other.glProgram == glProgram &&
              other.glVertex == glVertex &&
@@ -1074,7 +1031,7 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-  protected static class GLResourceFrameBuffer extends WeakReference<FrameBuffer> {
+  protected static class GLResourceFrameBuffer extends Disposable<FrameBuffer> {
     int glFbo;
     int glDepth;
     int glStencil;
@@ -1084,30 +1041,8 @@ public class PGraphicsOpenGL extends PGraphics {
     private PGL pgl;
     private int context;
 
-    static private ReferenceQueue<FrameBuffer> refQueue = new ReferenceQueue<FrameBuffer>();
-    static private List<GLResourceFrameBuffer> refList = new ArrayList<GLResourceFrameBuffer>();
-
-    static void drainRefQueueBounded() {
-      ReferenceQueue<FrameBuffer> refQueue = GLResourceFrameBuffer.referenceQueue();
-      int iterations = 0;
-      while (iterations < MAX_DRAIN_GLRES_ITERATIONS) {
-        GLResourceFrameBuffer res = (GLResourceFrameBuffer)refQueue.poll();
-        if (res == null) {
-          break;
-        }
-        res.dispose();
-        ++iterations;
-      }
-    }
-
-    static ReferenceQueue<FrameBuffer> referenceQueue() {
-      return refQueue;
-    }
-
     public GLResourceFrameBuffer(FrameBuffer fb) {
-      super(fb, refQueue);
-
-      drainRefQueueBounded();
+      super(fb);
 
       pgl = fb.pg.getPrimaryPGL();
       if (!fb.screenFb) {
@@ -1141,12 +1076,11 @@ public class PGraphicsOpenGL extends PGraphics {
       }
 
       this.context = fb.context;
-
-      refList.add(this);
     }
 
-    private void disposeNative() {
-      if (pgl != null && pgl.contextIsCurrent(context)) {
+    @Override
+    public void disposeNative() {
+      if (pgl != null) {
         if (glFbo != 0) {
           intBuffer.put(0, glFbo);
           pgl.deleteFramebuffers(1, intBuffer);
@@ -1176,13 +1110,11 @@ public class PGraphicsOpenGL extends PGraphics {
       }
     }
 
-    void dispose() {
-      refList.remove(this);
-      disposeNative();
-    }
-
     @Override
     public boolean equals(Object obj) {
+      if (!(obj instanceof GLResourceFrameBuffer)) {
+        return false;
+      }
       GLResourceFrameBuffer other = (GLResourceFrameBuffer)obj;
       return other.glFbo == glFbo &&
              other.glDepth == glDepth &&
