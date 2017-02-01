@@ -520,40 +520,6 @@ public class PApplet extends Object implements PConstants {
     if (DEBUG) println("Done with init surface");
   }
 
-  public void resetSurface(AppComponent component, SurfaceHolder holder) {
-    parentLayout = -1;
-    resetSurface(null, null,  null, component, holder);
-  }
-
-  public void resetSurface(LayoutInflater inflater, ViewGroup container,
-                           Bundle savedInstanceState,
-                           AppComponent component, SurfaceHolder holder) {
-    if (surface != null) {
-      // Don't kill the process (activity or service) after stopping the
-      // animation thread, otherwise the app will just quit. This in particular
-      // is needed by live wallpapers (since the preview and real wallpaper are
-      // the same service process).
-      surface.stopThread(false);
-      surface.dispose();
-    }
-    surface = g.createSurface(component, holder, true);
-
-    if (parentLayout == -1) {
-      setFullScreenVisibility();
-      surface.initView(width, height);
-    } else {
-      surface.initView(inflater, container, savedInstanceState,
-                       fullScreen, width, height);
-    }
-
-    // Reset frame count to start from setup() again
-    frameCount = 0;
-
-    finished = false;
-    looping = true;
-    redraw = true;
-  }
-
 
   public void startSurface() {
     surface.startThread();
@@ -614,8 +580,9 @@ public class PApplet extends Object implements PConstants {
 
   public void onPause() {
     // TODO need to save all application state here!
-    // At least we save the current style.
-    if (g != null) {
+    // At least we save the current style (once we had at least drawn one
+    // frame, otherwise we might be saving a "null" style with all zeroes).
+    if (g != null && 0 < frameCount) {
       savedStyle = new PStyle();
       g.getStyle(savedStyle);
     }
@@ -2770,17 +2737,13 @@ public class PApplet extends Object implements PConstants {
     // moved here from stop()
     finished = true;  // let the sketch know it is shut down time
 
-    // don't run stop and disposers twice
-//    if (thread == null) return;
-//    thread = null;
-
     // call to shut down renderer, in case it needs it (pdf does)
-//    if (surface != null) surface.dispose();
-    if (surface != null && surface.stopThread()) { // TODO stopping the thread for good?
-      if (g != null) {
-        g.dispose(); // TODO this would call PSurface.finish(), and so quit activity... but shouldn't
-        surface.dispose();
-      }
+    if (surface != null) {
+      surface.stopThread();
+      surface.dispose();
+    }
+    if (g != null) {
+      g.dispose();
     }
 
     handleMethods("dispose");

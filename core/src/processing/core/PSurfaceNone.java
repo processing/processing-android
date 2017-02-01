@@ -66,8 +66,6 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected float frameRateTarget = 60;
   protected long frameRatePeriod = 1000000000L / 60L;
 
-  protected boolean killProcAfterStop = true;
-
   @Override
   public Context getContext() {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -351,18 +349,13 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public boolean stopThread() {
-    return stopThread(true);
-  }
-
-  @Override
-  public boolean stopThread(boolean killProc) {
-    killProcAfterStop = killProc;
     if (thread == null) {
       return false;
     }
     thread = null;
     return true;
   }
+
 
   @Override
   public boolean isStopped() {
@@ -453,7 +446,7 @@ public class PSurfaceNone implements PSurface, PConstants {
         beforeTime = System.nanoTime();
       }
 
-      if (killProcAfterStop) finish();
+      finish();
     }
   }
 }

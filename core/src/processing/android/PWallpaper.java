@@ -23,22 +23,17 @@
 package processing.android;
 
 import android.service.wallpaper.WallpaperService;
-//import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.os.Build;
-//import android.view.WindowManager;
 import android.view.Display;
 import android.graphics.Point;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
   String TAG = "PWallpaper";
-
-  private PApplet sketch;
 
   protected Point size;
   private DisplayMetrics metrics;
@@ -92,11 +87,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public void setSketch(PApplet sketch) {
-//    engine.sketch = sketch;
+    engine.sketch = sketch;
   }
 
   public PApplet getSketch() {
-    return sketch;
+    return engine.sketch;
   }
 
   public PApplet createSketch() {
@@ -129,33 +124,17 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
   public class PEngine extends Engine {
+    protected PApplet sketch;
 
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
-      if (sketch == null || isPreview()) {
-        // Creating the sketch for the first time, this means that we are
-        // in preview mode
-        sketch = createSketch();
-        sketch.initSurface(PWallpaper.this, getSurfaceHolder());
-        sketch.startSurface();
-        // By default we don't get touch events, so enable them.
-        setTouchEventsEnabled(true);
-      } else {
-        // Sketch already exists, so we are launching the "real" wallpaper.
-        // Since the containing process is still the same, we don't want to
-        // recreate the sketch and all associated resources (renderer, etc) not
-        // only to keep resource usage/starting times low, but also because
-        // otherwise strange things might happen (e.g.: static variables in places
-        // like PConstants are zeroed when the preview instance is disposed, but
-        // still accessed by the new instance).
-        sketch.resetSurface(PWallpaper.this, getSurfaceHolder());
-        sketch.startSurface();
-      }
-      if (sketch != null) {
-        sketch.preview = isPreview();
-        if (!sketch.preview) requestPermissions();
-      }
+      sketch = createSketch();
+      sketch.initSurface(PWallpaper.this, getSurfaceHolder());
+      sketch.startSurface();
+      sketch.preview = isPreview();
+      if (isPreview()) requestPermissions();
+      setTouchEventsEnabled(true);
     }
 
     @Override
@@ -174,7 +153,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
     @Override
     public void onVisibilityChanged(boolean visible) {
-      if (!isPreview() && sketch != null) {
+      if (sketch != null) {
         if (visible) {
           sketch.onResume();
         } else {
@@ -191,7 +170,9 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onTouchEvent(MotionEvent event) {
       super.onTouchEvent(event);
-      if (sketch != null) sketch.surfaceTouchEvent(event);
+      if (sketch != null) {
+        sketch.surfaceTouchEvent(event);
+      }
     }
 
     @Override
@@ -204,23 +185,26 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
     @Override
     public void onSurfaceDestroyed(SurfaceHolder holder) {
-      // This is called immediately before a surface is being destroyed. After returning from this
-      // call, you should no longer try to access this surface. If you have a rendering thread that
-      // directly accesses the surface, you must ensure that thread is no longer touching the
-      // Surface before returning from this function.
+      // This is called immediately before a surface is being destroyed.
+      // After returning from this call, you should no longer try to access this
+      // surface. If you have a rendering thread that directly accesses the
+      // surface, you must ensure that thread is no longer touching the Surface
+      // before returning from this function.
       super.onSurfaceDestroyed(holder);
     }
 
     @Override
     public void onDestroy() {
       super.onDestroy();
-      if (!isPreview() && sketch != null) {
+      if (sketch != null) {
         sketch.onDestroy();
       }
     }
 
     public void onPermissionsGranted() {
-      if (sketch != null) sketch.onPermissionsGranted();
+      if (sketch != null) {
+        sketch.onPermissionsGranted();
+      }
     }
   }
 }

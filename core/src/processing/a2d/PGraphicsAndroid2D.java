@@ -238,7 +238,10 @@ public class PGraphicsAndroid2D extends PGraphics {
           }
         } finally {
           if (screen != null) {
-            parent.getSurfaceHolder().unlockCanvasAndPost(screen);
+            try {
+              parent.getSurfaceHolder().unlockCanvasAndPost(screen);
+            } catch (IllegalStateException ex) {
+            }
           }
         }
       }

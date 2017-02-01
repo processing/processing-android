@@ -50,11 +50,6 @@ public class PSurfaceGLES extends PSurfaceNone {
   public PGLES pgl;
   private SketchSurfaceViewGL glsurf;
 
-  /** The renderer object driving the rendering loop, analogous to the
-   * GLEventListener in JOGL */
-  protected AndroidRenderer renderer;
-  protected AndroidConfigChooser configChooser;
-
   public PSurfaceGLES() { }
 
   public PSurfaceGLES(PGraphics graphics, AppComponent component, SurfaceHolder holder) {
@@ -242,8 +237,9 @@ public class PSurfaceGLES extends PSurfaceNone {
 
 
   public AndroidRenderer getRenderer() {
-    renderer = new AndroidRenderer();
-    return renderer;
+//    renderer = new AndroidRenderer();
+//    return renderer;
+    return new AndroidRenderer();
   }
 
 
@@ -253,15 +249,13 @@ public class PSurfaceGLES extends PSurfaceNone {
 
 
   public AndroidConfigChooser getConfigChooser(int samples) {
-    configChooser = new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
-    return configChooser;
+    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
   }
 
 
   public AndroidConfigChooser getConfigChooser(int r, int g, int b, int a,
                                                int d, int s, int samples) {
-    configChooser = new AndroidConfigChooser(r, g, b, a, d, s, samples);
-    return configChooser;
+    return new AndroidConfigChooser(r, g, b, a, d, s, samples);
   }
 
 
