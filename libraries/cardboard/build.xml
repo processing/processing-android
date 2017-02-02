@@ -10,7 +10,8 @@
   </target>
 
   <target name="build" depends="sdk_chatter,compile" description="Build cardboard library for Processing Android" >
-  	<jar basedir="bin" destfile="library/cardboard.jar" />
+    <mkdir dir="library" />
+    <jar basedir="bin" destfile="library/cardboard.jar" />
   </target>
 
   <target name="sdk_chatter" unless="env.ANDROID_SDK">

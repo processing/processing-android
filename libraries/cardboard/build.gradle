@@ -46,9 +46,12 @@ import static java.nio.file.StandardCopyOption.*;
 
 task dist {
     doLast {
+        File cardBoardJar = file("library/cardboard.jar");
+        //create intermediate folder if they don't exist
+        cardBoardJar.mkdirs();
         // make copy of jar file to library folder
         Files.copy(file("$buildDir/libs/cardboard.jar").toPath(),
-                   file("library/cardboard.jar").toPath(), REPLACE_EXISTING);             
+                   cardBoardJar.toPath(), REPLACE_EXISTING);             
     }
 }
 
