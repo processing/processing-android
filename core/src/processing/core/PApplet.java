@@ -286,8 +286,10 @@ public class PApplet extends Object implements PConstants {
   /**
    * Offset for wallpapers, when user swipes across home screens.
    */
-  public float displayOffset = 0;
+  public float homeScreenOffset = 0;
 //  public float offsetY = 0;
+
+  public int homeScreenCount = 1;
 
   /**
    * Indicates if the wallpaper is in preview mode.
