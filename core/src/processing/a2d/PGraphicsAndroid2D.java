@@ -66,9 +66,12 @@ public class PGraphicsAndroid2D extends PGraphics {
   float[] curveDrawX;
   float[] curveDrawY;
 
-//  int transformCount;
-//  Matrix[] transformStack;
-  float[] transform;
+  static protected final int MATRIX_STACK_DEPTH = 32;
+  protected float[][] transformStack;
+  public PMatrix2D transform;
+  protected Matrix tmpMatrix;
+  protected float[] tmpArray;
+  int transformCount;
 
 //  Line2D.Float line = new Line2D.Float();
 //  Ellipse2D.Float ellipse = new Ellipse2D.Float();
@@ -107,9 +110,10 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   public PGraphicsAndroid2D() {
-//    transformStack = new Matrix[MATRIX_STACK_DEPTH];
-//    transform = new float[6];
-    transform = new float[9];
+    transformStack = new float[MATRIX_STACK_DEPTH][6];
+    transform = new PMatrix2D();
+    tmpMatrix = new Matrix();
+    tmpArray = new float[9];
 
     path = new Path();
     rect = new RectF();
@@ -506,7 +510,6 @@ public class PGraphicsAndroid2D extends PGraphics {
     }
     shape = 0;
   }
-
 
 
   //////////////////////////////////////////////////////////////
@@ -1387,27 +1390,28 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void pushMatrix() {
-//    if (transformCount == transformStack.length) {
-//      throw new RuntimeException("pushMatrix() cannot use push more than " +
-//                                 transformStack.length + " times");
-//    }
-//    transformStack[transformCount] = canvas.getMatrix();
-//    transformCount++;
-    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+    if (transformCount == transformStack.length) {
+      throw new RuntimeException("pushMatrix() cannot use push more than " +
+                                 transformStack.length + " times");
+    }
+    transform.get(transformStack[transformCount]);
+    transformCount++;
+//    canvas.save(Canvas.MATRIX_SAVE_FLAG);
   }
 
 
   @Override
   public void popMatrix() {
-//    if (transformCount == 0) {
-//      throw new RuntimeException("missing a popMatrix() " +
-//                                 "to go with that pushMatrix()");
-//    }
-//    transformCount--;
-//    canvas.setMatrix(transformStack[transformCount]);
-    canvas.restore();
+    if (transformCount == 0) {
+      throw new RuntimeException("missing a popMatrix() " +
+                                 "to go with that pushMatrix()");
+    }
+    transformCount--;
+    transform.set(transformStack[transformCount]);
+    updateTmpMatrix();
+    canvas.setMatrix(tmpMatrix);
+//    canvas.restore();
   }
-
 
 
   //////////////////////////////////////////////////////////////
@@ -1417,15 +1421,14 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void translate(float tx, float ty) {
+    transform.translate(tx, ty);
     canvas.translate(tx, ty);
   }
 
 
-  //public void translate(float tx, float ty, float tz)
-
-
   @Override
   public void rotate(float angle) {
+    transform.rotate(angle * RAD_TO_DEG);
     canvas.rotate(angle * RAD_TO_DEG);
   }
 
@@ -1456,12 +1459,14 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void scale(float s) {
+    transform.scale(s, s);
     canvas.scale(s, s);
   }
 
 
   @Override
   public void scale(float sx, float sy) {
+    transform.scale(sx, sy);
     canvas.scale(sx, sy);
   }
 
@@ -1474,15 +1479,18 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void shearX(float angle) {
-    canvas.skew((float) Math.tan(angle), 0);
+    float t = (float) Math.tan(angle);
+    transform.apply(1, t, 0, 0, 1, 0);
+    canvas.skew(t, 0);
   }
 
 
   @Override
   public void shearY(float angle) {
-    canvas.skew(0, (float) Math.tan(angle));
+    float t = (float) Math.tan(angle);
+    transform.apply(1, 0, 0, t, 1, 0);
+    canvas.skew(0, t);
   }
-
 
 
   //////////////////////////////////////////////////////////////
@@ -1492,8 +1500,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void resetMatrix() {
-//    canvas.setTransform(new AffineTransform());
-    canvas.setMatrix(new Matrix());
+    transform.reset();
+    canvas.setMatrix(null);
   }
 
 
@@ -1503,15 +1511,9 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void applyMatrix(float n00, float n01, float n02,
                           float n10, float n11, float n12) {
-//    canvas.transform(new AffineTransform(n00, n10, n01, n11, n02, n12));
-    // TODO optimize
-    Matrix m = new Matrix();
-    m.setValues(new float[] {
-      n00, n01, n02,
-      n10, n11, n12,
-      0,   0,   1
-    });
-    canvas.concat(m);
+    transform.apply(n00, n01, n02, n10, n11, n12);
+    updateTmpMatrix();
+    canvas.concat(tmpMatrix);
   }
 
 
@@ -1544,15 +1546,7 @@ public class PGraphicsAndroid2D extends PGraphics {
     if (target == null) {
       target = new PMatrix2D();
     }
-//    canvas.getTransform().getMatrix(transform);
-//    Matrix m = new Matrix();
-//    canvas.getMatrix(m);
-    Matrix m = getMatrixImp();
-    m.getValues(transform);
-//    target.set((float) transform[0], (float) transform[2], (float) transform[4],
-//               (float) transform[1], (float) transform[3], (float) transform[5]);
-    target.set((float) transform[0], (float) transform[1], (float) transform[2],
-               (float) transform[3], (float) transform[4], (float) transform[5]);
+    target.set(transform);
     return target;
   }
 
@@ -1569,16 +1563,9 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void setMatrix(PMatrix2D source) {
-//    canvas.setTransform(new AffineTransform(source.m00, source.m10,
-//                                            source.m01, source.m11,
-//                                            source.m02, source.m12));
-    Matrix matrix = new Matrix();
-    matrix.setValues(new float[] {
-      source.m00, source.m01, source.m02,
-      source.m10, source.m11, source.m12,
-      0, 0, 1
-    });
-    canvas.setMatrix(matrix);
+    transform.set(source);
+    updateTmpMatrix();
+    canvas.setMatrix(tmpMatrix);
   }
 
 
@@ -1595,10 +1582,26 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   protected Matrix getMatrixImp() {
-    return parent.getSurfaceView().getMatrix();
+    Matrix m = new Matrix();
+    updateTmpMatrix();
+    m.set(tmpMatrix);
+    return m;
 //    return canvas.getMatrix();
   }
 
+
+  protected void updateTmpMatrix() {
+    tmpArray[0] = transform.m00;
+    tmpArray[1] = transform.m01;
+    tmpArray[2] = transform.m02;
+    tmpArray[3] = transform.m10;
+    tmpArray[4] = transform.m11;
+    tmpArray[5] = transform.m12;
+    tmpArray[6] = 0;
+    tmpArray[7] = 0;
+    tmpArray[8] = 1;
+    tmpMatrix.setValues(tmpArray);
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -2109,10 +2112,12 @@ public class PGraphicsAndroid2D extends PGraphics {
       src.setModified(false);
     }
     // set() happens in screen coordinates, so need to clear the ctm
-    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+//    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+    pushMatrix();
     canvas.setMatrix(null);  // set to identity
     canvas.drawBitmap(bitmap, x, y, null);
-    canvas.restore();
+    popMatrix();
+//    canvas.restore();
   }
 
 
