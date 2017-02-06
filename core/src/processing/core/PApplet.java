@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.zip.*;
 
+import android.app.Activity;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -464,6 +465,11 @@ public class PApplet extends Object implements PConstants {
 
   public PSurface getSurface() {
     return surface;
+  }
+
+
+  public Activity getActivity() {
+    return surface.getActivity();
   }
 
 
