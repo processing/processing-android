@@ -36,6 +36,11 @@ import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -48,6 +53,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.SwingConstants;
 
 
 public class AndroidMode extends JavaMode {
@@ -318,22 +329,36 @@ public class AndroidMode extends JavaMode {
 
   public void showSelectComponentMessage(int appComp) {
     if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
-      Messages.showMessage("Is Debugging over Bluetooth enabled?",
-                           "Processing will access the wearable through the handheld paired to it.\n" +
-                           "Your watch won't show up in the device list, select the paired handheld.\n" +
-                           "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
-                           "http://developer.android.com/training/wearables/apps/bt-debugging.html");   
+      JLabel text1 = new JLabel("<html>Processing will access the watch through the phone<br>" +
+        "paired to it. Your watch won't show up in the device list,<br>"+
+        "select the paired phone.</html>");      
+      JLabel text2 = new JLabel("<html>Make sure to enable</html>");
+      final String url = "http://developer.android.com/training/wearables/apps/bt-debugging.html";
+      String urlText = "<html><a href=\"" + url + "\">debugging over bluetooth</a></html>";      
+      JLabel link = new JLabel(urlText);
+      link.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+      link.addMouseListener(new MouseAdapter() {
+        public void mouseClicked(MouseEvent e) {
+          Platform.openURL(url);
+        }
+      });
+      JLabel text3 = new JLabel("<html>for this to work.</html>");
+      JComponent[] text = new JComponent[] { text1, text2, link, text3 };  
+      String title = "Is Debugging over Bluetooth enabled?";
+      showMessage(title, text, 400, 100);
       showBluetoothDebugMessage = false;
-    }            
+    } 
   }
   
   public void showPostBuildMessage(int appComp) {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
-      Messages.showMessage("Now select the wallpaper...",
-                           "Processing built and installed your sketch\n" +
-                           "as a live wallpaper on the selected device.\n" +
-                           "You need to open the wallpaper selector\n" + 
-                           "in order to set it as the new background.");   
+      JLabel text1 = new JLabel("<html>Processing just built and installed your sketch as a<br>" +
+          "live wallpaper on the selected device.<br><br>" +
+          "You need to open the wallpaper selector in the device in order to<br>"+ 
+          "set it as the new background.</html>");
+      JComponent[] text = new JComponent[] { text1 };
+      String title = "Wallpaper installed!";
+      showMessage(title, text, 400, 100);  
       showWallpaperSelectMessage = false;
     }    
   }
@@ -429,4 +454,22 @@ public class AndroidMode extends JavaMode {
     }
     zip.close();
   }
+
+  static public void showMessage(String title, JComponent[] text, 
+      int w, int h) {
+    if (title == null) title = "Message";
+    if (Base.isCommandLine()) {
+      String concat = "";
+      for (JComponent txt: text) concat += txt.toString();
+      System.out.println(title + ": " + concat);
+    } else {
+      JFrame frame = new JFrame();
+      Container outer = frame.getContentPane();
+      outer.setLayout(new FlowLayout(FlowLayout.LEFT));
+      for (JComponent txt: text) outer.add(txt);
+      outer.setPreferredSize(new Dimension(w, h));      
+      JOptionPane.showMessageDialog(frame, outer, title,
+          JOptionPane.INFORMATION_MESSAGE);
+    }
+  }   
 }

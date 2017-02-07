@@ -43,6 +43,8 @@ import javax.swing.event.ChangeListener;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.TimerTask;
@@ -641,22 +643,55 @@ public class AndroidEditor extends JavaEditor {
   public void handleRunDevice() {
     if (Platform.isWindows() && !Preferences.getBoolean("usbDriverWarningShown")) {
       Preferences.setBoolean("usbDriverWarningShown", true);
-
-      String message = "";
-      File usbDriverFile = new File(((AndroidMode) sketch.getMode()).getSDK().getSdkFolder(), "extras/google/usb_driver");
+      
+      File sdkFolder = androidMode.getSDK().getSdkFolder();
+      File usbDriverFile = new File(sdkFolder, "extras/google/usb_driver");
+      JComponent[] text = null;
       if (usbDriverFile.exists()) {
-        message = "<html><body>" +
-            "You might need to install Google USB Driver to run the sketch on your device.<br>" +
-            "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
-            "For your reference, the driver is located in: " + usbDriverFile.getAbsolutePath();
+        JLabel text1 = new JLabel("<html>You might need to install Google USB Driver to run<br>" +
+            "the sketch on your device.</html>");
+        JLabel text2 = new JLabel("<html>Please follow</html>");      
+        final String url1 = "http://developer.android.com/sdk/win-usb.html";
+        String urlText1 = "<html><a href=\"" + url1 + "\">this guide</a></html>";      
+        JLabel link1 = new JLabel(urlText1);
+        link1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        link1.addMouseListener(new MouseAdapter() {
+          public void mouseClicked(MouseEvent e) {
+            Platform.openURL(url1);
+          }
+        });
+        JLabel text3 = new JLabel("<html>to install the driver.</html>");
+        JLabel text4 = new JLabel("<html>For your reference, the driver is located in:<br>" +
+            "C:/blah/blah/blah/lala</body></html>");       
+        text = new JComponent[] { text1, text2, link1, text3, text4 };
       } else {
-        message = "<html><body>" +
-            "You might need to install Google USB Driver to run the sketch on your device.<br>" +
-            "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
-            "You will also need to download the driver from <a href='http://developer.android.com/sdk/win-usb.html'>http://developer.android.com/sdk/win-usb.html</a>";
+        JLabel text1 = new JLabel("<html>You might need to install Google USB Driver to run the sketch<br>" +
+            "on your device.</html>");
+        JLabel text2 = new JLabel("<html>Please follow</html>");      
+        final String url1 = "http://developer.android.com/sdk/win-usb.html";
+        String urlText1 = "<html><a href=\"" + url1 + "\">this guide</a></html>";      
+        JLabel link1 = new JLabel(urlText1);
+        link1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        link1.addMouseListener(new MouseAdapter() {
+          public void mouseClicked(MouseEvent e) {
+            Platform.openURL(url1);
+          }
+        });
+        JLabel text3 = new JLabel("<html>to install the driver.</html>");        
+        JLabel text4 = new JLabel("<html>You will also need to download the driver from</html>");        
+        final String url2 = "https://dl-ssl.google.com/android/repository/latest_usb_driver_windows.zip";
+        String urlText2 = "<html><a href=\"" + url2 + "\">here</a>.</html>";      
+        JLabel link2 = new JLabel(urlText2);
+        link2.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        link2.addMouseListener(new MouseAdapter() {
+          public void mouseClicked(MouseEvent e) {
+            Platform.openURL(url2);
+          }
+        });
+        text = new JComponent[] { text1, text2, link1, text3, text4, link2 };
       }
-      Messages.showWarning("USB Driver warning", message);
-
+      String title = "USB Driver warning";
+      AndroidMode.showMessage(title, text, 400, 100); 
     } else {
       new Thread() {
         public void run() {

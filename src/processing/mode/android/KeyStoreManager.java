@@ -126,9 +126,9 @@ public class KeyStoreManager extends JFrame {
       public void actionPerformed(ActionEvent e) {
         setVisible(false);
         int result = Messages.showYesNoQuestion(editor, "Android keystore",
-            "Are you sure you want to reset the password?", "<html><body>We will have to reset the keystore to do this, " +
-            "which means you won't be able to upload an update for your app signed with the new keystore to Google Play.<br/><br/>" +
-            "We will make a backup for the old keystore.</body></html>");
+            "Are you sure you want to reset the password?", "We will have to reset the keystore to do this, " +
+            "which means you won't be able to upload an update for your app signed with the new keystore to Google Play.\n\n" +
+            "We will make a backup for the old keystore.");
 
         if (result == JOptionPane.NO_OPTION) {
           setVisible(true);
