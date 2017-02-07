@@ -354,8 +354,8 @@ public class AndroidMode extends JavaMode {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
       JLabel text1 = new JLabel("<html>Processing just built and installed your sketch as a<br>" +
           "live wallpaper on the selected device.<br><br>" +
-          "You need to open the wallpaper selector in the device in order to<br>"+ 
-          "set it as the new background.</html>");
+          "You need to open the wallpaper selector in the device in order<br>"+ 
+          "to set it as the new background.</html>");
       JComponent[] text = new JComponent[] { text1 };
       String title = "Wallpaper installed!";
       showMessage(title, text, 400, 100);  
