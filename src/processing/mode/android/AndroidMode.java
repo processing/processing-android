@@ -455,6 +455,8 @@ public class AndroidMode extends JavaMode {
     zip.close();
   }
 
+  // Based on some ideas seen in this thread 
+  // http://stackoverflow.com/questions/527719/how-to-add-hyperlink-in-jlabel
   static public void showMessage(String title, JComponent[] text, 
       int w, int h) {
     if (title == null) title = "Message";
