@@ -42,7 +42,7 @@ import processing.app.ui.Toolkit;
 @SuppressWarnings("serial")
 public class Permissions extends JFrame {
   static final String GUIDE_URL =
-    "https://developer.android.com/training/articles/security-tips.html#permissions";
+    "https://developer.android.com/training/articles/security-tips.html#Permissions";
 
   static final int BORDER_HORIZ = 5;
   static final int BORDER_VERT = 3;
