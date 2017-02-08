@@ -1246,10 +1246,16 @@ public class PGraphicsAndroid2D extends PGraphics {
   public void textFont(PFont which) {
     super.textFont(which);
     fillPaint.setTypeface((Typeface) which.getNative());
+    fillPaint.setTextSize(which.getDefaultSize());
   }
 
 
-  //public void textFont(PFont which, float size)
+  @Override
+  public void textFont(PFont which, float size) {
+    super.textFont(which, size);
+    fillPaint.setTypeface((Typeface) which.getNative());
+    fillPaint.setTextSize(which.getDefaultSize());
+  }
 
 
   //public void textLeading(float leading)
@@ -1281,14 +1287,7 @@ public class PGraphicsAndroid2D extends PGraphics {
       fillPaint.setTextSize(size);
     }
 
-    // take care of setting the textSize and textLeading vars
-    // this has to happen second, because it calls textAscent()
-    // (which requires the native font metrics to be set)
-    textSize = size;
-//    PApplet.println("P2D textSize textAscent -> " + textAscent());
-//    PApplet.println("P2D textSize textDescent -> " + textDescent());
-    textLeading = (textAscent() + textDescent()) * 1.275f;
-//    PApplet.println("P2D textSize textLeading = " + textLeading);
+    handleTextSize(size);
   }
 
 

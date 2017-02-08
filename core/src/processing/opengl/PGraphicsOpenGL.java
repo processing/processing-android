@@ -3493,7 +3493,7 @@ public class PGraphicsOpenGL extends PGraphics {
     Object font = textFont.getNative();
     if (font != null) {
       Object dfont = pgl.getDerivedFont(font, size);
-      textFont.setNative(dfont);
+      if (dfont != null) textFont.setNative(dfont);
     }
     super.handleTextSize(size);
   }
