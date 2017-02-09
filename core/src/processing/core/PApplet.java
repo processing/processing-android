@@ -481,7 +481,7 @@ public class PApplet extends Object implements PConstants {
   public void initSurface(LayoutInflater inflater, ViewGroup container,
                           Bundle savedInstanceState,
                           AppComponent component, SurfaceHolder holder) {
-    if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
+    if (DEBUG) println("initSurface() happening here: " + Thread.currentThread().getName());
 
     component.initDimensions();
     displayWidth = component.getDisplayWidth();

@@ -130,6 +130,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
   private class CEngine extends CanvasWatchFaceService.Engine {
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);

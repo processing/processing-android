@@ -1,25 +1,23 @@
 #!/bin/bash
 
-# I have being unable to find Google's repository from where Android Studio gets the wear
-# aar files. People have been trying to solve this in relation to using Eclipse to build
-# wear apps, for example:
-# http://stackoverflow.com/questions/27913902/dependencies-from-android-gradle-build-or-how-to-build-an-android-wear-app-wit
-# However, both JCenter and Maven Central don't seem to hold any wearable pacakges:
-# https://jcenter.bintray.com/com/google/android/
-# https://search.maven.org/#search%7Cga%7C1%7Cwearable
-# So far, only found two odd repostories with up-to-date versions of the aar packages:
-# http://uiq3.sourceforge.net/Repository/com/google/android/support/wearable/
-# http://mvn.sibext.com/com/google/android/support/wearable/
-# (one is maintained by a company in Siberia)
+# The addon repository description file:
+#
+# https://dl.google.com/android/repository/addon.xml
+# 
+# contains the entry Google Repository (Local Maven repository for Support Libraries)
+# which holds the latest file with the wearable pacakges
+#
+# On an already installed SDK, they should be available in:
+#
+# $ANDROID_SDK/extras/google/m2repository/com/google/android/support/wearable/$version/
 
 # Usage:
-# call with the version number of the wearable package to download and extract, i.e.:
-# ./wear-update.sh 1.4.0
+# call with the version number of the wearable package to copy from local SDK and extract, i.e.:
+# ./wear-update.sh 2.0.0-beta2:
 
-version=$1
+version=2.0.0-beta2
 
-# Download the requested aar package from the sourceforge repository
-wget http://uiq3.sourceforge.net/Repository/com/google/android/support/wearable/$version/wearable-$version.aar
+cp $ANDROID_SDK/extras/google/m2repository/com/google/android/support/wearable/$version/wearable-$version.aar .
 
 # Now unzip, and extract the classes jar. For more information on the aar format and how
 # to use it in Eclipse, see this blogposts:
@@ -28,6 +26,7 @@ wget http://uiq3.sourceforge.net/Repository/com/google/android/support/wearable/
 # https://developer.android.com/studio/projects/android-library.html
 
 unzip wearable-$version.aar -d wearable
+
 cp wearable/classes.jar ../core/library/wearable-$version.jar
 cp wearable/classes.jar ../mode/wearable-$version.jar
 

@@ -128,6 +128,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
   private class GLEngine extends Gles2WatchFaceService.Engine {
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);

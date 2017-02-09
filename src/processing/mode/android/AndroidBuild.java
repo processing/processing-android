@@ -90,7 +90,7 @@ class AndroidBuild extends JavaBuild {
   static public final String target_platform = "android-" + target_sdk;
 
   // Versions of Wear and VR in use 
-  static public final String wear_version = "1.4.0";
+  static public final String wear_version = "2.0.0-beta2";
   static public final String gvr_sdk_version = "1.10.0";
   
   
