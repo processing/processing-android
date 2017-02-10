@@ -13,7 +13,7 @@
   <property name="android.platform" value="android-23" />
 
   <!-- Wear version to build the core library -->
-  <property name="wear.version" value="2.0.0-beta2" />	
+  <property name="wear.version" value="2.0.0" />	
 	
   <!-- oh ant, you're so cute and convoluted -->
   <target name="build" depends="sdk_chatter,actual_build" />

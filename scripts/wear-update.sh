@@ -15,7 +15,7 @@
 # call with the version number of the wearable package to copy from local SDK and extract, i.e.:
 # ./wear-update.sh 2.0.0-beta2:
 
-version=2.0.0-beta2
+version=2.0.0
 
 cp $ANDROID_SDK/extras/google/m2repository/com/google/android/support/wearable/$version/wearable-$version.aar .
 
