@@ -197,20 +197,15 @@ public class PSurfaceNone implements PSurface, PConstants {
                        Bundle savedInstanceState) {
     // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
     ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
-    RelativeLayout.LayoutParams gp =
-      new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                      LayoutParams.WRAP_CONTENT);
-    gp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
     View view = getSurfaceView();
-    LinearLayout.LayoutParams vp;
-    vp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+    LinearLayout.LayoutParams lp;
+    lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                                        LayoutParams.MATCH_PARENT);
-    vp.weight = 1.0f;
-    vp.setMargins(0, 0, 0, 0);
-    view.setLayoutParams(vp);
+    lp.weight = 1.0f;
+    lp.setMargins(0, 0, 0, 0);
     view.setPadding(0,0,0,0);
-    rootView.addView(view, gp);
+    rootView.addView(view, lp);
 
     rootView.setBackgroundColor(sketch.sketchWindowColor());
     setRootView(rootView);

@@ -806,7 +806,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-
   public void orientation(int which) {
     surface.setOrientation(which);
   }
