@@ -39,6 +39,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.*;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -47,6 +48,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
@@ -73,7 +75,8 @@ public class PApplet extends Object implements PConstants {
   static final public boolean DEBUG = false;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
-  static final public int SDK = android.os.Build.VERSION.SDK_INT;
+  static final public int SDK = Build.VERSION.SDK_INT;
+
 //  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
 
   /**
@@ -108,8 +111,8 @@ public class PApplet extends Object implements PConstants {
 //  static final boolean THREAD_DEBUG = false;
 
   /** Default width and height for applet when not specified */
-  static public final int DEFAULT_WIDTH = 100;
-  static public final int DEFAULT_HEIGHT = 100;
+  static public final int DEFAULT_WIDTH = -1;
+  static public final int DEFAULT_HEIGHT = -1;
 
   /**
    * Minimum dimensions for the window holding an applet.
@@ -490,10 +493,18 @@ public class PApplet extends Object implements PConstants {
 
     handleSettings();
 
-    if (fullScreen && parentLayout == -1) {
-      // Setting the default height and width to be fullscreen
-      width = displayWidth;
-      height = displayHeight;
+    if (parentLayout == -1) {
+      if (fullScreen || width == -1 || height == -1) {
+        // Either sketch explicitly set to full-screen mode, or not
+        // size/fullScreen provided, so sketch uses the entire display
+        width = displayWidth;
+        height = displayHeight;
+      }
+    } else {
+      // Dummy weight and height to initialize the PGraphics, will be resized
+      // when the view associated to the parent layout is created
+      width = 100;
+      height = 100;
     }
 
     String rendererName = sketchRenderer();
@@ -514,8 +525,27 @@ public class PApplet extends Object implements PConstants {
       setFullScreenVisibility();
       surface.initView(width, height);
     } else {
-      surface.initView(inflater, container, savedInstanceState,
-                       fullScreen, width, height);
+      surface.initView(inflater, container, savedInstanceState);
+
+      /*
+      final View parent = surface.getRootView();
+      parent.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        @SuppressWarnings("deprecation")
+        @Override
+        public void onGlobalLayout() {
+          int availableWidth = parent.getMeasuredWidth();
+          int availableHeight = parent.getMeasuredHeight();
+          if (availableHeight > 0 && availableWidth > 0) {
+            System.err.println(availableWidth + " " + availableHeight);
+            if (SDK < Build.VERSION_CODES.JELLY_BEAN) {
+              parent.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+            } else {
+              parent.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+          }
+        }
+      });
+      */
     }
 
     finished = false; // just for clarity
@@ -626,7 +656,7 @@ public class PApplet extends Object implements PConstants {
 
 
   /**
-   * @param method "size" or "fullScreen"
+   * @param method "size", "fullScreen", or "layout"
    * @param args parameters passed to the function so we can show the user
    * @return true if safely inside the settings() method
    */
@@ -1274,6 +1304,26 @@ public class PApplet extends Object implements PConstants {
       if (insideSettings("size", iwidth, iheight, irenderer)) {
         this.width = iwidth;
         this.height = iheight;
+        this.renderer = irenderer;
+      }
+    }
+  }
+
+
+  public void layout(int ilayout) {
+    if (ilayout != this.parentLayout) {
+      if (insideSettings("layout", ilayout)) {
+        this.parentLayout = ilayout;
+      }
+    }
+  }
+
+
+  public void layout(int ilayout, String irenderer) {
+    if (ilayout != this.parentLayout ||
+        !this.renderer.equals(irenderer)) {
+      if (insideSettings("layout", ilayout, irenderer)) {
+        this.parentLayout = ilayout;
         this.renderer = irenderer;
       }
     }

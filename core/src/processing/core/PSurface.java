@@ -61,9 +61,7 @@ public interface PSurface {
 
   public void initView(int sketchWidth, int sketchHeight);
   public void initView(LayoutInflater inflater, ViewGroup container,
-                       Bundle savedInstanceState,
-                       boolean sketchFullScreen,
-                       int sketchWidth, int sketchHeight);
+                       Bundle savedInstanceState);
 
   public void startActivity(Intent intent);
 

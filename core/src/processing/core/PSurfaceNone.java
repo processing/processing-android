@@ -194,9 +194,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void initView(LayoutInflater inflater, ViewGroup container,
-                       Bundle savedInstanceState,
-                       boolean sketchFullScreen,
-                       int sketchWidth, int sketchHeight) {
+                       Bundle savedInstanceState) {
     // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
     ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
     RelativeLayout.LayoutParams gp =
@@ -205,18 +203,14 @@ public class PSurfaceNone implements PSurface, PConstants {
     gp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
     View view = getSurfaceView();
-    if (sketch.fullScreen) {
-      LinearLayout.LayoutParams vp;
-      vp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                                         LayoutParams.MATCH_PARENT);
-      vp.weight = 1.0f;
-      view.setLayoutParams(vp);
-      rootView.addView(view, gp);
-    } else {
-      LinearLayout layout = new LinearLayout(activity);
-      layout.addView(view, sketchWidth, sketchHeight);
-      rootView.addView(layout, gp);
-    }
+    LinearLayout.LayoutParams vp;
+    vp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                                       LayoutParams.MATCH_PARENT);
+    vp.weight = 1.0f;
+    vp.setMargins(0, 0, 0, 0);
+    view.setLayoutParams(vp);
+    view.setPadding(0,0,0,0);
+    rootView.addView(view, gp);
 
     rootView.setBackgroundColor(sketch.sketchWindowColor());
     setRootView(rootView);
