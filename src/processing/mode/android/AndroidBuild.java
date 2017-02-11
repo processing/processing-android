@@ -691,7 +691,7 @@ class AndroidBuild extends JavaBuild {
     rewriteManifest = true;
   }
   
-  protected boolean usesGPU() {
+  protected boolean usesOpenGL() {
     return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
   }
 

@@ -23,7 +23,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Messages;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Preferences;
