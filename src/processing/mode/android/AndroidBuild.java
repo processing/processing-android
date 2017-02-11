@@ -83,6 +83,7 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_fragment  = "16"; // Jelly Bean (4.1)
   static public final String min_sdk_wallpaper = "16"; // 
   static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
+  static public final String min_sdk_handheld  = "21"; // Lollipop (5.0)
   static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
   
   // Hard-coded target SDK, no longer user-selected.
@@ -541,6 +542,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@version_code@@", versionCode);
     replaceMap.put("@@version_name@@", versionName);
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@uses_permissions@@", usesPermissions);
         
@@ -1281,7 +1283,7 @@ class AndroidBuild extends JavaBuild {
     } else if (comp == WALLPAPER) {
       writeWallpaperService(srcDirectory, permissions);
     } else if (comp == WATCHFACE) {
-      if (usesGPU()) {
+      if (usesOpenGL()) {
         writeWatchFaceGLESService(srcDirectory, permissions);  
       } else {
         writeWatchFaceCanvasService(srcDirectory, permissions);  

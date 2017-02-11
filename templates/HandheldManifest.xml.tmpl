@@ -2,6 +2,8 @@
 <manifest package="@@package_name@@"
           android:versionCode="@@version_code@@" android:versionName="@@version_name@@"    
           xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-sdk android:minSdkVersion="@@min_sdk@@" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     @@uses_permissions@@
     <application
         android:allowBackup="true"
