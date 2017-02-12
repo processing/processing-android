@@ -84,10 +84,10 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_wallpaper = "16"; // 
   static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
   static public final String min_sdk_handheld  = "21"; // Lollipop (5.0)
-  static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
+  static public final String min_sdk_watchface = "23"; // Marshmallow (6.0)
   
   // Hard-coded target SDK, no longer user-selected.
-  static public final String target_sdk      = "23";  // Marshmallow (6.0)
+  static public final String target_sdk      = "25";  // Nougat (7.1.1)
   static public final String target_platform = "android-" + target_sdk;
 
   // Versions of Wear and VR in use 
