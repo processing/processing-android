@@ -12,3 +12,7 @@ Permissions.java
 
 wear-update.sh: downloads the wearable aar file from a known maven repository, and 
 extracts the classes jar and copies it inside core/library
+
+gradlew-update.sh: creates the gradle wrapper with the desired gradle version and packs
+it in the mode folder to be available when exporting projects using gradle as the build 
+system
