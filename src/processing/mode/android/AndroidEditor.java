@@ -640,8 +640,8 @@ public class AndroidEditor extends JavaEditor {
    * Build the sketch and run it on a device with the debugger connected.
    */
   public void handleRunDevice() {
-    if (Platform.isWindows() && !Preferences.getBoolean("usbDriverWarningShown")) {
-      Preferences.setBoolean("usbDriverWarningShown", true);
+    if (Platform.isWindows() && !Preferences.getBoolean("android.warnings.usb_driver")) {
+      Preferences.setBoolean("android.warnings.usb_driver", true);
       
       File sdkFolder = androidMode.getSDK().getSdkFolder();
       File usbDriverFile = new File(sdkFolder, "extras/google/usb_driver");
