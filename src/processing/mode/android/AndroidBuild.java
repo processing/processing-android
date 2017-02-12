@@ -31,6 +31,7 @@ import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
 import processing.app.Platform;
+import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
@@ -93,7 +94,6 @@ class AndroidBuild extends JavaBuild {
   // Versions of Wear and VR in use 
   static public final String wear_version = "2.0.0";
   static public final String gvr_sdk_version = "1.10.0";
-  
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
@@ -751,6 +751,12 @@ class AndroidBuild extends JavaBuild {
     // this will set debuggable to true in the .xml file
     target = "debug";
     
+    String buildSystem = Preferences.get("android.build.system");
+    if (buildSystem == null) {
+      buildSystem = "gradle";
+      Preferences.set("android.build.system", buildSystem);
+    }
+    
     if (appComponent == WATCHFACE) {
       // We are building a watchface not to run on the emulator. We need the
       // handheld app:
@@ -761,7 +767,11 @@ class AndroidBuild extends JavaBuild {
       File projectFolder = createHandheldProject(wearFolder, null);
       if (projectFolder != null) {
         File exportFolder = createExportFolder();
-        Util.copyDir(projectFolder, exportFolder);
+        if (buildSystem.equals("gradle")) {
+          createGradleProject(projectFolder, exportFolder);
+        } else { // ant          
+          Util.copyDir(projectFolder, exportFolder);
+        }
         return exportFolder;
       }
       return null;      
@@ -769,7 +779,12 @@ class AndroidBuild extends JavaBuild {
       File projectFolder = createProject(false);
       if (projectFolder != null) {
         File exportFolder = createExportFolder();
-        Util.copyDir(projectFolder, exportFolder);
+        if (buildSystem.equals("gradle")) {
+          createGradleProject(projectFolder, exportFolder);
+        } else { // ant   
+        Util.copyDir(
+          projectFolder, exportFolder);
+        }
         return exportFolder;
       }
       return null;
@@ -1493,6 +1508,11 @@ class AndroidBuild extends JavaBuild {
     // don't want to be responsible for this
     //rm(tempBuildFolder);
     tmpFolder.deleteOnExit();
+  }
+  
+  
+  protected void createGradleProject(File projectFolder, File exportFolder) {
+    
   }
   
   
