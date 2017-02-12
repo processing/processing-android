@@ -163,9 +163,17 @@ public class Manifest {
     }
     // ...and add the new kids back
     for (String name : names) {
-//      PNode newbie = new PNodeXML("uses-permission");
-//      newbie.setString("android:name", PERMISSION_PREFIX + name);
-//      xml.addChild(newbie);
+      // Don't add required permissions for wallpapers, watchfaces and cardboard again.      
+      if (appComp == AndroidBuild.WALLPAPER) {
+      } else if (appComp == AndroidBuild.WATCHFACE) {
+        if (name.equals("android.permission.WAKE_LOCK")) continue;
+      } else if (appComp == AndroidBuild.CARDBOARD) {
+        if (name.equals("android.permission.INTERNET") ||
+            name.equals("android.permission.NFC") ||
+            name.equals("android.permission.VIBRATE") ||
+            name.equals("android.permission.READ_EXTERNAL_STORAGE") ||
+            name.equals("android.permission.WRITE_EXTERNAL_STORAGE")) continue;
+      }       
       XML newbie = xml.addChild("uses-permission");
       newbie.setString("android:name", PERMISSION_PREFIX + name);
     }
