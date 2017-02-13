@@ -404,7 +404,13 @@ public class AndroidMode extends JavaMode {
     pw.close();    
   }    
   
-  public static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
+  public static void extractFolder(File file, File newPath, 
+    boolean setExec) throws IOException {
+    extractFolder(file, newPath, setExec, false);
+  }
+  
+  public static void extractFolder(File file, File newPath, 
+    boolean setExec, boolean remRoot) throws IOException {
     int BUFFER = 2048;
     ZipFile zip = new ZipFile(file);
     Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
@@ -414,6 +420,13 @@ public class AndroidMode extends JavaMode {
       // grab a zip file entry
       ZipEntry entry = zipFileEntries.nextElement();
       String currentEntry = entry.getName();
+      
+      if (remRoot) {
+        // Remove root folder from path
+        int idx = currentEntry.indexOf(File.separator); 
+        currentEntry = currentEntry.substring(idx + 1);
+      }
+      
       File destFile = new File(newPath, currentEntry);
       //destFile = new File(newPath, destFile.getName());
       File destinationParent = destFile.getParentFile();
@@ -423,7 +436,7 @@ public class AndroidMode extends JavaMode {
 
       String ext = PApplet.getExtension(currentEntry);
       if (setExec && ext.equals("unknown")) {        
-        // On some OS X machines the android binaries loose their executable
+        // On some OS X machines the android binaries lose their executable
         // attribute, rendering the mode unusable
         destFile.setExecutable(true);
       }

@@ -66,7 +66,12 @@ class AndroidBuild extends JavaBuild {
   static private final String XML_WALLPAPER_TEMPLATE = "XMLWallpaper.xml.tmpl";
   static private final String STRINGS_WALLPAPER_TEMPLATE = "StringsWallpaper.xml.tmpl";
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
-  static private final String BUILD_TEMPLATE = "Build.xml.tmpl";
+  static private final String ANT_BUILD_TEMPLATE = "Build.xml.tmpl";
+  
+  // Gradle files
+  static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
+  static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
+  static private final String FRAGMENT_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -1044,7 +1049,7 @@ class AndroidBuild extends JavaBuild {
 
 
   private void writeBuildXML(final File xmlFile, final String projectName) {    
-    File xmlTemplate = mode.getContentFile("templates/" + BUILD_TEMPLATE);
+    File xmlTemplate = mode.getContentFile("templates/" + ANT_BUILD_TEMPLATE);
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@project_name@@", projectName);
@@ -1080,6 +1085,7 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
+  
   static final String ICON_192 = "icon-192.png";
   static final String ICON_144 = "icon-144.png"; 
   static final String ICON_96 = "icon-96.png";
@@ -1364,7 +1370,6 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeCardboardActivity(final File srcDirectory, String[] permissions) {
-    
     File javaTemplate = mode.getContentFile("templates/" + CARDBOARD_ACTIVITY_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
     
@@ -1511,230 +1516,58 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  protected void createGradleProject(File projectFolder, File exportFolder) {
+  protected void createGradleProject(File projectFolder, File exportFolder) throws IOException, SketchException {
+    // Upacking gradlew
+    File gradlewFile = mode.getContentFile("mode/gradlew.zip");
+    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true);
     
+    
+    // Top level gradle files
+    File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
+    File buildlFile = new File(exportFolder, "build.gradle");
+    Util.copyFile(buildTemplate, buildlFile);
+    
+    writeLocalProps(new File(exportFolder, "local.properties"));
+    writeFile(new File(exportFolder, "gradle.properties"), new String[]{"org.gradle.jvmargs=-Xmx1536m"});
+    
+    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
+    File settingsFile = new File(exportFolder, "settings.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@project_modules@@", "':app'");    
+    AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
+    
+    // Creating app module    
+    File appFolder = mkdirs(exportFolder, "app");
+    
+    File appBuildTemplate = mode.getContentFile("templates/" + FRAGMENT_GRADLE_BUILD_TEMPLATE);    
+    File appBuildFile = new File(appFolder, "build.gradle");    
+    replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);    
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@version_code@@", manifest.getVersionCode());
+    replaceMap.put("@@version_name@@", manifest.getVersionName());
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
+    
+    writeFile(new File(appFolder, "proguard-rules.pro"), new String[]{"# Add project specific ProGuard rules here."});
+    
+    File coreFile = new File(projectFolder, "libs/processing-core.jar");    
+    File libsFolder = mkdirs(appFolder, "libs");
+    Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
+        
+    File mainFolder = mkdirs(appFolder, "src/main");
+    File javaFolder = mkdirs(mainFolder, "java");
+    File resFolder = mkdirs(mainFolder, "res");
+    
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyDir(new File(projectFolder, "res"), resFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);
   }
   
-  
-  // Some leftovers from earlier versions of the mode, probably should remove at some point...
-  /*
-  // SDK tools 17 have a problem where 'dex' won't pick up the libs folder
-  // (which contains our friend processing-core.jar) unless your current
-  // working directory is the same as the build file. So this is an unpleasant
-  // workaround, at least until things are fixed or we hear of a better way.
-  // This was fixed in SDK 19 (and Processing revision 0205) so we've now
-  // disabled this portion of the code.
-  protected boolean antBuild_dexworkaround() throws SketchException {
-    try {
-//      ProcessHelper helper = new ProcessHelper(tmpFolder, new String[] { "ant", target });
-      // Windows doesn't include full paths, so make 'em happen.
-      String cp = System.getProperty("java.class.path");
-      String[] cpp = PApplet.split(cp, File.pathSeparatorChar);
-      for (int i = 0; i < cpp.length; i++) {
-        cpp[i] = new File(cpp[i]).getAbsolutePath();
-      }
-      cp = PApplet.join(cpp, File.pathSeparator);
-
-      // Since Ant may or may not be installed, call it from the .jar file,
-      // though hopefully 'java' is in the classpath.. Given what we do in
-      // processing.mode.java.runner (and it that it works), should be ok.
-      String[] cmd = new String[] {
-        "java",
-        "-cp", cp, //System.getProperty("java.class.path"),
-        "org.apache.tools.ant.Main", target
-//        "ant", target
-      };
-      ProcessHelper helper = new ProcessHelper(tmpFolder, cmd);
-      ProcessResult pr = helper.execute();
-      if (pr.getResult() != 0) {
-//        System.err.println("mo builds, mo problems");
-        System.err.println(pr.getStderr());
-        System.out.println(pr.getStdout());
-        // the actual javac errors and whatnot go to stdout
-        antBuildProblems(pr.getStdout(), pr.getStderr());
-        return false;
-      }
-
-    } catch (InterruptedException e) {
-      return false;
-
-    } catch (IOException e) {
-      e.printStackTrace();
-      return false;
-    }
-    return true;
-  }
-
-  public class HopefullyTemporaryWorkaround extends org.apache.tools.ant.Main {
-
-    protected void exit(int exitCode) {
-      // I want to exit, but let's not System.exit()
-      System.out.println("gonna exit");
-      System.out.flush();
-      System.err.flush();
-    }
-  }
-
-
-  protected boolean antBuild() throws SketchException {
-    String[] cmd = new String[] {
-      "-main", "processing.mode.android.HopefullyTemporaryWorkaround",
-      "-Duser.dir=" + tmpFolder.getAbsolutePath(),
-      "-logfile", "/Users/fry/Desktop/ant-log.txt",
-      "-verbose",
-      "-help",
-//      "debug"
-    };
-    HopefullyTemporaryWorkaround.main(cmd);
-    return true;
-//    ProcessResult listResult =
-//      new ProcessHelper("ant", "debug", tmpFolder).execute();
-//    if (listResult.succeeded()) {
-//      boolean badness = false;
-//      for (String line : listResult) {
-//      }
-//    }
-  }
-  
-   private void copyLibraries(final File libsFolder,
-                             final File assetsFolder) throws IOException {
-    // Copy any libraries to the 'libs' folder
-    for (Library library : getImportedLibraries()) {
-      File libraryFolder = new File(library.getPath());
-      // in the list is a File object that points the
-      // library sketch's "library" folder
-      final File exportSettings = new File(libraryFolder, "export.txt");
-      final HashMap<String, String> exportTable =
-        Base.readSettings(exportSettings);
-      final String androidList = exportTable.get("android");
-      String exportList[] = null;
-      if (androidList != null) {
-        exportList = PApplet.splitTokens(androidList, ", ");
-      } else {
-        exportList = libraryFolder.list();
-      }
-      for (int i = 0; i < exportList.length; i++) {
-        exportList[i] = PApplet.trim(exportList[i]);
-        if (exportList[i].equals("") || exportList[i].equals(".")
-            || exportList[i].equals("..")) {
-          continue;
-        }
-
-        final File exportFile = new File(libraryFolder, exportList[i]);
-        if (!exportFile.exists()) {
-          System.err.println("File " + exportList[i] + " does not exist");
-        } else if (exportFile.isDirectory()) {
-          System.err.println("Ignoring sub-folder \"" + exportList[i] + "\"");
-        } else {
-          final String name = exportFile.getName();
-          final String lcname = name.toLowerCase();
-          if (lcname.endsWith(".zip") || lcname.endsWith(".jar")) {
-            // As of r4 of the Android SDK, it looks like .zip files
-            // are ignored in the libs folder, so rename to .jar
-            final String jarName =
-              name.substring(0, name.length() - 4) + ".jar";
-            Base.copyFile(exportFile, new File(libsFolder, jarName));
-          } else {
-            // just copy other files over directly
-            Base.copyFile(exportFile, new File(assetsFolder, name));
-          }
-        }
-      }
-    }
-  } 
-  
-  private void writeResLayoutMainFragment(final File file) {
+  private void writeFile(final File file, String[] lines) {
     final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("              android:orientation=\"vertical\"");
-    writer.println("              android:layout_width=\"fill_parent\"");
-    writer.println("              android:layout_height=\"fill_parent\">");
-    writer.println("</LinearLayout>");
-  }
-
-
-  // This recommended to be a string resource so that it can be localized.
-  // nah.. we're gonna be messing with it in the GUI anyway...
-  // people can edit themselves if they need to
-  private static void writeResValuesStrings(final File file,
-                                            final String className) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<resources>");
-    writer.println("  <string name=\"app_name\">" + className + "</string>");
-    writer.println("</resources>");
+    for (String line: lines) writer.println(line);
     writer.flush();
     writer.close();
-  }
-
-  private void copySupportV4(File libsFolder) throws SketchException {
-    File sdkLocation = sdk.getSdkFolder();
-    File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
-    if (!supportV4Jar.exists()) {
-      SketchException sketchException =
-          new SketchException("Please install support repository from SDK manager");
-      throw sketchException;
-    } else {
-      try {
-        Base.copyFile(supportV4Jar, new File(libsFolder, "android-support-v4.jar"));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-  
-  private boolean verifySignedPackage(File signedPackage) throws Exception {
-    String[] args = {
-        "-verify", signedPackage.getCanonicalPath()
-    };
-
-    PrintStream defaultPrintStream = System.out;
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream printStream = new PrintStream(baos);
-    System.setOut(printStream);
-
-    SystemExitControl.forbidSystemExitCall();
-    try {
-      JarSigner.main(args);
-    } catch (SystemExitControl.ExitTrappedException ignored) { }
-    SystemExitControl.enableSystemExitCall();
-
-    System.setOut(defaultPrintStream);
-    String result = baos.toString();
-
-    baos.close();
-    printStream.close();
-
-    return result.contains("verified");
-  }
-  */
+  }  
 }
-
-/*
-// How to prevent the System.exit() call, could be useful...
-// http://www.avanderw.co.za/preventing-calls-to-system-exit-in-java/
-class SystemExitControl {
-
-  @SuppressWarnings("serial")
-  public static class ExitTrappedException extends SecurityException {
-  }
-
-  public static void forbidSystemExitCall() {
-    final SecurityManager securityManager = new SecurityManager() {
-      @Override
-      public void checkPermission(Permission permission) {
-        if (permission.getName().contains("exitVM")) {
-          throw new ExitTrappedException();
-        }
-      }
-    };
-    System.setSecurityManager(securityManager);
-  }
-
-  public static void enableSystemExitCall() {
-    System.setSecurityManager(null);
-  }
-}
-*/
