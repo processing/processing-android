@@ -72,6 +72,8 @@ class AndroidBuild extends JavaBuild {
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
   static private final String FRAGMENT_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
+  static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
+  static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";  
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -1521,7 +1523,7 @@ class AndroidBuild extends JavaBuild {
     if (appComponent == WATCHFACE) {
       createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
       createMobileModule(projectFolder, exportFolder, "24.0.1");
-      createWearModule(projectFolder, exportFolder, "24.0.1");
+      createWearModule(new File(projectFolder, "wear"), exportFolder, "24.0.1");
     } else {
       createTopModule(projectFolder, exportFolder, "':app'");
       createAppModule(projectFolder, exportFolder, "24.0.1");
@@ -1553,12 +1555,11 @@ class AndroidBuild extends JavaBuild {
   
   private void createAppModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
-    File appFolder = mkdirs(exportFolder, "app");
+    File moduleFolder = mkdirs(exportFolder, "app");
     
     File appBuildTemplate = mode.getContentFile("templates/" + FRAGMENT_GRADLE_BUILD_TEMPLATE);    
-    File appBuildFile = new File(appFolder, "build.gradle");    
-    HashMap<String, String> replaceMap = new HashMap<String, String>();
-    
+    File appBuildFile = new File(moduleFolder, "build.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);    
@@ -1567,14 +1568,14 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
     
-    writeFile(new File(appFolder, "proguard-rules.pro"), 
+    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
         new String[]{"# Add project specific ProGuard rules here."});
     
     File coreFile = new File(projectFolder, "libs/processing-core.jar");    
-    File libsFolder = mkdirs(appFolder, "libs");
+    File libsFolder = mkdirs(moduleFolder, "libs");
     Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
         
-    File mainFolder = mkdirs(appFolder, "src/main");
+    File mainFolder = mkdirs(moduleFolder, "src/main");
     File javaFolder = mkdirs(mainFolder, "java");
     File resFolder = mkdirs(mainFolder, "res");
     
@@ -1586,12 +1587,62 @@ class AndroidBuild extends JavaBuild {
   
   private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
+    File moduleFolder = mkdirs(exportFolder, "mobile");
     
+    File appBuildTemplate = mode.getContentFile("templates/" + HANDHELD_GRADLE_BUILD_TEMPLATE);    
+    File appBuildFile = new File(moduleFolder, "build.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
+    replaceMap.put("@@build_tools@@", buildToolsVer);
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);    
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@version_code@@", manifest.getVersionCode());
+    replaceMap.put("@@version_name@@", manifest.getVersionName());
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
+    
+    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+        new String[]{"# Add project specific ProGuard rules here."});    
+    
+    File mainFolder = mkdirs(moduleFolder, "src/main");
+    File javaFolder = mkdirs(mainFolder, "java");
+    File resFolder = mkdirs(mainFolder, "res");
+    
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
+                  new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyDir(new File(projectFolder, "res"), resFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);
   }
   
   private void createWearModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
+    File moduleFolder = mkdirs(exportFolder, "wear");
     
+    File appBuildTemplate = mode.getContentFile("templates/" + WEARABLE_GRADLE_BUILD_TEMPLATE);    
+    File appBuildFile = new File(moduleFolder, "build.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
+    replaceMap.put("@@build_tools@@", buildToolsVer);
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);    
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@version_code@@", manifest.getVersionCode());
+    replaceMap.put("@@version_name@@", manifest.getVersionName());
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);     
+    
+    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+        new String[]{"# Add project specific ProGuard rules here."}); 
+    
+    File coreFile = new File(projectFolder, "libs/processing-core.jar");    
+    File libsFolder = mkdirs(moduleFolder, "libs");
+    Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
+        
+    File mainFolder = mkdirs(moduleFolder, "src/main");
+    File javaFolder = mkdirs(mainFolder, "java");
+    File resFolder = mkdirs(mainFolder, "res");
+    
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
+                  new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyDir(new File(projectFolder, "res"), resFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);
   }  
   
   private void writeFile(final File file, String[] lines) {
