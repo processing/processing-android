@@ -1522,25 +1522,24 @@ class AndroidBuild extends JavaBuild {
   protected void createGradleProject(File projectFolder, File exportFolder) 
       throws IOException, SketchException {
     installGradlew(exportFolder);
+    
+    
+    
     if (appComponent == WATCHFACE) {
       createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
       createMobileModule(projectFolder, exportFolder, "24.0.1");
       createWearModule(new File(projectFolder, "wear"), exportFolder, "24.0.1");
     } else {
       createTopModule(projectFolder, exportFolder, "':app'");
-      if (appComponent == CARDBOARD) {
-        createAppModule(projectFolder, exportFolder, min_sdk_cardboard, 
-            CARDBOARD_GRADLE_BUILD_TEMPLATE, "24.0.1");
-      } else {
-        createAppModule(projectFolder, exportFolder, min_sdk_fragment, 
-            APP_GRADLE_BUILD_TEMPLATE, "24.0.1");
-      }
+      createAppModule(projectFolder, exportFolder, "24.0.1");
     }
   }
   
   private void installGradlew(File exportFolder) throws IOException {
     File gradlewFile = mode.getContentFile("mode/gradlew.zip");
-    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true);    
+    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true); 
+    File execFile = new File(exportFolder, "gradlew");
+    execFile.setExecutable(true);
   }
   
   private void createTopModule(File projectFolder, File exportFolder, 
@@ -1561,16 +1560,26 @@ class AndroidBuild extends JavaBuild {
     AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
   }
   
-  private void createAppModule(File projectFolder, File exportFolder, 
-      String min_sdk, String tmplFile, String buildToolsVer) throws SketchException, IOException {
+  private void createAppModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
     File moduleFolder = mkdirs(exportFolder, "app");
+    
+    String minSdk;
+    String tmplFile;
+    if (appComponent == CARDBOARD) {
+      minSdk = min_sdk_cardboard;
+      tmplFile = CARDBOARD_GRADLE_BUILD_TEMPLATE;       
+    } else {
+      minSdk = min_sdk_fragment; 
+      tmplFile = APP_GRADLE_BUILD_TEMPLATE;      
+    }
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
-    replaceMap.put("@@min_sdk@@", min_sdk);  
+    replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@gvr_version@@", gvr_sdk_version);
@@ -1585,8 +1594,10 @@ class AndroidBuild extends JavaBuild {
     File libsFolder = mkdirs(moduleFolder, "libs");
     Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
 
-    File cardboardFile = new File(projectFolder, "libs/cardboard.jar");
-    Util.copyFile(cardboardFile, new File(libsFolder, "cardboard.jar"));    
+    if (appComponent == CARDBOARD) {
+      File cardboardFile = new File(projectFolder, "libs/cardboard.jar");
+      Util.copyFile(cardboardFile, new File(libsFolder, "cardboard.jar"));
+    }
     
     File mainFolder = mkdirs(moduleFolder, "src/main");
     File javaFolder = mkdirs(mainFolder, "java");
