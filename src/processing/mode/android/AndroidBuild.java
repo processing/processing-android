@@ -1523,15 +1523,21 @@ class AndroidBuild extends JavaBuild {
       throws IOException, SketchException {
     installGradlew(exportFolder);
     
-    
+    File folder = sdk.getBuildToolsFolder();
+    String[] versions = folder.list();
+    String[] sorted = PApplet.sort(versions, versions.length);
+    String buildToolVer = "";
+    if (sorted != null && 0 < sorted.length) {
+      buildToolVer = sorted[sorted.length - 1];
+    }
     
     if (appComponent == WATCHFACE) {
       createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
-      createMobileModule(projectFolder, exportFolder, "24.0.1");
-      createWearModule(new File(projectFolder, "wear"), exportFolder, "24.0.1");
+      createMobileModule(projectFolder, exportFolder, buildToolVer);
+      createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);
     } else {
       createTopModule(projectFolder, exportFolder, "':app'");
-      createAppModule(projectFolder, exportFolder, "24.0.1");
+      createAppModule(projectFolder, exportFolder, buildToolVer);
     }
   }
   
