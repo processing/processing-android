@@ -1517,31 +1517,49 @@ class AndroidBuild extends JavaBuild {
   
   
   protected void createGradleProject(File projectFolder, File exportFolder) throws IOException, SketchException {
-    // Upacking gradlew
+    installGradlew(exportFolder);
+    if (appComponent == WATCHFACE) {
+      createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
+      createMobileModule(projectFolder, exportFolder, "24.0.1");
+      createWearModule(projectFolder, exportFolder, "24.0.1");
+    } else {
+      createTopModule(projectFolder, exportFolder, "':app'");
+      createAppModule(projectFolder, exportFolder, "24.0.1");
+    }
+  }
+  
+  private void installGradlew(File exportFolder) throws IOException {
     File gradlewFile = mode.getContentFile("mode/gradlew.zip");
-    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true);
-    
-    
+    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true);    
+  }
+  
+  private void createTopModule(File projectFolder, File exportFolder, 
+      String projectModules) throws IOException {
     // Top level gradle files
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(exportFolder, "build.gradle");
     Util.copyFile(buildTemplate, buildlFile);
     
     writeLocalProps(new File(exportFolder, "local.properties"));
-    writeFile(new File(exportFolder, "gradle.properties"), new String[]{"org.gradle.jvmargs=-Xmx1536m"});
+    writeFile(new File(exportFolder, "gradle.properties"), 
+        new String[]{"org.gradle.jvmargs=-Xmx1536m"});
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
     File settingsFile = new File(exportFolder, "settings.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@project_modules@@", "':app'");    
+    replaceMap.put("@@project_modules@@", projectModules);    
     AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
-    
-    // Creating app module    
+  }
+  
+  private void createAppModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
     File appFolder = mkdirs(exportFolder, "app");
     
     File appBuildTemplate = mode.getContentFile("templates/" + FRAGMENT_GRADLE_BUILD_TEMPLATE);    
     File appBuildFile = new File(appFolder, "build.gradle");    
-    replaceMap = new HashMap<String, String>();
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    
+    replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);    
     replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
@@ -1549,7 +1567,8 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
     
-    writeFile(new File(appFolder, "proguard-rules.pro"), new String[]{"# Add project specific ProGuard rules here."});
+    writeFile(new File(appFolder, "proguard-rules.pro"), 
+        new String[]{"# Add project specific ProGuard rules here."});
     
     File coreFile = new File(projectFolder, "libs/processing-core.jar");    
     File libsFolder = mkdirs(appFolder, "libs");
@@ -1559,10 +1578,21 @@ class AndroidBuild extends JavaBuild {
     File javaFolder = mkdirs(mainFolder, "java");
     File resFolder = mkdirs(mainFolder, "res");
     
-    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
+                  new File(mainFolder, "AndroidManifest.xml"));
     Util.copyDir(new File(projectFolder, "res"), resFolder);
-    Util.copyDir(new File(projectFolder, "src"), javaFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);    
   }
+  
+  private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
+    
+  }
+  
+  private void createWearModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
+    
+  }  
   
   private void writeFile(final File file, String[] lines) {
     final PrintWriter writer = PApplet.createWriter(file);
