@@ -1,44 +1,33 @@
-/*
- * Copyright 2017 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-apply plugin: 'com.android.model.application'
+apply plugin: 'com.android.application'
 
-model {
-    android {
-        compileSdkVersion @@target_sdk@@
-        buildToolsVersion "@@build_tools@@"
-
-        defaultConfig {
-            applicationId "@@package_name@@"
-            minSdkVersion.apiLevel @@min_sdk@@
-            targetSdkVersion.apiLevel @@target_sdk@@
-            versionCode @@version_code@@
-            versionName "@@version_name@@"
-        }
-
-        buildTypes {
-            release {
-                minifyEnabled true
-                proguardFiles.add(file('../../proguard-gvr.txt'))
-            }
+android {
+    compileSdkVersion @@target_sdk@@
+    buildToolsVersion "@@build_tools@@"
+    defaultConfig {
+        applicationId "@@package_name@@"
+        minSdkVersion @@min_sdk@@
+        targetSdkVersion @@target_sdk@@
+        versionCode @@version_code@@
+        versionName "@@version_name@@"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:design:23.4.0'    
     compile 'com.google.vr:sdk-audio:@@gvr_version@@'
     compile 'com.google.vr:sdk-base:@@gvr_version@@'
+    testCompile 'junit:junit:4.12'
     compile files('libs/processing-core.jar')
+    compile files('libs/cardboard.jar')
 }

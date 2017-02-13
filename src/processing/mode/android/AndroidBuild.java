@@ -1529,9 +1529,11 @@ class AndroidBuild extends JavaBuild {
     } else {
       createTopModule(projectFolder, exportFolder, "':app'");
       if (appComponent == CARDBOARD) {
-        createAppModule(projectFolder, exportFolder, CARDBOARD_GRADLE_BUILD_TEMPLATE, "24.0.1");
+        createAppModule(projectFolder, exportFolder, min_sdk_cardboard, 
+            CARDBOARD_GRADLE_BUILD_TEMPLATE, "24.0.1");
       } else {
-        createAppModule(projectFolder, exportFolder, APP_GRADLE_BUILD_TEMPLATE, "24.0.1");
+        createAppModule(projectFolder, exportFolder, min_sdk_fragment, 
+            APP_GRADLE_BUILD_TEMPLATE, "24.0.1");
       }
     }
   }
@@ -1560,7 +1562,7 @@ class AndroidBuild extends JavaBuild {
   }
   
   private void createAppModule(File projectFolder, File exportFolder, 
-      String tmplFile, String buildToolsVer) throws SketchException, IOException {
+      String min_sdk, String tmplFile, String buildToolsVer) throws SketchException, IOException {
     File moduleFolder = mkdirs(exportFolder, "app");
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
@@ -1568,7 +1570,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
-    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);  
+    replaceMap.put("@@min_sdk@@", min_sdk);  
     replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@gvr_version@@", gvr_sdk_version);
@@ -1582,7 +1584,10 @@ class AndroidBuild extends JavaBuild {
     File coreFile = new File(projectFolder, "libs/processing-core.jar");    
     File libsFolder = mkdirs(moduleFolder, "libs");
     Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
-        
+
+    File cardboardFile = new File(projectFolder, "libs/cardboard.jar");
+    Util.copyFile(cardboardFile, new File(libsFolder, "cardboard.jar"));    
+    
     File mainFolder = mkdirs(moduleFolder, "src/main");
     File javaFolder = mkdirs(mainFolder, "java");
     File resFolder = mkdirs(mainFolder, "res");
