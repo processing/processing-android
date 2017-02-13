@@ -71,9 +71,10 @@ class AndroidBuild extends JavaBuild {
   // Gradle files
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
-  static private final String FRAGMENT_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
+  static private final String APP_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
   static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
-  static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";  
+  static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";
+  static private final String CARDBOARD_GRADLE_BUILD_TEMPLATE = "CardboardBuild.gradle.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -100,7 +101,7 @@ class AndroidBuild extends JavaBuild {
 
   // Versions of Wear and VR in use 
   static public final String wear_version = "2.0.0";
-  static public final String gvr_sdk_version = "1.10.0";
+  static public final String gvr_sdk_version = "1.20.0";
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
@@ -349,7 +350,7 @@ class AndroidBuild extends JavaBuild {
       // TODO: temporary hack until I find a better way to include the wearable aar
       // package included in the SDK:      
       File wearJarFile = mode.getContentFile("mode/wearable-" + wear_version + ".jar");
-      System.out.println(wearJarFile.toString());
+//      System.out.println(wearJarFile.toString());
       Util.copyFile(wearJarFile, new File(libsFolder, "wearable-" + wear_version + ".jar"));
 //    }      
       
@@ -758,10 +759,10 @@ class AndroidBuild extends JavaBuild {
     // this will set debuggable to true in the .xml file
     target = "debug";
     
-    String buildSystem = Preferences.get("android.build.system");
+    String buildSystem = Preferences.get("android.export.build_system");
     if (buildSystem == null) {
       buildSystem = "gradle";
-      Preferences.set("android.build.system", buildSystem);
+      Preferences.set("android.export.build_system", buildSystem);
     }
     
     if (appComponent == WATCHFACE) {
@@ -1518,7 +1519,8 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  protected void createGradleProject(File projectFolder, File exportFolder) throws IOException, SketchException {
+  protected void createGradleProject(File projectFolder, File exportFolder) 
+      throws IOException, SketchException {
     installGradlew(exportFolder);
     if (appComponent == WATCHFACE) {
       createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
@@ -1526,7 +1528,11 @@ class AndroidBuild extends JavaBuild {
       createWearModule(new File(projectFolder, "wear"), exportFolder, "24.0.1");
     } else {
       createTopModule(projectFolder, exportFolder, "':app'");
-      createAppModule(projectFolder, exportFolder, "24.0.1");
+      if (appComponent == CARDBOARD) {
+        createAppModule(projectFolder, exportFolder, CARDBOARD_GRADLE_BUILD_TEMPLATE, "24.0.1");
+      } else {
+        createAppModule(projectFolder, exportFolder, APP_GRADLE_BUILD_TEMPLATE, "24.0.1");
+      }
     }
   }
   
@@ -1553,17 +1559,19 @@ class AndroidBuild extends JavaBuild {
     AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
   }
   
-  private void createAppModule(File projectFolder, File exportFolder, String buildToolsVer) 
-      throws SketchException, IOException {
+  private void createAppModule(File projectFolder, File exportFolder, 
+      String tmplFile, String buildToolsVer) throws SketchException, IOException {
     File moduleFolder = mkdirs(exportFolder, "app");
     
-    File appBuildTemplate = mode.getContentFile("templates/" + FRAGMENT_GRADLE_BUILD_TEMPLATE);    
+    File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
-    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);    
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);  
     replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@wear_version@@", wear_version);
+    replaceMap.put("@@gvr_version@@", gvr_sdk_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
@@ -1595,7 +1603,8 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);    
-    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);
+    replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
@@ -1624,6 +1633,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);    
     replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);     
