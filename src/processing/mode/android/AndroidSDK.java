@@ -50,6 +50,7 @@ class AndroidSDK {
   private final File targetPlatform;
   private final File androidJar;
   private final File platformTools;
+  private final File buildTools;
   private final File androidTool;
 
   static final String DOWNLOAD_URL ="https://developer.android.com/studio/index.html#downloads";
@@ -102,6 +103,11 @@ class AndroidSDK {
       throw new BadSDKException("There is no platform-tools folder in " + folder);
     }
 
+    buildTools = new File(folder, "build-tools");
+    if (!buildTools.exists()) {
+      throw new BadSDKException("There is no build-tools folder in " + folder);
+    }
+    
     platforms = new File(folder, "platforms");
     if (!platforms.exists()) {
       throw new BadSDKException("There is no platforms folder in " + folder);
@@ -210,6 +216,11 @@ class AndroidSDK {
 
   public File getAndroidJarPath() {
     return androidJar;  
+  }
+  
+  
+  public File getBuildToolsFolder() {
+    return buildTools;
   }
   
   
