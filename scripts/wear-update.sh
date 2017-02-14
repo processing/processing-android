@@ -13,7 +13,7 @@
 
 # Usage:
 # call with the version number of the wearable package to copy from local SDK and extract, i.e.:
-# ./wear-update.sh 2.0.0-beta2:
+# ./wear-update.sh 2.0.0:
 
 version=$1
 

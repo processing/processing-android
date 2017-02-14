@@ -7,7 +7,7 @@
 
 # Usage:
 # call with the version number of the GVR SDK package to download and extract, i.e.:
-# ./gvrsdk-update.sh 1.10.0
+# ./gvrsdk-update.sh 1.20.0
 
 ver=$1
 sdk=v$1
