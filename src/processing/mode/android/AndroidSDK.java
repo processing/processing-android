@@ -29,6 +29,9 @@ import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,21 +56,36 @@ class AndroidSDK {
   private final File buildTools;
   private final File androidTool;
 
-  static final String DOWNLOAD_URL ="https://developer.android.com/studio/index.html#downloads";
+  private static final String SDK_DOWNLOAD_URL = 
+      "https://developer.android.com/studio/index.html#downloads";
   
-  private static final String ANDROID_SDK_PRIMARY =
+  private static final String MISSING_SDK_TITLE =
     "Is the Android SDK installed?";
-
-  private static final String ANDROID_SDK_SECONDARY =
-      "The Android SDK does not appear to be installed, <br>" +
-      "because the ANDROID_SDK variable is not set. <br>" +
-      "If it is installed, click “Locate SDK path” to select the <br>" +
-      "location of the SDK, or “Download SDK” to let <br>" +
+  
+  private static final String MISSING_SDK_MESSAGE =
+      "The Android SDK does not appear to be installed, " +
+      "because the ANDROID_SDK variable is not set. " +
+      "If it is installed, click “Locate SDK path” to select the" +
+      "location of the SDK, or “Download SDK” to let " +
       "Processing download the SDK automatically.<br><br>" +
-      "If you want to download the SDK manually, you can get <br>"+
-      "the command line tools from <a href=\"" + DOWNLOAD_URL + "\">here</a>. Make sure to install<br>" +
-      "the SDK platform for API " + AndroidBuild.target_sdk + ".";
+      "If you want to download the SDK manually, you can get "+
+      "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
+      "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";
     
+  private static final String INVALID_SDK_TITLE =
+      "Is the required Android API installed?";
+  
+  private static final String INVALID_SDK_MESSAGE =
+      "The Android SDK appears to be installed, " +
+      "however the SDK platform for API " + AndroidBuild.target_sdk + 
+      " was not found. If it is available in a different location, " +
+      "click “Locate SDK path” to select the " +
+      "location of the alternative SDK, or “Download SDK” to let " +
+      "Processing download the SDK automatically.<br><br>" +
+      "If you want to download the SDK manually, you can get "+
+      "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
+      "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";  
+  
   private static final String ANDROID_SYS_IMAGE_PRIMARY =
       "Download emulator?";
 
@@ -86,6 +104,11 @@ class AndroidSDK {
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
+  
+  private static final int NO_ERROR = 0;
+  private static final int MISSING_SDK = 1;
+  private static final int INVALID_SDK = 2;
+  private static int SDK_LOAD_ERROR = NO_ERROR;
 
   public AndroidSDK(File folder) throws BadSDKException, IOException {
     this.folder = folder;
@@ -263,6 +286,8 @@ class AndroidSDK {
    * @throws IOException
    */
   public static AndroidSDK load() throws IOException {
+    SDK_LOAD_ERROR = NO_ERROR;
+    
     // The environment variable is king. The preferences.txt entry is a page.
     final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
     if (sdkEnvPath != null) {
@@ -289,7 +314,10 @@ class AndroidSDK {
         return androidSDK;
       } catch (final BadSDKException wellThatsThat) {
         Preferences.unset("android.sdk.path");
+        SDK_LOAD_ERROR = INVALID_SDK;
       }
+    } else {
+      SDK_LOAD_ERROR = MISSING_SDK;
     }
     return null;
   }
@@ -359,36 +387,44 @@ class AndroidSDK {
     return res;
   }
 
+  
   static public int showLocateDialog(Frame editor) {
-    // Pane formatting adapted from the Quaqua guide
-    // http://www.randelshofer.ch/quaqua/guide/joptionpane.html
-    JOptionPane pane =
-        new JOptionPane("<html> " +
-            "<head> <style type=\"text/css\">"+
-            "b { font: 13pt \"Lucida Grande\" }"+
-            "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
-            "</style> </head>" +
-            "<b>" + ANDROID_SDK_PRIMARY + "</b>" +
-            "<p>" + ANDROID_SDK_SECONDARY + "</p>",
-            JOptionPane.QUESTION_MESSAGE);
-
+    // How to show a option dialog containing clickable links:
+    // http://stackoverflow.com/questions/8348063/clickable-links-in-joptionpane
+    String htmlString = "<html> " +
+        "<head> <style type=\"text/css\">"+
+        "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+        "</style> </head>";
+    String title = "";
+    if (SDK_LOAD_ERROR == MISSING_SDK) {
+      htmlString += "<body> <p>" + MISSING_SDK_MESSAGE + "</p> </body> </html>";
+      title = MISSING_SDK_TITLE;
+    } else if (SDK_LOAD_ERROR == INVALID_SDK) {
+      htmlString += "<body> <p>" + INVALID_SDK_MESSAGE + "</p> </body> </html>";
+      title = INVALID_SDK_TITLE;
+    }    
+    JEditorPane pane = new JEditorPane("text/html", htmlString);
+    pane.addHyperlinkListener(new HyperlinkListener() {
+      @Override
+      public void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+          Platform.openURL(e.getURL().toString());
+        }
+      }
+    });
+    pane.setEditable(false);
+    JLabel label = new JLabel();
+    pane.setBackground(label.getBackground());
+    
     String[] options = new String[] {
-        "Download SDK automatically", "Locate SDK path manually"
-    };
-    pane.setOptions(options);
-
-    // highlight the safest option ala apple hig
-    pane.setInitialValue(options[0]);
-
-    JDialog dialog = pane.createDialog(editor, null);
-    dialog.setTitle("");
-    dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
-    dialog.setVisible(true);
-
-    Object result = pane.getValue();
-    if (result == options[0]) {
+      "Download SDK automatically", "Locate SDK path manually"
+    };    
+    int result = JOptionPane.showOptionDialog(null, pane, title, 
+        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
+        null, options, options[0]);
+    if (result == JOptionPane.YES_OPTION) {
       return JOptionPane.YES_OPTION;
-    } else if (result == options[1]) {
+    } else if (result == JOptionPane.NO_OPTION) {
       return JOptionPane.NO_OPTION;
     } else {
       return JOptionPane.CLOSED_OPTION;

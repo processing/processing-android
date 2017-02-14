@@ -36,11 +36,6 @@ import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -54,10 +49,11 @@ import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.swing.JComponent;
-import javax.swing.JFrame;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 
 
 public class AndroidMode extends JavaMode {
@@ -71,6 +67,28 @@ public class AndroidMode extends JavaMode {
   private boolean checkingSDK = false;
   private boolean userCancelledSDKSearch = false;
 
+  private static final String BLUETOOTH_DEBUG_URL = 
+      "http://developer.android.com/training/wearables/apps/bt-debugging.html";
+  
+  private static final String WATCHFACE_DEBUG_TITLE =
+      "Is Debugging over Bluetooth enabled?";
+  
+  private static final String WATCHFACE_DEBUG_MESSAGE =
+      "Processing will access the smartwatch through the phone " +
+      "currently paired to it. Your watch won't show up in the device list, " +
+      "select the phone instead.<br><br>" +
+      "Make sure to enable <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging over bluetooth</a> " +
+      "for this to work.";
+  
+  private static final String WALLPAPER_INSTALL_TITLE =
+      "Wallpaper installed!";
+  
+  private static final String WALLPAPER_INSTALL_MESSAGE = 
+      "Processing just built and installed your sketch as a " +
+      "live wallpaper on the selected device.<br><br>" +
+      "You need to open the wallpaper picker in the device in order "+ 
+      "to select it as the new background.";
+  
   public AndroidMode(Base base, File folder) {
     super(base, folder);
   }
@@ -326,38 +344,18 @@ public class AndroidMode extends JavaMode {
     showPostBuildMessage(build.getAppComponent());
   }
 
+  
   public void showSelectComponentMessage(int appComp) {
     if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
-      JLabel text1 = new JLabel("<html>Processing will access the watch through the phone<br>" +
-        "paired to it. Your watch won't show up in the device list,<br>"+
-        "select the paired phone.</html>");      
-      JLabel text2 = new JLabel("<html>Make sure to enable</html>");
-      final String url = "http://developer.android.com/training/wearables/apps/bt-debugging.html";
-      String urlText = "<html><a href=\"" + url + "\">debugging over bluetooth</a></html>";      
-      JLabel link = new JLabel(urlText);
-      link.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-      link.addMouseListener(new MouseAdapter() {
-        public void mouseClicked(MouseEvent e) {
-          Platform.openURL(url);
-        }
-      });
-      JLabel text3 = new JLabel("<html>for this to work.</html>");
-      JComponent[] text = new JComponent[] { text1, text2, link, text3 };  
-      String title = "Is Debugging over Bluetooth enabled?";
-      showMessage(title, text, 400, 100);
+      showMessage(WATCHFACE_DEBUG_TITLE, WATCHFACE_DEBUG_MESSAGE);
       showBluetoothDebugMessage = false;
     } 
   }
   
+  
   public void showPostBuildMessage(int appComp) {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
-      JLabel text1 = new JLabel("<html>Processing just built and installed your sketch as a<br>" +
-          "live wallpaper on the selected device.<br><br>" +
-          "You need to open the wallpaper selector in the device in order<br>"+ 
-          "to set it as the new background.</html>");
-      JComponent[] text = new JComponent[] { text1 };
-      String title = "Wallpaper installed!";
-      showMessage(title, text, 400, 100);  
+      showMessage(WALLPAPER_INSTALL_TITLE, WALLPAPER_INSTALL_MESSAGE);  
       showWallpaperSelectMessage = false;
     }    
   }
@@ -467,22 +465,30 @@ public class AndroidMode extends JavaMode {
     zip.close();
   }
 
-  // Based on some ideas seen in this thread 
-  // http://stackoverflow.com/questions/527719/how-to-add-hyperlink-in-jlabel
-  static public void showMessage(String title, JComponent[] text, 
-      int w, int h) {
+
+  static public void showMessage(String title, String text) {
     if (title == null) title = "Message";
-    if (Base.isCommandLine()) {
-      String concat = "";
-      for (JComponent txt: text) concat += txt.toString();
-      System.out.println(title + ": " + concat);
+    if (Base.isCommandLine()) {      
+      System.out.println(title + ": " + text);
     } else {
-      JFrame frame = new JFrame();
-      Container outer = frame.getContentPane();
-      outer.setLayout(new FlowLayout(FlowLayout.LEFT));
-      for (JComponent txt: text) outer.add(txt);
-      outer.setPreferredSize(new Dimension(w, h));      
-      JOptionPane.showMessageDialog(frame, outer, title,
+      String htmlString = "<html> " +
+          "<head> <style type=\"text/css\">"+
+          "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+          "</style> </head>" +
+          "<body> <p>" + text + "</p> </body> </html>";      
+      JEditorPane pane = new JEditorPane("text/html", htmlString);
+      pane.addHyperlinkListener(new HyperlinkListener() {
+        @Override
+        public void hyperlinkUpdate(HyperlinkEvent e) {
+          if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+            Platform.openURL(e.getURL().toString());
+          }
+        }
+      });
+      pane.setEditable(false);
+      JLabel label = new JLabel();
+      pane.setBackground(label.getBackground());      
+      JOptionPane.showMessageDialog(null, pane, title, 
           JOptionPane.INFORMATION_MESSAGE);
     }
   }   
