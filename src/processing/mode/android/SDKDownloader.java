@@ -70,7 +70,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private int totalSize = 0;  
 
   class SDKUrlHolder {
-    public String platformVersion;
+    public String platformVersion, buildToolsVersion;
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
     public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
     public int totalSize = 0;
@@ -83,7 +83,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     @Override
     protected Object doInBackground() throws Exception {
-
       File modeFolder = mode.getFolder();
       
       // creating sdk folders
@@ -132,18 +131,16 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
 
-        tempFolder.delete();
-
-        // Normalize platform folder to android-<API LEVEL>
-        File expectedPath = new File(platformsFolder, "android-" + AndroidBuild.target_sdk);
-        File actualPath = new File(platformsFolder, "android-" + downloadUrls.platformVersion);
-        if (!expectedPath.exists()) {
-          if (actualPath.exists()) {
-            actualPath.renameTo(expectedPath);
-          } else {
-            throw new IOException("Error unpacking platform to " + actualPath.getAbsolutePath());
-          }
+        for (File f: tempFolder.listFiles()) {
+          f.delete();
+          PApplet.println("Deleting", f.getAbsolutePath());          
         }
+        tempFolder.delete();
+        
+         // Normalize built-tools and platform folders to android-<API LEVEL>
+        String actualName = "android-" + downloadUrls.platformVersion;
+        renameFolder(platformsFolder, "android-" + AndroidBuild.target_sdk, actualName);
+        renameFolder(buildToolsFolder, downloadUrls.buildToolsVersion, actualName);
         
         // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
@@ -254,6 +251,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // build-tools
       Node buildToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:build-tool"));
       if (buildToolsItem != null) {
+        Node revisionListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:revision").item(0);
+        String major = ((Element) revisionListItem).getElementsByTagName("sdk:major").item(0).getTextContent();
+        String minor = ((Element) revisionListItem).getElementsByTagName("sdk:minor").item(0).getTextContent();
+        String micro = ((Element) revisionListItem).getElementsByTagName("sdk:micro").item(0).getTextContent();
+        urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
         archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
         for (int i = 0; i < archiveList.getLength(); i++) {
@@ -338,6 +340,20 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     }
     return latest;
   } 
+  
+  private void renameFolder(File baseFolder, String expected, String actual) 
+      throws IOException {
+    File expectedPath = new File(baseFolder, expected);
+    File actualPath = new File(baseFolder, actual);
+    if (!expectedPath.exists()) {
+      if (actualPath.exists()) {
+        actualPath.renameTo(expectedPath);
+      } else {
+        throw new IOException("Error unpacking platform to " + 
+            actualPath.getAbsolutePath());
+      }
+    }        
+  }
   
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
