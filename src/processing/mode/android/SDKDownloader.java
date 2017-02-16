@@ -131,10 +131,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
 
-        for (File f: tempFolder.listFiles()) {
-          f.delete();
-          PApplet.println("Deleting", f.getAbsolutePath());          
-        }
+        for (File f: tempFolder.listFiles()) f.delete();    
         tempFolder.delete();
         
          // Normalize built-tools and platform folders to android-<API LEVEL>

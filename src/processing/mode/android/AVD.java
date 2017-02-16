@@ -83,13 +83,13 @@ public class AVD {
   /** Default virtual device used by Processing. */
   static public final AVD defaultAVD =
     new AVD("Processing-0" + Base.getRevision(),
-            AndroidBuild.target_platform, "default", DEFAULT_SKIN);
+            AndroidBuild.target_platform, SysImageDownloader.SYSTEM_IMAGE_TAG, DEFAULT_SKIN);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
   /** Default virtual wear device used by Processing. */
   static public final AVD wearAVD =
     new AVD("Processing-Wear-0" + Base.getRevision(),
-            AndroidBuild.target_platform, "android-wear", WEAR_SKIN);  
+            AndroidBuild.target_platform, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG, WEAR_SKIN);  
   
   public AVD(final String name, final String target, 
       final String tag, final String skin) {

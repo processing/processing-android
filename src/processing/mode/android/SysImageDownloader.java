@@ -29,6 +29,7 @@ import org.xml.sax.SAXException;
 
 import processing.app.Platform;
 import processing.app.ui.Toolkit;
+import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -53,13 +54,15 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
   private static final String URL_SYS_IMAGES_WEAR_FOLDER = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
   
-  private static final String SYSTEM_IMAGE_MACOSX = "Intel x86 Atom System Image";  
-  private static final String SYSTEM_IMAGE_WINDOWS = "ARM EABI v7a System Image";
-  private static final String SYSTEM_IMAGE_LINUX = "ARM EABI v7a System Image";
+  public static final String SYSTEM_IMAGE_TAG = "google_apis";
+  private static final String SYSTEM_IMAGE_MACOSX = "Google APIs Intel x86 Atom System Image";  
+  private static final String SYSTEM_IMAGE_WINDOWS = "Google APIs Intel x86 Atom System Image";
+  private static final String SYSTEM_IMAGE_LINUX = "Google APIs Intel x86 Atom System Image";
   
+  public static final String SYSTEM_IMAGE_WEAR_TAG = "android-wear";
   private static final String SYSTEM_IMAGE_WEAR_MACOSX = "Android Wear Intel x86 Atom System Image";
-  private static final String SYSTEM_IMAGE_WEAR_WINDOWS = "Android Wear ARM EABI v7a System Image";
-  private static final String SYSTEM_IMAGE_WEAR_LINUX = "Android Wear ARM EABI v7a System Image";
+  private static final String SYSTEM_IMAGE_WEAR_WINDOWS = "Android Wear Intel x86 Atom System Image";
+  private static final String SYSTEM_IMAGE_WEAR_LINUX = "Android Wear Intel x86 Atom System Image";
   
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -121,7 +124,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           if (!tmp.exists()) tmp.mkdir();
           File sysImgWearFinalFolder = new File(tmp, downloadUrls.sysImgWearTag);
           if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir();
-          downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);          
+          downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);
+          fixSourceProperties(sysImgWearFinalFolder);
         } else {
           // default system images
           File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
@@ -129,29 +133,16 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           if (!tmp.exists()) tmp.mkdir();
           File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
           if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
-          downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false);  
+          downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false);
+          fixSourceProperties(sysImgFinalFolder);
         }
 
         if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sysImgFolder.getAbsolutePath());
         }
 
+        for (File f: tempFolder.listFiles()) f.delete();    
         tempFolder.delete();
-
-        // Normalize platform folder to android-<API LEVEL>
-//        File expectedPath = new File(platformsFolder, "android-" + AndroidBuild.target_sdk);
-//        File actualPath = new File(platformsFolder, "android-" + downloadUrls.platformVersion);
-//        if (!expectedPath.exists()) {
-//          if (actualPath.exists()) {
-//            actualPath.renameTo(expectedPath);
-//          } else {
-//            throw new IOException("Error unpacking platform to " + actualPath.getAbsolutePath());
-//          }
-//        }
-//        
-//        // Done, let's set the environment and load the new SDK!
-//        Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
-//        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
         
         result = true;
       } catch (ParserConfigurationException e) {
@@ -203,6 +194,27 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       AndroidMode.extractFolder(saveTo, unpackTo, setExec);
     }
 
+    // For some reason the source.properties file includes Addon entries, 
+    // and this breaks the image...
+    private void fixSourceProperties(File imageFolder) {
+      for (File d: imageFolder.listFiles()) {
+        // Should iterate over the installed archs (x86, etc)
+        if (d.isDirectory()) {
+          for (File f: d.listFiles()) {
+            if (PApplet.getExtension(f.getName()).equals("properties")) {
+              String[] linesIn = PApplet.loadStrings(f);
+              String concat = "";
+              for (String l: linesIn) {
+                if (l.indexOf("Addon") == -1) concat += l + "\n";
+              }
+              String[] linesOut = concat.split("\n");
+              PApplet.saveStrings(f, linesOut);
+            }
+          }
+        }
+      }      
+    }
+    
     private UrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) 
         throws ParserConfigurationException, IOException, SAXException {
       UrlHolder urlHolder = new UrlHolder();
@@ -260,7 +272,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
           NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
           // Only considering nodes without a codename, which correspond to the platform
-          // pre-releases.        
+          // pre-releases.  
           if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
               desc.item(0).getTextContent().equals(systemImage) && 
               codename.item(0) == null) {          
