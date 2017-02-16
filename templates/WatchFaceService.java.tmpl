@@ -17,6 +17,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import android.support.v4.os.ResultReceiver; 
+import android.support.wearable.activity.WearableActivity;
         
 import processing.android.@@watchface_classs@@;
 import processing.core.PApplet;
@@ -92,8 +93,11 @@ public class MainService extends @@watchface_classs@@ {
     permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);
     permIntent.putExtra(KEY_PERMISSIONS, permissions);
     permIntent.putExtra(KEY_REQUEST_CODE, requestCode);  
+    permIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    startActivity(permIntent);
 
     // Create a notification on watch faces, otherwise it does not work.
+    /*
     TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
     stackBuilder.addNextIntent(permIntent);
     PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -108,6 +112,7 @@ public class MainService extends @@watchface_classs@@ {
         .setStyle(null);
     NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
     notificationManager.notify(requestCode, builder.build());
+    */
   }    
     
   public static class PermissionRequestActivity extends Activity {
