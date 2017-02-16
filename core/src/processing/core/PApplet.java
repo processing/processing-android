@@ -196,7 +196,7 @@ public class PApplet extends Object implements PConstants {
   public boolean mousePressed;
 
 
-  public boolean touchPressed;
+  public boolean touchIsStarted;
 
 
   public TouchEvent.Pointer[] touches = new TouchEvent.Pointer[0];
@@ -2103,10 +2103,10 @@ public class PApplet extends Object implements PConstants {
 
     switch (event.getAction()) {
     case TouchEvent.START:
-      touchPressed = true;
+      touchIsStarted = true;
       break;
     case TouchEvent.END:
-      touchPressed = false;
+      touchIsStarted = false;
       break;
     }
 
