@@ -63,10 +63,10 @@ public class PCardboard extends GvrActivity implements AppComponent {
   public int getDisplayHeight() {
     return metrics.heightPixels;
   }
-  
+
   public float getDisplayDensity() {
     return metrics.density;
-  } 
+  }
 
   public int getKind() {
       return CARDBOARD;
@@ -110,11 +110,6 @@ public class PCardboard extends GvrActivity implements AppComponent {
 //     super.onCreate(savedInstanceState);
 //
 //  }
-
-  @Override
-  public void startActivity(Intent intent) {
-    // TODO Auto-generated method stub
-  }
 
   @Override
   public void onResume() {

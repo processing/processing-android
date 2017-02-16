@@ -22,7 +22,6 @@
 
 package processing.android;
 
-import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Build;
@@ -32,7 +31,6 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.DisplayMetrics;
-//import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -88,10 +86,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
   public int getKind() {
     return WATCHFACE;
-  }
-
-  @Override
-  public void startActivity(Intent intent) {
   }
 
   public void setSketch(PApplet sketch) {

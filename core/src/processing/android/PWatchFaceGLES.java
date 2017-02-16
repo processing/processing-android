@@ -22,7 +22,6 @@
 
 package processing.android;
 
-import android.content.Intent;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,7 +31,6 @@ import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.DisplayMetrics;
-//import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
@@ -86,10 +84,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
   public int getKind() {
     return WATCHFACE;
-  }
-
-  @Override
-  public void startActivity(Intent intent) {
   }
 
   public void setSketch(PApplet sketch) {
