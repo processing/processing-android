@@ -28,6 +28,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import processing.app.Platform;
+import processing.app.Preferences;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
@@ -96,8 +97,10 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     protected Object doInBackground() throws Exception {
       result = false;
 
-      File modeFolder = mode.getFolder();
-      File sdkFolder = new File(modeFolder, "sdk");
+      // The SDK should already be detected by the android mode
+      String sdkPrefsPath = Preferences.get("android.sdk.path");
+      File sdkFolder = new File(sdkPrefsPath);
+      File modeFolder = mode.getFolder();      
       if (!sdkFolder.exists()) {
         throw new IOException("SDK folder does not exist " + sdkFolder.getAbsolutePath());
       }
@@ -127,7 +130,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);
           fixSourceProperties(sysImgWearFinalFolder);
         } else {
-          // default system images
+          // mobile system images
           File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
           File tmp = new File(sysImgFolder, "android-" + AndroidBuild.target_sdk);
           if (!tmp.exists()) tmp.mkdir();
