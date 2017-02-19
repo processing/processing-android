@@ -81,7 +81,7 @@ public class AVD {
   private String skin;
 
   /** Default virtual device used by Processing. */
-  static public final AVD defaultAVD =
+  static public final AVD mobileAVD =
     new AVD("Processing-0" + Base.getRevision(),
             AndroidBuild.target_platform, SysImageDownloader.SYSTEM_IMAGE_TAG, DEFAULT_SKIN);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
@@ -198,19 +198,25 @@ public class AVD {
         line = line.trim();
         if (line.equals("")) continue;
 
-        if (-1 < line.indexOf("API level")) {
-          api = line.split(":")[1];
-          api = api.trim();
-        }
-        
-        if (-1 < line.indexOf("Tag/ABIs")) {
-          String str = line.split(":")[1];
-          abis = str.split(",");
-          for (int i = 0; i < abis.length; i++) {
-            abis[i] = abis[i].trim();  
+        if (line.indexOf("API level") == 0) {
+          String[] m = line.split(":");
+          if (1 < m.length) {
+            api = m[1];
+            api = api.trim();            
           }
         }
-
+        
+        if (line.indexOf("Tag/ABIs") == 0) {
+          String[] m = line.split(":");
+          if (1 < m.length) {
+            String str = m[1];
+            abis = str.split(",");
+            for (int i = 0; i < abis.length; i++) {
+              abis[i] = abis[i].trim();  
+            }
+          }
+        }
+        
         if (api != null && abis != null) {
           for (String abi: abis) {
             if (abiList.indexOf(abi) == -1) continue;
@@ -223,34 +229,16 @@ public class AVD {
           api = null;
           abis = null; 
         }
-        
-//        String[] m = PApplet.match(line, "API\\slevel:\\s(\\S+)");
-//        if (m != null) {
-//          api = m[1];
-//        }
-//
-//        m = PApplet.match(line, "Tag\\/ABIs\\s:\\sdefault\\/(\\S+)");
-//        if (m != null) {
-//          abi = m[1];
-//
-//          if (api != null && abi != null) {
-//            if (preferredAbi.get(api) == null) {
-//              preferredAbi.put(api, abi);
-//            } else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
-//              preferredAbi.put(api, abi);
-//            }
-//            api = null;
-//            abi = null;
-//          }
-//        }
       }
-    } catch (InterruptedException e) {}  
+    } catch (InterruptedException e) {
+    }
   }
   
   
   protected boolean noTargets(final AndroidSDK sdk) throws IOException {
     initTargets(sdk); 
-    return preferredAbi.size() == 0;    
+//    return preferredAbi.size() == 0;
+    return preferredAbi.get(AndroidBuild.target_sdk) == null;
   }
   
 
@@ -267,15 +255,15 @@ public class AVD {
       "--abi", preferredAbi.get(AndroidBuild.target_sdk)
     };
         
-    //sdk/tools/android create avd -n "Wear-Processing-0254" -t android-23 -c 64M -s AndroidWearSquare --abi android-wear/x86
-    
-    
+    // sdk/tools/android create avd -n "Wear-Processing-0254" -t android-23 -c 64M -s AndroidWearSquare --abi android-wear/x86
+        
     // Set the list to null so that exists() will check again
     avdList = null;
-
+    
     ProcessHelper p = new ProcessHelper(params);
     try {
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
+      
       final ProcessResult createAvdResult = p.execute("no");
       if (createAvdResult.succeeded()) {
         return true;
@@ -286,10 +274,13 @@ public class AVD {
       } else {
         // Just generally not working
         Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
+//        Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, "UCKCUCKKDKDDKD", null);
         System.out.println(createAvdResult);
       }
       //System.err.println(createAvdResult);
-    } catch (final InterruptedException ie) { }
+    } catch (final InterruptedException ie) { 
+      ie.printStackTrace(); 
+    }
 
     return false;
   }
@@ -314,7 +305,7 @@ public class AVD {
           return false;
         }
         if (wearAVD.noTargets(sdk)) {
-          boolean res = AndroidSDK.locateSysImage(window, mode, true);
+          boolean res = AndroidSDK.locateSysImage(window, mode, true);          
           if (!res) {
             return false;  
           }
@@ -323,24 +314,25 @@ public class AVD {
           return true;
         }    
       } else {
-        if (defaultAVD.exists(sdk)) {
+        if (mobileAVD.exists(sdk)) {
           return true;
         }
-        if (defaultAVD.badness()) {
+        if (mobileAVD.badness()) {
           Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
           return false;
-        }    
-        if (defaultAVD.noTargets(sdk)) {
+        }
+        if (mobileAVD.noTargets(sdk)) {
           boolean res = AndroidSDK.locateSysImage(window, mode, false);
           if (!res) {
             return false;  
           }
         }        
-        if (defaultAVD.create(sdk)) {
+        if (mobileAVD.create(sdk)) {
           return true;
         }
       }
     } catch (final Exception e) {
+      e.printStackTrace();
       Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
                                  String.format(AVD_CREATE_SECONDARY,
                                                AndroidBuild.target_sdk), null);
