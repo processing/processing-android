@@ -1508,17 +1508,17 @@ public class PApplet extends Object implements PConstants {
           try {
             pg = (PGraphics) constructor.newInstance();
           } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            printStackTrace(e);
             throw new RuntimeException(e.getMessage());
           } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            printStackTrace(e);
             throw new RuntimeException(e.getMessage());
           } catch (InstantiationException e) {
-            e.printStackTrace();
+            printStackTrace(e);
             throw new RuntimeException(e.getMessage());
           } catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            printStackTrace(e);
           }
         }
       }
@@ -2716,13 +2716,21 @@ public class PApplet extends Object implements PConstants {
     try {
       return Runtime.getRuntime().exec(argv);
     } catch (Exception e) {
-      e.printStackTrace();
       throw new RuntimeException("Could not open " + join(argv, ' '));
     }
   }
 
 
   //////////////////////////////////////////////////////////////
+
+
+  /**
+   * Better way of handling e.printStackTrace() calls so that they can be
+   * handled by subclasses as necessary.
+   */
+  protected void printStackTrace(Throwable t) {
+    t.printStackTrace();
+  }
 
 
   /**
@@ -2823,16 +2831,16 @@ public class PApplet extends Object implements PConstants {
       method.invoke(this, new Object[] { });
 
     } catch (IllegalArgumentException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     } catch (IllegalAccessException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     } catch (InvocationTargetException e) {
       e.getTargetException().printStackTrace();
     } catch (NoSuchMethodException nsme) {
       System.err.println("There is no public " + name + "() method " +
                          "in the class " + getClass().getName());
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
     }
   }
 
@@ -3959,7 +3967,7 @@ public class PApplet extends Object implements PConstants {
     try {
       return new XML(name);
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -3983,7 +3991,7 @@ public class PApplet extends Object implements PConstants {
     try {
       return new XML(createInput(filename), options);
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -3998,7 +4006,7 @@ public class PApplet extends Object implements PConstants {
     try {
       return XML.parse(xmlString, options);
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -4145,7 +4153,7 @@ public class PApplet extends Object implements PConstants {
       return new Table(createInput(filename), options);
 
     } catch (IOException e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -4161,7 +4169,7 @@ public class PApplet extends Object implements PConstants {
       table.save(saveFile(filename), options);
       return true;
     } catch (IOException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     }
     return false;
   }
@@ -4681,15 +4689,18 @@ public class PApplet extends Object implements PConstants {
    */
   public InputStream createInput(String filename) {
     InputStream input = createInputRaw(filename);
-    if ((input != null) && filename.toLowerCase().endsWith(".gz")) {
+    final String lower = filename.toLowerCase();
+    if ((input != null) &&
+        (lower.endsWith(".gz") || lower.endsWith(".svgz"))) {
       try {
-        return new GZIPInputStream(input);
+        // buffered has to go *around* the GZ, otherwise 25x slower
+        return new BufferedInputStream(new GZIPInputStream(input));
       } catch (IOException e) {
-        e.printStackTrace();
+        printStackTrace(e);
         return null;
       }
     }
-    return input;
+    return new BufferedInputStream(input);
   }
 
 
@@ -4746,7 +4757,7 @@ public class PApplet extends Object implements PConstants {
 
       } catch (IOException e) {
         // changed for 0117, shouldn't be throwing exception
-        e.printStackTrace();
+        printStackTrace(e);
         //System.err.println("Error downloading from URL " + filename);
         return null;
         //throw new RuntimeException("Error downloading from URL " + filename);
@@ -4880,9 +4891,9 @@ public class PApplet extends Object implements PConstants {
     try {
       InputStream input = new FileInputStream(file);
       if (file.getName().toLowerCase().endsWith(".gz")) {
-        return new GZIPInputStream(input);
+        return new BufferedInputStream(new GZIPInputStream(input));
       }
-      return input;
+      return new BufferedInputStream(input);
 
     } catch (IOException e) {
       System.err.println("Could not createInput() for " + file);
@@ -5067,7 +5078,7 @@ public class PApplet extends Object implements PConstants {
       return fos;
 
     } catch (IOException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     }
     return null;
   }
