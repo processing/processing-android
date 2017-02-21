@@ -1254,7 +1254,7 @@ public class PGraphicsAndroid2D extends PGraphics {
   public void textFont(PFont which, float size) {
     super.textFont(which, size);
     fillPaint.setTypeface((Typeface) which.getNative());
-    fillPaint.setTextSize(which.getDefaultSize());
+    fillPaint.setTextSize(size);
   }
 
 
