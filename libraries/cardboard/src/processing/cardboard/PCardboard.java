@@ -25,7 +25,6 @@ package processing.cardboard;
 import com.google.vr.sdk.base.GvrActivity;
 import com.google.vr.sdk.base.Eye;
 
-import android.content.Intent;
 import android.util.DisplayMetrics;
 import processing.android.AppComponent;
 import processing.core.PApplet;
