@@ -5086,11 +5086,12 @@ public class PApplet extends Object implements PConstants {
 
   static public OutputStream createOutput(File file) {
     try {
-      FileOutputStream fos = new FileOutputStream(file);
+      createPath(file);  // make sure the path exists
+      OutputStream output = new FileOutputStream(file);
       if (file.getName().toLowerCase().endsWith(".gz")) {
-        return new GZIPOutputStream(fos);
+        return new BufferedOutputStream(new GZIPOutputStream(output));
       }
-      return fos;
+      return new BufferedOutputStream(output);
 
     } catch (IOException e) {
       e.printStackTrace();
