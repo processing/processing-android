@@ -22,11 +22,14 @@
 
 package processing.android;
 
+import java.lang.reflect.Method;
+
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.graphics.Rect;
+import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
@@ -40,12 +43,11 @@ import processing.a2d.PGraphicsAndroid2D;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 
-
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
-  protected PApplet sketch;
   protected Point size;
   private DisplayMetrics metrics;
-  protected CEngine engine;
+  protected CanvasEngine engine;
+
 
   public void initDimensions() {
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -70,52 +72,53 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     }
   }
 
+
   public int getDisplayWidth() {
     return size.x;
 //    return metrics.widthPixels;
   }
+
 
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
   }
 
+
   public float getDisplayDensity() {
     return metrics.density;
   }
+
 
   public int getKind() {
     return WATCHFACE;
   }
 
-  public void setSketch(PApplet sketch) {
-    this.sketch = sketch;
+
+  public PApplet createSketch() {
+    return new PApplet();
   }
+
+
+  public void setSketch(PApplet sketch) {
+    engine.sketch = sketch;
+  }
+
 
   public PApplet getSketch() {
-    return sketch;
+    return engine.sketch;
   }
 
-  public void dispose() {
-  }
 
-  public void requestPermissions() {
-
-  }
-
-  public void onPermissionsGranted() {
-    if (sketch != null) sketch.onPermissionsGranted();
-  }
-
-  @Override
-  public Engine onCreateEngine() {
-    engine = new CEngine();
+  public Engine getEngine() {
     return engine;
   }
+
 
   public void requestDraw() {
     if (engine != null) engine.invalidateIfNecessary();
   }
+
 
   public boolean canDraw() {
     // The rendering loop should never call handleDraw() directly, it only needs to invalidate the
@@ -123,7 +126,38 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     return false;
   }
 
-  private class CEngine extends CanvasWatchFaceService.Engine {
+
+  public void dispose() {
+  }
+
+
+  public void requestPermissions() {
+  }
+
+
+  public void onPermissionsGranted() {
+    if (engine != null) engine.onPermissionsGranted();
+  }
+
+
+  @Override
+  public Engine onCreateEngine() {
+    engine = new CanvasEngine();
+    return engine;
+  }
+
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (engine != null) engine.onDestroy();
+  }
+
+
+  private class CanvasEngine extends CanvasWatchFaceService.Engine {
+    private PApplet sketch;
+    private Method compUpdatedMethod;
+
     @SuppressWarnings("deprecation")
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
@@ -135,19 +169,38 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
               .setShowSystemUiTime(false)
               .setAcceptsTapEvents(true)
               .build());
-      if (sketch != null) {
-        PGraphicsAndroid2D.useBitmap = false;
-        sketch.initSurface(PWatchFaceCanvas.this, null);
-        sketch.startSurface();
-        requestPermissions();
+      sketch = createSketch();
+      PGraphicsAndroid2D.useBitmap = false;
+      sketch.initSurface(PWatchFaceCanvas.this, null);
+      sketch.startSurface();
+      initComplications();
+      requestPermissions();
+    }
+
+
+    private void initComplications() {
+      try {
+        compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
+                                                        new Class[] {int.class, ComplicationData.class});
+      } catch (Exception e) {
+        compUpdatedMethod = null;
       }
     }
+
 
     private void invalidateIfNecessary() {
       if (isVisible() && !isInAmbientMode()) {
         invalidate();
       }
     }
+
+
+    private void onPermissionsGranted() {
+      if (sketch != null) {
+        sketch.onPermissionsGranted();
+      }
+    }
+
 
     @Override
     public void onAmbientModeChanged(boolean inAmbientMode) {
@@ -157,6 +210,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       // call new event handlers in sketch (?)
     }
 
+
     @Override
     public void onPropertiesChanged(Bundle properties) {
       super.onPropertiesChanged(properties);
@@ -165,6 +219,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
         sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
       }
     }
+
 
     @Override
     public void onApplyWindowInsets(WindowInsets insets) {
@@ -178,6 +233,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       }
     }
 
+
     @Override
     public void onVisibilityChanged(boolean visible) {
       super.onVisibilityChanged(visible);
@@ -190,6 +246,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       }
     }
 
+
     @Override
     public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
       super.onSurfaceChanged(holder, format, width, height);
@@ -200,6 +257,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
         sketch.surfaceChanged();
       }
     }
+
 
     @Override
     public void onPeekCardPositionUpdate(Rect rect) {
@@ -222,6 +280,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
         sketch.handleDraw();
       }
     }
+
 
     @Override
     public void onTapCommand(
@@ -286,17 +345,24 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       if (sketch != null) sketch.surfaceTouchEvent(event);
     }
 
+
+    @Override
+    public void onComplicationDataUpdate(
+            int complicationId, ComplicationData complicationData) {
+      if (compUpdatedMethod != null) {
+        try {
+          compUpdatedMethod.invoke(complicationId, complicationData);
+        } catch (Exception e) {
+        }
+        invalidate();
+      }
+    }
+
+
     @Override
     public void onDestroy() {
       super.onDestroy();
       if (sketch != null) sketch.onDestroy();
     }
-  }
-
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    if (engine != null) engine.onDestroy();
   }
 }

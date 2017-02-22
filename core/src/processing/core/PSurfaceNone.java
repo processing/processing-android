@@ -30,6 +30,7 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.service.wallpaper.WallpaperService;
+import android.service.wallpaper.WallpaperService.Engine;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
@@ -44,6 +45,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import processing.android.AppComponent;
+import processing.android.PWallpaper;
+import processing.android.PWatchFaceCanvas;
+import processing.android.PWatchFaceGLES;
 
 /**
  * Base surface for Android2D and OpenGL renderers. It includes the standard rendering loop.
@@ -67,6 +71,11 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected long frameRatePeriod = 1000000000L / 60L;
 
   @Override
+  public AppComponent getComponent() {
+    return component;
+  }
+
+  @Override
   public Context getContext() {
     if (component.getKind() == AppComponent.FRAGMENT) {
       return activity;
@@ -84,8 +93,17 @@ public class PSurfaceNone implements PSurface, PConstants {
   }
 
   @Override
-  public AppComponent getComponent() {
-    return component;
+  public Engine getEngine() {
+    if (component.getKind() == AppComponent.WALLPAPER) {
+      return ((PWallpaper)component).getEngine();
+    } else if (component.getKind() == AppComponent.WATCHFACE) {
+      if (component instanceof PWatchFaceCanvas) {
+        return ((PWatchFaceCanvas)component).getEngine();
+      } else if (component instanceof PWatchFaceGLES) {
+        return ((PWatchFaceGLES)component).getEngine();
+      }
+    }
+    return null;
   }
 
   @Override

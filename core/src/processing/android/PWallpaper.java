@@ -33,17 +33,10 @@ import android.view.Display;
 import android.graphics.Point;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
-  String TAG = "PWallpaper";
-
   protected Point size;
   private DisplayMetrics metrics;
-  protected PEngine engine;
+  protected WallpaperEngine engine;
 
-  public PWallpaper() {
-  }
-
-  public PWallpaper(PApplet sketch) {
-  }
 
   public void initDimensions() {
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -68,63 +61,88 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     }
   }
 
-  public int getKind() {
-    return WALLPAPER;
-  }
 
   public int getDisplayWidth() {
     return size.x;
 //    return metrics.widthPixels;
   }
 
+
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
   }
 
+
   public float getDisplayDensity() {
     return metrics.density;
   }
 
-  public void setSketch(PApplet sketch) {
-    engine.sketch = sketch;
+
+  public int getKind() {
+    return WALLPAPER;
   }
 
-  public PApplet getSketch() {
-    return engine.sketch;
-  }
 
   public PApplet createSketch() {
     return new PApplet();
   }
 
-  public void requestDraw() {
 
+  public void setSketch(PApplet sketch) {
+    engine.sketch = sketch;
   }
+
+
+  public PApplet getSketch() {
+    return engine.sketch;
+  }
+
+
+  public Engine getEngine() {
+    return engine;
+  }
+
+
+  public void requestDraw() {
+  }
+
 
   public boolean canDraw() {
     return true;
   }
 
+
   public void dispose() {
   }
 
-  public void requestPermissions() {
 
+  public void requestPermissions() {
   }
+
 
   public void onPermissionsGranted() {
     if (engine != null) engine.onPermissionsGranted();
   }
 
+
   @Override
   public Engine onCreateEngine() {
-    engine = new PEngine();
+    engine = new WallpaperEngine();
     return engine;
   }
 
-  public class PEngine extends Engine {
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (engine != null) engine.onDestroy();
+  }
+
+
+  public class WallpaperEngine extends Engine {
     protected PApplet sketch;
+
 
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
@@ -137,10 +155,19 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       setTouchEventsEnabled(true);
     }
 
+
+    private void onPermissionsGranted() {
+      if (sketch != null) {
+        sketch.onPermissionsGranted();
+      }
+    }
+
+
     @Override
     public void onSurfaceCreated(SurfaceHolder surfaceHolder) {
       super.onSurfaceCreated(surfaceHolder);
     }
+
 
     @Override
     public void onSurfaceChanged(final SurfaceHolder holder, final int format,
@@ -150,6 +177,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       }
       super.onSurfaceChanged(holder, format, width, height);
     }
+
 
     @Override
     public void onVisibilityChanged(boolean visible) {
@@ -163,6 +191,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       super.onVisibilityChanged(visible);
     }
 
+
     /*
      * Store the position of the touch event so we can use it for drawing
      * later
@@ -174,6 +203,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
         sketch.surfaceTouchEvent(event);
       }
     }
+
 
     @Override
     public void onOffsetsChanged(float xOffset, float yOffset,
@@ -190,6 +220,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       }
     }
 
+
     @Override
     public void onSurfaceDestroyed(SurfaceHolder holder) {
       // This is called immediately before a surface is being destroyed.
@@ -200,17 +231,12 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       super.onSurfaceDestroyed(holder);
     }
 
+
     @Override
     public void onDestroy() {
       super.onDestroy();
       if (sketch != null) {
         sketch.onDestroy();
-      }
-    }
-
-    public void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
       }
     }
   }

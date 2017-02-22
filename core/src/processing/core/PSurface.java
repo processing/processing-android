@@ -35,6 +35,7 @@ import android.view.LayoutInflater;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.service.wallpaper.WallpaperService.Engine;
 import processing.android.AppComponent;
 
 /*
@@ -42,9 +43,10 @@ import processing.android.AppComponent;
  * handling
  */
 public interface PSurface {
+  public AppComponent getComponent();
   public Context getContext();
   public Activity getActivity();
-  public AppComponent getComponent();
+  public Engine getEngine();
 
   public void dispose();
 

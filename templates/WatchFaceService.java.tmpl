@@ -30,10 +30,10 @@ public class MainService extends @@watchface_classs@@ {
   private static final String KEY_GRANT_RESULTS = "grantResults";
   private static final String KEY_REQUEST_CODE = "requestCode";      
   
-  public MainService() {
-    super();
+  @Override
+  public PApplet createSketch() {
     PApplet sketch = new @@sketch_class_name@@();
-    setSketch(sketch);
+    return sketch;
   }
   
   // https://developer.android.com/training/articles/wear-permissions.html
