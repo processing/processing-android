@@ -1438,8 +1438,14 @@ class AndroidBuild extends JavaBuild {
   private String generatePermissionsString(final String[] permissions) {
     String permissionsStr = "";
     for (String p: permissions) {
-      permissionsStr += (0 < permissionsStr.length()?",":"") + 
-                        (p.indexOf("permission") == -1?"Manifest.permission.":"") + p;  
+      permissionsStr += (0 < permissionsStr.length() ? "," : "");
+      if (p.indexOf("permission") == -1) {
+        permissionsStr += "Manifest.permission." + p;
+      } else if (p.indexOf("Manifest.permission") == 0) {
+        permissionsStr += p;
+      } else {
+        permissionsStr += "\"" + p + "\"";
+      }
     }
     permissionsStr = "{" + permissionsStr + "}";   
     return permissionsStr;

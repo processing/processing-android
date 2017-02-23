@@ -137,8 +137,15 @@ public class Manifest {
     String[] names = new String[count];
     for (int i = 0; i < count; i++) {
       String tmp = elements[i].getString("android:name");
-      int idx = tmp.lastIndexOf(".");
-      names[i] = tmp.substring(idx + 1);
+      if (tmp.indexOf("android.permission") == 0) {
+        // Standard permission, remove perfix
+        int idx = tmp.lastIndexOf(".");
+        names[i] = tmp.substring(idx + 1);        
+      } else {
+        // Non-standard permission (for example, wearables)
+        // Store entire name.
+        names[i] = tmp;
+      }
     }
     return names;
   }
@@ -175,7 +182,12 @@ public class Manifest {
             name.equals("android.permission.WRITE_EXTERNAL_STORAGE")) continue;
       }       
       XML newbie = xml.addChild("uses-permission");
-      newbie.setString("android:name", PERMISSION_PREFIX + name);
+      if (-1 < name.indexOf(".")) {
+        // Permission string contains path
+        newbie.setString("android:name", name);
+      } else {
+        newbie.setString("android:name", PERMISSION_PREFIX + name);
+      }      
     }
     save();
   }
