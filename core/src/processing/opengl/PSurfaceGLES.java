@@ -60,15 +60,15 @@ public class PSurfaceGLES extends PSurfaceNone {
     if (component.getKind() == AppComponent.FRAGMENT) {
       PFragment frag = (PFragment)component;
       activity = frag.getActivity();
-      surface = new SketchSurfaceViewGL(activity, null);
+      surfaceView = new SketchSurfaceViewGL(activity, null);
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       wallpaper = (WallpaperService)component;
-      surface = new SketchSurfaceViewGL(wallpaper, holder);
+      surfaceView = new SketchSurfaceViewGL(wallpaper, holder);
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (Gles2WatchFaceService)component;
-      surface = null;
+      surfaceView = null;
     }
-    glsurf = (SketchSurfaceViewGL)surface;
+    glsurf = (SketchSurfaceViewGL)surfaceView;
   }
 
   @Override

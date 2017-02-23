@@ -172,7 +172,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       sketch = createSketch();
       PGraphicsAndroid2D.useBitmap = false;
       sketch.initSurface(PWatchFaceCanvas.this, null);
-      sketch.startSurface();
       initComplications();
       requestPermissions();
     }

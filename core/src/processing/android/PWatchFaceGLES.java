@@ -170,7 +170,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
               .build());
       sketch = createSketch();
       sketch.initSurface(PWatchFaceGLES.this, null);
-      sketch.startSurface();
       initComplications();
       requestPermissions();
     }

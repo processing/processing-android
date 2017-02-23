@@ -149,7 +149,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       super.onCreate(surfaceHolder);
       sketch = createSketch();
       sketch.initSurface(PWallpaper.this, getSurfaceHolder());
-      sketch.startSurface();
       sketch.preview = isPreview();
       if (isPreview()) requestPermissions();
       setTouchEventsEnabled(true);

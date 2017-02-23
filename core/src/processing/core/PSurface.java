@@ -32,6 +32,7 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,6 +58,7 @@ public interface PSurface {
   public Rect getVisibleFrame();
 
   public SurfaceView getSurfaceView();
+  public SurfaceHolder getSurfaceHolder();
 
   public View getRootView();
   public void setRootView(View view);

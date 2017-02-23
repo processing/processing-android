@@ -263,49 +263,20 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
-  /**
-   * Use in watch faces to check if the device in in ambient mode or interactive mode.
-   */
+  ///////////////////////////////////////////////////////////////
+  // Wallpaper and watchface variables: these will go away soon...
   public boolean ambientMode = false;
-
-  /**
-   * Indicates whether the watch face is round or not.
-   */
   public boolean isRound = false;
-
-  /**
-   * Watch face insets
-   */
-  public int insetLeft, insetRight = 0;
-  public int insetTop, insetBottom = 0;
-
-  /**
-   * Use in watch faces to store information abou the device screen
-   * https://developer.android.com/training/wearables/watch-faces/drawing.html#Screen
-   */
+  public int insetLeft = 0;
+  public int insetRight = 0;
+  public int insetTop = 0;
+  public int insetBottom = 0;
   public boolean lowBitAmbient = false;
   public boolean burnInProtection = false;
-
-  /**
-   * Offset for wallpapers, when user swipes across home screens.
-   */
-  public float homeScreenOffset = 0;
-//  public float offsetY = 0;
-
-  public int homeScreenCount = 1;
-
-  /**
-   * Indicates if the wallpaper is in preview mode.
-   */
   public boolean preview = false;
-
-  /**
-   * true if the applet is online.
-   * <P>
-   * This can be used to test how the applet should behave
-   * since online situations are different (no file writing, etc).
-   */
-//  public boolean online = false;
+  public float homeScreenOffset = 0;
+  public int homeScreenCount = 1;
+  ///////////////////////////////////////////////////////////////
 
   /**
    * Time in milliseconds when the applet was started.
@@ -480,6 +451,7 @@ public class PApplet extends Object implements PConstants {
     initSurface(null, null,  null, component, holder);
   }
 
+
   public void initSurface(LayoutInflater inflater, ViewGroup container,
                           Bundle savedInstanceState,
                           AppComponent component, SurfaceHolder holder) {
@@ -554,17 +526,11 @@ public class PApplet extends Object implements PConstants {
 
     sketchPath = surface.getFilesDir().getAbsolutePath();
 
+    surface.startThread();
+
     if (DEBUG) println("Done with init surface");
   }
 
-
-  public void startSurface() {
-    surface.startThread();
-  }
-
-  public View getRootView() {
-    return surface.getRootView();
-  }
 
   private void setFullScreenVisibility() {
     if (fullScreen) {
@@ -686,30 +652,6 @@ public class PApplet extends Object implements PConstants {
 
   public void settings() {
     //It'll be empty. Will be overridden by user's sketch class.
-  }
-
-
-  //////////////////////////////////////////////////////////////
-
-  // ANDROID SURFACE VIEW
-
-
-  // TODO this is only used by A2D, when finishing up a draw. but if the
-  // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
-  public SurfaceHolder getSurfaceHolder() {
-    SurfaceView view = surface.getSurfaceView();
-    if (view == null) {
-      // Watch faces don't have a surface view associated to them.
-      return null;
-    } else {
-      return view.getHolder();
-    }
-  }
-
-
-  /** Not official API, not guaranteed to work in the future. */
-  public SurfaceView getSurfaceView() {
-    return surface.getSurfaceView();
   }
 
 

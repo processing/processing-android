@@ -232,7 +232,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 //    }
 
     if (primaryGraphics) {
-      SurfaceHolder holder = parent.getSurfaceHolder();
+      SurfaceHolder holder = parent.surface.getSurfaceHolder();
       if (holder != null) {
         Canvas screen = null;
         try {
@@ -243,7 +243,7 @@ public class PGraphicsAndroid2D extends PGraphics {
         } finally {
           if (screen != null) {
             try {
-              parent.getSurfaceHolder().unlockCanvasAndPost(screen);
+              holder.unlockCanvasAndPost(screen);
             } catch (IllegalStateException ex) {
             }
           }

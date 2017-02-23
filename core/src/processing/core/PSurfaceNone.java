@@ -33,6 +33,7 @@ import android.service.wallpaper.WallpaperService;
 import android.service.wallpaper.WallpaperService.Engine;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,11 +58,12 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected PGraphics graphics;
   protected AppComponent component;
   protected Activity activity;
+
+  protected SurfaceView surfaceView;
   protected View view;
 
   protected WallpaperService wallpaper;
   protected WatchFaceService watchface;
-  protected SurfaceView surface;
 
   protected Thread thread;
   protected boolean paused;
@@ -70,10 +72,12 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected float frameRateTarget = 60;
   protected long frameRatePeriod = 1000000000L / 60L;
 
+
   @Override
   public AppComponent getComponent() {
     return component;
   }
+
 
   @Override
   public Context getContext() {
@@ -87,10 +91,12 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public Activity getActivity() {
     return activity;
   }
+
 
   @Override
   public Engine getEngine() {
@@ -106,10 +112,12 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public View getRootView() {
     return view;
   }
+
 
   @Override
   public String getName() {
@@ -123,10 +131,12 @@ public class PSurfaceNone implements PSurface, PConstants {
     return "";
   }
 
+
   @Override
   public View getResource(int id) {
     return activity.findViewById(id);
   }
+
 
   @Override
   public Rect getVisibleFrame() {
@@ -139,6 +149,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
     return frame;
   }
+
 
   @Override
   public void dispose() {
@@ -167,21 +178,38 @@ public class PSurfaceNone implements PSurface, PConstants {
       component = null;
     }
 
-    if (surface != null) {
-      surface.getHolder().getSurface().release();
-      surface = null;
+    if (surfaceView != null) {
+      surfaceView.getHolder().getSurface().release();
+      surfaceView = null;
     }
   }
+
 
   @Override
   public void setRootView(View view) {
     this.view = view;
   }
 
+
   @Override
   public SurfaceView getSurfaceView() {
-    return surface;
+    return surfaceView;
   }
+
+
+  @Override
+  // TODO this is only used by A2D, when finishing up a draw. but if the
+  // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
+  public SurfaceHolder getSurfaceHolder() {
+    SurfaceView view = getSurfaceView();
+    if (view == null) {
+      // Watch faces don't have a surface view associated to them.
+      return null;
+    } else {
+      return view.getHolder();
+    }
+  }
+
 
   @Override
   public void initView(int sketchWidth, int sketchHeight) {
@@ -210,6 +238,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   @Override
   public void initView(LayoutInflater inflater, ViewGroup container,
                        Bundle savedInstanceState) {
@@ -229,12 +258,14 @@ public class PSurfaceNone implements PSurface, PConstants {
     setRootView(rootView);
   }
 
+
   @Override
   public void startActivity(Intent intent) {
     if (component.getKind() == AppComponent.FRAGMENT) {
       component.startActivity(intent);
     }
   }
+
 
   @Override
   public void setOrientation(int which) {
@@ -246,6 +277,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       }
     }
   }
+
 
   @Override
   public File getFilesDir() {
@@ -259,6 +291,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public File getFileStreamPath(String path) {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -270,6 +303,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
     return null;
   }
+
 
   @Override
   public InputStream openFileInput(String filename) {
@@ -284,6 +318,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public AssetManager getAssets() {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -296,13 +331,15 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public void setSystemUiVisibility(int visibility) {
     int kind = component.getKind();
     if (kind == AppComponent.FRAGMENT || kind == AppComponent.WALLPAPER) {
-      surface.setSystemUiVisibility(visibility);
+      surfaceView.setSystemUiVisibility(visibility);
     }
   }
+
 
   @Override
   public void finish() {
@@ -317,13 +354,16 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   ///////////////////////////////////////////////////////////
 
   // Thread handling
 
+
   public Thread createThread() {
     return new AnimationThread();
   }
+
 
   @Override
   public void startThread() {
@@ -336,10 +376,12 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   @Override
   public void pauseThread() {
     paused = true;
   }
+
 
   @Override
   public void resumeThread() {
@@ -353,6 +395,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       pauseObject.notifyAll();  // wake up the animation thread
     }
   }
+
 
   @Override
   public boolean stopThread() {
@@ -369,10 +412,12 @@ public class PSurfaceNone implements PSurface, PConstants {
       return thread == null;
   }
 
+
   public void setFrameRate(float fps) {
     frameRateTarget = fps;
     frameRatePeriod = (long) (1000000000.0 / frameRateTarget);
   }
+
 
   protected void checkPause() {
     if (paused) {
@@ -386,12 +431,14 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   protected void callDraw() {
     component.requestDraw();
     if (component.canDraw() && sketch != null) {
       sketch.handleDraw();
     }
   }
+
 
   public class AnimationThread extends Thread {
     public AnimationThread() {

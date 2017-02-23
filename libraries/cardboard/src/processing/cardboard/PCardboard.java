@@ -96,7 +96,7 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
       // Don't start Papplet's animation thread bc cardboard will drive rendering
       // continuously
-      sketch.startSurface();
+//      sketch.startSurface();
     }
   }
 
