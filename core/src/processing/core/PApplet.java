@@ -41,11 +41,11 @@ import android.graphics.*;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.service.wallpaper.WallpaperService;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -443,6 +443,11 @@ public class PApplet extends Object implements PConstants {
 
   public Activity getActivity() {
     return surface.getActivity();
+  }
+
+
+  public WallpaperService.Engine getEngine() {
+    return surface.getEngine();
   }
 
 
