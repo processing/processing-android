@@ -78,14 +78,14 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     
-    if (!wear && device.hasFeature("watch")) {
-      listener.statusError("Trying to install a regular app or wallpaper on a watch.");
-      System.err.println("For some reason, Processing is trying to install the sketch\n" + 
-                         "on the paired watch instead of the mobile device.");
-      
-      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
-      return;
-    }
+//    if (!wear && device.hasFeature("watch")) {
+//      listener.statusError("Trying to install a regular app or wallpaper on a watch.");
+//      System.err.println("For some reason, Processing is trying to install the sketch\n" + 
+//                         "on the paired watch instead of the mobile device.");
+//      
+//      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
+//      return;
+//    }
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
