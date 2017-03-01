@@ -334,7 +334,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onTouchEvent(MotionEvent event) {
       super.onTouchEvent(event);
-      PApplet.println("touch even:" + event.toString());
       if (sketch != null) sketch.surfaceTouchEvent(event);
     }
 

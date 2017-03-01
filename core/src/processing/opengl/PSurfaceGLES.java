@@ -195,18 +195,9 @@ public class PSurfaceGLES extends PSurfaceNone {
     public void onWindowFocusChanged(boolean hasFocus) {
       super.onWindowFocusChanged(hasFocus);
       sketch.surfaceWindowFocusChanged(hasFocus);
-//      super.onWindowFocusChanged(hasFocus);
-//      focused = hasFocus;
-//      if (focused) {
-////        println("got focus");
-//        focusGained();
-//      } else {
-////        println("lost focus");
-//        focusLost();
-//      }
     }
 
-    // Do we need these to catpure events...?
+    // Do we need these to capture events...?
     @Override
     public boolean onTouchEvent(MotionEvent event) {
       boolean fullscreen = sketch.width == sketch.displayWidth &&
