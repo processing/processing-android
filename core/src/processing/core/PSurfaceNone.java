@@ -30,8 +30,10 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.service.wallpaper.WallpaperService;
+import android.service.wallpaper.WallpaperService.Engine;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +46,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import processing.android.AppComponent;
+import processing.android.PWallpaper;
+import processing.android.PWatchFaceCanvas;
+import processing.android.PWatchFaceGLES;
 
 /**
  * Base surface for Android2D and OpenGL renderers. It includes the standard rendering loop.
@@ -53,11 +58,12 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected PGraphics graphics;
   protected AppComponent component;
   protected Activity activity;
+
+  protected SurfaceView surfaceView;
   protected View view;
 
   protected WallpaperService wallpaper;
   protected WatchFaceService watchface;
-  protected SurfaceView surface;
 
   protected Thread thread;
   protected boolean paused;
@@ -65,6 +71,13 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   protected float frameRateTarget = 60;
   protected long frameRatePeriod = 1000000000L / 60L;
+
+
+  @Override
+  public AppComponent getComponent() {
+    return component;
+  }
+
 
   @Override
   public Context getContext() {
@@ -78,20 +91,33 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public Activity getActivity() {
     return activity;
   }
 
+
   @Override
-  public AppComponent getComponent() {
-    return component;
+  public Engine getEngine() {
+    if (component.getKind() == AppComponent.WALLPAPER) {
+      return ((PWallpaper)component).getEngine();
+    } else if (component.getKind() == AppComponent.WATCHFACE) {
+      if (component instanceof PWatchFaceCanvas) {
+        return ((PWatchFaceCanvas)component).getEngine();
+      } else if (component instanceof PWatchFaceGLES) {
+        return ((PWatchFaceGLES)component).getEngine();
+      }
+    }
+    return null;
   }
+
 
   @Override
   public View getRootView() {
     return view;
   }
+
 
   @Override
   public String getName() {
@@ -105,10 +131,12 @@ public class PSurfaceNone implements PSurface, PConstants {
     return "";
   }
 
+
   @Override
   public View getResource(int id) {
     return activity.findViewById(id);
   }
+
 
   @Override
   public Rect getVisibleFrame() {
@@ -121,6 +149,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
     return frame;
   }
+
 
   @Override
   public void dispose() {
@@ -149,21 +178,38 @@ public class PSurfaceNone implements PSurface, PConstants {
       component = null;
     }
 
-    if (surface != null) {
-      surface.getHolder().getSurface().release();
-      surface = null;
+    if (surfaceView != null) {
+      surfaceView.getHolder().getSurface().release();
+      surfaceView = null;
     }
   }
+
 
   @Override
   public void setRootView(View view) {
     this.view = view;
   }
 
+
   @Override
   public SurfaceView getSurfaceView() {
-    return surface;
+    return surfaceView;
   }
+
+
+  @Override
+  // TODO this is only used by A2D, when finishing up a draw. but if the
+  // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
+  public SurfaceHolder getSurfaceHolder() {
+    SurfaceView view = getSurfaceView();
+    if (view == null) {
+      // Watch faces don't have a surface view associated to them.
+      return null;
+    } else {
+      return view.getHolder();
+    }
+  }
+
 
   @Override
   public void initView(int sketchWidth, int sketchHeight) {
@@ -192,35 +238,26 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   @Override
   public void initView(LayoutInflater inflater, ViewGroup container,
-                       Bundle savedInstanceState,
-                       boolean sketchFullScreen,
-                       int sketchWidth, int sketchHeight) {
+                       Bundle savedInstanceState) {
     // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
     ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
-    RelativeLayout.LayoutParams gp =
-      new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                      LayoutParams.WRAP_CONTENT);
-    gp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
     View view = getSurfaceView();
-    if (sketch.fullScreen) {
-      LinearLayout.LayoutParams vp;
-      vp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                                         LayoutParams.MATCH_PARENT);
-      vp.weight = 1.0f;
-      view.setLayoutParams(vp);
-      rootView.addView(view, gp);
-    } else {
-      LinearLayout layout = new LinearLayout(activity);
-      layout.addView(view, sketchWidth, sketchHeight);
-      rootView.addView(layout, gp);
-    }
+    LinearLayout.LayoutParams lp;
+    lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                                       LayoutParams.MATCH_PARENT);
+    lp.weight = 1.0f;
+    lp.setMargins(0, 0, 0, 0);
+    view.setPadding(0,0,0,0);
+    rootView.addView(view, lp);
 
     rootView.setBackgroundColor(sketch.sketchWindowColor());
     setRootView(rootView);
   }
+
 
   @Override
   public void startActivity(Intent intent) {
@@ -228,6 +265,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       component.startActivity(intent);
     }
   }
+
 
   @Override
   public void setOrientation(int which) {
@@ -239,6 +277,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       }
     }
   }
+
 
   @Override
   public File getFilesDir() {
@@ -252,6 +291,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public File getFileStreamPath(String path) {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -263,6 +303,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
     return null;
   }
+
 
   @Override
   public InputStream openFileInput(String filename) {
@@ -277,6 +318,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public AssetManager getAssets() {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -289,13 +331,15 @@ public class PSurfaceNone implements PSurface, PConstants {
     return null;
   }
 
+
   @Override
   public void setSystemUiVisibility(int visibility) {
     int kind = component.getKind();
     if (kind == AppComponent.FRAGMENT || kind == AppComponent.WALLPAPER) {
-      surface.setSystemUiVisibility(visibility);
+      surfaceView.setSystemUiVisibility(visibility);
     }
   }
+
 
   @Override
   public void finish() {
@@ -310,13 +354,16 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   ///////////////////////////////////////////////////////////
 
   // Thread handling
 
+
   public Thread createThread() {
     return new AnimationThread();
   }
+
 
   @Override
   public void startThread() {
@@ -329,10 +376,12 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   @Override
   public void pauseThread() {
     paused = true;
   }
+
 
   @Override
   public void resumeThread() {
@@ -347,6 +396,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   @Override
   public boolean stopThread() {
     if (thread == null) {
@@ -356,15 +406,18 @@ public class PSurfaceNone implements PSurface, PConstants {
     return true;
   }
 
+
   @Override
   public boolean isStopped() {
       return thread == null;
   }
 
+
   public void setFrameRate(float fps) {
     frameRateTarget = fps;
     frameRatePeriod = (long) (1000000000.0 / frameRateTarget);
   }
+
 
   protected void checkPause() {
     if (paused) {
@@ -378,12 +431,14 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
+
   protected void callDraw() {
     component.requestDraw();
     if (component.canDraw() && sketch != null) {
       sketch.handleDraw();
     }
   }
+
 
   public class AnimationThread extends Thread {
     public AnimationThread() {
@@ -409,7 +464,8 @@ public class PSurfaceNone implements PSurface, PConstants {
       // un-pause the sketch and get rolling
       sketch.start();
 
-      while ((Thread.currentThread() == thread) && !sketch.finished) {
+      while ((Thread.currentThread() == thread) &&
+             (sketch != null && !sketch.finished)) {
         checkPause();
         callDraw();
 

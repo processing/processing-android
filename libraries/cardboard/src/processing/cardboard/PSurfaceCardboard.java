@@ -87,7 +87,7 @@ public class PSurfaceCardboard extends PSurfaceGLES {
     }
     cardboard.setGvrView(glview);
 
-    surface = null;
+    surfaceView = null;
   }
 
   @Override

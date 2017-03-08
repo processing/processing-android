@@ -46,13 +46,13 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
     if (component.getKind() == AppComponent.FRAGMENT) {
       PFragment frag = (PFragment)component;
       activity = frag.getActivity();
-      surface = new SketchSurfaceView(activity, null);
+      surfaceView = new SketchSurfaceView(activity, null);
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       wallpaper = (WallpaperService)component;
-      surface = new SketchSurfaceView(wallpaper, holder);
+      surfaceView = new SketchSurfaceView(wallpaper, holder);
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (CanvasWatchFaceService)component;
-      surface = null;
+      surfaceView = null;
     }
   }
 

@@ -31,6 +31,7 @@ import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
 import processing.app.Platform;
+import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
@@ -65,7 +66,15 @@ class AndroidBuild extends JavaBuild {
   static private final String XML_WALLPAPER_TEMPLATE = "XMLWallpaper.xml.tmpl";
   static private final String STRINGS_WALLPAPER_TEMPLATE = "StringsWallpaper.xml.tmpl";
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
-  static private final String BUILD_TEMPLATE = "Build.xml.tmpl";
+  static private final String ANT_BUILD_TEMPLATE = "Build.xml.tmpl";
+  
+  // Gradle files
+  static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
+  static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
+  static private final String APP_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
+  static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
+  static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";
+  static private final String CARDBOARD_GRADLE_BUILD_TEMPLATE = "CardboardBuild.gradle.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -83,16 +92,16 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_fragment  = "16"; // Jelly Bean (4.1)
   static public final String min_sdk_wallpaper = "16"; // 
   static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
-  static public final String min_sdk_watchface = "21"; // Lollipop (5.0)
+  static public final String min_sdk_handheld  = "21"; // Lollipop (5.0)
+  static public final String min_sdk_watchface = "23"; // Marshmallow (6.0)
   
   // Hard-coded target SDK, no longer user-selected.
-  static public final String target_sdk      = "23";  // Marshmallow (6.0)
+  static public final String target_sdk      = "25";  // Nougat (7.1.1)
   static public final String target_platform = "android-" + target_sdk;
 
   // Versions of Wear and VR in use 
-  static public final String wear_version = "1.4.0";
-  static public final String gvr_sdk_version = "1.10.0";
-  
+  static public final String wear_version = "2.0.0";
+  static public final String gvr_sdk_version = "1.20.0";
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
@@ -301,11 +310,17 @@ class AndroidBuild extends JavaBuild {
         // Need to add appcompat as a library project (includes v4 support)
         
         ////////////////////////////////////////////////////////////////////////
-        // first step: unpack the cardboard packages in the project's 
-        // libs folder:        
-        File appCompatFile = mode.getContentFile("mode/appcompat.zip");
-        AndroidMode.extractFolder(appCompatFile, libsFolder, true);        
+        // first step: copy appcompat library project 
+        
+        // TODO: the support-v7 library project should be copied from the Android 
+        // Support Repository, and not from the Support Library.
+        File appCompatFolderSrc = new File(sdk.getSupportLibrary(), "v7/appcompat");
+        // Delete the project.properties files because Processing will regenerate 
+        // it when building the project
+        File propFile = new File(appCompatFolderSrc, "project.properties");
+        propFile.delete();
         File appCompatFolder = new File(libsFolder, "appcompat");
+        Util.copyDir(appCompatFolderSrc, appCompatFolder);
 
         ////////////////////////////////////////////////////////////////////////
         // second step: create library projects
@@ -330,7 +345,7 @@ class AndroidBuild extends JavaBuild {
       } else {
         // Copy the v4 support package only, needed for the permission handling
         // in all other components
-        File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+        File compatJarFile = new File(sdk.getSupportLibrary(), "v4/android-support-v4.jar");
         Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));        
       }
       
@@ -340,9 +355,9 @@ class AndroidBuild extends JavaBuild {
       // cannot be resolved.
       // TODO: temporary hack until I find a better way to include the wearable aar
       // package included in the SDK:      
-      File wearJarFile = mode.getContentFile("mode/wearable-" + wear_version + ".jar");
-      System.out.println(wearJarFile.toString());
-      Util.copyFile(wearJarFile, new File(libsFolder, "wearable-" + wear_version + ".jar"));
+      File wearAarFile = new File(sdk.getWearableFolder(), wear_version + "/wearable-" + wear_version + ".aar");
+      File explodeDir = new File(tmpFolder, "aar");
+      AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));
 //    }      
       
       // Copy any imported libraries (their libs and assets),
@@ -463,7 +478,7 @@ class AndroidBuild extends JavaBuild {
         
     // Copy the compatibility package, needed for the permission handling
     final File libsFolder = mkdirs(tmpFolder, "libs");
-    File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+    File compatJarFile = new File(sdk.getSupportLibrary(), "v4/android-support-v4.jar");
     Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
     
     // Create manifest file
@@ -541,6 +556,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@version_code@@", versionCode);
     replaceMap.put("@@version_name@@", versionName);
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@uses_permissions@@", usesPermissions);
         
@@ -691,7 +707,7 @@ class AndroidBuild extends JavaBuild {
     rewriteManifest = true;
   }
   
-  protected boolean usesGPU() {
+  protected boolean usesOpenGL() {
     return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
   }
 
@@ -749,6 +765,12 @@ class AndroidBuild extends JavaBuild {
     // this will set debuggable to true in the .xml file
     target = "debug";
     
+    String buildSystem = Preferences.get("android.export.build_system");
+    if (buildSystem == null) {
+      buildSystem = "gradle";
+      Preferences.set("android.export.build_system", buildSystem);
+    }
+    
     if (appComponent == WATCHFACE) {
       // We are building a watchface not to run on the emulator. We need the
       // handheld app:
@@ -759,7 +781,11 @@ class AndroidBuild extends JavaBuild {
       File projectFolder = createHandheldProject(wearFolder, null);
       if (projectFolder != null) {
         File exportFolder = createExportFolder();
-        Util.copyDir(projectFolder, exportFolder);
+        if (buildSystem.equals("gradle")) {
+          createGradleProject(projectFolder, exportFolder);
+        } else { // ant          
+          Util.copyDir(projectFolder, exportFolder);
+        }
         return exportFolder;
       }
       return null;      
@@ -767,7 +793,12 @@ class AndroidBuild extends JavaBuild {
       File projectFolder = createProject(false);
       if (projectFolder != null) {
         File exportFolder = createExportFolder();
-        Util.copyDir(projectFolder, exportFolder);
+        if (buildSystem.equals("gradle")) {
+          createGradleProject(projectFolder, exportFolder);
+        } else { // ant   
+        Util.copyDir(
+          projectFolder, exportFolder);
+        }
         return exportFolder;
       }
       return null;
@@ -1027,7 +1058,7 @@ class AndroidBuild extends JavaBuild {
 
 
   private void writeBuildXML(final File xmlFile, final String projectName) {    
-    File xmlTemplate = mode.getContentFile("templates/" + BUILD_TEMPLATE);
+    File xmlTemplate = mode.getContentFile("templates/" + ANT_BUILD_TEMPLATE);
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@project_name@@", projectName);
@@ -1063,6 +1094,7 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
+  
   static final String ICON_192 = "icon-192.png";
   static final String ICON_144 = "icon-144.png"; 
   static final String ICON_96 = "icon-96.png";
@@ -1281,7 +1313,7 @@ class AndroidBuild extends JavaBuild {
     } else if (comp == WALLPAPER) {
       writeWallpaperService(srcDirectory, permissions);
     } else if (comp == WATCHFACE) {
-      if (usesGPU()) {
+      if (usesOpenGL()) {
         writeWatchFaceGLESService(srcDirectory, permissions);  
       } else {
         writeWatchFaceCanvasService(srcDirectory, permissions);  
@@ -1347,7 +1379,6 @@ class AndroidBuild extends JavaBuild {
   
   
   private void writeCardboardActivity(final File srcDirectory, String[] permissions) {
-    
     File javaTemplate = mode.getContentFile("templates/" + CARDBOARD_ACTIVITY_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
     
@@ -1413,8 +1444,14 @@ class AndroidBuild extends JavaBuild {
   private String generatePermissionsString(final String[] permissions) {
     String permissionsStr = "";
     for (String p: permissions) {
-      permissionsStr += (0 < permissionsStr.length()?",":"") + 
-                        (p.indexOf("permission") == -1?"Manifest.permission.":"") + p;  
+      permissionsStr += (0 < permissionsStr.length() ? "," : "");
+      if (p.indexOf("permission") == -1) {
+        permissionsStr += "Manifest.permission." + p;
+      } else if (p.indexOf("Manifest.permission") == 0) {
+        permissionsStr += p;
+      } else {
+        permissionsStr += "\"" + p + "\"";
+      }
     }
     permissionsStr = "{" + permissionsStr + "}";   
     return permissionsStr;
@@ -1494,225 +1531,168 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  // Some leftovers from earlier versions of the mode, probably should remove at some point...
-  /*
-  // SDK tools 17 have a problem where 'dex' won't pick up the libs folder
-  // (which contains our friend processing-core.jar) unless your current
-  // working directory is the same as the build file. So this is an unpleasant
-  // workaround, at least until things are fixed or we hear of a better way.
-  // This was fixed in SDK 19 (and Processing revision 0205) so we've now
-  // disabled this portion of the code.
-  protected boolean antBuild_dexworkaround() throws SketchException {
-    try {
-//      ProcessHelper helper = new ProcessHelper(tmpFolder, new String[] { "ant", target });
-      // Windows doesn't include full paths, so make 'em happen.
-      String cp = System.getProperty("java.class.path");
-      String[] cpp = PApplet.split(cp, File.pathSeparatorChar);
-      for (int i = 0; i < cpp.length; i++) {
-        cpp[i] = new File(cpp[i]).getAbsolutePath();
-      }
-      cp = PApplet.join(cpp, File.pathSeparator);
-
-      // Since Ant may or may not be installed, call it from the .jar file,
-      // though hopefully 'java' is in the classpath.. Given what we do in
-      // processing.mode.java.runner (and it that it works), should be ok.
-      String[] cmd = new String[] {
-        "java",
-        "-cp", cp, //System.getProperty("java.class.path"),
-        "org.apache.tools.ant.Main", target
-//        "ant", target
-      };
-      ProcessHelper helper = new ProcessHelper(tmpFolder, cmd);
-      ProcessResult pr = helper.execute();
-      if (pr.getResult() != 0) {
-//        System.err.println("mo builds, mo problems");
-        System.err.println(pr.getStderr());
-        System.out.println(pr.getStdout());
-        // the actual javac errors and whatnot go to stdout
-        antBuildProblems(pr.getStdout(), pr.getStderr());
-        return false;
-      }
-
-    } catch (InterruptedException e) {
-      return false;
-
-    } catch (IOException e) {
-      e.printStackTrace();
-      return false;
+  protected void createGradleProject(File projectFolder, File exportFolder) 
+      throws IOException, SketchException {
+    installGradlew(exportFolder);
+    
+    File folder = sdk.getBuildToolsFolder();
+    String[] versions = folder.list();
+    String[] sorted = PApplet.sort(versions, versions.length);
+    String buildToolVer = "";
+    if (sorted != null && 0 < sorted.length) {
+      buildToolVer = sorted[sorted.length - 1];
     }
-    return true;
-  }
-
-  public class HopefullyTemporaryWorkaround extends org.apache.tools.ant.Main {
-
-    protected void exit(int exitCode) {
-      // I want to exit, but let's not System.exit()
-      System.out.println("gonna exit");
-      System.out.flush();
-      System.err.flush();
+    
+    if (appComponent == WATCHFACE) {
+      createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
+      createMobileModule(projectFolder, exportFolder, buildToolVer);
+      createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);
+    } else {
+      createTopModule(projectFolder, exportFolder, "':app'");
+      createAppModule(projectFolder, exportFolder, buildToolVer);
     }
-  }
-
-
-  protected boolean antBuild() throws SketchException {
-    String[] cmd = new String[] {
-      "-main", "processing.mode.android.HopefullyTemporaryWorkaround",
-      "-Duser.dir=" + tmpFolder.getAbsolutePath(),
-      "-logfile", "/Users/fry/Desktop/ant-log.txt",
-      "-verbose",
-      "-help",
-//      "debug"
-    };
-    HopefullyTemporaryWorkaround.main(cmd);
-    return true;
-//    ProcessResult listResult =
-//      new ProcessHelper("ant", "debug", tmpFolder).execute();
-//    if (listResult.succeeded()) {
-//      boolean badness = false;
-//      for (String line : listResult) {
-//      }
-//    }
   }
   
-   private void copyLibraries(final File libsFolder,
-                             final File assetsFolder) throws IOException {
-    // Copy any libraries to the 'libs' folder
-    for (Library library : getImportedLibraries()) {
-      File libraryFolder = new File(library.getPath());
-      // in the list is a File object that points the
-      // library sketch's "library" folder
-      final File exportSettings = new File(libraryFolder, "export.txt");
-      final HashMap<String, String> exportTable =
-        Base.readSettings(exportSettings);
-      final String androidList = exportTable.get("android");
-      String exportList[] = null;
-      if (androidList != null) {
-        exportList = PApplet.splitTokens(androidList, ", ");
-      } else {
-        exportList = libraryFolder.list();
-      }
-      for (int i = 0; i < exportList.length; i++) {
-        exportList[i] = PApplet.trim(exportList[i]);
-        if (exportList[i].equals("") || exportList[i].equals(".")
-            || exportList[i].equals("..")) {
-          continue;
-        }
-
-        final File exportFile = new File(libraryFolder, exportList[i]);
-        if (!exportFile.exists()) {
-          System.err.println("File " + exportList[i] + " does not exist");
-        } else if (exportFile.isDirectory()) {
-          System.err.println("Ignoring sub-folder \"" + exportList[i] + "\"");
-        } else {
-          final String name = exportFile.getName();
-          final String lcname = name.toLowerCase();
-          if (lcname.endsWith(".zip") || lcname.endsWith(".jar")) {
-            // As of r4 of the Android SDK, it looks like .zip files
-            // are ignored in the libs folder, so rename to .jar
-            final String jarName =
-              name.substring(0, name.length() - 4) + ".jar";
-            Base.copyFile(exportFile, new File(libsFolder, jarName));
-          } else {
-            // just copy other files over directly
-            Base.copyFile(exportFile, new File(assetsFolder, name));
-          }
-        }
-      }
-    }
-  } 
-  
-  private void writeResLayoutMainFragment(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"");
-    writer.println("              android:orientation=\"vertical\"");
-    writer.println("              android:layout_width=\"fill_parent\"");
-    writer.println("              android:layout_height=\"fill_parent\">");
-    writer.println("</LinearLayout>");
+  private void installGradlew(File exportFolder) throws IOException {
+    File gradlewFile = mode.getContentFile("mode/gradlew.zip");
+    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true); 
+    File execFile = new File(exportFolder, "gradlew");
+    execFile.setExecutable(true);
   }
+  
+  private void createTopModule(File projectFolder, File exportFolder, 
+      String projectModules) throws IOException {
+    // Top level gradle files
+    File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
+    File buildlFile = new File(exportFolder, "build.gradle");
+    Util.copyFile(buildTemplate, buildlFile);
+    
+    writeLocalProps(new File(exportFolder, "local.properties"));
+    writeFile(new File(exportFolder, "gradle.properties"), 
+        new String[]{"org.gradle.jvmargs=-Xmx1536m"});
+    
+    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
+    File settingsFile = new File(exportFolder, "settings.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@project_modules@@", projectModules);    
+    AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
+  }
+  
+  private void createAppModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
+    File moduleFolder = mkdirs(exportFolder, "app");
+    
+    String minSdk;
+    String tmplFile;
+    if (appComponent == CARDBOARD) {
+      minSdk = min_sdk_cardboard;
+      tmplFile = CARDBOARD_GRADLE_BUILD_TEMPLATE;       
+    } else {
+      minSdk = min_sdk_fragment; 
+      tmplFile = APP_GRADLE_BUILD_TEMPLATE;      
+    }
+    
+    File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
+    File appBuildFile = new File(moduleFolder, "build.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
+    replaceMap.put("@@build_tools@@", buildToolsVer);
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@min_sdk@@", minSdk);  
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@wear_version@@", wear_version);
+    replaceMap.put("@@gvr_version@@", gvr_sdk_version);
+    replaceMap.put("@@version_code@@", manifest.getVersionCode());
+    replaceMap.put("@@version_name@@", manifest.getVersionName());
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
+    
+    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+        new String[]{"# Add project specific ProGuard rules here."});
+    
+    File coreFile = new File(projectFolder, "libs/processing-core.jar");    
+    File libsFolder = mkdirs(moduleFolder, "libs");
+    Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
 
-
-  // This recommended to be a string resource so that it can be localized.
-  // nah.. we're gonna be messing with it in the GUI anyway...
-  // people can edit themselves if they need to
-  private static void writeResValuesStrings(final File file,
-                                            final String className) {
+    if (appComponent == CARDBOARD) {
+      File cardboardFile = new File(projectFolder, "libs/cardboard.jar");
+      Util.copyFile(cardboardFile, new File(libsFolder, "cardboard.jar"));
+    }
+    
+    File mainFolder = mkdirs(moduleFolder, "src/main");
+    File javaFolder = mkdirs(mainFolder, "java");
+    File resFolder = mkdirs(mainFolder, "res");
+    
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
+                  new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyDir(new File(projectFolder, "res"), resFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);    
+  }
+  
+  private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
+    File moduleFolder = mkdirs(exportFolder, "mobile");
+    
+    File appBuildTemplate = mode.getContentFile("templates/" + HANDHELD_GRADLE_BUILD_TEMPLATE);    
+    File appBuildFile = new File(moduleFolder, "build.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
+    replaceMap.put("@@build_tools@@", buildToolsVer);
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);    
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);
+    replaceMap.put("@@wear_version@@", wear_version);
+    replaceMap.put("@@version_code@@", manifest.getVersionCode());
+    replaceMap.put("@@version_name@@", manifest.getVersionName());
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
+    
+    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+        new String[]{"# Add project specific ProGuard rules here."});    
+    
+    File mainFolder = mkdirs(moduleFolder, "src/main");
+    File javaFolder = mkdirs(mainFolder, "java");
+    File resFolder = mkdirs(mainFolder, "res");
+    
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
+                  new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyDir(new File(projectFolder, "res"), resFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);
+  }
+  
+  private void createWearModule(File projectFolder, File exportFolder, String buildToolsVer) 
+      throws SketchException, IOException {
+    File moduleFolder = mkdirs(exportFolder, "wear");
+    
+    File appBuildTemplate = mode.getContentFile("templates/" + WEARABLE_GRADLE_BUILD_TEMPLATE);    
+    File appBuildFile = new File(moduleFolder, "build.gradle");    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();    
+    replaceMap.put("@@build_tools@@", buildToolsVer);
+    replaceMap.put("@@package_name@@", getPackageName());    
+    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);    
+    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@wear_version@@", wear_version);
+    replaceMap.put("@@version_code@@", manifest.getVersionCode());
+    replaceMap.put("@@version_name@@", manifest.getVersionName());
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);     
+    
+    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+        new String[]{"# Add project specific ProGuard rules here."}); 
+    
+    File coreFile = new File(projectFolder, "libs/processing-core.jar");    
+    File libsFolder = mkdirs(moduleFolder, "libs");
+    Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
+        
+    File mainFolder = mkdirs(moduleFolder, "src/main");
+    File javaFolder = mkdirs(mainFolder, "java");
+    File resFolder = mkdirs(mainFolder, "res");
+    
+    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
+                  new File(mainFolder, "AndroidManifest.xml"));
+    Util.copyDir(new File(projectFolder, "res"), resFolder);
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);
+  }  
+  
+  private void writeFile(final File file, String[] lines) {
     final PrintWriter writer = PApplet.createWriter(file);
-    writer.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    writer.println("<resources>");
-    writer.println("  <string name=\"app_name\">" + className + "</string>");
-    writer.println("</resources>");
+    for (String line: lines) writer.println(line);
     writer.flush();
     writer.close();
-  }
-
-  private void copySupportV4(File libsFolder) throws SketchException {
-    File sdkLocation = sdk.getSdkFolder();
-    File supportV4Jar = new File(sdkLocation, "extras/android/support/v4/android-support-v4.jar");
-    if (!supportV4Jar.exists()) {
-      SketchException sketchException =
-          new SketchException("Please install support repository from SDK manager");
-      throw sketchException;
-    } else {
-      try {
-        Base.copyFile(supportV4Jar, new File(libsFolder, "android-support-v4.jar"));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-  
-  private boolean verifySignedPackage(File signedPackage) throws Exception {
-    String[] args = {
-        "-verify", signedPackage.getCanonicalPath()
-    };
-
-    PrintStream defaultPrintStream = System.out;
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    PrintStream printStream = new PrintStream(baos);
-    System.setOut(printStream);
-
-    SystemExitControl.forbidSystemExitCall();
-    try {
-      JarSigner.main(args);
-    } catch (SystemExitControl.ExitTrappedException ignored) { }
-    SystemExitControl.enableSystemExitCall();
-
-    System.setOut(defaultPrintStream);
-    String result = baos.toString();
-
-    baos.close();
-    printStream.close();
-
-    return result.contains("verified");
-  }
-  */
+  }  
 }
-
-/*
-// How to prevent the System.exit() call, could be useful...
-// http://www.avanderw.co.za/preventing-calls-to-system-exit-in-java/
-class SystemExitControl {
-
-  @SuppressWarnings("serial")
-  public static class ExitTrappedException extends SecurityException {
-  }
-
-  public static void forbidSystemExitCall() {
-    final SecurityManager securityManager = new SecurityManager() {
-      @Override
-      public void checkPermission(Permission permission) {
-        if (permission.getName().contains("exitVM")) {
-          throw new ExitTrappedException();
-        }
-      }
-    };
-    System.setSecurityManager(securityManager);
-  }
-
-  public static void enableSystemExitCall() {
-    System.setSecurityManager(null);
-  }
-}
-*/

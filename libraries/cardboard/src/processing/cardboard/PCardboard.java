@@ -25,7 +25,6 @@ package processing.cardboard;
 import com.google.vr.sdk.base.GvrActivity;
 import com.google.vr.sdk.base.Eye;
 
-import android.content.Intent;
 import android.util.DisplayMetrics;
 import processing.android.AppComponent;
 import processing.core.PApplet;
@@ -63,10 +62,10 @@ public class PCardboard extends GvrActivity implements AppComponent {
   public int getDisplayHeight() {
     return metrics.heightPixels;
   }
-  
+
   public float getDisplayDensity() {
     return metrics.density;
-  } 
+  }
 
   public int getKind() {
       return CARDBOARD;
@@ -97,7 +96,7 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
       // Don't start Papplet's animation thread bc cardboard will drive rendering
       // continuously
-      sketch.startSurface();
+//      sketch.startSurface();
     }
   }
 
@@ -110,11 +109,6 @@ public class PCardboard extends GvrActivity implements AppComponent {
 //     super.onCreate(savedInstanceState);
 //
 //  }
-
-  @Override
-  public void startActivity(Intent intent) {
-    // TODO Auto-generated method stub
-  }
 
   @Override
   public void onResume() {

@@ -17,6 +17,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import android.support.v4.os.ResultReceiver; 
+import android.support.wearable.activity.WearableActivity;
         
 import processing.android.@@watchface_classs@@;
 import processing.core.PApplet;
@@ -29,10 +30,10 @@ public class MainService extends @@watchface_classs@@ {
   private static final String KEY_GRANT_RESULTS = "grantResults";
   private static final String KEY_REQUEST_CODE = "requestCode";      
   
-  public MainService() {
-    super();
+  @Override
+  public PApplet createSketch() {
     PApplet sketch = new @@sketch_class_name@@();
-    setSketch(sketch);
+    return sketch;
   }
   
   // https://developer.android.com/training/articles/wear-permissions.html
@@ -91,23 +92,10 @@ public class MainService extends @@watchface_classs@@ {
     final Intent permIntent = new Intent(this, PermissionRequestActivity.class);
     permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);
     permIntent.putExtra(KEY_PERMISSIONS, permissions);
-    permIntent.putExtra(KEY_REQUEST_CODE, requestCode);  
-
-    // Create a notification on watch faces, otherwise it does not work.
-    TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-    stackBuilder.addNextIntent(permIntent);
-    PendingIntent permPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-        .setSmallIcon(R.drawable.icon)
-        .setContentTitle("Requesting permissions")
-        .setContentText("The watch face need permissions to work properly")
-        .setOngoing(true)
-        .setAutoCancel(true)
-        .setWhen(0)
-        .setContentIntent(permPendingIntent)
-        .setStyle(null);
-    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-    notificationManager.notify(requestCode, builder.build());
+    permIntent.putExtra(KEY_REQUEST_CODE, requestCode);
+    // Show the dialog requesting the permissions
+    permIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    startActivity(permIntent);
   }    
     
   public static class PermissionRequestActivity extends Activity {

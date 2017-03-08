@@ -33,19 +33,22 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.zip.*;
 
+import android.app.Activity;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.*;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.service.wallpaper.WallpaperService;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
 import processing.data.*;
@@ -71,7 +74,8 @@ public class PApplet extends Object implements PConstants {
   static final public boolean DEBUG = false;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
-  static final public int SDK = android.os.Build.VERSION.SDK_INT;
+  static final public int SDK = Build.VERSION.SDK_INT;
+
 //  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
 
   /**
@@ -106,8 +110,8 @@ public class PApplet extends Object implements PConstants {
 //  static final boolean THREAD_DEBUG = false;
 
   /** Default width and height for applet when not specified */
-  static public final int DEFAULT_WIDTH = 100;
-  static public final int DEFAULT_HEIGHT = 100;
+  static public final int DEFAULT_WIDTH = -1;
+  static public final int DEFAULT_HEIGHT = -1;
 
   /**
    * Minimum dimensions for the window holding an applet.
@@ -176,37 +180,6 @@ public class PApplet extends Object implements PConstants {
   /** absolute x position of input on screen */
   public int mouseY;
 
-//  /** current x position of motion (relative to start of motion) */
-//  public float motionX;
-//
-//  /** current y position of the mouse (relative to start of motion) */
-//  public float motionY;
-//
-//  /** Last reported pressure of the current motion event */
-//  public float motionPressure;
-//
-//  /** Last reported positions and pressures for all pointers */
-//  protected int numPointers;
-//  protected int pnumPointers;
-//
-//  protected float[] ppointersX = {0};
-//  protected float[] ppointersY = {0};
-//  protected float[] ppointersPressure = {0};
-//
-//  protected float[] pointersX = {0};
-//  protected float[] pointersY = {0};
-//  protected float[] pointersPressure = {0};
-//
-//  protected int downMillis;
-//  protected float downX, downY;
-//  protected boolean onePointerGesture = false;
-//  protected boolean twoPointerGesture = true;
-//
-//  protected final int MIN_SWIPE_LENGTH = 150;       // Minimum length (in pixels) of a swipe event
-//  protected final int MAX_SWIPE_DURATION = 2000;    // Maximum duration (in millis) of a swipe event
-//  protected final int MAX_TAP_DISP = 20;            // Maximum displacement (in pixels) during a tap event
-//  protected final int MAX_TAP_DURATION = 1000;      // Maximum duration (in millis) of a tap event
-
 
   /**
    * Previous x/y position of the mouse. This will be a different value
@@ -218,14 +191,23 @@ public class PApplet extends Object implements PConstants {
    * you're gonna run into trouble.
    */
   public int pmouseX, pmouseY;
-//  public float pmotionX, pmotionY;
+
+
+  public boolean mousePressed;
+
+
+  public boolean touchIsStarted;
+
+
+  public TouchEvent.Pointer[] touches = new TouchEvent.Pointer[0];
+
 
   /**
    * previous mouseX/Y for the draw loop, separated out because this is
    * separate from the pmouseX/Y when inside the mouse event handlers.
    */
   protected int dmouseX, dmouseY;
-//  protected float dmotionX, dmotionY;
+
 
   /**
    * pmotionX/Y for the event handlers (motionPressed(), motionDragged() etc)
@@ -235,27 +217,19 @@ public class PApplet extends Object implements PConstants {
    * to be updated once per trip through draw().
    */
   protected int emouseX, emouseY;
-//  protected float emotionX, emotionY;
 
-//  /**
-//   * Used to set pmotionX/Y to motionX/Y the first time motionX/Y are used,
-//   * otherwise pmotionX/Y are always zero, causing a nasty jump.
-//   * <P>
-//   * Just using (frameCount == 0) won't work since motionXxxxx()
-//   * may not be called until a couple frames into things.
-//   */
-//  public boolean firstMotion;
 
-//  public int mouseButton;
+  /**
+   * ID of the pointer tracked for mouse events.
+   */
+  protected int mousePointerId;
 
-  public boolean mousePressed;
 
-//  public MouseEvent mouseEvent;
+  /**
+   * ID of the most recently touch pointer gone up or down.
+   */
+  protected int touchPointerId;
 
-//  public MotionEvent motionEvent;
-
-  /** Post events to the main thread that created the Activity */
-//  Handler handler;
 
   /**
    * Last key pressed.
@@ -289,47 +263,20 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
-  /**
-   * Use in watch faces to check if the device in in ambient mode or interactive mode.
-   */
+  ///////////////////////////////////////////////////////////////
+  // Wallpaper and watchface variables: these will go away soon...
   public boolean ambientMode = false;
-
-  /**
-   * Indicates whether the watch face is round or not.
-   */
   public boolean isRound = false;
-
-  /**
-   * Watch face insets
-   */
-  public int insetLeft, insetRight = 0;
-  public int insetTop, insetBottom = 0;
-
-  /**
-   * Use in watch faces to store information abou the device screen
-   * https://developer.android.com/training/wearables/watch-faces/drawing.html#Screen
-   */
+  public int insetLeft = 0;
+  public int insetRight = 0;
+  public int insetTop = 0;
+  public int insetBottom = 0;
   public boolean lowBitAmbient = false;
   public boolean burnInProtection = false;
-
-  /**
-   * Offset for wallpapers, when user swipes across home screens.
-   */
-  public float offsetX = 0;
-  public float offsetY = 0;
-
-  /**
-   * Indicates if the wallpaper is in preview mode.
-   */
   public boolean preview = false;
-
-  /**
-   * true if the applet is online.
-   * <P>
-   * This can be used to test how the applet should behave
-   * since online situations are different (no file writing, etc).
-   */
-//  public boolean online = false;
+  public float homeScreenOffset = 0;
+  public int homeScreenCount = 1;
+  ///////////////////////////////////////////////////////////////
 
   /**
    * Time in milliseconds when the applet was started.
@@ -494,15 +441,26 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public Activity getActivity() {
+    return surface.getActivity();
+  }
+
+
+  public WallpaperService.Engine getEngine() {
+    return surface.getEngine();
+  }
+
+
   public void initSurface(AppComponent component, SurfaceHolder holder) {
     parentLayout = -1;
     initSurface(null, null,  null, component, holder);
   }
 
+
   public void initSurface(LayoutInflater inflater, ViewGroup container,
                           Bundle savedInstanceState,
                           AppComponent component, SurfaceHolder holder) {
-    if (DEBUG) println("onCreateView() happening here: " + Thread.currentThread().getName());
+    if (DEBUG) println("initSurface() happening here: " + Thread.currentThread().getName());
 
     component.initDimensions();
     displayWidth = component.getDisplayWidth();
@@ -511,17 +469,25 @@ public class PApplet extends Object implements PConstants {
 
     handleSettings();
 
-    if (fullScreen && parentLayout == -1) {
-      // Setting the default height and width to be fullscreen
-      width = displayWidth;
-      height = displayHeight;
+    if (parentLayout == -1) {
+      if (fullScreen || width == -1 || height == -1) {
+        // Either sketch explicitly set to full-screen mode, or not
+        // size/fullScreen provided, so sketch uses the entire display
+        width = displayWidth;
+        height = displayHeight;
+      }
+    } else {
+      // Dummy weight and height to initialize the PGraphics, will be resized
+      // when the view associated to the parent layout is created
+      width = 100;
+      height = 100;
     }
 
     String rendererName = sketchRenderer();
     if (DEBUG) println("Renderer " + rendererName);
     g = makeGraphics(width, height, rendererName, true);
     if (DEBUG) println("Created renderer");
-    surface = g.createSurface(component, holder);
+    surface = g.createSurface(component, holder, false);
     if (DEBUG) println("Created surface");
 
     //set smooth level
@@ -533,13 +499,29 @@ public class PApplet extends Object implements PConstants {
 
     if (parentLayout == -1) {
       setFullScreenVisibility();
-      // Now we now the right width/height size for the renderer
-//      g.setSize(width, height); // do need this?
-      // Finalize surface initialization.
       surface.initView(width, height);
     } else {
-      surface.initView(inflater, container, savedInstanceState,
-                       fullScreen, width, height);
+      surface.initView(inflater, container, savedInstanceState);
+
+      /*
+      final View parent = surface.getRootView();
+      parent.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        @SuppressWarnings("deprecation")
+        @Override
+        public void onGlobalLayout() {
+          int availableWidth = parent.getMeasuredWidth();
+          int availableHeight = parent.getMeasuredHeight();
+          if (availableHeight > 0 && availableWidth > 0) {
+            System.err.println(availableWidth + " " + availableHeight);
+            if (SDK < Build.VERSION_CODES.JELLY_BEAN) {
+              parent.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+            } else {
+              parent.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+          }
+        }
+      });
+      */
     }
 
     finished = false; // just for clarity
@@ -549,17 +531,11 @@ public class PApplet extends Object implements PConstants {
 
     sketchPath = surface.getFilesDir().getAbsolutePath();
 
+    surface.startThread();
+
     if (DEBUG) println("Done with init surface");
   }
 
-
-  public void startSurface() {
-    surface.startThread();
-  }
-
-  public View getRootView() {
-    return surface.getRootView();
-  }
 
   private void setFullScreenVisibility() {
     if (fullScreen) {
@@ -612,8 +588,9 @@ public class PApplet extends Object implements PConstants {
 
   public void onPause() {
     // TODO need to save all application state here!
-    // At least we save the current style.
-    if (g != null) {
+    // At least we save the current style (once we had at least drawn one
+    // frame, otherwise we might be saving a "null" style with all zeroes).
+    if (g != null && 0 < frameCount) {
       savedStyle = new PStyle();
       g.getStyle(savedStyle);
     }
@@ -649,7 +626,7 @@ public class PApplet extends Object implements PConstants {
 
 
   /**
-   * @param method "size" or "fullScreen"
+   * @param method "size", "fullScreen", or "layout"
    * @param args parameters passed to the function so we can show the user
    * @return true if safely inside the settings() method
    */
@@ -680,30 +657,6 @@ public class PApplet extends Object implements PConstants {
 
   public void settings() {
     //It'll be empty. Will be overridden by user's sketch class.
-  }
-
-
-  //////////////////////////////////////////////////////////////
-
-  // ANDROID SURFACE VIEW
-
-
-  // TODO this is only used by A2D, when finishing up a draw. but if the
-  // surfaceview has changed, then it might belong to an a3d surfaceview. hrm.
-  public SurfaceHolder getSurfaceHolder() {
-    SurfaceView view = surface.getSurfaceView();
-    if (view == null) {
-      // Watch faces don't have a surface view associated to them.
-      return null;
-    } else {
-      return view.getHolder();
-    }
-  }
-
-
-  /** Not official API, not guaranteed to work in the future. */
-  public SurfaceView getSurfaceView() {
-    return surface.getSurfaceView();
   }
 
 
@@ -797,7 +750,6 @@ public class PApplet extends Object implements PConstants {
   final public int sketchWindowColor() {
     return windowColor;
   }
-
 
 
   public void orientation(int which) {
@@ -1015,8 +967,8 @@ public class PApplet extends Object implements PConstants {
    * <li>pre – at the very top of the draw() method (safe to draw)
    * <li>draw – at the end of the draw() method (safe to draw)
    * <li>post – after draw() has exited (not safe to draw)
-   * <li>pause – called when the sketch is paused
-   * <li>resume – called when the sketch is resumed
+   * <li>pause – called when the sketch is paused
+   * <li>resume – called when the sketch is resumed
    * <li>dispose – when the sketch is shutting down (definitely not safe to draw)
    * <ul>
    * In addition, the new (for 2.0) processing.event classes are passed to
@@ -1303,6 +1255,26 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void layout(int ilayout) {
+    if (ilayout != this.parentLayout) {
+      if (insideSettings("layout", ilayout)) {
+        this.parentLayout = ilayout;
+      }
+    }
+  }
+
+
+  public void layout(int ilayout, String irenderer) {
+    if (ilayout != this.parentLayout ||
+        !this.renderer.equals(irenderer)) {
+      if (insideSettings("layout", ilayout, irenderer)) {
+        this.parentLayout = ilayout;
+        this.renderer = irenderer;
+      }
+    }
+  }
+
+
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -1483,17 +1455,17 @@ public class PApplet extends Object implements PConstants {
           try {
             pg = (PGraphics) constructor.newInstance();
           } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            printStackTrace(e);
             throw new RuntimeException(e.getMessage());
           } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            printStackTrace(e);
             throw new RuntimeException(e.getMessage());
           } catch (InstantiationException e) {
-            e.printStackTrace();
+            printStackTrace(e);
             throw new RuntimeException(e.getMessage());
           } catch (IllegalArgumentException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            printStackTrace(e);
           }
         }
       }
@@ -1950,9 +1922,9 @@ public class PApplet extends Object implements PConstants {
       Event e = eventQueue.remove();
 
       switch (e.getFlavor()) {
-//      case Event.TOUCH:
-//        handleTouchEvent((TouchEvent) e);
-//        break;
+      case Event.TOUCH:
+        handleTouchEvent((TouchEvent) e);
+        break;
       case Event.MOUSE:
         handleMouseEvent((MouseEvent) e);
         break;
@@ -2073,291 +2045,35 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  /*
-  // ******************** NOT CURRENTLY IN USE ********************
-  // this class is hiding inside PApplet for now,
-  // until I have a chance to get the API right inside TouchEvent.
-  class AndroidTouchEvent extends TouchEvent {
-    int action;
-    int numPointers;
-    float[] motionX, motionY;
-    float[] motionPressure;
-    int[] mouseX, mouseY;
+  protected void handleTouchEvent(TouchEvent event) {
+    touches = event.getTouches(touches);
 
-    AndroidTouchEvent(Object nativeObject, long millis, int action, int modifiers) {
-      super(nativeObject, millis, action, modifiers);
+    switch (event.getAction()) {
+    case TouchEvent.START:
+      touchIsStarted = true;
+      break;
+    case TouchEvent.END:
+      touchIsStarted = false;
+      break;
     }
 
-//    void setAction(int action) {
-//      this.action = action;
-//    }
+    handleMethods("touchEvent", new Object[] { event });
 
-    void setNumPointers(int n) {
-      numPointers = n;
-      motionX = new float[n];
-      motionY = new float[n];
-      motionPressure = new float[n];
-      mouseX = new int[n];
-      mouseY = new int[n];
-    }
-
-    void setPointers(MotionEvent event) {
-      for (int ptIdx = 0; ptIdx < numPointers; ptIdx++) {
-        motionX[ptIdx] = event.getX(ptIdx);
-        motionY[ptIdx] = event.getY(ptIdx);
-        motionPressure[ptIdx] = event.getPressure(ptIdx);  // should this be constrained?
-        mouseX[ptIdx] = (int) motionX[ptIdx];  //event.getRawX();
-        mouseY[ptIdx] = (int) motionY[ptIdx];  //event.getRawY();
-      }
-    }
-
-    // Sets the pointers for the historical event histIdx
-    void setPointers(MotionEvent event, int hisIdx) {
-      for (int ptIdx = 0; ptIdx < numPointers; ptIdx++) {
-        motionX[ptIdx] = event.getHistoricalX(ptIdx, hisIdx);
-        motionY[ptIdx] = event.getHistoricalY(ptIdx, hisIdx);
-        motionPressure[ptIdx] = event.getHistoricalPressure(ptIdx, hisIdx);  // should this be constrained?
-        mouseX[ptIdx] = (int) motionX[ptIdx];  //event.getRawX();
-        mouseY[ptIdx] = (int) motionY[ptIdx];  //event.getRawY();
-      }
+    switch (event.getAction()) {
+    case TouchEvent.START:
+      touchStarted(event);
+      break;
+    case TouchEvent.END:
+      touchEnded(event);
+      break;
+    case TouchEvent.MOVE:
+      touchMoved(event);
+      break;
+    case TouchEvent.CANCEL:
+      touchCancelled(event);
+      break;
     }
   }
-
-//  Object motionLock = new Object();
-//  AndroidTouchEvent[] motionEventQueue;
-//  int motionEventCount;
-//
-//  protected void enqueueMotionEvent(MotionEvent event) {
-//    synchronized (motionLock) {
-//      // on first run, allocate array for motion events
-//      if (motionEventQueue == null) {
-//        motionEventQueue = new AndroidTouchEvent[20];
-//        for (int i = 0; i < motionEventQueue.length; i++) {
-//          motionEventQueue[i] = new AndroidTouchEvent();
-//        }
-//      }
-//      // allocate more PMotionEvent objects if we're out
-//      int historyCount = event.getHistorySize();
-////      println("motion: " + motionEventCount + " " + historyCount + " " + motionEventQueue.length);
-//      if (motionEventCount + historyCount >= motionEventQueue.length) {
-//        int atLeast = motionEventCount + historyCount + 1;
-//        AndroidTouchEvent[] temp = new AndroidTouchEvent[max(atLeast, motionEventCount << 1)];
-//        if (PApplet.DEBUG) {
-//          println("motion: " + motionEventCount + " " + historyCount + " " + motionEventQueue.length);
-//          println("allocating " + temp.length + " entries for motion events");
-//        }
-//        System.arraycopy(motionEventQueue, 0, temp, 0, motionEventCount);
-//        motionEventQueue = temp;
-//        for (int i = motionEventCount; i < motionEventQueue.length; i++) {
-//          motionEventQueue[i] = new AndroidTouchEvent();
-//        }
-//      }
-//
-//      // this will be the last event in the list
-//      AndroidTouchEvent pme = motionEventQueue[motionEventCount + historyCount];
-//      pme.setAction(event.getAction());
-//      pme.setNumPointers(event.getPointerCount());
-//      pme.setPointers(event);
-//
-//      // historical events happen before the 'current' values
-//      if (pme.action == MotionEvent.ACTION_MOVE && historyCount > 0) {
-//        for (int i = 0; i < historyCount; i++) {
-//          AndroidTouchEvent hist = motionEventQueue[motionEventCount++];
-//          hist.setAction(event.getAction());
-//          hist.setNumPointers(event.getPointerCount());
-//          hist.setPointers(event, i);
-//        }
-//      }
-//
-//      // now step over the last one that we used to assign 'pme'
-//      // if historyCount is 0, this just steps over the last
-//      motionEventCount++;
-//    }
-//  }
-//
-//
-//  protected void dequeueMotionEvents() {
-//    synchronized (motionLock) {
-//      for (int i = 0; i < motionEventCount; i++) {
-//        handleMotionEvent(motionEventQueue[i]);
-//      }
-//      motionEventCount = 0;
-//    }
-//  }
-
-
-   // ******************** NOT CURRENTLY IN USE ********************
-   // Take action based on a motion event.
-   // Internally updates mouseX, mouseY, mousePressed, and mouseEvent.
-   // Then it calls the event type with no params,
-   // i.e. mousePressed() or mouseReleased() that the user may have
-   // overloaded to do something more useful.
-  protected void handleMotionEvent(AndroidTouchEvent pme) {
-    pmotionX = emotionX;
-    pmotionY = emotionY;
-    motionX = pme.motionX[0];
-    motionY = pme.motionY[0];
-    motionPressure = pme.motionPressure[0];
-
-    // replace previous mouseX/Y with the last from the event handlers
-    pmouseX = emouseX;
-    pmouseY = emouseY;
-    mouseX = pme.mouseX[0];
-    mouseY = pme.mouseY[0];
-
-    // *** because removed from PApplet
-    boolean firstMotion = false;
-    // this used to only be called on mouseMoved and mouseDragged
-    // change it back if people run into trouble
-    if (firstMotion) {
-      pmouseX = mouseX;
-      pmouseY = mouseY;
-      dmouseX = mouseX;  // set it as the first value to be used inside draw() too
-      dmouseY = mouseY;
-
-      pmotionX = motionX;
-      pmotionY = motionY;
-      dmotionX = motionX;
-      dmotionY = motionY;
-
-      firstMotion = false;
-    }
-
-    // TODO implement method handling for registry of motion/mouse events
-//    MouseEvent me = new MouseEvent(nativeObject, millis, action, modifiers, x, y, button, clickCount);
-//    handleMethods("mouseEvent", new Object[] { mouseEvent });
-//    handleMethods("motionEvent", new Object[] { motionEvent });
-
-    if (ppointersX.length < numPointers) {
-      ppointersX = new float[numPointers];
-      ppointersY = new float[numPointers];
-      ppointersPressure = new float[numPointers];
-    }
-    arrayCopy(pointersX, ppointersX);
-    arrayCopy(pointersY, ppointersY);
-    arrayCopy(pointersPressure, ppointersPressure);
-
-    numPointers = pme.numPointers;
-    if (pointersX.length < numPointers) {
-      pointersX = new float[numPointers];
-      pointersY = new float[numPointers];
-      pointersPressure = new float[numPointers];
-    }
-    arrayCopy(pme.motionX, pointersX);
-    arrayCopy(pme.motionY, pointersY);
-    arrayCopy(pme.motionPressure, pointersPressure);
-
-    // Triggering the appropriate event methods
-    if (pme.action == MotionEvent.ACTION_DOWN || (!mousePressed && numPointers == 1)) {
-      // First pointer is down
-      mousePressed = true;
-      onePointerGesture = true;
-      twoPointerGesture = false;
-      downMillis = millis();
-      downX = pointersX[0];
-      downY = pointersY[0];
-
-      mousePressed();
-      pressEvent();
-
-    } else if ((pme.action == MotionEvent.ACTION_POINTER_DOWN  && numPointers == 2) ||
-               (pme.action == MotionEvent.ACTION_POINTER_2_DOWN) || // 2.3 seems to use this action constant (supposedly deprecated) instead of ACTION_POINTER_DOWN
-               (pnumPointers == 1 && numPointers == 2)) {           // 2.1 just uses MOVE as the action constant, so the only way to know we have a new pointer is to compare the counters.
-
-      // An additional pointer is down (we keep track of multitouch only for 2 pointers)
-      onePointerGesture = false;
-      twoPointerGesture = true;
-
-    } else if ((pme.action == MotionEvent.ACTION_POINTER_UP && numPointers == 2) ||
-               (pme.action == MotionEvent.ACTION_POINTER_2_UP) || // 2.1 doesn't use the ACTION_POINTER_UP constant, but this one, apparently deprecated in newer versions of the SDK.
-               (twoPointerGesture && numPointers < 2)) {          // Sometimes it seems that it doesn't generate the up event.
-      // A previously detected pointer is up
-
-      twoPointerGesture = false; // Not doing a 2-pointer gesture anymore, but neither a 1-pointer.
-
-    } else if (pme.action == MotionEvent.ACTION_MOVE) {
-      // Pointer motion
-
-      if (onePointerGesture) {
-        if (mousePressed) {
-          mouseDragged();
-          dragEvent();
-        } else {  // TODO is this physically possible? (perhaps with alt input devices...)
-          mouseMoved();
-          moveEvent();
-        }
-      } else if (twoPointerGesture) {
-        float d0 = PApplet.dist(ppointersX[0], ppointersY[0], ppointersX[1], ppointersY[1]);
-        float d1 = PApplet.dist(pointersX[0], pointersY[0], pointersX[1], pointersY[1]);
-
-        if (0 < d0 && 0 < d1) {
-          float centerX = 0.5f * (pointersX[0] + pointersX[1]);
-          float centerY = 0.5f * (pointersY[0] + pointersY[1]);
-
-          zoomEvent(centerX, centerY, d0, d1);
-        }
-      }
-
-    } else if (pme.action == MotionEvent.ACTION_UP) {
-      // Final pointer is up
-      mousePressed = false;
-
-      float upX = pointersX[0];
-      float upY = pointersY[0];
-      float gestureLength = PApplet.dist(downX, downY, upX, upY);
-
-      int upMillis = millis();
-      int gestureTime = upMillis - downMillis;
-
-      if (onePointerGesture) {
-        // First, lets determine if this 1-pointer event is a tap
-        boolean tap = gestureLength <= MAX_TAP_DISP && gestureTime <= MAX_TAP_DURATION;
-        if (tap) {
-          mouseClicked();
-          tapEvent(downX, downY);
-        } else if (MIN_SWIPE_LENGTH <= gestureLength && gestureTime <= MAX_SWIPE_DURATION) {
-          mouseReleased();
-          swipeEvent(downX, downY, upX, upY);
-        } else {
-          mouseReleased();
-          releaseEvent();
-        }
-
-      } else {
-        mouseReleased();
-        releaseEvent();
-      }
-      onePointerGesture = twoPointerGesture = false;
-
-    } else if (pme.action == MotionEvent.ACTION_CANCEL) {
-      // Current gesture is canceled.
-      onePointerGesture = twoPointerGesture = false;
-      mousePressed = false;
-      mouseReleased();
-      releaseEvent();
-
-    } else {
-      //System.out.println("Unknown MotionEvent action: " + action);
-    }
-
-    pnumPointers = numPointers;
-
-    if (pme.action == MotionEvent.ACTION_MOVE) {
-      emotionX = motionX;
-      emotionY = motionY;
-      emouseX = mouseX;
-      emouseY = mouseY;
-    }
-  }
-  */
-
-
-  // Added in API 11, so defined here: Constant Value: 4096 (0x00001000)
-  static final int META_CTRL_ON = 4096;
-  // Added in API 11, so defined here: 65536 (0x00010000)
-  static final int META_META_ON = 65536;
-
-  int motionPointerId;
 
 
   /**
@@ -2365,84 +2081,144 @@ public class PApplet extends Object implements PConstants {
    * called, the events will be queued up until drawing is complete.
    * If noLoop() has been called, then events will happen immediately.
    */
-  protected void nativeMotionEvent(android.view.MotionEvent motionEvent) {
-//    enqueueMotionEvent(event);
-//
-//    // this will be the last event in the list
-//    AndroidTouchEvent pme = motionEventQueue[motionEventCount + historyCount];
-//    pme.setAction(event.getAction());
-//    pme.setNumPointers(event.getPointerCount());
-//    pme.setPointers(event);
-//
-//    // historical events happen before the 'current' values
-//    if (pme.action == MotionEvent.ACTION_MOVE && historyCount > 0) {
-//      for (int i = 0; i < historyCount; i++) {
-//        AndroidTouchEvent hist = motionEventQueue[motionEventCount++];
-//        hist.setAction(event.getAction());
-//        hist.setNumPointers(event.getPointerCount());
-//        hist.setPointers(event, i);
-//      }
-//    }
-
-    // ACTION_HOVER_ENTER and ACTION_HOVER_EXIT are passed into
-    // onGenericMotionEvent(android.view.MotionEvent)
-    // if we want to implement mouseEntered/Exited
-
-    // http://developer.android.com/reference/android/view/MotionEvent.html
-    // http://android-developers.blogspot.com/2010/06/making-sense-of-multitouch.html
-    // http://www.techrepublic.com/blog/app-builder/use-androids-gesture-detector-to-translate-a-swipe-into-an-event/1577
-
+  protected void nativeMotionEvent(MotionEvent motionEvent) {
     int metaState = motionEvent.getMetaState();
     int modifiers = 0;
     if ((metaState & android.view.KeyEvent.META_SHIFT_ON) != 0) {
       modifiers |= Event.SHIFT;
     }
-    if ((metaState & META_CTRL_ON) != 0) {
+    if ((metaState & android.view.KeyEvent.META_CTRL_ON) != 0) {
       modifiers |= Event.CTRL;
     }
-    if ((metaState & META_META_ON) != 0) {
+    if ((metaState & android.view.KeyEvent.META_META_ON) != 0) {
       modifiers |= Event.META;
     }
     if ((metaState & android.view.KeyEvent.META_ALT_ON) != 0) {
       modifiers |= Event.ALT;
     }
 
+    int button;
+    int state = motionEvent.getButtonState();
+    switch (state) {
+      case MotionEvent.BUTTON_PRIMARY:
+        button = LEFT;
+        break;
+      case MotionEvent.BUTTON_SECONDARY:
+        button = RIGHT;
+        break;
+      case MotionEvent.BUTTON_TERTIARY:
+        button = CENTER;
+        break;
+      default:
+        // Covers the BUTTON_FORWARD, BUTTON_BACK,
+        // BUTTON_STYLUS_PRIMARY, and BUTTON_STYLUS_SECONDARY
+        button = state;
+    }
+
+    enqueueTouchEvents(motionEvent, button, modifiers);
+    enqueueMouseEvents(motionEvent, button, modifiers);
+  }
+
+
+  protected void enqueueTouchEvents(MotionEvent event, int button, int modifiers) {
+    int action = event.getAction();
+    int actionMasked = action & MotionEvent.ACTION_MASK;
+    int paction = 0;
+    switch (actionMasked) {
+    case MotionEvent.ACTION_DOWN:
+      paction = TouchEvent.START;
+      break;
+    case MotionEvent.ACTION_POINTER_DOWN:
+      paction = TouchEvent.START;
+      break;
+    case MotionEvent.ACTION_MOVE:
+      paction = TouchEvent.MOVE;
+      break;
+    case MotionEvent.ACTION_UP:
+      paction = TouchEvent.END;
+      break;
+    case MotionEvent.ACTION_POINTER_UP:
+      paction = TouchEvent.END;
+      break;
+    default:
+      // Covers any other action value, including ACTION_CANCEL
+      paction = TouchEvent.CANCEL;
+      break;
+    }
+
+    if (paction == TouchEvent.START || paction == TouchEvent.END) {
+      touchPointerId = event.getPointerId(0);
+    }
+
+    int pointerCount = event.getPointerCount();
+
+    if (actionMasked == MotionEvent.ACTION_MOVE) {
+      // Post historical movement events, if any.
+      int historySize = event.getHistorySize();
+      for (int h = 0; h < historySize; h++) {
+        TouchEvent touchEvent = new TouchEvent(event, event.getHistoricalEventTime(h),
+                                               paction, modifiers, button);
+        touchEvent.setNumPointers(pointerCount);
+        for (int p = 0; p < pointerCount; p++) {
+          touchEvent.setPointer(p, event.getPointerId(p), event.getHistoricalX(p, h), event.getHistoricalY(p, h),
+                                event.getHistoricalSize(p, h), event.getHistoricalPressure(p, h));
+        }
+        postEvent(touchEvent);
+      }
+    }
+
+    // Current event
+    TouchEvent touchEvent = new TouchEvent(event, event.getEventTime(),
+                                           paction, modifiers, button);
+    if (actionMasked == MotionEvent.ACTION_UP) {
+      // Last pointer up
+      touchEvent.setNumPointers(0);
+    } else {
+      // We still have some pointers left
+      touchEvent.setNumPointers(pointerCount);
+      for (int p = 0; p < event.getPointerCount(); p++) {
+        touchEvent.setPointer(p, event.getPointerId(p), event.getX(p), event.getY(p),
+                                 event.getSize(p), event.getPressure(p));
+      }
+    }
+    postEvent(touchEvent);
+  }
+
+
+  protected void enqueueMouseEvents(MotionEvent event, int button, int modifiers) {
+    int action = event.getAction();
+
     int clickCount = 1;  // not really set... (i.e. not catching double taps)
     int index;
 
-    // MotionEvent.html -> getButtonState() does BUTTON_PRIMARY, SECONDARY, TERTIARY
-    //   use this for left/right/etc
-    switch (motionEvent.getAction()) {
+    switch (action & MotionEvent.ACTION_MASK) {
     case MotionEvent.ACTION_DOWN:
-      motionPointerId = motionEvent.getPointerId(0);
-      postEvent(new MouseEvent(motionEvent, motionEvent.getEventTime(),
+      mousePointerId = event.getPointerId(0);
+      postEvent(new MouseEvent(event, event.getEventTime(),
                                MouseEvent.PRESS, modifiers,
-                               (int) motionEvent.getX(), (int) motionEvent.getY(),
-                               LEFT, clickCount));
+                               (int) event.getX(), (int) event.getY(),
+                               button, clickCount));
       break;
     case MotionEvent.ACTION_MOVE:
-//      int historySize = motionEvent.getHistorySize();
-      index = motionEvent.findPointerIndex(motionPointerId);
+      index = event.findPointerIndex(mousePointerId);
       if (index != -1) {
-        postEvent(new MouseEvent(motionEvent, motionEvent.getEventTime(),
+        postEvent(new MouseEvent(event, event.getEventTime(),
                                  MouseEvent.DRAG, modifiers,
-                                 (int) motionEvent.getX(index), (int) motionEvent.getY(index),
-                                 LEFT, clickCount));
+                                 (int) event.getX(index), (int) event.getY(index),
+                                 button, clickCount));
       }
       break;
     case MotionEvent.ACTION_UP:
-      index = motionEvent.findPointerIndex(motionPointerId);
+      index = event.findPointerIndex(mousePointerId);
       if (index != -1) {
-        postEvent(new MouseEvent(motionEvent, motionEvent.getEventTime(),
+        postEvent(new MouseEvent(event, event.getEventTime(),
                                  MouseEvent.RELEASE, modifiers,
-                                 (int) motionEvent.getX(index), (int) motionEvent.getY(index),
-                                 LEFT, clickCount));
+                                 (int) event.getX(index), (int) event.getY(index),
+                                 button, clickCount));
       }
       break;
     }
-    //postEvent(pme);
   }
-
 
   public void mousePressed() { }
 
@@ -2503,6 +2279,37 @@ public class PApplet extends Object implements PConstants {
     mouseExited();
   }
 
+
+  public void touchStarted() { }
+
+
+  public void touchStarted(TouchEvent event) {
+    touchStarted();
+  }
+
+
+  public void touchMoved() { }
+
+
+  public void touchMoved(TouchEvent event) {
+    touchMoved();
+  }
+
+
+  public void touchEnded() { }
+
+
+  public void touchEnded(TouchEvent event) {
+    touchEnded();
+  }
+
+
+  public void touchCancelled() { }
+
+
+  public void touchCancelled(TouchEvent event) {
+    touchCancelled();
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -2596,6 +2403,22 @@ public class PApplet extends Object implements PConstants {
                                keAction, keModifiers, key, keyCode);
 
     postEvent(ke);
+  }
+
+
+  public void openKeyboard() {
+    View view = surface.getRootView();
+    Context context = surface.getContext();
+    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+  }
+
+
+  public void closeKeyboard() {
+    View view = surface.getRootView();
+    Context context = surface.getContext();
+    InputMethodManager imm =(InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
   }
 
 
@@ -2840,13 +2663,21 @@ public class PApplet extends Object implements PConstants {
     try {
       return Runtime.getRuntime().exec(argv);
     } catch (Exception e) {
-      e.printStackTrace();
       throw new RuntimeException("Could not open " + join(argv, ' '));
     }
   }
 
 
   //////////////////////////////////////////////////////////////
+
+
+  /**
+   * Better way of handling e.printStackTrace() calls so that they can be
+   * handled by subclasses as necessary.
+   */
+  protected void printStackTrace(Throwable t) {
+    t.printStackTrace();
+  }
 
 
   /**
@@ -2917,17 +2748,13 @@ public class PApplet extends Object implements PConstants {
     // moved here from stop()
     finished = true;  // let the sketch know it is shut down time
 
-    // don't run stop and disposers twice
-//    if (thread == null) return;
-//    thread = null;
-
     // call to shut down renderer, in case it needs it (pdf does)
-//    if (surface != null) surface.dispose();
-    if (surface != null && surface.stopThread()) {
-      if (g != null) {
-        g.dispose();
-        surface.dispose();
-      }
+    if (surface != null) {
+      surface.stopThread();
+      surface.dispose();
+    }
+    if (g != null) {
+      g.dispose();
     }
 
     handleMethods("dispose");
@@ -2951,16 +2778,16 @@ public class PApplet extends Object implements PConstants {
       method.invoke(this, new Object[] { });
 
     } catch (IllegalArgumentException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     } catch (IllegalAccessException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     } catch (InvocationTargetException e) {
       e.getTargetException().printStackTrace();
     } catch (NoSuchMethodException nsme) {
       System.err.println("There is no public " + name + "() method " +
                          "in the class " + getClass().getName());
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
     }
   }
 
@@ -4087,7 +3914,7 @@ public class PApplet extends Object implements PConstants {
     try {
       return new XML(name);
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -4111,7 +3938,7 @@ public class PApplet extends Object implements PConstants {
     try {
       return new XML(createInput(filename), options);
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -4126,7 +3953,7 @@ public class PApplet extends Object implements PConstants {
     try {
       return XML.parse(xmlString, options);
     } catch (Exception e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -4273,7 +4100,7 @@ public class PApplet extends Object implements PConstants {
       return new Table(createInput(filename), options);
 
     } catch (IOException e) {
-      e.printStackTrace();
+      printStackTrace(e);
       return null;
     }
   }
@@ -4289,7 +4116,7 @@ public class PApplet extends Object implements PConstants {
       table.save(saveFile(filename), options);
       return true;
     } catch (IOException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     }
     return false;
   }
@@ -4709,7 +4536,20 @@ public class PApplet extends Object implements PConstants {
   static public BufferedReader createReader(InputStream input) {
     InputStreamReader isr =
       new InputStreamReader(input, StandardCharsets.UTF_8);
-    return new BufferedReader(isr);
+
+    BufferedReader reader = new BufferedReader(isr);
+    // consume the Unicode BOM (byte order marker) if present
+    try {
+      reader.mark(1);
+      int c = reader.read();
+      // if not the BOM, back up to the beginning again
+      if (c != '\uFEFF') {
+        reader.reset();
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return reader;
   }
 
 
@@ -4796,15 +4636,18 @@ public class PApplet extends Object implements PConstants {
    */
   public InputStream createInput(String filename) {
     InputStream input = createInputRaw(filename);
-    if ((input != null) && filename.toLowerCase().endsWith(".gz")) {
+    final String lower = filename.toLowerCase();
+    if ((input != null) &&
+        (lower.endsWith(".gz") || lower.endsWith(".svgz"))) {
       try {
-        return new GZIPInputStream(input);
+        // buffered has to go *around* the GZ, otherwise 25x slower
+        return new BufferedInputStream(new GZIPInputStream(input));
       } catch (IOException e) {
-        e.printStackTrace();
+        printStackTrace(e);
         return null;
       }
     }
-    return input;
+    return new BufferedInputStream(input);
   }
 
 
@@ -4861,7 +4704,7 @@ public class PApplet extends Object implements PConstants {
 
       } catch (IOException e) {
         // changed for 0117, shouldn't be throwing exception
-        e.printStackTrace();
+        printStackTrace(e);
         //System.err.println("Error downloading from URL " + filename);
         return null;
         //throw new RuntimeException("Error downloading from URL " + filename);
@@ -4995,9 +4838,9 @@ public class PApplet extends Object implements PConstants {
     try {
       InputStream input = new FileInputStream(file);
       if (file.getName().toLowerCase().endsWith(".gz")) {
-        return new GZIPInputStream(input);
+        return new BufferedInputStream(new GZIPInputStream(input));
       }
-      return input;
+      return new BufferedInputStream(input);
 
     } catch (IOException e) {
       System.err.println("Could not createInput() for " + file);
@@ -5182,7 +5025,7 @@ public class PApplet extends Object implements PConstants {
       return fos;
 
     } catch (IOException e) {
-      e.printStackTrace();
+      printStackTrace(e);
     }
     return null;
   }
@@ -5190,11 +5033,12 @@ public class PApplet extends Object implements PConstants {
 
   static public OutputStream createOutput(File file) {
     try {
-      FileOutputStream fos = new FileOutputStream(file);
+      createPath(file);  // make sure the path exists
+      OutputStream output = new FileOutputStream(file);
       if (file.getName().toLowerCase().endsWith(".gz")) {
-        return new GZIPOutputStream(fos);
+        return new BufferedOutputStream(new GZIPOutputStream(output));
       }
-      return fos;
+      return new BufferedOutputStream(output);
 
     } catch (IOException e) {
       e.printStackTrace();

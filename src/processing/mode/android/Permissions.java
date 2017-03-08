@@ -42,7 +42,7 @@ import processing.app.ui.Toolkit;
 @SuppressWarnings("serial")
 public class Permissions extends JFrame {
   static final String GUIDE_URL =
-    "https://developer.android.com/training/articles/security-tips.html#permissions";
+    "https://developer.android.com/training/articles/security-tips.html#Permissions";
 
   static final int BORDER_HORIZ = 5;
   static final int BORDER_VERT = 3;
@@ -160,9 +160,10 @@ public class Permissions extends JFrame {
       "Android applications must specifically ask for permission\n" +
       "to do things like connect to the internet, write a file,\n" +
       "or make phone calls. When installing your application,\n" +
-      "users will be asked whether they want to allow such access.\n" +
-      "More about permissions can be found " +
-      "<a href=\"" + GUIDE_URL + "\">here</a>.</body></html>";
+      "users will be asked whether they want to allow such access.</html>";
+    String urlText = "<html>More about permissions can be found " +
+        "<a href=\"" + GUIDE_URL + "\">here</a>.</html>"; 
+    
 //      "<html>" +
 //      "Android applications must specifically ask for permission\n" +
 //      "to do things like connect to the internet, write a file,\n" +
@@ -174,6 +175,7 @@ public class Permissions extends JFrame {
 //    JTextArea textarea = new JTextArea(5, 40);
 //    textarea.setText(labelText);
     JLabel textarea = new JLabel(labelText);
+    JLabel urlarea = new JLabel(urlText);
 //    JLabel textarea = new JLabel(labelText) {
 //      public Dimension getPreferredSize() {
 //        return new Dimension(400, 100);
@@ -185,14 +187,17 @@ public class Permissions extends JFrame {
 //        return getPreferredSize();
 //      }
 //    };
-    textarea.setPreferredSize(new Dimension(400, 100));
-    textarea.addMouseListener(new MouseAdapter() {
+    textarea.setPreferredSize(new Dimension(400, 80));
+    urlarea.setPreferredSize(new Dimension(400, 30));
+    urlarea.addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent e) {
         Platform.openURL(GUIDE_URL);
       }
     });
+    urlarea.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
     //textarea.setHorizontalAlignment(SwingConstants.LEFT);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
+    urlarea.setAlignmentX(LEFT_ALIGNMENT);
 
 //    textarea.setBorder(new EmptyBorder(13, 8, 13, 8));
 
@@ -202,6 +207,7 @@ public class Permissions extends JFrame {
 //    textarea.setHighlighter(null);
 //    textarea.setFont(new Font("Dialog", Font.PLAIN, 12));
     pain.add(textarea);
+    pain.add(urlarea);
 //    textarea.setForeground(Color.RED);
 //    pain.setBackground(Color.GREEN);
 

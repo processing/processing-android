@@ -86,7 +86,7 @@ class EmulatorController {
     if (wear) {
       avdName = AVD.wearAVD.name;
     } else {
-      avdName = AVD.defaultAVD.name;
+      avdName = AVD.mobileAVD.name;
     }
     
     String gpuFlag = gpu ? "on" : "off";

@@ -11,7 +11,7 @@ buildscript {
 dependencies {
     compile name: 'android'
     compile name: 'android-support-v4'
-    compile name: 'wearable-1.4.0'
+    compile name: 'wearable-2.0.0'
 }
 
 sourceSets {

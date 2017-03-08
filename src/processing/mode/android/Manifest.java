@@ -137,8 +137,15 @@ public class Manifest {
     String[] names = new String[count];
     for (int i = 0; i < count; i++) {
       String tmp = elements[i].getString("android:name");
-      int idx = tmp.lastIndexOf(".");
-      names[i] = tmp.substring(idx + 1);
+      if (tmp.indexOf("android.permission") == 0) {
+        // Standard permission, remove perfix
+        int idx = tmp.lastIndexOf(".");
+        names[i] = tmp.substring(idx + 1);        
+      } else {
+        // Non-standard permission (for example, wearables)
+        // Store entire name.
+        names[i] = tmp;
+      }
     }
     return names;
   }
@@ -149,25 +156,39 @@ public class Manifest {
     for (XML kid : xml.getChildren("uses-permission")) {
       String name = kid.getString("android:name");
       // Don't remove required permissions for wallpapers, watchfaces and cardboard.      
+      if (-1 < name.indexOf(".")) continue;
       if (appComp == AndroidBuild.WALLPAPER) {
       } else if (appComp == AndroidBuild.WATCHFACE) {
-        if (name.equals("android.permission.WAKE_LOCK")) continue;
+        if (name.equals("WAKE_LOCK")) continue;
       } else if (appComp == AndroidBuild.CARDBOARD) {
-        if (name.equals("android.permission.INTERNET") ||
-            name.equals("android.permission.NFC") ||
-            name.equals("android.permission.VIBRATE") ||
-            name.equals("android.permission.READ_EXTERNAL_STORAGE") ||
-            name.equals("android.permission.WRITE_EXTERNAL_STORAGE")) continue;
-      }      
+        if (name.equals("INTERNET") ||
+            name.equals("NFC") ||
+            name.equals("VIBRATE") ||
+            name.equals("READ_EXTERNAL_STORAGE") ||
+            name.equals("WRITE_EXTERNAL_STORAGE")) continue;
+      }
       xml.removeChild(kid);
     }
     // ...and add the new kids back
     for (String name : names) {
-//      PNode newbie = new PNodeXML("uses-permission");
-//      newbie.setString("android:name", PERMISSION_PREFIX + name);
-//      xml.addChild(newbie);
+      // Don't add required permissions for wallpapers, watchfaces and cardboard again.      
+      if (appComp == AndroidBuild.WALLPAPER) {
+      } else if (appComp == AndroidBuild.WATCHFACE) {
+        if (name.equals("WAKE_LOCK")) continue;
+      } else if (appComp == AndroidBuild.CARDBOARD) {
+        if (name.equals("INTERNET") ||
+            name.equals("NFC") ||
+            name.equals("VIBRATE") ||
+            name.equals("READ_EXTERNAL_STORAGE") ||
+            name.equals("WRITE_EXTERNAL_STORAGE")) continue;
+      }       
       XML newbie = xml.addChild("uses-permission");
-      newbie.setString("android:name", PERMISSION_PREFIX + name);
+      if (-1 < name.indexOf(".")) {
+        // Permission string contains path
+        newbie.setString("android:name", name);
+      } else {
+        newbie.setString("android:name", PERMISSION_PREFIX + name);
+      }
     }
     save();
   }

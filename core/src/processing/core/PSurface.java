@@ -32,9 +32,11 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.service.wallpaper.WallpaperService.Engine;
 import processing.android.AppComponent;
 
 /*
@@ -42,9 +44,10 @@ import processing.android.AppComponent;
  * handling
  */
 public interface PSurface {
+  public AppComponent getComponent();
   public Context getContext();
   public Activity getActivity();
-  public AppComponent getComponent();
+  public Engine getEngine();
 
   public void dispose();
 
@@ -55,15 +58,14 @@ public interface PSurface {
   public Rect getVisibleFrame();
 
   public SurfaceView getSurfaceView();
+  public SurfaceHolder getSurfaceHolder();
 
   public View getRootView();
   public void setRootView(View view);
 
   public void initView(int sketchWidth, int sketchHeight);
   public void initView(LayoutInflater inflater, ViewGroup container,
-                       Bundle savedInstanceState,
-                       boolean sketchFullScreen,
-                       int sketchWidth, int sketchHeight);
+                       Bundle savedInstanceState);
 
   public void startActivity(Intent intent);
 

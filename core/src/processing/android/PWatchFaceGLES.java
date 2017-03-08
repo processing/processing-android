@@ -22,30 +22,30 @@
 
 package processing.android;
 
-import android.content.Intent;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.WindowInsets;
+import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.DisplayMetrics;
-//import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
+import java.lang.reflect.Method;
 
 import android.graphics.Rect;
 
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
-  protected PApplet sketch;
   protected Point size;
   private DisplayMetrics metrics;
-  protected GLEngine engine;
+  protected GLES2Engine engine;
+
 
   public void initDimensions() {
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -70,56 +70,53 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     }
   }
 
+
   public int getDisplayWidth() {
     return size.x;
 //    return metrics.widthPixels;
   }
+
 
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
   }
 
+
   public float getDisplayDensity() {
     return metrics.density;
   }
+
 
   public int getKind() {
     return WATCHFACE;
   }
 
-  @Override
-  public void startActivity(Intent intent) {
+
+  public PApplet createSketch() {
+    return new PApplet();
   }
+
 
   public void setSketch(PApplet sketch) {
-    this.sketch = sketch;
+    engine.sketch = sketch;
   }
+
 
   public PApplet getSketch() {
-    return sketch;
+    return engine.sketch;
   }
 
-  public void dispose() {
-  }
 
-  public void requestPermissions() {
-
-  }
-
-  public void onPermissionsGranted() {
-    if (sketch != null) sketch.onPermissionsGranted();
-  }
-
-  @Override
-  public Engine onCreateEngine() {
-    engine = new GLEngine();
+  public Engine getEngine() {
     return engine;
   }
+
 
   public void requestDraw() {
     if (engine != null) engine.invalidateIfNecessary();
   }
+
 
   public boolean canDraw() {
     // The rendering loop should never call handleDraw() directly, it only needs to invalidate the
@@ -127,7 +124,40 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     return false;
   }
 
-  private class GLEngine extends Gles2WatchFaceService.Engine {
+
+  public void dispose() {
+  }
+
+
+  public void requestPermissions() {
+  }
+
+
+  public void onPermissionsGranted() {
+    if (engine != null) engine.onPermissionsGranted();
+  }
+
+
+  @Override
+  public Engine onCreateEngine() {
+    engine = new GLES2Engine();
+    return engine;
+  }
+
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (engine != null) engine.onDestroy();
+  }
+
+
+  private class GLES2Engine extends Gles2WatchFaceService.Engine {
+    private PApplet sketch;
+    private Method compUpdatedMethod;
+
+
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
@@ -138,10 +168,19 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
               .setShowSystemUiTime(false)
               .setAcceptsTapEvents(true)
               .build());
-      if (sketch != null) {
-        sketch.initSurface(PWatchFaceGLES.this, null);
-        sketch.startSurface();
-        requestPermissions();
+      sketch = createSketch();
+      sketch.initSurface(PWatchFaceGLES.this, null);
+      initComplications();
+      requestPermissions();
+    }
+
+
+    private void initComplications() {
+      try {
+        compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
+                                                        new Class[] {int.class, ComplicationData.class});
+      } catch (Exception e) {
+        compUpdatedMethod = null;
       }
     }
 
@@ -179,6 +218,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
       // call new event handlers in sketch (?)
     }
 
+
     @Override
     public void onPropertiesChanged(Bundle properties) {
       super.onPropertiesChanged(properties);
@@ -187,6 +227,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
         sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
       }
     }
+
 
     @Override
     public void onApplyWindowInsets(WindowInsets insets) {
@@ -199,6 +240,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
         sketch.insetBottom = insets.getSystemWindowInsetBottom();
       }
     }
+
 
     @Override
     public void onVisibilityChanged(boolean visible) {
@@ -292,21 +334,34 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onTouchEvent(MotionEvent event) {
       super.onTouchEvent(event);
-      PApplet.println("touch even:" + event.toString());
       if (sketch != null) sketch.surfaceTouchEvent(event);
     }
+
+
+    @Override
+    public void onComplicationDataUpdate(
+            int complicationId, ComplicationData complicationData) {
+      if (compUpdatedMethod != null) {
+        try {
+          compUpdatedMethod.invoke(complicationId, complicationData);
+        } catch (Exception e) {
+        }
+        invalidate();
+      }
+    }
+
 
     @Override
     public void onDestroy() {
       super.onDestroy();
       if (sketch != null) sketch.onDestroy();
     }
-  }
 
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    if (engine != null) engine.onDestroy();
+    public void onPermissionsGranted() {
+      if (sketch != null) {
+        sketch.onPermissionsGranted();
+      }
+    }
   }
 }

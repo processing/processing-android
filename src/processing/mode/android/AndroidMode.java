@@ -29,6 +29,7 @@ import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
+import processing.app.Util;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -49,6 +50,12 @@ import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+
 
 public class AndroidMode extends JavaMode {
   private AndroidSDK sdk;
@@ -61,6 +68,28 @@ public class AndroidMode extends JavaMode {
   private boolean checkingSDK = false;
   private boolean userCancelledSDKSearch = false;
 
+  private static final String BLUETOOTH_DEBUG_URL = 
+      "http://developer.android.com/training/wearables/apps/bt-debugging.html";
+  
+  private static final String WATCHFACE_DEBUG_TITLE =
+      "Is Debugging over Bluetooth enabled?";
+  
+  private static final String WATCHFACE_DEBUG_MESSAGE =
+      "Processing will access the smartwatch through the phone " +
+      "currently paired to it. Your watch won't show up in the device list, " +
+      "select the phone instead.<br><br>" +
+      "Make sure to enable <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging over bluetooth</a> " +
+      "for this to work.";
+  
+  private static final String WALLPAPER_INSTALL_TITLE =
+      "Wallpaper installed!";
+  
+  private static final String WALLPAPER_INSTALL_MESSAGE = 
+      "Processing just built and installed your sketch as a " +
+      "live wallpaper on the selected device.<br><br>" +
+      "You need to open the wallpaper picker in the device in order "+ 
+      "to select it as the new background.";
+  
   public AndroidMode(Base base, File folder) {
     super(base, folder);
   }
@@ -202,29 +231,6 @@ public class AndroidMode extends JavaMode {
       Messages.log("Android SDK path couldn't be loaded.");
       return "";
     }
-
-    /*
-    Path path = Paths.get(sdk.getSdkFolder().getAbsolutePath(), 
-                          "platforms", AndroidBuild.target_platform, 
-                          "android.jar").toAbsolutePath();
-        
-//    String path = new File().getAbsolutePath(); 
-//        
-//        
-//        sdk.getSdkFolder().getAbsolutePath() + File.separator + 
-//                  "platforms" + File.separator + "android-";
-    String level = AndroidBuild.target_api_level;
-    String name = AndroidBuild.target_sdk_version;
-    String androidJarPath = path + level + File.separator + "android.jar";    
-    if (!new File(androidJarPath).exists()) {
-      // Try again using SDK name, I have seen the SDK stored as platforms/android-x.y.z
-      androidJarPath = path + name + File.separator + "android.jar";
-      if (!new File(androidJarPath).exists()) {
-        Messages.log("Android SDK path couldn't be loaded.");
-        return "";        
-      }
-    }
-    */
     
     String coreJarPath = new File(getFolder(), "android-core.zip").getAbsolutePath();
     return sdk.getAndroidJarPath().getAbsolutePath() + File.pathSeparatorChar + coreJarPath;
@@ -279,7 +285,7 @@ public class AndroidMode extends JavaMode {
 
     listener.statusNotice("Running sketch on emulator...");
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getEmulator(build.isWear(), build.usesGPU()), 
+    runner.launch(Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL()), 
         build.isWear());
   }
 
@@ -316,24 +322,18 @@ public class AndroidMode extends JavaMode {
     showPostBuildMessage(build.getAppComponent());
   }
 
+  
   public void showSelectComponentMessage(int appComp) {
     if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
-      Messages.showMessage("Is Debugging over Bluetooth enabled?",
-                           "Processing will access the wearable through the handheld paired to it.\n" +
-                           "Your watch won't show up in the device list, select the paired handheld.\n" +
-                           "Make sure to enable \"Debugging over Bluetooth\" for this to work:\n" +
-                           "http://developer.android.com/training/wearables/apps/bt-debugging.html");   
+      showMessage(WATCHFACE_DEBUG_TITLE, WATCHFACE_DEBUG_MESSAGE);
       showBluetoothDebugMessage = false;
-    }            
+    } 
   }
+  
   
   public void showPostBuildMessage(int appComp) {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
-      Messages.showMessage("Now select the wallpaper...",
-                           "Processing built and installed your sketch\n" +
-                           "as a live wallpaper on the selected device.\n" +
-                           "You need to open the wallpaper selector\n" + 
-                           "in order to set it as the new background.");   
+      showMessage(WALLPAPER_INSTALL_TITLE, WALLPAPER_INSTALL_MESSAGE);  
       showWallpaperSelectMessage = false;
     }    
   }
@@ -380,7 +380,13 @@ public class AndroidMode extends JavaMode {
     pw.close();    
   }    
   
-  public static void extractFolder(File file, File newPath, boolean setExec) throws IOException {
+  public static void extractFolder(File file, File newPath, 
+    boolean setExec) throws IOException {
+    extractFolder(file, newPath, setExec, false);
+  }
+  
+  public static void extractFolder(File file, File newPath, 
+    boolean setExec, boolean remRoot) throws IOException {
     int BUFFER = 2048;
     ZipFile zip = new ZipFile(file);
     Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
@@ -390,6 +396,13 @@ public class AndroidMode extends JavaMode {
       // grab a zip file entry
       ZipEntry entry = zipFileEntries.nextElement();
       String currentEntry = entry.getName();
+      
+      if (remRoot) {
+        // Remove root folder from path
+        int idx = currentEntry.indexOf(File.separator); 
+        currentEntry = currentEntry.substring(idx + 1);
+      }
+      
       File destFile = new File(newPath, currentEntry);
       //destFile = new File(newPath, destFile.getName());
       File destinationParent = destFile.getParentFile();
@@ -399,7 +412,7 @@ public class AndroidMode extends JavaMode {
 
       String ext = PApplet.getExtension(currentEntry);
       if (setExec && ext.equals("unknown")) {        
-        // On some OS X machines the android binaries loose their executable
+        // On some OS X machines the android binaries lose their executable
         // attribute, rendering the mode unusable
         destFile.setExecutable(true);
       }
@@ -429,4 +442,47 @@ public class AndroidMode extends JavaMode {
     }
     zip.close();
   }
+
+  
+  static public void explodeAar(File wearFile, File explodeDir, File jarFile) 
+      throws IOException {
+    explodeAar(wearFile, explodeDir, jarFile, true);
+  }
+  
+  
+  static public void explodeAar(File wearFile, File explodeDir, File jarFile, 
+      boolean removeDir) throws IOException {
+    extractFolder(wearFile, explodeDir, false);
+    File classFile = new File(explodeDir, "classes.jar");
+    Util.copyFile(classFile, jarFile);
+    Util.removeDir(explodeDir);
+  }
+  
+
+  static public void showMessage(String title, String text) {
+    if (title == null) title = "Message";
+    if (Base.isCommandLine()) {      
+      System.out.println(title + ": " + text);
+    } else {
+      String htmlString = "<html> " +
+          "<head> <style type=\"text/css\">"+
+          "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+          "</style> </head>" +
+          "<body> <p>" + text + "</p> </body> </html>";      
+      JEditorPane pane = new JEditorPane("text/html", htmlString);
+      pane.addHyperlinkListener(new HyperlinkListener() {
+        @Override
+        public void hyperlinkUpdate(HyperlinkEvent e) {
+          if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+            Platform.openURL(e.getURL().toString());
+          }
+        }
+      });
+      pane.setEditable(false);
+      JLabel label = new JLabel();
+      pane.setBackground(label.getBackground());      
+      JOptionPane.showMessageDialog(null, pane, title, 
+          JOptionPane.INFORMATION_MESSAGE);
+    }
+  }   
 }

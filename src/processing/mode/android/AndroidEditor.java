@@ -23,7 +23,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Messages;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Preferences;
@@ -64,6 +63,16 @@ public class AndroidEditor extends JavaEditor {
   private JCheckBoxMenuItem watchfaceItem;
   private JCheckBoxMenuItem cardboardItem;
     
+  private static final String USB_DRIVER_TITLE = "USB Driver warning";
+  private static final String USB_DRIVER_URL = 
+      "http://developer.android.com/sdk/win-usb.html";
+  private static final String USB_DRIVER_MESSAGEA = 
+      "You might need to install Google USB Driver to run " +
+      "the sketch on your device. Please follow <a href=\"" + USB_DRIVER_URL + "\">this guide</a> " +
+      "to install the driver.<br>";  
+  private static final String USB_DRIVER_MESSAGEB = 
+      "<br>For your reference, the driver is located in:<br>";
+  
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
     super(base, path, state, mode);
@@ -639,24 +648,17 @@ public class AndroidEditor extends JavaEditor {
    * Build the sketch and run it on a device with the debugger connected.
    */
   public void handleRunDevice() {
-    if (Platform.isWindows() && !Preferences.getBoolean("usbDriverWarningShown")) {
-      Preferences.setBoolean("usbDriverWarningShown", true);
-
-      String message = "";
-      File usbDriverFile = new File(((AndroidMode) sketch.getMode()).getSDK().getSdkFolder(), "extras/google/usb_driver");
+    if (Platform.isWindows() && !Preferences.getBoolean("android.warnings.usb_driver")) {
+      Preferences.setBoolean("android.warnings.usb_driver", true);      
+      File sdkFolder = androidMode.getSDK().getSdkFolder();
+      String text = "";
+      File usbDriverFile = new File(sdkFolder, "extras/google/usb_driver");      
       if (usbDriverFile.exists()) {
-        message = "<html><body>" +
-            "You might need to install Google USB Driver to run the sketch on your device.<br>" +
-            "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
-            "For your reference, the driver is located in: " + usbDriverFile.getAbsolutePath();
+        text = USB_DRIVER_MESSAGEA + USB_DRIVER_MESSAGEB + usbDriverFile.getAbsolutePath();
       } else {
-        message = "<html><body>" +
-            "You might need to install Google USB Driver to run the sketch on your device.<br>" +
-            "Please follow the guide at <a href='http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver'>http://developer.android.com/tools/extras/oem-usb.html#InstallingDriver</a> to install the driver.<br>" +
-            "You will also need to download the driver from <a href='http://developer.android.com/sdk/win-usb.html'>http://developer.android.com/sdk/win-usb.html</a>";
+        text = USB_DRIVER_MESSAGEA;        
       }
-      Messages.showWarning("USB Driver warning", message);
-
+      AndroidMode.showMessage(USB_DRIVER_TITLE, text);
     } else {
       new Thread() {
         public void run() {

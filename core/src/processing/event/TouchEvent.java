@@ -22,28 +22,121 @@
 
 package processing.event;
 
-
-// PLACEHOLDER CLASS: DO NOT USE. IT HAS NOT EVEN DECIDED WHETHER
-// THIS WILL BE CALLED TOUCHEVENT ONCE IT'S FINISHED.
-
 /*
-http://developer.android.com/guide/topics/ui/ui-events.html
-http://developer.android.com/reference/android/view/MotionEvent.html
-http://developer.apple.com/library/safari/#documentation/UserExperience/Reference/TouchEventClassReference/TouchEvent/TouchEvent.html
-http://developer.apple.com/library/ios/#documentation/UIKit/Reference/UIGestureRecognizer_Class/Reference/Reference.html#//apple_ref/occ/cl/UIGestureRecognizer
-
-Apple's high-level gesture names:
-tap
-pinch
-rotate
-swipe
-pan
-longpress
+ * IMPORTANT NOTICE: None of the methods and inner classes in TouchEvent are
+ * part of the Processing API. Don't use them! They might be changed or removed
+ * without notice.
 */
 public class TouchEvent extends Event {
+  static public final int START = 1;
+  static public final int END = 2;
+  static public final int CANCEL = 3;
+  static public final int MOVE = 4;
 
-  public TouchEvent(Object nativeObject, long millis, int action, int modifiers) {
+  protected int action;
+
+  protected int button;
+  protected int numPointers;
+  protected int[] pointerId;
+  protected float[] pointerX;
+  protected float[] pointerY;
+  protected float[] pointerArea;
+  protected float[] pointerPressure;
+
+  public TouchEvent(Object nativeObject, long millis, int action, int modifiers,
+                    int button) {
     super(nativeObject, millis, action, modifiers);
     this.flavor = TOUCH;
+    this.button = button;
+  }
+
+  public void setNumPointers(int n) {
+    numPointers = n;
+    pointerId = new int[n];
+    pointerX = new float[n];
+    pointerY = new float[n];
+    pointerArea = new float[n];
+    pointerPressure = new float[n];
+ }
+
+
+ public void setPointer(int idx, int id, float x, float y, float a, float p) {
+   pointerId[idx] = id;
+   pointerX[idx] = x;
+   pointerY[idx] = y;
+   pointerArea[idx] = a;
+   pointerPressure[idx] = p;
+ }
+
+
+ public int getNumPointers() {
+   return numPointers;
+ }
+
+
+ public Pointer getPointer(int idx) {
+   Pointer pt = new Pointer();
+   pt.id = pointerId[idx];
+   pt.x = pointerX[idx];
+   pt.y = pointerY[idx];
+   pt.area = pointerArea[idx];
+   pt.pressure = pointerPressure[idx];
+   return pt;
+ }
+
+
+ public int getPointerId(int idx) {
+   return pointerId[idx];
+ }
+
+
+ public float getPointerX(int idx) {
+   return pointerX[idx];
+ }
+
+
+ public float getPointerY(int idx) {
+   return pointerY[idx];
+ }
+
+
+ public float getPointerArea(int idx) {
+   return pointerArea[idx];
+ }
+
+
+ public float getPointerPressure(int idx) {
+   return pointerPressure[idx];
+ }
+
+
+ public int getButton() {
+   return button;
+ }
+
+
+ public Pointer[] getTouches(Pointer[] touches) {
+   if (touches == null || touches.length != numPointers) {
+     touches = new Pointer[numPointers];
+     for (int idx = 0; idx < numPointers; idx++) {
+       touches[idx] = new Pointer();
+     }
+   }
+   for (int idx = 0; idx < numPointers; idx++) {
+     touches[idx].id = pointerId[idx];
+     touches[idx].x = pointerX[idx];
+     touches[idx].y = pointerY[idx];
+     touches[idx].area = pointerArea[idx];
+     touches[idx].pressure = pointerPressure[idx];
+   }
+   return touches;
+ }
+
+
+  public class Pointer {
+    public int id;
+    public float x, y;
+    public float area;
+    public float pressure;
   }
 }

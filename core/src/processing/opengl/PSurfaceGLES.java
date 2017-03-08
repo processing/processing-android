@@ -48,12 +48,7 @@ import processing.core.PSurfaceNone;
 
 public class PSurfaceGLES extends PSurfaceNone {
   public PGLES pgl;
-  private GLSurfaceView glsurf;
-
-  /** The renderer object driving the rendering loop, analogous to the
-   * GLEventListener in JOGL */
-  protected AndroidRenderer renderer;
-  protected AndroidConfigChooser configChooser;
+  private SketchSurfaceViewGL glsurf;
 
   public PSurfaceGLES() { }
 
@@ -65,21 +60,24 @@ public class PSurfaceGLES extends PSurfaceNone {
     if (component.getKind() == AppComponent.FRAGMENT) {
       PFragment frag = (PFragment)component;
       activity = frag.getActivity();
-      surface = new SketchSurfaceViewGL(activity, null);
+      surfaceView = new SketchSurfaceViewGL(activity, null);
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       wallpaper = (WallpaperService)component;
-      surface = new SketchSurfaceViewGL(wallpaper, holder);
+      surfaceView = new SketchSurfaceViewGL(wallpaper, holder);
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (Gles2WatchFaceService)component;
-      surface = null;
+      surfaceView = null;
     }
-    glsurf = (GLSurfaceView)surface;
+    glsurf = (SketchSurfaceViewGL)surfaceView;
   }
 
   @Override
   public void dispose() {
     super.dispose();
-    glsurf = null;
+    if (glsurf != null) {
+      glsurf.dispose();
+      glsurf = null;
+    }
   }
 
   ///////////////////////////////////////////////////////////
@@ -145,12 +143,10 @@ public class PSurfaceGLES extends PSurfaceNone {
       }
     }
 
-//    public void onDestroy() {
-//      super.destroyDrawingCache();
-//      super.onDetachedFromWindow();
-      // don't think i want to call stop() from here, since it might be swapping renderers
-      //      stop();
-//    }
+    public void dispose() {
+      super.destroyDrawingCache();
+      super.onDetachedFromWindow();
+    }
 
 
     @Override
@@ -199,18 +195,9 @@ public class PSurfaceGLES extends PSurfaceNone {
     public void onWindowFocusChanged(boolean hasFocus) {
       super.onWindowFocusChanged(hasFocus);
       sketch.surfaceWindowFocusChanged(hasFocus);
-//      super.onWindowFocusChanged(hasFocus);
-//      focused = hasFocus;
-//      if (focused) {
-////        println("got focus");
-//        focusGained();
-//      } else {
-////        println("lost focus");
-//        focusLost();
-//      }
     }
 
-    // Do we need these to catpure events...?
+    // Do we need these to capture events...?
     @Override
     public boolean onTouchEvent(MotionEvent event) {
       boolean fullscreen = sketch.width == sketch.displayWidth &&
@@ -241,8 +228,9 @@ public class PSurfaceGLES extends PSurfaceNone {
 
 
   public AndroidRenderer getRenderer() {
-    renderer = new AndroidRenderer();
-    return renderer;
+//    renderer = new AndroidRenderer();
+//    return renderer;
+    return new AndroidRenderer();
   }
 
 
@@ -252,27 +240,28 @@ public class PSurfaceGLES extends PSurfaceNone {
 
 
   public AndroidConfigChooser getConfigChooser(int samples) {
-    configChooser = new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
-    return configChooser;
+    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
   }
 
 
   public AndroidConfigChooser getConfigChooser(int r, int g, int b, int a,
                                                int d, int s, int samples) {
-    configChooser = new AndroidConfigChooser(r, g, b, a, d, s, samples);
-    return configChooser;
+    return new AndroidConfigChooser(r, g, b, a, d, s, samples);
   }
 
 
   protected class AndroidRenderer implements Renderer {
+
     public AndroidRenderer() {
     }
 
+    @Override
     public void onDrawFrame(GL10 igl) {
       pgl.getGL(igl);
       sketch.handleDraw();
     }
 
+    @Override
     public void onSurfaceChanged(GL10 igl, int iwidth, int iheight) {
       if (PApplet.DEBUG) {
         System.out.println("AndroidRenderer.onSurfaceChanged() " + iwidth + " " + iheight);
@@ -294,6 +283,7 @@ public class PSurfaceGLES extends PSurfaceNone {
       sketch.surfaceChanged();
     }
 
+    @Override
     public void onSurfaceCreated(GL10 igl, EGLConfig config) {
       pgl.init(igl);
     }

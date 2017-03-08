@@ -22,8 +22,9 @@
 
 package processing.android;
 
-//import android.app.Fragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -44,6 +45,12 @@ public class PFragment extends Fragment implements AppComponent {
   protected PApplet sketch;
 
   public PFragment() {
+  }
+
+  public void init(int layout, FragmentManager fragmentManager) {
+    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    fragmentTransaction.add(layout, this);
+    fragmentTransaction.commit();
   }
 
   public void initDimensions() {
@@ -103,8 +110,7 @@ public class PFragment extends Fragment implements AppComponent {
                            Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(inflater, container, savedInstanceState, this, null);
-      sketch.startSurface();
-      return sketch.getRootView();
+      return sketch.surface.getRootView();
     } else {
       return null;
     }

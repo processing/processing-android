@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import processing.app.ui.Editor;
+import processing.app.Messages;
 import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
@@ -77,11 +78,11 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     
-//    if (wear && !device.hasFeature("watch")) {
-//      Messages.showWarning("Device is not a watch!", 
-//                           "Processing built your sketch as a watch face, but\n" +
-//                           "you selected a non-watch device to install it on.\n" +
-//                           "Please select a watch device instead.");      
+//    if (!wear && device.hasFeature("watch")) {
+//      listener.statusError("Trying to install a regular app or wallpaper on a watch.");
+//      System.err.println("For some reason, Processing is trying to install the sketch\n" + 
+//                         "on the paired watch instead of the mobile device.");
+//      
 //      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
 //      return;
 //    }
@@ -98,7 +99,18 @@ public class AndroidRunner implements DeviceListener {
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
-      listener.statusError("Lost connection with device while installing. Try again.");
+      if (device.getId().contains("emulator")) {
+        // More detailed message when using the emulator, to following discussion in
+        // https://code.google.com/p/android/issues/detail?id=104305
+        listener.statusError("Lost connection with emulator while installing. Try again.");
+        Messages.showWarning("The emulator is slooow...",
+          "This is common when the emulator is booting up for the first time.\n" +
+          "Just try again once the emulator is ready, or set the\n" + 
+          "ADB_INSTALL_TIMEOUT environmental variable to have a.\n" +
+          "longer timeout, for example 5 minutes or more");
+      } else {
+        listener.statusError("Lost connection with device while installing. Try again.");
+      }
       Devices.killAdbServer();  // see above
       return;
     }
@@ -111,8 +123,8 @@ public class AndroidRunner implements DeviceListener {
 //  monitor.setNote("Starting sketch on " + device.getId());
     listener.statusNotice("Starting sketch on " + device.getId());
     if (startSketch(build, device)) {
-      listener.statusNotice("Sketch launched on the "
-                            + (device.isEmulator() ? "emulator" : "device") + ".");
+      listener.statusNotice("Sketch launched "
+                            + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
     } else {
       listener.statusError("Could not start the sketch.");
     }
