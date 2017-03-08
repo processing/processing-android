@@ -23,10 +23,9 @@
 package processing.event;
 
 /*
-http://developer.android.com/guide/topics/ui/ui-events.html
-http://developer.android.com/reference/android/view/MotionEvent.html
-http://android-developers.blogspot.com/2010/06/making-sense-of-multitouch.html
-http://www.techrepublic.com/blog/app-builder/use-androids-gesture-detector-to-translate-a-swipe-into-an-event/1577
+ * IMPORTANT NOTICE: None of the methods and inner classes in TouchEvent are
+ * part of the Processing API. Don't use them! They might be changed or removed
+ * without notice.
 */
 public class TouchEvent extends Event {
   static public final int START = 1;
