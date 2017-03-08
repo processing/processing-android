@@ -40,7 +40,7 @@ public class TouchEvent extends Event {
   protected int[] pointerId;
   protected float[] pointerX;
   protected float[] pointerY;
-  protected float[] pointerSize;
+  protected float[] pointerArea;
   protected float[] pointerPressure;
 
   public TouchEvent(Object nativeObject, long millis, int action, int modifiers,
@@ -55,16 +55,16 @@ public class TouchEvent extends Event {
     pointerId = new int[n];
     pointerX = new float[n];
     pointerY = new float[n];
-    pointerSize = new float[n];
+    pointerArea = new float[n];
     pointerPressure = new float[n];
  }
 
 
- public void setPointer(int idx, int id, float x, float y, float s, float p) {
+ public void setPointer(int idx, int id, float x, float y, float a, float p) {
    pointerId[idx] = id;
    pointerX[idx] = x;
    pointerY[idx] = y;
-   pointerSize[idx] = s;
+   pointerArea[idx] = a;
    pointerPressure[idx] = p;
  }
 
@@ -79,7 +79,7 @@ public class TouchEvent extends Event {
    pt.id = pointerId[idx];
    pt.x = pointerX[idx];
    pt.y = pointerY[idx];
-   pt.size = pointerSize[idx];
+   pt.area = pointerArea[idx];
    pt.pressure = pointerPressure[idx];
    return pt;
  }
@@ -100,8 +100,8 @@ public class TouchEvent extends Event {
  }
 
 
- public float getPointerSize(int idx) {
-   return pointerSize[idx];
+ public float getPointerArea(int idx) {
+   return pointerArea[idx];
  }
 
 
@@ -126,7 +126,7 @@ public class TouchEvent extends Event {
      touches[idx].id = pointerId[idx];
      touches[idx].x = pointerX[idx];
      touches[idx].y = pointerY[idx];
-     touches[idx].size = pointerSize[idx];
+     touches[idx].area = pointerArea[idx];
      touches[idx].pressure = pointerPressure[idx];
    }
    return touches;
@@ -136,7 +136,7 @@ public class TouchEvent extends Event {
   public class Pointer {
     public int id;
     public float x, y;
-    public float size;
+    public float area;
     public float pressure;
   }
 }
