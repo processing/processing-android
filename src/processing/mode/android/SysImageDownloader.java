@@ -50,10 +50,11 @@ import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SysImageDownloader extends JDialog implements PropertyChangeListener {
-  private static final String URL_SYS_IMAGES = "https://dl-ssl.google.com/android/repository/sys-img/android/sys-img.xml";
-  private static final String URL_SYS_IMAGES_FOLDER = "http://dl-ssl.google.com/android/repository/sys-img/android/";
-  private static final String URL_SYS_IMAGES_WEAR = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/sys-img.xml";
-  private static final String URL_SYS_IMAGES_WEAR_FOLDER = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
+  private static final String SYS_IMAGES_URL = "https://dl-ssl.google.com/android/repository/sys-img/android/";  
+  private static final String SYS_IMAGES_LIST = "sys-img.xml";
+  
+  private static final String SYS_IMAGES_WEAR_URL = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
+  private static final String SYS_IMAGES_WEAR_LIST = "sys-img.xml";
   
   public static final String SYSTEM_IMAGE_TAG = "google_apis";
   private static final String SYSTEM_IMAGE_MACOSX = "Google APIs Intel x86 Atom System Image";  
@@ -114,9 +115,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        String repo = wear ? URL_SYS_IMAGES_WEAR : URL_SYS_IMAGES;
+        String repo = wear ? SYS_IMAGES_URL + SYS_IMAGES_WEAR_LIST : 
+                             SYS_IMAGES_WEAR_URL + SYS_IMAGES_LIST;
         
-        UrlHolder downloadUrls = getDownloadUrls(repo, Platform.getName());
+        UrlHolder downloadUrls = new UrlHolder();
+        getDownloadUrls(downloadUrls, repo, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
@@ -218,10 +221,9 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       }      
     }
     
-    private UrlHolder getDownloadUrls(String repositoryUrl, String requiredHostOs) 
+    private void getDownloadUrls(UrlHolder urlHolder, 
+        String repositoryUrl, String requiredHostOs) 
         throws ParserConfigurationException, IOException, SAXException {
-      UrlHolder urlHolder = new UrlHolder();
-
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = dbf.newDocumentBuilder();
       
@@ -252,7 +254,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
             Node archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
             Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
             urlHolder.sysImgWearFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-            urlHolder.sysImgWearUrl = URL_SYS_IMAGES_WEAR_FOLDER + urlHolder.sysImgWearFilename;
+            urlHolder.sysImgWearUrl = SYS_IMAGES_WEAR_URL + urlHolder.sysImgWearFilename;
             urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
             break;
           }
@@ -284,14 +286,12 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
             Node archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
             Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
             urlHolder.sysImgFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-            urlHolder.sysImgUrl = URL_SYS_IMAGES_FOLDER + urlHolder.sysImgFilename;
+            urlHolder.sysImgUrl = SYS_IMAGES_URL + urlHolder.sysImgFilename;
             urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
             break;
           }
-        }          
+        }
       }
-      
-      return urlHolder;
     }
   }
 
