@@ -28,7 +28,6 @@ cp $ANDROID_SDK/extras/google/m2repository/com/google/android/support/wearable/$
 unzip wearable-$version.aar -d wearable
 
 cp wearable/classes.jar ../core/library/wearable-$version.jar
-cp wearable/classes.jar ../mode/wearable-$version.jar
 
 # Remove left over files
 rm -Rf wearable
