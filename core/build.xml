@@ -10,7 +10,7 @@
   <property name="core.jar.path" value="../android-core.zip" />
 
   <!-- Android platform to build the core library -->
-  <property name="android.platform" value="android-23" />
+  <property name="android.platform" value="android-25" />
 
   <!-- Wear version to build the core library -->
   <property name="wear.version" value="2.0.0" />	
