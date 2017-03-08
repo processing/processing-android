@@ -54,10 +54,13 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String REPOSITORY_LIST = "repository-11.xml";
   private static final String ADDON_LIST = "addon.xml";
   
-  // The Android Support Repository does not include the android-support-v4 jar
-  // file, so downloading the latest support library package available.
+  // The Android Support Repository does not seem to include the 
+  // android-support-v4 jar file, even somewhere inside the aar packages, so 
+  // downloading the latest support library package available.
   // More info on the Support Library and latest releases:
   // https://developer.android.com/topic/libraries/support-library/index.html
+  // This probably needs to be fixed so the Support Repository is used moving 
+  // forward.
   private static final String LEGACY_SUPPORT_LIBRARY = "support_r23.2.1.zip";
   private static final int SUPPORT_LIBRARY_SIZE = 10850402;
   

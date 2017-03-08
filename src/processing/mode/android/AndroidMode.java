@@ -29,6 +29,7 @@ import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
+import processing.app.Util;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -442,6 +443,21 @@ public class AndroidMode extends JavaMode {
     zip.close();
   }
 
+  
+  static public void explodeAar(File wearFile, File explodeDir, File jarFile) 
+      throws IOException {
+    explodeAar(wearFile, explodeDir, jarFile, true);
+  }
+  
+  
+  static public void explodeAar(File wearFile, File explodeDir, File jarFile, 
+      boolean removeDir) throws IOException {
+    extractFolder(wearFile, explodeDir, false);
+    File classFile = new File(explodeDir, "classes.jar");
+    Util.copyFile(classFile, jarFile);
+    Util.removeDir(explodeDir);
+  }
+  
 
   static public void showMessage(String title, String text) {
     if (title == null) title = "Message";

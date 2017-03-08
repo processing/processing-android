@@ -55,6 +55,8 @@ class AndroidSDK {
   private final File platformTools;
   private final File buildTools;
   private final File androidTool;
+  private final File wearablePath;
+  private final File supportLibPath;
 
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
@@ -146,6 +148,16 @@ class AndroidSDK {
     if (!androidJar.exists()) {
       throw new BadSDKException("android.jar for plaform " + 
                                 AndroidBuild.target_sdk + " is missing from " + targetPlatform.getAbsolutePath());
+    }
+    
+    wearablePath = new File(folder, "extras/google/m2repository/com/google/android/support/wearable");
+    if (!wearablePath.exists()) {
+      throw new BadSDKException("There is no wearable folder in " + folder);
+    }
+    
+    supportLibPath = new File(folder, "extras/android/support");
+    if (!supportLibPath.exists()) {
+      throw new BadSDKException("There is no support library folder in " + folder);
     }
     
     androidTool = findAndroidTool(tools);
@@ -251,6 +263,16 @@ class AndroidSDK {
     return platformTools;
   }
 
+  
+  public File getWearableFolder() {
+    return wearablePath;
+  }
+  
+
+  public File getSupportLibrary() {
+    return supportLibPath;
+  } 
+  
 
   /**
    * Checks a path to see if there's a tools/android file inside, a rough check

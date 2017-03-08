@@ -310,11 +310,17 @@ class AndroidBuild extends JavaBuild {
         // Need to add appcompat as a library project (includes v4 support)
         
         ////////////////////////////////////////////////////////////////////////
-        // first step: unpack the cardboard packages in the project's 
-        // libs folder:        
-        File appCompatFile = mode.getContentFile("mode/appcompat.zip");
-        AndroidMode.extractFolder(appCompatFile, libsFolder, true);        
+        // first step: copy appcompat library project 
+        
+        // TODO: the support-v7 library project should be copied from the Android 
+        // Support Repository, and not from the Support Library.
+        File appCompatFolderSrc = new File(sdk.getSupportLibrary(), "v7/appcompat");
+        // Delete the project.properties files because Processing will regenerate 
+        // it when building the project
+        File propFile = new File(appCompatFolderSrc, "project.properties");
+        propFile.delete();
         File appCompatFolder = new File(libsFolder, "appcompat");
+        Util.copyDir(appCompatFolderSrc, appCompatFolder);
 
         ////////////////////////////////////////////////////////////////////////
         // second step: create library projects
@@ -339,7 +345,7 @@ class AndroidBuild extends JavaBuild {
       } else {
         // Copy the v4 support package only, needed for the permission handling
         // in all other components
-        File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+        File compatJarFile = new File(sdk.getSupportLibrary(), "v4/android-support-v4.jar");
         Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));        
       }
       
@@ -349,9 +355,9 @@ class AndroidBuild extends JavaBuild {
       // cannot be resolved.
       // TODO: temporary hack until I find a better way to include the wearable aar
       // package included in the SDK:      
-      File wearJarFile = mode.getContentFile("mode/wearable-" + wear_version + ".jar");
-//      System.out.println(wearJarFile.toString());
-      Util.copyFile(wearJarFile, new File(libsFolder, "wearable-" + wear_version + ".jar"));
+      File wearAarFile = new File(sdk.getWearableFolder(), wear_version + "/wearable-" + wear_version + ".aar");
+      File explodeDir = new File(tmpFolder, "aar");
+      AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));
 //    }      
       
       // Copy any imported libraries (their libs and assets),
@@ -472,7 +478,7 @@ class AndroidBuild extends JavaBuild {
         
     // Copy the compatibility package, needed for the permission handling
     final File libsFolder = mkdirs(tmpFolder, "libs");
-    File compatJarFile = mode.getContentFile("mode/android-support-v4.jar");
+    File compatJarFile = new File(sdk.getSupportLibrary(), "v4/android-support-v4.jar");
     Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
     
     // Create manifest file
