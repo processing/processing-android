@@ -34,7 +34,7 @@
                   lib/gvr-common.jar;
                   lib/gvr-audio.jar;
 	              ../../android-core.zip;
-	              ${env.ANDROID_SDK}/platforms/android-23/android.jar"
+	              ${env.ANDROID_SDK}/platforms/android-25/android.jar"
 	   nowarn="true"
 	   compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
       <compilerclasspath path="../../../processing/java/mode/org.eclipse.jdt.core.jar;
