@@ -50,8 +50,15 @@ import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-  private static final String REPOSITORY_URL = "http://dl-ssl.google.com/android/repository/";
-  private static final String REPOSITORY_LIST = "repository-11.xml";
+  // Version 25.3.1 of the SDK tools break the mode, since the android tool
+  // no longer works:
+  // https://code.google.com/p/android/issues/detail?id=235455
+  // as well as removing the ant scripts.
+  // https://code.google.com/p/android/issues/detail?id=235410
+  // See release notes:
+  // https://developer.android.com/studio/releases/sdk-tools.html  
+  private static final String REPOSITORY_URL = "https://dl.google.com/android/repository/";
+  private static final String REPOSITORY_LIST = "repository-12.xml";
   private static final String ADDON_LIST = "addon.xml";
   
   // The Android Support Repository does not seem to include the 

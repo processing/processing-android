@@ -50,10 +50,10 @@ import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SysImageDownloader extends JDialog implements PropertyChangeListener {
-  private static final String SYS_IMAGES_URL = "https://dl-ssl.google.com/android/repository/sys-img/android/";  
+  private static final String SYS_IMAGES_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
   private static final String SYS_IMAGES_LIST = "sys-img.xml";
   
-  private static final String SYS_IMAGES_WEAR_URL = "https://dl-ssl.google.com/android/repository/sys-img/android-wear/";
+  private static final String SYS_IMAGES_WEAR_URL = "https://dl.google.com/android/repository/sys-img/android-wear/";
   private static final String SYS_IMAGES_WEAR_LIST = "sys-img.xml";
   
   public static final String SYSTEM_IMAGE_TAG = "google_apis";
@@ -115,8 +115,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        String repo = wear ? SYS_IMAGES_URL + SYS_IMAGES_WEAR_LIST : 
-                             SYS_IMAGES_WEAR_URL + SYS_IMAGES_LIST;
+        String repo = wear ? SYS_IMAGES_WEAR_URL + SYS_IMAGES_WEAR_LIST : 
+                             SYS_IMAGES_URL + SYS_IMAGES_LIST;
         
         UrlHolder downloadUrls = new UrlHolder();
         getDownloadUrls(downloadUrls, repo, Platform.getName());
