@@ -119,7 +119,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
         getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());        
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
-        totalSize = downloadUrls.totalSize + SUPPORT_LIBRARY_SIZE;
 
         // tools
         File downloadedTools = new File(tempFolder, downloadUrls.toolsFilename);
