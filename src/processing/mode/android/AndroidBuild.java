@@ -311,30 +311,35 @@ class AndroidBuild extends JavaBuild {
         }
       } catch (InterruptedException e) {}       
       
-      File wearAarFile, explodeDir; 
+      File aarFile, explodeDir; 
       
       // The wear jar is needed even when the app is not a watch face, because on
       // devices with android < 5 the dependencies of the PWatchFace* classes
       // cannot be resolved.
       // TODO: temporary hack until I find a better way to include the wearable aar
       // package included in the SDK:      
-      wearAarFile = new File(sdk.getWearableFolder(), wear_version + "/wearable-" + wear_version + ".aar");
+      aarFile = new File(sdk.getWearableFolder(), wear_version + "/wearable-" + wear_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));      
+      AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));      
       
-      // Copy support packages (core-utils, compat, fragment, and annotations)
-      wearAarFile = new File(sdk.getSupportLibrary(), "/support-core-utils/" + support_version + "/support-core-utils-" + support_version + ".aar");
+      // Copy support packages (core-utils, compat, fragment, annotations, and 
+      // vector-drawable)
+      aarFile = new File(sdk.getSupportLibrary(), "/support-core-utils/" + support_version + "/support-core-utils-" + support_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "support-core-utils-" + support_version + ".jar"));
+      AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-core-utils-" + support_version + ".jar"));
       
-      wearAarFile = new File(sdk.getSupportLibrary(), "/support-compat/" + support_version + "/support-compat-" + support_version + ".aar");
+      aarFile = new File(sdk.getSupportLibrary(), "/support-compat/" + support_version + "/support-compat-" + support_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "support-compat-" + support_version + ".jar"));
+      AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-compat-" + support_version + ".jar"));
       
-      wearAarFile = new File(sdk.getSupportLibrary(), "/support-fragment/" + support_version + "/support-fragment-" + support_version + ".aar");
+      aarFile = new File(sdk.getSupportLibrary(), "/support-fragment/" + support_version + "/support-fragment-" + support_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "support-fragment-" + support_version + ".jar"));
+      AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-fragment-" + support_version + ".jar"));
 
+      aarFile = new File(sdk.getSupportLibrary(), "/support-vector-drawable/" + support_version + "/support-vector-drawable-" + support_version + ".aar");
+      explodeDir = new File(tmpFolder, "aar");
+      AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-vector-drawable-" + support_version + ".jar"));
+      
       File compatJarFile = new File(sdk.getSupportLibrary(), "/support-annotations/" + support_version + "/support-annotations-" + support_version + ".jar");
       Util.copyFile(compatJarFile, new File(libsFolder, "support-annotations-" + support_version + ".jar"));  
       
@@ -342,9 +347,9 @@ class AndroidBuild extends JavaBuild {
         ////////////////////////////////////////////////////////////////////////
         // first step: extract appcompat library project 
         
-        wearAarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");        
+        aarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");        
         File appCompatFolder = new File(libsFolder, "appcompat");
-        AndroidMode.extractFolder(wearAarFile, appCompatFolder, false);
+        AndroidMode.extractFolder(aarFile, appCompatFolder, false);
         Util.removeDir(new File(appCompatFolder, "aidl"));
         Util.removeDir(new File(appCompatFolder, "android"));
         Util.removeDir(new File(appCompatFolder, "assets"));
@@ -354,28 +359,6 @@ class AndroidBuild extends JavaBuild {
         File appCompatJar = new File(appCompatLibsFolder, "android-support-v7-appcompat.jar");
         Util.copyFile(classesJar, appCompatJar);
         classesJar.delete();
-        
-        // remove aidl
-        // remove android
-        // remove annotations
-        // remove assets
-        // move classes.jar to libs as android-support-v7-appcompat.jar
-        // remove jni
-        
-        
-        /*
-        // Need to add appcompat as a library project (includes v4 support)
-        
-        // TODO: the support-v7 library project should be copied from the Android 
-        // Support Repository, and not from the Support Library.
-        File appCompatFolderSrc = new File(sdk.getSupportLibrary(), "v7/appcompat");
-        // Delete the project.properties files because Processing will regenerate 
-        // it when building the project
-        File propFile = new File(appCompatFolderSrc, "project.properties");
-        propFile.delete();
-        File appCompatFolder = new File(libsFolder, "appcompat");
-        Util.copyDir(appCompatFolderSrc, appCompatFolder);
-*/ 
         
         ////////////////////////////////////////////////////////////////////////
         // second step: create library projects
@@ -397,7 +380,6 @@ class AndroidBuild extends JavaBuild {
             writeBuildXML(appCompatBuildFile, "appcompat");
           }
         }
-         
       }
       
       // Copy any imported libraries (their libs and assets),
