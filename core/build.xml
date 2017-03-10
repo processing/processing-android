@@ -15,6 +15,9 @@
   <!-- Wear version to build the core library -->
   <property name="wear.version" value="2.0.0" />	
 	
+  <!-- Support version to build the core library -->
+  <property name="support.version" value="25.2.0" />	
+	
   <!-- oh ant, you're so cute and convoluted -->
   <target name="build" depends="sdk_chatter,actual_build" />
 
@@ -41,7 +44,9 @@
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
 	   bootclasspath="${env.ANDROID_SDK}/platforms/${android.platform}/android.jar;
-    	              library/android-support-v4.jar;
+    	              library/support-compat-${support.version}.jar;
+    	              library/support-fragment-${support.version}.jar;
+    	              library/support-annotations-${support.version}.jar;
 	                  library/wearable-${wear.version}.jar"
 	   srcdir="src" destdir="bin" />
 

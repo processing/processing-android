@@ -155,7 +155,7 @@ class AndroidSDK {
       throw new BadSDKException("There is no wearable folder in " + folder);
     }
     
-    supportLibPath = new File(folder, "extras/android/support");
+    supportLibPath = new File(folder, "extras/android/m2repository/com/android/support");
     if (!supportLibPath.exists()) {
       throw new BadSDKException("There is no support library folder in " + folder);
     }
