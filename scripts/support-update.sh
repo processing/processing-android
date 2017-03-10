@@ -6,13 +6,6 @@
 
 version=$1
 
-# support-core-utils
-cp $ANDROID_SDK/extras/android/m2repository/com/android/support/support-core-utils/$version/support-core-utils-$version.aar .
-unzip support-core-utils-$version.aar -d support-core-utils
-cp support-core-utils/classes.jar ../core/library/support-core-utils-$version.jar
-rm -Rf support-core-utils
-rm support-core-utils-$version.aar
-
 # support-compat
 cp $ANDROID_SDK/extras/android/m2repository/com/android/support/support-compat/$version/support-compat-$version.aar .
 unzip support-compat-$version.aar -d support-compat
