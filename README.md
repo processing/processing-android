@@ -1,8 +1,4 @@
 Processing for Android
 ======================
 
-#New architecture branch
-
-This branch is meant to test the new architecture that will allow different app publishing options (fragment-based apps, wallpaper, watchfaces, etc)
-
-It is highly experimental and very likely will break your code, don't use it unless you want to help us with debugging.
+This is the main repository for Processing for Android. It includes the core library inside the core folder, and the mode itself in the root. See the [wiki](https://github.com/processing/processing-android/wiki) for build instructions.
