@@ -99,9 +99,12 @@ class AndroidBuild extends JavaBuild {
   static public final String target_sdk      = "25";  // Nougat (7.1.1)
   static public final String target_platform = "android-" + target_sdk;
 
-  // Versions of Support, AppCompatn, Wear and VR in use
+  // Versions of Support, AppCompat, Wear and VR in use
+  // All of these are hard-coded, as the target_sdk. Should obtained from the
+  // repository files? Or users being able to change them in the preferences 
+  // file?
   static public final String support_version = "25.2.0";
-  static public final String appcompat_version = "25.2.0";
+  static public final String play_services_version = "10.2.0";  
   static public final String wear_version = "2.0.0";
   static public final String gvr_sdk_version = "1.20.0";
   
@@ -317,26 +320,84 @@ class AndroidBuild extends JavaBuild {
       // package included in the SDK:      
       wearAarFile = new File(sdk.getWearableFolder(), wear_version + "/wearable-" + wear_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));      
+      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));      
       
-      // Copy support packages (compat, fragment, and annotations)      
+      // Copy support packages (core-utils, compat, fragment, and annotations)
+      wearAarFile = new File(sdk.getSupportLibrary(), "/support-core-utils/" + support_version + "/support-core-utils-" + support_version + ".aar");
+      explodeDir = new File(tmpFolder, "aar");
+      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "support-core-utils-" + support_version + ".jar"));
+      
       wearAarFile = new File(sdk.getSupportLibrary(), "/support-compat/" + support_version + "/support-compat-" + support_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "support-compat-" + support_version + ".jar"));
+      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "support-compat-" + support_version + ".jar"));
       
       wearAarFile = new File(sdk.getSupportLibrary(), "/support-fragment/" + support_version + "/support-fragment-" + support_version + ".aar");
       explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "support-fragment-" + support_version + ".jar"));
+      AndroidMode.extractClassesJarFromAar(wearAarFile, explodeDir, new File(libsFolder, "support-fragment-" + support_version + ".jar"));
 
-      wearAarFile = new File(sdk.getSupportLibrary(), "/support-annotations/" + support_version + "/support-annotations-" + support_version + ".aar");
-      explodeDir = new File(tmpFolder, "aar");
-      AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "support-annotations-" + support_version + ".jar"));      
+      File compatJarFile = new File(sdk.getSupportLibrary(), "/support-annotations/" + support_version + "/support-annotations-" + support_version + ".jar");
+      Util.copyFile(compatJarFile, new File(libsFolder, "support-annotations-" + support_version + ".jar"));  
       
       if (getAppComponent() == FRAGMENT) {
-        // Copy support appcompat-v7 package
-        wearAarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + appcompat_version + ".aar");
-        explodeDir = new File(tmpFolder, "aar");
-        AndroidMode.explodeAar(wearAarFile, explodeDir, new File(libsFolder, "appcompat-v7-" + appcompat_version + ".jar"));      
+        ////////////////////////////////////////////////////////////////////////
+        // first step: extract appcompat library project 
+        
+        wearAarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");        
+        File appCompatFolder = new File(libsFolder, "appcompat");
+        AndroidMode.extractFolder(wearAarFile, appCompatFolder, false);
+        Util.removeDir(new File(appCompatFolder, "aidl"));
+        Util.removeDir(new File(appCompatFolder, "android"));
+        Util.removeDir(new File(appCompatFolder, "assets"));
+        File classesJar = new File(appCompatFolder, "classes.jar");
+        File appCompatLibsFolder = new File(appCompatFolder, "/libs");
+        if (!appCompatLibsFolder.exists()) appCompatLibsFolder.mkdir();        
+        File appCompatJar = new File(appCompatLibsFolder, "android-support-v7-appcompat.jar");
+        Util.copyFile(classesJar, appCompatJar);
+        classesJar.delete();
+        
+        // remove aidl
+        // remove android
+        // remove annotations
+        // remove assets
+        // move classes.jar to libs as android-support-v7-appcompat.jar
+        // remove jni
+        
+        
+        /*
+        // Need to add appcompat as a library project (includes v4 support)
+        
+        // TODO: the support-v7 library project should be copied from the Android 
+        // Support Repository, and not from the Support Library.
+        File appCompatFolderSrc = new File(sdk.getSupportLibrary(), "v7/appcompat");
+        // Delete the project.properties files because Processing will regenerate 
+        // it when building the project
+        File propFile = new File(appCompatFolderSrc, "project.properties");
+        propFile.delete();
+        File appCompatFolder = new File(libsFolder, "appcompat");
+        Util.copyDir(appCompatFolderSrc, appCompatFolder);
+*/ 
+        
+        ////////////////////////////////////////////////////////////////////////
+        // second step: create library projects
+        boolean appCompatRes = createLibraryProject("appcompat", targetID, 
+            appCompatFolder.getAbsolutePath(), "android.support.v7.appcompat");
+
+        ////////////////////////////////////////////////////////////////////////
+        // third step: reference library projects from main project        
+        if (appCompatRes) {
+          System.out.println("Library project created succesfully in " + libsFolder.toString());
+          appCompatRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/appcompat");
+          if (appCompatRes) {
+            System.out.println("Library project referenced succesfully!");
+            // Finally, re-write the build files so they use org.eclipse.jdt.core.JDTCompilerAdapter
+            // instead of com.sun.tools.javac.Main
+            // TODO: use the build file generated by the android tools, and 
+            // add the custom section redefining the target
+            File appCompatBuildFile = new File(appCompatFolder, "build.xml");
+            writeBuildXML(appCompatBuildFile, "appcompat");
+          }
+        }
+         
       }
       
       // Copy any imported libraries (their libs and assets),
@@ -535,7 +596,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@version_code@@", versionCode);
     replaceMap.put("@@version_name@@", versionName);
-    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);
+    replaceMap.put("@@min_sdk@@", min_sdk_handheld);
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@uses_permissions@@", usesPermissions);
         
@@ -1577,8 +1638,9 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
-    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
-    replaceMap.put("@@wear_version@@", wear_version);
+    replaceMap.put("@@target_sdk@@", target_sdk);
+    replaceMap.put("@@support_version@@", support_version);    
+    replaceMap.put("@@wear_version@@", wear_version);        
     replaceMap.put("@@gvr_version@@", gvr_sdk_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
@@ -1615,8 +1677,9 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
-    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_handheld);    
-    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);
+    replaceMap.put("@@min_sdk@@", min_sdk_handheld);    
+    replaceMap.put("@@target_sdk@@", target_sdk);    
+    replaceMap.put("@@play_services_version@@", play_services_version);
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
@@ -1644,8 +1707,9 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
-    replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);    
-    replaceMap.put("@@target_sdk@@", AndroidBuild.target_sdk);    
+    replaceMap.put("@@min_sdk@@", min_sdk_watchface);    
+    replaceMap.put("@@target_sdk@@", target_sdk);
+    replaceMap.put("@@play_services_version@@", play_services_version);
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());

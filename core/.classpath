@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="library/support-annotations-25.2.0.jar"/>
 	<classpathentry kind="lib" path="library/support-compat-25.2.0.jar"/>
 	<classpathentry kind="lib" path="library/support-fragment-25.2.0.jar"/>
+	<classpathentry kind="lib" path="library/support-core-utils-25.2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

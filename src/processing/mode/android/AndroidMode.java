@@ -444,14 +444,14 @@ public class AndroidMode extends JavaMode {
   }
 
   
-  static public void explodeAar(File wearFile, File explodeDir, File jarFile) 
-      throws IOException {
-    explodeAar(wearFile, explodeDir, jarFile, true);
+  static public void extractClassesJarFromAar(File wearFile, File explodeDir, 
+      File jarFile) throws IOException {
+    extractClassesJarFromAar(wearFile, explodeDir, jarFile, true);
   }
   
   
-  static public void explodeAar(File wearFile, File explodeDir, File jarFile, 
-      boolean removeDir) throws IOException {
+  static public void extractClassesJarFromAar(File wearFile, File explodeDir, 
+      File jarFile, boolean removeDir) throws IOException {
     extractFolder(wearFile, explodeDir, false);
     File classFile = new File(explodeDir, "classes.jar");
     Util.copyFile(classFile, jarFile);
