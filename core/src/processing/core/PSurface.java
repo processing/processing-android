@@ -64,7 +64,8 @@ public interface PSurface {
   public void setRootView(View view);
 
   public void initView(int sketchWidth, int sketchHeight);
-  public void initView(LayoutInflater inflater, ViewGroup container,
+  public void initView(int sketchWidth, int sketchHeight, boolean parentSize,
+                       LayoutInflater inflater, ViewGroup container,
                        Bundle savedInstanceState);
 
   public void startActivity(Intent intent);

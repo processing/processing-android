@@ -240,20 +240,31 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   @Override
-  public void initView(LayoutInflater inflater, ViewGroup container,
+  public void initView(int sketchWidth, int sketchHeight, boolean parentSize,
+                       LayoutInflater inflater, ViewGroup container,
                        Bundle savedInstanceState) {
     // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
     ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
 
     View view = getSurfaceView();
-    LinearLayout.LayoutParams lp;
-    lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                                       LayoutParams.MATCH_PARENT);
-    lp.weight = 1.0f;
-    lp.setMargins(0, 0, 0, 0);
-    view.setPadding(0,0,0,0);
-    rootView.addView(view, lp);
+    if (parentSize) {
+      LinearLayout.LayoutParams lp;
+      lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                                         LayoutParams.MATCH_PARENT);
+      lp.weight = 1.0f;
+      lp.setMargins(0, 0, 0, 0);
+      view.setPadding(0,0,0,0);
+      rootView.addView(view, lp);
+    } else {
+      RelativeLayout layout = new RelativeLayout(activity);
+      RelativeLayout.LayoutParams lp =
+        new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                                        ViewGroup.LayoutParams.WRAP_CONTENT);
+      lp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
+      layout.addView(view, sketchWidth, sketchHeight);
+      rootView.addView(layout, lp);
+    }
     rootView.setBackgroundColor(sketch.sketchWindowColor());
     setRootView(rootView);
   }

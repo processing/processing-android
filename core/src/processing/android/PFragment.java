@@ -22,6 +22,8 @@
 
 package processing.android;
 
+import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -47,11 +49,15 @@ public class PFragment extends Fragment implements AppComponent {
   public PFragment() {
   }
 
-  public void init(int layout, FragmentManager fragmentManager) {
-    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    fragmentTransaction.add(layout, this);
-    fragmentTransaction.commit();
-  }
+//  public void setLayout(int layout, FragmentManager manager) {
+//    this.layout = layout;
+//    if (sketch != null) {
+//      sketch.parentLayout = layout;
+//    }
+//    FragmentTransaction transaction = manager.beginTransaction();
+//    transaction.add(layout, this);
+//    transaction.commit();
+//  }
 
   public void initDimensions() {
     WindowManager wm = getActivity().getWindowManager();
@@ -96,6 +102,15 @@ public class PFragment extends Fragment implements AppComponent {
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
+  }
+
+  public void setSketch(PApplet sketch, @IdRes int id, @LayoutRes int layout,
+                        FragmentManager manager) {
+    this.sketch = sketch;
+    sketch.parentLayout = layout;
+    FragmentTransaction transaction = manager.beginTransaction();
+    transaction.add(id, this);
+    transaction.commit();
   }
 
   public PApplet getSketch() {

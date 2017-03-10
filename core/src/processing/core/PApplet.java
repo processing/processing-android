@@ -42,6 +42,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.wallpaper.WallpaperService;
+import android.support.annotation.LayoutRes;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -65,7 +66,7 @@ public class PApplet extends Object implements PConstants {
   /**
    * The view group containing the surface view of the PApplet.
    */
-  public int parentLayout = -1;
+  public @LayoutRes int parentLayout = -1;
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
@@ -469,6 +470,7 @@ public class PApplet extends Object implements PConstants {
 
     handleSettings();
 
+    boolean parentSize = false;
     if (parentLayout == -1) {
       if (fullScreen || width == -1 || height == -1) {
         // Either sketch explicitly set to full-screen mode, or not
@@ -477,10 +479,13 @@ public class PApplet extends Object implements PConstants {
         height = displayHeight;
       }
     } else {
-      // Dummy weight and height to initialize the PGraphics, will be resized
-      // when the view associated to the parent layout is created
-      width = 100;
-      height = 100;
+      if (fullScreen || width == -1 || height == -1) {
+        // Dummy weight and height to initialize the PGraphics, will be resized
+        // when the view associated to the parent layout is created
+        width = 100;
+        height = 100;
+        parentSize = true;
+      }
     }
 
     String rendererName = sketchRenderer();
@@ -501,27 +506,8 @@ public class PApplet extends Object implements PConstants {
       setFullScreenVisibility();
       surface.initView(width, height);
     } else {
-      surface.initView(inflater, container, savedInstanceState);
-
-      /*
-      final View parent = surface.getRootView();
-      parent.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-        @SuppressWarnings("deprecation")
-        @Override
-        public void onGlobalLayout() {
-          int availableWidth = parent.getMeasuredWidth();
-          int availableHeight = parent.getMeasuredHeight();
-          if (availableHeight > 0 && availableWidth > 0) {
-            System.err.println(availableWidth + " " + availableHeight);
-            if (SDK < Build.VERSION_CODES.JELLY_BEAN) {
-              parent.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-            } else {
-              parent.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-          }
-        }
-      });
-      */
+      surface.initView(width, height, parentSize,
+                       inflater, container, savedInstanceState);
     }
 
     finished = false; // just for clarity
@@ -1255,7 +1241,7 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void layout(int ilayout) {
+  public void layout(@LayoutRes int ilayout) {
     if (ilayout != this.parentLayout) {
       if (insideSettings("layout", ilayout)) {
         this.parentLayout = ilayout;
@@ -1264,7 +1250,7 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void layout(int ilayout, String irenderer) {
+  public void layout(@LayoutRes int ilayout, String irenderer) {
     if (ilayout != this.parentLayout ||
         !this.renderer.equals(irenderer)) {
       if (insideSettings("layout", ilayout, irenderer)) {
