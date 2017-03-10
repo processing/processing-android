@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -33,9 +33,9 @@ import android.view.Display;
 import android.graphics.Point;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
-  protected Point size;
+  private Point size;
   private DisplayMetrics metrics;
-  protected WallpaperEngine engine;
+  private WallpaperEngine engine;
 
 
   public void initDimensions() {
@@ -140,8 +140,9 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
-  public class WallpaperEngine extends Engine {
-    protected PApplet sketch;
+  public class WallpaperEngine extends Engine implements ServiceEngine {
+    private PApplet sketch;
+    private float xOffset, xOffsetStep;
 
 
     @Override
@@ -210,6 +211,9 @@ public class PWallpaper extends WallpaperService implements AppComponent {
                                  int xPixelOffset, int yPixelOffset) {
 
       if (sketch != null) {
+        this.xOffset = xOffset;
+        this.xOffsetStep = xOffsetStep;
+
         sketch.homeScreenOffset = xOffset;
         if (0 < xOffsetStep) {
           sketch.homeScreenCount = (int)(1 + 1 / xOffsetStep);
@@ -237,6 +241,70 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       if (sketch != null) {
         sketch.onDestroy();
       }
+    }
+
+
+    @Override
+    public float homeScreenOffset() {
+      return xOffset;
+    }
+
+
+    @Override
+    public int homeScreenCount() {
+      if (0 < xOffsetStep) {
+        return (int)(1 + 1 / xOffsetStep);
+      } else {
+        return 1;
+      }
+    }
+
+
+    @Override
+    public boolean ambientMode() {
+      return false;
+    }
+
+
+    @Override
+    public boolean isRound() {
+      return false;
+    }
+
+
+    @Override
+    public int insetLeft() {
+      return 0;
+    }
+
+
+    @Override
+    public int insetRight() {
+      return 0;
+    }
+
+
+    @Override
+    public int insetTop() {
+      return 0;
+    }
+
+
+    @Override
+    public int insetBottom() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean lowBitAmbient() {
+      return false;
+    }
+
+
+    @Override
+    public boolean burnInProtection() {
+      return false;
     }
   }
 }

@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -44,9 +44,9 @@ import processing.core.PApplet;
 import processing.event.MouseEvent;
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
-  protected Point size;
+  private Point size;
   private DisplayMetrics metrics;
-  protected CanvasEngine engine;
+  private CanvasEngine engine;
 
 
   public void initDimensions() {
@@ -154,9 +154,16 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
 
-  private class CanvasEngine extends CanvasWatchFaceService.Engine {
+  private class CanvasEngine extends CanvasWatchFaceService.Engine implements ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
+    private boolean isRound = false;
+    private int insetLeft = 0;
+    private int insetRight = 0;
+    private int insetTop = 0;
+    private int insetBottom = 0;
+    private boolean lowBitAmbient = false;
+    private boolean burnInProtection = false;
 
     @SuppressWarnings("deprecation")
     @Override
@@ -213,6 +220,8 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onPropertiesChanged(Bundle properties) {
       super.onPropertiesChanged(properties);
+      lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+      burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
       if (sketch != null) {
         sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
         sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
@@ -223,6 +232,11 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onApplyWindowInsets(WindowInsets insets) {
       super.onApplyWindowInsets(insets);
+      isRound = insets.isRound();
+      insetLeft = insets.getSystemWindowInsetLeft();
+      insetRight = insets.getSystemWindowInsetRight();
+      insetTop = insets.getSystemWindowInsetTop();
+      insetBottom = insets.getSystemWindowInsetBottom();
       if (sketch != null) {
         sketch.isRound = insets.isRound();
         sketch.insetLeft = insets.getSystemWindowInsetLeft();
@@ -361,6 +375,66 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onDestroy() {
       super.onDestroy();
       if (sketch != null) sketch.onDestroy();
+    }
+
+
+    @Override
+    public float homeScreenOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public int homeScreenCount() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean ambientMode() {
+      return isInAmbientMode();
+    }
+
+
+    @Override
+    public boolean isRound() {
+      return isRound;
+    }
+
+
+    @Override
+    public int insetLeft() {
+      return insetLeft;
+    }
+
+
+    @Override
+    public int insetRight() {
+      return insetRight;
+    }
+
+
+    @Override
+    public int insetTop() {
+      return insetTop;
+    }
+
+
+    @Override
+    public int insetBottom() {
+      return insetBottom;
+    }
+
+
+    @Override
+    public boolean lowBitAmbient() {
+      return lowBitAmbient;
+    }
+
+
+    @Override
+    public boolean burnInProtection() {
+      return burnInProtection;
     }
   }
 }

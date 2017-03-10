@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -42,9 +42,9 @@ import java.lang.reflect.Method;
 import android.graphics.Rect;
 
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
-  protected Point size;
+  private Point size;
   private DisplayMetrics metrics;
-  protected GLES2Engine engine;
+  private GLES2Engine engine;
 
 
   public void initDimensions() {
@@ -152,9 +152,17 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
-  private class GLES2Engine extends Gles2WatchFaceService.Engine {
+  private class GLES2Engine extends Gles2WatchFaceService.Engine implements
+  ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
+    private boolean isRound = false;
+    private int insetLeft = 0;
+    private int insetRight = 0;
+    private int insetTop = 0;
+    private int insetBottom = 0;
+    private boolean lowBitAmbient = false;
+    private boolean burnInProtection = false;
 
 
     @SuppressWarnings("deprecation")
@@ -175,6 +183,24 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     }
 
 
+    @Override
+    public void onGlContextCreated() {
+      super.onGlContextCreated();
+    }
+
+
+    @Override
+    public void onGlSurfaceCreated(int width, int height) {
+      super.onGlSurfaceCreated(width, height);
+      if (sketch != null) {
+        sketch.displayWidth = width;
+        sketch.displayHeight = height;
+        sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
+        sketch.surfaceChanged();
+      }
+    }
+
+
     private void initComplications() {
       try {
         compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
@@ -192,20 +218,9 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     }
 
 
-    @Override
-    public void onGlContextCreated() {
-      super.onGlContextCreated();
-    }
-
-
-    @Override
-    public void onGlSurfaceCreated(int width, int height) {
-      super.onGlSurfaceCreated(width, height);
+    public void onPermissionsGranted() {
       if (sketch != null) {
-        sketch.displayWidth = width;
-        sketch.displayHeight = height;
-        sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
-        sketch.surfaceChanged();
+        sketch.onPermissionsGranted();
       }
     }
 
@@ -358,10 +373,63 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     }
 
 
-    public void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
-      }
+    @Override
+    public float homeScreenOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public int homeScreenCount() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean ambientMode() {
+      return isInAmbientMode();
+    }
+
+
+    @Override
+    public boolean isRound() {
+      return isRound;
+    }
+
+
+    @Override
+    public int insetLeft() {
+      return insetLeft;
+    }
+
+
+    @Override
+    public int insetRight() {
+      return insetRight;
+    }
+
+
+    @Override
+    public int insetTop() {
+      return insetTop;
+    }
+
+
+    @Override
+    public int insetBottom() {
+      return insetBottom;
+    }
+
+
+    @Override
+    public boolean lowBitAmbient() {
+      return lowBitAmbient;
+    }
+
+
+    @Override
+    public boolean burnInProtection() {
+      return burnInProtection;
     }
   }
 }

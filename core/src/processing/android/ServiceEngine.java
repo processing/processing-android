@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016-17 The Processing Foundation
+  Copyright (c) 2017 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,28 +22,23 @@
 
 package processing.android;
 
-import android.content.Intent;
-import processing.core.PApplet;
 import processing.core.PConstants;
 
-abstract public interface AppComponent extends PConstants {
-  static public final int FRAGMENT  = 0;
-  static public final int WALLPAPER = 1;
-  static public final int WATCHFACE = 2;
+public interface ServiceEngine extends PConstants {
+  // Live wallpapers
+  public boolean isPreview();
+  public float homeScreenOffset();
+  public int homeScreenCount();
 
-  public void initDimensions();
-  public int getDisplayWidth();
-  public int getDisplayHeight();
-  public float getDisplayDensity();
-  public int getKind();
-  public void setSketch(PApplet sketch);
-  public PApplet getSketch();
+  // Watch faces
+  public boolean ambientMode();
+  public boolean isRound();
 
-  public void startActivity(Intent intent);
+  public int insetLeft();
+  public int insetRight();
+  public int insetTop();
+  public int insetBottom();
 
-  public void requestDraw();
-  public boolean canDraw();
-
-  public void dispose();
-  public void onPermissionsGranted();
+  public boolean lowBitAmbient();
+  public boolean burnInProtection();
 }

@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012-17 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -266,16 +266,27 @@ public class PApplet extends Object implements PConstants {
 
   ///////////////////////////////////////////////////////////////
   // Wallpaper and watchface variables: these will go away soon...
+  @Deprecated
   public boolean ambientMode = false;
+  @Deprecated
   public boolean isRound = false;
+  @Deprecated
   public int insetLeft = 0;
+  @Deprecated
   public int insetRight = 0;
+  @Deprecated
   public int insetTop = 0;
+  @Deprecated
   public int insetBottom = 0;
+  @Deprecated
   public boolean lowBitAmbient = false;
+  @Deprecated
   public boolean burnInProtection = false;
+  @Deprecated
   public boolean preview = false;
+  @Deprecated
   public float homeScreenOffset = 0;
+  @Deprecated
   public int homeScreenCount = 1;
   ///////////////////////////////////////////////////////////////
 
