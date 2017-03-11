@@ -117,6 +117,10 @@ public class PFragment extends Fragment implements AppComponent {
     return sketch;
   }
 
+  public ServiceEngine getEngine() {
+    return null;
+  }
+
   public void dispose() {
   }
 

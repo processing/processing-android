@@ -36,8 +36,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.service.wallpaper.WallpaperService.Engine;
 import processing.android.AppComponent;
+import processing.android.ServiceEngine;
 
 /*
  * Holds the surface view associated with the sketch, and the rendering thread
@@ -47,7 +47,7 @@ public interface PSurface {
   public AppComponent getComponent();
   public Context getContext();
   public Activity getActivity();
-  public Engine getEngine();
+  public ServiceEngine getEngine();
 
   public void dispose();
 

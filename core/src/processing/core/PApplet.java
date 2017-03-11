@@ -41,7 +41,6 @@ import android.graphics.*;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.service.wallpaper.WallpaperService;
 import android.support.annotation.LayoutRes;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -52,6 +51,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
+import processing.android.ServiceEngine;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
@@ -61,7 +61,7 @@ public class PApplet extends Object implements PConstants {
   /**
    * The surface this sketch draws to.
    */
-  public PSurface surface;
+  protected PSurface surface;
 
   /**
    * The view group containing the surface view of the PApplet.
@@ -453,12 +453,17 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public Context getContext() {
+    return surface.getContext();
+  }
+
+
   public Activity getActivity() {
     return surface.getActivity();
   }
 
 
-  public WallpaperService.Engine getEngine() {
+  public ServiceEngine getEngine() {
     return surface.getEngine();
   }
 

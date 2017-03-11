@@ -99,7 +99,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
-  public Engine getEngine() {
+  public ServiceEngine getEngine() {
     return engine;
   }
 

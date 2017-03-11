@@ -110,7 +110,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
 
-  public Engine getEngine() {
+  public ServiceEngine getEngine() {
     return engine;
   }
 

@@ -27,6 +27,7 @@ import com.google.vr.sdk.base.Eye;
 
 import android.util.DisplayMetrics;
 import processing.android.AppComponent;
+import processing.android.ServiceEngine;
 import processing.core.PApplet;
 
 // http://pastebin.com/6wPgFYhq
@@ -84,6 +85,10 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
   public PApplet getSketch() {
     return sketch;
+  }
+
+  public ServiceEngine getEngine() {
+    return null;
   }
 
   public void init(PApplet sketch) {

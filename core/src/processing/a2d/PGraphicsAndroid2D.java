@@ -473,7 +473,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void endShape(int mode) {
     if (shape == POINTS && stroke && vertexCount > 0) {
-//      Matrix m = canvas.getMatrix();
       Matrix m = getMatrixImp();
       if (strokeWeight == 1 && m.isIdentity()) {
         if (screenPoint == null) {
@@ -519,7 +518,6 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void clipImpl(float x1, float y1, float x2, float y2) {
-//    canvas.save(Canvas.CLIP_SAVE_FLAG);
     canvas.clipRect(x1, y1, x2, y2);
   }
 
@@ -527,7 +525,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void noClip() {
     canvas.clipRect(0, 0, width, height, Region.Op.REPLACE);
-//    canvas.restore();
   }
 
 

@@ -49,6 +49,7 @@ import processing.android.AppComponent;
 import processing.android.PWallpaper;
 import processing.android.PWatchFaceCanvas;
 import processing.android.PWatchFaceGLES;
+import processing.android.ServiceEngine;
 
 /**
  * Base surface for Android2D and OpenGL renderers. It includes the standard rendering loop.
@@ -99,17 +100,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   @Override
-  public Engine getEngine() {
-    if (component.getKind() == AppComponent.WALLPAPER) {
-      return ((PWallpaper)component).getEngine();
-    } else if (component.getKind() == AppComponent.WATCHFACE) {
-      if (component instanceof PWatchFaceCanvas) {
-        return ((PWatchFaceCanvas)component).getEngine();
-      } else if (component instanceof PWatchFaceGLES) {
-        return ((PWatchFaceGLES)component).getEngine();
-      }
-    }
-    return null;
+  public ServiceEngine getEngine() {
+    return component.getEngine();
   }
 
 
