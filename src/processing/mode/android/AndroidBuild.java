@@ -499,9 +499,9 @@ class AndroidBuild extends JavaBuild {
     writeHandheldActivity();
         
     // Copy the compatibility package, needed for the permission handling
-    final File libsFolder = mkdirs(tmpFolder, "libs");
-    File compatJarFile = new File(sdk.getSupportLibrary(), "v4/android-support-v4.jar");
-    Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));      
+//    final File libsFolder = mkdirs(tmpFolder, "libs");
+//    File compatJarFile = new File(sdk.getSupportLibrary(), "v4/android-support-v4.jar");
+//    Util.copyFile(compatJarFile, new File(libsFolder, "android-support-v4.jar"));
     
     // Create manifest file
     String[] permissions = manifest.getPermissions();    
