@@ -135,34 +135,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   //public void setPath(String path)
 
 
-  /**
-   * Called in response to a resize event, handles setting the
-   * new width and height internally, as well as re-allocating
-   * the pixel buffer for the new size.
-   *
-   * Note that this will nuke any cameraMode() settings.
-   */
-//  @Override
-//  public void setSize(int iwidth, int iheight) {  // ignore
-//    width = iwidth;
-//    height = iheight;
-//    width1 = width - 1;
-//    height1 = height - 1;
-//
-//    allocate();
-//    reapplySettings();
-//  }
-
-
-  @Override
-  protected void allocate() {
-    if (useBitmap) {
-      if (bitmap != null) bitmap.recycle();
-      bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-      canvas = new Canvas(bitmap);
-    }
-  }
-
 
   @Override
   public void dispose() {
@@ -197,8 +169,20 @@ public class PGraphicsAndroid2D extends PGraphics {
 //  }
 
 
+  protected Canvas checkCanvas() {
+    if (canvas == null && useBitmap) {
+      if (bitmap != null) bitmap.recycle();
+      bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+      canvas = new Canvas(bitmap);
+    }
+    return canvas;
+  }
+
+
   @Override
   public void beginDraw() {
+    canvas = checkCanvas();
+
 //    if (primaryGraphics) {
 //      canvas = parent.getSurfaceHolder().lockCanvas(null);
 //      if (canvas == null) {
