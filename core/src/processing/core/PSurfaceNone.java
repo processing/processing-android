@@ -30,7 +30,6 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.service.wallpaper.WallpaperService;
-import android.service.wallpaper.WallpaperService.Engine;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -46,9 +45,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import processing.android.AppComponent;
-import processing.android.PWallpaper;
-import processing.android.PWatchFaceCanvas;
-import processing.android.PWatchFaceGLES;
 import processing.android.ServiceEngine;
 
 /**
