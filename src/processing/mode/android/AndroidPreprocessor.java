@@ -204,8 +204,10 @@ public class AndroidPreprocessor extends PdePreprocessor {
                              final List<String> codeFolderImports) {
     out.println("package " + packageName + ";");
     out.println();
-    // add two lines for the package above
-    return 2 + super.writeImports(out, programImports, codeFolderImports);
+    int count = 2;
+    count += super.writeImports(out, programImports, codeFolderImports);
+    count += writeImportList(out, getAndroidImports());
+    return count;
   }
 
 /*
@@ -302,4 +304,10 @@ public class AndroidPreprocessor extends PdePreprocessor {
       };    
   } 
   */
+  
+  public String[] getAndroidImports() {
+    return new String[] {
+      "processing.android.ServiceEngine"
+    };
+  }  
 }
