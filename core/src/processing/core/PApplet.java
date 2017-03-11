@@ -628,7 +628,7 @@ public class PApplet extends Object implements PConstants {
 
 
   /**
-   * @param method "size", "fullScreen", or "layout"
+   * @param method "size" or "fullScreen"
    * @param args parameters passed to the function so we can show the user
    * @return true if safely inside the settings() method
    */
@@ -1251,26 +1251,6 @@ public class PApplet extends Object implements PConstants {
       if (insideSettings("size", iwidth, iheight, irenderer)) {
         this.width = iwidth;
         this.height = iheight;
-        this.renderer = irenderer;
-      }
-    }
-  }
-
-
-  public void layout(@LayoutRes int ilayout) {
-    if (ilayout != this.parentLayout) {
-      if (insideSettings("layout", ilayout)) {
-        this.parentLayout = ilayout;
-      }
-    }
-  }
-
-
-  public void layout(@LayoutRes int ilayout, String irenderer) {
-    if (ilayout != this.parentLayout ||
-        !this.renderer.equals(irenderer)) {
-      if (insideSettings("layout", ilayout, irenderer)) {
-        this.parentLayout = ilayout;
         this.renderer = irenderer;
       }
     }
