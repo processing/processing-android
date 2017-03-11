@@ -232,7 +232,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 //    }
 
     if (primaryGraphics) {
-      SurfaceHolder holder = parent.surface.getSurfaceHolder();
+      SurfaceHolder holder = parent.getSurface().getSurfaceHolder();
       if (holder != null) {
         Canvas screen = null;
         try {

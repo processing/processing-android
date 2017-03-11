@@ -115,7 +115,7 @@ public class PGLES extends PGL {
 
   @Override
   protected void initSurface(int antialias) {
-    SurfaceView surf = sketch.surface.getSurfaceView();
+    SurfaceView surf = sketch.getSurface().getSurfaceView();
     if (surf != null) {
       glview = (GLSurfaceView)surf;
     }

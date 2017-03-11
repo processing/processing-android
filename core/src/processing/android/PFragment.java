@@ -129,7 +129,7 @@ public class PFragment extends Fragment implements AppComponent {
                            Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(inflater, container, savedInstanceState, this, null);
-      return sketch.surface.getRootView();
+      return sketch.getSurface().getRootView();
     } else {
       return null;
     }

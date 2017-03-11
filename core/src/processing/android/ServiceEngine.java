@@ -27,18 +27,25 @@ import processing.core.PConstants;
 public interface ServiceEngine extends PConstants {
   // Live wallpapers
   public boolean isPreview();
-  public float homeScreenOffset();
-  public int homeScreenCount();
+  public float getXOffset();
+  public float getYOffset();
+  public float getXOffsetStep();
+  public float getYOffsetStep();
+  public int getXPixelOffset();
+  public int getYPixelOffset();
+  public int getHomeScreenCount();
 
   // Watch faces
-  public boolean ambientMode();
+  public boolean isInAmbientMode();
+  public boolean isInInteractiveMode();
   public boolean isRound();
+  public boolean isSquare();
 
-  public int insetLeft();
-  public int insetRight();
-  public int insetTop();
-  public int insetBottom();
+  public int getInsetLeft();
+  public int getInsetRight();
+  public int getInsetTop();
+  public int getInsetBottom();
 
-  public boolean lowBitAmbient();
-  public boolean burnInProtection();
+  public boolean useLowBitAmbient();
+  public boolean requireBurnInProtection();
 }

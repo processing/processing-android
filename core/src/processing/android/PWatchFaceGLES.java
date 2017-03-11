@@ -374,20 +374,50 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
 
     @Override
-    public float homeScreenOffset() {
+    public float getXOffset() {
       return 0;
     }
 
 
     @Override
-    public int homeScreenCount() {
+    public float getYOffset() {
       return 0;
     }
 
 
     @Override
-    public boolean ambientMode() {
-      return isInAmbientMode();
+    public float getXOffsetStep() {
+      return 0;
+    }
+
+
+    @Override
+    public float getYOffsetStep() {
+      return 0;
+    }
+
+
+    @Override
+    public int getXPixelOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public int getYPixelOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public int getHomeScreenCount() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean isInInteractiveMode() {
+      return !isInAmbientMode();
     }
 
 
@@ -398,37 +428,43 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
 
     @Override
-    public int insetLeft() {
+    public boolean isSquare() {
+      return !isRound;
+    }
+
+
+    @Override
+    public int getInsetLeft() {
       return insetLeft;
     }
 
 
     @Override
-    public int insetRight() {
+    public int getInsetRight() {
       return insetRight;
     }
 
 
     @Override
-    public int insetTop() {
+    public int getInsetTop() {
       return insetTop;
     }
 
 
     @Override
-    public int insetBottom() {
+    public int getInsetBottom() {
       return insetBottom;
     }
 
 
     @Override
-    public boolean lowBitAmbient() {
+    public boolean useLowBitAmbient() {
       return lowBitAmbient;
     }
 
 
     @Override
-    public boolean burnInProtection() {
+    public boolean requireBurnInProtection() {
       return burnInProtection;
     }
   }

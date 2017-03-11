@@ -143,6 +143,8 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   public class WallpaperEngine extends Engine implements ServiceEngine {
     private PApplet sketch;
     private float xOffset, xOffsetStep;
+    private float yOffset, yOffsetStep;
+    private int xPixelOffset, yPixelOffset;
 
 
     @Override
@@ -212,7 +214,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
       if (sketch != null) {
         this.xOffset = xOffset;
+        this.yOffset = yOffset;
         this.xOffsetStep = xOffsetStep;
+        this.yOffsetStep = yOffsetStep;
+        this.xPixelOffset = xPixelOffset;
+        this.yPixelOffset = yPixelOffset;
 
         sketch.homeScreenOffset = xOffset;
         if (0 < xOffsetStep) {
@@ -245,13 +251,43 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
 
     @Override
-    public float homeScreenOffset() {
+    public float getXOffset() {
       return xOffset;
     }
 
 
     @Override
-    public int homeScreenCount() {
+    public float getYOffset() {
+      return yOffset;
+    }
+
+
+    @Override
+    public float getXOffsetStep() {
+      return xOffsetStep;
+    }
+
+
+    @Override
+    public float getYOffsetStep() {
+      return yOffsetStep;
+    }
+
+
+    @Override
+    public int getXPixelOffset() {
+      return xPixelOffset;
+    }
+
+
+    @Override
+    public int getYPixelOffset() {
+      return yPixelOffset;
+    }
+
+
+    @Override
+    public int getHomeScreenCount() {
       if (0 < xOffsetStep) {
         return (int)(1 + 1 / xOffsetStep);
       } else {
@@ -261,7 +297,13 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
 
     @Override
-    public boolean ambientMode() {
+    public boolean isInAmbientMode() {
+      return false;
+    }
+
+
+    @Override
+    public boolean isInInteractiveMode() {
       return false;
     }
 
@@ -273,37 +315,43 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
 
     @Override
-    public int insetLeft() {
-      return 0;
-    }
-
-
-    @Override
-    public int insetRight() {
-      return 0;
-    }
-
-
-    @Override
-    public int insetTop() {
-      return 0;
-    }
-
-
-    @Override
-    public int insetBottom() {
-      return 0;
-    }
-
-
-    @Override
-    public boolean lowBitAmbient() {
+    public boolean isSquare() {
       return false;
     }
 
 
     @Override
-    public boolean burnInProtection() {
+    public int getInsetLeft() {
+      return 0;
+    }
+
+
+    @Override
+    public int getInsetRight() {
+      return 0;
+    }
+
+
+    @Override
+    public int getInsetTop() {
+      return 0;
+    }
+
+
+    @Override
+    public int getInsetBottom() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean useLowBitAmbient() {
+      return false;
+    }
+
+
+    @Override
+    public boolean requireBurnInProtection() {
       return false;
     }
   }
