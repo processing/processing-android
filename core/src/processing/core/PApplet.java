@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.zip.*;
 
+import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
 import android.content.*;
 import android.content.pm.PackageManager;
@@ -767,6 +768,18 @@ public class PApplet extends Object implements PConstants {
     } else {
       return false;
     }
+  }
+  
+   public void openKeyboard() {
+    Context context = surface.getContext();
+    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+  }
+
+  public void closeKeyboard() {
+    Context context = surface.getContext();
+    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
   }
 
 
