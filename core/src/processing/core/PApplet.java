@@ -2388,22 +2388,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void openKeyboard() {
-    View view = surface.getRootView();
-    Context context = surface.getContext();
-    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
-  }
-
-
-  public void closeKeyboard() {
-    View view = surface.getRootView();
-    Context context = surface.getContext();
-    InputMethodManager imm =(InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-  }
-
-
   public void keyPressed() { }
 
 
