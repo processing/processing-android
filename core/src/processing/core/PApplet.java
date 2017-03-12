@@ -769,18 +769,6 @@ public class PApplet extends Object implements PConstants {
       return false;
     }
   }
-  
-   public void openKeyboard() {
-    Context context = surface.getContext();
-    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
-  }
-
-  public void closeKeyboard() {
-    Context context = surface.getContext();
-    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-  }
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -2398,6 +2386,20 @@ public class PApplet extends Object implements PConstants {
                                keAction, keModifiers, key, keyCode);
 
     postEvent(ke);
+  }
+
+
+  public void openKeyboard() {
+    Context context = surface.getContext();
+    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+  }
+
+
+  public void closeKeyboard() {
+    Context context = surface.getContext();
+    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
   }
 
 
