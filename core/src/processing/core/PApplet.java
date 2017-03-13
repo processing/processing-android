@@ -49,7 +49,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
 import processing.android.ServiceEngine;
@@ -461,11 +460,6 @@ public class PApplet extends Object implements PConstants {
 
   public Activity getActivity() {
     return surface.getActivity();
-  }
-
-
-  public ServiceEngine getEngine() {
-    return surface.getEngine();
   }
 
 
@@ -2297,22 +2291,62 @@ public class PApplet extends Object implements PConstants {
 
   //////////////////////////////////////////////////////////////
 
-  // unfinished API, do not use
+  // Wallpaper and wear API
 
 
-//  protected void pressEvent() { }
-//
-//  protected void dragEvent() { }
-//
-//  protected void moveEvent() { }
-//
-//  protected void releaseEvent() { }
-//
-//  protected void zoomEvent(float x, float y, float d0, float d1) { }
-//
-//  protected void tapEvent(float x, float y) { }
-//
-//  protected void swipeEvent(float x0, float y0, float x1, float y1) { }
+  public boolean wallpaperPreview() {
+    return surface.getEngine().isPreview();
+  }
+
+
+  public float wallpaperOffset() {
+    return surface.getEngine().getXOffset();
+  }
+
+
+  public int wallpaperHomeCount() {
+    float step = surface.getEngine().getXOffsetStep();
+    if (0 < step) {
+      return (int)(1 + 1 / step);
+    } else {
+      return 1;
+    }
+  }
+
+
+  public boolean wearAmbient() {
+    return surface.getEngine().isInAmbientMode();
+  }
+
+
+  public boolean wearInteractive() {
+    return !surface.getEngine().isInAmbientMode();
+  }
+
+
+  public boolean wearRound() {
+    return surface.getEngine().isRound();
+  }
+
+
+  public boolean wearSquare() {
+    return !surface.getEngine().isRound();
+  }
+
+
+  public Rect wearInsets() {
+    return surface.getEngine().getInsets();
+  }
+
+
+  boolean wearLowBit() {
+    return surface.getEngine().useLowBitAmbient();
+  }
+
+
+  boolean wearBurnProtection() {
+    return surface.getEngine().requireBurnInProtection();
+  }
 
 
   //////////////////////////////////////////////////////////////

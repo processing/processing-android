@@ -31,6 +31,7 @@ import android.util.DisplayMetrics;
 import android.os.Build;
 import android.view.Display;
 import android.graphics.Point;
+import android.graphics.Rect;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
   private Point size;
@@ -287,23 +288,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
 
     @Override
-    public int getHomeScreenCount() {
-      if (0 < xOffsetStep) {
-        return (int)(1 + 1 / xOffsetStep);
-      } else {
-        return 1;
-      }
-    }
-
-
-    @Override
     public boolean isInAmbientMode() {
-      return false;
-    }
-
-
-    @Override
-    public boolean isInInteractiveMode() {
       return false;
     }
 
@@ -315,32 +300,8 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
 
     @Override
-    public boolean isSquare() {
-      return false;
-    }
-
-
-    @Override
-    public int getInsetLeft() {
-      return 0;
-    }
-
-
-    @Override
-    public int getInsetRight() {
-      return 0;
-    }
-
-
-    @Override
-    public int getInsetTop() {
-      return 0;
-    }
-
-
-    @Override
-    public int getInsetBottom() {
-      return 0;
+    public Rect getInsets() {
+      return null;
     }
 
 

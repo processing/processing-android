@@ -158,10 +158,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     private PApplet sketch;
     private Method compUpdatedMethod;
     private boolean isRound = false;
-    private int insetLeft = 0;
-    private int insetRight = 0;
-    private int insetTop = 0;
-    private int insetBottom = 0;
+    private Rect insets = new Rect();
     private boolean lowBitAmbient = false;
     private boolean burnInProtection = false;
 
@@ -233,10 +230,10 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onApplyWindowInsets(WindowInsets insets) {
       super.onApplyWindowInsets(insets);
       isRound = insets.isRound();
-      insetLeft = insets.getSystemWindowInsetLeft();
-      insetRight = insets.getSystemWindowInsetRight();
-      insetTop = insets.getSystemWindowInsetTop();
-      insetBottom = insets.getSystemWindowInsetBottom();
+      this.insets.set(insets.getSystemWindowInsetLeft(),
+                      insets.getSystemWindowInsetTop(),
+                      insets.getSystemWindowInsetRight(),
+                      insets.getSystemWindowInsetBottom());
       if (sketch != null) {
         sketch.isRound = insets.isRound();
         sketch.insetLeft = insets.getSystemWindowInsetLeft();
@@ -415,50 +412,14 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
     @Override
-    public int getHomeScreenCount() {
-      return 0;
-    }
-
-
-    @Override
-    public boolean isInInteractiveMode() {
-      return !isInAmbientMode();
-    }
-
-
-    @Override
     public boolean isRound() {
       return isRound;
     }
 
 
     @Override
-    public boolean isSquare() {
-      return !isRound;
-    }
-
-
-    @Override
-    public int getInsetLeft() {
-      return insetLeft;
-    }
-
-
-    @Override
-    public int getInsetRight() {
-      return insetRight;
-    }
-
-
-    @Override
-    public int getInsetTop() {
-      return insetTop;
-    }
-
-
-    @Override
-    public int getInsetBottom() {
-      return insetBottom;
+    public Rect getInsets() {
+      return insets;
     }
 
 

@@ -22,10 +22,11 @@
 
 package processing.android;
 
+import android.graphics.Rect;
 import processing.core.PConstants;
 
 public interface ServiceEngine extends PConstants {
-  // Live wallpapers
+  // wwallpapers
   public boolean isPreview();
   public float getXOffset();
   public float getYOffset();
@@ -33,19 +34,11 @@ public interface ServiceEngine extends PConstants {
   public float getYOffsetStep();
   public int getXPixelOffset();
   public int getYPixelOffset();
-  public int getHomeScreenCount();
 
-  // Watch faces
+  // wear
   public boolean isInAmbientMode();
-  public boolean isInInteractiveMode();
   public boolean isRound();
-  public boolean isSquare();
-
-  public int getInsetLeft();
-  public int getInsetRight();
-  public int getInsetTop();
-  public int getInsetBottom();
-
+  public Rect getInsets();
   public boolean useLowBitAmbient();
   public boolean requireBurnInProtection();
 }
