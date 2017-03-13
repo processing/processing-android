@@ -26,7 +26,7 @@ import android.graphics.Rect;
 import processing.core.PConstants;
 
 public interface ServiceEngine extends PConstants {
-  // wwallpapers
+  // wallpapers
   public boolean isPreview();
   public float getXOffset();
   public float getYOffset();

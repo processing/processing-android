@@ -51,7 +51,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
-import processing.android.ServiceEngine;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
