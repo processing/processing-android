@@ -206,7 +206,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
     out.println();
     int count = 2;
     count += super.writeImports(out, programImports, codeFolderImports);
-    count += writeImportList(out, getAndroidImports());
+//    count += writeImportList(out, getAndroidImports());
     return count;
   }
 
@@ -303,11 +303,12 @@ public class AndroidPreprocessor extends PdePreprocessor {
         "android.app.Fragment"
       };    
   } 
-  */
+
   
   public String[] getAndroidImports() {
     return new String[] {
       "processing.android.ServiceEngine"
     };
   }  
+  */  
 }
