@@ -5087,33 +5087,25 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  static public boolean saveStream(File targetFile, InputStream sourceStream) {
+  static public boolean saveStream(File target, InputStream source) {
     File tempFile = null;
     try {
-      File parentDir = targetFile.getParentFile();
-      createPath(targetFile);
-      tempFile = File.createTempFile(targetFile.getName(), null, parentDir);
+      // make sure that this path actually exists before writing
+      createPath(target);
+      tempFile = createTempFile(target);
+      FileOutputStream targetStream = new FileOutputStream(tempFile);
 
-      BufferedInputStream bis = new BufferedInputStream(sourceStream, 16384);
-      FileOutputStream fos = new FileOutputStream(tempFile);
-      BufferedOutputStream bos = new BufferedOutputStream(fos);
+      saveStream(targetStream, source);
+      targetStream.close();
+      targetStream = null;
 
-      byte[] buffer = new byte[8192];
-      int bytesRead;
-      while ((bytesRead = bis.read(buffer)) != -1) {
-        bos.write(buffer, 0, bytesRead);
+      if (target.exists()) {
+        if (!target.delete()) {
+          System.err.println("Could not replace " +
+                             target.getAbsolutePath() + ".");
+        }
       }
-
-      bos.flush();
-      bos.close();
-      bos = null;
-
-      if (targetFile.exists() && !targetFile.delete()) {
-        System.err.println("Could not replace " +
-                           targetFile.getAbsolutePath() + ".");
-      }
-
-      if (!tempFile.renameTo(targetFile)) {
+      if (!tempFile.renameTo(target)) {
         System.err.println("Could not rename temporary file " +
                            tempFile.getAbsolutePath());
         return false;
@@ -5130,6 +5122,21 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  static public void saveStream(OutputStream target,
+                                InputStream source) throws IOException {
+    BufferedInputStream bis = new BufferedInputStream(source, 16384);
+    BufferedOutputStream bos = new BufferedOutputStream(target);
+
+    byte[] buffer = new byte[8192];
+    int bytesRead;
+    while ((bytesRead = bis.read(buffer)) != -1) {
+      bos.write(buffer, 0, bytesRead);
+    }
+
+    bos.flush();
+  }
+
+
   /**
    * Saves bytes to a file to inside the sketch folder.
    * The filename can be a relative path, i.e. "poo/bytefun.txt"
@@ -5137,27 +5144,68 @@ public class PApplet extends Object implements PConstants {
    * called 'poo' inside the sketch folder. If the in-between
    * subfolders don't exist, they'll be created.
    */
-  public void saveBytes(String filename, byte buffer[]) {
-    saveBytes(saveFile(filename), buffer);
+  public void saveBytes(String filename, byte[] data) {
+    saveBytes(saveFile(filename), data);
+  }
+
+
+  /**
+   * Creates a temporary file based on the name/extension of another file
+   * and in the same parent directory. Ensures that the same extension is used
+   * (i.e. so that .gz files are gzip compressed on output) and that it's done
+   * from the same directory so that renaming the file later won't cross file
+   * system boundaries.
+   */
+  static private File createTempFile(File file) throws IOException {
+    File parentDir = file.getParentFile();
+    String name = file.getName();
+    String prefix;
+    String suffix = null;
+    int dot = name.lastIndexOf('.');
+    if (dot == -1) {
+      prefix = name;
+    } else {
+      // preserve the extension so that .gz works properly
+      prefix = name.substring(0, dot);
+      suffix = name.substring(dot);
+    }
+    // Prefix must be three characters
+    if (prefix.length() < 3) {
+      prefix += "processing";
+    }
+    return File.createTempFile(prefix, suffix, parentDir);
   }
 
 
   /**
    * Saves bytes to a specific File location specified by the user.
    */
-  static public void saveBytes(File file, byte buffer[]) {
+  static public void saveBytes(File file, byte[] data) {
+    File tempFile = null;
     try {
-      String filename = file.getAbsolutePath();
-      createPath(filename);
-      OutputStream output = new FileOutputStream(file);
-      if (file.getName().toLowerCase().endsWith(".gz")) {
-        output = new GZIPOutputStream(output);
-      }
-      saveBytes(output, buffer);
+      tempFile = createTempFile(file);
+
+      OutputStream output = createOutput(tempFile);
+      saveBytes(output, data);
       output.close();
+      output = null;
+
+      if (file.exists()) {
+        if (!file.delete()) {
+          System.err.println("Could not replace " + file.getAbsolutePath());
+        }
+      }
+
+      if (!tempFile.renameTo(file)) {
+        System.err.println("Could not rename temporary file " +
+                           tempFile.getAbsolutePath());
+      }
 
     } catch (IOException e) {
       System.err.println("error saving bytes to " + file);
+      if (tempFile != null) {
+        tempFile.delete();
+      }
       e.printStackTrace();
     }
   }
@@ -5166,9 +5214,9 @@ public class PApplet extends Object implements PConstants {
   /**
    * Spews a buffer of bytes to an OutputStream.
    */
-  static public void saveBytes(OutputStream output, byte buffer[]) {
+  static public void saveBytes(OutputStream output, byte[] data) {
     try {
-      output.write(buffer);
+      output.write(data);
       output.flush();
 
     } catch (IOException e) {
