@@ -14,7 +14,7 @@ allprojects {
     apply plugin: 'java'
     
     ext.android_platform = "$sdkdir/platforms/android-$sdkver"
-    ext.core_jar_path = "$rootDir/android-core.zip"
+    ext.core_jar_path = "$rootDir/processing-core.zip"
 
     repositories {
         jcenter()
@@ -66,8 +66,8 @@ task dist {
         Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
                    file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
                    
-        Files.copy(file("core/build/libs/android-core.zip").toPath(),
-                   file("$root/android-core.zip").toPath(), REPLACE_EXISTING);
+        Files.copy(file("core/build/libs/processing-core.zip").toPath(),
+                   file("$root/processing-core.zip").toPath(), REPLACE_EXISTING);
 
         Files.copy(file("mode.properties").toPath(),
                    file("$root/mode.properties").toPath(), REPLACE_EXISTING);

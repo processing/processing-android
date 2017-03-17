@@ -5,7 +5,7 @@
   <!-- path to the main processing repo --> 
   <property name="processing.dir" value="../processing" />
 
-  <property name="core.jar.path" value="android-core.zip" />
+  <property name="core.jar.path" value="processing-core.zip" />
   <property name="mode.jar.path" value="mode/AndroidMode.jar" />
   <property name="mode.dist.path" value="release/AndroidMode.zip" />
   <property name="tools.jar.path" value="mode/tools.jar" />
@@ -58,15 +58,15 @@
 <!--
   <target name="android-dist-check">
 -->
-    <!-- ensure that the android-core.zip file has been built -->
+    <!-- ensure that the processing-core.zip file has been built -->
 <!--
     <available file="${core.jar.path}" 
 	       property="android-core-present" />
 -->
-    <!--<echo message="${target.path}/modes/android/android-core.zip" />-->
+    <!--<echo message="${target.path}/modes/android/processing-core.zip" />-->
 <!--
     <fail unless="android-core-present" 
-	  message="android-core.zip was not built, but is required for dist. Install the Android tools, set ANDROID_SDK, and try again." />
+	  message="processing-core.zip was not built, but is required for dist. Install the Android tools, set ANDROID_SDK, and try again." />
   </target>
 -->
 
@@ -85,7 +85,7 @@
   	
     <zip destfile="${mode.dist.path}">
       <zipfileset dir="." prefix="AndroidMode">
-	      <include name="android-core.zip" />
+	      <include name="processing-core.zip" />
         <include name="mode.properties" />	
         <include name="mode/**" />
         <include name="templates/**" />	

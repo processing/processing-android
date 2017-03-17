@@ -48,7 +48,7 @@ task dist {
     doLast {
         // make copy of jar file as zip
         Files.copy(file("$buildDir/libs/core.jar").toPath(),
-                   file("$buildDir/libs/android-core.zip").toPath(), REPLACE_EXISTING);
+                   file("$buildDir/libs/processing-core.zip").toPath(), REPLACE_EXISTING);
                    
         // and copy it to root
         Files.copy(file("$buildDir/libs/core.jar").toPath(),

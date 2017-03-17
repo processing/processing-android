@@ -7,7 +7,7 @@
   <property name="processing.dir" value="../../processing" />
 
   <!-- path to the core library -->
-  <property name="core.jar.path" value="../android-core.zip" />
+  <property name="core.jar.path" value="../processing-core.zip" />
 
   <!-- Android platform to build the core library -->
   <property name="android.platform" value="android-25" />
@@ -22,7 +22,7 @@
   <target name="build" depends="sdk_chatter,actual_build" />
 
   <target name="sdk_chatter" unless="env.ANDROID_SDK">
-    <echo message="ANDROID_SDK not set, skipping build of android-core.zip" />
+    <echo message="ANDROID_SDK not set, skipping build of processing-core.zip" />
   </target>
 
   <target name="sdk_whining">

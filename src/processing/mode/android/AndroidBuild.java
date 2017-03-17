@@ -266,8 +266,6 @@ class AndroidBuild extends JavaBuild {
       final File libsFolder = mkdirs(tmpFolder, "libs");
       final File assetsFolder = mkdirs(tmpFolder, "assets");
 
-//      InputStream input = PApplet.createInput(getCoreZipLocation());
-//      PApplet.saveStream(new File(libsFolder, "processing-core.jar"), input);
       Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
 
       ////////////////////////////////////////////////////////////////////////
@@ -1660,7 +1658,8 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", min_sdk_handheld);    
-    replaceMap.put("@@target_sdk@@", target_sdk);    
+    replaceMap.put("@@target_sdk@@", target_sdk);
+    replaceMap.put("@@support_version@@", support_version);
     replaceMap.put("@@play_services_version@@", play_services_version);
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
@@ -1691,6 +1690,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", min_sdk_watchface);    
     replaceMap.put("@@target_sdk@@", target_sdk);
+    replaceMap.put("@@support_version@@", support_version);
     replaceMap.put("@@play_services_version@@", play_services_version);
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());

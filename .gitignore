@@ -11,3 +11,4 @@ release
 
 build/**
 .gradle
+/processing-core.zip

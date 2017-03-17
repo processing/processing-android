@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2011-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -152,7 +152,7 @@ public class AndroidMode extends JavaMode {
 
       // otherwise do the usual
       //    return new File(base.getSketchbookFolder(), ANDROID_CORE_FILENAME);
-      coreZipLocation = getContentFile("android-core.zip");
+      coreZipLocation = getContentFile("processing-core.zip");
     }
     return coreZipLocation;
   }
@@ -232,7 +232,7 @@ public class AndroidMode extends JavaMode {
       return "";
     }
     
-    String coreJarPath = new File(getFolder(), "android-core.zip").getAbsolutePath();
+    String coreJarPath = new File(getFolder(), "processing-core.zip").getAbsolutePath();
     return sdk.getAndroidJarPath().getAbsolutePath() + File.pathSeparatorChar + coreJarPath;
   }
 
