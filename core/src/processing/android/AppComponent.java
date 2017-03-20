@@ -46,5 +46,4 @@ abstract public interface AppComponent extends PConstants {
   public boolean canDraw();
 
   public void dispose();
-  public void onPermissionsGranted();
 }

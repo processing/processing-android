@@ -26,10 +26,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -39,6 +44,9 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.support.v4.os.ResultReceiver;
+
+import android.support.wearable.activity.WearableActivity;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,9 +56,15 @@ import processing.android.AppComponent;
 import processing.android.ServiceEngine;
 
 /**
- * Base surface for Android2D and OpenGL renderers. It includes the standard rendering loop.
+ * Base surface for Android2D and OpenGL renderers.
+ * It includes the standard rendering loop.
  */
 public class PSurfaceNone implements PSurface, PConstants {
+  private static final String KEY_RESULT_RECEIVER = "resultReceiver";
+  private static final String KEY_PERMISSIONS = "permissions";
+  private static final String KEY_GRANT_RESULTS = "grantResults";
+  private static final String KEY_REQUEST_CODE = "requestCode";
+
   protected PApplet sketch;
   protected PGraphics graphics;
   protected AppComponent component;
@@ -260,9 +274,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void startActivity(Intent intent) {
-    if (component.getKind() == AppComponent.FRAGMENT) {
-      component.startActivity(intent);
-    }
+    component.startActivity(intent);
   }
 
 
@@ -499,6 +511,72 @@ public class PSurfaceNone implements PSurface, PConstants {
         beforeTime = System.nanoTime();
       }
 
+      finish();
+    }
+  }
+
+
+  public boolean hasPermission(String permission) {
+    int res = ContextCompat.checkSelfPermission(getContext(), permission);
+    return res == PackageManager.PERMISSION_GRANTED;
+  }
+
+
+  public void requestPermission(String permission) {
+    int comp = component.getKind();
+    if (comp == AppComponent.FRAGMENT) {
+      // Requesting permissions from user when the app resumes.
+      // Nice example on how to handle user response
+      // http://stackoverflow.com/a/35495855
+      // More on permission in Android 23:
+      // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
+      ActivityCompat.requestPermissions(activity, new String[] { permission },
+                                        REQUEST_PERMISSIONS);
+    } else if (comp == AppComponent.WALLPAPER || comp == AppComponent.WATCHFACE) {
+      // https://developer.android.com/training/articles/wear-permissions.html
+      // Inspired by PermissionHelper.java from Michael von Glasow:
+      // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/utils/PermissionHelper.java
+      // Example of use:
+      // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/PasvLocListenerService.java
+      final ServiceEngine eng = getEngine();
+      ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+        @Override
+        protected void onReceiveResult (int resultCode, Bundle resultData) {
+          String[] outPermissions = resultData.getStringArray(KEY_PERMISSIONS);
+          int[] grantResults = resultData.getIntArray(KEY_GRANT_RESULTS);
+          eng.onRequestPermissionsResult(resultCode, outPermissions, grantResults);
+        }
+      };
+      final Intent permIntent = new Intent(getContext(), PermissionRequestActivity.class);
+      permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);
+      permIntent.putExtra(KEY_PERMISSIONS, new String[] { permission });
+      permIntent.putExtra(KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
+      // Show the dialog requesting the permissions
+      permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+      startActivity(permIntent);
+    }
+  }
+
+  //WearableActivity
+  public static class PermissionRequestActivity extends Activity {
+    ResultReceiver resultReceiver;
+    String[] permissions;
+    int requestCode;
+    @Override
+    protected void onStart() {
+      super.onStart();
+      resultReceiver = this.getIntent().getParcelableExtra(KEY_RESULT_RECEIVER);
+      permissions = this.getIntent().getStringArrayExtra(KEY_PERMISSIONS);
+      requestCode = this.getIntent().getIntExtra(KEY_REQUEST_CODE, 0);
+      ActivityCompat.requestPermissions(this, permissions, requestCode);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+      Bundle resultData = new Bundle();
+      resultData.putStringArray(KEY_PERMISSIONS, permissions);
+      resultData.putIntArray(KEY_GRANT_RESULTS, grantResults);
+      resultReceiver.send(requestCode, resultData);
       finish();
     }
   }

@@ -5,103 +5,33 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-
-import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import java.util.ArrayList;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.Manifest;
 
 import processing.android.PFragment;
 import processing.core.PApplet;
 
 public class MainActivity extends AppCompatActivity {
-  private static final String MAIN_FRAGMENT_TAG = "main_fragment";
-        
-  private static final String[] permissions = @@permissions@@;
-  private static final int REQUEST_PERMISSIONS = 1;
-  
-  private static final int viewId = View.generateViewId();
-  PFragment fragment;
+  private PApplet sketch;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     FrameLayout frame = new FrameLayout(this);
-    frame.setId(viewId);
+    frame.setId(View.generateViewId());
     setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
-    PApplet sketch = new @@sketch_class_name@@();
-    if (savedInstanceState == null) {
-      fragment = new PFragment();
-      fragment.setSketch(sketch);
-      FragmentManager fm = getSupportFragmentManager();
-      FragmentTransaction ft = fm.beginTransaction();
-      ft.add(frame.getId(), fragment, MAIN_FRAGMENT_TAG).commit();
-    } else {
-      fragment = (PFragment) getSupportFragmentManager().findFragmentByTag(MAIN_FRAGMENT_TAG);
-      fragment.setSketch(sketch);
-    }
+    
+    sketch = new @@sketch_class_name@@();
+    PFragment fragment = new PFragment();
+    fragment.setSketch(sketch, frame, getSupportFragmentManager());
   }
-  
-  protected void onPermissionsGranted() {
-    fragment.onPermissionsGranted();
-  }
-  
-  // Requesting permissions from user when the app resumes.
-  // Nice example on how to handle user response
-  // http://stackoverflow.com/a/35495855   
-  // More on permission in Android 23:
-  // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en  
-  @Override
-  public void onStart() {
-    super.onStart();    
-    ArrayList<String> needed = new ArrayList<String>();
-    int check;
-    boolean danger = false;
-    for (String p: permissions) {
-      check = ContextCompat.checkSelfPermission(this, p);
-      if (check != PackageManager.PERMISSION_GRANTED) {
-        needed.add(p);
-      } else {
-        danger = true;
-      }
-    }
-  
-    if (!needed.isEmpty()) {
-      ActivityCompat.requestPermissions(this, needed.toArray(new String[needed.size()]), REQUEST_PERMISSIONS);
-    } else if (danger) {
-      onPermissionsGranted();
-    }
-  } 
   
   @Override
   public void onRequestPermissionsResult(int requestCode,
-                                         String permissions[], int[] grantResults) {      
-    if (requestCode == REQUEST_PERMISSIONS) {      
-      if (grantResults.length > 0) {
-        boolean granted = true;    
-        for (int i = 0; i < grantResults.length; i++) {              
-          if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Some permissions needed by the app were not granted, so it might not work as intended.")
-              .setCancelable(false)
-              .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) { }
-              });  
-            AlertDialog alert = builder.create();
-            alert.show();
-            granted = false;
-            break; 
-          }
-        }
-        if (granted) onPermissionsGranted();
-      }
-    }    
-  } 
-  
+                                         String permissions[],
+                                         int[] grantResults) {
+    PApplet.println("------->  onRequestPermissionsResult", grantResults);
+    if (sketch != null) {
+      sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+  }  
 }

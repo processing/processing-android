@@ -122,11 +122,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
-  public void onPermissionsGranted() {
-    if (engine != null) engine.onPermissionsGranted();
-  }
-
-
   @Override
   public Engine onCreateEngine() {
     engine = new WallpaperEngine();
@@ -156,13 +151,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       sketch.preview = isPreview();
       if (isPreview()) requestPermissions();
       setTouchEventsEnabled(true);
-    }
-
-
-    private void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
-      }
     }
 
 
@@ -314,6 +302,15 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public boolean requireBurnInProtection() {
       return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[],
+                                           int[] grantResults) {
+      if (sketch != null) {
+        sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      }
     }
   }
 }

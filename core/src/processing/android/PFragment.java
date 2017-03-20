@@ -28,6 +28,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
+
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -43,8 +44,8 @@ import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
   private DisplayMetrics metrics;
-  protected Point size;
-  protected PApplet sketch;
+  private Point size;
+  private PApplet sketch;
 
   public PFragment() {
   }
@@ -113,6 +114,13 @@ public class PFragment extends Fragment implements AppComponent {
     transaction.commit();
   }
 
+  public void setSketch(PApplet sketch, View view, FragmentManager manager) {
+    this.sketch = sketch;
+    FragmentTransaction transaction = manager.beginTransaction();
+    transaction.add(view.getId(), this);
+    transaction.commit();
+  }
+
   public PApplet getSketch() {
     return sketch;
   }
@@ -123,6 +131,7 @@ public class PFragment extends Fragment implements AppComponent {
 
   public void dispose() {
   }
+
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -177,16 +186,6 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
 
-//  public void onBackPressed() {
-//    sketch.exit();
-//  }
-
-
-  public void onPermissionsGranted() {
-    if (sketch != null) sketch.onPermissionsGranted();
-  }
-
-
   public void setOrientation(int which) {
     if (which == PORTRAIT) {
       getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -199,8 +198,14 @@ public class PFragment extends Fragment implements AppComponent {
   public void requestDraw() {
   }
 
+
   public boolean canDraw() {
     if (sketch == null) return false;
     return sketch.isLooping();
   }
+
+
+//public void onBackPressed() {
+//  sketch.exit();
+//}
 }

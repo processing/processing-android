@@ -90,6 +90,16 @@ public class Manifest {
     return AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();
   }
 
+  
+  private String defaultVersionCode() {
+    return "1";
+  }
+
+  
+  private String defaultVersionName() {
+    return "1.0";
+  }
+  
 
   // called by other classes who want an actual package name
   // internally, we'll figure this out ourselves whether it's filled or not
@@ -101,13 +111,13 @@ public class Manifest {
 
   public String getVersionCode() {
     String code = xml.getString("android:versionCode");
-    return code.length() == 0 ? "1" : code;
+    return code.length() == 0 ? defaultVersionCode() : code;
   }
   
   
   public String getVersionName() {
     String name = xml.getString("android:versionName");
-    return name.length() == 0 ? "1.0" : name;
+    return name.length() == 0 ? defaultVersionName() : name;
   }
   
   
@@ -193,23 +203,7 @@ public class Manifest {
     save();
   }
 
-/*
-  public void setClassName(String className) {
-    XML[] kids = xml.getChildren("application/activity");
-    if (kids.length != 1) {
-      Base.showWarning("Don't touch that", MULTIPLE_ACTIVITIES, null);
-    }
-    XML activity = kids[0];
-    String currentName = activity.getString("android:name");
-    // only update if there are changes
-    if (currentName == null || !currentName.equals(className)) {
-      activity.setString("android:name", "." + className);
-      save();
-    }
-  }
-*/
 
-  // TODO: needs to be converted into a template file...
   private void writeBlankManifest(final File xmlFile, final int appComp) {
     File xmlTemplate = new File(modeFolder, "templates/" + MANIFEST_TEMPLATE[appComp]);
     
@@ -232,8 +226,8 @@ public class Manifest {
    * Save a new version of the manifest info to the build location.
    * Also fill in any missing attributes that aren't yet set properly.
    */
-  protected void writeBuild(File file, String className,
-                            boolean debug) throws IOException {
+  protected void writeCopy(File file, String className,
+                           boolean debug) throws IOException {
     // write a copy to the build location
     save(file);
 
@@ -282,75 +276,71 @@ public class Manifest {
   }
 
 
-  protected void load(boolean forceNew) {
-//  Sketch sketch = editor.getSketch();
-//  File manifestFile = new File(sketch.getFolder(), MANIFEST_XML);
-//  XMLElement xml = null;
-  File manifestFile = getManifestFile();
-  if (manifestFile.exists()) {
-    try {
-      xml = new XML(manifestFile);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.err.println("Problem reading AndroidManifest.xml, creating a new version");
+  protected void load(boolean forceNew) { 
+    File manifestFile = getManifestFile();
+    if (manifestFile.exists()) {
+      try {
+        xml = new XML(manifestFile);
+      } catch (Exception e) {
+        e.printStackTrace();
+        System.err.println("Problem reading AndroidManifest.xml, creating a new version");
 
-      // remove the old manifest file, rename it with date stamp
-      long lastModified = manifestFile.lastModified();
-      String stamp = AndroidMode.getDateStamp(lastModified);
-      File dest = new File(sketch.getFolder(), MANIFEST_XML + "." + stamp);
-      boolean moved = manifestFile.renameTo(dest);
-      if (!moved) {
-        System.err.println("Could not move/rename " + manifestFile.getAbsolutePath());
-        System.err.println("You'll have to move or remove it before continuing.");
-        return;
+        // remove the old manifest file, rename it with date stamp
+        long lastModified = manifestFile.lastModified();
+        String stamp = AndroidMode.getDateStamp(lastModified);
+        File dest = new File(sketch.getFolder(), MANIFEST_XML + "." + stamp);
+        boolean moved = manifestFile.renameTo(dest);
+        if (!moved) {
+          System.err.println("Could not move/rename " + manifestFile.getAbsolutePath());
+          System.err.println("You'll have to move or remove it before continuing.");
+          return;
+        }
       }
     }
-  }
-  
-  String[] permissionNames = null;
-  String pkgName = null;
-  String versionCode = null;
-  String versionName = null;
-  if (xml != null && forceNew) {
-    permissionNames = getPermissions();    
-    pkgName = getPackageName();
-    versionCode = getVersionCode();
-    versionName = getVersionName();
-    xml = null;
-  }
-  
-  if (xml == null) {
-    writeBlankManifest(manifestFile, appComp);
-    try {
-      xml = new XML(manifestFile);
-      if (permissionNames != null) {
-        setPermissions(permissionNames);
+    
+    String[] permissionNames = null;
+    String pkgName = null;
+    String versionCode = null;
+    String versionName = null;
+    if (xml != null && forceNew) {
+      permissionNames = getPermissions();    
+      pkgName = getPackageName();
+      versionCode = getVersionCode();
+      versionName = getVersionName();
+      xml = null;
+    }
+
+    if (xml == null) {
+      writeBlankManifest(manifestFile, appComp);
+      try {
+        xml = new XML(manifestFile);
+        if (permissionNames != null) {
+          setPermissions(permissionNames);
+        }
+        if (pkgName != null) {
+          xml.setString("package", pkgName);
+        }
+        if (versionCode != null) {
+          xml.setString("android:versionCode", versionCode);
+        }
+        if (versionName != null) {
+          xml.setString("android:versionName", versionName);
+        }       
+      } catch (FileNotFoundException e) {
+        System.err.println("Could not read " + manifestFile.getAbsolutePath());
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (ParserConfigurationException e) {
+        e.printStackTrace();
+      } catch (SAXException e) {
+        e.printStackTrace();
       }
-      if (pkgName != null) {
-        xml.setString("package", pkgName);
-      }
-      if (versionCode != null) {
-        xml.setString("android:versionCode", versionCode);
-      }
-      if (versionName != null) {
-        xml.setString("android:versionName", versionName);
-      }       
-    } catch (FileNotFoundException e) {
-      System.err.println("Could not read " + manifestFile.getAbsolutePath());
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ParserConfigurationException e) {
-      e.printStackTrace();
-    } catch (SAXException e) {
-      e.printStackTrace();
+    }
+    if (xml == null) {
+      Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
     }
   }
-  if (xml == null) {
-    Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
-  }
-//  return xml;
-}
 
   protected void save() {
     save(getManifestFile());

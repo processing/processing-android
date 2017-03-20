@@ -81,6 +81,15 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
+    if (sketch != null) {
+      //cardboardView.setChromaticAberrationCorrectionEnabled(true);
+      //cardboardView.setVRModeEnabled(false); // sets Monocular mode
+      sketch.initSurface(PCardboard.this, null);
+
+      // Don't start Papplet's animation thread bc cardboard will drive rendering
+      // continuously
+//      sketch.startSurface();
+    }
   }
 
   public PApplet getSketch() {
@@ -89,20 +98,6 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
   public ServiceEngine getEngine() {
     return null;
-  }
-
-  public void init(PApplet sketch) {
-    setSketch(sketch);
-    if (sketch != null) {
-      //cardboardView.setChromaticAberrationCorrectionEnabled(true);
-      //cardboardView.setVRModeEnabled(false); // sets Monocular mode
-      sketch.initSurface(PCardboard.this, null);
-
-
-      // Don't start Papplet's animation thread bc cardboard will drive rendering
-      // continuously
-//      sketch.startSurface();
-    }
   }
 
   /*
@@ -154,5 +149,14 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
   public boolean canDraw() {
     return true;
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode,
+                                         String permissions[],
+                                         int[] grantResults) {
+    if (sketch == null) {
+      sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
   }
 }

@@ -30,6 +30,7 @@ import processing.app.*;
 import processing.core.PApplet;
 import processing.mode.java.preproc.PdePreprocessor;
 import processing.mode.java.preproc.SurfaceInfo;
+import processing.mode.java.preproc.PdePreprocessor.Mode;
 
 
 public class AndroidPreprocessor extends PdePreprocessor {
@@ -210,33 +211,33 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return count;
   }
 
+  
 /*
+  @Override
   protected void writeFooter(PrintWriter out, String className) {
-    if (mode == Mode.STATIC) {
-      // close off draw() definition
-      out.println("noLoop();");
-      out.println(indent + "}");
+    SurfaceInfo info = null;
+    try {
+      info = initSketchSize(sketch.getMainProgram());
+    } catch (SketchException e) {
     }
-
-    if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
-      out.println();
-
-      if (sizeInfo.getWidth() != null) {
-        out.println(indent + "public int sketchWidth() { return " + sizeInfo.getWidth() + "; }");
-      }
-      if (sizeInfo.getHeight() != null) {
-        out.println(indent + "public int sketchHeight() { return " + sizeInfo.getHeight() + "; }");
-      }
-      if (sizeInfo.getRenderer() != null) {
-        out.println(indent + "public String sketchRenderer() { return " + sizeInfo.getRenderer() + "; }");
+    
+    if (info == null) {
+      // Cannot get size info, just use parent's implementation.
+      super.writeFooter(out, className);
+    } else {
+      if (mode == Mode.STATIC) {
+        // close off setup() definition
+        out.println(indent + indent + "noLoop();");
+        out.println(indent + "}");
+        out.println();
       }
 
-      if (sketchQuality != null) {
-        out.println(indent + "public int sketchQuality() { return " + sketchQuality + "; }");
+      if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
+        if (!hasMethod("settings") && info.hasSettings()) {
+          out.println(indent + "public void settings() { " + info.getSettings() + " }");
+        }
+        out.println("}");
       }
-
-      // close off the class definition
-      out.println("}");
     }
   }
 */

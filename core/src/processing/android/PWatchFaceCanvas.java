@@ -135,11 +135,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
 
-  public void onPermissionsGranted() {
-    if (engine != null) engine.onPermissionsGranted();
-  }
-
-
   @Override
   public Engine onCreateEngine() {
     engine = new CanvasEngine();
@@ -194,13 +189,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     private void invalidateIfNecessary() {
       if (isVisible() && !isInAmbientMode()) {
         invalidate();
-      }
-    }
-
-
-    private void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
       }
     }
 
@@ -432,6 +420,15 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public boolean requireBurnInProtection() {
       return burnInProtection;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[],
+                                           int[] grantResults) {
+      if (sketch != null) {
+        sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      }
     }
   }
 }

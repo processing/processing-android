@@ -114,41 +114,10 @@ public class PApplet extends Object implements PConstants {
   static public final int DEFAULT_HEIGHT = -1;
 
   /**
-   * Minimum dimensions for the window holding an applet.
-   * This varies between platforms, Mac OS X 10.3 can do any height
-   * but requires at least 128 pixels width. Windows XP has another
-   * set of limitations. And for all I know, Linux probably lets you
-   * make windows with negative sizes.
-   */
-//  static public final int MIN_WINDOW_WIDTH = 128;
-//  static public final int MIN_WINDOW_HEIGHT = 128;
-
-  /**
-   * Exception thrown when size() is called the first time.
-   * <P>
-   * This is used internally so that setup() is forced to run twice
-   * when the renderer is changed. This is the only way for us to handle
-   * invoking the new renderer while also in the midst of rendering.
-   */
-//  static public class RendererChangeException extends RuntimeException { }
-
-//  protected boolean surfaceReady;
-
-  /**
    * Set true when the surface dimensions have changed, so that the PGraphics
    * object can be resized on the next trip through handleDraw().
    */
   protected boolean surfaceChanged;
-
-  /**
-   * true if no size() command has been executed. This is used to wait until
-   * a size has been set before placing in the window and showing it.
-   */
-//  public boolean defaultSize;
-
-//  volatile boolean resizeRequest;
-//  volatile int resizeWidth;
-//  volatile int resizeHeight;
 
   /**
    * Pixel buffer from this applet's PGraphics.
@@ -263,6 +232,11 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
+  /**
+   * Callback methods to handle permission requests
+   */
+  protected HashMap<String, Method> permissionMethods = new HashMap<String, Method>();
+
   ///////////////////////////////////////////////////////////////
   // Wallpaper and watchface variables: these will go away soon...
   @Deprecated
@@ -311,12 +285,6 @@ public class PApplet extends Object implements PConstants {
    * As such, this value won't be valid until after 5-10 frames.
    */
   public float frameRate = 10;
-  /** Last time in nanoseconds that frameRate was checked */
-//  protected long frameRateLastNanos = 0;
-//
-//  /** As of release 0116, frameRate(60) is called as a default */
-//  protected float frameRateTarget = 60;
-//  protected long frameRatePeriod = 1000000000L / 60L;
 
   protected boolean looping;
 
@@ -338,18 +306,6 @@ public class PApplet extends Object implements PConstants {
    * true if this applet has had it.
    */
   public boolean finished;
-
-  /**
-   * For Android, true if the activity has been paused.
-   */
-//  protected boolean paused;
-
-//  protected SurfaceView surfaceView;
-
-  /**
-   * The Window object for Android.
-   */
-//  protected Window window;
 
   /**
    * true if exit() has been called so that things shut down
@@ -616,8 +572,54 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void onPermissionsGranted() {
+  public boolean hasPermission(String permission) {
+    return surface.hasPermission(permission);
+  }
 
+
+  public void requestPermission(String permission, String callback) {
+    if (!hasPermission(permission)) {
+      println("Requesting permission ", permission, " with callback ", callback);
+      Method handleMethod = null;
+      try {
+        Class<?> callbackClass = this.getClass();
+        handleMethod = callbackClass.getMethod(callback, new Class[] { boolean.class });
+      } catch (NoSuchMethodException nsme) {
+        System.err.println(callback + "() could not be found");
+      }
+      if (handleMethod != null) {
+        permissionMethods.put(permission, handleMethod);
+        surface.requestPermission(permission);
+      }
+    }
+  }
+
+
+  public void onRequestPermissionsResult(int requestCode,
+                                         String permissions[],
+                                         int[] grantResults) {
+    if (requestCode == PSurface.REQUEST_PERMISSIONS) {
+      for (int i = 0; i < grantResults.length; i++) {
+        boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+        handlePermissionsResult(permissions[i], granted);
+      }
+    }
+  }
+
+
+  private void handlePermissionsResult(String permission, boolean granted) {
+    Method handleMethod = permissionMethods.get(permission);
+    if (handleMethod != null) {
+      try {
+        handleMethod.invoke(this, new Object[] { granted });
+      } catch (IllegalAccessException e) {
+        e.printStackTrace();
+      } catch (IllegalArgumentException e) {
+        e.printStackTrace();
+      } catch (InvocationTargetException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
 

@@ -246,7 +246,7 @@ class AndroidBuild extends JavaBuild {
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
     if (sketchClassName != null) {
       File tempManifest = new File(tmpFolder, "AndroidManifest.xml");
-      manifest.writeBuild(tempManifest, sketchClassName, target.equals("debug"));
+      manifest.writeCopy(tempManifest, sketchClassName, target.equals("debug"));
 
       writeAntProps(new File(tmpFolder, "ant.properties"));
       buildFile = new File(tmpFolder, "build.xml");
@@ -268,13 +268,13 @@ class AndroidBuild extends JavaBuild {
       // Copy any imported libraries (their libs and assets),
       // and anything in the code folder contents to the project.
       copyImportedLibs(libsFolder, assetsFolder);
-      copyCodeFolder(libsFolder);      
+      copyCodeFolder(libsFolder);
       
       // Copy any system libraries needed by the project
       copyWearLib(tmpFolder, libsFolder);
-      copySupportLibs(tmpFolder, libsFolder);    
+      copySupportLibs(tmpFolder, libsFolder);
       if (getAppComponent() == FRAGMENT) {
-        copyAppCompatLib(targetID, tmpFolder, libsFolder);        
+        copyAppCompatLib(targetID, tmpFolder, libsFolder);   
       }
       if (getAppComponent() == CARDBOARD) {
         copyGVRLibs(targetID, libsFolder);
@@ -382,7 +382,6 @@ class AndroidBuild extends JavaBuild {
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
-    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
@@ -420,6 +419,7 @@ class AndroidBuild extends JavaBuild {
 
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);      
   }
+  
   
   private void writeWearableDescription(final File resFolder, final String apkName,
       final String versionCode, String versionName) {
@@ -1118,7 +1118,6 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
@@ -1131,7 +1130,6 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
@@ -1145,7 +1143,6 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceGLES");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
@@ -1159,7 +1156,6 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceCanvas");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }  
@@ -1172,7 +1168,6 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@permissions@@", generatePermissionsString(permissions));
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }

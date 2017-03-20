@@ -133,11 +133,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
-  public void onPermissionsGranted() {
-    if (engine != null) engine.onPermissionsGranted();
-  }
-
-
   @Override
   public Engine onCreateEngine() {
     engine = new GLES2Engine();
@@ -211,13 +206,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     private void invalidateIfNecessary() {
       if (isVisible() && !isInAmbientMode()) {
         invalidate();
-      }
-    }
-
-
-    public void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
       }
     }
 
@@ -433,6 +421,16 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public boolean requireBurnInProtection() {
       return burnInProtection;
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[],
+                                           int[] grantResults) {
+      if (sketch != null) {
+        sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      }
     }
   }
 }

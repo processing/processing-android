@@ -41,4 +41,9 @@ public interface ServiceEngine extends PConstants {
   public Rect getInsets();
   public boolean useLowBitAmbient();
   public boolean requireBurnInProtection();
+
+  // Service permissions
+  public void onRequestPermissionsResult(int requestCode,
+                                         String permissions[],
+                                         int[] grantResults);
 }

@@ -44,6 +44,8 @@ import processing.android.ServiceEngine;
  * handling
  */
 public interface PSurface {
+  public static final int REQUEST_PERMISSIONS = 1;
+
   public AppComponent getComponent();
   public Context getContext();
   public Activity getActivity();
@@ -95,4 +97,7 @@ public interface PSurface {
   public void finish();
 
   public void setFrameRate(float fps);
+
+  public boolean hasPermission(String permission);
+  public void requestPermission(String permission);
 }
