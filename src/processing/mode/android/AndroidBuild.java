@@ -166,18 +166,11 @@ class AndroidBuild extends JavaBuild {
       // so the watchface can be uninstalled from the phone, and can be
       // published on Google Play.
       File wearFolder = createProject(targetID, true);
-      if (wearFolder != null) {
-        if (!antBuild()) {
-          return null;
-        }
-      }
-      
+      if (wearFolder == null) return null;
+      if (!antBuild()) return null;      
       File folder = createHandheldProject(targetID, wearFolder, null);
-      if (folder != null) {
-        if (!antBuild()) {
-          return null;
-        }
-      }
+      if (folder == null) return null;
+      if (!antBuild()) return null;
       return folder;      
     } else {
       File folder = createProject(targetID, false);
@@ -592,14 +585,15 @@ class AndroidBuild extends JavaBuild {
       Preferences.set("android.export.build_system", buildSystem);
     }
 
-    if (buildSystem.equals("ant")) {    
-      // this will set debuggable to true in the manifest file
-      target = "debug";
-    } else {
-      // debuggable property should not set in the manifest file when building
-      // with gradle
-      target = "";
-    }
+//    if (buildSystem.equals("ant")) {    
+//      // this will set debuggable to true in the manifest file
+//      target = "debug";
+//    } else {
+//      // debuggable property should not set in the manifest file when building
+//      // with gradle
+//      target = "";
+//    }
+    target = "debug";
     
     String targetID = getTargetID();
     
