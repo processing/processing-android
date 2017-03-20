@@ -232,10 +232,19 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
+  ///////////////////////////////////////////////////////////////
+  // Permission handling
+
   /**
    * Callback methods to handle permission requests
    */
   protected HashMap<String, Method> permissionMethods = new HashMap<String, Method>();
+
+
+  /**
+   * Permissions requested during one frame
+   */
+  protected ArrayList<String> reqPermissions = new ArrayList<String>();
 
   ///////////////////////////////////////////////////////////////
   // Wallpaper and watchface variables: these will go away soon...
@@ -579,7 +588,6 @@ public class PApplet extends Object implements PConstants {
 
   public void requestPermission(String permission, String callback) {
     if (!hasPermission(permission)) {
-      println("Requesting permission ", permission, " with callback ", callback);
       Method handleMethod = null;
       try {
         Class<?> callbackClass = this.getClass();
@@ -589,7 +597,9 @@ public class PApplet extends Object implements PConstants {
       }
       if (handleMethod != null) {
         permissionMethods.put(permission, handleMethod);
-        surface.requestPermission(permission);
+        // Accumulating permissions so they requested all at once at the end
+        // of draw.
+        reqPermissions.add(permission);
       }
     }
   }
@@ -619,6 +629,15 @@ public class PApplet extends Object implements PConstants {
       } catch (InvocationTargetException e) {
         e.printStackTrace();
       }
+    }
+  }
+
+
+  private void handlePermissions() {
+    if (0 < reqPermissions.size()) {
+      String[] req = reqPermissions.toArray(new String[reqPermissions.size()]);
+      surface.requestPermissions(req);
+      reqPermissions.clear();
     }
   }
 
@@ -1744,6 +1763,7 @@ public class PApplet extends Object implements PConstants {
       dequeueEvents();
 
       handleMethods("draw");
+      handlePermissions();
 
       redraw = false;  // unset 'redraw' flag in case it was set
       // (only do this once draw() has run, not just setup())

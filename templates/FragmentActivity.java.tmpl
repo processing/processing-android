@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
   public void onRequestPermissionsResult(int requestCode,
                                          String permissions[],
                                          int[] grantResults) {
-    PApplet.println("------->  onRequestPermissionsResult", grantResults);
     if (sketch != null) {
       sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }

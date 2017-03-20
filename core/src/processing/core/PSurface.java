@@ -99,5 +99,5 @@ public interface PSurface {
   public void setFrameRate(float fps);
 
   public boolean hasPermission(String permission);
-  public void requestPermission(String permission);
+  public void requestPermissions(String[] permissions);
 }

@@ -46,8 +46,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.support.v4.os.ResultReceiver;
 
-import android.support.wearable.activity.WearableActivity;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -522,7 +520,7 @@ public class PSurfaceNone implements PSurface, PConstants {
   }
 
 
-  public void requestPermission(String permission) {
+  public void requestPermissions(String[] permissions) {
     int comp = component.getKind();
     if (comp == AppComponent.FRAGMENT) {
       // Requesting permissions from user when the app resumes.
@@ -530,8 +528,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       // http://stackoverflow.com/a/35495855
       // More on permission in Android 23:
       // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
-      ActivityCompat.requestPermissions(activity, new String[] { permission },
-                                        REQUEST_PERMISSIONS);
+      ActivityCompat.requestPermissions(activity, permissions, REQUEST_PERMISSIONS);
     } else if (comp == AppComponent.WALLPAPER || comp == AppComponent.WATCHFACE) {
       // https://developer.android.com/training/articles/wear-permissions.html
       // Inspired by PermissionHelper.java from Michael von Glasow:
@@ -549,7 +546,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       };
       final Intent permIntent = new Intent(getContext(), PermissionRequestActivity.class);
       permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);
-      permIntent.putExtra(KEY_PERMISSIONS, new String[] { permission });
+      permIntent.putExtra(KEY_PERMISSIONS, permissions);
       permIntent.putExtra(KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
       // Show the dialog requesting the permissions
       permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -558,7 +555,6 @@ public class PSurfaceNone implements PSurface, PConstants {
     }
   }
 
-  //WearableActivity
   public static class PermissionRequestActivity extends Activity {
     ResultReceiver resultReceiver;
     String[] permissions;
