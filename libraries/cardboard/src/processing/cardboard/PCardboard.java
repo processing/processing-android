@@ -27,6 +27,7 @@ import com.google.vr.sdk.base.Eye;
 
 import android.util.DisplayMetrics;
 import processing.android.AppComponent;
+import processing.android.ServiceEngine;
 import processing.core.PApplet;
 
 // http://pastebin.com/6wPgFYhq
@@ -80,24 +81,23 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
+    if (sketch != null) {
+      //cardboardView.setChromaticAberrationCorrectionEnabled(true);
+      //cardboardView.setVRModeEnabled(false); // sets Monocular mode
+      sketch.initSurface(PCardboard.this, null);
+
+      // Don't start Papplet's animation thread bc cardboard will drive rendering
+      // continuously
+//      sketch.startSurface();
+    }
   }
 
   public PApplet getSketch() {
     return sketch;
   }
 
-  public void init(PApplet sketch) {
-    setSketch(sketch);
-    if (sketch != null) {
-      //cardboardView.setChromaticAberrationCorrectionEnabled(true);
-      //cardboardView.setVRModeEnabled(false); // sets Monocular mode
-      sketch.initSurface(PCardboard.this, null);
-
-
-      // Don't start Papplet's animation thread bc cardboard will drive rendering
-      // continuously
-//      sketch.startSurface();
-    }
+  public ServiceEngine getEngine() {
+    return null;
   }
 
   /*
@@ -149,5 +149,14 @@ public class PCardboard extends GvrActivity implements AppComponent {
 
   public boolean canDraw() {
     return true;
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode,
+                                         String permissions[],
+                                         int[] grantResults) {
+    if (sketch == null) {
+      sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
   }
 }

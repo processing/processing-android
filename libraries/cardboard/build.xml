@@ -20,9 +20,9 @@
 
   <target name="compile" description="Compile sources">
     <condition property="core-built">
-      <available file="../../android-core.zip" />
+      <available file="../../processing-core.zip" />
     </condition>
-    <fail unless="core-built" message="Please build the core library first and make sure it sits in ../../android-core.zip" />
+    <fail unless="core-built" message="Please build the core library first and make sure it sits in ../../processing-core.zip" />
 
     <mkdir dir="bin" />
     <javac source="1.7"
@@ -33,7 +33,7 @@
 	   classpath="lib/gvr-base.jar;
                   lib/gvr-common.jar;
                   lib/gvr-audio.jar;
-	              ../../android-core.zip;
+	              ../../processing-core.zip;
 	              ${env.ANDROID_SDK}/platforms/android-25/android.jar"
 	   nowarn="true"
 	   compiler="org.eclipse.jdt.core.JDTCompilerAdapter">

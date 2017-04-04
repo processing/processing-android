@@ -26,11 +26,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
-import android.service.wallpaper.WallpaperService.Engine;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -40,18 +44,19 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.support.v4.os.ResultReceiver;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import processing.android.AppComponent;
-import processing.android.PWallpaper;
-import processing.android.PWatchFaceCanvas;
-import processing.android.PWatchFaceGLES;
+import processing.android.ServiceEngine;
+import processing.android.PermissionRequestor;
 
 /**
- * Base surface for Android2D and OpenGL renderers. It includes the standard rendering loop.
+ * Base surface for Android2D and OpenGL renderers.
+ * It includes the standard rendering loop.
  */
 public class PSurfaceNone implements PSurface, PConstants {
   protected PApplet sketch;
@@ -99,17 +104,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   @Override
-  public Engine getEngine() {
-    if (component.getKind() == AppComponent.WALLPAPER) {
-      return ((PWallpaper)component).getEngine();
-    } else if (component.getKind() == AppComponent.WATCHFACE) {
-      if (component instanceof PWatchFaceCanvas) {
-        return ((PWatchFaceCanvas)component).getEngine();
-      } else if (component instanceof PWatchFaceGLES) {
-        return ((PWatchFaceGLES)component).getEngine();
-      }
-    }
-    return null;
+  public ServiceEngine getEngine() {
+    return component.getEngine();
   }
 
 
@@ -240,20 +236,31 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   @Override
-  public void initView(LayoutInflater inflater, ViewGroup container,
+  public void initView(int sketchWidth, int sketchHeight, boolean parentSize,
+                       LayoutInflater inflater, ViewGroup container,
                        Bundle savedInstanceState) {
     // https://www.bignerdranch.com/blog/understanding-androids-layoutinflater-inflate/
     ViewGroup rootView = (ViewGroup)inflater.inflate(sketch.parentLayout, container, false);
 
     View view = getSurfaceView();
-    LinearLayout.LayoutParams lp;
-    lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                                       LayoutParams.MATCH_PARENT);
-    lp.weight = 1.0f;
-    lp.setMargins(0, 0, 0, 0);
-    view.setPadding(0,0,0,0);
-    rootView.addView(view, lp);
+    if (parentSize) {
+      LinearLayout.LayoutParams lp;
+      lp = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                                         LayoutParams.MATCH_PARENT);
+      lp.weight = 1.0f;
+      lp.setMargins(0, 0, 0, 0);
+      view.setPadding(0,0,0,0);
+      rootView.addView(view, lp);
+    } else {
+      RelativeLayout layout = new RelativeLayout(activity);
+      RelativeLayout.LayoutParams lp =
+        new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                                        ViewGroup.LayoutParams.WRAP_CONTENT);
+      lp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
+      layout.addView(view, sketchWidth, sketchHeight);
+      rootView.addView(layout, lp);
+    }
     rootView.setBackgroundColor(sketch.sketchWindowColor());
     setRootView(rootView);
   }
@@ -261,9 +268,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void startActivity(Intent intent) {
-    if (component.getKind() == AppComponent.FRAGMENT) {
-      component.startActivity(intent);
-    }
+    component.startActivity(intent);
   }
 
 
@@ -501,6 +506,48 @@ public class PSurfaceNone implements PSurface, PConstants {
       }
 
       finish();
+    }
+  }
+
+
+  public boolean hasPermission(String permission) {
+    int res = ContextCompat.checkSelfPermission(getContext(), permission);
+    return res == PackageManager.PERMISSION_GRANTED;
+  }
+
+
+  public void requestPermissions(String[] permissions) {
+    int comp = component.getKind();
+    if (comp == AppComponent.FRAGMENT) {
+      // Requesting permissions from user when the app resumes.
+      // Nice example on how to handle user response
+      // http://stackoverflow.com/a/35495855
+      // More on permission in Android 23:
+      // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
+      ActivityCompat.requestPermissions(activity, permissions, REQUEST_PERMISSIONS);
+    } else if (comp == AppComponent.WALLPAPER || comp == AppComponent.WATCHFACE) {
+      // https://developer.android.com/training/articles/wear-permissions.html
+      // Inspired by PermissionHelper.java from Michael von Glasow:
+      // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/utils/PermissionHelper.java
+      // Example of use:
+      // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/PasvLocListenerService.java
+      final ServiceEngine eng = getEngine();
+      ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+        @Override
+        protected void onReceiveResult (int resultCode, Bundle resultData) {
+          String[] outPermissions = resultData.getStringArray(PermissionRequestor.KEY_PERMISSIONS);
+          int[] grantResults = resultData.getIntArray(PermissionRequestor.KEY_GRANT_RESULTS);
+          eng.onRequestPermissionsResult(resultCode, outPermissions, grantResults);
+        }
+      };
+      final Intent permIntent = new Intent(getContext(), PermissionRequestor.class);
+      permIntent.putExtra(PermissionRequestor.KEY_RESULT_RECEIVER, resultReceiver);
+      permIntent.putExtra(PermissionRequestor.KEY_PERMISSIONS, permissions);
+      permIntent.putExtra(PermissionRequestor.KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
+      // Show the dialog requesting the permissions
+      permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+      startActivity(permIntent);
     }
   }
 }

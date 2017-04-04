@@ -135,34 +135,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   //public void setPath(String path)
 
 
-  /**
-   * Called in response to a resize event, handles setting the
-   * new width and height internally, as well as re-allocating
-   * the pixel buffer for the new size.
-   *
-   * Note that this will nuke any cameraMode() settings.
-   */
-//  @Override
-//  public void setSize(int iwidth, int iheight) {  // ignore
-//    width = iwidth;
-//    height = iheight;
-//    width1 = width - 1;
-//    height1 = height - 1;
-//
-//    allocate();
-//    reapplySettings();
-//  }
-
-
-  @Override
-  protected void allocate() {
-    if (useBitmap) {
-      if (bitmap != null) bitmap.recycle();
-      bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-      canvas = new Canvas(bitmap);
-    }
-  }
-
 
   @Override
   public void dispose() {
@@ -197,8 +169,20 @@ public class PGraphicsAndroid2D extends PGraphics {
 //  }
 
 
+  protected Canvas checkCanvas() {
+    if (canvas == null && (useBitmap || !primaryGraphics)) {
+      if (bitmap != null) bitmap.recycle();
+      bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+      canvas = new Canvas(bitmap);
+    }
+    return canvas;
+  }
+
+
   @Override
   public void beginDraw() {
+    canvas = checkCanvas();
+
 //    if (primaryGraphics) {
 //      canvas = parent.getSurfaceHolder().lockCanvas(null);
 //      if (canvas == null) {
@@ -232,7 +216,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 //    }
 
     if (primaryGraphics) {
-      SurfaceHolder holder = parent.surface.getSurfaceHolder();
+      SurfaceHolder holder = parent.getSurface().getSurfaceHolder();
       if (holder != null) {
         Canvas screen = null;
         try {
@@ -473,7 +457,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void endShape(int mode) {
     if (shape == POINTS && stroke && vertexCount > 0) {
-//      Matrix m = canvas.getMatrix();
       Matrix m = getMatrixImp();
       if (strokeWeight == 1 && m.isIdentity()) {
         if (screenPoint == null) {
@@ -519,7 +502,6 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void clipImpl(float x1, float y1, float x2, float y2) {
-//    canvas.save(Canvas.CLIP_SAVE_FLAG);
     canvas.clipRect(x1, y1, x2, y2);
   }
 
@@ -527,7 +509,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void noClip() {
     canvas.clipRect(0, 0, width, height, Region.Op.REPLACE);
-//    canvas.restore();
   }
 
 

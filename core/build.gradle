@@ -10,7 +10,9 @@ buildscript {
 
 dependencies {
     compile name: 'android'
-    compile name: 'android-support-v4'
+    compile name: 'support-compat-25.2.0'
+    compile name: 'support-fragment-25.2.0'
+    compile name: 'support-annotations-25.2.0'
     compile name: 'wearable-2.0.0'
 }
 
@@ -46,7 +48,7 @@ task dist {
     doLast {
         // make copy of jar file as zip
         Files.copy(file("$buildDir/libs/core.jar").toPath(),
-                   file("$buildDir/libs/android-core.zip").toPath(), REPLACE_EXISTING);
+                   file("$buildDir/libs/processing-core.zip").toPath(), REPLACE_EXISTING);
                    
         // and copy it to root
         Files.copy(file("$buildDir/libs/core.jar").toPath(),

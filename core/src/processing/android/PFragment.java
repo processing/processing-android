@@ -22,10 +22,13 @@
 
 package processing.android;
 
+import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
+
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -41,17 +44,21 @@ import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
   private DisplayMetrics metrics;
-  protected Point size;
-  protected PApplet sketch;
+  private Point size;
+  private PApplet sketch;
 
   public PFragment() {
   }
 
-  public void init(int layout, FragmentManager fragmentManager) {
-    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-    fragmentTransaction.add(layout, this);
-    fragmentTransaction.commit();
-  }
+//  public void setLayout(int layout, FragmentManager manager) {
+//    this.layout = layout;
+//    if (sketch != null) {
+//      sketch.parentLayout = layout;
+//    }
+//    FragmentTransaction transaction = manager.beginTransaction();
+//    transaction.add(layout, this);
+//    transaction.commit();
+//  }
 
   public void initDimensions() {
     WindowManager wm = getActivity().getWindowManager();
@@ -98,19 +105,40 @@ public class PFragment extends Fragment implements AppComponent {
     this.sketch = sketch;
   }
 
+  public void setSketch(PApplet sketch, @IdRes int id, @LayoutRes int layout,
+                        FragmentManager manager) {
+    this.sketch = sketch;
+    sketch.parentLayout = layout;
+    FragmentTransaction transaction = manager.beginTransaction();
+    transaction.add(id, this);
+    transaction.commit();
+  }
+
+  public void setSketch(PApplet sketch, View view, FragmentManager manager) {
+    this.sketch = sketch;
+    FragmentTransaction transaction = manager.beginTransaction();
+    transaction.add(view.getId(), this);
+    transaction.commit();
+  }
+
   public PApplet getSketch() {
     return sketch;
   }
 
+  public ServiceEngine getEngine() {
+    return null;
+  }
+
   public void dispose() {
   }
+
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
                            Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(inflater, container, savedInstanceState, this, null);
-      return sketch.surface.getRootView();
+      return sketch.getSurface().getRootView();
     } else {
       return null;
     }
@@ -158,16 +186,6 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
 
-//  public void onBackPressed() {
-//    sketch.exit();
-//  }
-
-
-  public void onPermissionsGranted() {
-    if (sketch != null) sketch.onPermissionsGranted();
-  }
-
-
   public void setOrientation(int which) {
     if (which == PORTRAIT) {
       getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -180,8 +198,14 @@ public class PFragment extends Fragment implements AppComponent {
   public void requestDraw() {
   }
 
+
   public boolean canDraw() {
     if (sketch == null) return false;
     return sketch.isLooping();
   }
+
+
+//public void onBackPressed() {
+//  sketch.exit();
+//}
 }

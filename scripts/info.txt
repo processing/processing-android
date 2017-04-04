@@ -1,14 +1,17 @@
 Collection of utility scripts that I put here for the lack of a better place. They 
 probably should become tasks/targets in the gradle/ant build scripts at some point.
 
-gvrsdk-update.sh: downloads the Google VR SDK and generates all required packages and jar
-files needed to build and run cardboard sketches from Processing
-
 perm-parse.py: generates the array of permissions for a given SDK level, to be pasted in
 Permissions.java
 
+support-update.sh: Explodes the support aar files from the local SDK repository, 
+and extracts the classes jar and copies it inside core/library
+
 wear-update.sh: downloads the wearable aar file from a known maven repository, and 
 extracts the classes jar and copies it inside core/library
+
+gvrsdk-update.sh: downloads the Google VR SDK and generates all required packages and jar
+files needed to build and run cardboard sketches from Processing
 
 gradlew-update.sh: creates the gradle wrapper with the desired gradle version and packs
 it in the mode folder to be available when exporting projects using gradle as the build 

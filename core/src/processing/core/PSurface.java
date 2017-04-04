@@ -36,18 +36,20 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.service.wallpaper.WallpaperService.Engine;
 import processing.android.AppComponent;
+import processing.android.ServiceEngine;
 
 /*
  * Holds the surface view associated with the sketch, and the rendering thread
  * handling
  */
 public interface PSurface {
+  public static final int REQUEST_PERMISSIONS = 1;
+
   public AppComponent getComponent();
   public Context getContext();
   public Activity getActivity();
-  public Engine getEngine();
+  public ServiceEngine getEngine();
 
   public void dispose();
 
@@ -64,7 +66,8 @@ public interface PSurface {
   public void setRootView(View view);
 
   public void initView(int sketchWidth, int sketchHeight);
-  public void initView(LayoutInflater inflater, ViewGroup container,
+  public void initView(int sketchWidth, int sketchHeight, boolean parentSize,
+                       LayoutInflater inflater, ViewGroup container,
                        Bundle savedInstanceState);
 
   public void startActivity(Intent intent);
@@ -94,4 +97,7 @@ public interface PSurface {
   public void finish();
 
   public void setFrameRate(float fps);
+
+  public boolean hasPermission(String permission);
+  public void requestPermissions(String[] permissions);
 }

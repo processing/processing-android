@@ -125,11 +125,11 @@ public class PGraphics extends PImage implements PConstants {
   // width and height are already inherited from PImage
 
 
-  /// width minus one (useful for many calculations)
-  protected int width1;
-
-  /// height minus one (useful for many calculations)
-  protected int height1;
+//  /// width minus one (useful for many calculations)
+//  protected int width1;
+//
+//  /// height minus one (useful for many calculations)
+//  protected int height1;
 
   /// width * height (useful for many calculations)
   public int pixelCount;
@@ -141,6 +141,9 @@ public class PGraphics extends PImage implements PConstants {
 
   /// true if defaults() has been called a first time
   protected boolean settingsInited;
+
+  /// true if settings should be re-applied on next beginDraw()
+  protected boolean reapplySettings;
 
   /// set to a PGraphics object being used inside a beginRaw/endRaw() block
   protected PGraphics raw;
@@ -698,19 +701,12 @@ public class PGraphics extends PImage implements PConstants {
   public void setSize(int w, int h) {  // ignore
     width = w;
     height = h;
-    width1 = width - 1;
-    height1 = height - 1;
 
-    allocate();
-    reapplySettings();
+    pixelWidth = width * pixelDensity;
+    pixelHeight = height * pixelDensity;
+
+    reapplySettings = true;
   }
-
-
-  /**
-   * Allocate memory for this renderer. Generally will need to be implemented
-   * for all renderers.
-   */
-  protected void allocate() { }
 
 
   /**
@@ -837,6 +833,7 @@ public class PGraphics extends PImage implements PConstants {
 
   protected void checkSettings() {
     if (!settingsInited) defaultSettings();
+    if (reapplySettings) reapplySettings();
   }
 
 
@@ -894,7 +891,7 @@ public class PGraphics extends PImage implements PConstants {
 
     settingsInited = true;
     // defaultSettings() overlaps reapplySettings(), don't do both
-    //reapplySettings = false;
+    reapplySettings = false;
   }
 
 
@@ -963,7 +960,7 @@ public class PGraphics extends PImage implements PConstants {
 
     blendMode(blendMode);
 
-    //reapplySettings = false;
+    reapplySettings = false;
   }
 
 

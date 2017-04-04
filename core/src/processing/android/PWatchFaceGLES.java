@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -42,9 +42,9 @@ import java.lang.reflect.Method;
 import android.graphics.Rect;
 
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
-  protected Point size;
+  private Point size;
   private DisplayMetrics metrics;
-  protected GLES2Engine engine;
+  private GLES2Engine engine;
 
 
   public void initDimensions() {
@@ -108,7 +108,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
-  public Engine getEngine() {
+  public ServiceEngine getEngine() {
     return engine;
   }
 
@@ -133,11 +133,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
-  public void onPermissionsGranted() {
-    if (engine != null) engine.onPermissionsGranted();
-  }
-
-
   @Override
   public Engine onCreateEngine() {
     engine = new GLES2Engine();
@@ -152,9 +147,14 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
-  private class GLES2Engine extends Gles2WatchFaceService.Engine {
+  private class GLES2Engine extends Gles2WatchFaceService.Engine implements
+  ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
+    private boolean isRound = false;
+    private Rect insets = new Rect();
+    private boolean lowBitAmbient = false;
+    private boolean burnInProtection = false;
 
 
     @SuppressWarnings("deprecation")
@@ -172,23 +172,6 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
       sketch.initSurface(PWatchFaceGLES.this, null);
       initComplications();
       requestPermissions();
-    }
-
-
-    private void initComplications() {
-      try {
-        compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
-                                                        new Class[] {int.class, ComplicationData.class});
-      } catch (Exception e) {
-        compUpdatedMethod = null;
-      }
-    }
-
-
-    private void invalidateIfNecessary() {
-      if (isVisible() && !isInAmbientMode()) {
-        invalidate();
-      }
     }
 
 
@@ -210,6 +193,23 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     }
 
 
+    private void initComplications() {
+      try {
+        compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
+                                                        new Class[] {int.class, ComplicationData.class});
+      } catch (Exception e) {
+        compUpdatedMethod = null;
+      }
+    }
+
+
+    private void invalidateIfNecessary() {
+      if (isVisible() && !isInAmbientMode()) {
+        invalidate();
+      }
+    }
+
+
     @Override
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
@@ -222,6 +222,8 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onPropertiesChanged(Bundle properties) {
       super.onPropertiesChanged(properties);
+      lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+      burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
       if (sketch != null) {
         sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
         sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
@@ -232,6 +234,10 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onApplyWindowInsets(WindowInsets insets) {
       super.onApplyWindowInsets(insets);
+      this.insets.set(insets.getSystemWindowInsetLeft(),
+                      insets.getSystemWindowInsetTop(),
+                      insets.getSystemWindowInsetRight(),
+                      insets.getSystemWindowInsetBottom());
       if (sketch != null) {
         sketch.isRound = insets.isRound();
         sketch.insetLeft = insets.getSystemWindowInsetLeft();
@@ -358,9 +364,72 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     }
 
 
-    public void onPermissionsGranted() {
+    @Override
+    public float getXOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public float getYOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public float getXOffsetStep() {
+      return 0;
+    }
+
+
+    @Override
+    public float getYOffsetStep() {
+      return 0;
+    }
+
+
+    @Override
+    public int getXPixelOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public int getYPixelOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean isRound() {
+      return isRound;
+    }
+
+
+    @Override
+    public Rect getInsets() {
+      return insets;
+    }
+
+
+    @Override
+    public boolean useLowBitAmbient() {
+      return lowBitAmbient;
+    }
+
+
+    @Override
+    public boolean requireBurnInProtection() {
+      return burnInProtection;
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[],
+                                           int[] grantResults) {
       if (sketch != null) {
-        sketch.onPermissionsGranted();
+        sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
       }
     }
   }

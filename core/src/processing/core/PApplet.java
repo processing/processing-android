@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012-17 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.zip.*;
 
+import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
 import android.content.*;
 import android.content.pm.PackageManager;
@@ -41,14 +42,13 @@ import android.graphics.*;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.service.wallpaper.WallpaperService;
+import android.support.annotation.LayoutRes;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.AppComponent;
 import processing.data.*;
@@ -60,12 +60,12 @@ public class PApplet extends Object implements PConstants {
   /**
    * The surface this sketch draws to.
    */
-  public PSurface surface;
+  protected PSurface surface;
 
   /**
    * The view group containing the surface view of the PApplet.
    */
-  public int parentLayout = -1;
+  public @LayoutRes int parentLayout = -1;
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
@@ -114,41 +114,10 @@ public class PApplet extends Object implements PConstants {
   static public final int DEFAULT_HEIGHT = -1;
 
   /**
-   * Minimum dimensions for the window holding an applet.
-   * This varies between platforms, Mac OS X 10.3 can do any height
-   * but requires at least 128 pixels width. Windows XP has another
-   * set of limitations. And for all I know, Linux probably lets you
-   * make windows with negative sizes.
-   */
-//  static public final int MIN_WINDOW_WIDTH = 128;
-//  static public final int MIN_WINDOW_HEIGHT = 128;
-
-  /**
-   * Exception thrown when size() is called the first time.
-   * <P>
-   * This is used internally so that setup() is forced to run twice
-   * when the renderer is changed. This is the only way for us to handle
-   * invoking the new renderer while also in the midst of rendering.
-   */
-//  static public class RendererChangeException extends RuntimeException { }
-
-//  protected boolean surfaceReady;
-
-  /**
    * Set true when the surface dimensions have changed, so that the PGraphics
    * object can be resized on the next trip through handleDraw().
    */
   protected boolean surfaceChanged;
-
-  /**
-   * true if no size() command has been executed. This is used to wait until
-   * a size has been set before placing in the window and showing it.
-   */
-//  public boolean defaultSize;
-
-//  volatile boolean resizeRequest;
-//  volatile int resizeWidth;
-//  volatile int resizeHeight;
 
   /**
    * Pixel buffer from this applet's PGraphics.
@@ -264,17 +233,42 @@ public class PApplet extends Object implements PConstants {
   public boolean focused = false;
 
   ///////////////////////////////////////////////////////////////
+  // Permission handling
+
+  /**
+   * Callback methods to handle permission requests
+   */
+  protected HashMap<String, Method> permissionMethods = new HashMap<String, Method>();
+
+
+  /**
+   * Permissions requested during one frame
+   */
+  protected ArrayList<String> reqPermissions = new ArrayList<String>();
+
+  ///////////////////////////////////////////////////////////////
   // Wallpaper and watchface variables: these will go away soon...
+  @Deprecated
   public boolean ambientMode = false;
+  @Deprecated
   public boolean isRound = false;
+  @Deprecated
   public int insetLeft = 0;
+  @Deprecated
   public int insetRight = 0;
+  @Deprecated
   public int insetTop = 0;
+  @Deprecated
   public int insetBottom = 0;
+  @Deprecated
   public boolean lowBitAmbient = false;
+  @Deprecated
   public boolean burnInProtection = false;
+  @Deprecated
   public boolean preview = false;
+  @Deprecated
   public float homeScreenOffset = 0;
+  @Deprecated
   public int homeScreenCount = 1;
   ///////////////////////////////////////////////////////////////
 
@@ -300,12 +294,6 @@ public class PApplet extends Object implements PConstants {
    * As such, this value won't be valid until after 5-10 frames.
    */
   public float frameRate = 10;
-  /** Last time in nanoseconds that frameRate was checked */
-//  protected long frameRateLastNanos = 0;
-//
-//  /** As of release 0116, frameRate(60) is called as a default */
-//  protected float frameRateTarget = 60;
-//  protected long frameRatePeriod = 1000000000L / 60L;
 
   protected boolean looping;
 
@@ -327,18 +315,6 @@ public class PApplet extends Object implements PConstants {
    * true if this applet has had it.
    */
   public boolean finished;
-
-  /**
-   * For Android, true if the activity has been paused.
-   */
-//  protected boolean paused;
-
-//  protected SurfaceView surfaceView;
-
-  /**
-   * The Window object for Android.
-   */
-//  protected Window window;
 
   /**
    * true if exit() has been called so that things shut down
@@ -441,13 +417,13 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public Activity getActivity() {
-    return surface.getActivity();
+  public Context getContext() {
+    return surface.getContext();
   }
 
 
-  public WallpaperService.Engine getEngine() {
-    return surface.getEngine();
+  public Activity getActivity() {
+    return surface.getActivity();
   }
 
 
@@ -469,6 +445,7 @@ public class PApplet extends Object implements PConstants {
 
     handleSettings();
 
+    boolean parentSize = false;
     if (parentLayout == -1) {
       if (fullScreen || width == -1 || height == -1) {
         // Either sketch explicitly set to full-screen mode, or not
@@ -477,10 +454,13 @@ public class PApplet extends Object implements PConstants {
         height = displayHeight;
       }
     } else {
-      // Dummy weight and height to initialize the PGraphics, will be resized
-      // when the view associated to the parent layout is created
-      width = 100;
-      height = 100;
+      if (fullScreen || width == -1 || height == -1) {
+        // Dummy weight and height to initialize the PGraphics, will be resized
+        // when the view associated to the parent layout is created
+        width = 100;
+        height = 100;
+        parentSize = true;
+      }
     }
 
     String rendererName = sketchRenderer();
@@ -501,27 +481,8 @@ public class PApplet extends Object implements PConstants {
       setFullScreenVisibility();
       surface.initView(width, height);
     } else {
-      surface.initView(inflater, container, savedInstanceState);
-
-      /*
-      final View parent = surface.getRootView();
-      parent.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-        @SuppressWarnings("deprecation")
-        @Override
-        public void onGlobalLayout() {
-          int availableWidth = parent.getMeasuredWidth();
-          int availableHeight = parent.getMeasuredHeight();
-          if (availableHeight > 0 && availableWidth > 0) {
-            System.err.println(availableWidth + " " + availableHeight);
-            if (SDK < Build.VERSION_CODES.JELLY_BEAN) {
-              parent.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-            } else {
-              parent.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-          }
-        }
-      });
-      */
+      surface.initView(width, height, parentSize,
+                       inflater, container, savedInstanceState);
     }
 
     finished = false; // just for clarity
@@ -620,13 +581,69 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void onPermissionsGranted() {
+  public boolean hasPermission(String permission) {
+    return surface.hasPermission(permission);
+  }
 
+
+  public void requestPermission(String permission, String callback) {
+    if (!hasPermission(permission)) {
+      Method handleMethod = null;
+      try {
+        Class<?> callbackClass = this.getClass();
+        handleMethod = callbackClass.getMethod(callback, new Class[] { boolean.class });
+      } catch (NoSuchMethodException nsme) {
+        System.err.println(callback + "() could not be found");
+      }
+      if (handleMethod != null) {
+        permissionMethods.put(permission, handleMethod);
+        // Accumulating permissions so they requested all at once at the end
+        // of draw.
+        reqPermissions.add(permission);
+      }
+    }
+  }
+
+
+  public void onRequestPermissionsResult(int requestCode,
+                                         String permissions[],
+                                         int[] grantResults) {
+    if (requestCode == PSurface.REQUEST_PERMISSIONS) {
+      for (int i = 0; i < grantResults.length; i++) {
+        boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+        handlePermissionsResult(permissions[i], granted);
+      }
+    }
+  }
+
+
+  private void handlePermissionsResult(String permission, boolean granted) {
+    Method handleMethod = permissionMethods.get(permission);
+    if (handleMethod != null) {
+      try {
+        handleMethod.invoke(this, new Object[] { granted });
+      } catch (IllegalAccessException e) {
+        e.printStackTrace();
+      } catch (IllegalArgumentException e) {
+        e.printStackTrace();
+      } catch (InvocationTargetException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+
+  private void handlePermissions() {
+    if (0 < reqPermissions.size()) {
+      String[] req = reqPermissions.toArray(new String[reqPermissions.size()]);
+      surface.requestPermissions(req);
+      reqPermissions.clear();
+    }
   }
 
 
   /**
-   * @param method "size", "fullScreen", or "layout"
+   * @param method "size" or "fullScreen"
    * @param args parameters passed to the function so we can show the user
    * @return true if safely inside the settings() method
    */
@@ -1255,26 +1272,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void layout(int ilayout) {
-    if (ilayout != this.parentLayout) {
-      if (insideSettings("layout", ilayout)) {
-        this.parentLayout = ilayout;
-      }
-    }
-  }
-
-
-  public void layout(int ilayout, String irenderer) {
-    if (ilayout != this.parentLayout ||
-        !this.renderer.equals(irenderer)) {
-      if (insideSettings("layout", ilayout, irenderer)) {
-        this.parentLayout = ilayout;
-        this.renderer = irenderer;
-      }
-    }
-  }
-
-
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -1766,6 +1763,7 @@ public class PApplet extends Object implements PConstants {
       dequeueEvents();
 
       handleMethods("draw");
+      handlePermissions();
 
       redraw = false;  // unset 'redraw' flag in case it was set
       // (only do this once draw() has run, not just setup())
@@ -2314,22 +2312,62 @@ public class PApplet extends Object implements PConstants {
 
   //////////////////////////////////////////////////////////////
 
-  // unfinished API, do not use
+  // Wallpaper and wear API
 
 
-//  protected void pressEvent() { }
-//
-//  protected void dragEvent() { }
-//
-//  protected void moveEvent() { }
-//
-//  protected void releaseEvent() { }
-//
-//  protected void zoomEvent(float x, float y, float d0, float d1) { }
-//
-//  protected void tapEvent(float x, float y) { }
-//
-//  protected void swipeEvent(float x0, float y0, float x1, float y1) { }
+  public boolean wallpaperPreview() {
+    return surface.getEngine().isPreview();
+  }
+
+
+  public float wallpaperOffset() {
+    return surface.getEngine().getXOffset();
+  }
+
+
+  public int wallpaperHomeCount() {
+    float step = surface.getEngine().getXOffsetStep();
+    if (0 < step) {
+      return (int)(1 + 1 / step);
+    } else {
+      return 1;
+    }
+  }
+
+
+  public boolean wearAmbient() {
+    return surface.getEngine().isInAmbientMode();
+  }
+
+
+  public boolean wearInteractive() {
+    return !surface.getEngine().isInAmbientMode();
+  }
+
+
+  public boolean wearRound() {
+    return surface.getEngine().isRound();
+  }
+
+
+  public boolean wearSquare() {
+    return !surface.getEngine().isRound();
+  }
+
+
+  public Rect wearInsets() {
+    return surface.getEngine().getInsets();
+  }
+
+
+  boolean wearLowBit() {
+    return surface.getEngine().useLowBitAmbient();
+  }
+
+
+  boolean wearBurnProtection() {
+    return surface.getEngine().requireBurnInProtection();
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -2407,18 +2445,16 @@ public class PApplet extends Object implements PConstants {
 
 
   public void openKeyboard() {
-    View view = surface.getRootView();
     Context context = surface.getContext();
-    InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
   }
 
 
   public void closeKeyboard() {
-    View view = surface.getRootView();
     Context context = surface.getContext();
-    InputMethodManager imm =(InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
   }
 
 
@@ -5073,33 +5109,25 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  static public boolean saveStream(File targetFile, InputStream sourceStream) {
+  static public boolean saveStream(File target, InputStream source) {
     File tempFile = null;
     try {
-      File parentDir = targetFile.getParentFile();
-      createPath(targetFile);
-      tempFile = File.createTempFile(targetFile.getName(), null, parentDir);
+      // make sure that this path actually exists before writing
+      createPath(target);
+      tempFile = createTempFile(target);
+      FileOutputStream targetStream = new FileOutputStream(tempFile);
 
-      BufferedInputStream bis = new BufferedInputStream(sourceStream, 16384);
-      FileOutputStream fos = new FileOutputStream(tempFile);
-      BufferedOutputStream bos = new BufferedOutputStream(fos);
+      saveStream(targetStream, source);
+      targetStream.close();
+      targetStream = null;
 
-      byte[] buffer = new byte[8192];
-      int bytesRead;
-      while ((bytesRead = bis.read(buffer)) != -1) {
-        bos.write(buffer, 0, bytesRead);
+      if (target.exists()) {
+        if (!target.delete()) {
+          System.err.println("Could not replace " +
+                             target.getAbsolutePath() + ".");
+        }
       }
-
-      bos.flush();
-      bos.close();
-      bos = null;
-
-      if (targetFile.exists() && !targetFile.delete()) {
-        System.err.println("Could not replace " +
-                           targetFile.getAbsolutePath() + ".");
-      }
-
-      if (!tempFile.renameTo(targetFile)) {
+      if (!tempFile.renameTo(target)) {
         System.err.println("Could not rename temporary file " +
                            tempFile.getAbsolutePath());
         return false;
@@ -5116,6 +5144,21 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  static public void saveStream(OutputStream target,
+                                InputStream source) throws IOException {
+    BufferedInputStream bis = new BufferedInputStream(source, 16384);
+    BufferedOutputStream bos = new BufferedOutputStream(target);
+
+    byte[] buffer = new byte[8192];
+    int bytesRead;
+    while ((bytesRead = bis.read(buffer)) != -1) {
+      bos.write(buffer, 0, bytesRead);
+    }
+
+    bos.flush();
+  }
+
+
   /**
    * Saves bytes to a file to inside the sketch folder.
    * The filename can be a relative path, i.e. "poo/bytefun.txt"
@@ -5123,27 +5166,68 @@ public class PApplet extends Object implements PConstants {
    * called 'poo' inside the sketch folder. If the in-between
    * subfolders don't exist, they'll be created.
    */
-  public void saveBytes(String filename, byte buffer[]) {
-    saveBytes(saveFile(filename), buffer);
+  public void saveBytes(String filename, byte[] data) {
+    saveBytes(saveFile(filename), data);
+  }
+
+
+  /**
+   * Creates a temporary file based on the name/extension of another file
+   * and in the same parent directory. Ensures that the same extension is used
+   * (i.e. so that .gz files are gzip compressed on output) and that it's done
+   * from the same directory so that renaming the file later won't cross file
+   * system boundaries.
+   */
+  static private File createTempFile(File file) throws IOException {
+    File parentDir = file.getParentFile();
+    String name = file.getName();
+    String prefix;
+    String suffix = null;
+    int dot = name.lastIndexOf('.');
+    if (dot == -1) {
+      prefix = name;
+    } else {
+      // preserve the extension so that .gz works properly
+      prefix = name.substring(0, dot);
+      suffix = name.substring(dot);
+    }
+    // Prefix must be three characters
+    if (prefix.length() < 3) {
+      prefix += "processing";
+    }
+    return File.createTempFile(prefix, suffix, parentDir);
   }
 
 
   /**
    * Saves bytes to a specific File location specified by the user.
    */
-  static public void saveBytes(File file, byte buffer[]) {
+  static public void saveBytes(File file, byte[] data) {
+    File tempFile = null;
     try {
-      String filename = file.getAbsolutePath();
-      createPath(filename);
-      OutputStream output = new FileOutputStream(file);
-      if (file.getName().toLowerCase().endsWith(".gz")) {
-        output = new GZIPOutputStream(output);
-      }
-      saveBytes(output, buffer);
+      tempFile = createTempFile(file);
+
+      OutputStream output = createOutput(tempFile);
+      saveBytes(output, data);
       output.close();
+      output = null;
+
+      if (file.exists()) {
+        if (!file.delete()) {
+          System.err.println("Could not replace " + file.getAbsolutePath());
+        }
+      }
+
+      if (!tempFile.renameTo(file)) {
+        System.err.println("Could not rename temporary file " +
+                           tempFile.getAbsolutePath());
+      }
 
     } catch (IOException e) {
       System.err.println("error saving bytes to " + file);
+      if (tempFile != null) {
+        tempFile.delete();
+      }
       e.printStackTrace();
     }
   }
@@ -5152,9 +5236,9 @@ public class PApplet extends Object implements PConstants {
   /**
    * Spews a buffer of bytes to an OutputStream.
    */
-  static public void saveBytes(OutputStream output, byte buffer[]) {
+  static public void saveBytes(OutputStream output, byte[] data) {
     try {
-      output.write(buffer);
+      output.write(data);
       output.flush();
 
     } catch (IOException e) {

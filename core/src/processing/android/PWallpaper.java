@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -31,11 +31,12 @@ import android.util.DisplayMetrics;
 import android.os.Build;
 import android.view.Display;
 import android.graphics.Point;
+import android.graphics.Rect;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
-  protected Point size;
+  private Point size;
   private DisplayMetrics metrics;
-  protected WallpaperEngine engine;
+  private WallpaperEngine engine;
 
 
   public void initDimensions() {
@@ -99,7 +100,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
-  public Engine getEngine() {
+  public ServiceEngine getEngine() {
     return engine;
   }
 
@@ -121,11 +122,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
-  public void onPermissionsGranted() {
-    if (engine != null) engine.onPermissionsGranted();
-  }
-
-
   @Override
   public Engine onCreateEngine() {
     engine = new WallpaperEngine();
@@ -140,8 +136,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
-  public class WallpaperEngine extends Engine {
-    protected PApplet sketch;
+  public class WallpaperEngine extends Engine implements ServiceEngine {
+    private PApplet sketch;
+    private float xOffset, xOffsetStep;
+    private float yOffset, yOffsetStep;
+    private int xPixelOffset, yPixelOffset;
 
 
     @Override
@@ -152,13 +151,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       sketch.preview = isPreview();
       if (isPreview()) requestPermissions();
       setTouchEventsEnabled(true);
-    }
-
-
-    private void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
-      }
     }
 
 
@@ -210,6 +202,13 @@ public class PWallpaper extends WallpaperService implements AppComponent {
                                  int xPixelOffset, int yPixelOffset) {
 
       if (sketch != null) {
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
+        this.xOffsetStep = xOffsetStep;
+        this.yOffsetStep = yOffsetStep;
+        this.xPixelOffset = xPixelOffset;
+        this.yPixelOffset = yPixelOffset;
+
         sketch.homeScreenOffset = xOffset;
         if (0 < xOffsetStep) {
           sketch.homeScreenCount = (int)(1 + 1 / xOffsetStep);
@@ -236,6 +235,81 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       super.onDestroy();
       if (sketch != null) {
         sketch.onDestroy();
+      }
+    }
+
+
+    @Override
+    public float getXOffset() {
+      return xOffset;
+    }
+
+
+    @Override
+    public float getYOffset() {
+      return yOffset;
+    }
+
+
+    @Override
+    public float getXOffsetStep() {
+      return xOffsetStep;
+    }
+
+
+    @Override
+    public float getYOffsetStep() {
+      return yOffsetStep;
+    }
+
+
+    @Override
+    public int getXPixelOffset() {
+      return xPixelOffset;
+    }
+
+
+    @Override
+    public int getYPixelOffset() {
+      return yPixelOffset;
+    }
+
+
+    @Override
+    public boolean isInAmbientMode() {
+      return false;
+    }
+
+
+    @Override
+    public boolean isRound() {
+      return false;
+    }
+
+
+    @Override
+    public Rect getInsets() {
+      return null;
+    }
+
+
+    @Override
+    public boolean useLowBitAmbient() {
+      return false;
+    }
+
+
+    @Override
+    public boolean requireBurnInProtection() {
+      return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[],
+                                           int[] grantResults) {
+      if (sketch != null) {
+        sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
       }
     }
   }

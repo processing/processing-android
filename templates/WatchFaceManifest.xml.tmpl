@@ -8,8 +8,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />     
     <application android:label=""
                  android:icon="@drawable/icon"
-                 android:supportsRtl="true"
-                 android:debuggable="true">
+                 android:supportsRtl="true">
         <uses-library android:name="com.google.android.wearable" android:required="false"/>
         <service android:name=".MainService"
                  android:label=""
@@ -27,6 +26,6 @@
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
             </intent-filter>
         </service>
-        <activity android:name=".MainService$PermissionRequestActivity" ></activity>       
+        <activity android:name="processing.android.PermissionRequestor" ></activity>       
     </application>
 </manifest>

@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -44,9 +44,9 @@ import processing.core.PApplet;
 import processing.event.MouseEvent;
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
-  protected Point size;
+  private Point size;
   private DisplayMetrics metrics;
-  protected CanvasEngine engine;
+  private CanvasEngine engine;
 
 
   public void initDimensions() {
@@ -110,7 +110,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
 
-  public Engine getEngine() {
+  public ServiceEngine getEngine() {
     return engine;
   }
 
@@ -135,11 +135,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
 
-  public void onPermissionsGranted() {
-    if (engine != null) engine.onPermissionsGranted();
-  }
-
-
   @Override
   public Engine onCreateEngine() {
     engine = new CanvasEngine();
@@ -154,9 +149,13 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   }
 
 
-  private class CanvasEngine extends CanvasWatchFaceService.Engine {
+  private class CanvasEngine extends CanvasWatchFaceService.Engine implements ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
+    private boolean isRound = false;
+    private Rect insets = new Rect();
+    private boolean lowBitAmbient = false;
+    private boolean burnInProtection = false;
 
     @SuppressWarnings("deprecation")
     @Override
@@ -194,13 +193,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     }
 
 
-    private void onPermissionsGranted() {
-      if (sketch != null) {
-        sketch.onPermissionsGranted();
-      }
-    }
-
-
     @Override
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
@@ -213,6 +205,8 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onPropertiesChanged(Bundle properties) {
       super.onPropertiesChanged(properties);
+      lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+      burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
       if (sketch != null) {
         sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
         sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
@@ -223,6 +217,11 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onApplyWindowInsets(WindowInsets insets) {
       super.onApplyWindowInsets(insets);
+      isRound = insets.isRound();
+      this.insets.set(insets.getSystemWindowInsetLeft(),
+                      insets.getSystemWindowInsetTop(),
+                      insets.getSystemWindowInsetRight(),
+                      insets.getSystemWindowInsetBottom());
       if (sketch != null) {
         sketch.isRound = insets.isRound();
         sketch.insetLeft = insets.getSystemWindowInsetLeft();
@@ -361,6 +360,75 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onDestroy() {
       super.onDestroy();
       if (sketch != null) sketch.onDestroy();
+    }
+
+
+    @Override
+    public float getXOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public float getYOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public float getXOffsetStep() {
+      return 0;
+    }
+
+
+    @Override
+    public float getYOffsetStep() {
+      return 0;
+    }
+
+
+    @Override
+    public int getXPixelOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public int getYPixelOffset() {
+      return 0;
+    }
+
+
+    @Override
+    public boolean isRound() {
+      return isRound;
+    }
+
+
+    @Override
+    public Rect getInsets() {
+      return insets;
+    }
+
+
+    @Override
+    public boolean useLowBitAmbient() {
+      return lowBitAmbient;
+    }
+
+
+    @Override
+    public boolean requireBurnInProtection() {
+      return burnInProtection;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[],
+                                           int[] grantResults) {
+      if (sketch != null) {
+        sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      }
     }
   }
 }
