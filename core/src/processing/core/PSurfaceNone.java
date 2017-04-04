@@ -52,17 +52,13 @@ import java.io.InputStream;
 
 import processing.android.AppComponent;
 import processing.android.ServiceEngine;
+import processing.android.PermissionRequestor;
 
 /**
  * Base surface for Android2D and OpenGL renderers.
  * It includes the standard rendering loop.
  */
 public class PSurfaceNone implements PSurface, PConstants {
-  private static final String KEY_RESULT_RECEIVER = "resultReceiver";
-  private static final String KEY_PERMISSIONS = "permissions";
-  private static final String KEY_GRANT_RESULTS = "grantResults";
-  private static final String KEY_REQUEST_CODE = "requestCode";
-
   protected PApplet sketch;
   protected PGraphics graphics;
   protected AppComponent component;
@@ -539,41 +535,19 @@ public class PSurfaceNone implements PSurface, PConstants {
       ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
         @Override
         protected void onReceiveResult (int resultCode, Bundle resultData) {
-          String[] outPermissions = resultData.getStringArray(KEY_PERMISSIONS);
-          int[] grantResults = resultData.getIntArray(KEY_GRANT_RESULTS);
+          String[] outPermissions = resultData.getStringArray(PermissionRequestor.KEY_PERMISSIONS);
+          int[] grantResults = resultData.getIntArray(PermissionRequestor.KEY_GRANT_RESULTS);
           eng.onRequestPermissionsResult(resultCode, outPermissions, grantResults);
         }
       };
-      final Intent permIntent = new Intent(getContext(), PermissionRequestActivity.class);
-      permIntent.putExtra(KEY_RESULT_RECEIVER, resultReceiver);
-      permIntent.putExtra(KEY_PERMISSIONS, permissions);
-      permIntent.putExtra(KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
+      final Intent permIntent = new Intent(getContext(), PermissionRequestor.class);
+      permIntent.putExtra(PermissionRequestor.KEY_RESULT_RECEIVER, resultReceiver);
+      permIntent.putExtra(PermissionRequestor.KEY_PERMISSIONS, permissions);
+      permIntent.putExtra(PermissionRequestor.KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
       // Show the dialog requesting the permissions
       permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
       startActivity(permIntent);
-    }
-  }
-
-  public static class PermissionRequestActivity extends Activity {
-    ResultReceiver resultReceiver;
-    String[] permissions;
-    int requestCode;
-    @Override
-    protected void onStart() {
-      super.onStart();
-      resultReceiver = this.getIntent().getParcelableExtra(KEY_RESULT_RECEIVER);
-      permissions = this.getIntent().getStringArrayExtra(KEY_PERMISSIONS);
-      requestCode = this.getIntent().getIntExtra(KEY_REQUEST_CODE, 0);
-      ActivityCompat.requestPermissions(this, permissions, requestCode);
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-      Bundle resultData = new Bundle();
-      resultData.putStringArray(KEY_PERMISSIONS, permissions);
-      resultData.putIntArray(KEY_GRANT_RESULTS, grantResults);
-      resultReceiver.send(requestCode, resultData);
-      finish();
     }
   }
 }
