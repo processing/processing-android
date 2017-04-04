@@ -1,5 +1,5 @@
 bin
-android-core.zip
+processing-core.zip
 release
 
 .AppleDouble
@@ -11,4 +11,4 @@ release
 
 build/**
 .gradle
-/processing-core.zip
+
