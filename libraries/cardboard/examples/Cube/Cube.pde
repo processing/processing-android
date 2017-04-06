@@ -1,16 +1,16 @@
-import processing.cardboard.*;
+import processing.vr.*;
 
 void setup() {
-  fullScreen(PCardboard.STEREO);
+  fullScreen(PVR.STEREO);
 }
 
 void draw() {
-//  PGraphicsCardboard pgc = (PGraphicsCardboard)g;
-//  if (pgc.eyeType == PCardboard.LEFT) {
+//  PGraphicsVR pgc = (PGraphicsVR)g;
+//  if (pgc.eyeType == PVR.LEFT) {
 //    background(200, 50, 50);
-//  } else if (pgc.eyeType == PCardboard.RIGHT) {
+//  } else if (pgc.eyeType == PVR.RIGHT) {
 //    background(50, 50, 200);
-//  } else if (pgc.eyeType == PCardboard.MONOCULAR) {
+//  } else if (pgc.eyeType == PVR.MONOCULAR) {
 //    background(50, 200, 50);
 //  }
       

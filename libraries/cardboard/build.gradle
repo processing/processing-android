@@ -37,7 +37,7 @@ jar {
 }
 
 clean.doFirst {
-    delete "library/cardboard.jar"
+    delete "library/vr.jar"
 }
 
 import groovy.util.AntBuilder
@@ -46,12 +46,12 @@ import static java.nio.file.StandardCopyOption.*;
 
 task dist {
     doLast {
-        File cardBoardJar = file("library/cardboard.jar");
+        File vrJar = file("library/vr.jar");
         //create intermediate folder if they don't exist
-        cardBoardJar.mkdirs();
+        vrJar.mkdirs();
         // make copy of jar file to library folder
-        Files.copy(file("$buildDir/libs/cardboard.jar").toPath(),
-                   cardBoardJar.toPath(), REPLACE_EXISTING);             
+        Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+                   vrJar.toPath(), REPLACE_EXISTING);             
     }
 }
 

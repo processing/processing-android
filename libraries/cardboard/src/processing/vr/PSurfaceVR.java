@@ -20,7 +20,7 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.cardboard;
+package processing.vr;
 
 import java.io.File;
 import java.io.InputStream;
@@ -51,23 +51,23 @@ import processing.opengl.PSurfaceGLES;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class PSurfaceCardboard extends PSurfaceGLES {
-  protected GLCardboardSurfaceView glview;
-  protected PGraphicsCardboard pgc;
+public class PSurfaceVR extends PSurfaceGLES {
+  protected GLVRSurfaceView glview;
+  protected PGraphicsVR pgc;
 
-  protected GvrActivity cardboard;
-  protected AndroidCardboardStereoRenderer renderer;
+  protected GvrActivity vrActivity;
+  protected AndroidVRStereoRenderer renderer;
 
-  public PSurfaceCardboard(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
+  public PSurfaceVR(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.component = component;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
 
-    cardboard = (GvrActivity)component;
-    pgc = (PGraphicsCardboard)graphics;
+    vrActivity = (GvrActivity)component;
+    pgc = (PGraphicsVR)graphics;
 
-    glview = new GLCardboardSurfaceView(cardboard);
+    glview = new GLVRSurfaceView(vrActivity);
     glview.setStereoModeEnabled(vr);
     if (vr) {
       glview.setDistortionCorrectionEnabled(true);
@@ -83,45 +83,45 @@ public class PSurfaceCardboard extends PSurfaceGLES {
       // Async reprojection decouples the app framerate from the display framerate,
       // allowing immersive interaction even at the throttled clockrates set by
       // sustained performance mode.
-      AndroidCompat.setSustainedPerformanceMode(cardboard, true);
+      AndroidCompat.setSustainedPerformanceMode(vrActivity, true);
     }
-    cardboard.setGvrView(glview);
+    vrActivity.setGvrView(glview);
 
     surfaceView = null;
   }
 
   @Override
   public Context getContext() {
-    return cardboard;
+    return vrActivity;
   }
 
   @Override
   public Activity getActivity() {
-    return cardboard;
+    return vrActivity;
   }
 
   @Override
   public void finish() {
-    cardboard.finish();
+    vrActivity.finish();
   }
 
   @Override
   public AssetManager getAssets() {
-    return cardboard.getAssets();
+    return vrActivity.getAssets();
   }
 
   @Override
   public void startActivity(Intent intent) {
-    cardboard.startActivity(intent);
+    vrActivity.startActivity(intent);
   }
 
   @Override
   public void initView(int sketchWidth, int sketchHeight) {
-    Window window = cardboard.getWindow();
+    Window window = vrActivity.getWindow();
 
     // Take up as much area as possible
     //requestWindowFeature(Window.FEATURE_NO_TITLE);  // may need to set in theme properties
-    // the above line does not seem to be needed when using cardboard
+    // the above line does not seem to be needed when using VR
     //  android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen" >
     window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
@@ -135,7 +135,7 @@ public class PSurfaceCardboard extends PSurfaceGLES {
 
   @Override
   public String getName() {
-    return cardboard.getComponentName().getPackageName();
+    return vrActivity.getComponentName().getPackageName();
   }
 
   @Override
@@ -151,7 +151,7 @@ public class PSurfaceCardboard extends PSurfaceGLES {
 
   @Override
   public File getFilesDir() {
-    return cardboard.getFilesDir();
+    return vrActivity.getFilesDir();
   }
 
   @Override
@@ -161,7 +161,7 @@ public class PSurfaceCardboard extends PSurfaceGLES {
 
   @Override
   public File getFileStreamPath(String path) {
-    return cardboard.getFileStreamPath(path);
+    return vrActivity.getFileStreamPath(path);
   }
 
   @Override
@@ -206,8 +206,8 @@ public class PSurfaceCardboard extends PSurfaceGLES {
 
   ///////////////////////////////////////////////////////////
 
-  public class GLCardboardSurfaceView extends GvrView {
-    public GLCardboardSurfaceView(Context context) {
+  public class GLVRSurfaceView extends GvrView {
+    public GLVRSurfaceView(Context context) {
       super(context);
 
       // Check if the system supports OpenGL ES 2.0.
@@ -228,8 +228,7 @@ public class PSurfaceCardboard extends PSurfaceGLES {
         setEGLConfigChooser(8, 8, 8, 8, 16, 1);
       }
       // The renderer can be set only once.
-//      setRenderer(surf.getCardboardRenderer());
-      setRenderer(getCardboardStereoRenderer());
+      setRenderer(getVRStereoRenderer());
     }
 
     /*
@@ -276,14 +275,14 @@ public class PSurfaceCardboard extends PSurfaceGLES {
   // Android specific classes (Renderer, ConfigChooser)
 
 
-  public AndroidCardboardStereoRenderer getCardboardStereoRenderer() {
-    renderer = new AndroidCardboardStereoRenderer();
+  public AndroidVRStereoRenderer getVRStereoRenderer() {
+    renderer = new AndroidVRStereoRenderer();
     return renderer;
   }
 
 
-  protected class AndroidCardboardStereoRenderer implements GvrView.StereoRenderer {
-    public AndroidCardboardStereoRenderer() {
+  protected class AndroidVRStereoRenderer implements GvrView.StereoRenderer {
+    public AndroidVRStereoRenderer() {
 
     }
 

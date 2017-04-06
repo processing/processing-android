@@ -20,7 +20,7 @@ allprojects {
         jcenter()
         flatDir dirs: "$rootDir/core/library"
         flatDir dirs: "$rootDir/core/build/libs"
-        flatDir dirs: "$rootDir/libraries/cardboard/lib"
+        flatDir dirs: "$rootDir/libraries/vr/lib"
         flatDir dirs: android_platform
     }
 
@@ -31,7 +31,7 @@ allprojects {
 dependencies {
     compile name: 'android'
     compile project(":core")
-    compile project(":libraries:cardboard")
+    compile project(":libraries:vr")
     compile group: 'org.processing', name: 'core', version: '3.2.3'
     compile group: 'org.processing', name: 'pde', version: '3.2.3'
     compile group: 'org.processing', name: 'java-mode', version: '3.2.3'
@@ -72,18 +72,18 @@ task dist {
         Files.copy(file("mode.properties").toPath(),
                    file("$root/mode.properties").toPath(), REPLACE_EXISTING);
         
-        FileUtils.copyDirectory(file("libraries/cardboard/examples"), 
-                                file("$root/libraries/cardboard/examples"))
-        FileUtils.copyDirectory(file("libraries/cardboard/gvrsdk"), 
-                                file("$root/libraries/cardboard/gvrsdk"))
-        FileUtils.copyDirectory(file("libraries/cardboard/lib"), 
-                                file("$root/libraries/cardboard/lib"))    
-        FileUtils.copyDirectory(file("libraries/cardboard/library"), 
-                                file("$root/libraries/cardboard/library"))
-        FileUtils.copyDirectory(file("libraries/cardboard/src"), 
-                                file("$root/libraries/cardboard/src"))
-        Files.copy(file("libraries/cardboard/library.properties").toPath(),
-                   file("$root/libraries/cardboard/library.properties").toPath(), REPLACE_EXISTING);                             
+        FileUtils.copyDirectory(file("libraries/vr/examples"), 
+                                file("$root/libraries/vr/examples"))
+        FileUtils.copyDirectory(file("libraries/vr/gvrsdk"), 
+                                file("$root/libraries/vr/gvrsdk"))
+        FileUtils.copyDirectory(file("libraries/vr/lib"), 
+                                file("$root/libraries/vr/lib"))    
+        FileUtils.copyDirectory(file("libraries/vr/library"), 
+                                file("$root/libraries/vr/library"))
+        FileUtils.copyDirectory(file("libraries/vr/src"), 
+                                file("$root/libraries/vr/src"))
+        Files.copy(file("libraries/vr/library.properties").toPath(),
+                   file("$root/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
 
         ZipUtil.pack(file("$buildDir/zip"), new File("release/AndroidMode.zip"))        
         Files.copy(file("mode.properties").toPath(),

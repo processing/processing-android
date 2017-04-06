@@ -20,7 +20,7 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.cardboard;
+package processing.vr;
 
 import com.google.vr.sdk.base.Eye;
 import com.google.vr.sdk.base.HeadTransform;
@@ -32,7 +32,7 @@ import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
 import processing.opengl.PGraphicsOpenGL;
 
-public class PGraphicsCardboard extends PGraphics3D {
+public class PGraphicsVR extends PGraphics3D {
   private boolean initialized = false;
 
   public int eyeType;
@@ -69,7 +69,7 @@ public class PGraphicsCardboard extends PGraphics3D {
 
 
   protected void headTransform(HeadTransform headTransform) {
-    initCardboard();
+    initVR();
 
     // Get the head view and rotation so the user can use them for object selecton and
     // other operations.
@@ -82,7 +82,7 @@ public class PGraphicsCardboard extends PGraphics3D {
     eyeType = eye.getType();
     viewPort = eye.getViewport();
 
-    // Matrices in Processing are row-major, and Cardboard API is column-major
+    // Matrices in Processing are row-major, and GVR API is column-major
     float[] p = eye.getPerspective(cameraNear, cameraFar);
     perspectiveMatrix.set(p[0], p[4],  p[8], p[12],
                           p[1], p[5],  p[9], p[13],
@@ -97,7 +97,7 @@ public class PGraphicsCardboard extends PGraphics3D {
   }
 
 
-  private void initCardboard() {
+  private void initVR() {
     if (!initialized) {
       headRotation = new float[4];
       headView = new float[16];

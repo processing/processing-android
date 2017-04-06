@@ -92,12 +92,12 @@
         <include name="examples/**" />
         <include name="icons/**" />
         <include name="theme/**" />
-        <include name="libraries/cardboard/library.properties" />        
-        <include name="libraries/cardboard/examples/**" />
-        <include name="libraries/cardboard/gvrsdk/**" />
-        <include name="libraries/cardboard/lib/**" />
-        <include name="libraries/cardboard/library/**" />
-        <include name="libraries/cardboard/src/**" />        
+        <include name="libraries/vr/library.properties" />        
+        <include name="libraries/vr/examples/**" />
+        <include name="libraries/vr/gvrsdk/**" />
+        <include name="libraries/vr/lib/**" />
+        <include name="libraries/vr/library/**" />
+        <include name="libraries/vr/src/**" />        
         <exclude name="**/._*" />
       </zipfileset>
     </zip>
@@ -112,12 +112,12 @@
   
   <target name="subprojects-clean">
     <subant buildpath="core" target="clean"/>
-    <subant buildpath="libraries/cardboard" target="clean"/>    
+    <subant buildpath="libraries/vr" target="clean"/>    
   </target>
     
   <target name="subprojects-build">
     <subant buildpath="core" target="build"/>
-    <subant buildpath="libraries/cardboard" target="build"/>    
+    <subant buildpath="libraries/vr" target="build"/>    
   </target>
   
 

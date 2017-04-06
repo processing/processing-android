@@ -1,7 +1,7 @@
-import processing.cardboard.*;
+import processing.vr.*;
 
 void setup() {
-  fullScreen(PCardboard.MONO);
+  fullScreen(PVR.MONO);
 }
 
 void draw() {

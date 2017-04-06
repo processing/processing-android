@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
-<project name="Processing Cardboard Library" default="build">
+<project name="Processing VR Library" default="build">
 
   <property name="processing.dir" value="../../../processing" />
   <property environment="env"/>
 
   <target name="clean" description="Clean the build directories">
     <delete dir="bin" />
-    <delete file="library/cardboard.jar" />
+    <delete file="library/vr.jar" />
   </target>
 
-  <target name="build" depends="sdk_chatter,compile" description="Build cardboard library for Processing Android" >
+  <target name="build" depends="sdk_chatter,compile" description="Build VR library for Processing Android" >
     <mkdir dir="library" />
-    <jar basedir="bin" destfile="library/cardboard.jar" />
+    <jar basedir="bin" destfile="library/vr.jar" />
   </target>
 
   <target name="sdk_chatter" unless="env.ANDROID_SDK">

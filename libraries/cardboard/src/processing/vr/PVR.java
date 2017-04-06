@@ -20,7 +20,7 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.cardboard;
+package processing.vr;
 
 import com.google.vr.sdk.base.GvrActivity;
 import com.google.vr.sdk.base.Eye;
@@ -31,24 +31,24 @@ import processing.android.ServiceEngine;
 import processing.core.PApplet;
 
 // http://pastebin.com/6wPgFYhq
-public class PCardboard extends GvrActivity implements AppComponent {
-  public static final String STEREO = "processing.cardboard.PGraphicsCardboardStereo";
-  public static final String MONO = "processing.cardboard.PGraphicsCardboardMono";
+public class PVR extends GvrActivity implements AppComponent {
+  public static final String STEREO = "processing.vr.PGraphicsVRStereo";
+  public static final String MONO = "processing.vr.PGraphicsVRMono";
 
   public static final int LEFT      = Eye.Type.LEFT;
   public static final int RIGHT     = Eye.Type.RIGHT;
   public static final int MONOCULAR = Eye.Type.MONOCULAR;
 
-  static public final int CARDBOARD = 3;
+  static public final int VR = 3;
 
   private DisplayMetrics metrics;
   private PApplet sketch;
 
-  public PCardboard() {
+  public PVR() {
 
   }
 
-  public PCardboard(PApplet sketch) {
+  public PVR(PApplet sketch) {
     this.sketch = sketch;
   }
 
@@ -69,7 +69,7 @@ public class PCardboard extends GvrActivity implements AppComponent {
   }
 
   public int getKind() {
-      return CARDBOARD;
+      return VR;
   }
 
   public void dispose() {
@@ -82,13 +82,7 @@ public class PCardboard extends GvrActivity implements AppComponent {
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
     if (sketch != null) {
-      //cardboardView.setChromaticAberrationCorrectionEnabled(true);
-      //cardboardView.setVRModeEnabled(false); // sets Monocular mode
-      sketch.initSurface(PCardboard.this, null);
-
-      // Don't start Papplet's animation thread bc cardboard will drive rendering
-      // continuously
-//      sketch.startSurface();
+      sketch.initSurface(PVR.this, null);
     }
   }
 

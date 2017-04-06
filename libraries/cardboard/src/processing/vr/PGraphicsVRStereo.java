@@ -20,16 +20,16 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.cardboard;
+package processing.vr;
 
 import android.view.SurfaceHolder;
 import processing.android.AppComponent;
 import processing.core.PSurface;
 
-public class PGraphicsCardboardStereo extends PGraphicsCardboard {
+public class PGraphicsVRStereo extends PGraphicsVR {
   @Override
   public PSurface createSurface(AppComponent component, SurfaceHolder holder, boolean reset) {  // ignore
     if (reset) pgl.resetFBOLayer();
-    return new PSurfaceCardboard(this, component, holder, true);
+    return new PSurfaceVR(this, component, holder, true);
   }
 }
