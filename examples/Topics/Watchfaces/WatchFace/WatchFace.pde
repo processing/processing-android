@@ -6,9 +6,9 @@ void setup() {
 }
 
 void draw() {
-  translate(0, +insetBottom/2);
+  translate(0, +wearInsets().bottom/2);
 
-  if (ambientMode) {
+  if (wearAmbient()) {
     background(0);
     stroke(255);
     noFill();
