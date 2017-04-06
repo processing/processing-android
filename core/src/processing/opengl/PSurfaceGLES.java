@@ -115,16 +115,15 @@ public class PSurfaceGLES extends PSurfaceNone {
 
       SurfaceHolder h = getHolder();
       h.addCallback(this);
-      h.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
       setEGLContextClientVersion(2);
       setPreserveEGLContextOnPause(true);
 
-      int quality = sketch.sketchQuality();
-      if (1 < quality) {
-        setEGLConfigChooser(getConfigChooser(quality));
-      }
+      int samples = sketch.sketchSmooth();
+      System.out.println("Using smooth level " + samples);
+      setEGLConfigChooser(getConfigChooser(samples));
+
       // The renderer can be set only once.
       setRenderer(getRenderer());
       setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
@@ -238,9 +237,15 @@ public class PSurfaceGLES extends PSurfaceNone {
     return new AndroidContextFactory();
   }
 
+  public AndroidConfigChooser getConfigChooser() {
+    return new AndroidConfigChooser(8, 8, 8, 8, 16, 8, 1);
+//    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
+  }
+
 
   public AndroidConfigChooser getConfigChooser(int samples) {
-    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
+    return new AndroidConfigChooser(8, 8, 8, 8, 16, 8, samples);
+//    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
   }
 
 
@@ -272,13 +277,7 @@ public class PSurfaceGLES extends PSurfaceNone {
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
-      if (sketch.fullScreen) {
-        sketch.displayWidth = iwidth;
-        sketch.displayHeight = iheight;
-      }
-      sketch.width = iwidth;
-      sketch.height = iheight;
-
+      sketch.setSize(iwidth, iheight);
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
     }

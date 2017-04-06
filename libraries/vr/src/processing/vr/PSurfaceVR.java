@@ -68,16 +68,20 @@ public class PSurfaceVR extends PSurfaceGLES {
     pvr = (PGraphicsVR)graphics;
 
     glview = new GLVRSurfaceView(vrActivity);
+
+    // Enables/disables the transition view used to prompt the user to place
+    // their phone into a GVR viewer.
+    glview.setTransitionViewEnabled(true);
+
+    // Enables Cardboard-trigger feedback with Daydream headsets. This is a simple way of supporting
+    // Daydream controller input for basic interactions using the existing Cardboard trigger API.
+    glview.enableCardboardTriggerEmulation();
+
     glview.setStereoModeEnabled(vr);
     if (vr) {
       glview.setDistortionCorrectionEnabled(true);
       glview.setNeckModelEnabled(true);
-//      glview.setElectronicDisplayStabilizationEnabled(true);
     }
-
-    // Enable Cardboard-trigger feedback with Daydream headsets. This is a simple way of supporting
-    // Daydream controller input for basic interactions using the existing Cardboard trigger API.
-    glview.enableCardboardTriggerEmulation();
 
     if (glview.setAsyncReprojectionEnabled(true)) {
       // Async reprojection decouples the app framerate from the display framerate,
@@ -217,32 +221,17 @@ public class PSurfaceVR extends PSurfaceGLES {
       setFocusableInTouchMode(true);
       requestFocus();
 
-      int quality = sketch.sketchQuality();
-      if (1 < quality) {
-        setEGLConfigChooser(8, 8, 8, 8, 16, 1);
+      setEGLConfigChooser(8, 8, 8, 8, 16, 8);
+      int samples = sketch.sketchSmooth();
+      if (1 < samples) {
+        System.out.println("setting multisampling to " + samples);
+        setMultisampling(samples);
       }
+
       // The renderer can be set only once.
       setRenderer(getVRStereoRenderer());
     }
 
-    /*
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-      super.surfaceChanged(holder, format, w, h);
-
-      if (PApplet.DEBUG) {
-        System.out.println("SketchSurfaceView3D.surfaceChanged() " + w + " " + h);
-      }
-      sketch.surfaceChanged();
-//      width = w;
-//      height = h;
-//      g.setSize(w, h);
-
-      // No need to call g.setSize(width, height) b/c super.surfaceChanged()
-      // will trigger onSurfaceChanged in the renderer, which calls setSize().
-      // -- apparently not true? (100110)
-    }
-*/
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -280,9 +269,9 @@ public class PSurfaceVR extends PSurfaceGLES {
 
     }
 
-
     @Override
     public void onNewFrame(HeadTransform transform) {
+      hadnleGVREnumError();
       pgl.getGL(null);
       pvr.headTransform(transform);
     }
@@ -302,11 +291,28 @@ public class PSurfaceVR extends PSurfaceGLES {
     }
 
     @Override
-    public void onSurfaceChanged(int arg0, int arg1) {
+    public void onSurfaceChanged(int iwidth, int iheight) {
+      sketch.setSize(iwidth, iheight);
+      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
+      sketch.surfaceChanged();
     }
 
     @Override
     public void onSurfaceCreated(EGLConfig arg0) {
+    }
+
+    // Don't print the invalid enum error:
+    // https://github.com/processing/processing-android/issues/281
+    // seems harmless as it happens in the first frame only
+    // TODO: need to find the reason for the error (gl config?)
+    private void hadnleGVREnumError() {
+      int err = pgl.getError();
+      if (err != 0 && err != 1280) {
+        String where = "top onNewFrame";
+        String errString = pgl.errorString(err);
+        String msg = "OpenGL error " + err + " at " + where + ": " + errString;
+        PGraphics.showWarning(msg);
+      }
     }
   }
 }

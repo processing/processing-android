@@ -143,6 +143,11 @@ public class PApplet extends Object implements PConstants {
    */
   public float displayDensity = 1;
 
+  // For future use
+  public int pixelDensity = 1;
+  public int pixelWidth;
+  public int pixelHeight;
+
   /** absolute x position of input on screen */
   public int mouseX;
 
@@ -391,7 +396,9 @@ public class PApplet extends Object implements PConstants {
 
   int smooth = 1;  // default smoothing (whatever that means for the renderer)
 
-  public boolean fullScreen = false;
+  boolean fullScreen = false;
+
+  int display = -1;  // use default
 
   // Background default needs to be different from the default value in
   // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
@@ -462,6 +469,9 @@ public class PApplet extends Object implements PConstants {
         parentSize = true;
       }
     }
+
+    pixelWidth = width * pixelDensity;
+    pixelHeight = height * pixelDensity;
 
     String rendererName = sketchRenderer();
     if (DEBUG) println("Renderer " + rendererName);
@@ -684,6 +694,57 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  final public int sketchWidth() {
+    return width;
+  }
+
+
+  final public  int sketchHeight() {
+    return height;
+  }
+
+
+  final public String sketchRenderer() {
+    return renderer;
+  }
+
+
+  public int sketchSmooth() {
+    return smooth;
+  }
+
+
+  final public boolean sketchFullScreen() {
+    //return false;
+    return fullScreen;
+  }
+
+
+  final public int sketchDisplay() {
+    return display;
+  }
+
+
+  final public String sketchOutputPath() {
+    return null;
+  }
+
+
+  final public OutputStream sketchOutputStream() {
+    return null;
+  }
+
+
+  final public int sketchWindowColor() {
+    return windowColor;
+  }
+
+
+  final public int sketchPixelDensity() {
+    return pixelDensity;
+  }
+
+
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -736,59 +797,6 @@ public class PApplet extends Object implements PConstants {
     //  System.out.println("got onKeyUp for " + code + " " + event);
     nativeKeyEvent(event);
 //    return super.onKeyUp(code, event);
-  }
-
-
-  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-
-  public int sketchQuality() {
-    return 1;
-  }
-
-  public int sketchKind() {
-    return AppComponent.FRAGMENT;
-  }
-
-  final public int sketchWidth() {
-    if (fullScreen) {
-      return displayWidth;
-    }
-    return width;
-  }
-
-
-  final public  int sketchHeight() {
-    if (fullScreen) {
-      return displayHeight;
-    }
-    return height;
-  }
-
-
-  final public String sketchRenderer() {
-    return renderer;
-  }
-
-
-  final public int sketchWindowColor() {
-    return windowColor;
-  }
-
-
-  public void orientation(int which) {
-    surface.setOrientation(which);
-  }
-
-
-  public boolean checkPermission(String permission) {
-    Context context = surface.getContext();
-    if (context != null) {
-      int check = ContextCompat.checkSelfPermission(context, permission);
-      return check == PackageManager.PERMISSION_GRANTED;
-    } else {
-      return false;
-    }
   }
 
 
@@ -1279,6 +1287,18 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void setSize(int width, int height) {
+    if (fullScreen) {
+      this.displayWidth = width;
+      this.displayHeight = height;
+    }
+    this.width = width;
+    this.height = height;
+    pixelWidth = width * pixelDensity;
+    pixelHeight = height * pixelDensity;
+  }
+
+
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
@@ -1311,6 +1331,14 @@ public class PApplet extends Object implements PConstants {
    // When running from the PDE, say setup(), otherwise say settings()
    final String where = external ? "setup" : "settings";
    PGraphics.showWarning("%s() can only be used inside %s()", method, where);
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+
+ public void orientation(int which) {
+   surface.setOrientation(which);
  }
 
 
