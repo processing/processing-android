@@ -586,6 +586,13 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void requestPermission(String permission) {
+    if (!hasPermission(permission)) {
+      reqPermissions.add(permission);
+    }
+  }
+
+
   public void requestPermission(String permission, String callback) {
     if (!hasPermission(permission)) {
       Method handleMethod = null;

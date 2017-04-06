@@ -53,7 +53,7 @@ import android.view.WindowManager;
 
 public class PSurfaceVR extends PSurfaceGLES {
   protected GLVRSurfaceView glview;
-  protected PGraphicsVR pgc;
+  protected PGraphicsVR pvr;
 
   protected GvrActivity vrActivity;
   protected AndroidVRStereoRenderer renderer;
@@ -65,7 +65,8 @@ public class PSurfaceVR extends PSurfaceGLES {
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
 
     vrActivity = (GvrActivity)component;
-    pgc = (PGraphicsVR)graphics;
+    this.activity = vrActivity;
+    pvr = (PGraphicsVR)graphics;
 
     glview = new GLVRSurfaceView(vrActivity);
     glview.setStereoModeEnabled(vr);
@@ -86,9 +87,6 @@ public class PSurfaceVR extends PSurfaceGLES {
       AndroidCompat.setSustainedPerformanceMode(vrActivity, true);
     }
     vrActivity.setGvrView(glview);
-
-    // Required to read the paired viewer's distortion parameters.
-    requestPermissions(new String[] {"android.permission.READ_EXTERNAL_STORAGE"});
 
     surfaceView = null;
   }
@@ -293,12 +291,12 @@ public class PSurfaceVR extends PSurfaceGLES {
     @Override
     public void onNewFrame(HeadTransform transform) {
       pgl.getGL(null);
-      pgc.headTransform(transform);
+      pvr.headTransform(transform);
     }
 
     @Override
     public void onDrawEye(Eye eye) {
-      pgc.eyeTransform(eye);
+      pvr.eyeTransform(eye);
       sketch.handleDraw();
     }
 

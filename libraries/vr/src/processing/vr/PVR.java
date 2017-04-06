@@ -30,7 +30,6 @@ import processing.android.AppComponent;
 import processing.android.ServiceEngine;
 import processing.core.PApplet;
 
-// http://pastebin.com/6wPgFYhq
 public class PVR extends GvrActivity implements AppComponent {
   public static final String STEREO = "processing.vr.PGraphicsVRStereo";
   public static final String MONO = "processing.vr.PGraphicsVRMono";
@@ -44,65 +43,70 @@ public class PVR extends GvrActivity implements AppComponent {
   private DisplayMetrics metrics;
   private PApplet sketch;
 
+
   public PVR() {
 
   }
+
 
   public PVR(PApplet sketch) {
     this.sketch = sketch;
   }
 
+
   public void initDimensions() {
     metrics = getResources().getDisplayMetrics();
   }
+
 
   public int getDisplayWidth() {
     return metrics.widthPixels;
   }
 
+
   public int getDisplayHeight() {
     return metrics.heightPixels;
   }
+
 
   public float getDisplayDensity() {
     return metrics.density;
   }
 
+
   public int getKind() {
       return VR;
   }
 
+
   public void dispose() {
   }
 
-  public void onPermissionsGranted() {
-
-  }
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
     if (sketch != null) {
       sketch.initSurface(PVR.this, null);
+      // Required to read the paired viewer's distortion parameters.
+      sketch.requestPermission("android.permission.READ_EXTERNAL_STORAGE");
     }
   }
+
 
   public PApplet getSketch() {
     return sketch;
   }
 
+
+  public boolean isService() {
+    return false;
+  }
+
+
   public ServiceEngine getEngine() {
     return null;
   }
 
-  /*
-   * Called with the activity is first created.
-   */
-//  @SuppressWarnings("unchecked")
-//  @Override
-//  public void onCreate(Bundle savedInstanceState) {
-//     super.onCreate(savedInstanceState);
-//
-//  }
 
   @Override
   public void onResume() {
@@ -138,18 +142,21 @@ public class PVR extends GvrActivity implements AppComponent {
     sketch.onStop();
   }
 
+
   public void requestDraw() {
   }
+
 
   public boolean canDraw() {
     return true;
   }
 
+
   @Override
   public void onRequestPermissionsResult(int requestCode,
                                          String permissions[],
                                          int[] grantResults) {
-    if (sketch == null) {
+    if (sketch != null) {
       sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
   }

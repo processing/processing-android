@@ -38,6 +38,8 @@ abstract public interface AppComponent extends PConstants {
   public int getKind();
   public void setSketch(PApplet sketch);
   public PApplet getSketch();
+
+  public boolean isService();
   public ServiceEngine getEngine();
 
   public void startActivity(Intent intent);

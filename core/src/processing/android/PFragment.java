@@ -47,18 +47,10 @@ public class PFragment extends Fragment implements AppComponent {
   private Point size;
   private PApplet sketch;
 
+
   public PFragment() {
   }
 
-//  public void setLayout(int layout, FragmentManager manager) {
-//    this.layout = layout;
-//    if (sketch != null) {
-//      sketch.parentLayout = layout;
-//    }
-//    FragmentTransaction transaction = manager.beginTransaction();
-//    transaction.add(layout, this);
-//    transaction.commit();
-//  }
 
   public void initDimensions() {
     WindowManager wm = getActivity().getWindowManager();
@@ -83,27 +75,33 @@ public class PFragment extends Fragment implements AppComponent {
     }
   }
 
+
   public int getDisplayWidth() {
     return size.x;
 //    return metrics.widthPixels;
   }
+
 
   public int getDisplayHeight() {
     return size.y;
 //    return metrics.heightPixels;
   }
 
+
   public float getDisplayDensity() {
     return metrics.density;
   }
+
 
   public int getKind() {
     return FRAGMENT;
   }
 
+
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
   }
+
 
   public void setSketch(PApplet sketch, @IdRes int id, @LayoutRes int layout,
                         FragmentManager manager) {
@@ -114,6 +112,7 @@ public class PFragment extends Fragment implements AppComponent {
     transaction.commit();
   }
 
+
   public void setSketch(PApplet sketch, View view, FragmentManager manager) {
     this.sketch = sketch;
     FragmentTransaction transaction = manager.beginTransaction();
@@ -121,13 +120,21 @@ public class PFragment extends Fragment implements AppComponent {
     transaction.commit();
   }
 
+
   public PApplet getSketch() {
     return sketch;
   }
 
+
+  public boolean isService() {
+    return false;
+  }
+
+
   public ServiceEngine getEngine() {
     return null;
   }
+
 
   public void dispose() {
   }
@@ -143,6 +150,7 @@ public class PFragment extends Fragment implements AppComponent {
       return null;
     }
   }
+
 
   @Override
   public void onResume() {

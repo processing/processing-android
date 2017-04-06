@@ -108,6 +108,11 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
+  public boolean isService() {
+    return true;
+  }
+
+
   public ServiceEngine getEngine() {
     return engine;
   }

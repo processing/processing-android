@@ -517,37 +517,37 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   public void requestPermissions(String[] permissions) {
-    int comp = component.getKind();
-    if (comp == AppComponent.FRAGMENT) {
-      // Requesting permissions from user when the app resumes.
-      // Nice example on how to handle user response
-      // http://stackoverflow.com/a/35495855
-      // More on permission in Android 23:
-      // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
-      ActivityCompat.requestPermissions(activity, permissions, REQUEST_PERMISSIONS);
-    } else if (comp == AppComponent.WALLPAPER || comp == AppComponent.WATCHFACE) {
+      if (component.isService()) {
       // https://developer.android.com/training/articles/wear-permissions.html
       // Inspired by PermissionHelper.java from Michael von Glasow:
       // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/utils/PermissionHelper.java
       // Example of use:
       // https://github.com/mvglasow/satstat/blob/master/src/com/vonglasow/michael/satstat/PasvLocListenerService.java
       final ServiceEngine eng = getEngine();
-      ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
-        @Override
-        protected void onReceiveResult (int resultCode, Bundle resultData) {
-          String[] outPermissions = resultData.getStringArray(PermissionRequestor.KEY_PERMISSIONS);
-          int[] grantResults = resultData.getIntArray(PermissionRequestor.KEY_GRANT_RESULTS);
-          eng.onRequestPermissionsResult(resultCode, outPermissions, grantResults);
-        }
-      };
-      final Intent permIntent = new Intent(getContext(), PermissionRequestor.class);
-      permIntent.putExtra(PermissionRequestor.KEY_RESULT_RECEIVER, resultReceiver);
-      permIntent.putExtra(PermissionRequestor.KEY_PERMISSIONS, permissions);
-      permIntent.putExtra(PermissionRequestor.KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
-      // Show the dialog requesting the permissions
-      permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-      startActivity(permIntent);
+      if (eng != null) { // A valid service should have a non-null engine at this point, but just in case
+        ResultReceiver resultReceiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+          @Override
+          protected void onReceiveResult (int resultCode, Bundle resultData) {
+            String[] outPermissions = resultData.getStringArray(PermissionRequestor.KEY_PERMISSIONS);
+            int[] grantResults = resultData.getIntArray(PermissionRequestor.KEY_GRANT_RESULTS);
+            eng.onRequestPermissionsResult(resultCode, outPermissions, grantResults);
+          }
+        };
+        final Intent permIntent = new Intent(getContext(), PermissionRequestor.class);
+        permIntent.putExtra(PermissionRequestor.KEY_RESULT_RECEIVER, resultReceiver);
+        permIntent.putExtra(PermissionRequestor.KEY_PERMISSIONS, permissions);
+        permIntent.putExtra(PermissionRequestor.KEY_REQUEST_CODE, REQUEST_PERMISSIONS);
+        // Show the dialog requesting the permissions
+        permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(permIntent);
+      }
+    } else if (activity != null) {
+      // Requesting permissions from user when the app resumes.
+      // Nice example on how to handle user response
+      // http://stackoverflow.com/a/35495855
+      // More on permission in Android 23:
+      // https://inthecheesefactory.com/blog/things-you-need-to-know-about-android-m-permission-developer-edition/en
+      ActivityCompat.requestPermissions(activity, permissions, REQUEST_PERMISSIONS);
     }
   }
 }

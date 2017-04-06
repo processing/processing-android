@@ -100,6 +100,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   }
 
 
+  public boolean isService() {
+    return true;
+  }
+
+
   public ServiceEngine getEngine() {
     return engine;
   }

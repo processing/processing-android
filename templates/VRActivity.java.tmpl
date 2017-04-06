@@ -12,14 +12,4 @@ public class MainActivity extends PVR {
     PApplet sketch = new @@sketch_class_name@@();
     setSketch(sketch);
   }
-  
-  @Override
-  public void onRequestPermissionsResult(int requestCode,
-                                         String permissions[],
-                                         int[] grantResults) {
-    PApplet sketch = getSketch();
-    if (sketch != null) {
-      sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-  }    
 }
