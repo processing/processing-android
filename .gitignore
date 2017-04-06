@@ -9,6 +9,7 @@ release
 /sdk/
 /temp/
 
+libraries/build/**
 build/**
 .gradle
 
