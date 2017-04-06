@@ -106,7 +106,7 @@ class AndroidBuild extends JavaBuild {
   static public final String support_version = "25.2.0";
   static public final String play_services_version = "10.2.0";  
   static public final String wear_version = "2.0.0";
-  static public final String gvr_sdk_version = "1.20.0";
+  static public final String gvr_sdk_version = "1.40.0";
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
@@ -1556,7 +1556,8 @@ class AndroidBuild extends JavaBuild {
     
     ////////////////////////////////////////////////////////////////////////
     // first step: unpack the VR packages in the project's 
-    // libs folder:        
+    // libs folder:
+    PApplet.println("GVR version to use", gvr_sdk_version);
     File baseZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-base.zip");
     File commonZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-common.zip");
     File audioZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-audio.zip");

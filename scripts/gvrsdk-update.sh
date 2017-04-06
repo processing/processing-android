@@ -17,7 +17,10 @@ nano=3.1.0
 
 mkdir ../libraries/vr/gvrsdk/$ver
 
-wget https://github.com/googlevr/gvr-android-sdk/archive/$sdk.zip
+#wget https://github.com/googlevr/gvr-android-sdk/archive/$sdk.zip
+
+# curl is the default on Mac now
+curl -o $sdk.zip -L https://github.com/googlevr/gvr-android-sdk/archive/$sdk.zip
 
 unzip $sdk.zip
 
@@ -25,6 +28,17 @@ unzip $sdk.zip
 unzip gvr-android-sdk-$ver/libraries/sdk-base-$ver.aar -d base.aar
 unzip gvr-android-sdk-$ver/libraries/sdk-common-$ver.aar -d common.aar
 unzip gvr-android-sdk-$ver/libraries/sdk-audio-$ver.aar -d audio.aar
+
+################################################
+# protobuf-javanano
+
+# protobuf-javanano was unbundled from the SDK:
+# https://github.com/googlevr/gvr-android-sdk/issues/264
+# but required by sdk-common, the correspond pom file alongside the aar contains the 
+# details of the dependency.
+#wget http://central.maven.org/maven2/com/google/protobuf/nano/protobuf-javanano/$nano/protobuf-javanano-$nano.jar
+nanojar=protobuf-javanano-$nano.jar
+curl -o $nanojar -L http://central.maven.org/maven2/com/google/protobuf/nano/protobuf-javanano/$nano/$nanojar
 
 ################################################
 # Base package
@@ -56,7 +70,6 @@ cp sdk-base/libs/gvr-base.jar ../libraries/vr/lib
 zip -r sdk-base.zip sdk-base
 mv sdk-base.zip ../libraries/vr/gvrsdk/$ver
 
-
 ################################################
 # Common package
 mkdir sdk-common
@@ -78,12 +91,7 @@ jar cf gvr-common.jar -C sdk-common/libs/common .
 rm -Rf sdk-common/libs/common
 mv gvr-common.jar sdk-common/libs
 
-# protobuf-javanano was unbundled from the SDK:
-# https://github.com/googlevr/gvr-android-sdk/issues/264
-# but required by sdk-common, the correspond pom file alongside the aar contains the 
-# details of the dependency.
-wget http://central.maven.org/maven2/com/google/protobuf/nano/protobuf-javanano/$nano/protobuf-javanano-$nano.jar
-mv protobuf-javanano-$nano.jar sdk-common/libs
+mv $nanojar sdk-common/libs
 
 # Need the jar also in VR's lib folder
 cp sdk-common/libs/gvr-common.jar ../libraries/vr/lib

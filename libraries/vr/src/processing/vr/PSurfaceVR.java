@@ -38,7 +38,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.AssetManager;
 import android.view.MotionEvent;
@@ -141,13 +140,7 @@ public class PSurfaceVR extends PSurfaceGLES {
 
   @Override
   public void setOrientation(int which) {
-    if (component.getKind() == AppComponent.FRAGMENT) {
-      if (which == PORTRAIT) {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-      } else if (which == LANDSCAPE) {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-      }
-    }
+    PGraphics.showWarning("Orientation in VR apps cannot be changed");
   }
 
   @Override
