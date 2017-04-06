@@ -61,7 +61,7 @@ public class AndroidEditor extends JavaEditor {
   private JCheckBoxMenuItem fragmentItem;
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
-  private JCheckBoxMenuItem cardboardItem;
+  private JCheckBoxMenuItem vrItem;
     
   private static final String USB_DRIVER_TITLE = "USB Driver warning";
   private static final String USB_DRIVER_URL = 
@@ -263,7 +263,7 @@ public class AndroidEditor extends JavaEditor {
     fragmentItem = new JCheckBoxMenuItem("App");
     wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
     watchfaceItem = new JCheckBoxMenuItem("Watch Face");
-    cardboardItem = new JCheckBoxMenuItem("Cardboard");
+    vrItem = new JCheckBoxMenuItem("VR");
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -272,7 +272,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(true);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
-        cardboardItem.setSelected(false);
+        vrItem.setSelected(false);
         androidMode.showSelectComponentMessage(AndroidBuild.FRAGMENT);
       }
     });
@@ -283,7 +283,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
-        cardboardItem.setSelected(false);
+        vrItem.setSelected(false);
         androidMode.showSelectComponentMessage(AndroidBuild.WALLPAPER);
       }
     });
@@ -294,31 +294,31 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
-        cardboardItem.setSelected(false);
+        vrItem.setSelected(false);
         androidMode.showSelectComponentMessage(AndroidBuild.WATCHFACE);
       }
     });
-    cardboardItem.addActionListener(new ActionListener() {
+    vrItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        setAppComponent(AndroidBuild.CARDBOARD);
+        setAppComponent(AndroidBuild.VR);
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
-        cardboardItem.setSelected(true);
-        androidMode.showSelectComponentMessage(AndroidBuild.CARDBOARD);
+        vrItem.setSelected(true);
+        androidMode.showSelectComponentMessage(AndroidBuild.VR);
       }
     });    
        
     fragmentItem.setState(false);
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
-    cardboardItem.setSelected(false);
+    vrItem.setSelected(false);
 
     menu.add(fragmentItem);
     menu.add(wallpaperItem);
     menu.add(watchfaceItem);
-    menu.add(cardboardItem);
+    menu.add(vrItem);
     
     menu.addSeparator();
 
@@ -482,8 +482,8 @@ public class AndroidEditor extends JavaEditor {
         settings.set("component", "wallpaper");
       } else if (appComponent == AndroidBuild.WATCHFACE) {
         settings.set("component", "watchface");
-      } else if (appComponent == AndroidBuild.CARDBOARD) {
-        settings.set("component", "cardboard");
+      } else if (appComponent == AndroidBuild.VR) {
+        settings.set("component", "vr");
       }
       settings.save();
     }
@@ -805,9 +805,9 @@ public class AndroidEditor extends JavaEditor {
       } else if (component.equals("watchface")) {
         appComponent = AndroidBuild.WATCHFACE;
         watchfaceItem.setState(true);
-      } else if (component.equals("cardboard")) {
-        appComponent = AndroidBuild.CARDBOARD;
-        cardboardItem.setState(true);
+      } else if (component.equals("vr")) {
+        appComponent = AndroidBuild.VR;
+        vrItem.setState(true);
       }  
     } catch (IOException e) {
       System.err.println("While creating " + sketchProps + ": " + e.getMessage());

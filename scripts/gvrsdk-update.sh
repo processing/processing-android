@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script downloads the GVR SDK, explodes the AAR files, and creates zip packages than
-# can be used by the mode to generate the required libraries to build a cardboard sketch.
+# can be used by the mode to generate the required libraries to build a VR sketch.
 # The steps in the AAR to ZIP conversion were based on this blogpost:
 # https://commonsware.com/blog/2014/07/03/consuming-aars-eclipse.html
 
@@ -15,7 +15,7 @@ sdk=v$1
 # Version of the protobuf-javanano dependency
 nano=3.1.0
 
-mkdir ../libraries/cardboard/gvrsdk/$ver
+mkdir ../libraries/vr/gvrsdk/$ver
 
 wget https://github.com/googlevr/gvr-android-sdk/archive/$sdk.zip
 
@@ -49,12 +49,12 @@ jar cf gvr-base.jar -C sdk-base/libs/base .
 rm -Rf sdk-base/libs/base
 mv gvr-base.jar sdk-base/libs
 
-# Need the jar also in cardboard's lib folder
-cp sdk-base/libs/gvr-base.jar ../libraries/cardboard/lib
+# Need the jar also in VR's lib folder
+cp sdk-base/libs/gvr-base.jar ../libraries/vr/lib
 
 # Finally, create zip file and mode to the sdk location
 zip -r sdk-base.zip sdk-base
-mv sdk-base.zip ../libraries/cardboard/gvrsdk/$ver
+mv sdk-base.zip ../libraries/vr/gvrsdk/$ver
 
 
 ################################################
@@ -85,12 +85,12 @@ mv gvr-common.jar sdk-common/libs
 wget http://central.maven.org/maven2/com/google/protobuf/nano/protobuf-javanano/$nano/protobuf-javanano-$nano.jar
 mv protobuf-javanano-$nano.jar sdk-common/libs
 
-# Need the jar also in cardboard's lib folder
-cp sdk-common/libs/gvr-common.jar ../libraries/cardboard/lib
+# Need the jar also in VR's lib folder
+cp sdk-common/libs/gvr-common.jar ../libraries/vr/lib
 
 # Finally, create zip file and mode to the sdk location
 zip -r sdk-common.zip sdk-common
-mv sdk-common.zip ../libraries/cardboard/gvrsdk/$ver
+mv sdk-common.zip ../libraries/vr/gvrsdk/$ver
 
 ################################################
 # Audio package
@@ -115,12 +115,12 @@ jar cf gvr-audio.jar -C sdk-audio/libs/audio .
 rm -Rf sdk-audio/libs/audio
 mv gvr-audio.jar sdk-audio/libs
 
-# Need the jar also in cardboard's lib folder
-cp sdk-audio/libs/gvr-audio.jar ../libraries/cardboard/lib
+# Need the jar also in VR's lib folder
+cp sdk-audio/libs/gvr-audio.jar ../libraries/vr/lib
 
 # Finally, create zip file and mode to the sdk location
 zip -r sdk-audio.zip sdk-audio
-mv sdk-audio.zip ../libraries/cardboard/gvrsdk/$ver
+mv sdk-audio.zip ../libraries/vr/gvrsdk/$ver
 
 ################################################
 # Cleanup

@@ -87,6 +87,9 @@ public class PSurfaceVR extends PSurfaceGLES {
     }
     vrActivity.setGvrView(glview);
 
+    // Required to read the paired viewer's distortion parameters.
+    requestPermissions(new String[] {"android.permission.READ_EXTERNAL_STORAGE"});
+
     surfaceView = null;
   }
 

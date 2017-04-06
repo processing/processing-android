@@ -1,1 +1,1 @@
-include 'core', 'libraries:cardboard'
+include 'core', 'libraries:vr'

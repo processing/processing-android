@@ -48,21 +48,21 @@ class AndroidBuild extends JavaBuild {
   static public final int FRAGMENT  = 0;
   static public final int WALLPAPER = 1;
   static public final int WATCHFACE = 2;
-  static public final int CARDBOARD = 3;
+  static public final int VR = 3;
   
   static public final String DEFAULT_COMPONENT = "app";
   
   static private final String FRAGMENT_ACTIVITY_TEMPLATE = "FragmentActivity.java.tmpl";
   static private final String WALLPAPER_SERVICE_TEMPLATE = "WallpaperService.java.tmpl";
   static private final String WATCHFACE_SERVICE_TEMPLATE = "WatchFaceService.java.tmpl";
-  static private final String CARDBOARD_ACTIVITY_TEMPLATE = "CardboardActivity.java.tmpl";
+  static private final String VR_ACTIVITY_TEMPLATE = "VRActivity.java.tmpl";
   static private final String HANDHELD_ACTIVITY_TEMPLATE = "HandheldActivity.java.tmpl";
   static private final String HANDHELD_MANIFEST_TEMPLATE = "HandheldManifest.xml.tmpl";
   static private final String HANDHELD_LAYOUT_TEMPLATE = "HandheldLayout.xml.tmpl";
   static private final String WEARABLE_DESCRIPTION_TEMPLATE = "WearableDescription.xml.tmpl";
   static private final String LAYOUT_ACTIVITY_TEMPLATE = "LayoutActivity.xml.tmpl";
   static private final String STYLES_FRAGMENT_TEMPLATE = "StylesFragment.xml.tmpl";
-  static private final String STYLES_CARDBOARD_TEMPLATE = "StylesCardboard.xml.tmpl";
+  static private final String STYLES_VR_TEMPLATE = "StylesVR.xml.tmpl";
   static private final String XML_WALLPAPER_TEMPLATE = "XMLWallpaper.xml.tmpl";
   static private final String STRINGS_WALLPAPER_TEMPLATE = "StringsWallpaper.xml.tmpl";
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
@@ -74,7 +74,7 @@ class AndroidBuild extends JavaBuild {
   static private final String APP_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
   static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
   static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";
-  static private final String CARDBOARD_GRADLE_BUILD_TEMPLATE = "CardboardBuild.gradle.tmpl";
+  static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";
   
   // TODO: ask base package name when exporting signed apk
   //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
@@ -91,7 +91,7 @@ class AndroidBuild extends JavaBuild {
   // which allows us to exactly determine the size of the screen.
   static public final String min_sdk_fragment  = "16"; // Jelly Bean (4.1)
   static public final String min_sdk_wallpaper = "16"; // 
-  static public final String min_sdk_cardboard = "19"; // KitKat (4.4)
+  static public final String min_sdk_gvr       = "19"; // KitKat (4.4)
   static public final String min_sdk_handheld  = "21"; // Lollipop (5.0)
   static public final String min_sdk_watchface = "23"; // Marshmallow (6.0)
   
@@ -269,7 +269,7 @@ class AndroidBuild extends JavaBuild {
       if (getAppComponent() == FRAGMENT) {
         copyAppCompatLib(targetID, tmpFolder, libsFolder);   
       }
-      if (getAppComponent() == CARDBOARD) {
+      if (getAppComponent() == VR) {
         copyGVRLibs(targetID, libsFolder);
       }
       
@@ -923,9 +923,9 @@ class AndroidBuild extends JavaBuild {
       writeResStringsWallpaper(valuesFolder);      
     }
     
-    if (comp == CARDBOARD) {
+    if (comp == VR) {
       File valuesFolder = mkdirs(resFolder, "values");      
-      writeResStylesCardboard(valuesFolder);  
+      writeResStylesVR(valuesFolder);  
     }    
 
     File sketchFolder = sketch.getFolder();
@@ -1099,8 +1099,8 @@ class AndroidBuild extends JavaBuild {
       } else {
         writeWatchFaceCanvasService(srcDirectory, permissions);  
       }      
-    } else if (comp == CARDBOARD) {
-      writeCardboardActivity(srcDirectory, permissions);
+    } else if (comp == VR) {
+      writeVRActivity(srcDirectory, permissions);
     }
   }
 
@@ -1155,8 +1155,8 @@ class AndroidBuild extends JavaBuild {
   }  
   
   
-  private void writeCardboardActivity(final File srcDirectory, String[] permissions) {
-    File javaTemplate = mode.getContentFile("templates/" + CARDBOARD_ACTIVITY_TEMPLATE);    
+  private void writeVRActivity(final File srcDirectory, String[] permissions) {
+    File javaTemplate = mode.getContentFile("templates/" + VR_ACTIVITY_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
@@ -1185,8 +1185,8 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  private void writeResStylesCardboard(final File valuesFolder) {
-    File xmlTemplate = mode.getContentFile("templates/" + STYLES_CARDBOARD_TEMPLATE);
+  private void writeResStylesVR(final File valuesFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + STYLES_VR_TEMPLATE);
     File xmlFile = new File(valuesFolder, "styles.xml");
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
   }
@@ -1360,9 +1360,9 @@ class AndroidBuild extends JavaBuild {
     
     String minSdk;
     String tmplFile;
-    if (appComponent == CARDBOARD) {
-      minSdk = min_sdk_cardboard;
-      tmplFile = CARDBOARD_GRADLE_BUILD_TEMPLATE;       
+    if (appComponent == VR) {
+      minSdk = min_sdk_gvr;
+      tmplFile = VR_GRADLE_BUILD_TEMPLATE;       
     } else {
       minSdk = min_sdk_fragment; 
       tmplFile = APP_GRADLE_BUILD_TEMPLATE;      
@@ -1389,9 +1389,9 @@ class AndroidBuild extends JavaBuild {
     File libsFolder = mkdirs(moduleFolder, "libs");
     Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
 
-    if (appComponent == CARDBOARD) {
-      File cardboardFile = new File(projectFolder, "libs/cardboard.jar");
-      Util.copyFile(cardboardFile, new File(libsFolder, "cardboard.jar"));
+    if (appComponent == VR) {
+      File vrFile = new File(projectFolder, "libs/vr.jar");
+      Util.copyFile(vrFile, new File(libsFolder, "vr.jar"));
     }
     
     File mainFolder = mkdirs(moduleFolder, "src/main");
@@ -1551,15 +1551,15 @@ class AndroidBuild extends JavaBuild {
   }
   
   private void copyGVRLibs(String targetID, File libsFolder) throws IOException {
-    // TODO: temporary hack until I find a better way to include the cardboard aar
-    // packages included in the cardboard SDK:
+    // TODO: temporary hack until I find a better way to include the VR aar
+    // packages included in the GVR SDK:
     
     ////////////////////////////////////////////////////////////////////////
-    // first step: unpack the cardboard packages in the project's 
+    // first step: unpack the VR packages in the project's 
     // libs folder:        
-    File baseZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/" + gvr_sdk_version + "/sdk-base.zip");
-    File commonZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/" + gvr_sdk_version + "/sdk-common.zip");
-    File audioZipFile = mode.getContentFile("libraries/cardboard/gvrsdk/" + gvr_sdk_version + "/sdk-audio.zip");
+    File baseZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-base.zip");
+    File commonZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-common.zip");
+    File audioZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-audio.zip");
     AndroidMode.extractFolder(baseZipFile, libsFolder, true);
     AndroidMode.extractFolder(commonZipFile, libsFolder, true);        
     AndroidMode.extractFolder(audioZipFile, libsFolder, true);        

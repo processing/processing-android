@@ -55,7 +55,7 @@ public class Manifest {
     "FragmentManifest.xml.tmpl",
     "WallpaperManifest.xml.tmpl",
     "WatchFaceManifest.xml.tmpl",
-    "CardboardManifest.xml.tmpl",
+    "VRManifest.xml.tmpl",
   };
   
 //  private Editor editor;
@@ -165,12 +165,12 @@ public class Manifest {
     // just remove all the old ones
     for (XML kid : xml.getChildren("uses-permission")) {
       String name = kid.getString("android:name");
-      // Don't remove required permissions for wallpapers, watchfaces and cardboard.      
+      // Don't remove required permissions for wallpapers, watchfaces and VR.      
       if (-1 < name.indexOf(".")) continue;
       if (appComp == AndroidBuild.WALLPAPER) {
       } else if (appComp == AndroidBuild.WATCHFACE) {
         if (name.equals("WAKE_LOCK")) continue;
-      } else if (appComp == AndroidBuild.CARDBOARD) {
+      } else if (appComp == AndroidBuild.VR) {
         if (name.equals("INTERNET") ||
             name.equals("NFC") ||
             name.equals("VIBRATE") ||
@@ -181,11 +181,11 @@ public class Manifest {
     }
     // ...and add the new kids back
     for (String name : names) {
-      // Don't add required permissions for wallpapers, watchfaces and cardboard again.      
+      // Don't add required permissions for wallpapers, watchfaces and VR again.      
       if (appComp == AndroidBuild.WALLPAPER) {
       } else if (appComp == AndroidBuild.WATCHFACE) {
         if (name.equals("WAKE_LOCK")) continue;
-      } else if (appComp == AndroidBuild.CARDBOARD) {
+      } else if (appComp == AndroidBuild.VR) {
         if (name.equals("INTERNET") ||
             name.equals("NFC") ||
             name.equals("VIBRATE") ||
@@ -214,8 +214,8 @@ public class Manifest {
       replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_wallpaper);
     } else if (appComp == AndroidBuild.WATCHFACE) {
       replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);
-    } else if (appComp == AndroidBuild.CARDBOARD) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_cardboard);
+    } else if (appComp == AndroidBuild.VR) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_gvr);
     }
         
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
