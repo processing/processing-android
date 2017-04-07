@@ -99,7 +99,6 @@ public class PSurfaceGLES extends PSurfaceNone {
   public class SketchSurfaceViewGL extends GLSurfaceView {
     SurfaceHolder holder;
 
-    @SuppressWarnings("deprecation")
     public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
       super(context);
       this.holder = holder;
@@ -121,8 +120,17 @@ public class PSurfaceGLES extends PSurfaceNone {
       setPreserveEGLContextOnPause(true);
 
       int samples = sketch.sketchSmooth();
-      System.out.println("Using smooth level " + samples);
-      setEGLConfigChooser(getConfigChooser(samples));
+      if (1 < samples) {
+        setEGLConfigChooser(getConfigChooser(samples));
+      } else {
+        // use default EGL config chooser for now...
+//        setEGLConfigChooser(getConfigChooser(5, 6, 5, 4, 16, 1, samples));
+
+        // Some notes on how to choose an EGL configuration:
+        // https://github.com/mapbox/mapbox-gl-native/issues/574
+        // http://malideveloper.arm.com/sample-code/selecting-the-correct-eglconfig/
+    }
+
 
       // The renderer can be set only once.
       setRenderer(getRenderer());
@@ -237,15 +245,10 @@ public class PSurfaceGLES extends PSurfaceNone {
     return new AndroidContextFactory();
   }
 
-  public AndroidConfigChooser getConfigChooser() {
-    return new AndroidConfigChooser(8, 8, 8, 8, 16, 8, 1);
-//    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
-  }
-
 
   public AndroidConfigChooser getConfigChooser(int samples) {
-    return new AndroidConfigChooser(8, 8, 8, 8, 16, 8, samples);
-//    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
+    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
+//  return new AndroidConfigChooser(8, 8, 8, 8, 16, 8, samples);
   }
 
 

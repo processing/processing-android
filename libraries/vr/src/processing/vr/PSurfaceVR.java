@@ -221,11 +221,13 @@ public class PSurfaceVR extends PSurfaceGLES {
       setFocusableInTouchMode(true);
       requestFocus();
 
-      setEGLConfigChooser(8, 8, 8, 8, 16, 8);
+
       int samples = sketch.sketchSmooth();
       if (1 < samples) {
-        System.out.println("setting multisampling to " + samples);
         setMultisampling(samples);
+      } else {
+        // use default EGL config chooser for now
+//        setEGLConfigChooser(8, 8, 8, 8, 16, 8);
       }
 
       // The renderer can be set only once.

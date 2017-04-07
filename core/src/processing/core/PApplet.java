@@ -43,7 +43,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -479,13 +478,6 @@ public class PApplet extends Object implements PConstants {
     if (DEBUG) println("Created renderer");
     surface = g.createSurface(component, holder, false);
     if (DEBUG) println("Created surface");
-
-    //set smooth level
-    if (smooth == 0) {
-      g.noSmooth();
-    } else {
-      g.smooth(smooth);
-    }
 
     if (parentLayout == -1) {
       setFullScreenVisibility();
@@ -1296,6 +1288,11 @@ public class PApplet extends Object implements PConstants {
     this.height = height;
     pixelWidth = width * pixelDensity;
     pixelHeight = height * pixelDensity;
+  }
+
+
+  public void setExternal(boolean external) {
+    this.external = external;
   }
 
 

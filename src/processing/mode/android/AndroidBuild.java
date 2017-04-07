@@ -58,7 +58,7 @@ class AndroidBuild extends JavaBuild {
   static private final String VR_ACTIVITY_TEMPLATE = "VRActivity.java.tmpl";
   static private final String HANDHELD_ACTIVITY_TEMPLATE = "HandheldActivity.java.tmpl";
   static private final String HANDHELD_MANIFEST_TEMPLATE = "HandheldManifest.xml.tmpl";
-  static private final String HANDHELD_LAYOUT_TEMPLATE = "HandheldLayout.xml.tmpl";
+//  static private final String HANDHELD_LAYOUT_TEMPLATE = "HandheldLayout.xml.tmpl";
   static private final String WEARABLE_DESCRIPTION_TEMPLATE = "WearableDescription.xml.tmpl";
   static private final String LAYOUT_ACTIVITY_TEMPLATE = "LayoutActivity.xml.tmpl";
   static private final String STYLES_FRAGMENT_TEMPLATE = "StylesFragment.xml.tmpl";
@@ -165,7 +165,7 @@ class AndroidBuild extends JavaBuild {
       // https://developer.android.com/training/wearables/apps/creating.html
       // so the watchface can be uninstalled from the phone, and can be
       // published on Google Play.
-      File wearFolder = createProject(targetID, true);
+      File wearFolder = createProject(targetID, true, true);
       if (wearFolder == null) return null;
       if (!antBuild()) return null;      
       File folder = createHandheldProject(targetID, wearFolder, null);
@@ -173,7 +173,7 @@ class AndroidBuild extends JavaBuild {
       if (!antBuild()) return null;
       return folder;      
     } else {
-      File folder = createProject(targetID, false);
+      File folder = createProject(targetID, true, false);
       if (folder != null) {
         if (!antBuild()) {
           return null;
@@ -211,7 +211,7 @@ class AndroidBuild extends JavaBuild {
    * Populates the 'src' folder with Java code, and 'libs' folder with the
    * libraries and code folder contents. Also copies data folder to 'assets'.
    */
-  public File createProject(String targetID, boolean wear) 
+  public File createProject(String targetID, boolean external, boolean wear) 
       throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
     if (wear) {
@@ -251,7 +251,7 @@ class AndroidBuild extends JavaBuild {
       writeRes(resFolder);
 
       renderer = info.getRenderer();
-      writeMainClass(srcFolder, renderer);
+      writeMainClass(srcFolder, renderer, external);
 
       final File libsFolder = mkdirs(tmpFolder, "libs");
       final File assetsFolder = mkdirs(tmpFolder, "assets");
@@ -403,6 +403,7 @@ class AndroidBuild extends JavaBuild {
   }  
   
   
+  /*
   private void writeHandheldLayout(final File resFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + HANDHELD_LAYOUT_TEMPLATE);    
     File xmlFile = new File(resFolder, "layout/activity_handheld.xml");
@@ -412,7 +413,7 @@ class AndroidBuild extends JavaBuild {
 
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);      
   }
-  
+  */
   
   private void writeWearableDescription(final File resFolder, final String apkName,
       final String versionCode, String versionName) {
@@ -600,7 +601,7 @@ class AndroidBuild extends JavaBuild {
     if (appComponent == WATCHFACE) {
       // We are building a watchface not to run on the emulator. We need the
       // handheld app:
-      File wearFolder = createProject(targetID, true);
+      File wearFolder = createProject(targetID, false, true);
       if (wearFolder == null) return null;
       if (!antBuild()) return null;
       
@@ -617,7 +618,7 @@ class AndroidBuild extends JavaBuild {
       }
       return null;      
     } else {
-      File projectFolder = createProject(targetID, false);
+      File projectFolder = createProject(targetID, false, false);
       if (projectFolder != null) {
         File exportFolder = createExportFolder();
         if (buildSystem.equals("gradle")) {
@@ -637,7 +638,7 @@ class AndroidBuild extends JavaBuild {
       this.target = "release";
       String targetID = getTargetID();
       // We need to sign and align the wearable and handheld apps:      
-      File wearFolder = createProject(targetID, true);
+      File wearFolder = createProject(targetID, true, true);
       if (wearFolder == null) return null;
       if (!antBuild()) return null;      
       File signedWearPackage = signPackage(wearFolder, keyStorePassword);
@@ -1086,50 +1087,56 @@ class AndroidBuild extends JavaBuild {
   }
 
 
-  private void writeMainClass(final File srcDirectory, String renderer) {
+  private void writeMainClass(final File srcDirectory, 
+      final String renderer, final boolean external) {
     int comp = getAppComponent();
     String[] permissions = manifest.getPermissions();
     if (comp == FRAGMENT) {
-      writeFragmentActivity(srcDirectory, permissions);
+      writeFragmentActivity(srcDirectory, permissions, external);
     } else if (comp == WALLPAPER) {
-      writeWallpaperService(srcDirectory, permissions);
+      writeWallpaperService(srcDirectory, permissions, external);
     } else if (comp == WATCHFACE) {
       if (usesOpenGL()) {
-        writeWatchFaceGLESService(srcDirectory, permissions);  
+        writeWatchFaceGLESService(srcDirectory, permissions, external);  
       } else {
-        writeWatchFaceCanvasService(srcDirectory, permissions);  
+        writeWatchFaceCanvasService(srcDirectory, permissions, external);  
       }      
     } else if (comp == VR) {
-      writeVRActivity(srcDirectory, permissions);
+      writeVRActivity(srcDirectory, permissions, external);
     }
   }
 
   
-  private void writeFragmentActivity(final File srcDirectory, String[] permissions) {    
+  private void writeFragmentActivity(final File srcDirectory, 
+      final String[] permissions, final boolean external) {    
     File javaTemplate = mode.getContentFile("templates/" + FRAGMENT_ACTIVITY_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
   
   
-  private void writeWallpaperService(final File srcDirectory, String[] permissions) {    
+  private void writeWallpaperService(final File srcDirectory, 
+      String[] permissions, final boolean external) {    
     File javaTemplate = mode.getContentFile("templates/" + WALLPAPER_SERVICE_TEMPLATE);
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainService.java");
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");    
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
   
   
-  private void writeWatchFaceGLESService(final File srcDirectory, String[] permissions) {
+  private void writeWatchFaceGLESService(final File srcDirectory, 
+      String[] permissions, final boolean external) {
     File javaTemplate = mode.getContentFile("templates/" + WATCHFACE_SERVICE_TEMPLATE);
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainService.java");
     
@@ -1137,12 +1144,14 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceGLES");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");    
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
 
   
-  private void writeWatchFaceCanvasService(final File srcDirectory, String[] permissions) {
+  private void writeWatchFaceCanvasService(final File srcDirectory, 
+      String[] permissions, final boolean external) {
     File javaTemplate = mode.getContentFile("templates/" + WATCHFACE_SERVICE_TEMPLATE);
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainService.java");
     
@@ -1150,18 +1159,21 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceCanvas");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : ""); 
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }  
   
   
-  private void writeVRActivity(final File srcDirectory, String[] permissions) {
+  private void writeVRActivity(final File srcDirectory, String[] permissions, 
+      final boolean external) {
     File javaTemplate = mode.getContentFile("templates/" + VR_ACTIVITY_TEMPLATE);    
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
@@ -1557,7 +1569,6 @@ class AndroidBuild extends JavaBuild {
     ////////////////////////////////////////////////////////////////////////
     // first step: unpack the VR packages in the project's 
     // libs folder:
-    PApplet.println("GVR version to use", gvr_sdk_version);
     File baseZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-base.zip");
     File commonZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-common.zip");
     File audioZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-audio.zip");

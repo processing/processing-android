@@ -847,8 +847,6 @@ public class PGraphics extends PImage implements PConstants {
    * This is currently called by checkSettings(), during beginDraw().
    */
   protected void defaultSettings() {  // ignore
-    smooth();  // 2.0a5
-
     colorMode(RGB, 255);
     fill(255);
     stroke(0);
