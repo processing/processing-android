@@ -54,7 +54,9 @@ public class PGraphicsVR extends PGraphics3D {
   public void beginDraw() {
     super.beginDraw();
     pgl.viewport(viewPort.x, viewPort.y, viewPort.width, viewPort.height);
-    camera(0.0f, 0.0f, cameraZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    // The camera up direction is along -Y, because of the axis inversion
+    // in Processing
+    camera(0.0f, 0.0f, defCameraZ, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f);
     setProjection(perspectiveMatrix);
     preApplyMatrix(viewMatrix);
   }
@@ -71,7 +73,7 @@ public class PGraphicsVR extends PGraphics3D {
   protected void headTransform(HeadTransform headTransform) {
     initVR();
 
-    // Get the head view and rotation so the user can use them for object selecton and
+    // Get the head view and rotation so the user can use them for object selection and
     // other operations.
     headTransform.getHeadView(headView, 0);
     headTransform.getQuaternion(headRotation, 0);
@@ -83,11 +85,12 @@ public class PGraphicsVR extends PGraphics3D {
     viewPort = eye.getViewport();
 
     // Matrices in Processing are row-major, and GVR API is column-major
+    // Also, need to invert Y coordinate, that's why the minus in front of p[5]
     float[] p = eye.getPerspective(cameraNear, cameraFar);
-    perspectiveMatrix.set(p[0], p[4],  p[8], p[12],
-                          p[1], p[5],  p[9], p[13],
-                          p[2], p[6], p[10], p[14],
-                          p[3], p[7], p[11], p[15]);
+    perspectiveMatrix.set(p[0],  p[4],  p[8], p[12],
+                          p[1], -p[5],  p[9], p[13],
+                          p[2],  p[6], p[10], p[14],
+                          p[3],  p[7], p[11], p[15]);
 
     float[] v = eye.getEyeView();
     viewMatrix.set(v[0], v[4],  v[8], v[12],
