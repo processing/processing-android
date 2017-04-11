@@ -68,5 +68,4 @@ void draw() {
   strokeWeight(50);
   point(x, y, z);
   noStroke();
-  popMatrix();
 }
