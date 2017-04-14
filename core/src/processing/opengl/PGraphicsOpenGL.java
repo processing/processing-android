@@ -4409,8 +4409,15 @@ public class PGraphicsOpenGL extends PGraphics {
     float tz = -eyeZ;
     modelview.translate(tx, ty, tz);
 
-    modelviewInv.set(modelview);
-    modelviewInv.invert();
+    // The initial modelview transformation can be decomposed in a orthogonal
+    // matrix (with the inverse simply being the transpose), and a translation.
+    // The modelview inverse can then be calculated as follows, without need of
+    // employing the more general, slower, inverse() calculation.
+    modelviewInv.set(x0, y0, z0, 0,
+                     x1, y1, z1, 0,
+                     x2, y2, z2, 0,
+                      0,  0,  0, 1);
+    modelviewInv.translate(-tx, -ty, -tz);
 
     camera.set(modelview);
     cameraInv.set(modelviewInv);
