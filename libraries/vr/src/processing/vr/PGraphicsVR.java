@@ -23,11 +23,11 @@
 package processing.vr;
 
 import com.google.vr.sdk.base.Eye;
-import com.google.vr.sdk.base.FieldOfView;
 import com.google.vr.sdk.base.HeadTransform;
 import com.google.vr.sdk.base.Viewport;
 
-import processing.core.PMatrix3D;
+import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
@@ -36,23 +36,18 @@ import processing.opengl.PGraphicsOpenGL;
 public class PGraphicsVR extends PGraphics3D {
   private boolean initialized = false;
 
-  // Head properties, independent of eye view
+  public HeadTransform headTransform;
+  public Eye eye;
   public int eyeType;
-  public float[] headView;
-  public float[] headRotation;
-  public float[] translationVector;
-  public float[] forwardVector;
-  public float[] rightVector;
-  public float[] upVector;
+  public float forwardX;
+  public float forwardY;
+  public float forwardZ;
 
   // Eye properties
-  public FieldOfView eyeFov;
-  public Viewport eyeViewPort;
-  public float[] eyeView;
-  public float[] eyePerspective;
-
-  private PMatrix3D viewMatrix;
-  private PMatrix3D perspectiveMatrix;
+  private Viewport eyeViewport;
+  private float[] forwardVector;
+  private float[] eyeView;
+  private float[] eyePerspective;
 
   @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
@@ -63,70 +58,147 @@ public class PGraphicsVR extends PGraphics3D {
   @Override
   public void beginDraw() {
     super.beginDraw();
-    pgl.viewport(eyeViewPort.x, eyeViewPort.y, eyeViewPort.width, eyeViewPort.height);
-    // The camera up direction is along -Y, because of the axis inversion
-    // in Processing
-    camera(0.0f, 0.0f, defCameraZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    setProjection(perspectiveMatrix);
-    preApplyMatrix(viewMatrix);
+    updateView();
   }
 
 
-  public void preApplyMatrix(PMatrix3D source) {
-    modelview.preApply(source);
+  @Override
+  public void camera(float eyeX, float eyeY, float eyeZ,
+                     float centerX, float centerY, float centerZ,
+                     float upX, float upY, float upZ) {
+    PGraphics.showWarning("The camera cannnot be modified in VR mode");
+  }
+
+
+  @Override
+  public void perspective(float fov, float aspect, float zNear, float zFar) {
+    PGraphics.showWarning("Perspective cannnot be modified in VR mode");
+  }
+
+
+  @Override
+  protected void defaultCamera() {
+    // do nothing
+  }
+
+
+  @Override
+  protected void defaultPerspective() {
+    // do nothing
+  }
+
+
+  protected void updateView() {
+    pgl.viewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
+    setCameraVR(0.0f, 0.0f, defCameraZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    setProjectionVR();
+  }
+
+
+  protected void setCameraVR(float eyeX, float eyeY, float eyeZ,
+                             float centerX, float centerY, float centerZ,
+                             float upX, float upY, float upZ) {
+    cameraX = eyeX;
+    cameraY = eyeY;
+    cameraZ = eyeZ;
+
+    // Calculating Z vector
+    float z0 = eyeX - centerX;
+    float z1 = eyeY - centerY;
+    float z2 = eyeZ - centerZ;
+    eyeDist = PApplet.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
+    if (nonZero(eyeDist)) {
+      z0 /= eyeDist;
+      z1 /= eyeDist;
+      z2 /= eyeDist;
+    }
+
+    // Calculating Y vector
+    float y0 = upX;
+    float y1 = upY;
+    float y2 = upZ;
+
+    // Computing X vector as Y cross Z
+    float x0 =  y1 * z2 - y2 * z1;
+    float x1 = -y0 * z2 + y2 * z0;
+    float x2 =  y0 * z1 - y1 * z0;
+
+    // Recompute Y = Z cross X
+    y0 =  z1 * x2 - z2 * x1;
+    y1 = -z0 * x2 + z2 * x0;
+    y2 =  z0 * x1 - z1 * x0;
+
+    // Cross product gives area of parallelogram, which is < 1.0 for
+    // non-perpendicular unit-length vectors; so normalize x, y here:
+    float xmag = PApplet.sqrt(x0 * x0 + x1 * x1 + x2 * x2);
+    if (nonZero(xmag)) {
+      x0 /= xmag;
+      x1 /= xmag;
+      x2 /= xmag;
+    }
+
+    float ymag = PApplet.sqrt(y0 * y0 + y1 * y1 + y2 * y2);
+    if (nonZero(ymag)) {
+      y0 /= ymag;
+      y1 /= ymag;
+      y2 /= ymag;
+    }
+
+    // Pre-apply the eye view matrix:
+    // https://developers.google.com/vr/android/reference/com/google/vr/sdk/base/Eye.html#getEyeView()
+    modelview.set(eyeView[0], eyeView[4], eyeView[8],  eyeView[12],
+                  eyeView[1], eyeView[5], eyeView[9],  eyeView[13],
+                  eyeView[2], eyeView[6], eyeView[10], eyeView[14],
+                  eyeView[3], eyeView[7], eyeView[11], eyeView[15]);
+    modelview.apply(x0, x1, x2, 0,
+                    y0, y1, y2, 0,
+                    z0, z1, z2, 0,
+                     0,  0,  0, 1);
+    float tx = -eyeX;
+    float ty = -eyeY;
+    float tz = -eyeZ;
+    modelview.translate(tx, ty, tz);
+
     modelviewInv.set(modelview);
     modelviewInv.invert();
+
+    camera.set(modelview);
+    cameraInv.set(modelviewInv);
+  }
+
+
+  protected void setProjectionVR() {
+    // Matrices in Processing are row-major, and GVR API is column-major
+    projection.set(eyePerspective[0], eyePerspective[4], eyePerspective[8], eyePerspective[12],
+                   eyePerspective[1], eyePerspective[5], eyePerspective[9], eyePerspective[13],
+                   eyePerspective[2], eyePerspective[6], eyePerspective[10], eyePerspective[14],
+                   eyePerspective[3], eyePerspective[7], eyePerspective[11], eyePerspective[15]);
     updateProjmodelview();
   }
 
 
-  protected void headTransform(HeadTransform headTransform) {
+  protected void headTransform(HeadTransform ht) {
     initVR();
-
-    // Get the head view and rotation so the user can use them for object selection and
-    // other operations.
-    headTransform.getHeadView(headView, 0);
-    headTransform.getQuaternion(headRotation, 0);
-    headTransform.getTranslation(translationVector, 0);
+    headTransform = ht;
     headTransform.getForwardVector(forwardVector, 0);
-    headTransform.getRightVector(rightVector, 0);
-    headTransform.getUpVector(upVector, 0);
+    forwardX =  forwardVector[0];
+    forwardY =  forwardVector[1];
+    forwardZ =  forwardVector[2];
   }
 
 
-  protected void eyeTransform(Eye eye) {
+  protected void eyeTransform(Eye e) {
+    eye = e;
     eyeType = eye.getType();
-    eyeViewPort = eye.getViewport();
-    eyeFov = eye.getFov();
-
-    // Matrices in Processing are row-major, and GVR API is column-major
-    // Also, need to invert Y coordinate, that's why the minus in front of p[5]
+    eyeViewport = eye.getViewport();
     eyePerspective = eye.getPerspective(cameraNear, cameraFar);
-    perspectiveMatrix.set(eyePerspective[0],  eyePerspective[4],  eyePerspective[8], eyePerspective[12],
-                          eyePerspective[1],  eyePerspective[5],  eyePerspective[9], eyePerspective[13],
-                          eyePerspective[2],  eyePerspective[6], eyePerspective[10], eyePerspective[14],
-                          eyePerspective[3],  eyePerspective[7], eyePerspective[11], eyePerspective[15]);
-
     eyeView = eye.getEyeView();
-    viewMatrix.set(eyeView[0], eyeView[4],  eyeView[8], eyeView[12],
-                   eyeView[1], eyeView[5],  eyeView[9], eyeView[13],
-                   eyeView[2], eyeView[6], eyeView[10], eyeView[14],
-                   eyeView[3], eyeView[7], eyeView[11], eyeView[15]);
   }
 
 
   private void initVR() {
     if (!initialized) {
-      headRotation = new float[4];
-      headView = new float[16];
-      translationVector = new float[3];
       forwardVector = new float[3];
-      rightVector = new float[3];
-      upVector = new float[3];
-
-      perspectiveMatrix = new PMatrix3D();
-      viewMatrix = new PMatrix3D();
-
       initialized = true;
     }
   }
