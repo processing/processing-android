@@ -28,6 +28,7 @@ import com.google.vr.sdk.base.Viewport;
 
 import processing.core.PApplet;
 import processing.core.PGraphics;
+import processing.core.PMatrix3D;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
@@ -43,15 +44,33 @@ public class PGraphicsVR extends PGraphics3D {
   public float forwardY;
   public float forwardZ;
 
-  // Eye properties
-  private Viewport eyeViewport;
   private float[] forwardVector;
+  private Viewport eyeViewport;
   private float[] eyeView;
   private float[] eyePerspective;
+
 
   @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
     return new PGLES(pg);
+  }
+
+
+  public PMatrix3D getObjectMatrix() {
+    PMatrix3D mat = new PMatrix3D();
+    mat.set(modelviewInv);
+    mat.apply(camera);
+    return mat;
+  }
+
+
+  public PMatrix3D getObjectMatrix(PMatrix3D target) {
+    if (target == null) {
+      target = new PMatrix3D();
+    }
+    target.set(modelviewInv);
+    target.apply(camera);
+    return target;
   }
 
 
@@ -196,12 +215,13 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
-  private void initVR() {
+  protected void initVR() {
     if (!initialized) {
       forwardVector = new float[3];
       initialized = true;
     }
   }
+
 
   @Override
   protected void updateGLNormal() {
