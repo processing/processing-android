@@ -40,19 +40,43 @@ public class PGraphicsVR extends PGraphics3D {
   public HeadTransform headTransform;
   public Eye eye;
   public int eyeType;
-  public float forwardX;
-  public float forwardY;
-  public float forwardZ;
+  public float forwardX, forwardY, forwardZ;
+  public float rightX, rightY, rightZ;
+  public float upX, upY, upZ;
 
   private float[] forwardVector;
+  private float[] rightVector;
+  private float[] upVector;
   private Viewport eyeViewport;
   private float[] eyeView;
   private float[] eyePerspective;
-
+  private PMatrix3D eyeMatrix;
 
   @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
     return new PGLES(pg);
+  }
+
+
+  public PMatrix3D getEyeMatrix() {
+    PMatrix3D mat = new PMatrix3D();
+    mat.set(rightX, upX, forwardX, 0,
+            rightY, upY, forwardY, 0,
+            rightZ, upZ, forwardZ, 0,
+                 0,   0,        0, 1);
+    return mat;
+  }
+
+
+  public PMatrix3D getEyeMatrix(PMatrix3D target) {
+    if (target == null) {
+      target = new PMatrix3D();
+    }
+    target.set(rightX, upX, forwardX, 0,
+               rightY, upY, forwardY, 0,
+               rightZ, upZ, forwardZ, 0,
+                    0,   0,        0, 1);
+    return target;
   }
 
 
@@ -71,6 +95,27 @@ public class PGraphicsVR extends PGraphics3D {
     target.set(modelviewInv);
     target.apply(camera);
     return target;
+  }
+
+
+  public void setEyeTransform() {
+    eyeMatrix = getEyeMatrix(eyeMatrix);
+
+    // Erasing any previous transformation in modelview
+    modelview.set(camera);
+    modelview.translate(cameraX, cameraY, cameraZ);
+    modelview.apply(eyeMatrix);
+
+    // eyeMatrix is orthogonal, so taking the transpose inverts it.
+    eyeMatrix.transpose();
+
+    // Applying the inverse of the previous transformations in the opposite order
+    // to compute the modelview inverse
+    modelviewInv.set(eyeMatrix);
+    modelviewInv.translate(-cameraX, -cameraY, -cameraZ);
+    modelviewInv.preApply(cameraInv);
+
+    updateProjmodelview();
   }
 
 
@@ -200,9 +245,17 @@ public class PGraphicsVR extends PGraphics3D {
     initVR();
     headTransform = ht;
     headTransform.getForwardVector(forwardVector, 0);
-    forwardX =  forwardVector[0];
-    forwardY =  forwardVector[1];
-    forwardZ =  forwardVector[2];
+    headTransform.getRightVector(rightVector, 0);
+    headTransform.getUpVector(upVector, 0);
+    forwardX = forwardVector[0];
+    forwardY = forwardVector[1];
+    forwardZ = forwardVector[2];
+    rightX = rightVector[0];
+    rightY = rightVector[1];
+    rightZ = rightVector[2];
+    upX = upVector[0];
+    upY = upVector[1];
+    upZ = upVector[2];
   }
 
 
@@ -218,6 +271,8 @@ public class PGraphicsVR extends PGraphics3D {
   protected void initVR() {
     if (!initialized) {
       forwardVector = new float[3];
+      rightVector = new float[3];
+      upVector = new float[3];
       initialized = true;
     }
   }
