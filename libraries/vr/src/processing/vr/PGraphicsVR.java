@@ -52,6 +52,10 @@ public class PGraphicsVR extends PGraphics3D {
   private float[] eyePerspective;
   private PMatrix3D eyeMatrix;
 
+  static {
+    Y_AXIS_DOWN = false;
+  }
+
   @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
     return new PGLES(pg);

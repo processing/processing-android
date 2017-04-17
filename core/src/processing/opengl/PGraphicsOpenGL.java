@@ -105,6 +105,9 @@ public class PGraphicsOpenGL extends PGraphics {
   /** Current flush mode. */
   protected int flushMode = FLUSH_WHEN_FULL;
 
+  /** Orientation of Y axis. */
+  static protected boolean Y_AXIS_DOWN = true;
+
   // ........................................................
 
   // VBOs for immediate rendering:
@@ -3577,10 +3580,14 @@ public class PGraphicsOpenGL extends PGraphics {
         float lextent = glyph.leftExtent / (float) textFont.getSize();
         float textent = glyph.topExtent  / (float) textFont.getSize();
 
+        // The default text setting assumes an Y axis pointing down, so
+        // inverting in the the case Y points up
+        int sign = Y_AXIS_DOWN ? +1 : -1;
+
         float x1 = x + lextent * textSize;
-        float y1 = y - textent * textSize;
+        float y1 = y - sign * textent * textSize;
         float x2 = x1 + bwidth * textSize;
-        float y2 = y1 + high * textSize;
+        float y2 = y1 + sign * high * textSize;
 
         textCharModelImpl(tinfo, x1, y1, x2, y2);
       } else if (textMode == SHAPE) {
@@ -5875,7 +5882,7 @@ public class PGraphicsOpenGL extends PGraphics {
       Texture.Parameters params = new Texture.Parameters(ARGB,
                                                          sampling, mipmap);
       texture = new Texture(this, pixelWidth, pixelHeight, params);
-      texture.invertedY(true);
+      texture.invertedY(Y_AXIS_DOWN);
       texture.colorBuffer(true);
       setCache(this, texture);
     }
@@ -5886,7 +5893,7 @@ public class PGraphicsOpenGL extends PGraphics {
     updatePixelSize();
     if (texture != null) {
       ptexture = new Texture(this, pixelWidth, pixelHeight, texture.getParameters());
-      ptexture.invertedY(true);
+      ptexture.invertedY(Y_AXIS_DOWN);
       ptexture.colorBuffer(true);
     }
   }
@@ -6026,7 +6033,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height,
                                   texture.getParameters());
-      filterTexture.invertedY(true);
+      filterTexture.invertedY(Y_AXIS_DOWN);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.set(texture);
@@ -6096,7 +6103,7 @@ public class PGraphicsOpenGL extends PGraphics {
     loadTexture();
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height, texture.getParameters());
-      filterTexture.invertedY(true);
+      filterTexture.invertedY(Y_AXIS_DOWN);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.put(texture, sx, height - (sy + sh), sw, height - sy);
@@ -6416,6 +6423,7 @@ public class PGraphicsOpenGL extends PGraphics {
       img.parent = parent;
     }
     Texture tex = new Texture(this, img.pixelWidth, img.pixelHeight, params);
+    tex.invertedY(!Y_AXIS_DOWN); // Pixels are read upside down
     setCache(img, tex);
     return tex;
   }
