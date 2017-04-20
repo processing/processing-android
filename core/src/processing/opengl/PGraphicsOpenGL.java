@@ -3460,6 +3460,188 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
+  public void text(char c, float x, float y) {
+    if (textFont == null) {
+      defaultFontOrDeath("text");
+    }
+
+    int sign = Y_AXIS_DOWN ? +1 : -1;
+
+    if (textAlignY == CENTER) {
+      y += sign * textAscent() / 2;
+    } else if (textAlignY == TOP) {
+      y += sign * textAscent();
+    } else if (textAlignY == BOTTOM) {
+      y -= sign * textDescent();
+    //} else if (textAlignY == BASELINE) {
+      // do nothing
+    }
+
+    textBuffer[0] = c;
+    textLineAlignImpl(textBuffer, 0, 1, x, y);
+  }
+
+
+  @Override
+  public void text(String str, float x, float y) {
+    if (textFont == null) {
+      defaultFontOrDeath("text");
+    }
+
+    int sign = Y_AXIS_DOWN ? +1 : -1;
+
+    int length = str.length();
+    if (length > textBuffer.length) {
+      textBuffer = new char[length + 10];
+    }
+    str.getChars(0, length, textBuffer, 0);
+
+    // If multiple lines, sum the height of the additional lines
+    float high = 0; //-textAscent();
+    for (int i = 0; i < length; i++) {
+      if (textBuffer[i] == '\n') {
+        high += sign * textLeading;
+      }
+    }
+    if (textAlignY == CENTER) {
+      // for a single line, this adds half the textAscent to y
+      // for multiple lines, subtract half the additional height
+      //y += (textAscent() - textDescent() - high)/2;
+      y += sign * (textAscent() - high)/2;
+    } else if (textAlignY == TOP) {
+      // for a single line, need to add textAscent to y
+      // for multiple lines, no different
+      y += sign * textAscent();
+    } else if (textAlignY == BOTTOM) {
+      // for a single line, this is just offset by the descent
+      // for multiple lines, subtract leading for each line
+      y -= sign * textDescent() + high;
+    }
+
+    int start = 0;
+    int index = 0;
+    while (index < length) {
+      if (textBuffer[index] == '\n') {
+        textLineAlignImpl(textBuffer, start, index, x, y);
+        start = index + 1;
+        y += sign * textLeading;
+      }
+      index++;
+    }
+    if (start < length) {
+      textLineAlignImpl(textBuffer, start, index, x, y);
+    }
+  }
+
+
+  @Override
+  public void text(String str, float x1, float y1, float x2, float y2) {
+    if (textFont == null) {
+      defaultFontOrDeath("text");
+    }
+
+    int sign = Y_AXIS_DOWN ? +1 : -1;
+
+    float hradius, vradius;
+    switch (rectMode) {
+    case CORNER:
+      x2 += x1; y2 += y1;
+      break;
+    case RADIUS:
+      hradius = x2;
+      vradius = y2;
+      x2 = x1 + hradius;
+      y2 = y1 + vradius;
+      x1 -= hradius;
+      y1 -= vradius;
+      break;
+    case CENTER:
+      hradius = x2 / 2.0f;
+      vradius = y2 / 2.0f;
+      x2 = x1 + hradius;
+      y2 = y1 + vradius;
+      x1 -= hradius;
+      y1 -= vradius;
+    }
+    if (x2 < x1) {
+      float temp = x1; x1 = x2; x2 = temp;
+    }
+    if (y2 < y1) {
+      float temp = y1; y1 = y2; y2 = temp;
+    }
+
+    float boxWidth = x2 - x1;
+
+    float spaceWidth = textWidth(' ');
+
+    if (textBreakStart == null) {
+      textBreakStart = new int[20];
+      textBreakStop = new int[20];
+    }
+    textBreakCount = 0;
+
+    int length = str.length();
+    if (length + 1 > textBuffer.length) {
+      textBuffer = new char[length + 1];
+    }
+    str.getChars(0, length, textBuffer, 0);
+    // add a fake newline to simplify calculations
+    textBuffer[length++] = '\n';
+
+    int sentenceStart = 0;
+    for (int i = 0; i < length; i++) {
+      if (textBuffer[i] == '\n') {
+        boolean legit =
+          textSentence(textBuffer, sentenceStart, i, boxWidth, spaceWidth);
+        if (!legit) break;
+        sentenceStart = i + 1;
+      }
+    }
+
+    // lineX is the position where the text starts, which is adjusted
+    // to left/center/right based on the current textAlign
+    float lineX = x1; //boxX1;
+    if (textAlign == CENTER) {
+      lineX = lineX + boxWidth/2f;
+    } else if (textAlign == RIGHT) {
+      lineX = x2; //boxX2;
+    }
+
+    float boxHeight = y2 - y1;
+    // incorporate textAscent() for the top (baseline will be y1 + ascent)
+    // and textDescent() for the bottom, so that lower parts of letters aren't
+    // outside the box. [0151]
+    float topAndBottom = textAscent() + textDescent();
+    int lineFitCount = 1 + PApplet.floor((boxHeight - topAndBottom) / textLeading);
+    int lineCount = Math.min(textBreakCount, lineFitCount);
+
+    if (textAlignY == CENTER) {
+      lineX = 0;
+      float lineHigh = textAscent() + textLeading * (lineCount - 1);
+      float y = Y_AXIS_DOWN ? y1 + textAscent() + (boxHeight - lineHigh) / 2 : y2 - textAscent() - (boxHeight - lineHigh) / 2;
+      for (int i = 0; i < lineCount; i++) {
+        textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
+        y += sign * textLeading;
+      }
+
+    } else if (textAlignY == BOTTOM) {
+      float y = Y_AXIS_DOWN ? y2 - textDescent() - textLeading * (lineCount - 1) : y1 + textDescent() + textLeading * (lineCount - 1);
+      for (int i = 0; i < lineCount; i++) {
+        textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
+        y += sign * textLeading;
+      }
+
+    } else {  // TOP or BASELINE just go to the default
+      float y = Y_AXIS_DOWN ? y1 + textAscent() : y2 - textAscent();
+      for (int i = 0; i < lineCount; i++) {
+        textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
+        y += sign * textLeading;
+      }
+    }
+  }
+
+
+  @Override
   public float textAscent() {
     if (textFont == null) defaultFontOrDeath("textAscent");
     Object font = textFont.getNative();
