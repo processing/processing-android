@@ -396,7 +396,9 @@ public interface PConstants {
   // hints - hint values are positive for the alternate version,
   // negative of the same value returns to the normal/default state
 
+  @Deprecated
   static final int ENABLE_NATIVE_FONTS        =  1;
+  @Deprecated
   static final int DISABLE_NATIVE_FONTS       = -1;
 
   static final int DISABLE_DEPTH_TEST         =  2;
@@ -426,10 +428,13 @@ public interface PConstants {
   static final int ENABLE_BUFFER_READING      =  10;
   static final int DISABLE_BUFFER_READING     = -10;
 
-  static final int DISABLE_ASYNC_SAVEFRAME    =  11;
-  static final int ENABLE_ASYNC_SAVEFRAME     = -11;
+  static final int DISABLE_KEY_REPEAT         =  11;
+  static final int ENABLE_KEY_REPEAT          = -11;
 
-  static final int HINT_COUNT                 =  12;
+  static final int DISABLE_ASYNC_SAVEFRAME    =  12;
+  static final int ENABLE_ASYNC_SAVEFRAME     = -12;
+
+  static final int HINT_COUNT                 =  13;
 
 
   // error messages

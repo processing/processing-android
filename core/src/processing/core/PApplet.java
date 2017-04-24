@@ -56,6 +56,14 @@ import processing.opengl.*;
 
 public class PApplet extends Object implements PConstants {
 
+  //static final public boolean DEBUG = true;
+  static final public boolean DEBUG = false;
+
+  // Convenience public constant holding the SDK version, akin to platform in Java mode
+  static final public int SDK = Build.VERSION.SDK_INT;
+
+  //static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
+
   /**
    * The surface this sketch draws to.
    */
@@ -68,14 +76,6 @@ public class PApplet extends Object implements PConstants {
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
-
-//  static final public boolean DEBUG = true;
-  static final public boolean DEBUG = false;
-
-  // Convenience public constant holding the SDK version, akin to platform in Java mode
-  static final public int SDK = Build.VERSION.SDK_INT;
-
-//  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
 
   /**
    * The screen size when the sketch was started. This is initialized inside
@@ -147,6 +147,9 @@ public class PApplet extends Object implements PConstants {
   public int pixelWidth;
   public int pixelHeight;
 
+  ///////////////////////////////////////////////////////////////
+  // Mouse events
+
   /** absolute x position of input on screen */
   public int mouseX;
 
@@ -203,6 +206,8 @@ public class PApplet extends Object implements PConstants {
    */
   protected int touchPointerId;
 
+  ///////////////////////////////////////////////////////////////
+  // Key events
 
   /**
    * Last key pressed.
@@ -236,6 +241,11 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
+  /**
+   * Keeps track of ENABLE_KEY_REPEAT hint
+   */
+  protected boolean keyRepeatEnabled = false;
+
   ///////////////////////////////////////////////////////////////
   // Permission handling
 
@@ -250,31 +260,9 @@ public class PApplet extends Object implements PConstants {
    */
   protected ArrayList<String> reqPermissions = new ArrayList<String>();
 
+
   ///////////////////////////////////////////////////////////////
-  // Wallpaper and watchface variables: these will go away soon...
-  @Deprecated
-  public boolean ambientMode = false;
-  @Deprecated
-  public boolean isRound = false;
-  @Deprecated
-  public int insetLeft = 0;
-  @Deprecated
-  public int insetRight = 0;
-  @Deprecated
-  public int insetTop = 0;
-  @Deprecated
-  public int insetBottom = 0;
-  @Deprecated
-  public boolean lowBitAmbient = false;
-  @Deprecated
-  public boolean burnInProtection = false;
-  @Deprecated
-  public boolean preview = false;
-  @Deprecated
-  public float homeScreenOffset = 0;
-  @Deprecated
-  public int homeScreenCount = 1;
-  ///////////////////////////////////////////////////////////////
+  // Rendering/timing
 
   /**
    * Time in milliseconds when the applet was started.
@@ -326,9 +314,31 @@ public class PApplet extends Object implements PConstants {
    */
   protected boolean exitCalled;
 
-//  Thread thread;
+  boolean insideSettings;
 
-  // messages to send if attached as an external vm
+  String renderer = JAVA2D;
+
+  int smooth = 1;  // default smoothing (whatever that means for the renderer)
+
+  boolean fullScreen = false;
+
+  int display = -1;  // use default
+
+  // Background default needs to be different from the default value in
+  // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
+  // https://github.com/processing/processing/issues/2297
+  int windowColor = 0xffDDDDDD;
+
+  PStyle savedStyle;
+
+  ///////////////////////////////////////////////////////////////
+  // Error messages
+
+  static final String ERROR_MIN_MAX =
+    "Cannot use min() or max() on an empty array.";
+
+  ///////////////////////////////////////////////////////////////
+  // Command line options
 
   /**
    * Position of the upper-lefthand corner of the editor window
@@ -386,25 +396,6 @@ public class PApplet extends Object implements PConstants {
   /** true if this sketch is being run by the PDE */
   boolean external = false;
 
-  static final String ERROR_MIN_MAX =
-    "Cannot use min() or max() on an empty array.";
-
-  boolean insideSettings;
-
-  String renderer = JAVA2D;
-
-  int smooth = 1;  // default smoothing (whatever that means for the renderer)
-
-  boolean fullScreen = false;
-
-  int display = -1;  // use default
-
-  // Background default needs to be different from the default value in
-  // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
-  // https://github.com/processing/processing/issues/2297
-  int windowColor = 0xffDDDDDD;
-
-  PStyle savedStyle;
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
@@ -2428,6 +2419,10 @@ public class PApplet extends Object implements PConstants {
 
 
   protected void handleKeyEvent(KeyEvent event) {
+
+    // Get rid of auto-repeating keys if desired and supported
+    if (!keyRepeatEnabled && event.isAutoRepeat()) return;
+
 //    keyEvent = event;
     key = event.getKey();
     keyCode = event.getKeyCode();
@@ -2469,8 +2464,10 @@ public class PApplet extends Object implements PConstants {
     // TODO set up proper key modifier handling
     int keModifiers = 0;
 
+//    KeyEvent ke = new KeyEvent(event, event.getEventTime(),
+//                               keAction, keModifiers, key, keyCode);
     KeyEvent ke = new KeyEvent(event, event.getEventTime(),
-                               keAction, keModifiers, key, keyCode);
+                               keAction, keModifiers, key, keyCode, 0 < event.getRepeatCount());
 
     postEvent(ke);
   }

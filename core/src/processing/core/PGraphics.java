@@ -984,7 +984,18 @@ public class PGraphics extends PImage implements PConstants {
    * turns off the z-buffer in the P3D or OPENGL renderers.
    * </UL>
    */
+  @SuppressWarnings("deprecation")
   public void hint(int which) {
+    if (which == ENABLE_NATIVE_FONTS ||
+        which == DISABLE_NATIVE_FONTS) {
+      showWarning("hint(ENABLE_NATIVE_FONTS) no longer supported. " +
+                  "Use createFont() instead.");
+    }
+    if (which == ENABLE_KEY_REPEAT) {
+      parent.keyRepeatEnabled = true;
+    } else if (which == DISABLE_KEY_REPEAT) {
+      parent.keyRepeatEnabled = false;
+    }
     if (which > 0) {
       hints[which] = true;
     } else {
