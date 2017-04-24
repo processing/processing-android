@@ -7904,24 +7904,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  /**
-   * Enable a hint option.
-   * <P>
-   * For the most part, hints are temporary api quirks,
-   * for which a proper api hasn't been properly worked out.
-   * for instance SMOOTH_IMAGES existed because smooth()
-   * wasn't yet implemented, but it will soon go away.
-   * <P>
-   * They also exist for obscure features in the graphics
-   * engine, like enabling/disabling single pixel lines
-   * that ignore the zbuffer, the way they do in alphabot.
-   * <P>
-   * Current hint options:
-   * <UL>
-   * <LI><TT>DISABLE_DEPTH_TEST</TT> -
-   * turns off the z-buffer in the P3D or OPENGL renderers.
-   * </UL>
-   */
   public void hint(int which) {
     g.hint(which);
   }

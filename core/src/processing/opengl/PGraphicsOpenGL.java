@@ -105,8 +105,10 @@ public class PGraphicsOpenGL extends PGraphics {
   /** Current flush mode. */
   protected int flushMode = FLUSH_WHEN_FULL;
 
-  /** Orientation of Y axis. */
-  static protected boolean Y_AXIS_DOWN = true;
+  /**
+   * Keeps track of ENABLE_OPENGL_COORDINATES hint
+   */
+  protected boolean glCoordsEnabled = false;
 
   // ........................................................
 
@@ -1851,7 +1853,15 @@ public class PGraphicsOpenGL extends PGraphics {
       return;
     }
 
-    if (which == DISABLE_DEPTH_TEST) {
+    if (which == DISABLE_OPENGL_COORDINATES) {
+      flush();
+      glCoordsEnabled = false;
+
+    } else if (which == ENABLE_OPENGL_COORDINATES) {
+      flush();
+      glCoordsEnabled = true;
+
+    } else if (which == DISABLE_DEPTH_TEST) {
       flush();
       pgl.disable(PGL.DEPTH_TEST);
     } else if (which == ENABLE_DEPTH_TEST) {
@@ -3465,7 +3475,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = Y_AXIS_DOWN ? +1 : -1;
+    int sign = glCoordsEnabled ? +1 : -1;
 
     if (textAlignY == CENTER) {
       y += sign * textAscent() / 2;
@@ -3488,7 +3498,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = Y_AXIS_DOWN ? +1 : -1;
+    int sign = glCoordsEnabled ? +1 : -1;
 
     int length = str.length();
     if (length > textBuffer.length) {
@@ -3540,7 +3550,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = Y_AXIS_DOWN ? +1 : -1;
+    int sign = glCoordsEnabled ? +1 : -1;
 
     float hradius, vradius;
     switch (rectMode) {
@@ -3618,21 +3628,21 @@ public class PGraphicsOpenGL extends PGraphics {
     if (textAlignY == CENTER) {
       lineX = 0;
       float lineHigh = textAscent() + textLeading * (lineCount - 1);
-      float y = Y_AXIS_DOWN ? y1 + textAscent() + (boxHeight - lineHigh) / 2 : y2 - textAscent() - (boxHeight - lineHigh) / 2;
+      float y = glCoordsEnabled ? y1 + textAscent() + (boxHeight - lineHigh) / 2 : y2 - textAscent() - (boxHeight - lineHigh) / 2;
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
       }
 
     } else if (textAlignY == BOTTOM) {
-      float y = Y_AXIS_DOWN ? y2 - textDescent() - textLeading * (lineCount - 1) : y1 + textDescent() + textLeading * (lineCount - 1);
+      float y = glCoordsEnabled ? y2 - textDescent() - textLeading * (lineCount - 1) : y1 + textDescent() + textLeading * (lineCount - 1);
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
       }
 
     } else {  // TOP or BASELINE just go to the default
-      float y = Y_AXIS_DOWN ? y1 + textAscent() : y2 - textAscent();
+      float y = glCoordsEnabled ? y1 + textAscent() : y2 - textAscent();
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
@@ -3764,7 +3774,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
         // The default text setting assumes an Y axis pointing down, so
         // inverting in the the case Y points up
-        int sign = Y_AXIS_DOWN ? +1 : -1;
+        int sign = glCoordsEnabled ? +1 : -1;
 
         float x1 = x + lextent * textSize;
         float y1 = y - sign * textent * textSize;
@@ -6064,7 +6074,7 @@ public class PGraphicsOpenGL extends PGraphics {
       Texture.Parameters params = new Texture.Parameters(ARGB,
                                                          sampling, mipmap);
       texture = new Texture(this, pixelWidth, pixelHeight, params);
-      texture.invertedY(Y_AXIS_DOWN);
+      texture.invertedY(glCoordsEnabled);
       texture.colorBuffer(true);
       setCache(this, texture);
     }
@@ -6075,7 +6085,7 @@ public class PGraphicsOpenGL extends PGraphics {
     updatePixelSize();
     if (texture != null) {
       ptexture = new Texture(this, pixelWidth, pixelHeight, texture.getParameters());
-      ptexture.invertedY(Y_AXIS_DOWN);
+      ptexture.invertedY(glCoordsEnabled);
       ptexture.colorBuffer(true);
     }
   }
@@ -6215,7 +6225,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height,
                                   texture.getParameters());
-      filterTexture.invertedY(Y_AXIS_DOWN);
+      filterTexture.invertedY(glCoordsEnabled);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.set(texture);
@@ -6285,7 +6295,7 @@ public class PGraphicsOpenGL extends PGraphics {
     loadTexture();
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height, texture.getParameters());
-      filterTexture.invertedY(Y_AXIS_DOWN);
+      filterTexture.invertedY(glCoordsEnabled);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.put(texture, sx, height - (sy + sh), sw, height - sy);
@@ -6605,7 +6615,7 @@ public class PGraphicsOpenGL extends PGraphics {
       img.parent = parent;
     }
     Texture tex = new Texture(this, img.pixelWidth, img.pixelHeight, params);
-    tex.invertedY(!Y_AXIS_DOWN); // Pixels are read upside down
+    tex.invertedY(!glCoordsEnabled); // Pixels are read upside down
     setCache(img, tex);
     return tex;
   }

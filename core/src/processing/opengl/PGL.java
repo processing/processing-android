@@ -544,7 +544,7 @@ public abstract class PGL {
                    glColorTex.get(backTex), TEXTURE_2D, RGBA,
                    fboWidth, fboHeight, NEAREST, NEAREST,
                    CLAMP_TO_EDGE, CLAMP_TO_EDGE);
-      texture.invertedY(PGraphicsOpenGL.Y_AXIS_DOWN);
+      texture.invertedY(graphics.glCoordsEnabled);
       texture.colorBuffer(true);
       graphics.setCache(graphics, texture);
     } else {
@@ -561,7 +561,7 @@ public abstract class PGL {
                    glColorTex.get(frontTex), TEXTURE_2D, RGBA,
                    fboWidth, fboHeight, NEAREST, NEAREST,
                    CLAMP_TO_EDGE, CLAMP_TO_EDGE);
-      texture.invertedY(PGraphicsOpenGL.Y_AXIS_DOWN);
+      texture.invertedY(graphics.glCoordsEnabled);
       texture.colorBuffer(true);
     } else {
       texture.glName = glColorTex.get(frontTex);
