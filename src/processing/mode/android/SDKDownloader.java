@@ -52,6 +52,15 @@ import java.net.URLConnection;
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
   // Version 25.3.1 of the SDK tools break the mode, since the android tool
   // no longer works:
+  private static final int SDK_TOOLS_MAX_MAJOR = 25;
+  private static final int SDK_TOOLS_MAX_MINOR = 2;
+  
+  private static final int PLATFORM_TOOLS_MAX_MAJOR = 25;
+  private static final int PLATFORM_TOOLS_MAX_MINOR = 0;  
+
+  private static final int BUILD_TOOLS_MAX_MAJOR = 25;
+  private static final int BUILD_TOOLS_MAX_MINOR = 0;   
+  
   // https://code.google.com/p/android/issues/detail?id=235455
   // as well as removing the ant scripts.
   // https://code.google.com/p/android/issues/detail?id=235410
@@ -250,7 +259,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // platform-tools
-      Node platformToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:platform-tool"));
+      Node platformToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:platform-tool"), PLATFORM_TOOLS_MAX_MAJOR, PLATFORM_TOOLS_MAX_MINOR);
       if (platformToolsItem != null) {
         archiveListItem = ((Element) platformToolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
@@ -268,12 +277,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
       // -----------------------------------------------------------------------
       // build-tools
-      Node buildToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:build-tool"));
+      Node buildToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:build-tool"), BUILD_TOOLS_MAX_MAJOR, BUILD_TOOLS_MAX_MINOR);
       if (buildToolsItem != null) {
         Node revisionListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:revision").item(0);
         String major = ((Element) revisionListItem).getElementsByTagName("sdk:major").item(0).getTextContent();
         String minor = ((Element) revisionListItem).getElementsByTagName("sdk:minor").item(0).getTextContent();
-        String micro = ((Element) revisionListItem).getElementsByTagName("sdk:micro").item(0).getTextContent();
+        String micro = ((Element) revisionListItem).getElementsByTagName("sdk:micro").item(0).getTextContent();        
         urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
         archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
@@ -291,7 +300,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // tools
-      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"));
+      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"), SDK_TOOLS_MAX_MAJOR, SDK_TOOLS_MAX_MINOR);;
       if (toolsItem != null) {
         archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
@@ -384,7 +393,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     return latest;
   }
   
-  private Node getLatestToolItem(NodeList list) {
+  private Node getLatestToolItem(NodeList list, int max_major, int max_minor) {
     Node latest = null;
     int maxMajor = -1;
     int maxMinor = -1;
@@ -397,7 +406,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       NodeList micro = ((Element)revision).getElementsByTagName("sdk:micro");        
       int intMajor = PApplet.parseInt(major.item(0).getTextContent());
       int intMinor = PApplet.parseInt(minor.item(0).getTextContent());
-      int intMicro = PApplet.parseInt(micro.item(0).getTextContent());
+      int intMicro = PApplet.parseInt(micro.item(0).getTextContent());      
+      if (max_major < intMajor || (max_major == intMajor && max_minor < intMinor)) continue;      
       if (maxMajor <= intMajor && maxMinor <= intMinor && maxMicro <= intMicro) {        
         latest = item;
         maxMajor = intMajor;
