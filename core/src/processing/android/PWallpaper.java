@@ -153,7 +153,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       super.onCreate(surfaceHolder);
       sketch = createSketch();
       sketch.initSurface(PWallpaper.this, getSurfaceHolder());
-      sketch.preview = isPreview();
       if (isPreview()) requestPermissions();
       setTouchEventsEnabled(true);
     }
@@ -213,13 +212,6 @@ public class PWallpaper extends WallpaperService implements AppComponent {
         this.yOffsetStep = yOffsetStep;
         this.xPixelOffset = xPixelOffset;
         this.yPixelOffset = yPixelOffset;
-
-        sketch.homeScreenOffset = xOffset;
-        if (0 < xOffsetStep) {
-          sketch.homeScreenCount = (int)(1 + 1 / xOffsetStep);
-        } else {
-          sketch.homeScreenCount = 1;
-        }
       }
     }
 
