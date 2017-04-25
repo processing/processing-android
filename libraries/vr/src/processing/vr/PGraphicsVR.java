@@ -185,18 +185,27 @@ public class PGraphicsVR extends PGraphics3D {
 
   protected void headTransform(HeadTransform ht) {
     initVR();
+
     headTransform = ht;
+
+    // Forward, right, and up vectors are given in the original system with Y
+    // pointing up. Need to invert y coords in the non-gl case:
+    float yf = glCoordsEnabled ? +1 : -1;
+
     headTransform.getForwardVector(forwardVector, 0);
     headTransform.getRightVector(rightVector, 0);
     headTransform.getUpVector(upVector, 0);
+
     forwardX = forwardVector[0];
-    forwardY = forwardVector[1];
+    forwardY = yf * forwardVector[1];
     forwardZ = forwardVector[2];
+
     rightX = rightVector[0];
-    rightY = rightVector[1];
+    rightY = yf * rightVector[1];
     rightZ = rightVector[2];
+
     upX = upVector[0];
-    upY = upVector[1];
+    upY = yf * upVector[1];
     upZ = upVector[2];
   }
 
