@@ -1115,7 +1115,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
@@ -1129,7 +1129,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");    
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");    
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
@@ -1144,7 +1144,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceGLES");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");    
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");    
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
@@ -1159,7 +1159,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceCanvas");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : ""); 
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : ""); 
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }  
@@ -1173,7 +1173,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
