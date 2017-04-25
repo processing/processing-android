@@ -1583,7 +1583,7 @@ public class PGraphicsOpenGL extends PGraphics {
       pgl.disable(PGL.SCISSOR_TEST);
     }
 
-    pgl.frontFace(PGL.CW);
+    pgl.frontFace(glCoordsEnabled ? PGL.CCW : PGL.CW);
     pgl.disable(PGL.CULL_FACE);
 
     pgl.activeTexture(PGL.TEXTURE0);
@@ -6975,13 +6975,11 @@ public class PGraphicsOpenGL extends PGraphics {
       lightSpecular(0, 0, 0);
     }
 
-    // Vertices should be specified by user in CW order (left-handed)
-    // That is CCW order (right-handed). Vertex shader inverts
-    // Y-axis and outputs vertices in CW order (right-handed).
-    // Culling occurs after the vertex shader, so FRONT FACE
-    // has to be set to CW (right-handed) for OpenGL to correctly
-    // recognize FRONT and BACK faces.
-    pgl.frontFace(PGL.CW);
+    // The GL coordinate system is right-handed, so that facing
+    // polygons are CCW in window coordinates, whereas  are CW
+    // in the left-handed system that is Processing's default (with
+    // its Y axis pointing down)
+    pgl.frontFace(glCoordsEnabled ? PGL.CCW : PGL.CW);
     pgl.disable(PGL.CULL_FACE);
 
     // Processing uses only one texture unit.
