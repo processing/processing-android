@@ -20,9 +20,10 @@ public class MainActivity extends AppCompatActivity {
     setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
     
-    sketch = new @@sketch_class_name@@();@@external@@
-    PFragment fragment = new PFragment();
-    fragment.setSketch(sketch, frame, getSupportFragmentManager());
+    sketch = new @@sketch_class_name@@();
+    @@external@@
+    PFragment fragment = new PFragment(sketch);
+    fragment.setView(frame, this);
   }
   
   @Override

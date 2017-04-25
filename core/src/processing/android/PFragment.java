@@ -25,6 +25,7 @@ package processing.android;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
@@ -46,9 +47,17 @@ public class PFragment extends Fragment implements AppComponent {
   private DisplayMetrics metrics;
   private Point size;
   private PApplet sketch;
+  private @LayoutRes int layout = -1;
 
 
   public PFragment() {
+    super();
+  }
+
+
+  public PFragment(PApplet sketch) {
+    super();
+    setSketch(sketch);
   }
 
 
@@ -100,29 +109,34 @@ public class PFragment extends Fragment implements AppComponent {
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
+    if (layout != -1) {
+      sketch.parentLayout = layout;
+    }
   }
 
 
-  public void setSketch(PApplet sketch, @IdRes int id, @LayoutRes int layout,
-                        FragmentManager manager) {
-    this.sketch = sketch;
-    sketch.parentLayout = layout;
+  public PApplet getSketch() {
+    return sketch;
+  }
+
+
+  public void setLayout(@LayoutRes int layout, @IdRes int id, FragmentActivity activity) {
+    this.layout = layout;
+    if (sketch != null) {
+      sketch.parentLayout = layout;
+    }
+    FragmentManager manager = activity.getSupportFragmentManager();
     FragmentTransaction transaction = manager.beginTransaction();
     transaction.add(id, this);
     transaction.commit();
   }
 
 
-  public void setSketch(PApplet sketch, View view, FragmentManager manager) {
-    this.sketch = sketch;
+  public void setView(View view, FragmentActivity activity) {
+    FragmentManager manager = activity.getSupportFragmentManager();
     FragmentTransaction transaction = manager.beginTransaction();
     transaction.add(view.getId(), this);
     transaction.commit();
-  }
-
-
-  public PApplet getSketch() {
-    return sketch;
   }
 
 
