@@ -265,12 +265,11 @@ public class AndroidMode extends JavaMode {
 //    }
 //  }
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener, boolean resetManifest) throws SketchException, IOException {
+      RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this, 
         editor.getAppComponent(), true);
-    if (resetManifest) build.resetManifest();
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -291,7 +290,7 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunDevice(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener, boolean resetManifest)
+      RunnerListener listener)
     throws SketchException, IOException {    
     
     final Devices devices = Devices.getInstance();
@@ -310,7 +309,6 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this, 
         editor.getAppComponent(), false);
-    if (resetManifest) build.resetManifest();
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -353,9 +351,21 @@ public class AndroidMode extends JavaMode {
     }
   }
 
+  
+  public void initManifest(Sketch sketch, int comp) {
+    new Manifest(sketch, comp, getFolder(), false);
+  }  
+  
+  
+  public void resetManifest(Sketch sketch, int comp) {
+    new Manifest(sketch, comp, getFolder(), true);
+  }
+  
+  
   public static void createFileFromTemplate(final File tmplFile, final File destFile) {
     createFileFromTemplate(tmplFile, destFile, null);
   }
+  
   
   public static void createFileFromTemplate(final File tmplFile, final File destFile, 
       final HashMap<String, String> replaceMap) {

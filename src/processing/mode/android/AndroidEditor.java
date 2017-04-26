@@ -52,8 +52,6 @@ public class AndroidEditor extends JavaEditor {
   private int appComponent;
   
   private Settings settings;
-  private boolean resetManifest = false;
-  
   private AndroidMode androidMode;
 
   private java.util.Timer updateDevicesTimer;
@@ -77,11 +75,11 @@ public class AndroidEditor extends JavaEditor {
                           Mode mode) throws EditorException {
     super(base, path, state, mode);
     
-    loadModeSettings();
-    
     androidMode = (AndroidMode) mode;
     androidMode.resetUserSelection();
-    androidMode.checkSDK(this);    
+    androidMode.checkSDK(this);
+    
+    loadModeSettings();
   }  
 
   @Override
@@ -267,46 +265,42 @@ public class AndroidEditor extends JavaEditor {
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
-        setAppComponent(AndroidBuild.FRAGMENT);
+      public void actionPerformed(ActionEvent e) {        
         fragmentItem.setState(true);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
-        androidMode.showSelectComponentMessage(AndroidBuild.FRAGMENT);
+        setAppComponent(AndroidBuild.FRAGMENT);
       }
     });
     wallpaperItem.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
-        setAppComponent(AndroidBuild.WALLPAPER);
+      public void actionPerformed(ActionEvent e) {        
         fragmentItem.setState(false);
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
-        androidMode.showSelectComponentMessage(AndroidBuild.WALLPAPER);
+        setAppComponent(AndroidBuild.WALLPAPER);        
       }
     });
     watchfaceItem.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
-        setAppComponent(AndroidBuild.WATCHFACE);
+      public void actionPerformed(ActionEvent e) {        
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
         vrItem.setSelected(false);
-        androidMode.showSelectComponentMessage(AndroidBuild.WATCHFACE);
+        setAppComponent(AndroidBuild.WATCHFACE);        
       }
     });
     vrItem.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
-        setAppComponent(AndroidBuild.VR);
+      public void actionPerformed(ActionEvent e) {        
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(true);
-        androidMode.showSelectComponentMessage(AndroidBuild.VR);
+        setAppComponent(AndroidBuild.VR);
       }
     });    
        
@@ -471,10 +465,9 @@ public class AndroidEditor extends JavaEditor {
   }
 */
 
-  private void setAppComponent(int opt) {
-    if (appComponent != opt) {
-      appComponent = opt;
-      resetManifest = true;
+  private void setAppComponent(int comp) {
+    if (appComponent != comp) {
+      appComponent = comp;
       
       if (appComponent == AndroidBuild.FRAGMENT) {
         settings.set("component", "app");  
@@ -485,7 +478,9 @@ public class AndroidEditor extends JavaEditor {
       } else if (appComponent == AndroidBuild.VR) {
         settings.set("component", "vr");
       }
-      settings.save();
+      settings.save();            
+      androidMode.resetManifest(sketch, appComponent);
+      androidMode.showSelectComponentMessage(comp); 
     }
   }  
   
@@ -630,9 +625,7 @@ public class AndroidEditor extends JavaEditor {
         startIndeterminate();
         prepareRun();
         try {
-          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this,
-              resetManifest);
-          resetManifest = false;
+          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this);
         } catch (SketchException e) {
           statusError(e);
         } catch (IOException e) {
@@ -667,9 +660,7 @@ public class AndroidEditor extends JavaEditor {
           startIndeterminate();
           prepareRun();
           try {
-            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this,
-                resetManifest);
-            resetManifest = false;
+            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
           } catch (SketchException e) {
             statusError(e);
           } catch (IOException e) {
@@ -809,6 +800,8 @@ public class AndroidEditor extends JavaEditor {
         appComponent = AndroidBuild.VR;
         vrItem.setState(true);
       }  
+      
+      if (save) androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
       System.err.println("While creating " + sketchProps + ": " + e.getMessage());
     }   

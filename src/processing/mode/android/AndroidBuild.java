@@ -110,7 +110,6 @@ class AndroidBuild extends JavaBuild {
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
-  private boolean rewriteManifest = false;
   
   private String renderer = "";
   
@@ -226,6 +225,7 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
+    boolean rewriteManifest = false;
     if (!external) {
       // If creating an export project, then the manifest might have attributes
       // that create trouble with gradle, so we just re-write it...
@@ -235,7 +235,6 @@ class AndroidBuild extends JavaBuild {
     }
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), rewriteManifest);    
     manifest.setSdkTarget(target_sdk);
-    rewriteManifest = false;
 
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
@@ -528,10 +527,6 @@ class AndroidBuild extends JavaBuild {
 //      resetManifest = true;
 //    }
 //  }
-  
-  public void resetManifest() {
-    rewriteManifest = true;
-  }
   
   protected boolean usesOpenGL() {
     return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
