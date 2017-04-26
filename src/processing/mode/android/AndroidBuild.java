@@ -226,6 +226,13 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
+    if (!external) {
+      // If creating an export project, then the manifest might have attributes
+      // that create trouble with gradle, so we just re-write it...
+      // TODO: the current manifest logic is exceeded by the complexity of the mode
+      // need to rewrite.
+      rewriteManifest = true;
+    }
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), rewriteManifest);    
     manifest.setSdkTarget(target_sdk);
     rewriteManifest = false;
@@ -239,7 +246,8 @@ class AndroidBuild extends JavaBuild {
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
     if (sketchClassName != null) {
       File tempManifest = new File(tmpFolder, "AndroidManifest.xml");
-      manifest.writeCopy(tempManifest, sketchClassName, target.equals("debug"));
+            
+      manifest.writeCopy(tempManifest, sketchClassName, external, target.equals("debug"));
 
       writeAntProps(new File(tmpFolder, "ant.properties"));
       buildFile = new File(tmpFolder, "build.xml");
@@ -586,15 +594,7 @@ class AndroidBuild extends JavaBuild {
       Preferences.set("android.export.build_system", buildSystem);
     }
 
-//    if (buildSystem.equals("ant")) {    
-//      // this will set debuggable to true in the manifest file
-//      target = "debug";
-//    } else {
-//      // debuggable property should not set in the manifest file when building
-//      // with gradle
-//      target = "";
-//    }
-    target = "debug";
+    this.target = "debug";
     
     String targetID = getTargetID();
     
