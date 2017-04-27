@@ -9,6 +9,7 @@ android {
         targetSdkVersion @@target_sdk@@
         versionCode @@version_code@@
         versionName "@@version_name@@"
+        vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -26,6 +27,8 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:@@support_version@@'
     compile 'com.android.support:design:@@support_version@@'
+    provided 'com.google.android.wearable:wearable:@@wear_version@@'
+    compile 'com.google.android.support:wearable:@@wear_version@@'      
     testCompile 'junit:junit:4.12'
     compile files('libs/processing-core.jar')
 }
