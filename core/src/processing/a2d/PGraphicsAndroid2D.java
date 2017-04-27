@@ -104,6 +104,12 @@ public class PGraphicsAndroid2D extends PGraphics {
   Paint tintPaint;
 
 
+  /**
+   * Marks when changes to the size have occurred, so that the backing bitmap
+   * can be recreated.
+   */
+  protected boolean sized;
+
   //////////////////////////////////////////////////////////////
 
   // INTERNAL
@@ -135,6 +141,12 @@ public class PGraphicsAndroid2D extends PGraphics {
   //public void setPath(String path)
 
 
+  @Override
+  public void setSize(int iwidth, int iheight) {
+    super.setSize(iwidth, iheight);
+    sized = true;
+  }
+
 
   @Override
   public void dispose() {
@@ -165,15 +177,16 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 //  @Override
 //  public void requestDraw() {
-//    parent.handleDraw();
+//parent.handleDraw();
 //  }
 
 
   protected Canvas checkCanvas() {
-    if (canvas == null && (useBitmap || !primaryGraphics)) {
+    if ((canvas == null || sized) && (useBitmap || !primaryGraphics)) {
       if (bitmap != null) bitmap.recycle();
       bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
       canvas = new Canvas(bitmap);
+      sized = false;
     }
     return canvas;
   }
