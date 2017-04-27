@@ -183,8 +183,12 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   protected Canvas checkCanvas() {
     if ((canvas == null || sized) && (useBitmap || !primaryGraphics)) {
-      if (bitmap != null) bitmap.recycle();
-      bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+      if (bitmap == null || bitmap.getWidth() * bitmap.getHeight() < width * height) {
+        if (bitmap != null) bitmap.recycle();
+        bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+      } else {
+        bitmap.reconfigure(width, height, bitmap.getConfig());
+      }
       canvas = new Canvas(bitmap);
       sized = false;
     }
