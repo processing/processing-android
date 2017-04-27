@@ -72,11 +72,6 @@ public class Manifest {
   private XML xml;
 
 
-//  public Manifest(Editor editor) {
-//    this.editor = editor;
-//    this.sketch = editor.getSketch();
-//    load();
-//  }
   public Manifest(Sketch sketch, int appComp, File modeFolder, boolean forceNew) {
     this.sketch = sketch;
     this.appComp = appComp;
@@ -86,7 +81,6 @@ public class Manifest {
 
 
   private String defaultPackageName() {
-//    Sketch sketch = editor.getSketch();
     return AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();
   }
 
@@ -301,7 +295,7 @@ public class Manifest {
     String versionCode = null;
     String versionName = null;
     if (xml != null && forceNew) {
-      permissionNames = getPermissions();    
+      permissionNames = getPermissions();
       pkgName = getPackageName();
       versionCode = getVersionCode();
       versionName = getVersionName();

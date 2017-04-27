@@ -627,7 +627,7 @@ class AndroidBuild extends JavaBuild {
   }
 
   public File exportPackage(String keyStorePassword) throws Exception {
-    File projectFolder = null;       
+    File projectFolder = null;
     if (appComponent == WATCHFACE) {
       this.target = "release";
       String targetID = getTargetID();

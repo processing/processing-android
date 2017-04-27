@@ -194,6 +194,21 @@ public class AndroidEditor extends JavaEditor {
     return new AndroidToolbar(this, base);
   }
 
+  
+  /*
+  // Not for now, it is unclear if the package name should be reset after save
+  // as, i.e.: sketch_1 -> sketch_2 ... 
+  @Override
+  public boolean handleSaveAs() {
+    boolean saved = super.handleSaveAs();
+    if (saved) {
+      // Reset the manifest so package name and versions are blank 
+      androidMode.resetManifest(sketch, appComponent);
+    }
+    return saved;
+  }
+  */
+  
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -494,10 +509,10 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    item = new JMenuItem("Processing for Android Wiki");
+    item = new JMenuItem("Processing for Android Site");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        Platform.openURL("http://wiki.processing.org/w/Android");
+        Platform.openURL("http://android.processing.org/");
       }
     });
     menu.add(item);
@@ -727,10 +742,8 @@ public class AndroidEditor extends JavaEditor {
    * attached device.
    */
   public void handleExportPackage() {
-    // Need to implement an entire signing setup first
-    // http://dev.processing.org/bugs/show_bug.cgi?id=1430
-    if (handleExportCheckModified()) {
-//      deactivateExport();
+    if (androidMode.checkPackageName(sketch, appComponent) &&
+        androidMode.checkAppIcons(sketch) && handleExportCheckModified()) {
       new KeyStoreManager(this);
     }
   }
