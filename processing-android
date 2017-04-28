@@ -15,6 +15,11 @@
 
 # Thanks to Ferdinand Kasper for this build script. [fry]
 
+# Target version
+ANDROID_VERSION="17"
+
+# Your sketchbook location
+SKETCHBOOK_LOCATION="/path/to/your/sketchbook"
 
 # JARs required from JDK (anywhere in/below the JDK home directory)
 JDKLIBS="rt.jar tools.jar"
@@ -91,6 +96,14 @@ done
 for LIB in "$APPDIR"/core/library/*.jar; do
   CLASSPATH="$CLASSPATH"${CLASSPATH:+:}"$LIB"
 done
+for LIB in "$APPDIR"/modes/java/mode/*.jar; do
+  CLASSPATH="$CLASSPATH"${CLASSPATH:+:}"$LIB"
+done
+  CLASSPATH="$CLASSPATH"${CLASSPATH:+:}$SKETCHBOOK_LOCATION"/modes/AndroidMode/mode/AndroidMode.jar"
+  CLASSPATH="$CLASSPATH"${CLASSPATH:+:}$ANDROID_SDK"/platforms/android-"$ANDROID_VERSION"/android.jar"
+
+
+
 export CLASSPATH
 log CLASSPATH
 
