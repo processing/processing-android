@@ -159,17 +159,19 @@ public class PFragment extends Fragment implements AppComponent {
                            Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(inflater, container, savedInstanceState, this, null);
+
+      // For compatibility with older sketches that run some hardware initialization
+      // inside onCreate(), don't call from Fragment.onCreate() because the surface
+      // will not be yet ready, and so the reference to the activity and other
+      // system variables will be null. In any case, onCreateView() is called
+      // immediately after onCreate():
+      // https://developer.android.com/reference/android/app/Fragment.html#Lifecycle
+      sketch.onCreate(savedInstanceState);
+
       return sketch.getSurface().getRootView();
     } else {
       return null;
     }
-  }
-
-
-  @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (sketch != null) sketch.onCreate(savedInstanceState);
   }
 
 
