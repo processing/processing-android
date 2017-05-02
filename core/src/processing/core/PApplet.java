@@ -535,6 +535,10 @@ public class PApplet extends Object implements PConstants {
       // Don't call resume() when the app is starting and setup() has not been
       // called yet
       // https://github.com/processing/processing-android/issues/274
+
+      // Also, no need to call resume() from anywhere else (for example, from
+      // onStart) since onResume() is always called in the activity lifecyle:
+      // https://developer.android.com/guide/components/activities/activity-lifecycle.html
       resume();
     }
   }
@@ -698,7 +702,6 @@ public class PApplet extends Object implements PConstants {
 
 
   final public boolean sketchFullScreen() {
-    //return false;
     return fullScreen;
   }
 
@@ -731,10 +734,6 @@ public class PApplet extends Object implements PConstants {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-//  public interface SketchSurfaceView {
-//    public PGraphics getGraphics();
-//  }
-
   public void surfaceChanged() {
     surfaceChanged = true;
   }
@@ -762,24 +761,18 @@ public class PApplet extends Object implements PConstants {
    * then motionX, motionY, motionPressed, and motionEvent will not be set.
    */
   public boolean surfaceTouchEvent(MotionEvent event) {
-//    println(event);
     nativeMotionEvent(event);
-//    return super.onTouchEvent(event);
     return true;
   }
 
 
   public void surfaceKeyDown(int code, android.view.KeyEvent event) {
-    //  System.out.println("got onKeyDown for " + code + " " + event);
     nativeKeyEvent(event);
-//    return super.onKeyDown(code, event);
   }
 
 
   public void surfaceKeyUp(int code, android.view.KeyEvent event) {
-    //  System.out.println("got onKeyUp for " + code + " " + event);
     nativeKeyEvent(event);
-//    return super.onKeyUp(code, event);
   }
 
 
@@ -795,7 +788,6 @@ public class PApplet extends Object implements PConstants {
    * PAppletGL needs to have a usable screen before getting things rolling.
    */
   public void start() {
-    resume();
     surface.resumeThread();
   }
 
@@ -811,7 +803,6 @@ public class PApplet extends Object implements PConstants {
   public void stop() {
     // this used to shut down the sketch, but that code has
     // been moved to dispose()
-    pause();
     surface.pauseThread();
 
     //TODO listeners
@@ -832,39 +823,6 @@ public class PApplet extends Object implements PConstants {
    */
   public void resume() {
   }
-
-  /**
-   * Called by the browser or applet viewer to inform this applet
-   * that it is being reclaimed and that it should destroy
-   * any resources that it has allocated.
-   * <p/>
-   * This also attempts to call PApplet.stop(), in case there
-   * was an inadvertent override of the stop() function by a user.
-   * <p/>
-   * destroy() supposedly gets called as the applet viewer
-   * is shutting down the applet. stop() is called
-   * first, and then destroy() to really get rid of things.
-   * no guarantees on when they're run (on browser quit, or
-   * when moving between pages), though.
-   */
-//  public void destroy() {
-//    ((PApplet)this).exit();
-//  }
-
-
-  /**
-   * This returns the last width and height specified by the user
-   * via the size() command.
-   */
-//  public Dimension getPreferredSize() {
-//    return new Dimension(width, height);
-//  }
-
-
-//  public void addNotify() {
-//    super.addNotify();
-//    println("addNotify()");
-//  }
 
 
   //////////////////////////////////////////////////////////////
