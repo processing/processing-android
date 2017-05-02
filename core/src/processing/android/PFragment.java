@@ -29,7 +29,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
-
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -167,6 +167,20 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    if (sketch != null) sketch.onCreate(savedInstanceState);
+  }
+
+
+  @Override
+  public void onStart() {
+    super.onStart();
+    if (sketch != null) sketch.onStart();
+  }
+
+
+  @Override
   public void onResume() {
     super.onResume();
     if (sketch != null) sketch.onResume();
@@ -181,6 +195,13 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   @Override
+  public void onStop() {
+    super.onStop();
+    if (sketch != null) sketch.onStop();
+  }
+
+
+  @Override
   public void onDestroy() {
     super.onDestroy();
     if (sketch != null) sketch.onDestroy();
@@ -188,16 +209,8 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   @Override
-  public void onStart() {
-    super.onStart();
-    if (sketch != null) sketch.onStart();
-  }
-
-
-  @Override
-  public void onStop() {
-    super.onStop();
-    if (sketch != null) sketch.onStop();
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (sketch != null) sketch.onActivityResult(requestCode, resultCode, data);
   }
 
 

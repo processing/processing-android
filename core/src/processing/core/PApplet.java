@@ -578,6 +578,14 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void onCreate(Bundle savedInstanceState) {
+  }
+
+
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+  }
+
+
   public boolean hasPermission(String permission) {
     return surface.hasPermission(permission);
   }
