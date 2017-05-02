@@ -3626,7 +3626,6 @@ public class PGraphicsOpenGL extends PGraphics {
     int lineCount = Math.min(textBreakCount, lineFitCount);
 
     if (textAlignY == CENTER) {
-      lineX = 0;
       float lineHigh = textAscent() + textLeading * (lineCount - 1);
       float y = glCoordsEnabled ? y1 + textAscent() + (boxHeight - lineHigh) / 2 : y2 - textAscent() - (boxHeight - lineHigh) / 2;
       for (int i = 0; i < lineCount; i++) {
