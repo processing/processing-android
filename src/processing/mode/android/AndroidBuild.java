@@ -95,9 +95,17 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_handheld  = "21"; // Lollipop (5.0)
   static public final String min_sdk_watchface = "23"; // Marshmallow (6.0)
   
-  // Hard-coded target SDK, no longer user-selected.
-  static public final String target_sdk      = "25";  // Nougat (7.1.1)
-  static public final String target_platform = "android-" + target_sdk;
+  // Target SDK is stored in the preferences file.
+  static public String target_sdk;  
+  static public String target_platform;
+  static {
+    target_sdk = Preferences.get("android.sdk.target");
+    if (PApplet.parseInt(target_sdk) < 25) { // Must be Nougat (7.1.1) or higher
+      target_sdk = "25"; 
+      Preferences.set("android.sdk.target", target_sdk);
+    }
+    target_platform = "android-" + target_sdk;
+  }  
 
   // Versions of Support, AppCompat, Wear and VR in use
   // All of these are hard-coded, as the target_sdk. Should obtained from the
