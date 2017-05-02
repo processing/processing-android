@@ -3475,7 +3475,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = glCoordsEnabled ? +1 : -1;
+    int sign = glCoordsEnabled ? -1 : +1;
 
     if (textAlignY == CENTER) {
       y += sign * textAscent() / 2;
@@ -3498,7 +3498,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = glCoordsEnabled ? +1 : -1;
+    int sign = glCoordsEnabled ? -1 : +1;
 
     int length = str.length();
     if (length > textBuffer.length) {
@@ -3550,7 +3550,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = glCoordsEnabled ? +1 : -1;
+    int sign = glCoordsEnabled ? -1 : +1;
 
     float hradius, vradius;
     switch (rectMode) {
@@ -3627,21 +3627,23 @@ public class PGraphicsOpenGL extends PGraphics {
 
     if (textAlignY == CENTER) {
       float lineHigh = textAscent() + textLeading * (lineCount - 1);
-      float y = glCoordsEnabled ? y1 + textAscent() + (boxHeight - lineHigh) / 2 : y2 - textAscent() - (boxHeight - lineHigh) / 2;
+      float y = glCoordsEnabled ? y2 - textAscent() - (boxHeight - lineHigh) / 2 :
+                                  y1 + textAscent() + (boxHeight - lineHigh) / 2;
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
       }
 
     } else if (textAlignY == BOTTOM) {
-      float y = glCoordsEnabled ? y2 - textDescent() - textLeading * (lineCount - 1) : y1 + textDescent() + textLeading * (lineCount - 1);
+      float y = glCoordsEnabled ? y1 + textDescent() + textLeading * (lineCount - 1) :
+                                  y2 - textDescent() - textLeading * (lineCount - 1);
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
       }
 
     } else {  // TOP or BASELINE just go to the default
-      float y = glCoordsEnabled ? y1 + textAscent() : y2 - textAscent();
+      float y = glCoordsEnabled ? y2 - textAscent() : y1 + textAscent();
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
