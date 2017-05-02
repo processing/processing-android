@@ -3774,7 +3774,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
         // The default text setting assumes an Y axis pointing down, so
         // inverting in the the case Y points up
-        int sign = glCoordsEnabled ? +1 : -1;
+        int sign = glCoordsEnabled ? -1 : +1;
 
         float x1 = x + lextent * textSize;
         float y1 = y - sign * textent * textSize;
