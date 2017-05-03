@@ -100,7 +100,7 @@ class AndroidBuild extends JavaBuild {
   static public String target_platform;
   static {
     target_sdk = Preferences.get("android.sdk.target");
-    if (PApplet.parseInt(target_sdk) < 25) { // Must be Nougat (7.1.1) or higher
+    if (target_sdk == null || PApplet.parseInt(target_sdk) < 25) { // Must be Nougat (7.1.1) or higher
       target_sdk = "25"; 
       Preferences.set("android.sdk.target", target_sdk);
     }
