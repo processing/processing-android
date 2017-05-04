@@ -599,15 +599,27 @@ public class PApplet extends Object implements PConstants {
 
 
   public void requestPermission(String permission, String callback) {
-    if (!hasPermission(permission)) {
-      Method handleMethod = null;
-      try {
-        Class<?> callbackClass = this.getClass();
-        handleMethod = callbackClass.getMethod(callback, new Class[] { boolean.class });
-      } catch (NoSuchMethodException nsme) {
-        System.err.println(callback + "() could not be found");
-      }
-      if (handleMethod != null) {
+    Method handleMethod = null;
+    try {
+      Class<?> callbackClass = this.getClass();
+      handleMethod = callbackClass.getMethod(callback, new Class[] { boolean.class });
+    } catch (NoSuchMethodException nsme) {
+      System.err.println(callback + "() could not be found");
+    }
+    if (handleMethod != null) {
+      if (hasPermission(permission)) {
+        // If the app already has permission, still call the handle method as it
+        // may be doing some initialization
+        try {
+          handleMethod.invoke(this, new Object[] { true });
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+          e.printStackTrace();
+        } catch (InvocationTargetException e) {
+          e.printStackTrace();
+        }
+      } else {
         permissionMethods.put(permission, handleMethod);
         // Accumulating permissions so they requested all at once at the end
         // of draw.
