@@ -252,7 +252,7 @@ public class PApplet extends Object implements PConstants {
   /**
    * Callback methods to handle permission requests
    */
-  protected HashMap<String, Method> permissionMethods = new HashMap<String, Method>();
+  protected HashMap<String, String> permissionMethods = new HashMap<String, String>();
 
 
   /**
@@ -599,32 +599,21 @@ public class PApplet extends Object implements PConstants {
 
 
   public void requestPermission(String permission, String callback) {
-    Method handleMethod = null;
-    try {
-      Class<?> callbackClass = this.getClass();
-      handleMethod = callbackClass.getMethod(callback, new Class[] { boolean.class });
-    } catch (NoSuchMethodException nsme) {
-      System.err.println(callback + "() could not be found");
-    }
-    if (handleMethod != null) {
-      if (hasPermission(permission)) {
-        // If the app already has permission, still call the handle method as it
-        // may be doing some initialization
-        try {
-          handleMethod.invoke(this, new Object[] { true });
-        } catch (IllegalAccessException e) {
-          e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-          e.printStackTrace();
-        } catch (InvocationTargetException e) {
-          e.printStackTrace();
-        }
-      } else {
-        permissionMethods.put(permission, handleMethod);
-        // Accumulating permissions so they requested all at once at the end
-        // of draw.
-        reqPermissions.add(permission);
-      }
+    requestPermission(permission, callback, this);
+  }
+
+
+  public void requestPermission(String permission, String callback, Object target) {
+    registerWithArgs(callback, target, new Class[] { boolean.class });
+    if (hasPermission(permission)) {
+      // If the app already has permission, still call the handle method as it
+      // may be doing some initialization
+      handleMethods(callback, new Object[] { true });
+    } else {
+      permissionMethods.put(permission, callback);
+      // Accumulating permissions so they requested all at once at the end
+      // of draw.
+      reqPermissions.add(permission);
     }
   }
 
@@ -642,17 +631,10 @@ public class PApplet extends Object implements PConstants {
 
 
   private void handlePermissionsResult(String permission, boolean granted) {
-    Method handleMethod = permissionMethods.get(permission);
-    if (handleMethod != null) {
-      try {
-        handleMethod.invoke(this, new Object[] { granted });
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-      } catch (IllegalArgumentException e) {
-        e.printStackTrace();
-      } catch (InvocationTargetException e) {
-        e.printStackTrace();
-      }
+    String methodName = permissionMethods.get(permission);
+    RegisteredMethods meth = registerMap.get(methodName);
+    if (meth != null) {
+      meth.handle(new Object[] { granted });
     }
   }
 
