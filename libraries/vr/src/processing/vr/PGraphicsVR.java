@@ -99,7 +99,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
-  public void setEyeTransform() {
+  public void eye() {
     eyeMatrix = getEyeMatrix(eyeMatrix);
 
     // Erasing any previous transformation in modelview
