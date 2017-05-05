@@ -160,23 +160,18 @@ public class PSurfaceNone implements PSurface, PConstants {
       // but seems redundant to call it here, since dispose() is triggered by
       // the onDestroy() handler, which means that the app is already
       // being destroyed.
-
-      activity = null;
     }
 
     if (view != null) {
       view.destroyDrawingCache();
-      view = null;
     }
 
     if (component != null) {
       component.dispose();
-      component = null;
     }
 
     if (surfaceView != null) {
       surfaceView.getHolder().getSurface().release();
-      surfaceView = null;
     }
   }
 
@@ -348,15 +343,17 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void finish() {
-    if (component == null) return;
-
-    if (component.getKind() == AppComponent.FRAGMENT) {
-      activity.finish();
-    } else if (component.getKind() == AppComponent.WALLPAPER) {
-      wallpaper.stopSelf();
-    } else if (component.getKind() == AppComponent.WATCHFACE) {
-      watchface.stopSelf();
-    }
+    // No need to do anything here, as the Android system will take care of
+    // releasing activity resources if needed, etc.
+//    if (component == null) return;
+//
+//    if (component.getKind() == AppComponent.FRAGMENT) {
+//      activity.finish();
+//    } else if (component.getKind() == AppComponent.WALLPAPER) {
+//      wallpaper.stopSelf();
+//    } else if (component.getKind() == AppComponent.WATCHFACE) {
+//      watchface.stopSelf();
+//    }
   }
 
 
@@ -414,7 +411,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public boolean isStopped() {
-      return thread == null;
+    return thread == null;
   }
 
 
