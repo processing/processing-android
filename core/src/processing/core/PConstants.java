@@ -410,34 +410,31 @@ public interface PConstants {
   static final int DISABLE_OPENGL_ERRORS      =  4;
   static final int ENABLE_OPENGL_ERRORS       = -4;
 
-  static final int ENABLE_OPENGL_COORDINATES  =  5;
-  static final int DISABLE_OPENGL_COORDINATES = -5;
+  static final int DISABLE_DEPTH_MASK         =  5;
+  static final int ENABLE_DEPTH_MASK          = -5;
 
-  static final int DISABLE_DEPTH_MASK         =  6;
-  static final int ENABLE_DEPTH_MASK          = -6;
+  static final int DISABLE_OPTIMIZED_STROKE   =  6;
+  static final int ENABLE_OPTIMIZED_STROKE    = -6;
 
-  static final int DISABLE_OPTIMIZED_STROKE   =  7;
-  static final int ENABLE_OPTIMIZED_STROKE    = -7;
+  static final int ENABLE_STROKE_PERSPECTIVE  =  7;
+  static final int DISABLE_STROKE_PERSPECTIVE = -7;
 
-  static final int ENABLE_STROKE_PERSPECTIVE  =  8;
-  static final int DISABLE_STROKE_PERSPECTIVE = -8;
+  static final int DISABLE_TEXTURE_MIPMAPS    =  8;
+  static final int ENABLE_TEXTURE_MIPMAPS     = -8;
 
-  static final int DISABLE_TEXTURE_MIPMAPS    =  9;
-  static final int ENABLE_TEXTURE_MIPMAPS     = -9;
+  static final int ENABLE_STROKE_PURE         =  9;
+  static final int DISABLE_STROKE_PURE        = -9;
 
-  static final int ENABLE_STROKE_PURE         =  10;
-  static final int DISABLE_STROKE_PURE        = -10;
+  static final int ENABLE_BUFFER_READING      =  10;
+  static final int DISABLE_BUFFER_READING     = -10;
 
-  static final int ENABLE_BUFFER_READING      =  11;
-  static final int DISABLE_BUFFER_READING     = -11;
+  static final int DISABLE_KEY_REPEAT         =  11;
+  static final int ENABLE_KEY_REPEAT          = -11;
 
-  static final int DISABLE_KEY_REPEAT         =  12;
-  static final int ENABLE_KEY_REPEAT          = -12;
+  static final int DISABLE_ASYNC_SAVEFRAME    =  12;
+  static final int ENABLE_ASYNC_SAVEFRAME     = -12;
 
-  static final int DISABLE_ASYNC_SAVEFRAME    =  13;
-  static final int ENABLE_ASYNC_SAVEFRAME     = -13;
-
-  static final int HINT_COUNT                 =  14;
+  static final int HINT_COUNT                 =  13;
 
 
   // error messages

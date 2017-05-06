@@ -1853,15 +1853,7 @@ public class PGraphicsOpenGL extends PGraphics {
       return;
     }
 
-    if (which == DISABLE_OPENGL_COORDINATES) {
-      flush();
-      glCoordsEnabled = false;
-
-    } else if (which == ENABLE_OPENGL_COORDINATES) {
-      flush();
-      glCoordsEnabled = true;
-
-    } else if (which == DISABLE_DEPTH_TEST) {
+    if (which == DISABLE_DEPTH_TEST) {
       flush();
       pgl.disable(PGL.DEPTH_TEST);
     } else if (which == ENABLE_DEPTH_TEST) {
