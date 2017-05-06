@@ -20,7 +20,7 @@ allprojects {
         jcenter()
         flatDir dirs: "$rootDir/core/library"
         flatDir dirs: "$rootDir/core/build/libs"
-        flatDir dirs: "$rootDir/libraries/vr/lib"
+        flatDir dirs: "$rootDir/libraries/vr/library"
         flatDir dirs: android_platform
     }
 
