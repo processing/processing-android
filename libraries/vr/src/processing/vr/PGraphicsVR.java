@@ -59,6 +59,25 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  public void vrCoordinates(boolean v) {
+    if (glCoordsEnabled != v) {
+      flush();
+      glCoordsEnabled = v;
+    }
+  }
+
+
+  public void registerUpdate() {
+    registerUpdate("update");
+  }
+
+
+  public void registerUpdate(String methodName) {
+    PSurfaceVR surface = (PSurfaceVR)parent.getSurface();
+    surface.registerUpdateMethod(methodName);
+  }
+
+
   public PMatrix3D getEyeMatrix() {
     PMatrix3D mat = new PMatrix3D();
     mat.set(rightX, upX, forwardX, 0,

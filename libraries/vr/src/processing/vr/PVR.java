@@ -49,6 +49,11 @@ public class PVR extends GvrActivity implements AppComponent {
   }
 
 
+  static public PGraphicsVR getRenderer(PApplet p) {
+    return (PGraphicsVR) p.g;
+  }
+
+
   public PVR(PApplet sketch) {
     this.sketch = sketch;
   }

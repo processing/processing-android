@@ -1,16 +1,24 @@
 import processing.vr.*;
 
+PGraphicsVR pg;
 
 void setup() {
-  fullScreen(PVR.STEREO);
+  fullScreen(PVR.STEREO);  
+  pg = PVR.getRenderer(this);
+  pg.registerUpdate();
+}
+
+void update() {
+  println("in update function");
 }
 
 void draw() {
   background(150);
-  PGraphicsVR pvr = (PGraphicsVR)g; 
-
+  
+  println("in draw function for eye " + pg.eyeType);
+  
   // Some lights
-  pointLight(255, 255, 255, pvr.cameraX, pvr.cameraY, pvr.cameraZ);
+  pointLight(255, 255, 255, pg.cameraX, pg.cameraY, pg.cameraZ);
   
   translate(width/2, height/2);
 
@@ -57,9 +65,9 @@ void draw() {
   
   // Place the aim at 100 units from the camera eye
   float d = 100;
-  float x = d * pvr.forwardX;
-  float y = d * pvr.forwardY;
-  float z = pvr.cameraZ + d * pvr.forwardZ;
+  float x = d * pg.forwardX;
+  float y = d * pg.forwardY;
+  float z = pg.cameraZ + d * pg.forwardZ;
   stroke(255, 200);
   strokeWeight(50);
   point(x, y, z);  

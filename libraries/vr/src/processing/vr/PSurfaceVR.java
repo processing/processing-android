@@ -67,12 +67,6 @@ public class PSurfaceVR extends PSurfaceGLES {
     this.component = component;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
 
-    Class<?> c = sketch.getClass();
-    try {
-      updateMethod = c.getMethod("update", new Class[] {});
-    } catch (Exception e) {
-    }
-
     vrActivity = (GvrActivity)component;
     this.activity = vrActivity;
     pvr = (PGraphicsVR)graphics;
@@ -175,6 +169,20 @@ public class PSurfaceVR extends PSurfaceGLES {
   @Override
   public void dispose() {
 //    surface.onDestroy();
+  }
+
+  public void registerUpdateMethod(String name) {
+    Class<?> c = sketch.getClass();
+    try {
+      updateMethod = c.getMethod(name, new Class[] {});
+
+    } catch (NoSuchMethodException nsme) {
+      sketch.die("There is no public " + name + "() method in sketch class " +
+                 sketch.getClass().getName());
+
+    } catch (Exception e) {
+      sketch.die("Could not register " + name + " + () for " + sketch, e);
+    }
   }
 
   ///////////////////////////////////////////////////////////
