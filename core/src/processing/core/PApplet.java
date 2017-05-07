@@ -586,6 +586,16 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void startActivity(Intent intent) {
+    surface.startActivity(intent);
+  }
+
+
+  public void runOnUiThread(Runnable action) {
+    surface.runOnUiThread(action);
+  }
+
+
   public boolean hasPermission(String permission) {
     return surface.hasPermission(permission);
   }
