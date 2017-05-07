@@ -268,6 +268,14 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   @Override
+  public void runOnUiThread(Runnable action) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      activity.runOnUiThread(action);
+    }
+  }
+
+
+  @Override
   public void setOrientation(int which) {
     if (component.getKind() == AppComponent.FRAGMENT) {
       if (which == PORTRAIT) {

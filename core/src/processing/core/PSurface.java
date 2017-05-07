@@ -72,6 +72,8 @@ public interface PSurface {
 
   public void startActivity(Intent intent);
 
+  public void runOnUiThread(Runnable action);
+
   public void setOrientation(int which);
 
   public File getFilesDir();
