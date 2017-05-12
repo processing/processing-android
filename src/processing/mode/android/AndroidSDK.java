@@ -544,7 +544,8 @@ class AndroidSDK {
     }
     // printing this here to see if anyone else is killing the adb server
     if (processing.app.Base.DEBUG) {
-      PApplet.printArray(adbCmd);
+    	//TODO: Fix later
+//      PApplet.printArray(adbCmd);
     }
     try {
       ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
