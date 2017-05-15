@@ -2476,14 +2476,10 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  /**
-   * Never currently called (does not exist) on Android.
-   * http://code.google.com/p/processing/issues/detail?id=1489
-   */
   public void keyTyped() { }
 
 
-  public void keyTyped(KeyEvent event ) {
+  public void keyTyped(KeyEvent event) {
     keyTyped();
   }
 
