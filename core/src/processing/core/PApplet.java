@@ -651,6 +651,12 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public Activity getActivity() {
+
+    return this.activity;
+  }
+
+
   /**
    * @param method "size" or "fullScreen"
    * @param args parameters passed to the function so we can show the user
