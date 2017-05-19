@@ -83,8 +83,8 @@ class AndroidBuild extends JavaBuild {
   // Minimum SDK levels required for each app component
   // https://source.android.com/source/build-numbers.html
   // We should use 17 (4.2) as minimum for fragment and wallpaper at some point, 
-  // once combined usage of all previous versions is falls below 5%:
-  // http://developer.android.com/about/dashboards/index.html
+  // once combined usage of all previous versions falls below 5%:
+  // http://developer.android.com/about/dashboards/index.html (as of Mat 19th, they are exactly at 5%)
   // because 17 give us getRealSize and getRealMetrics:
   // http://developer.android.com/reference/android/view/Display.html#getRealSize(android.graphics.Point)
   // http://developer.android.com/reference/android/view/Display.html#getRealMetrics(android.util.DisplayMetrics)
