@@ -42,6 +42,8 @@ import android.graphics.*;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.LayoutRes;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -640,11 +642,17 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  private void handlePermissionsResult(String permission, boolean granted) {
+  private void handlePermissionsResult(String permission, final boolean granted) {
     String methodName = permissionMethods.get(permission);
-    RegisteredMethods meth = registerMap.get(methodName);
+    final RegisteredMethods meth = registerMap.get(methodName);
     if (meth != null) {
-      meth.handle(new Object[] { granted });
+      Handler handler = new Handler(Looper.getMainLooper());
+      handler.post(new Runnable() {
+        @Override
+        public void run() {
+          meth.handle(new Object[] { granted });
+        }
+      });
     }
   }
 
@@ -1054,10 +1062,16 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  protected void handleMethods(String methodName, Object[] args) {
-    RegisteredMethods meth = registerMap.get(methodName);
+  protected void handleMethods(String methodName, final Object[] args) {
+    final RegisteredMethods meth = registerMap.get(methodName);
     if (meth != null) {
-      meth.handle(args);
+      Handler handler = new Handler(Looper.getMainLooper());
+      handler.post(new Runnable() {
+        @Override
+        public void run() {
+          meth.handle(args);
+        }
+      });
     }
   }
 
