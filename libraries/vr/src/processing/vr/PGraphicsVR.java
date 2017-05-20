@@ -80,10 +80,10 @@ public class PGraphicsVR extends PGraphics3D {
 
   public PMatrix3D getEyeMatrix() {
     PMatrix3D mat = new PMatrix3D();
-    mat.set(rightX, upX, forwardX, 0,
-            rightY, upY, forwardY, 0,
-            rightZ, upZ, forwardZ, 0,
-                 0,   0,        0, 1);
+    mat.set(rightX, upX, forwardX, cameraX,
+            rightY, upY, forwardY, cameraY,
+            rightZ, upZ, forwardZ, cameraZ,
+                 0,   0,        0,       1);
     return mat;
   }
 
@@ -92,10 +92,10 @@ public class PGraphicsVR extends PGraphics3D {
     if (target == null) {
       target = new PMatrix3D();
     }
-    target.set(rightX, upX, forwardX, 0,
-               rightY, upY, forwardY, 0,
-               rightZ, upZ, forwardZ, 0,
-                    0,   0,        0, 1);
+    target.set(rightX, upX, forwardX, cameraX,
+               rightY, upY, forwardY, cameraY,
+               rightZ, upZ, forwardZ, cameraZ,
+                    0,   0,        0,       1);
     return target;
   }
 
@@ -123,16 +123,22 @@ public class PGraphicsVR extends PGraphics3D {
 
     // Erasing any previous transformation in modelview
     modelview.set(camera);
-    modelview.translate(cameraX, cameraY, cameraZ);
     modelview.apply(eyeMatrix);
 
-    // eyeMatrix is orthogonal, so taking the transpose inverts it.
+    // The 3x3 block of eyeMatrix is orthogonal, so taking the transpose
+    // inverts it...
     eyeMatrix.transpose();
+    // ...and then invert the translation separately:
+    eyeMatrix.m03 = -cameraX;
+    eyeMatrix.m13 = -cameraY;
+    eyeMatrix.m23 = -cameraZ;
+    eyeMatrix.m30 = 0;
+    eyeMatrix.m31 = 0;
+    eyeMatrix.m32 = 0;
 
     // Applying the inverse of the previous transformations in the opposite order
     // to compute the modelview inverse
     modelviewInv.set(eyeMatrix);
-    modelviewInv.translate(-cameraX, -cameraY, -cameraZ);
     modelviewInv.preApply(cameraInv);
 
     updateProjmodelview();
