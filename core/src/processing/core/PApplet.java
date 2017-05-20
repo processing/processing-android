@@ -1144,6 +1144,10 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void calculate() {
+  }
+
+
   public void draw() {
     // if no draw method, then shut things down
     //System.out.println("no draw method, goodbye");

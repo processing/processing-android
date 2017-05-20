@@ -1,28 +1,20 @@
 import processing.vr.*;
 
-PGraphicsVR pg;
-
 void setup() {
   fullScreen(PVR.STEREO);  
-  pg = PVR.getRenderer(this);
-  pg.registerUpdate();
 }
 
-void update() {
-  println("in update function");
+void calculate() {
+  println("in calculate function");
 }
 
 void draw() {
-  background(150);
-  
-  println("in draw function for eye " + pg.eyeType);
-  
-  // Some lights
-  pointLight(255, 255, 255, pg.cameraX, pg.cameraY, pg.cameraZ);
-  
+  background(150);  
   translate(width/2, height/2);
-
   noStroke();
+
+  // Some lights
+  pointLight(255, 255, 255, 0, 0, 500);
 
   // Floor
   beginShape(QUADS); 
@@ -36,6 +28,7 @@ void draw() {
   vertex(+width/2, +500, -width/2);
   endShape();
   
+  // Large box at the center
   pushMatrix();
   rotateY(millis()/1000.0);
   fill(220);
@@ -63,12 +56,10 @@ void draw() {
   box(100);
   popMatrix();
   
-  // Place the aim at 100 units from the camera eye
-  float d = 100;
-  float x = d * pg.forwardX;
-  float y = d * pg.forwardY;
-  float z = pg.cameraZ + d * pg.forwardZ;
+  // Use eye coordinates at 100 units from the camera position:
+  PGraphicsVR gvr = (PGraphicsVR)g;
+  gvr.eye();
   stroke(255, 200);
   strokeWeight(50);
-  point(x, y, z);  
+  point(0, 0, 100);  
 }
