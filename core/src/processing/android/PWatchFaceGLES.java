@@ -353,7 +353,9 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onDestroy() {
       super.onDestroy();
-      if (sketch != null) sketch.onDestroy();
+      if (sketch != null) {
+        sketch.onDestroy();
+      }
     }
 
 

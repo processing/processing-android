@@ -352,7 +352,9 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onDestroy() {
       super.onDestroy();
-      if (sketch != null) sketch.onDestroy();
+      if (sketch != null) {
+        sketch.onDestroy();
+      }
     }
 
 

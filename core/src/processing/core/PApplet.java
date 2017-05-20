@@ -58,8 +58,8 @@ import processing.opengl.*;
 
 public class PApplet extends Object implements PConstants {
 
-  //static final public boolean DEBUG = true;
-  static final public boolean DEBUG = false;
+  static final public boolean DEBUG = true;
+//  static final public boolean DEBUG = false;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
   static final public int SDK = Build.VERSION.SDK_INT;
@@ -562,14 +562,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void onDestroy() {
-    dispose();
-    if (PApplet.DEBUG) {
-      System.out.println("PApplet.onDestroy() called");
-    }
-  }
-
-
   public void onStart() {
     start();
   }
@@ -581,6 +573,11 @@ public class PApplet extends Object implements PConstants {
 
 
   public void onCreate(Bundle savedInstanceState) {
+  }
+
+
+  public void onDestroy() {
+    dispose();
   }
 
 

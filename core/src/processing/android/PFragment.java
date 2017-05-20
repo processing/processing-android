@@ -178,35 +178,45 @@ public class PFragment extends Fragment implements AppComponent {
   @Override
   public void onStart() {
     super.onStart();
-    if (sketch != null) sketch.onStart();
+    if (sketch != null) {
+      sketch.onStart();
+    }
   }
 
 
   @Override
   public void onResume() {
     super.onResume();
-    if (sketch != null) sketch.onResume();
+    if (sketch != null) {
+      sketch.onResume();
+    }
   }
 
 
   @Override
   public void onPause() {
     super.onPause();
-    if (sketch != null) sketch.onPause();
+    if (sketch != null) {
+      sketch.onPause();
+    }
   }
 
 
   @Override
   public void onStop() {
     super.onStop();
-    if (sketch != null) sketch.onStop();
+    if (sketch != null) {
+      sketch.onStop();
+    }
   }
 
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (sketch != null) sketch.onDestroy();
+    if (sketch != null) {
+      sketch.onDestroy();
+    }
   }
 
 
