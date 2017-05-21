@@ -67,6 +67,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
   public PMatrix3D getEyeMatrix() {
     PMatrix3D mat = new PMatrix3D();
     mat.set(rightX, upX, forwardX, cameraX,
@@ -77,6 +78,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
   public PMatrix3D getEyeMatrix(PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
@@ -89,6 +91,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
   public PMatrix3D getObjectMatrix() {
     PMatrix3D mat = new PMatrix3D();
     mat.set(modelviewInv);
@@ -97,6 +100,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
   public PMatrix3D getObjectMatrix(PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
@@ -107,6 +111,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
   public void eye() {
     eyeMatrix = getEyeMatrix(eyeMatrix);
 

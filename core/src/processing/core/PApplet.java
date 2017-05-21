@@ -8912,6 +8912,42 @@ public class PApplet extends Object implements PConstants {
 
 
   /**
+   * Returns a copy of the current object matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix() {
+    return g.getObjectMatrix();
+  }
+
+
+  /**
+   * Copy the current object matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix(PMatrix3D target) {
+    return g.getObjectMatrix(target);
+  }
+
+
+  /**
+   * Returns a copy of the current eye matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix() {
+    return g.getEyeMatrix();
+  }
+
+
+  /**
+   * Copy the current eye matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix(PMatrix3D target) {
+    return g.getEyeMatrix(target);
+  }
+
+
+  /**
    * Set the current transformation matrix to the contents of another.
    */
   public void setMatrix(PMatrix source) {
@@ -8967,6 +9003,11 @@ public class PApplet extends Object implements PConstants {
 
   public void printCamera() {
     g.printCamera();
+  }
+
+
+  public void eye() {
+    g.eye();
   }
 
 
