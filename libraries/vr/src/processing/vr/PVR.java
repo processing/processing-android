@@ -31,9 +31,6 @@ import processing.android.ServiceEngine;
 import processing.core.PApplet;
 
 public class PVR extends GvrActivity implements AppComponent {
-  public static final String STEREO = "processing.vr.PGraphicsVRStereo";
-  public static final String MONO = "processing.vr.PGraphicsVRMono";
-
   public static final int LEFT      = Eye.Type.LEFT;
   public static final int RIGHT     = Eye.Type.RIGHT;
   public static final int MONOCULAR = Eye.Type.MONOCULAR;
