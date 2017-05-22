@@ -59,14 +59,6 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
-  public void vrCoordinates(boolean v) {
-    if (glCoordsEnabled != v) {
-      flush();
-      glCoordsEnabled = v;
-    }
-  }
-
-
   @Override
   public PMatrix3D getEyeMatrix() {
     PMatrix3D mat = new PMatrix3D();
@@ -192,7 +184,7 @@ public class PGraphicsVR extends PGraphics3D {
     defCameraFOV = fov.getTop()* DEG_TO_RAD;
     defCameraZ = (float) (height / (2 * Math.tan(defCameraFOV)));
     cameraAspect = (float)width / height;
-    if (glCoordsEnabled) {
+    if (cameraUp) {
       defCameraX = 0;
       defCameraY = 0;
     } else {
@@ -209,7 +201,7 @@ public class PGraphicsVR extends PGraphics3D {
 
     // Forward, right, and up vectors are given in the original system with Y
     // pointing up. Need to invert y coords in the non-gl case:
-    float yf = glCoordsEnabled ? +1 : -1;
+    float yf = cameraUp ? +1 : -1;
 
     headTransform.getForwardVector(forwardVector, 0);
     headTransform.getRightVector(rightVector, 0);
@@ -262,14 +254,14 @@ public class PGraphicsVR extends PGraphics3D {
 
     // Calculating Y vector
     float y0 = 0;
-    float y1 = glCoordsEnabled ? + 1: -1;
+    float y1 = cameraUp ? + 1: -1;
     float y2 = 0;
 
     // Computing X vector as Y cross Z
     float x0 =  y1 * z2 - y2 * z1;
     float x1 = -y0 * z2 + y2 * z0;
     float x2 =  y0 * z1 - y1 * z0;
-    if (!glCoordsEnabled) {
+    if (!cameraUp) {
       // Inverting X axis
       x0 *= -1;
       x1 *= -1;

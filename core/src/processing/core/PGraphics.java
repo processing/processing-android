@@ -4087,6 +4087,11 @@ public class PGraphics extends PImage implements PConstants {
   // CAMERA
 
 
+  public void cameraUp() {
+    showMethodWarning("cameraUp");
+  }
+
+
   public void beginCamera() {
     showMethodWarning("beginCamera");
   }

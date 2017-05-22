@@ -105,10 +105,6 @@ public class PGraphicsOpenGL extends PGraphics {
   /** Current flush mode. */
   protected int flushMode = FLUSH_WHEN_FULL;
 
-  /**
-   * Keeps track of ENABLE_OPENGL_COORDINATES hint
-   */
-  protected boolean glCoordsEnabled = false;
 
   // ........................................................
 
@@ -277,6 +273,12 @@ public class PGraphicsOpenGL extends PGraphics {
 
   /** Flag to indicate that we are inside beginCamera/endCamera block. */
   protected boolean manipulatingCamera;
+
+  /**
+   * Sets the coordinates to "first person" setting: Y axis up, origin at
+   * screen center
+   */
+  protected boolean cameraUp = false;
 
   // ........................................................
 
@@ -1583,7 +1585,7 @@ public class PGraphicsOpenGL extends PGraphics {
       pgl.disable(PGL.SCISSOR_TEST);
     }
 
-    pgl.frontFace(glCoordsEnabled ? PGL.CCW : PGL.CW);
+    pgl.frontFace(cameraUp ? PGL.CCW : PGL.CW);
     pgl.disable(PGL.CULL_FACE);
 
     pgl.activeTexture(PGL.TEXTURE0);
@@ -3467,7 +3469,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = glCoordsEnabled ? -1 : +1;
+    int sign = cameraUp ? -1 : +1;
 
     if (textAlignY == CENTER) {
       y += sign * textAscent() / 2;
@@ -3490,7 +3492,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = glCoordsEnabled ? -1 : +1;
+    int sign = cameraUp ? -1 : +1;
 
     int length = str.length();
     if (length > textBuffer.length) {
@@ -3542,7 +3544,7 @@ public class PGraphicsOpenGL extends PGraphics {
       defaultFontOrDeath("text");
     }
 
-    int sign = glCoordsEnabled ? -1 : +1;
+    int sign = cameraUp ? -1 : +1;
 
     float hradius, vradius;
     switch (rectMode) {
@@ -3619,7 +3621,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
     if (textAlignY == CENTER) {
       float lineHigh = textAscent() + textLeading * (lineCount - 1);
-      float y = glCoordsEnabled ? y2 - textAscent() - (boxHeight - lineHigh) / 2 :
+      float y = cameraUp ? y2 - textAscent() - (boxHeight - lineHigh) / 2 :
                                   y1 + textAscent() + (boxHeight - lineHigh) / 2;
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
@@ -3627,7 +3629,7 @@ public class PGraphicsOpenGL extends PGraphics {
       }
 
     } else if (textAlignY == BOTTOM) {
-      float y = glCoordsEnabled ? y1 + textDescent() + textLeading * (lineCount - 1) :
+      float y = cameraUp ? y1 + textDescent() + textLeading * (lineCount - 1) :
                                   y2 - textDescent() - textLeading * (lineCount - 1);
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
@@ -3635,7 +3637,7 @@ public class PGraphicsOpenGL extends PGraphics {
       }
 
     } else {  // TOP or BASELINE just go to the default
-      float y = glCoordsEnabled ? y2 - textAscent() : y1 + textAscent();
+      float y = cameraUp ? y2 - textAscent() : y1 + textAscent();
       for (int i = 0; i < lineCount; i++) {
         textLineAlignImpl(textBuffer, textBreakStart[i], textBreakStop[i], lineX, y);
         y += sign * textLeading;
@@ -3767,7 +3769,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
         // The default text setting assumes an Y axis pointing down, so
         // inverting in the the case Y points up
-        int sign = glCoordsEnabled ? -1 : +1;
+        int sign = cameraUp ? -1 : +1;
 
         float x1 = x + lextent * textSize;
         float y1 = y - sign * textent * textSize;
@@ -4624,6 +4626,12 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public void printCamera() {
     camera.print();
+  }
+
+
+  @Override
+  public void cameraUp() {
+    cameraUp = true;
   }
 
 
@@ -6067,7 +6075,7 @@ public class PGraphicsOpenGL extends PGraphics {
       Texture.Parameters params = new Texture.Parameters(ARGB,
                                                          sampling, mipmap);
       texture = new Texture(this, pixelWidth, pixelHeight, params);
-      texture.invertedY(glCoordsEnabled);
+      texture.invertedY(cameraUp);
       texture.colorBuffer(true);
       setCache(this, texture);
     }
@@ -6078,7 +6086,7 @@ public class PGraphicsOpenGL extends PGraphics {
     updatePixelSize();
     if (texture != null) {
       ptexture = new Texture(this, pixelWidth, pixelHeight, texture.getParameters());
-      ptexture.invertedY(glCoordsEnabled);
+      ptexture.invertedY(cameraUp);
       ptexture.colorBuffer(true);
     }
   }
@@ -6218,7 +6226,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height,
                                   texture.getParameters());
-      filterTexture.invertedY(glCoordsEnabled);
+      filterTexture.invertedY(cameraUp);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.set(texture);
@@ -6288,7 +6296,7 @@ public class PGraphicsOpenGL extends PGraphics {
     loadTexture();
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height, texture.getParameters());
-      filterTexture.invertedY(glCoordsEnabled);
+      filterTexture.invertedY(cameraUp);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.put(texture, sx, height - (sy + sh), sw, height - sy);
@@ -6608,7 +6616,7 @@ public class PGraphicsOpenGL extends PGraphics {
       img.parent = parent;
     }
     Texture tex = new Texture(this, img.pixelWidth, img.pixelHeight, params);
-    tex.invertedY(!glCoordsEnabled); // Pixels are read upside down
+    tex.invertedY(!cameraUp); // Pixels are read upside down
     setCache(img, tex);
     return tex;
   }
@@ -6972,7 +6980,7 @@ public class PGraphicsOpenGL extends PGraphics {
     // polygons are CCW in window coordinates, whereas  are CW
     // in the left-handed system that is Processing's default (with
     // its Y axis pointing down)
-    pgl.frontFace(glCoordsEnabled ? PGL.CCW : PGL.CW);
+    pgl.frontFace(cameraUp ? PGL.CCW : PGL.CW);
     pgl.disable(PGL.CULL_FACE);
 
     // Processing uses only one texture unit.
