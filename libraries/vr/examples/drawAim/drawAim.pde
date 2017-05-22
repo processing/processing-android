@@ -1,7 +1,7 @@
 import processing.vr.*;
 
 void setup() {
-  fullScreen(PVR.STEREO);  
+  fullScreen(STEREO);  
 }
 
 void calculate() {
@@ -56,9 +56,8 @@ void draw() {
   box(100);
   popMatrix();
   
-  // Use eye coordinates at 100 units from the camera position:
-  PGraphicsVR gvr = (PGraphicsVR)g;
-  gvr.eye();
+  // Use eye coordinates at 100 units from the camera position:;
+  eye();
   stroke(255, 200);
   strokeWeight(50);
   point(0, 0, 100);  
