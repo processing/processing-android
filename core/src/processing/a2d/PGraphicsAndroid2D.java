@@ -382,6 +382,14 @@ public class PGraphicsAndroid2D extends PGraphics {
         }
         break;
 
+      case LINE_STRIP:
+      case LINE_LOOP:
+        if (vertexCount >= 2) {
+          line(vertices[vertexCount-2][X],
+               vertices[vertexCount-2][Y], x, y);
+        }
+        break;
+
       case TRIANGLES:
         if ((vertexCount % 3) == 0) {
           triangle(vertices[vertexCount - 3][X],
@@ -507,6 +515,11 @@ public class PGraphicsAndroid2D extends PGraphics {
         }
         drawPath();
       }
+    } else if (shape == LINE_LOOP && vertexCount >= 2) {
+    line(vertices[vertexCount-1][X],
+         vertices[vertexCount-1][Y],
+         vertices[0][X],
+         vertices[0][Y]);
     }
     shape = 0;
   }
