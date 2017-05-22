@@ -3946,6 +3946,10 @@ public class PApplet extends Object implements PConstants {
         vessel.pixels = actual.pixels;
         // an android, pixels[] will probably be null, we want this one
         vessel.bitmap = actual.bitmap;
+
+        vessel.pixelWidth = actual.width;
+        vessel.pixelHeight = actual.height;
+        vessel.pixelDensity = 1;
       }
       requestImageCount--;
     }
