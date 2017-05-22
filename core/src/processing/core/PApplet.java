@@ -3799,12 +3799,14 @@ public class PApplet extends Object implements PConstants {
     }
 //    int much = (int) (System.currentTimeMillis() - t);
 //    println("loadImage(" + filename + ") was " + nfc(much));
-    PImage image = new PImage(bitmap);
-    image.parent = this;
-//    if (params != null) {
-//      image.setParams(g, params);
-//    }
-    return image;
+    if (bitmap == null) {
+      System.err.println("Could not load the image because the bitmap was empty.");
+      return null;
+    } else {
+      PImage image = new PImage(bitmap);
+      image.parent = this;
+      return image;
+    }
   }
 
 
@@ -8976,6 +8978,11 @@ public class PApplet extends Object implements PConstants {
    */
   public void printMatrix() {
     g.printMatrix();
+  }
+
+
+  public void cameraUp() {
+    g.cameraUp();
   }
 
 
