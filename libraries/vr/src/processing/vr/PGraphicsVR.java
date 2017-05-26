@@ -62,9 +62,10 @@ public class PGraphicsVR extends PGraphics3D {
   @Override
   public PMatrix3D getEyeMatrix() {
     PMatrix3D mat = new PMatrix3D();
-    mat.set(rightX, upX, forwardX, cameraX,
-            rightY, upY, forwardY, cameraY,
-            rightZ, upZ, forwardZ, cameraZ,
+    float sign = cameraUp ? +1 : -1;
+    mat.set(rightX, sign * upX, forwardX, cameraX,
+            rightY, sign * upY, forwardY, cameraY,
+            rightZ, sign * upZ, forwardZ, cameraZ,
                  0,   0,        0,       1);
     return mat;
   }
@@ -75,9 +76,10 @@ public class PGraphicsVR extends PGraphics3D {
     if (target == null) {
       target = new PMatrix3D();
     }
-    target.set(rightX, upX, forwardX, cameraX,
-               rightY, upY, forwardY, cameraY,
-               rightZ, upZ, forwardZ, cameraZ,
+    float sign = cameraUp ? +1 : -1;
+    target.set(rightX, sign * upX, forwardX, cameraX,
+               rightY, sign * upY, forwardY, cameraY,
+               rightZ, sign * upZ, forwardZ, cameraZ,
                     0,   0,        0,       1);
     return target;
   }
