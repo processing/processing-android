@@ -48,6 +48,8 @@ public interface PConstants {
   static final String P2D = "processing.opengl.PGraphics2D";
   static final String P3D = "processing.opengl.PGraphics3D";
   static final String OPENGL = P3D;
+  static final String STEREO = "processing.vr.PGraphicsVRStereo";
+  static final String MONO = "processing.vr.PGraphicsVRMono";
 
   // The PDF and DXF renderers are not available for Android.
 
@@ -396,7 +398,9 @@ public interface PConstants {
   // hints - hint values are positive for the alternate version,
   // negative of the same value returns to the normal/default state
 
+  @Deprecated
   static final int ENABLE_NATIVE_FONTS        =  1;
+  @Deprecated
   static final int DISABLE_NATIVE_FONTS       = -1;
 
   static final int DISABLE_DEPTH_TEST         =  2;
@@ -426,10 +430,13 @@ public interface PConstants {
   static final int ENABLE_BUFFER_READING      =  10;
   static final int DISABLE_BUFFER_READING     = -10;
 
-  static final int DISABLE_ASYNC_SAVEFRAME    =  11;
-  static final int ENABLE_ASYNC_SAVEFRAME     = -11;
+  static final int DISABLE_KEY_REPEAT         =  11;
+  static final int ENABLE_KEY_REPEAT          = -11;
 
-  static final int HINT_COUNT                 =  12;
+  static final int DISABLE_ASYNC_SAVEFRAME    =  12;
+  static final int ENABLE_ASYNC_SAVEFRAME     = -12;
+
+  static final int HINT_COUNT                 =  13;
 
 
   // error messages

@@ -42,6 +42,8 @@ import android.graphics.*;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.LayoutRes;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -56,6 +58,14 @@ import processing.opengl.*;
 
 public class PApplet extends Object implements PConstants {
 
+  static final public boolean DEBUG = true;
+//  static final public boolean DEBUG = false;
+
+  // Convenience public constant holding the SDK version, akin to platform in Java mode
+  static final public int SDK = Build.VERSION.SDK_INT;
+
+  //static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
+
   /**
    * The surface this sketch draws to.
    */
@@ -68,14 +78,6 @@ public class PApplet extends Object implements PConstants {
 
   /** The PGraphics renderer associated with this PApplet */
   public PGraphics g;
-
-//  static final public boolean DEBUG = true;
-  static final public boolean DEBUG = false;
-
-  // Convenience public constant holding the SDK version, akin to platform in Java mode
-  static final public int SDK = Build.VERSION.SDK_INT;
-
-//  static final public int SDK = Build.VERSION_CODES.ICE_CREAM_SANDWICH; // Forcing older SDK for testing
 
   /**
    * The screen size when the sketch was started. This is initialized inside
@@ -147,6 +149,9 @@ public class PApplet extends Object implements PConstants {
   public int pixelWidth;
   public int pixelHeight;
 
+  ///////////////////////////////////////////////////////////////
+  // Mouse events
+
   /** absolute x position of input on screen */
   public int mouseX;
 
@@ -203,6 +208,8 @@ public class PApplet extends Object implements PConstants {
    */
   protected int touchPointerId;
 
+  ///////////////////////////////////////////////////////////////
+  // Key events
 
   /**
    * Last key pressed.
@@ -236,13 +243,18 @@ public class PApplet extends Object implements PConstants {
    */
   public boolean focused = false;
 
+  /**
+   * Keeps track of ENABLE_KEY_REPEAT hint
+   */
+  protected boolean keyRepeatEnabled = false;
+
   ///////////////////////////////////////////////////////////////
   // Permission handling
 
   /**
    * Callback methods to handle permission requests
    */
-  protected HashMap<String, Method> permissionMethods = new HashMap<String, Method>();
+  protected HashMap<String, String> permissionMethods = new HashMap<String, String>();
 
 
   /**
@@ -250,31 +262,9 @@ public class PApplet extends Object implements PConstants {
    */
   protected ArrayList<String> reqPermissions = new ArrayList<String>();
 
+
   ///////////////////////////////////////////////////////////////
-  // Wallpaper and watchface variables: these will go away soon...
-  @Deprecated
-  public boolean ambientMode = false;
-  @Deprecated
-  public boolean isRound = false;
-  @Deprecated
-  public int insetLeft = 0;
-  @Deprecated
-  public int insetRight = 0;
-  @Deprecated
-  public int insetTop = 0;
-  @Deprecated
-  public int insetBottom = 0;
-  @Deprecated
-  public boolean lowBitAmbient = false;
-  @Deprecated
-  public boolean burnInProtection = false;
-  @Deprecated
-  public boolean preview = false;
-  @Deprecated
-  public float homeScreenOffset = 0;
-  @Deprecated
-  public int homeScreenCount = 1;
-  ///////////////////////////////////////////////////////////////
+  // Rendering/timing
 
   /**
    * Time in milliseconds when the applet was started.
@@ -326,9 +316,31 @@ public class PApplet extends Object implements PConstants {
    */
   protected boolean exitCalled;
 
-//  Thread thread;
+  boolean insideSettings;
 
-  // messages to send if attached as an external vm
+  String renderer = JAVA2D;
+
+  int smooth = 1;  // default smoothing (whatever that means for the renderer)
+
+  boolean fullScreen = false;
+
+  int display = -1;  // use default
+
+  // Background default needs to be different from the default value in
+  // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
+  // https://github.com/processing/processing/issues/2297
+  int windowColor = 0xffDDDDDD;
+
+  PStyle savedStyle;
+
+  ///////////////////////////////////////////////////////////////
+  // Error messages
+
+  static final String ERROR_MIN_MAX =
+    "Cannot use min() or max() on an empty array.";
+
+  ///////////////////////////////////////////////////////////////
+  // Command line options
 
   /**
    * Position of the upper-lefthand corner of the editor window
@@ -386,25 +398,6 @@ public class PApplet extends Object implements PConstants {
   /** true if this sketch is being run by the PDE */
   boolean external = false;
 
-  static final String ERROR_MIN_MAX =
-    "Cannot use min() or max() on an empty array.";
-
-  boolean insideSettings;
-
-  String renderer = JAVA2D;
-
-  int smooth = 1;  // default smoothing (whatever that means for the renderer)
-
-  boolean fullScreen = false;
-
-  int display = -1;  // use default
-
-  // Background default needs to be different from the default value in
-  // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
-  // https://github.com/processing/processing/issues/2297
-  int windowColor = 0xffDDDDDD;
-
-  PStyle savedStyle;
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
@@ -544,6 +537,10 @@ public class PApplet extends Object implements PConstants {
       // Don't call resume() when the app is starting and setup() has not been
       // called yet
       // https://github.com/processing/processing-android/issues/274
+
+      // Also, no need to call resume() from anywhere else (for example, from
+      // onStart) since onResume() is always called in the activity lifecyle:
+      // https://developer.android.com/guide/components/activities/activity-lifecycle.html
       resume();
     }
   }
@@ -565,14 +562,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  public void onDestroy() {
-    dispose();
-    if (PApplet.DEBUG) {
-      System.out.println("PApplet.onDestroy() called");
-    }
-  }
-
-
   public void onStart() {
     start();
   }
@@ -580,6 +569,29 @@ public class PApplet extends Object implements PConstants {
 
   public void onStop() {
     stop();
+  }
+
+
+  public void onCreate(Bundle savedInstanceState) {
+  }
+
+
+  public void onDestroy() {
+    dispose();
+  }
+
+
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+  }
+
+
+  public void startActivity(Intent intent) {
+    surface.startActivity(intent);
+  }
+
+
+  public void runOnUiThread(Runnable action) {
+    surface.runOnUiThread(action);
   }
 
 
@@ -596,20 +608,21 @@ public class PApplet extends Object implements PConstants {
 
 
   public void requestPermission(String permission, String callback) {
-    if (!hasPermission(permission)) {
-      Method handleMethod = null;
-      try {
-        Class<?> callbackClass = this.getClass();
-        handleMethod = callbackClass.getMethod(callback, new Class[] { boolean.class });
-      } catch (NoSuchMethodException nsme) {
-        System.err.println(callback + "() could not be found");
-      }
-      if (handleMethod != null) {
-        permissionMethods.put(permission, handleMethod);
-        // Accumulating permissions so they requested all at once at the end
-        // of draw.
-        reqPermissions.add(permission);
-      }
+    requestPermission(permission, callback, this);
+  }
+
+
+  public void requestPermission(String permission, String callback, Object target) {
+    registerWithArgs(callback, target, new Class[] { boolean.class });
+    if (hasPermission(permission)) {
+      // If the app already has permission, still call the handle method as it
+      // may be doing some initialization
+      handleMethods(callback, new Object[] { true });
+    } else {
+      permissionMethods.put(permission, callback);
+      // Accumulating permissions so they requested all at once at the end
+      // of draw.
+      reqPermissions.add(permission);
     }
   }
 
@@ -626,18 +639,17 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  private void handlePermissionsResult(String permission, boolean granted) {
-    Method handleMethod = permissionMethods.get(permission);
-    if (handleMethod != null) {
-      try {
-        handleMethod.invoke(this, new Object[] { granted });
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-      } catch (IllegalArgumentException e) {
-        e.printStackTrace();
-      } catch (InvocationTargetException e) {
-        e.printStackTrace();
-      }
+  private void handlePermissionsResult(String permission, final boolean granted) {
+    String methodName = permissionMethods.get(permission);
+    final RegisteredMethods meth = registerMap.get(methodName);
+    if (meth != null) {
+      Handler handler = new Handler(Looper.getMainLooper());
+      handler.post(new Runnable() {
+        @Override
+        public void run() {
+          meth.handle(new Object[] { granted });
+        }
+      });
     }
   }
 
@@ -707,7 +719,6 @@ public class PApplet extends Object implements PConstants {
 
 
   final public boolean sketchFullScreen() {
-    //return false;
     return fullScreen;
   }
 
@@ -740,10 +751,6 @@ public class PApplet extends Object implements PConstants {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-//  public interface SketchSurfaceView {
-//    public PGraphics getGraphics();
-//  }
-
   public void surfaceChanged() {
     surfaceChanged = true;
   }
@@ -771,24 +778,18 @@ public class PApplet extends Object implements PConstants {
    * then motionX, motionY, motionPressed, and motionEvent will not be set.
    */
   public boolean surfaceTouchEvent(MotionEvent event) {
-//    println(event);
     nativeMotionEvent(event);
-//    return super.onTouchEvent(event);
     return true;
   }
 
 
   public void surfaceKeyDown(int code, android.view.KeyEvent event) {
-    //  System.out.println("got onKeyDown for " + code + " " + event);
     nativeKeyEvent(event);
-//    return super.onKeyDown(code, event);
   }
 
 
   public void surfaceKeyUp(int code, android.view.KeyEvent event) {
-    //  System.out.println("got onKeyUp for " + code + " " + event);
     nativeKeyEvent(event);
-//    return super.onKeyUp(code, event);
   }
 
 
@@ -804,7 +805,6 @@ public class PApplet extends Object implements PConstants {
    * PAppletGL needs to have a usable screen before getting things rolling.
    */
   public void start() {
-    resume();
     surface.resumeThread();
   }
 
@@ -820,7 +820,6 @@ public class PApplet extends Object implements PConstants {
   public void stop() {
     // this used to shut down the sketch, but that code has
     // been moved to dispose()
-    pause();
     surface.pauseThread();
 
     //TODO listeners
@@ -841,39 +840,6 @@ public class PApplet extends Object implements PConstants {
    */
   public void resume() {
   }
-
-  /**
-   * Called by the browser or applet viewer to inform this applet
-   * that it is being reclaimed and that it should destroy
-   * any resources that it has allocated.
-   * <p/>
-   * This also attempts to call PApplet.stop(), in case there
-   * was an inadvertent override of the stop() function by a user.
-   * <p/>
-   * destroy() supposedly gets called as the applet viewer
-   * is shutting down the applet. stop() is called
-   * first, and then destroy() to really get rid of things.
-   * no guarantees on when they're run (on browser quit, or
-   * when moving between pages), though.
-   */
-//  public void destroy() {
-//    ((PApplet)this).exit();
-//  }
-
-
-  /**
-   * This returns the last width and height specified by the user
-   * via the size() command.
-   */
-//  public Dimension getPreferredSize() {
-//    return new Dimension(width, height);
-//  }
-
-
-//  public void addNotify() {
-//    super.addNotify();
-//    println("addNotify()");
-//  }
 
 
   //////////////////////////////////////////////////////////////
@@ -1093,10 +1059,16 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  protected void handleMethods(String methodName, Object[] args) {
-    RegisteredMethods meth = registerMap.get(methodName);
+  protected void handleMethods(String methodName, final Object[] args) {
+    final RegisteredMethods meth = registerMap.get(methodName);
     if (meth != null) {
-      meth.handle(args);
+      Handler handler = new Handler(Looper.getMainLooper());
+      handler.post(new Runnable() {
+        @Override
+        public void run() {
+          meth.handle(args);
+        }
+      });
     }
   }
 
@@ -1169,6 +1141,10 @@ public class PApplet extends Object implements PConstants {
 
 
   public void setup() {
+  }
+
+
+  public void calculate() {
   }
 
 
@@ -2428,6 +2404,10 @@ public class PApplet extends Object implements PConstants {
 
 
   protected void handleKeyEvent(KeyEvent event) {
+
+    // Get rid of auto-repeating keys if desired and supported
+    if (!keyRepeatEnabled && event.isAutoRepeat()) return;
+
 //    keyEvent = event;
     key = event.getKey();
     keyCode = event.getKeyCode();
@@ -2469,8 +2449,10 @@ public class PApplet extends Object implements PConstants {
     // TODO set up proper key modifier handling
     int keModifiers = 0;
 
+//    KeyEvent ke = new KeyEvent(event, event.getEventTime(),
+//                               keAction, keModifiers, key, keyCode);
     KeyEvent ke = new KeyEvent(event, event.getEventTime(),
-                               keAction, keModifiers, key, keyCode);
+                               keAction, keModifiers, key, keyCode, 0 < event.getRepeatCount());
 
     postEvent(ke);
   }
@@ -2509,14 +2491,10 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  /**
-   * Never currently called (does not exist) on Android.
-   * http://code.google.com/p/processing/issues/detail?id=1489
-   */
   public void keyTyped() { }
 
 
-  public void keyTyped(KeyEvent event ) {
+  public void keyTyped(KeyEvent event) {
     keyTyped();
   }
 
@@ -3821,12 +3799,14 @@ public class PApplet extends Object implements PConstants {
     }
 //    int much = (int) (System.currentTimeMillis() - t);
 //    println("loadImage(" + filename + ") was " + nfc(much));
-    PImage image = new PImage(bitmap);
-    image.parent = this;
-//    if (params != null) {
-//      image.setParams(g, params);
-//    }
-    return image;
+    if (bitmap == null) {
+      System.err.println("Could not load the image because the bitmap was empty.");
+      return null;
+    } else {
+      PImage image = new PImage(bitmap);
+      image.parent = this;
+      return image;
+    }
   }
 
 
@@ -3966,6 +3946,10 @@ public class PApplet extends Object implements PConstants {
         vessel.pixels = actual.pixels;
         // an android, pixels[] will probably be null, we want this one
         vessel.bitmap = actual.bitmap;
+
+        vessel.pixelWidth = actual.width;
+        vessel.pixelHeight = actual.height;
+        vessel.pixelDensity = 1;
       }
       requestImageCount--;
     }
@@ -7907,24 +7891,6 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  /**
-   * Enable a hint option.
-   * <P>
-   * For the most part, hints are temporary api quirks,
-   * for which a proper api hasn't been properly worked out.
-   * for instance SMOOTH_IMAGES existed because smooth()
-   * wasn't yet implemented, but it will soon go away.
-   * <P>
-   * They also exist for obscure features in the graphics
-   * engine, like enabling/disabling single pixel lines
-   * that ignore the zbuffer, the way they do in alphabot.
-   * <P>
-   * Current hint options:
-   * <UL>
-   * <LI><TT>DISABLE_DEPTH_TEST</TT> -
-   * turns off the z-buffer in the P3D or OPENGL renderers.
-   * </UL>
-   */
   public void hint(int which) {
     g.hint(which);
   }
@@ -8952,6 +8918,42 @@ public class PApplet extends Object implements PConstants {
 
 
   /**
+   * Returns a copy of the current object matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix() {
+    return g.getObjectMatrix();
+  }
+
+
+  /**
+   * Copy the current object matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix(PMatrix3D target) {
+    return g.getObjectMatrix(target);
+  }
+
+
+  /**
+   * Returns a copy of the current eye matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix() {
+    return g.getEyeMatrix();
+  }
+
+
+  /**
+   * Copy the current eye matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix(PMatrix3D target) {
+    return g.getEyeMatrix(target);
+  }
+
+
+  /**
    * Set the current transformation matrix to the contents of another.
    */
   public void setMatrix(PMatrix source) {
@@ -8983,6 +8985,11 @@ public class PApplet extends Object implements PConstants {
   }
 
 
+  public void cameraUp() {
+    g.cameraUp();
+  }
+
+
   public void beginCamera() {
     g.beginCamera();
   }
@@ -9007,6 +9014,11 @@ public class PApplet extends Object implements PConstants {
 
   public void printCamera() {
     g.printCamera();
+  }
+
+
+  public void eye() {
+    g.eye();
   }
 
 

@@ -90,6 +90,34 @@ public class AndroidMode extends JavaMode {
       "You need to open the wallpaper picker in the device in order "+ 
       "to select it as the new background.";
   
+  private static final String DISTRIBUTING_APPS_TUT_URL = 
+      "http://android.processing.org/tutorials/distributing/index.html";  
+  
+  private static final String EXPORT_DEFAULT_PACKAGE_TITLE =
+      "Cannot export package...";
+
+  private static final String EXPORT_DEFAULT_PACKAGE_MESSAGE =
+      "The sketch still has the default package name. " +
+      "Not good, since this name will uniquely identify your app on the Play store... for ever!<br>" +
+      "Come up with a different package name and write in the AndroidManifest.xml file in the sketch folder, " +
+      "after the \"package=\" attribute inside the manifest tag, which also contains version code and name. " +
+      "Once you have done that, try exporting the sketch again.<br><br>" +
+      "For more info on distributing apps from Processing,<br>" +
+      "check <a href=\"" + DISTRIBUTING_APPS_TUT_URL + "\">this online tutorial</a>.";
+  
+  private static final String EXPORT_DEFAULT_ICONS_TITLE =
+      "Cannot export package...";
+
+  private static final String EXPORT_DEFAULT_ICONS_MESSAGE =
+      "The sketch does not include any app icons. " +
+      "Processing could use use its default set of Android icons, which are okay " +
+      "to test the app on your devices, but a bad idea to distribute on the Play store. " +
+      "Create a full set of unique icons for your app, and copy them into the sketch folder. " +
+      "Once you have done that, try exporting the sketch again.<br><br>" +
+      "For more info on distributing apps from Processing,<br>" +
+      "check <a href=\"" + DISTRIBUTING_APPS_TUT_URL + "\">this online tutorial</a>.";  
+    
+  
   public AndroidMode(Base base, File folder) {
     super(base, folder);
   }
@@ -265,12 +293,11 @@ public class AndroidMode extends JavaMode {
 //    }
 //  }
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener, boolean resetManifest) throws SketchException, IOException {
+      RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this, 
         editor.getAppComponent(), true);
-    if (resetManifest) build.resetManifest();
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -291,7 +318,7 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunDevice(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener, boolean resetManifest)
+      RunnerListener listener)
     throws SketchException, IOException {    
     
     final Devices devices = Devices.getInstance();
@@ -310,7 +337,6 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Starting build...");
     AndroidBuild build = new AndroidBuild(sketch, this, 
         editor.getAppComponent(), false);
-    if (resetManifest) build.resetManifest();
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -353,9 +379,57 @@ public class AndroidMode extends JavaMode {
     }
   }
 
+  
+  public boolean checkPackageName(Sketch sketch, int comp) {
+    Manifest manifest = new Manifest(sketch, comp, getFolder(), false);
+    String defName = AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();    
+    String name = manifest.getPackageName();
+    if (name.toLowerCase().equals(defName.toLowerCase())) {
+      // The user did not set the package name, show error and stop
+      AndroidMode.showMessage(EXPORT_DEFAULT_PACKAGE_TITLE, EXPORT_DEFAULT_PACKAGE_MESSAGE);
+      return false;
+    }
+    return true;
+  }
+  
+  
+  public boolean checkAppIcons(Sketch sketch) {
+    File sketchFolder = sketch.getFolder();
+    File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
+    File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
+    File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
+    File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
+    File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
+    File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
+    boolean allExist = localIcon36.exists() &&
+                       localIcon48.exists() &&
+                       localIcon72.exists() &&
+                       localIcon96.exists() &&
+                       localIcon144.exists() &&
+                       localIcon192.exists();    
+    if (!allExist) {
+      // The user did not set custom icons, show error and stop
+      AndroidMode.showMessage(EXPORT_DEFAULT_ICONS_TITLE, EXPORT_DEFAULT_ICONS_MESSAGE);
+      return false;      
+    }
+    return true;
+  }
+  
+  
+  public void initManifest(Sketch sketch, int comp) {
+    new Manifest(sketch, comp, getFolder(), false);
+  }  
+  
+  
+  public void resetManifest(Sketch sketch, int comp) {
+    new Manifest(sketch, comp, getFolder(), true);
+  }
+  
+  
   public static void createFileFromTemplate(final File tmplFile, final File destFile) {
     createFileFromTemplate(tmplFile, destFile, null);
   }
+  
   
   public static void createFileFromTemplate(final File tmplFile, final File destFile, 
       final HashMap<String, String> replaceMap) {

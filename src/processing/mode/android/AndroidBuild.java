@@ -83,8 +83,8 @@ class AndroidBuild extends JavaBuild {
   // Minimum SDK levels required for each app component
   // https://source.android.com/source/build-numbers.html
   // We should use 17 (4.2) as minimum for fragment and wallpaper at some point, 
-  // once combined usage of all previous versions is falls below 5%:
-  // http://developer.android.com/about/dashboards/index.html
+  // once combined usage of all previous versions falls below 5%:
+  // http://developer.android.com/about/dashboards/index.html (as of Mat 19th, they are exactly at 5%)
   // because 17 give us getRealSize and getRealMetrics:
   // http://developer.android.com/reference/android/view/Display.html#getRealSize(android.graphics.Point)
   // http://developer.android.com/reference/android/view/Display.html#getRealMetrics(android.util.DisplayMetrics)
@@ -95,9 +95,17 @@ class AndroidBuild extends JavaBuild {
   static public final String min_sdk_handheld  = "21"; // Lollipop (5.0)
   static public final String min_sdk_watchface = "23"; // Marshmallow (6.0)
   
-  // Hard-coded target SDK, no longer user-selected.
-  static public final String target_sdk      = "25";  // Nougat (7.1.1)
-  static public final String target_platform = "android-" + target_sdk;
+  // Target SDK is stored in the preferences file.
+  static public String target_sdk;  
+  static public String target_platform;
+  static {
+    target_sdk = Preferences.get("android.sdk.target");
+    if (target_sdk == null || PApplet.parseInt(target_sdk) < 25) { // Must be Nougat (7.1.1) or higher
+      target_sdk = "25"; 
+      Preferences.set("android.sdk.target", target_sdk);
+    }
+    target_platform = "android-" + target_sdk;
+  }  
 
   // Versions of Support, AppCompat, Wear and VR in use
   // All of these are hard-coded, as the target_sdk. Should obtained from the
@@ -110,7 +118,6 @@ class AndroidBuild extends JavaBuild {
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
-  private boolean rewriteManifest = false;
   
   private String renderer = "";
   
@@ -226,9 +233,16 @@ class AndroidBuild extends JavaBuild {
       Platform.openFolder(tmpFolder);
     }
 
+    boolean rewriteManifest = false;
+    if (!external) {
+      // If creating an export project, then the manifest might have attributes
+      // that create trouble with gradle, so we just re-write it...
+      // TODO: the current manifest logic is exceeded by the complexity of the mode
+      // need to rewrite.
+      rewriteManifest = true;
+    }
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), rewriteManifest);    
     manifest.setSdkTarget(target_sdk);
-    rewriteManifest = false;
 
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
@@ -239,7 +253,8 @@ class AndroidBuild extends JavaBuild {
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
     if (sketchClassName != null) {
       File tempManifest = new File(tmpFolder, "AndroidManifest.xml");
-      manifest.writeCopy(tempManifest, sketchClassName, target.equals("debug"));
+            
+      manifest.writeCopy(tempManifest, sketchClassName, external, target.equals("debug"));
 
       writeAntProps(new File(tmpFolder, "ant.properties"));
       buildFile = new File(tmpFolder, "build.xml");
@@ -521,10 +536,6 @@ class AndroidBuild extends JavaBuild {
 //    }
 //  }
   
-  public void resetManifest() {
-    rewriteManifest = true;
-  }
-  
   protected boolean usesOpenGL() {
     return renderer != null && (renderer.equals("P2D") || renderer.equals("P3D")); 
   }
@@ -586,16 +597,7 @@ class AndroidBuild extends JavaBuild {
       Preferences.set("android.export.build_system", buildSystem);
     }
 
-//    if (buildSystem.equals("ant")) {    
-//      // this will set debuggable to true in the manifest file
-//      target = "debug";
-//    } else {
-//      // debuggable property should not set in the manifest file when building
-//      // with gradle
-//      target = "";
-//    }
-    target = "debug";
-    
+    this.target = "debug";    
     String targetID = getTargetID();
     
     if (appComponent == WATCHFACE) {
@@ -633,7 +635,7 @@ class AndroidBuild extends JavaBuild {
   }
 
   public File exportPackage(String keyStorePassword) throws Exception {
-    File projectFolder = null;       
+    File projectFolder = null;
     if (appComponent == WATCHFACE) {
       this.target = "release";
       String targetID = getTargetID();
@@ -1115,7 +1117,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
@@ -1129,7 +1131,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");    
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");    
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
@@ -1144,7 +1146,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceGLES");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");    
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");    
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
@@ -1159,7 +1161,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@watchface_classs@@", "PWatchFaceCanvas");
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : ""); 
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : ""); 
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }  
@@ -1173,7 +1175,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
-    replaceMap.put("@@external@@", external ? "\n    sketch.setExternal(true);" : "");
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
     
     AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
@@ -1229,21 +1231,21 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  private String generatePermissionsString(final String[] permissions) {
-    String permissionsStr = "";
-    for (String p: permissions) {
-      permissionsStr += (0 < permissionsStr.length() ? "," : "");
-      if (p.indexOf("permission") == -1) {
-        permissionsStr += "Manifest.permission." + p;
-      } else if (p.indexOf("Manifest.permission") == 0) {
-        permissionsStr += p;
-      } else {
-        permissionsStr += "\"" + p + "\"";
-      }
-    }
-    permissionsStr = "{" + permissionsStr + "}";   
-    return permissionsStr;
-  }
+//  private String generatePermissionsString(final String[] permissions) {
+//    String permissionsStr = "";
+//    for (String p: permissions) {
+//      permissionsStr += (0 < permissionsStr.length() ? "," : "");
+//      if (p.indexOf("permission") == -1) {
+//        permissionsStr += "Manifest.permission." + p;
+//      } else if (p.indexOf("Manifest.permission") == 0) {
+//        permissionsStr += p;
+//      } else {
+//        permissionsStr += "\"" + p + "\"";
+//      }
+//    }
+//    permissionsStr = "{" + permissionsStr + "}";   
+//    return permissionsStr;
+//  }
  
 
   /**
@@ -1409,11 +1411,13 @@ class AndroidBuild extends JavaBuild {
     File mainFolder = mkdirs(moduleFolder, "src/main");
     File javaFolder = mkdirs(mainFolder, "java");
     File resFolder = mkdirs(mainFolder, "res");
+    File assetsFolder = mkdirs(mainFolder, "assets");
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
     Util.copyDir(new File(projectFolder, "res"), resFolder);
-    Util.copyDir(new File(projectFolder, "src"), javaFolder);    
+    Util.copyDir(new File(projectFolder, "src"), javaFolder);
+    Util.copyDir(new File(projectFolder, "assets"), assetsFolder);
   }
   
   private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
@@ -1439,7 +1443,7 @@ class AndroidBuild extends JavaBuild {
     
     File mainFolder = mkdirs(moduleFolder, "src/main");
     File javaFolder = mkdirs(mainFolder, "java");
-    File resFolder = mkdirs(mainFolder, "res");
+    File resFolder = mkdirs(mainFolder, "res");    
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
@@ -1475,6 +1479,7 @@ class AndroidBuild extends JavaBuild {
     File mainFolder = mkdirs(moduleFolder, "src/main");
     File javaFolder = mkdirs(mainFolder, "java");
     File resFolder = mkdirs(mainFolder, "res");
+    File assetsFolder = mkdirs(mainFolder, "assets");
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
@@ -1548,10 +1553,10 @@ class AndroidBuild extends JavaBuild {
     ////////////////////////////////////////////////////////////////////////
     // third step: reference library projects from main project        
     if (appCompatRes) {
-      System.out.println("Library project created succesfully in " + libsFolder.toString());
+//      System.out.println("Library project created succesfully in " + libsFolder.toString());
       appCompatRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/appcompat");
       if (appCompatRes) {
-        System.out.println("Library project referenced succesfully!");
+//        System.out.println("Library project referenced succesfully!");
         // Finally, re-write the build files so they use org.eclipse.jdt.core.JDTCompilerAdapter
         // instead of com.sun.tools.javac.Main
         // TODO: use the build file generated by the android tools, and 

@@ -23,6 +23,7 @@
 package processing.vr;
 
 import com.google.vr.sdk.base.Eye;
+import com.google.vr.sdk.base.FieldOfView;
 import com.google.vr.sdk.base.HeadTransform;
 import com.google.vr.sdk.base.Viewport;
 
@@ -52,38 +53,39 @@ public class PGraphicsVR extends PGraphics3D {
   private float[] eyePerspective;
   private PMatrix3D eyeMatrix;
 
-  static {
-    Y_AXIS_DOWN = false;
-  }
-
   @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
     return new PGLES(pg);
   }
 
 
+  @Override
   public PMatrix3D getEyeMatrix() {
     PMatrix3D mat = new PMatrix3D();
-    mat.set(rightX, upX, forwardX, 0,
-            rightY, upY, forwardY, 0,
-            rightZ, upZ, forwardZ, 0,
-                 0,   0,        0, 1);
+    float sign = cameraUp ? +1 : -1;
+    mat.set(rightX, sign * upX, forwardX, cameraX,
+            rightY, sign * upY, forwardY, cameraY,
+            rightZ, sign * upZ, forwardZ, cameraZ,
+                 0,   0,        0,       1);
     return mat;
   }
 
 
+  @Override
   public PMatrix3D getEyeMatrix(PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
     }
-    target.set(rightX, upX, forwardX, 0,
-               rightY, upY, forwardY, 0,
-               rightZ, upZ, forwardZ, 0,
-                    0,   0,        0, 1);
+    float sign = cameraUp ? +1 : -1;
+    target.set(rightX, sign * upX, forwardX, cameraX,
+               rightY, sign * upY, forwardY, cameraY,
+               rightZ, sign * upZ, forwardZ, cameraZ,
+                    0,   0,        0,       1);
     return target;
   }
 
 
+  @Override
   public PMatrix3D getObjectMatrix() {
     PMatrix3D mat = new PMatrix3D();
     mat.set(modelviewInv);
@@ -92,6 +94,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
   public PMatrix3D getObjectMatrix(PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
@@ -102,21 +105,28 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
-  public void setEyeTransform() {
+  @Override
+  public void eye() {
     eyeMatrix = getEyeMatrix(eyeMatrix);
 
     // Erasing any previous transformation in modelview
     modelview.set(camera);
-    modelview.translate(cameraX, cameraY, cameraZ);
     modelview.apply(eyeMatrix);
 
-    // eyeMatrix is orthogonal, so taking the transpose inverts it.
+    // The 3x3 block of eyeMatrix is orthogonal, so taking the transpose
+    // inverts it...
     eyeMatrix.transpose();
+    // ...and then invert the translation separately:
+    eyeMatrix.m03 = -cameraX;
+    eyeMatrix.m13 = -cameraY;
+    eyeMatrix.m23 = -cameraZ;
+    eyeMatrix.m30 = 0;
+    eyeMatrix.m31 = 0;
+    eyeMatrix.m32 = 0;
 
     // Applying the inverse of the previous transformations in the opposite order
     // to compute the modelview inverse
     modelviewInv.set(eyeMatrix);
-    modelviewInv.translate(-cameraX, -cameraY, -cameraZ);
     modelviewInv.preApply(cameraInv);
 
     updateProjmodelview();
@@ -157,24 +167,87 @@ public class PGraphicsVR extends PGraphics3D {
 
 
   protected void updateView() {
-    pgl.viewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
-    setCameraVR(0.0f, 0.0f, defCameraZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    setProjectionVR();
+    setVRViewport();
+    setVRCamera();
+    setVRProjection();
   }
 
 
-  protected void setCameraVR(float eyeX, float eyeY, float eyeZ,
-                             float centerX, float centerY, float centerZ,
-                             float upX, float upY, float upZ) {
-    cameraX = eyeX;
-    cameraY = eyeY;
-    cameraZ = eyeZ;
+  protected void eyeTransform(Eye e) {
+    eye = e;
+    eyeType = eye.getType();
+    eyeViewport = eye.getViewport();
+    eyePerspective = eye.getPerspective(defCameraNear, defCameraFar);
+    eyeView = eye.getEyeView();
+
+    // Adjust the camera Z position to it fits the (width,height) rect at Z = 0, given
+    // the fov settings.
+    FieldOfView fov = eye.getFov();
+    defCameraFOV = fov.getTop()* DEG_TO_RAD;
+    defCameraZ = (float) (height / (2 * Math.tan(defCameraFOV)));
+    cameraAspect = (float)width / height;
+    if (cameraUp) {
+      defCameraX = 0;
+      defCameraY = 0;
+    } else {
+      defCameraX = +width / 2.0f;
+      defCameraY = +height / 2.0f;
+    }
+  }
+
+
+  protected void headTransform(HeadTransform ht) {
+    initVR();
+
+    headTransform = ht;
+
+    // Forward, right, and up vectors are given in the original system with Y
+    // pointing up. Need to invert y coords in the non-gl case:
+    float yf = cameraUp ? +1 : -1;
+
+    headTransform.getForwardVector(forwardVector, 0);
+    headTransform.getRightVector(rightVector, 0);
+    headTransform.getUpVector(upVector, 0);
+
+    forwardX = forwardVector[0];
+    forwardY = yf * forwardVector[1];
+    forwardZ = forwardVector[2];
+
+    rightX = rightVector[0];
+    rightY = yf * rightVector[1];
+    rightZ = rightVector[2];
+
+    upX = upVector[0];
+    upY = yf * upVector[1];
+    upZ = upVector[2];
+  }
+
+
+  protected void initVR() {
+    if (!initialized) {
+      forwardVector = new float[3];
+      rightVector = new float[3];
+      upVector = new float[3];
+      initialized = true;
+    }
+  }
+
+
+  protected void setVRViewport() {
+    pgl.viewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
+  }
+
+
+  protected void setVRCamera() {
+    cameraX = defCameraX;
+    cameraY = defCameraY;
+    cameraZ = defCameraZ;
 
     // Calculating Z vector
-    float z0 = eyeX - centerX;
-    float z1 = eyeY - centerY;
-    float z2 = eyeZ - centerZ;
-    eyeDist = PApplet.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
+    float z0 = 0;
+    float z1 = 0;
+    float z2 = defCameraZ;
+    eyeDist = PApplet.abs(z2);
     if (nonZero(eyeDist)) {
       z0 /= eyeDist;
       z1 /= eyeDist;
@@ -182,19 +255,20 @@ public class PGraphicsVR extends PGraphics3D {
     }
 
     // Calculating Y vector
-    float y0 = upX;
-    float y1 = upY;
-    float y2 = upZ;
+    float y0 = 0;
+    float y1 = cameraUp ? + 1: -1;
+    float y2 = 0;
 
     // Computing X vector as Y cross Z
     float x0 =  y1 * z2 - y2 * z1;
     float x1 = -y0 * z2 + y2 * z0;
     float x2 =  y0 * z1 - y1 * z0;
-
-    // Recompute Y = Z cross X
-    y0 =  z1 * x2 - z2 * x1;
-    y1 = -z0 * x2 + z2 * x0;
-    y2 =  z0 * x1 - z1 * x0;
+    if (!cameraUp) {
+      // Inverting X axis
+      x0 *= -1;
+      x1 *= -1;
+      x2 *= -1;
+    }
 
     // Cross product gives area of parallelogram, which is < 1.0 for
     // non-perpendicular unit-length vectors; so normalize x, y here:
@@ -222,9 +296,9 @@ public class PGraphicsVR extends PGraphics3D {
                     y0, y1, y2, 0,
                     z0, z1, z2, 0,
                      0,  0,  0, 1);
-    float tx = -eyeX;
-    float ty = -eyeY;
-    float tz = -eyeZ;
+    float tx = -defCameraX;
+    float ty = -defCameraY;
+    float tz = -defCameraZ;
     modelview.translate(tx, ty, tz);
 
     modelviewInv.set(modelview);
@@ -235,7 +309,7 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
-  protected void setProjectionVR() {
+  protected void setVRProjection() {
     // Matrices in Processing are row-major, and GVR API is column-major
     projection.set(eyePerspective[0], eyePerspective[4], eyePerspective[8], eyePerspective[12],
                    eyePerspective[1], eyePerspective[5], eyePerspective[9], eyePerspective[13],
@@ -243,64 +317,4 @@ public class PGraphicsVR extends PGraphics3D {
                    eyePerspective[3], eyePerspective[7], eyePerspective[11], eyePerspective[15]);
     updateProjmodelview();
   }
-
-
-  protected void headTransform(HeadTransform ht) {
-    initVR();
-    headTransform = ht;
-    headTransform.getForwardVector(forwardVector, 0);
-    headTransform.getRightVector(rightVector, 0);
-    headTransform.getUpVector(upVector, 0);
-    forwardX = forwardVector[0];
-    forwardY = forwardVector[1];
-    forwardZ = forwardVector[2];
-    rightX = rightVector[0];
-    rightY = rightVector[1];
-    rightZ = rightVector[2];
-    upX = upVector[0];
-    upY = upVector[1];
-    upZ = upVector[2];
-  }
-
-
-  protected void eyeTransform(Eye e) {
-    eye = e;
-    eyeType = eye.getType();
-    eyeViewport = eye.getViewport();
-    eyePerspective = eye.getPerspective(cameraNear, cameraFar);
-    eyeView = eye.getEyeView();
-  }
-
-
-  protected void initVR() {
-    if (!initialized) {
-      forwardVector = new float[3];
-      rightVector = new float[3];
-      upVector = new float[3];
-      initialized = true;
-    }
-  }
-
-
-  @Override
-  protected void updateGLNormal() {
-    if (glNormal == null) {
-      glNormal = new float[9];
-    }
-
-    // Since Y is inverted in VR, we need to invert the normal calculation so
-    // lighting works as it should, even if we provide the normals as before.
-    glNormal[0] = -modelviewInv.m00;
-    glNormal[1] = -modelviewInv.m01;
-    glNormal[2] = -modelviewInv.m02;
-
-    glNormal[3] = -modelviewInv.m10;
-    glNormal[4] = -modelviewInv.m11;
-    glNormal[5] = -modelviewInv.m12;
-
-    glNormal[6] = -modelviewInv.m20;
-    glNormal[7] = -modelviewInv.m21;
-    glNormal[8] = -modelviewInv.m22;
-  }
-
 }

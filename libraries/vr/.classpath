@@ -2,9 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="var" path="ANDROID_LIB"/>
-	<classpathentry kind="lib" path="lib/gvr-audio.jar"/>
-	<classpathentry kind="lib" path="lib/gvr-base.jar"/>
-	<classpathentry kind="lib" path="lib/gvr-common.jar"/>
 	<classpathentry kind="lib" path="/android-mode/processing-core.zip"/>
+	<classpathentry kind="lib" path="library/gvr-audio.jar"/>
+	<classpathentry kind="lib" path="library/gvr-base.jar"/>
+	<classpathentry kind="lib" path="library/gvr-common.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

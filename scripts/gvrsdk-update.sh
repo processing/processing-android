@@ -64,7 +64,7 @@ rm -Rf sdk-base/libs/base
 mv gvr-base.jar sdk-base/libs
 
 # Need the jar also in VR's lib folder
-cp sdk-base/libs/gvr-base.jar ../libraries/vr/lib
+cp sdk-base/libs/gvr-base.jar ../libraries/vr/library
 
 # Finally, create zip file and mode to the sdk location
 zip -r sdk-base.zip sdk-base
@@ -94,7 +94,7 @@ mv gvr-common.jar sdk-common/libs
 mv $nanojar sdk-common/libs
 
 # Need the jar also in VR's lib folder
-cp sdk-common/libs/gvr-common.jar ../libraries/vr/lib
+cp sdk-common/libs/gvr-common.jar ../libraries/vr/library
 
 # Finally, create zip file and mode to the sdk location
 zip -r sdk-common.zip sdk-common
@@ -124,7 +124,7 @@ rm -Rf sdk-audio/libs/audio
 mv gvr-audio.jar sdk-audio/libs
 
 # Need the jar also in VR's lib folder
-cp sdk-audio/libs/gvr-audio.jar ../libraries/vr/lib
+cp sdk-audio/libs/gvr-audio.jar ../libraries/vr/library
 
 # Finally, create zip file and mode to the sdk location
 zip -r sdk-audio.zip sdk-audio

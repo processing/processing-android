@@ -202,7 +202,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onAmbientModeChanged(boolean inAmbientMode) {
       super.onAmbientModeChanged(inAmbientMode);
       invalidateIfNecessary();
-      if (sketch != null) sketch.ambientMode = inAmbientMode;
       // call new event handlers in sketch (?)
     }
 
@@ -212,10 +211,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       super.onPropertiesChanged(properties);
       lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
       burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
-      if (sketch != null) {
-        sketch.lowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
-        sketch.burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
-      }
     }
 
 
@@ -227,13 +222,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
                       insets.getSystemWindowInsetTop(),
                       insets.getSystemWindowInsetRight(),
                       insets.getSystemWindowInsetBottom());
-      if (sketch != null) {
-        sketch.isRound = insets.isRound();
-        sketch.insetLeft = insets.getSystemWindowInsetLeft();
-        sketch.insetRight = insets.getSystemWindowInsetRight();
-        sketch.insetTop = insets.getSystemWindowInsetTop();
-        sketch.insetBottom = insets.getSystemWindowInsetBottom();
-      }
     }
 
 
@@ -364,7 +352,9 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     @Override
     public void onDestroy() {
       super.onDestroy();
-      if (sketch != null) sketch.onDestroy();
+      if (sketch != null) {
+        sketch.onDestroy();
+      }
     }
 
 

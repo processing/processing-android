@@ -1,37 +1,34 @@
 import processing.vr.*;
 
-float[] r1, r2;
-
 void setup() {
-  fullScreen(PVR.STEREO);  
-  //size(1920, 1080, P3D);
-  r1 = new float[100]; 
-  r2 = new float[100];
-  for (int i = 0; i < 100; i++) {
-    r1[i] = random(0, 1);
-    r2[i] = random(0, 1);
-  }  
+  fullScreen(STEREO);  
+}
+
+void calculate() {
+  println("in calculate function");
 }
 
 void draw() {
-  background(150);
-  PGraphicsVR pvr = (PGraphicsVR)g; 
-  
+  background(150);  
+  translate(width/2, height/2);
+  noStroke();
+
   // Some lights
-  pointLight(255, 255, 255, pvr.cameraX, pvr.cameraY, pvr.cameraZ);
+  pointLight(255, 255, 255, 0, 0, 500);
 
   // Floor
   beginShape(QUADS); 
   fill(255, 0, 0);
-  normal(0, 0, +1);
-  vertex(-width/2, -500, -width/2);
+  normal(0, 0, -1);
+  vertex(-width/2, +500, -width/2);
   fill(0, 0, 255);
-  vertex(-width/2, -500, +width/2);
-  vertex(+width/2, -500, +width/2);
+  vertex(-width/2, +500, +width/2);
+  vertex(+width/2, +500, +width/2);
   fill(255, 0, 0);
-  vertex(+width/2, -500, -width/2);
+  vertex(+width/2, +500, -width/2);
   endShape();
   
+  // Large box at the center
   pushMatrix();
   rotateY(millis()/1000.0);
   fill(220);
@@ -59,13 +56,9 @@ void draw() {
   box(100);
   popMatrix();
   
-  // Place the aim at 300 units from the camera eye
-  float d = 300;
-  float x = pvr.cameraX + d * pvr.forwardVector[0];
-  float y = pvr.cameraY + d * pvr.forwardVector[1];
-  float z = pvr.cameraZ + d * pvr.forwardVector[2];
-  stroke(200, 50, 150);
+  // Use eye coordinates at 100 units from the camera position:;
+  eye();
+  stroke(255, 200);
   strokeWeight(50);
-  point(x, y, z);
-  noStroke();
+  point(0, 0, 100);  
 }

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.os.ResultReceiver;
 
+// A simple utility activity to request permissions in a service.
 public class PermissionRequestor extends Activity {
   public static final String KEY_RESULT_RECEIVER = "resultReceiver";
   public static final String KEY_PERMISSIONS = "permissions";

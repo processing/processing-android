@@ -30,9 +30,9 @@
 	   srcdir="src" destdir="bin"
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
-	   classpath="lib/gvr-base.jar;
-                  lib/gvr-common.jar;
-                  lib/gvr-audio.jar;
+	   classpath="library/gvr-base.jar;
+                  library/gvr-common.jar;
+                  library/gvr-audio.jar;
 	              ../../processing-core.zip;
 	              ${env.ANDROID_SDK}/platforms/android-25/android.jar"
 	   nowarn="true"

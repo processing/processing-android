@@ -25,6 +25,7 @@
 package processing.opengl;
 
 import processing.core.PGraphics;
+import processing.core.PMatrix2D;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
 import processing.core.PShapeSVG;
@@ -545,6 +546,19 @@ public class PGraphics2D extends PGraphicsOpenGL {
   public float screenZ(float x, float y, float z) {
     showDepthWarningXYZ("screenZ");
     return 0;
+  }
+
+  @Override
+  public PMatrix2D getMatrix(PMatrix2D target) {
+    if (target == null) {
+      target = new PMatrix2D();
+    }
+    // This set operation is well defined, since modelview is a 2D-only
+    // transformation matrix in the P2D renderer.
+    target.set(modelview.m00, modelview.m01, modelview.m03,
+               modelview.m10, modelview.m11, modelview.m13);
+    return target;
+
   }
 
   @Override

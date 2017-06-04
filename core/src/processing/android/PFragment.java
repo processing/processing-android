@@ -25,10 +25,11 @@ package processing.android;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
-
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -46,9 +47,17 @@ public class PFragment extends Fragment implements AppComponent {
   private DisplayMetrics metrics;
   private Point size;
   private PApplet sketch;
+  private @LayoutRes int layout = -1;
 
 
   public PFragment() {
+    super();
+  }
+
+
+  public PFragment(PApplet sketch) {
+    super();
+    setSketch(sketch);
   }
 
 
@@ -100,29 +109,34 @@ public class PFragment extends Fragment implements AppComponent {
 
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
+    if (layout != -1) {
+      sketch.parentLayout = layout;
+    }
   }
 
 
-  public void setSketch(PApplet sketch, @IdRes int id, @LayoutRes int layout,
-                        FragmentManager manager) {
-    this.sketch = sketch;
-    sketch.parentLayout = layout;
+  public PApplet getSketch() {
+    return sketch;
+  }
+
+
+  public void setLayout(@LayoutRes int layout, @IdRes int id, FragmentActivity activity) {
+    this.layout = layout;
+    if (sketch != null) {
+      sketch.parentLayout = layout;
+    }
+    FragmentManager manager = activity.getSupportFragmentManager();
     FragmentTransaction transaction = manager.beginTransaction();
     transaction.add(id, this);
     transaction.commit();
   }
 
 
-  public void setSketch(PApplet sketch, View view, FragmentManager manager) {
-    this.sketch = sketch;
+  public void setView(View view, FragmentActivity activity) {
+    FragmentManager manager = activity.getSupportFragmentManager();
     FragmentTransaction transaction = manager.beginTransaction();
     transaction.add(view.getId(), this);
     transaction.commit();
-  }
-
-
-  public PApplet getSketch() {
-    return sketch;
   }
 
 
@@ -145,6 +159,15 @@ public class PFragment extends Fragment implements AppComponent {
                            Bundle savedInstanceState) {
     if (sketch != null) {
       sketch.initSurface(inflater, container, savedInstanceState, this, null);
+
+      // For compatibility with older sketches that run some hardware initialization
+      // inside onCreate(), don't call from Fragment.onCreate() because the surface
+      // will not be yet ready, and so the reference to the activity and other
+      // system variables will be null. In any case, onCreateView() is called
+      // immediately after onCreate():
+      // https://developer.android.com/reference/android/app/Fragment.html#Lifecycle
+      sketch.onCreate(savedInstanceState);
+
       return sketch.getSurface().getRootView();
     } else {
       return null;
@@ -153,37 +176,53 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   @Override
+  public void onStart() {
+    super.onStart();
+    if (sketch != null) {
+      sketch.onStart();
+    }
+  }
+
+
+  @Override
   public void onResume() {
     super.onResume();
-    if (sketch != null) sketch.onResume();
+    if (sketch != null) {
+      sketch.onResume();
+    }
   }
 
 
   @Override
   public void onPause() {
     super.onPause();
-    if (sketch != null) sketch.onPause();
-  }
-
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    if (sketch != null) sketch.onDestroy();
-  }
-
-
-  @Override
-  public void onStart() {
-    super.onStart();
-    if (sketch != null) sketch.onStart();
+    if (sketch != null) {
+      sketch.onPause();
+    }
   }
 
 
   @Override
   public void onStop() {
     super.onStop();
-    if (sketch != null) sketch.onStop();
+    if (sketch != null) {
+      sketch.onStop();
+    }
+  }
+
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (sketch != null) {
+      sketch.onDestroy();
+    }
+  }
+
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (sketch != null) sketch.onActivityResult(requestCode, resultCode, data);
   }
 
 

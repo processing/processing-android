@@ -72,11 +72,6 @@ public class Manifest {
   private XML xml;
 
 
-//  public Manifest(Editor editor) {
-//    this.editor = editor;
-//    this.sketch = editor.getSketch();
-//    load();
-//  }
   public Manifest(Sketch sketch, int appComp, File modeFolder, boolean forceNew) {
     this.sketch = sketch;
     this.appComp = appComp;
@@ -86,7 +81,6 @@ public class Manifest {
 
 
   private String defaultPackageName() {
-//    Sketch sketch = editor.getSketch();
     return AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();
   }
 
@@ -165,18 +159,17 @@ public class Manifest {
     // just remove all the old ones
     for (XML kid : xml.getChildren("uses-permission")) {
       String name = kid.getString("android:name");
-      // Don't remove required permissions for wallpapers, watchfaces and VR.      
-      if (-1 < name.indexOf(".")) continue;
+      // Don't remove required permissions for wallpapers, watchfaces and VR.
       if (appComp == AndroidBuild.WALLPAPER) {
       } else if (appComp == AndroidBuild.WATCHFACE) {
         if (name.equals("WAKE_LOCK")) continue;
       } else if (appComp == AndroidBuild.VR) {
-        if (name.equals("INTERNET") ||
-            name.equals("NFC") ||
-            name.equals("VIBRATE") ||
-            name.equals("READ_EXTERNAL_STORAGE") ||
-            name.equals("WRITE_EXTERNAL_STORAGE")) continue;
+        if (name.equals("VIBRATE") ||
+            name.equals("READ_EXTERNAL_STORAGE")) continue;
       }
+      // Don't remove non-standard permissions, such as
+      // com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA
+      if (-1 < name.indexOf("com.google.android")) continue;
       xml.removeChild(kid);
     }
     // ...and add the new kids back
@@ -186,12 +179,9 @@ public class Manifest {
       } else if (appComp == AndroidBuild.WATCHFACE) {
         if (name.equals("WAKE_LOCK")) continue;
       } else if (appComp == AndroidBuild.VR) {
-        if (name.equals("INTERNET") ||
-            name.equals("NFC") ||
-            name.equals("VIBRATE") ||
-            name.equals("READ_EXTERNAL_STORAGE") ||
-            name.equals("WRITE_EXTERNAL_STORAGE")) continue;
-      }       
+        if (name.equals("VIBRATE") ||
+            name.equals("READ_EXTERNAL_STORAGE")) continue;
+      }
       XML newbie = xml.addChild("uses-permission");
       if (-1 < name.indexOf(".")) {
         // Permission string contains path
@@ -226,8 +216,8 @@ public class Manifest {
    * Save a new version of the manifest info to the build location.
    * Also fill in any missing attributes that aren't yet set properly.
    */
-  protected void writeCopy(File file, String className,
-                           boolean debug) throws IOException {
+  protected void writeCopy(File file, String className, boolean setDebugAttrib, 
+      boolean debug) throws IOException {
     // write a copy to the build location
     save(file);
 
@@ -257,7 +247,9 @@ public class Manifest {
         }       
       }
       
-      app.setString("android:debuggable", debug ? "true" : "false");
+      if (setDebugAttrib) {
+        app.setString("android:debuggable", debug ? "true" : "false");
+      }
 
 //      XML activity = app.getChild("activity");
       // the '.' prefix is just an alias for the full package name
@@ -303,7 +295,7 @@ public class Manifest {
     String versionCode = null;
     String versionName = null;
     if (xml != null && forceNew) {
-      permissionNames = getPermissions();    
+      permissionNames = getPermissions();
       pkgName = getPackageName();
       versionCode = getVersionCode();
       versionName = getVersionName();

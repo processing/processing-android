@@ -24,7 +24,6 @@ package processing.vr;
 
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 
 import javax.microedition.khronos.egl.EGLConfig;
 
@@ -58,20 +57,11 @@ public class PSurfaceVR extends PSurfaceGLES {
   protected GvrActivity vrActivity;
   protected AndroidVRStereoRenderer renderer;
 
-  protected Method updateMethod;
-  protected Object[] noArgs = new Object[] {};
-
   public PSurfaceVR(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.component = component;
     this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
-
-    Class<?> c = sketch.getClass();
-    try {
-      updateMethod = c.getMethod("update", new Class[] {});
-    } catch (Exception e) {
-    }
 
     vrActivity = (GvrActivity)component;
     this.activity = vrActivity;
@@ -176,6 +166,7 @@ public class PSurfaceVR extends PSurfaceGLES {
   public void dispose() {
 //    surface.onDestroy();
   }
+
 
   ///////////////////////////////////////////////////////////
 
@@ -286,12 +277,7 @@ public class PSurfaceVR extends PSurfaceGLES {
       hadnleGVREnumError();
       pgl.getGL(null);
       pvr.headTransform(transform);
-      if (updateMethod != null) {
-        try {
-          updateMethod.invoke(sketch, noArgs);
-        } catch (Exception e) {
-        }
-      }
+      sketch.calculate();
     }
 
     @Override

@@ -984,7 +984,18 @@ public class PGraphics extends PImage implements PConstants {
    * turns off the z-buffer in the P3D or OPENGL renderers.
    * </UL>
    */
+  @SuppressWarnings("deprecation")
   public void hint(int which) {
+    if (which == ENABLE_NATIVE_FONTS ||
+        which == DISABLE_NATIVE_FONTS) {
+      showWarning("hint(ENABLE_NATIVE_FONTS) no longer supported. " +
+                  "Use createFont() instead.");
+    }
+    if (which == ENABLE_KEY_REPEAT) {
+      parent.keyRepeatEnabled = true;
+    } else if (which == DISABLE_KEY_REPEAT) {
+      parent.keyRepeatEnabled = false;
+    }
     if (which > 0) {
       hints[which] = true;
     } else {
@@ -3996,6 +4007,46 @@ public class PGraphics extends PImage implements PConstants {
 
 
   /**
+   * Returns a copy of the current object matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix() {
+    showMissingWarning("getObjectMatrix");
+    return null;
+  }
+
+
+  /**
+   * Copy the current object matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix(PMatrix3D target) {
+    showMissingWarning("getObjectMatrix");
+    return null;
+  }
+
+
+  /**
+   * Returns a copy of the current eye matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix() {
+    showMissingWarning("getEyeMatrix");
+    return null;
+  }
+
+
+  /**
+   * Copy the current eye matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix(PMatrix3D target) {
+    showMissingWarning("getEyeMatrix");
+    return null;
+  }
+
+
+  /**
    * Set the current transformation matrix to the contents of another.
    */
   public void setMatrix(PMatrix source) {
@@ -4036,6 +4087,11 @@ public class PGraphics extends PImage implements PConstants {
   // CAMERA
 
 
+  public void cameraUp() {
+    showMethodWarning("cameraUp");
+  }
+
+
   public void beginCamera() {
     showMethodWarning("beginCamera");
   }
@@ -4062,6 +4118,10 @@ public class PGraphics extends PImage implements PConstants {
     showMethodWarning("printCamera");
   }
 
+
+  public void eye() {
+    showMethodWarning("eye");
+  }
 
 
   //////////////////////////////////////////////////////////////
