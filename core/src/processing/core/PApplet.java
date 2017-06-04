@@ -573,15 +573,23 @@ public class PApplet extends Object implements PConstants {
 
 
   public void onCreate(Bundle savedInstanceState) {
+    handleMethods("onCreate", new Object[] { savedInstanceState });
   }
 
 
   public void onDestroy() {
+    handleMethods("onDestroy");
     dispose();
   }
 
 
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    handleMethods("onActivityResult", new Object[] { requestCode, resultCode, data });
+  }
+
+
+  public void onNewIntent(Intent intent) {
+    handleMethods("onNewIntent", new Object[] { intent });
   }
 
 
@@ -982,6 +990,16 @@ public class PApplet extends Object implements PConstants {
 
     } else if (methodName.equals("touchEvent")) {
       registerWithArgs("touchEvent", target, new Class[] { processing.event.TouchEvent.class });
+
+    // Android-lifecycle event handlers
+    } else if (methodName.equals("onCreate")) {
+      registerWithArgs("onCreate", target, new Class[] { Bundle.class });
+    } else if (methodName.equals("onDestroy")) {
+      registerNoArgs(methodName, target);
+    } else if (methodName.equals("onActivityResult")) {
+      registerWithArgs("onActivityResult", target, new Class[] { int.class, int.class, Intent.class });
+    } else if (methodName.equals("onNewIntent")) {
+      registerWithArgs("onNewIntent", target, new Class[] { Intent.class });
 
     } else {
       registerNoArgs(methodName, target);
