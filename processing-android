@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script runs Processing, using the JDK in the Processing 
 # installation directory if possible.
@@ -15,6 +15,23 @@
 
 # Thanks to Ferdinand Kasper for this build script. [fry]
 
+PREFERENCES_LOCATION=$HOME/.processing/preferences.txt
+
+# Use this if you're working with Processing 2+
+#SKETCHBOOK_TOKEN="sketchbook.path="
+
+SKETCHBOOK_TOKEN="sketchbook.path.three="
+
+ANDROID_SDK_TOKEN="android.sdk.version="
+
+SKETCHBOOK_LOCATION_RAW=$(grep $SKETCHBOOK_TOKEN $PREFERENCES_LOCATION)
+ANDROID_VERSION_RAW=$(grep $ANDROID_SDK_TOKEN $PREFERENCES_LOCATION)
+
+# Get the Processing Sketchbook location
+SKETCHBOOK_LOCATION=${SKETCHBOOK_LOCATION_RAW/$SKETCHBOOK_TOKEN}
+
+# Get the Android build target version number
+ANDROID_VERSION=${ANDROID_VERSION_RAW/$ANDROID_SDK_TOKEN}
 
 # JARs required from JDK (anywhere in/below the JDK home directory)
 JDKLIBS="rt.jar tools.jar"
@@ -91,6 +108,14 @@ done
 for LIB in "$APPDIR"/core/library/*.jar; do
   CLASSPATH="$CLASSPATH"${CLASSPATH:+:}"$LIB"
 done
+for LIB in "$APPDIR"/modes/java/mode/*.jar; do
+  CLASSPATH="$CLASSPATH"${CLASSPATH:+:}"$LIB"
+done
+  CLASSPATH="$CLASSPATH"${CLASSPATH:+:}$SKETCHBOOK_LOCATION"/modes/AndroidMode/mode/AndroidMode.jar"
+  CLASSPATH="$CLASSPATH"${CLASSPATH:+:}$ANDROID_SDK"/platforms/android-"$ANDROID_VERSION"/android.jar"
+
+
+
 export CLASSPATH
 log CLASSPATH
 
