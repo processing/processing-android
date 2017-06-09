@@ -6,5 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-java"/>
 	<classpathentry kind="lib" path="/processing-java/mode/antlr.jar"/>
+	<classpathentry kind="lib" path="lib/gradle-tooling-api-3.2.1.jar"/>
 	<classpathentry kind="output" path="core/bin"/>
 </classpath>
