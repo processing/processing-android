@@ -67,7 +67,7 @@ class AndroidSDK {
   private static final String MISSING_SDK_MESSAGE =
       "The Android SDK does not appear to be installed, " +
       "because the ANDROID_SDK variable is not set. " +
-      "If it is installed, click “Locate SDK path” to select the" +
+      "If it is installed, click “Locate SDK path” to select the " +
       "location of the SDK, or “Download SDK” to let " +
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
