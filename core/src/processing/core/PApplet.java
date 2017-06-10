@@ -45,18 +45,24 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.LayoutRes;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import processing.a2d.PGraphicsAndroid2D;
+import processing.android.ActivityAPI;
 import processing.android.AppComponent;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
 
-public class PApplet extends Object implements PConstants {
+public class PApplet extends Object implements ActivityAPI, PConstants {
 
   static final public boolean DEBUG = true;
 //  static final public boolean DEBUG = false;
@@ -590,6 +596,31 @@ public class PApplet extends Object implements PConstants {
 
   public void onNewIntent(Intent intent) {
     handleMethods("onNewIntent", new Object[] { intent });
+  }
+
+
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
+
+  }
+
+
+  public boolean onOptionsItemSelected(MenuItem item) {
+    return false;
+  }
+
+
+  public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+
+  }
+
+
+  public boolean onContextItemSelected(MenuItem item) {
+    return false;
+  }
+
+
+  public boolean onMenuItemClick(MenuItem item) {
+    return false;
   }
 
 
