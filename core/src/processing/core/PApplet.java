@@ -2373,7 +2373,7 @@ public class PApplet extends Object implements PConstants {
   }
 
 
-  boolean wearBurnProtection() {
+  boolean wearBurnIn() {
     return surface.getEngine().requireBurnInProtection();
   }
 
