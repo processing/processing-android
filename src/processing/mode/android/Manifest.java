@@ -216,8 +216,7 @@ public class Manifest {
    * Save a new version of the manifest info to the build location.
    * Also fill in any missing attributes that aren't yet set properly.
    */
-  protected void writeCopy(File file, String className, boolean setDebugAttrib, 
-      boolean debug) throws IOException {
+  protected void writeCopy(File file, String className) throws IOException {
     // write a copy to the build location
     save(file);
 
@@ -245,10 +244,6 @@ public class Manifest {
         if (label.length() == 0) {
           serv.setString("android:label", className);
         }       
-      }
-      
-      if (setDebugAttrib) {
-        app.setString("android:debuggable", debug ? "true" : "false");
       }
 
 //      XML activity = app.getChild("activity");

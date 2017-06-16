@@ -225,10 +225,9 @@ class AndroidBuild extends JavaBuild {
     if (wear) {
       tmpFolder = new File(tmpFolder, "wear");
     }
-    installGradlew(tmpFolder);
 
     // Create the 'src' folder with the preprocessed code.
-    srcFolder = new File(tmpFolder, "src");
+    srcFolder = new File(tmpFolder, "app/src/main/java");
     // use the src folder, since 'bin' might be used by the ant build
     binFolder = srcFolder;
     if (processing.app.Base.DEBUG) {
@@ -254,28 +253,23 @@ class AndroidBuild extends JavaBuild {
     
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
     if (sketchClassName != null) {
+      renderer = info.getRenderer();
+      writeMainClass(srcFolder, renderer, external);
+
       if (appComponent == WATCHFACE) {
 /*        createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
         createMobileModule(projectFolder, exportFolder, buildToolVer);
         createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);*/
       } else {
-        createTopModuleFolder(tmpFolder, "':app'");
-        createAppModuleFolder(tmpFolder, targetID, external);
+        createTopModuleFolder();
+        createAppModuleFolder(targetID);
       }
-
-      renderer = info.getRenderer();
-      writeMainClass(srcFolder, renderer, external);
-
-      File javaFolder = mkdirs(tmpFolder, "app/src/main/java");
-      Util.copyDir(new File(tmpFolder, "src"), javaFolder);
-      Util.removeDir(srcFolder);
     }
     
     return tmpFolder;
   }
 
-  private void createTopModuleFolder(File tmpFolder,
-                               String projectModules) throws IOException {
+  private void createTopModuleFolder() throws IOException {
     // Top level gradle files
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
@@ -288,13 +282,13 @@ class AndroidBuild extends JavaBuild {
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@project_modules@@", projectModules);
+    replaceMap.put("@@project_modules@@", "':app'");
     AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
   }
 
-  private void createAppModuleFolder(File tmpFolder, String targetID, boolean external)
+  private void createAppModuleFolder(String targetID)
           throws SketchException, IOException {
-    File moduleFolder = mkdirs(tmpFolder, "app");
+    File moduleFolder = new File(tmpFolder, "app");
 
     File folder = sdk.getBuildToolsFolder();
     String[] versions = folder.list();
@@ -332,12 +326,14 @@ class AndroidBuild extends JavaBuild {
             new String[]{"# Add project specific ProGuard rules here."});
 
     File libsFolder = mkdirs(moduleFolder, "libs");
-    File mainFolder = mkdirs(moduleFolder, "src/main");
+    File mainFolder = new File(moduleFolder, "src/main");
     File resFolder = mkdirs(mainFolder, "res");
     File assetsFolder = mkdirs(mainFolder, "assets");
 
+    writeRes(resFolder);
+
     File tempManifest = new File(mainFolder, "AndroidManifest.xml");
-    manifest.writeCopy(tempManifest, sketchClassName, external, target.equals("debug"));
+    manifest.writeCopy(tempManifest, sketchClassName);
 
     Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
 
@@ -350,7 +346,8 @@ class AndroidBuild extends JavaBuild {
     copyWearLib(tmpFolder, libsFolder);
     copySupportLibs(tmpFolder, libsFolder);
     if (getAppComponent() == FRAGMENT) {
-      copyAppCompatLib(targetID, tmpFolder, libsFolder);
+      File aarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");
+      Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
     }
     if (getAppComponent() == VR) {
       copyGVRLibs(targetID, libsFolder);
@@ -361,8 +358,6 @@ class AndroidBuild extends JavaBuild {
     if (sketchDataFolder.exists()) {
       Util.copyDir(sketchDataFolder, assetsFolder);
     }
-
-    writeRes(resFolder);
 
     // Do the same for the 'res' folder. The user can copy an entire res folder
     // into the sketch's folder, and it will be used in the project!
@@ -799,7 +794,7 @@ class AndroidBuild extends JavaBuild {
     boolean success;
     try {
       BuildLauncher build = connection.newBuild();
-      build.forTasks("build");
+      build.forTasks("assembleDebug");
       ProgressListener listener = new ProgressListener() {
         @Override
         public void statusChanged(ProgressEvent progressEvent) {
@@ -924,7 +919,7 @@ class AndroidBuild extends JavaBuild {
 
   String getPathForAPK() {
     String suffix = target.equals("release") ? "release_unsigned" : "debug";
-    String apkName = "app/build/outputs/apk/" + "app-" + suffix + ".apk";
+    String apkName = "app/build/outputs/apk/" + sketch.getName().toLowerCase() + "_" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (!apkFile.exists()) {
       return null;
@@ -1603,20 +1598,16 @@ class AndroidBuild extends JavaBuild {
     // Copy support packages (core-utils, compat, fragment, annotations, and 
     // vector-drawable)
     File aarFile = new File(sdk.getSupportLibrary(), "/support-core-utils/" + support_version + "/support-core-utils-" + support_version + ".aar");
-    File explodeDir = new File(tmpFolder, "aar");
-    AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-core-utils-" + support_version + ".jar"));
+    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
     
     aarFile = new File(sdk.getSupportLibrary(), "/support-compat/" + support_version + "/support-compat-" + support_version + ".aar");
-    explodeDir = new File(tmpFolder, "aar");
-    AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-compat-" + support_version + ".jar"));
+    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
     
     aarFile = new File(sdk.getSupportLibrary(), "/support-fragment/" + support_version + "/support-fragment-" + support_version + ".aar");
-    explodeDir = new File(tmpFolder, "aar");
-    AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-fragment-" + support_version + ".jar"));
+    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
 
     aarFile = new File(sdk.getSupportLibrary(), "/support-vector-drawable/" + support_version + "/support-vector-drawable-" + support_version + ".aar");
-    explodeDir = new File(tmpFolder, "aar");
-    AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "support-vector-drawable-" + support_version + ".jar"));
+    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
     
     File compatJarFile = new File(sdk.getSupportLibrary(), "/support-annotations/" + support_version + "/support-annotations-" + support_version + ".jar");
     Util.copyFile(compatJarFile, new File(libsFolder, "support-annotations-" + support_version + ".jar"));      
