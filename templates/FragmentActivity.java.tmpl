@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
   }  
   
   @Override
-  void onNewIntent(Intent intent) {
+  public void onNewIntent(Intent intent) {
     if (sketch != null) {
       sketch.onNewIntent(intent);
     }  

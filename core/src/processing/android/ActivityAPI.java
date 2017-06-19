@@ -16,9 +16,9 @@ public interface ActivityAPI {
   public void onActivityResult(int requestCode, int resultCode, Intent data);
   public void onNewIntent(Intent intent);
 
-  void onCreateOptionsMenu(Menu menu, MenuInflater inflater);
-  boolean onOptionsItemSelected(MenuItem item);
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater);
+  public boolean onOptionsItemSelected(MenuItem item);
   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo);
   public boolean onContextItemSelected(MenuItem item);
-  public boolean onMenuItemClick(MenuItem item);
+  public void setHasOptionsMenu(boolean hasMenu);
 }

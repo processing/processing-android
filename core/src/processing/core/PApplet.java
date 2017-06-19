@@ -64,8 +64,8 @@ import processing.opengl.*;
 
 public class PApplet extends Object implements ActivityAPI, PConstants {
 
-  static final public boolean DEBUG = true;
-//  static final public boolean DEBUG = false;
+//  static final public boolean DEBUG = true;
+  static final public boolean DEBUG = false;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
   static final public int SDK = Build.VERSION.SDK_INT;
@@ -619,8 +619,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
-  public boolean onMenuItemClick(MenuItem item) {
-    return false;
+  public void setHasOptionsMenu(boolean hasMenu) {
+    surface.setHasOptionsMenu(hasMenu);
   }
 
 

@@ -35,12 +35,16 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-
+import android.view.ContextMenu.ContextMenuInfo;
 import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
@@ -225,6 +229,27 @@ public class PFragment extends Fragment implements AppComponent {
     if (sketch != null) sketch.onActivityResult(requestCode, resultCode, data);
   }
 
+  @Override
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    if (sketch != null) sketch.onCreateOptionsMenu(menu, inflater);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item){
+    if (sketch != null) return sketch.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+    if (sketch != null) sketch.onCreateContextMenu(menu, v, menuInfo);
+  }
+
+  @Override
+  public boolean onContextItemSelected(MenuItem item) {
+    if (sketch != null) return sketch.onContextItemSelected(item);
+    return super.onContextItemSelected(item);
+  }
 
   @Override
   public void onConfigurationChanged(Configuration newConfig) {

@@ -76,6 +76,8 @@ public interface PSurface {
 
   public void setOrientation(int which);
 
+  public void setHasOptionsMenu(boolean hasMenu);
+
   public File getFilesDir();
 
   public File getFileStreamPath(String path);
