@@ -732,16 +732,18 @@ class AndroidBuild extends JavaBuild {
     // Final export folder
     File exportFolder = createExportFolder();
     Util.copyDir(projectFolder, exportFolder);
-    return new File(exportFolder, "/bin/");     
+    return new File(exportFolder, "/app/build");     
   }
 
   private File signPackage(File projectFolder, String keyStorePassword) throws Exception {
     File keyStore = AndroidKeyStore.getKeyStore();
     if (keyStore == null) return null;
 
-    File unsignedPackage = new File(projectFolder, "bin/" + sketch.getName().toLowerCase() + "_release_unsigned.apk");
+    
+    
+    File unsignedPackage = new File(projectFolder, "app/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_unsigned.apk");
     if (!unsignedPackage.exists()) return null;
-    File signedPackage = new File(projectFolder, "bin/" + sketch.getName().toLowerCase() + "_release_signed.apk");
+    File signedPackage = new File(projectFolder, "app/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_signed.apk");
 
     JarSigner.signJar(unsignedPackage, signedPackage, AndroidKeyStore.ALIAS_STRING, keyStorePassword, keyStore.getAbsolutePath(), keyStorePassword);
 
@@ -778,7 +780,7 @@ class AndroidBuild extends JavaBuild {
     File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0];
     String zipalignPath = buildToolsFolder.getAbsolutePath() + "/zipalign";
 
-    File alignedPackage = new File(projectFolder, "bin/" + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
+    File alignedPackage = new File(projectFolder, "app/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
 
     String[] args = {
         zipalignPath, "-v", "-f", "4",
@@ -800,7 +802,8 @@ class AndroidBuild extends JavaBuild {
     boolean success;
     try {
       BuildLauncher build = connection.newBuild();
-      build.forTasks("assembleDebug");
+      if (target.equals("debug")) build.forTasks("assembleDebug");
+      else build.forTasks("assembleRelease");
       ProgressListener listener = new ProgressListener() {
         @Override
         public void statusChanged(ProgressEvent progressEvent) {
