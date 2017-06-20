@@ -222,6 +222,7 @@ class AndroidBuild extends JavaBuild {
   public File createProject(String targetID, boolean external, boolean wear) 
       throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
+    System.out.println("Build folder: " + tmpFolder.getAbsolutePath());
     if (wear) {
       tmpFolder = new File(tmpFolder, "wear");
     }
@@ -683,16 +684,21 @@ class AndroidBuild extends JavaBuild {
       return null;      
     } else {
       File projectFolder = createProject(targetID, false, false);
-      if (projectFolder != null) {
-        File exportFolder = createExportFolder();
-        if (buildSystem.equals("gradle")) {
-          createGradleProject(projectFolder, exportFolder);
-        } else { // ant   
-          Util.copyDir(projectFolder, exportFolder);
-        }
-        return exportFolder;
-      }
-      return null;
+      File exportFolder = createExportFolder();      
+      Util.copyDir(projectFolder, exportFolder);
+      installGradlew(exportFolder);
+      return exportFolder;      
+//      File projectFolder = createProject(targetID, false, false);
+//      if (projectFolder != null) {
+//        File exportFolder = createExportFolder();
+//        if (buildSystem.equals("gradle")) {
+//          createGradleProject(projectFolder, exportFolder);
+//        } else { // ant   
+//          Util.copyDir(projectFolder, exportFolder);
+//        }
+//        return exportFolder;
+//      }
+//      return null;
     }    
   }
 
