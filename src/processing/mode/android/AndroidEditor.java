@@ -379,7 +379,7 @@ public class AndroidEditor extends JavaEditor {
     menu.addSeparator();
     */
     
-    item = new JMenuItem("SDK Manager");
+    item = new JMenuItem("Update SDK");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         File file = androidMode.getSDK().getAndroidTool();
@@ -392,14 +392,14 @@ public class AndroidEditor extends JavaEditor {
     });
     menu.add(item);
 
-    item = new JMenuItem("AVD Manager");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        File file = androidMode.getSDK().getAndroidTool();
-        PApplet.exec(new String[] { file.getAbsolutePath(), "avd" });
-      }
-    });
-    menu.add(item);
+//    item = new JMenuItem("AVD Manager");
+//    item.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent e) {
+//        File file = androidMode.getSDK().getAndroidTool();
+//        PApplet.exec(new String[] { file.getAbsolutePath(), "avd" });
+//      }
+//    });
+//    menu.add(item);
 
     item = new JMenuItem("Reset ADB");
     item.addActionListener(new ActionListener() {
