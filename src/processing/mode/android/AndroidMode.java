@@ -110,8 +110,8 @@ public class AndroidMode extends JavaMode {
 
   private static final String EXPORT_DEFAULT_ICONS_MESSAGE =
       "The sketch does not include any app icons. " +
-      "Processing could use use its default set of Android icons, which are okay " +
-      "to test the app on your devices, but a bad idea to distribute on the Play store. " +
+      "Processing could use its default set of Android icons, which are okay " +
+      "to test the app on your device, but a bad idea to distribute it on the Play store. " +
       "Create a full set of unique icons for your app, and copy them into the sketch folder. " +
       "Once you have done that, try exporting the sketch again.<br><br>" +
       "For more info on distributing apps from Processing,<br>" +
