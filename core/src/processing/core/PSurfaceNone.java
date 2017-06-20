@@ -51,6 +51,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import processing.android.AppComponent;
+import processing.android.PFragment;
 import processing.android.ServiceEngine;
 import processing.android.PermissionRequestor;
 
@@ -285,6 +286,14 @@ public class PSurfaceNone implements PSurface, PConstants {
       }
     }
   }
+
+
+  public void setHasOptionsMenu(boolean hasMenu) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      ((PFragment)component).setHasOptionsMenu(hasMenu);
+    }
+  }
+
 
 
   @Override
