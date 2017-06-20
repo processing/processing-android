@@ -579,7 +579,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   public void onCreate(Bundle savedInstanceState) {
-    handleMethods("onCreate", new Object[] { savedInstanceState });
+    create();
   }
 
 
@@ -1023,8 +1023,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       registerWithArgs("touchEvent", target, new Class[] { processing.event.TouchEvent.class });
 
     // Android-lifecycle event handlers
-    } else if (methodName.equals("onCreate")) {
-      registerWithArgs("onCreate", target, new Class[] { Bundle.class });
     } else if (methodName.equals("onDestroy")) {
       registerNoArgs(methodName, target);
     } else if (methodName.equals("onActivityResult")) {
@@ -2791,6 +2789,16 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void die(String what, Exception e) {
     if (e != null) e.printStackTrace();
     die(what);
+  }
+
+
+  /**
+   * Conveniency method so perform initialization tasks when the activity is
+   * created, while avoiding the ackward call to onCreate() with the bundle
+   * and super.onCreate().
+   */
+  public void create() {
+
   }
 
   /*
