@@ -339,8 +339,12 @@ public class AndroidMode extends JavaMode {
         editor.getAppComponent(), false);
 
     listener.statusNotice("Building Android project...");
-    build.build("debug");
-
+    File projectFolder = build.build("debug");
+    if (projectFolder == null) {
+      listener.statusError("Build failed.");      
+      return;
+    }
+    
     listener.statusNotice("Running sketch on device...");
     runner = new AndroidRunner(build, listener);
     runner.launch(Devices.getInstance().getHardware(), build.isWear());

@@ -799,9 +799,9 @@ class AndroidBuild extends JavaBuild {
             .forProjectDirectory(tmpFolder)
             .connect();
 
-    boolean success;
-    try {
-      BuildLauncher build = connection.newBuild();
+    boolean success = false;
+    BuildLauncher build = connection.newBuild();
+    try {      
       if (target.equals("debug")) build.forTasks("assembleDebug");
       else build.forTasks("assembleRelease");
       ProgressListener listener = new ProgressListener() {
@@ -814,12 +814,25 @@ class AndroidBuild extends JavaBuild {
       build.run();
       renameAPK();
       success = true;
-    } catch (org.gradle.tooling.BuildException e) {
+    } catch (org.gradle.tooling.UnsupportedVersionException e) {
+      e.printStackTrace();
+      success = false;   
+    } catch (org.gradle.tooling.BuildException e) {      
+      e.printStackTrace();
       success = false;
+    } catch (org.gradle.tooling.BuildCancelledException e) {
+      e.printStackTrace();
+      success = false;      
+    } catch (org.gradle.tooling.GradleConnectionException e) {
+      e.printStackTrace();
+      success = false;        
+    } catch (Exception e) {
+      e.printStackTrace();
+      success = false;      
     } finally {
       connection.close();
     }
-
+    
     return success;
   }
 

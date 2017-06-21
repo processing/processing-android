@@ -122,8 +122,16 @@ class Device {
       return false;
     }
     bringLauncherToFront();
+    
+    String apkPath = build.getPathForAPK();
+    if (apkPath == null) {
+      status.statusError("Could not install the sketch.");
+      System.err.println("The APK file is missing");      
+      return false;
+    }
+    
     try {
-      final ProcessResult installResult = adb("install", "-r", build.getPathForAPK());
+      final ProcessResult installResult = adb("install", "-r", apkPath);
       if (!installResult.succeeded()) {
         status.statusError("Could not install the sketch.");
         System.err.println(installResult);
