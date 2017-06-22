@@ -55,7 +55,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final int SDK_TOOLS_MAX_MAJOR = 25;
   private static final int SDK_TOOLS_MAX_MINOR = 2;
   
-  private static final int PLATFORM_TOOLS_MAX_MAJOR = 25;
+  private static final int PLATFORM_TOOLS_MAX_MAJOR = 26;
   private static final int PLATFORM_TOOLS_MAX_MINOR = 0;  
 
   private static final int BUILD_TOOLS_MAX_MAJOR = 25;
@@ -251,6 +251,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
         urlHolder.platformFilename = urlHolder.platformUrl.split("/")[urlHolder.platformUrl.split("/").length-1];
         urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());        
+      } else {
+        throw new IOException("Cannot find the platform files");
       }
 
       // Difference between platform tools, build tools, and SDK tools: 
@@ -273,6 +275,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             break;
           }
         }
+      } else {
+        throw new IOException("Cannot find the platform-tools");
       }
 
       // -----------------------------------------------------------------------
@@ -296,11 +300,13 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             break;
           }
         }
+      } else {
+        throw new IOException("Cannot find the build-tools");
       }
       
       // -----------------------------------------------------------------------
       // tools
-      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"), SDK_TOOLS_MAX_MAJOR, SDK_TOOLS_MAX_MINOR);;
+      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"), SDK_TOOLS_MAX_MAJOR, SDK_TOOLS_MAX_MINOR);
       if (toolsItem != null) {
         archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
@@ -314,7 +320,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             break;
           }
         }
-      }      
+      } else {
+        throw new IOException("Cannot find the tools");
+      }    
     }
   }
 
@@ -407,7 +415,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       int intMajor = PApplet.parseInt(major.item(0).getTextContent());
       int intMinor = PApplet.parseInt(minor.item(0).getTextContent());
       int intMicro = PApplet.parseInt(micro.item(0).getTextContent());      
-      if (max_major < intMajor || (max_major == intMajor && max_minor < intMinor)) continue;      
+      if ((0 <= max_major && 0 <= max_minor) &&
+          max_major < intMajor || (max_major == intMajor && max_minor < intMinor)) continue;      
       if (maxMajor <= intMajor && maxMinor <= intMinor && maxMicro <= intMicro) {        
         latest = item;
         maxMajor = intMajor;
