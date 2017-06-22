@@ -36,30 +36,36 @@ import java.util.Map;
 
 
 public class AVD {
-  static private final String AVD_CREATE_PRIMARY =
-    "An error occurred while running “android create avd”";
+  static private final String AVD_CREATE_TITLE =
+    "Could not create the AVD";
 
-  static private final String AVD_CREATE_SECONDARY =
+  static private final String AVD_CREATE_MESSAGE =
     "The default Android emulator could not be set up. Make sure<br>" +
     "that the Android SDK is installed properly, and that the<br>" +
     "system images are installed for level %s.<br>" +
     "(Between you and me, occasionally, this error is a red herring,<br>" +
     "and your sketch may be launching shortly.)";
 
-  static private final String AVD_LOAD_PRIMARY =
-    "There is an error with the Processing AVD.";
-  static private final String AVD_LOAD_SECONDARY =
+  private static final String COMMAND_LINE_TUT_URL = 
+      "http://android.processing.org/tutorials/command_line/index.html";  
+  
+  static private final String AVD_LOAD_TITLE =
+    "Could not load the AVD.";
+  static private final String AVD_LOAD_MESSAGE =
     "This could mean that the Android tools need to be updated,<br>" +
     "or that the Processing AVD should be deleted (it will<br>" +
-    "automatically re-created the next time you run Processing).<br>" +
-    "Open the Android SDK Manager (underneath the Android menu)<br>" +
-    "to check for any errors.";
+    "automatically re-created the next time you run Processing).<br><br>" +
+    "You can use the SDK command-line tools to update the SDK or list<br>" +
+    "the current AVDs, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";
 
-  static private final String AVD_TARGET_PRIMARY =
-    "The Google APIs are not installed properly";
-  static private final String AVD_TARGET_SECONDARY =
-    "Please re-read the installation instructions for Processing<br>" +
-    "found at http://android.processing.org and try again.";
+  private static final String GETTING_START_TUT_URL = 
+      "http://android.processing.org/tutorials/getting_started/index.html";    
+  
+  static private final String AVD_TARGET_TITLE =
+    "The SDK is not properly instaled";
+  static private final String AVD_TARGET_MESSAGE =
+      "Please re-read the installation instructions for Processing<br>" +
+      "found in <a href=\"" + GETTING_START_TUT_URL + "\">this online tutorial</a>.";
   
   static final String DEFAULT_SDCARD_SIZE = "64M";
   
@@ -270,11 +276,11 @@ public class AVD {
       }
       if (createAvdResult.toString().contains("Target id is not valid")) {
         // They didn't install the Google APIs
-        Messages.showWarningTiered("Android Error", AVD_TARGET_PRIMARY, AVD_TARGET_SECONDARY, null);
+        AndroidMode.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
       } else {
         // Just generally not working
-        Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, AVD_CREATE_SECONDARY, null);
-//        Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY, "UCKCUCKKDKDDKD", null);
+        AndroidMode.showMessage(AVD_CREATE_TITLE, 
+                                String.format(AVD_CREATE_MESSAGE, AndroidBuild.target_sdk));
         System.out.println(createAvdResult);
       }
       //System.err.println(createAvdResult);
@@ -301,7 +307,7 @@ public class AVD {
           return true;
         }
         if (wearAVD.badness()) {
-          Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+          AndroidMode.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
         if (wearAVD.noTargets(sdk)) {
@@ -318,7 +324,7 @@ public class AVD {
           return true;
         }
         if (mobileAVD.badness()) {
-          Messages.showWarningTiered("Android Error", AVD_LOAD_PRIMARY, AVD_LOAD_SECONDARY, null);
+          AndroidMode.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
         if (mobileAVD.noTargets(sdk)) {
@@ -333,9 +339,8 @@ public class AVD {
       }
     } catch (final Exception e) {
       e.printStackTrace();
-      Messages.showWarningTiered("Android Error", AVD_CREATE_PRIMARY,
-                                 String.format(AVD_CREATE_SECONDARY,
-                                               AndroidBuild.target_sdk), null);
+      AndroidMode.showMessage(AVD_CREATE_TITLE, 
+                              String.format(AVD_CREATE_MESSAGE, AndroidBuild.target_sdk));
     }
     return false;
   }
