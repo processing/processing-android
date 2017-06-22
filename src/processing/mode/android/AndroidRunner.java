@@ -59,7 +59,7 @@ public class AndroidRunner implements DeviceListener {
   }
 
 
-  public void launch(Future<Device> deviceFuture, boolean wear) {
+  public void launch(Future<Device> deviceFuture, boolean emu, boolean wear) {
 //    try {
 //      runSketchOnDevice(Devices.getInstance().getEmulator(), "debug", AndroidEditor.this);
 //    } catch (final MonitorCanceled ok) {
@@ -67,11 +67,14 @@ public class AndroidRunner implements DeviceListener {
 //      statusNotice("Canceled.");
 //    }
 
-    listener.statusNotice("Waiting for device to become available...");
+    
+    String devStr = emu ? "emulator" : "device";
+    listener.statusNotice("Waiting for " + devStr + " to become available...");
+    
 //  final Device device = waitForDevice(deviceFuture, monitor);
     final Device device = waitForDevice(deviceFuture, listener);
     if (device == null || !device.isAlive()) {
-      listener.statusError("Lost connection with device while launching. Try again.");
+      listener.statusError("Lost connection with " + devStr + " while launching. Try again.");
       // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
       Devices.killAdbServer();
@@ -99,19 +102,16 @@ public class AndroidRunner implements DeviceListener {
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
-      if (device.getId().contains("emulator")) {
+      listener.statusError("Lost connection with " + devStr + " while installing. Try again.");
+      if (emu) {
         // More detailed message when using the emulator, to following discussion in
         // https://code.google.com/p/android/issues/detail?id=104305
-        listener.statusError("Lost connection with emulator while installing. Try again.");
         Messages.showWarning("The emulator is slooow...",
           "This is common when the emulator is booting up for the first time.\n" +
           "Just try again once the emulator is ready, or set the\n" + 
-          "ADB_INSTALL_TIMEOUT environmental variable to have a.\n" +
-          "longer timeout, for example 5 minutes or more");
-      } else {
-        listener.statusError("Lost connection with device while installing. Try again.");
-      }
-      Devices.killAdbServer();  // see above
+          "ADB_INSTALL_TIMEOUT environmental variable to have a\n" +
+          "longer timeout, for example 5 minutes or more.");
+      }      Devices.killAdbServer();  // see above
       return;
     }
 //    if (!build.antInstall()) {

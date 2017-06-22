@@ -313,7 +313,7 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice("Running sketch on emulator...");
     runner = new AndroidRunner(build, listener);
     runner.launch(Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL()), 
-        build.isWear());
+        true, build.isWear());
   }
 
 
@@ -347,7 +347,7 @@ public class AndroidMode extends JavaMode {
     
     listener.statusNotice("Running sketch on device...");
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getHardware(), build.isWear());
+    runner.launch(Devices.getInstance().getHardware(), false, build.isWear());
     
     showPostBuildMessage(build.getAppComponent());
   }
