@@ -88,21 +88,26 @@ class AndroidSDK {
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
       "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";  
   
+  private static final String COMMAND_LINE_TUT_URL = 
+      "http://android.processing.org/tutorials/command_line/index.html";  
+  
   private static final String ANDROID_SYS_IMAGE_PRIMARY =
       "Download emulator?";
 
   private static final String ANDROID_SYS_IMAGE_SECONDARY =
       "The emulator does not appear to be installed, <br>" +
-      "Do you want Processing to download and install it now? <br>" +
-      "Otherwise, you will need to do it through SDK manager.";
+      "Do you want Processing to download and install it now? <br><br>" +
+      "Otherwise, you will need to do it through the sdkmanager<br>" +
+      "command line tool, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";
 
   private static final String ANDROID_SYS_IMAGE_WEAR_PRIMARY =
       "Download watch emulator?";
 
   private static final String ANDROID_SYS_IMAGE_WEAR_SECONDARY =
       "The watch emulator does not appear to be installed, <br>" +
-      "Do you want Processing to download and install it now? <br>" +
-      "Otherwise, you will need to do it through SDK manager.";    
+      "Do you want Processing to download and install it now? <br><br>" +
+      "Otherwise, you will need to do it through the sdkmanager<br>" +
+      "command line tool, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";  
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
@@ -455,34 +460,33 @@ class AndroidSDK {
   
   
   static public int showDownloadSysImageDialog(Frame editor, boolean wear) {
-    String msg1 = wear ? ANDROID_SYS_IMAGE_WEAR_PRIMARY : ANDROID_SYS_IMAGE_PRIMARY;
-    String msg2 = wear ? ANDROID_SYS_IMAGE_WEAR_SECONDARY : ANDROID_SYS_IMAGE_SECONDARY;
+    String title = wear ? ANDROID_SYS_IMAGE_WEAR_PRIMARY : ANDROID_SYS_IMAGE_PRIMARY;    
+    String msg = wear ? ANDROID_SYS_IMAGE_WEAR_SECONDARY : ANDROID_SYS_IMAGE_SECONDARY;
+    String htmlString = "<html> " +
+        "<head> <style type=\"text/css\">"+
+        "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+        "</style> </head>" + "<body> <p>" + msg + "</p> </body> </html>";
+    JEditorPane pane = new JEditorPane("text/html", htmlString);
+    pane.addHyperlinkListener(new HyperlinkListener() {
+      @Override
+      public void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+          Platform.openURL(e.getURL().toString());
+        }
+      }
+    });
+    pane.setEditable(false);
+    JLabel label = new JLabel();
+    pane.setBackground(label.getBackground());
     
-    JOptionPane pane =
-        new JOptionPane("<html> " +
-            "<head> <style type=\"text/css\">"+
-            "b { font: 13pt \"Lucida Grande\" }"+
-            "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
-            "</style> </head>" +
-            "<b>" + msg1 + "</b>" +
-            "<p>" + msg2 + "</p>",
-            JOptionPane.QUESTION_MESSAGE);
-
     String[] options = new String[] { "Yes", "No" };
-    pane.setOptions(options);
-
-    // highlight the safest option ala apple hig
-    pane.setInitialValue(options[0]);
-
-    JDialog dialog = pane.createDialog(editor, null);
-    dialog.setTitle("");
-    dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
-    dialog.setVisible(true);
-
-    Object result = pane.getValue();
-    if (result == options[0]) {
+    
+    int result = JOptionPane.showOptionDialog(null, pane, title, 
+        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
+        null, options, options[0]);
+    if (result == JOptionPane.YES_OPTION) {
       return JOptionPane.YES_OPTION;
-    } else if (result == options[1]) {
+    } else if (result == JOptionPane.NO_OPTION) {
       return JOptionPane.NO_OPTION;
     } else {
       return JOptionPane.CLOSED_OPTION;
