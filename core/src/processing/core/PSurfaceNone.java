@@ -71,6 +71,7 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected WallpaperService wallpaper;
   protected WatchFaceService watchface;
 
+  protected boolean threadReady = false;
   protected Thread thread;
   protected boolean paused;
   protected Object pauseObject = new Object();
@@ -386,6 +387,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void startThread() {
+    if (!threadReady) return;
+
     if (thread == null) {
       thread = createThread();
       thread.start();
@@ -398,12 +401,16 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void pauseThread() {
+    if (!threadReady) return;
+
     paused = true;
   }
 
 
   @Override
   public void resumeThread() {
+    if (!threadReady) return;
+
     if (thread == null) {
       thread = createThread();
       thread.start();
@@ -418,6 +425,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public boolean stopThread() {
+    if (!threadReady) return true;
+
     if (thread == null) {
       return false;
     }

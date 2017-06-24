@@ -92,6 +92,7 @@ public class PSurfaceVR extends PSurfaceGLES {
     vrActivity.setGvrView(glview);
 
     surfaceView = null;
+    threadReady = true;
   }
 
   @Override

@@ -89,18 +89,24 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
         return holder;
       }
     }
-//  public PGraphics getGraphics() {
-//    return g2;
-//  }
 
     // part of SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
+      threadReady = true;
+      // Only start the thread once the surface has been created, otherwise
+      // it will not be able draw
+      startThread();
+      if (PApplet.DEBUG) {
+        System.out.println("surfaceCreated()");
+      }
     }
 
 
     // part of SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder) {
-      //g2.dispose();
+      if (PApplet.DEBUG) {
+        System.out.println("surfaceDestroyed()");
+      }
     }
 
 

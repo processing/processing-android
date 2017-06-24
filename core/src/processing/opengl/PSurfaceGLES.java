@@ -167,16 +167,16 @@ public class PSurfaceGLES extends PSurfaceNone {
 //        sketch.surfaceChanged();
     }
 
-    // part of SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
       super.surfaceCreated(holder);
+      threadReady = true;
+      startThread();
       if (PApplet.DEBUG) {
         System.out.println("surfaceCreated()");
       }
     }
 
-    // part of SurfaceHolder.Callback
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
       super.surfaceDestroyed(holder);
