@@ -65,13 +65,14 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected AppComponent component;
   protected Activity activity;
 
+  protected boolean surfaceReady;
   protected SurfaceView surfaceView;
   protected View view;
 
   protected WallpaperService wallpaper;
   protected WatchFaceService watchface;
 
-  protected boolean threadReady = false;
+  protected boolean requestedThreadStart = false;
   protected Thread thread;
   protected boolean paused;
   protected Object pauseObject = new Object();
@@ -387,11 +388,15 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void startThread() {
-    if (!threadReady) return;
+    if (!surfaceReady) {
+      requestedThreadStart = true;
+      return;
+    }
 
     if (thread == null) {
       thread = createThread();
       thread.start();
+      requestedThreadStart = false;
     } else {
       throw new IllegalStateException("Thread already started in " +
                                       getClass().getSimpleName());
@@ -401,7 +406,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void pauseThread() {
-    if (!threadReady) return;
+    if (!surfaceReady) return;
 
     paused = true;
   }
@@ -409,7 +414,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void resumeThread() {
-    if (!threadReady) return;
+    if (!surfaceReady) return;
 
     if (thread == null) {
       thread = createThread();
@@ -425,7 +430,7 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public boolean stopThread() {
-    if (!threadReady) return true;
+    if (!surfaceReady) return true;
 
     if (thread == null) {
       return false;
