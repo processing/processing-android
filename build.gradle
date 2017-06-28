@@ -32,9 +32,11 @@ dependencies {
     compile name: 'android'
     compile project(":core")
     compile project(":libraries:vr")
-    compile group: 'org.processing', name: 'core', version: '3.2.3'
-    compile group: 'org.processing', name: 'pde', version: '3.2.3'
-    compile group: 'org.processing', name: 'java-mode', version: '3.2.3'
+    compile group: 'org.processing', name: 'core', version: '3.3.4'
+    compile group: 'org.processing', name: 'pde', version: '3.3.4'
+    compile group: 'org.processing', name: 'java-mode', version: '3.3.4'
+    compile "org.gradle:gradle-tooling-api:3.2.1"
+    runtime 'org.slf4j:slf4j-simple:1.7.10'    
 }
 
 sourceSets {

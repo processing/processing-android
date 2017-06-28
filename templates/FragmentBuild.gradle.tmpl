@@ -21,6 +21,32 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    
+    /*
+    compileJava {
+        dependsOn createDirs
+        doFirst {
+        setDefaultProperty("useEclipseCompiler", true)
+        def useEclipseCompiler = Boolean.parseBoolean("$project.ext.useEclipseCompiler")
+        if (useEclipseCompiler) {
+            println "Compiling main Java source using Eclipse compiler..."
+            options.fork = true
+            options.compilerArgs = ['-target','1.7','-source','1.7']
+            options.forkOptions.with {
+                executable = 'java'
+                jvmArgs = ['-classpath', files("@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar","@@tools_folder@@/../modes/java/mode/jdtCompilerAdapter.jar").getAsPath(), 'org.eclipse.jdt.internal.compiler.batch.Main']
+            }
+        } else {
+          println "Compiling main Java source..."
+        }
+      }
+        sourceCompatibility = 1.7
+        classpath = sourceSets.main.compileClasspath
+        destinationDir = classesDir
+        options.encoding = 'utf-8'
+    }
+    */
+    
 }
 
 dependencies {
