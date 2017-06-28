@@ -801,16 +801,12 @@ class AndroidBuild extends JavaBuild {
 
     boolean success = false;
     BuildLauncher build = connection.newBuild();
+    build.setStandardOutput(System.out);
+    build.setStandardError(System.err);
+
     try {      
       if (target.equals("debug")) build.forTasks("assembleDebug");
       else build.forTasks("assembleRelease");
-      ProgressListener listener = new ProgressListener() {
-        @Override
-        public void statusChanged(ProgressEvent progressEvent) {
-          System.out.println(progressEvent.getDescription());
-        }
-      };
-      build.addProgressListener(listener);
       build.run();
       renameAPK();
       success = true;
