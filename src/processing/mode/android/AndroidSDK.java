@@ -242,8 +242,8 @@ class AndroidSDK {
   }
 
 
-  public File getAndroidTool() {
-    return androidTool;
+  public File getToolsFolder() {
+    return tools;
   }
 
 
