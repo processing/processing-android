@@ -44,8 +44,9 @@ android {
             //println paths
             println "@@tools_folder@@/../modes/java/mode/jdtCompilerAdapter.jar"
                         
-            List<String> argsList = ['-source', '1.8', 
-                                     '-target', '1.8', 
+            List<String> argsList = ['-g',
+                                     '-source', variant.javaCompile.sourceCompatibility, 
+                                     '-target', variant.javaCompile.targetCompatibility, 
                                      '-d', variant.javaCompile.destinationDir] as String[]
 
             //variant.javaCompile.source.getFiles().toArray()
@@ -81,7 +82,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile fileTree(include: ['*.jar'], dir: '@@tools_folder@@/../modes/java/mode/')
-    compile fileTree(include: ['*.jar'], dir: '/Users/andres/code/android/sdk/platforms/android-25/')
+    compile fileTree(include: ['*.jar'], dir: '@@target_platform@@')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })

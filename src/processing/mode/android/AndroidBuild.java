@@ -300,8 +300,6 @@ class AndroidBuild extends JavaBuild {
           throws SketchException, IOException {
     File moduleFolder = new File(tmpFolder, "app");
 
-
-
     String minSdk;
     String tmplFile;
     if (appComponent == VR) {
@@ -311,11 +309,12 @@ class AndroidBuild extends JavaBuild {
       minSdk = min_sdk_fragment;
       tmplFile = APP_GRADLE_BUILD_TEMPLATE;
     }
-
+    
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);
     File appBuildFile = new File(moduleFolder, "build.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
+    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath());
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@min_sdk@@", minSdk);
@@ -1502,7 +1501,8 @@ class AndroidBuild extends JavaBuild {
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());    
+    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
+    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath());
     replaceMap.put("@@build_tools@@", buildToolsVer);    
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  

@@ -254,6 +254,10 @@ class AndroidSDK {
   }
 
 
+  public File getTargetPlatform() {
+    return targetPlatform;
+  }
+  
   public File getAndroidJarPath() {
     return androidJar;  
   }
