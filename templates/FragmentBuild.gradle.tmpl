@@ -83,7 +83,9 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile fileTree(include: ['org.eclipse.jdt.core.jar'], dir: '@@tools_folder@@/../modes/java/mode/')
+    provided files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
+    
+//    compile fileTree(include: ['org.eclipse.jdt.core.jar'], dir: '@@tools_folder@@/../modes/java/mode/')
 //    compile fileTree(include: ['*.jar'], dir: '@@target_platform@@')
 //    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
 //        exclude group: 'com.android.support', module: 'support-annotations'
