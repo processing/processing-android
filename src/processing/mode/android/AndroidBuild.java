@@ -253,6 +253,13 @@ class AndroidBuild extends JavaBuild {
     preproc.initSketchSmooth(sketch.getMainProgram());
     
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
+    File folder = sdk.getBuildToolsFolder();
+    String[] versions = folder.list();
+    String[] sorted = PApplet.sort(versions, versions.length);
+    String buildToolsVer = "";
+    if (sorted != null && 0 < sorted.length) {
+      buildToolsVer = sorted[sorted.length - 1];
+    } 
     if (sketchClassName != null) {
       renderer = info.getRenderer();
       writeMainClass(srcFolder, renderer, external);
@@ -262,18 +269,20 @@ class AndroidBuild extends JavaBuild {
         createMobileModule(projectFolder, exportFolder, buildToolVer);
         createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);*/
       } else {
-        createTopModuleFolder();
-        createAppModuleFolder(targetID);
+        createTopModuleFolder(buildToolsVer);
+        createAppModuleFolder(buildToolsVer, targetID);
       }
     }
     
     return tmpFolder;
   }
 
-  private void createTopModuleFolder() throws IOException {
+  private void createTopModuleFolder(String buildToolsVer) throws IOException {
     // Top level gradle files
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
+//    HashMap<String, String> replaceMap = new HashMap<String, String>();
+//    replaceMap.put("@@build_tools@@", buildToolsVer);
     Util.copyFile(buildTemplate, buildlFile);
 
     writeLocalProps(new File(tmpFolder, "local.properties"));
@@ -287,17 +296,11 @@ class AndroidBuild extends JavaBuild {
     AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
   }
 
-  private void createAppModuleFolder(String targetID)
+  private void createAppModuleFolder(String buildToolsVer, String targetID)
           throws SketchException, IOException {
     File moduleFolder = new File(tmpFolder, "app");
 
-    File folder = sdk.getBuildToolsFolder();
-    String[] versions = folder.list();
-    String[] sorted = PApplet.sort(versions, versions.length);
-    String buildToolsVer = "";
-    if (sorted != null && 0 < sorted.length) {
-      buildToolsVer = sorted[sorted.length - 1];
-    }
+
 
     String minSdk;
     String tmplFile;
@@ -312,6 +315,7 @@ class AndroidBuild extends JavaBuild {
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);
     File appBuildFile = new File(moduleFolder, "build.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@min_sdk@@", minSdk);
@@ -803,6 +807,10 @@ class AndroidBuild extends JavaBuild {
     BuildLauncher build = connection.newBuild();
     build.setStandardOutput(System.out);
     build.setStandardError(System.err);
+    
+//    String ecjPath = Base.getToolsFolder().getPath() + "/../modes/java/mode/*";
+//    System.out.println(ecjPath);
+//    build.setJvmArguments("-cp", ".:" + ecjPath, "org.eclipse.jdt.internal.compiler.batch.Main");
 
     try {      
       if (target.equals("debug")) build.forTasks("assembleDebug");
@@ -1441,11 +1449,11 @@ class AndroidBuild extends JavaBuild {
     }
     
     if (appComponent == WATCHFACE) {
-      createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
+      createTopModule(projectFolder, exportFolder, buildToolVer, "':mobile', ':wear'");
       createMobileModule(projectFolder, exportFolder, buildToolVer);
       createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);
     } else {
-      createTopModule(projectFolder, exportFolder, "':app'");
+      createTopModule(projectFolder, exportFolder, buildToolVer, "':app'");
       createAppModule(projectFolder, exportFolder, buildToolVer);
     }
   }
@@ -1457,11 +1465,13 @@ class AndroidBuild extends JavaBuild {
     execFile.setExecutable(true);
   }
   
-  private void createTopModule(File projectFolder, File exportFolder, 
+  private void createTopModule(File projectFolder, File exportFolder, String buildToolsVer, 
       String projectModules) throws IOException {
     // Top level gradle files
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(exportFolder, "build.gradle");
+//    HashMap<String, String> replaceMap = new HashMap<String, String>();
+//    replaceMap.put("@@build_tools@@", buildToolsVer);
     Util.copyFile(buildTemplate, buildlFile);
     
     writeLocalProps(new File(exportFolder, "local.properties"));
@@ -1491,8 +1501,9 @@ class AndroidBuild extends JavaBuild {
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
-    HashMap<String, String> replaceMap = new HashMap<String, String>();    
-    replaceMap.put("@@build_tools@@", buildToolsVer);
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());    
+    replaceMap.put("@@build_tools@@", buildToolsVer);    
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", target_sdk);
