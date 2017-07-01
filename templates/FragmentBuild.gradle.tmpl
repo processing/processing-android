@@ -35,11 +35,19 @@ android {
             
             // We construct the list of arguments needed by the batch compiler 
             // https://help.eclipse.org/neon/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_batch_compiler.htm            
-            List<String> ecjArgs = ['-g',
-                                    '-nowarn',
+            List<String> ecjArgs = ['-nowarn',
                                     '-source', variant.javaCompile.sourceCompatibility, 
                                     '-target', variant.javaCompile.targetCompatibility, 
                                     '-d', variant.javaCompile.destinationDir] as String[]
+
+            // Set the debug attributes level according to the build target
+            if (variant.name == 'debug') {
+              // All debug info
+              ecjArgs += '-g'
+            } else {
+              // No debug info
+              ecjArgs += '-g:none'
+            }
 
             // Adding all the source files to the list of arguments
             ecjArgs += variant.javaCompile.source
