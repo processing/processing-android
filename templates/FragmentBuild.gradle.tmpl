@@ -42,7 +42,7 @@ android {
                                     '-d', variant.javaCompile.destinationDir] as String[]
 
             // Adding all the source files to the list of arguments
-            ecjArgs += variant.javaCompile.source.getAsPath().split(':').collect{it as String}
+            ecjArgs += variant.javaCompile.source
              
             // Add the Android jar to the classpath inherited from the task
             FileCollection ecjClasspath = files('@@target_platform@@/android.jar', 

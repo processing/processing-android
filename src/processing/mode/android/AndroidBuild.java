@@ -313,8 +313,8 @@ class AndroidBuild extends JavaBuild {
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);
     File appBuildFile = new File(moduleFolder, "build.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
-    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath());
+    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
+    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath().replace('\\', '/'));
     replaceMap.put("@@build_tools@@", buildToolsVer);
     replaceMap.put("@@package_name@@", getPackageName());
     replaceMap.put("@@min_sdk@@", minSdk);
@@ -979,7 +979,7 @@ class AndroidBuild extends JavaBuild {
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@project_name@@", projectName);
-    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
+    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
         
     AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);
   }
@@ -1501,8 +1501,8 @@ class AndroidBuild extends JavaBuild {
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath());
-    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath());
+    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
+    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath().replace('\\', '/'));
     replaceMap.put("@@build_tools@@", buildToolsVer);    
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
