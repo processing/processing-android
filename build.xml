@@ -43,7 +43,7 @@
                   ${processing.dir}/app/pde.jar;
                   ${processing.dir}/app/lib/ant.jar;
                   ${processing.dir}/app/lib/ant-launcher.jar;
-                  mode/gradle-tooling-api-3.2.1.jar"
+                  mode/gradle-tooling-api-4.0.jar"
 	   debug="on">
       <src path="src" />
     </javac>
