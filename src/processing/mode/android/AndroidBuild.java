@@ -73,6 +73,7 @@ class AndroidBuild extends JavaBuild {
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
+  static private final String APP_EXPORT_GRADLE_BUILD_TEMPLATE = "FragmentBuildExport.gradle.tmpl";
   static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
   static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";
   static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";
@@ -134,6 +135,9 @@ class AndroidBuild extends JavaBuild {
 
   /** build.xml file for this project */
   private File buildFile;
+
+  /** Determines which gradle build template will be used */
+  private boolean exportProject = false;
 
 
   public AndroidBuild(final Sketch sketch, final AndroidMode mode, 
@@ -570,11 +574,13 @@ class AndroidBuild extends JavaBuild {
 
     this.target = "debug";    
     String targetID = getTargetID();
+    exportProject = true;
     
     if (appComponent == WATCHFACE) {
       // We are building a watchface not to run on the emulator. We need the
       // handheld app:
       File wearFolder = createProject(targetID, false, true);
+      exportProject = false;
       if (wearFolder == null) return null;
       if (!antBuild()) return null;
       
@@ -592,6 +598,7 @@ class AndroidBuild extends JavaBuild {
       return null;      
     } else {
       File projectFolder = createProject(targetID, false, false);
+      exportProject = false;
       File exportFolder = createExportFolder();      
       Util.copyDir(projectFolder, exportFolder);
       installGradlew(exportFolder);
@@ -612,11 +619,13 @@ class AndroidBuild extends JavaBuild {
 
   public File exportPackage(String keyStorePassword) throws Exception {
     File projectFolder = null;
+    exportProject = true;
     if (appComponent == WATCHFACE) {
       this.target = "release";
       String targetID = getTargetID();
       // We need to sign and align the wearable and handheld apps:      
       File wearFolder = createProject(targetID, true, true);
+      exportProject = false;
       if (wearFolder == null) return null;
       if (!antBuild()) return null;      
       File signedWearPackage = signPackage(wearFolder, keyStorePassword);
@@ -1375,8 +1384,11 @@ class AndroidBuild extends JavaBuild {
       minSdk = min_sdk_gvr;
       tmplFile = VR_GRADLE_BUILD_TEMPLATE;       
     } else {
-      minSdk = min_sdk_fragment; 
-      tmplFile = APP_GRADLE_BUILD_TEMPLATE;      
+      minSdk = min_sdk_fragment;
+      if(exportProject)
+        tmplFile = APP_EXPORT_GRADLE_BUILD_TEMPLATE;
+      else
+        tmplFile = APP_GRADLE_BUILD_TEMPLATE;
     }
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    

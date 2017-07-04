@@ -1,0 +1,37 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion @@target_sdk@@
+    buildToolsVersion "@@build_tools@@"
+    defaultConfig {
+        applicationId "@@package_name@@"
+        minSdkVersion @@min_sdk@@
+        targetSdkVersion @@target_sdk@@
+        versionCode @@version_code@@
+        versionName "@@version_name@@"
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:@@support_version@@'
+    compile 'com.android.support:design:@@support_version@@'
+    provided 'com.google.android.wearable:wearable:@@wear_version@@'
+    compile 'com.google.android.support:wearable:@@wear_version@@'
+    testCompile 'junit:junit:4.12'
+    compile files('libs/processing-core.jar')
+}
