@@ -1,6 +1,7 @@
 package processing.mode.android;
 
 import processing.app.Platform;
+import processing.app.ui.Editor;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -8,6 +9,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
@@ -16,22 +19,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Vector;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 public class SDKUpdater extends JFrame implements PropertyChangeListener {
-
-    private HashMap<String, Boolean> requiredPackages;
 
     private final Vector<String> columnsInstalled = new Vector<>(Arrays.asList("Path", "Version",
             "Description", "Location"));
     private final Class[] columnClassI = new Class[]{
-            String.class, String.class, String.class, String.class, String.class
+            String.class, String.class, String.class, String.class
     };
 
     private final Vector<String> columnsUpdates = new Vector<>(Arrays.asList("ID", "Installed", "Available"));
     private final Class[] columnClassU = new Class[]{
-            String.class, String.class, String.class, String.class, String.class
+            String.class, String.class, String.class
     };
 
     private static final String PROPERTY_CHANGE_QUERY = "query";
@@ -42,7 +44,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     private Vector<Vector<String>> installedList;
     private QueryTask queryTask;
     private DownloadTask downloadTask;
-    private boolean installFlag;
+    private boolean downloadTaskRunning;
+    private Process backgroundProcess;
 
     private DefaultTableModel modelInstalled;
     private DefaultTableModel modelUpdates;
@@ -50,27 +53,31 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     private JLabel status;
     private JButton actionButton;
 
-    public SDKUpdater() {
+    public SDKUpdater(Editor editor, AndroidMode androidMode) {
         super("SDK Updater");
 
-        requiredPackages = new HashMap<>();
-        requiredPackages.put("build-tools", false);
-        requiredPackages.put("platforms", false);
-        requiredPackages.put("extras;android;m2repository", false);
-        requiredPackages.put("extras;google;m2repository", false);
-        requiredPackages.put("platform-tools", false);
-        requiredPackages.put("tools", false);
-
+        androidMode.checkSDK(editor);
         try {
             sdk = AndroidSDK.load();
-            toolsFolder = sdk.getToolsFolder();
-            queryTask = new QueryTask();
-            queryTask.addPropertyChangeListener(this);
-            queryTask.execute();
-            createLayout();
+            if (sdk == null) {
+                sdk = AndroidSDK.locate(editor, androidMode);
+            }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (AndroidSDK.CancelException e) {
+            e.printStackTrace();
+        } catch (AndroidSDK.BadSDKException e) {
+            e.printStackTrace();
         }
+
+        if (sdk == null)
+            return;
+
+        toolsFolder = sdk.getToolsFolder();
+        queryTask = new QueryTask();
+        queryTask.addPropertyChangeListener(this);
+        queryTask.execute();
+        createLayout();
     }
 
     @Override
@@ -78,21 +85,13 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         switch (evt.getPropertyName()) {
             case PROPERTY_CHANGE_QUERY:
                 progressBar.setIndeterminate(false);
-                if (requiredPackages.size() == 0) {
-                    if (updatesList.size() == 0) {
-                        status.setText("No updates available");
-                        status.setForeground(Color.GREEN);
-                    } else {
-                        actionButton.setVisible(true);
-                        status.setText("Update(s) found!");
-                        status.setForeground(Color.BLUE);
-                    }
+                if (updatesList.size() == 0) {
+                    status.setText("No updates available");
+                    status.setForeground(Color.GREEN);
                 } else {
-                    status.setText("<html>Required packages missing.<br>Please install missing packages.</html>");
-                    status.setForeground(Color.RED);
-                    actionButton.setText("Install");
                     actionButton.setVisible(true);
-                    installFlag = true;
+                    status.setText("Update(s) found!");
+                    status.setForeground(Color.BLUE);
                 }
                 break;
         }
@@ -111,51 +110,33 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             cmd.add("--list");
 
             ProcessBuilder process = new ProcessBuilder(cmd);
-            Process p = process.start();
-            try {
-                BufferedReader reader =
-                        new BufferedReader(new InputStreamReader(p.getInputStream()));
-                p.waitFor();
+            backgroundProcess = process.start();
 
-                updatesList = new Vector<>();
-                installedList = new Vector<>();
-                String line;
-                boolean skip = false, updates = false;
-                while ((line = reader.readLine()) != null) {
-                    if (line.isEmpty())
-                        skip = !skip;
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(backgroundProcess.getInputStream()));
+            backgroundProcess.waitFor();
 
-                    if (!skip && !line.startsWith("d")) { //Skip all available packages
-                        if (line.startsWith("  I"))
-                            updates = true;
-                        else if (!line.startsWith("  P") && !line.startsWith("  -") && !line.startsWith("I") &&
-                                !line.startsWith("A") && !line.isEmpty()) {
-                            String[] result = line.split("\\|");
+            updatesList = new Vector<>();
+            installedList = new Vector<>();
+            String line;
+            boolean skip = false, updates = false;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty())
+                    skip = !skip;
 
-                            // Remove matching packages; remaining packages haven't been installed
-                            String resKey = result[0].trim();
-                            if (requiredPackages.containsKey(resKey))
-                                requiredPackages.remove(resKey);
-                            else {
-                                for (String key : requiredPackages.keySet()) {
-                                    if (resKey.startsWith(key)) {
-                                        requiredPackages.remove(key);
-                                        break;
-                                    }
-                                }
-                            }
+                if (!skip && !line.startsWith("d")) { //Skip all available packages
+                    if (line.startsWith("  I"))
+                        updates = true;
+                    else if (!line.startsWith("  P") && !line.startsWith("  -") && !line.startsWith("I") &&
+                            !line.startsWith("A") && !line.isEmpty()) {
+                        String[] result = line.split("\\|");
 
-                            if (updates)
-                                updatesList.add(new Vector<>(Arrays.asList(result)));
-                            else
-                                installedList.add(new Vector<>(Arrays.asList(result)));
-                        }
+                        if (updates)
+                            updatesList.add(new Vector<>(Arrays.asList(result)));
+                        else
+                            installedList.add(new Vector<>(Arrays.asList(result)));
                     }
                 }
-
-                firePropertyChange(PROPERTY_CHANGE_QUERY, "query", "SUCCESS");
-            } catch (InterruptedException e) {
-                p.destroy();
             }
 
             return null;
@@ -165,12 +146,22 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         protected void done() {
             super.done();
 
-            if (updatesList != null && installedList != null) {
-                modelInstalled.setDataVector(installedList, columnsInstalled);
-                modelUpdates.setDataVector(updatesList, columnsUpdates);
+            try {
+                get();
+                firePropertyChange(PROPERTY_CHANGE_QUERY, "query", "SUCCESS");
 
-                modelUpdates.fireTableDataChanged();
-                modelInstalled.fireTableDataChanged();
+                if (updatesList != null && installedList != null) {
+                    modelInstalled.setDataVector(installedList, columnsInstalled);
+                    modelUpdates.setDataVector(updatesList, columnsUpdates);
+
+                    modelUpdates.fireTableDataChanged();
+                    modelInstalled.fireTableDataChanged();
+                }
+            } catch (InterruptedException | CancellationException e) {
+                backgroundProcess.destroy();
+            } catch (ExecutionException e) {
+                JOptionPane.showMessageDialog(null,
+                        e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -178,6 +169,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     class DownloadTask extends SwingWorker {
         @Override
         protected Object doInBackground() throws Exception {
+            downloadTaskRunning = true;
             ArrayList<String> cmd = new ArrayList<>();
             String path = toolsFolder + File.separator + "bin" + File.separator;
             if (Platform.isWindows())
@@ -185,22 +177,36 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             else
                 path += "sdkmanager";
             cmd.add(path);
+            cmd.add("--update");
 
-            if(installFlag) {
+            ProcessBuilder process = new ProcessBuilder(cmd);
+            backgroundProcess = process.start();
+            backgroundProcess.waitFor();
 
-            } else {
-                cmd.add("--update");
-                ProcessBuilder process = new ProcessBuilder(cmd);
-                Process p = process.start();
-                try {
-                    progressBar.setIndeterminate(true);
-                    p.waitFor();
-                } catch (InterruptedException e) {
-                    p.destroy();
-                }
+            return null;
+        }
+
+        @Override
+        protected void done() {
+            super.done();
+
+            try {
+                get();
+                actionButton.setVisible(false); //Hide button after update completes
+                status.setText("Refreshing packages...");
+
+                queryTask = new QueryTask();
+                queryTask.addPropertyChangeListener(SDKUpdater.this);
+                queryTask.execute();
+            } catch (InterruptedException | CancellationException e) {
+                backgroundProcess.destroy();
+            } catch (ExecutionException e) {
+                JOptionPane.showMessageDialog(null,
+                        e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            } finally {
+                downloadTaskRunning = false;
                 progressBar.setIndeterminate(false);
             }
-            return null;
         }
     }
 
@@ -221,7 +227,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         packagesPanel.setLayout(boxLayout);
 
         /* Installed Packages panel */
-        JPanel installedPanel = new JPanel();
+        JPanel installedPanel = new JPanel(new BorderLayout());
         installedPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "Installed"));
 
@@ -251,7 +257,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
 
         /* Updates panel */
-        JPanel updatesPanel = new JPanel();
+        JPanel updatesPanel = new JPanel(new BorderLayout());
         updatesPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "Available Updates"));
 
@@ -276,7 +282,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         tUpdates.setFillsViewportHeight(true);
         tUpdates.setPreferredScrollableViewportSize(new Dimension(tUpdates.getPreferredSize().width,
                 5 * tUpdates.getRowHeight()));
-        updatesPanel.add(new JScrollPane(tUpdates));
+        updatesPanel.add(new JScrollPane(tUpdates), BorderLayout.CENTER);
 
         packagesPanel.add(installedPanel);
         packagesPanel.add(updatesPanel);
@@ -288,7 +294,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         GridBagConstraints gbc = new GridBagConstraints();
 
         status = new JLabel();
-        status.setText("Querying");
+        status.setText("Querying packages...");
         gbc.gridx = 0;
         gbc.gridy = 0;
         controlPanel.add(status, gbc);
@@ -301,11 +307,20 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         controlPanel.add(progressBar, gbc);
 
-        actionButton = new JButton("Update");
+        actionButton = new JButton("Update"); // handles Update/Cancel
         actionButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                downloadTask = new DownloadTask();
-                downloadTask.execute();
+                if (downloadTaskRunning) { // i.e button state is Cancel
+                    downloadTask.cancel(true);
+                    status.setText("Download cancelled");
+                    actionButton.setText("Update");
+                } else { // i.e button state is Update
+                    downloadTask = new DownloadTask();
+                    progressBar.setIndeterminate(true);
+                    downloadTask.execute();
+                    status.setText("Downloading available updates...");
+                    actionButton.setText("Cancel");
+                }
             }
         });
         actionButton.setVisible(false);
@@ -318,7 +333,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         ActionListener disposer = new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 cancelTasks();
-                setVisible(false);
+                dispose();
             }
         };
 
@@ -340,12 +355,25 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         processing.app.ui.Toolkit.registerWindowCloseKeys(root, disposer);
         processing.app.ui.Toolkit.setIcon(this);
 
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                cancelTasks();
+                super.windowClosing(e);
+            }
+        });
+
         setLocationRelativeTo(null);
-        setResizable(false);
+        setResizable(true);
         setVisible(true);
     }
 
     public void cancelTasks() {
         queryTask.cancel(true);
+        if (downloadTaskRunning) {
+            JOptionPane.showMessageDialog(null,
+                    "Download cancelled", "Warning", JOptionPane.WARNING_MESSAGE);
+            downloadTask.cancel(true);
+        }
     }
 }

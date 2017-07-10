@@ -342,7 +342,7 @@ public class AndroidEditor extends JavaEditor {
     item = new JMenuItem("Update SDK");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        new SDKUpdater();
+        new SDKUpdater(AndroidEditor.this, androidMode);
       }
     });
     menu.add(item);
