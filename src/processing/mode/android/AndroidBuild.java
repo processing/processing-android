@@ -73,6 +73,7 @@ class AndroidBuild extends JavaBuild {
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
+  static private final String APP_EXPORT_GRADLE_BUILD_TEMPLATE = "FragmentBuildExport.gradle.tmpl";
   static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
   static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";
   static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";
@@ -134,6 +135,9 @@ class AndroidBuild extends JavaBuild {
 
   /** build.xml file for this project */
   private File buildFile;
+
+  /** Determines which gradle build template will be used */
+  private boolean exportProject = false;
 
 
   public AndroidBuild(final Sketch sketch, final AndroidMode mode, 
@@ -269,108 +273,13 @@ class AndroidBuild extends JavaBuild {
         createMobileModule(projectFolder, exportFolder, buildToolVer);
         createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);*/
       } else {
-        createTopModuleFolder(buildToolsVer);
-        createAppModuleFolder(buildToolsVer, targetID);
+        createTopModule(buildToolsVer, "':app'");
+        createAppModule(tmpFolder, buildToolsVer, targetID);
       }
     }
     
     return tmpFolder;
   }
-
-  private void createTopModuleFolder(String buildToolsVer) throws IOException {
-    // Top level gradle files
-    File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
-    File buildlFile = new File(tmpFolder, "build.gradle");
-//    HashMap<String, String> replaceMap = new HashMap<String, String>();
-//    replaceMap.put("@@build_tools@@", buildToolsVer);
-    Util.copyFile(buildTemplate, buildlFile);
-
-    writeLocalProps(new File(tmpFolder, "local.properties"));
-    writeFile(new File(tmpFolder, "gradle.properties"),
-            new String[]{"org.gradle.jvmargs=-Xmx1536m"});
-
-    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
-    File settingsFile = new File(tmpFolder, "settings.gradle");
-    HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@project_modules@@", "':app'");
-    AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
-  }
-
-  private void createAppModuleFolder(String buildToolsVer, String targetID)
-          throws SketchException, IOException {
-    File moduleFolder = new File(tmpFolder, "app");
-
-    String minSdk;
-    String tmplFile;
-    if (appComponent == VR) {
-      minSdk = min_sdk_gvr;
-      tmplFile = VR_GRADLE_BUILD_TEMPLATE;
-    } else {
-      minSdk = min_sdk_fragment;
-      tmplFile = APP_GRADLE_BUILD_TEMPLATE;
-    }
-    
-    File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);
-    File appBuildFile = new File(moduleFolder, "build.gradle");
-    HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
-    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath().replace('\\', '/'));
-    replaceMap.put("@@build_tools@@", buildToolsVer);
-    replaceMap.put("@@package_name@@", getPackageName());
-    replaceMap.put("@@min_sdk@@", minSdk);
-    replaceMap.put("@@target_sdk@@", target_sdk);
-    replaceMap.put("@@support_version@@", support_version);
-    replaceMap.put("@@wear_version@@", wear_version);
-    replaceMap.put("@@gvr_version@@", gvr_sdk_version);
-    replaceMap.put("@@version_code@@", manifest.getVersionCode());
-    replaceMap.put("@@version_name@@", manifest.getVersionName());
-    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);
-
-    writeFile(new File(moduleFolder, "proguard-rules.pro"),
-            new String[]{"# Add project specific ProGuard rules here."});
-
-    File libsFolder = mkdirs(moduleFolder, "libs");
-    File mainFolder = new File(moduleFolder, "src/main");
-    File resFolder = mkdirs(mainFolder, "res");
-    File assetsFolder = mkdirs(mainFolder, "assets");
-
-    writeRes(resFolder);
-
-    File tempManifest = new File(mainFolder, "AndroidManifest.xml");
-    manifest.writeCopy(tempManifest, sketchClassName);
-
-    Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
-
-    // Copy any imported libraries (their libs and assets),
-    // and anything in the code folder contents to the project.
-    copyImportedLibs(libsFolder, assetsFolder);
-    copyCodeFolder(libsFolder);
-
-    // Copy any system libraries needed by the project
-    copyWearLib(tmpFolder, libsFolder);
-    copySupportLibs(tmpFolder, libsFolder);
-    if (getAppComponent() == FRAGMENT) {
-      File aarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");
-      Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
-    }
-    if (getAppComponent() == VR) {
-      copyGVRLibs(targetID, libsFolder);
-    }
-
-    // Copy the data folder (if one exists) to the project's 'assets' folder
-    final File sketchDataFolder = sketch.getDataFolder();
-    if (sketchDataFolder.exists()) {
-      Util.copyDir(sketchDataFolder, assetsFolder);
-    }
-
-    // Do the same for the 'res' folder. The user can copy an entire res folder
-    // into the sketch's folder, and it will be used in the project!
-    final File sketchResFolder = new File(sketch.getFolder(), "res");
-    if (sketchResFolder.exists()) {
-      Util.copyDir(sketchResFolder, resFolder);
-    }
-  }
-
   
   // This creates the special activity project only needed to serve as the
   // (invisible) app on the handheld that allows to uninstall the watchface
@@ -665,11 +574,13 @@ class AndroidBuild extends JavaBuild {
 
     this.target = "debug";    
     String targetID = getTargetID();
+    exportProject = true;
     
     if (appComponent == WATCHFACE) {
       // We are building a watchface not to run on the emulator. We need the
       // handheld app:
       File wearFolder = createProject(targetID, false, true);
+      exportProject = false;
       if (wearFolder == null) return null;
       if (!antBuild()) return null;
       
@@ -678,7 +589,7 @@ class AndroidBuild extends JavaBuild {
       if (antBuild()) {
         File exportFolder = createExportFolder();
         if (buildSystem.equals("gradle")) {
-          createGradleProject(projectFolder, exportFolder);
+          //createGradleProject(projectFolder, exportFolder);
         } else { // ant          
           Util.copyDir(projectFolder, exportFolder);
         }
@@ -687,6 +598,7 @@ class AndroidBuild extends JavaBuild {
       return null;      
     } else {
       File projectFolder = createProject(targetID, false, false);
+      exportProject = false;
       File exportFolder = createExportFolder();      
       Util.copyDir(projectFolder, exportFolder);
       installGradlew(exportFolder);
@@ -707,11 +619,13 @@ class AndroidBuild extends JavaBuild {
 
   public File exportPackage(String keyStorePassword) throws Exception {
     File projectFolder = null;
+    exportProject = true;
     if (appComponent == WATCHFACE) {
       this.target = "release";
       String targetID = getTargetID();
       // We need to sign and align the wearable and handheld apps:      
       File wearFolder = createProject(targetID, true, true);
+      exportProject = false;
       if (wearFolder == null) return null;
       if (!antBuild()) return null;      
       File signedWearPackage = signPackage(wearFolder, keyStorePassword);
@@ -1434,29 +1348,6 @@ class AndroidBuild extends JavaBuild {
     tmpFolder.deleteOnExit();
   }
   
-  
-  protected void createGradleProject(File projectFolder, File exportFolder) 
-      throws IOException, SketchException {
-    installGradlew(exportFolder);
-    
-    File folder = sdk.getBuildToolsFolder();
-    String[] versions = folder.list();
-    String[] sorted = PApplet.sort(versions, versions.length);
-    String buildToolVer = "";
-    if (sorted != null && 0 < sorted.length) {
-      buildToolVer = sorted[sorted.length - 1];
-    }
-    
-    if (appComponent == WATCHFACE) {
-      createTopModule(projectFolder, exportFolder, buildToolVer, "':mobile', ':wear'");
-      createMobileModule(projectFolder, exportFolder, buildToolVer);
-      createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);
-    } else {
-      createTopModule(projectFolder, exportFolder, buildToolVer, "':app'");
-      createAppModule(projectFolder, exportFolder, buildToolVer);
-    }
-  }
-  
   private void installGradlew(File exportFolder) throws IOException {
     File gradlewFile = mode.getContentFile("mode/gradlew.zip");
     AndroidMode.extractFolder(gradlewFile, exportFolder, true, true); 
@@ -1464,29 +1355,28 @@ class AndroidBuild extends JavaBuild {
     execFile.setExecutable(true);
   }
   
-  private void createTopModule(File projectFolder, File exportFolder, String buildToolsVer, 
-      String projectModules) throws IOException {
+  private void createTopModule(String buildToolsVer, String projectModules) throws IOException {
     // Top level gradle files
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
-    File buildlFile = new File(exportFolder, "build.gradle");
+    File buildlFile = new File(tmpFolder, "build.gradle");
 //    HashMap<String, String> replaceMap = new HashMap<String, String>();
 //    replaceMap.put("@@build_tools@@", buildToolsVer);
     Util.copyFile(buildTemplate, buildlFile);
     
-    writeLocalProps(new File(exportFolder, "local.properties"));
-    writeFile(new File(exportFolder, "gradle.properties"), 
+    writeLocalProps(new File(tmpFolder, "local.properties"));
+    writeFile(new File(tmpFolder, "gradle.properties"),
         new String[]{"org.gradle.jvmargs=-Xmx1536m"});
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
-    File settingsFile = new File(exportFolder, "settings.gradle");    
+    File settingsFile = new File(tmpFolder, "settings.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@project_modules@@", projectModules);    
     AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
   }
   
-  private void createAppModule(File projectFolder, File exportFolder, String buildToolsVer) 
+  private void createAppModule(File projectFolder, String buildToolsVer, String targetID)
       throws SketchException, IOException {
-    File moduleFolder = mkdirs(exportFolder, "app");
+    File moduleFolder = mkdirs(tmpFolder, "app");
     
     String minSdk;
     String tmplFile;
@@ -1494,8 +1384,11 @@ class AndroidBuild extends JavaBuild {
       minSdk = min_sdk_gvr;
       tmplFile = VR_GRADLE_BUILD_TEMPLATE;       
     } else {
-      minSdk = min_sdk_fragment; 
-      tmplFile = APP_GRADLE_BUILD_TEMPLATE;      
+      minSdk = min_sdk_fragment;
+      if(exportProject)
+        tmplFile = APP_EXPORT_GRADLE_BUILD_TEMPLATE;
+      else
+        tmplFile = APP_GRADLE_BUILD_TEMPLATE;
     }
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
@@ -1512,30 +1405,56 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@gvr_version@@", gvr_sdk_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
-    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
-    
-    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);
+
+    writeFile(new File(moduleFolder, "proguard-rules.pro"),
         new String[]{"# Add project specific ProGuard rules here."});
-    
-    File coreFile = new File(projectFolder, "libs/processing-core.jar");    
+
     File libsFolder = mkdirs(moduleFolder, "libs");
-    Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
+    File mainFolder = new File(moduleFolder, "src/main");
+    File resFolder = mkdirs(mainFolder, "res");
+    File assetsFolder = mkdirs(mainFolder, "assets");
+
+    writeRes(resFolder);
+
+    File tempManifest = new File(mainFolder, "AndroidManifest.xml");
+    manifest.writeCopy(tempManifest, sketchClassName);
+
+    Util.copyFile(coreZipFile, new File(libsFolder, "processing-core.jar"));
+
+    // Copy any imported libraries (their libs and assets),
+    // and anything in the code folder contents to the project.
+    copyImportedLibs(libsFolder, assetsFolder);
+    copyCodeFolder(libsFolder);
 
     if (appComponent == VR) {
       File vrFile = new File(projectFolder, "libs/vr.jar");
       Util.copyFile(vrFile, new File(libsFolder, "vr.jar"));
     }
-    
-    File mainFolder = mkdirs(moduleFolder, "src/main");
-    File javaFolder = mkdirs(mainFolder, "java");
-    File resFolder = mkdirs(mainFolder, "res");
-    File assetsFolder = mkdirs(mainFolder, "assets");
-    
-    Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
-                  new File(mainFolder, "AndroidManifest.xml"));
-    Util.copyDir(new File(projectFolder, "res"), resFolder);
-    Util.copyDir(new File(projectFolder, "src"), javaFolder);
-    Util.copyDir(new File(projectFolder, "assets"), assetsFolder);
+
+    // Copy any system libraries needed by the project
+    copyWearLib(tmpFolder, libsFolder);
+    copySupportLibs(tmpFolder, libsFolder);
+    if (getAppComponent() == FRAGMENT) {
+      File aarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");
+      Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
+    }
+    if (getAppComponent() == VR) {
+      copyGVRLibs(targetID, libsFolder);
+    }
+
+    // Copy the data folder (if one exists) to the project's 'assets' folder
+    final File sketchDataFolder = sketch.getDataFolder();
+    if (sketchDataFolder.exists()) {
+      Util.copyDir(sketchDataFolder, assetsFolder);
+    }
+
+    // Do the same for the 'res' folder. The user can copy an entire res folder
+    // into the sketch's folder, and it will be used in the project!
+    final File sketchResFolder = new File(sketch.getFolder(), "res");
+    if (sketchResFolder.exists()) {
+      Util.copyDir(sketchResFolder, resFolder);
+    }
   }
   
   private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
