@@ -9,14 +9,12 @@ android {
         targetSdkVersion @@target_sdk@@
         versionCode @@version_code@@
         versionName "@@version_name@@"
-        vectorDrawables.useSupportLibrary = true
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     
     buildTypes {
         debug {
             debuggable true
-        }
+        }    
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -69,7 +67,7 @@ android {
             // source is already compiled with ecj
             throw new StopExecutionException("skip javac")
         }
-    }
+    }    
 }
 
 dependencies {
@@ -77,7 +75,8 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:@@support_version@@'
     compile 'com.android.support:design:@@support_version@@'
-    provided 'com.google.android.wearable:wearable:@@wear_version@@'
-    compile 'com.google.android.support:wearable:@@wear_version@@'      
+    compile 'com.google.vr:sdk-audio:@@gvr_version@@'
+    compile 'com.google.vr:sdk-base:@@gvr_version@@'
     compile files('libs/processing-core.jar')
+    compile files('libs/vr.jar')
 }

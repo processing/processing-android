@@ -74,14 +74,14 @@ class AndroidBuild extends JavaBuild {
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_ECJ_TEMPLATE = "FragmentBuildECJ.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_TEMPLATE = "FragmentBuild.gradle.tmpl";
-  static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";
+  static private final String VR_GRADLE_BUILD_ECJ_TEMPLATE = "VRBuildECJ.gradle.tmpl";
+  static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";  
 
   static private final String HANDHELD_GRADLE_BUILD_TEMPLATE = "HandheldBuild.gradle.tmpl";
   static private final String WEARABLE_GRADLE_BUILD_TEMPLATE = "WearableBuild.gradle.tmpl";
   
   
-  // TODO: ask base package name when exporting signed apk
-  //  static final String basePackage = "changethispackage.beforesubmitting.tothemarket";
+  // Default base package name, user need to change when exporting package. 
   static final String basePackage = "processing.test";
   
   // Minimum SDK levels required for each app component
@@ -118,7 +118,7 @@ class AndroidBuild extends JavaBuild {
   static public final String support_version = "25.2.0";
   static public final String play_services_version = "10.2.0";  
   static public final String wear_version = "2.0.0";
-  static public final String gvr_sdk_version = "1.40.0";
+  static public final String gvr_sdk_version = "1.60.1";
   
   private boolean runOnEmulator = false;
   private int appComponent = FRAGMENT;
@@ -353,14 +353,14 @@ class AndroidBuild extends JavaBuild {
     writeProjectProps(new File(tmpFolder, "project.properties"));
     writeLocalProps(new File(tmpFolder, "local.properties"));    
     
-    File libsFolder = mkdirs(tmpFolder, "libs");    
+    File libsFolder = AndroidMode.mkdirs(tmpFolder, "libs");    
     copySupportLibs(tmpFolder, libsFolder);
     copyAppCompatLib(tmpFolder, libsFolder);
     
     final File resFolder = new File(tmpFolder, "res");        
-    File layoutFolder = mkdirs(resFolder, "layout");    
+    File layoutFolder = AndroidMode.mkdirs(resFolder, "layout");    
     writeResLayoutMainActivity(layoutFolder);
-    File valuesFolder = mkdirs(resFolder, "values");      
+    File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
     writeResStylesFragment(valuesFolder);
     
     // Write icons for handheld app
@@ -423,12 +423,10 @@ class AndroidBuild extends JavaBuild {
     // Top level gradle files
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
-//    HashMap<String, String> replaceMap = new HashMap<String, String>();
-//    replaceMap.put("@@build_tools@@", buildToolsVer);
     Util.copyFile(buildTemplate, buildlFile);
     
-//    writeLocalProps(new File(tmpFolder, "local.properties"));
-    writeFile(new File(tmpFolder, "gradle.properties"),
+    writeLocalProps(new File(tmpFolder, "local.properties"));
+    AndroidMode.writeFile(new File(tmpFolder, "gradle.properties"),
         new String[]{"org.gradle.jvmargs=-Xmx1536m"});
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
@@ -441,19 +439,16 @@ class AndroidBuild extends JavaBuild {
   
   private void createAppModule(File projectFolder, String buildToolsVer)
       throws SketchException, IOException {
-    File moduleFolder = mkdirs(tmpFolder, "app");
+    File moduleFolder = AndroidMode.mkdirs(tmpFolder, "app");
     
     String minSdk;
     String tmplFile;
     if (appComponent == VR) {
       minSdk = min_sdk_gvr;
-      tmplFile = VR_GRADLE_BUILD_TEMPLATE;       
+      tmplFile = exportProject ? VR_GRADLE_BUILD_TEMPLATE : VR_GRADLE_BUILD_ECJ_TEMPLATE;
     } else {
       minSdk = min_sdk_fragment;
-      if (exportProject)
-        tmplFile = APP_GRADLE_BUILD_TEMPLATE;
-      else
-        tmplFile = APP_GRADLE_BUILD_ECJ_TEMPLATE;
+      tmplFile = exportProject ? APP_GRADLE_BUILD_TEMPLATE : APP_GRADLE_BUILD_ECJ_TEMPLATE;
     }
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
@@ -472,13 +467,13 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);
 
-    writeFile(new File(moduleFolder, "proguard-rules.pro"),
+    AndroidMode.writeFile(new File(moduleFolder, "proguard-rules.pro"),
         new String[]{"# Add project specific ProGuard rules here."});
 
-    File libsFolder = mkdirs(moduleFolder, "libs");
+    File libsFolder = AndroidMode.mkdirs(moduleFolder, "libs");
     File mainFolder = new File(moduleFolder, "src/main");
-    File resFolder = mkdirs(mainFolder, "res");
-    File assetsFolder = mkdirs(mainFolder, "assets");
+    File resFolder = AndroidMode.mkdirs(mainFolder, "res");
+    File assetsFolder = AndroidMode.mkdirs(mainFolder, "assets");
 
     writeRes(resFolder);
 
@@ -492,10 +487,10 @@ class AndroidBuild extends JavaBuild {
     copyImportedLibs(libsFolder, assetsFolder);
     copyCodeFolder(libsFolder);
 
-    if (appComponent == VR) {
-      File vrFile = new File(projectFolder, "libs/vr.jar");
-      Util.copyFile(vrFile, new File(libsFolder, "vr.jar"));
-    }
+//    if (appComponent == VR) {
+//      File vrFile = new File(projectFolder, "libs/vr.jar");
+//      Util.copyFile(vrFile, new File(libsFolder, "vr.jar"));
+//    }
 
     // Copy any system libraries needed by the project
     copyWearLib(tmpFolder, libsFolder);
@@ -526,7 +521,7 @@ class AndroidBuild extends JavaBuild {
   
   private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
-    File moduleFolder = mkdirs(exportFolder, "mobile");
+    File moduleFolder = AndroidMode.mkdirs(exportFolder, "mobile");
     
     File appBuildTemplate = mode.getContentFile("templates/" + HANDHELD_GRADLE_BUILD_TEMPLATE);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
@@ -542,12 +537,12 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
     
-    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+    AndroidMode.writeFile(new File(moduleFolder, "proguard-rules.pro"), 
         new String[]{"# Add project specific ProGuard rules here."});    
     
-    File mainFolder = mkdirs(moduleFolder, "src/main");
-    File javaFolder = mkdirs(mainFolder, "java");
-    File resFolder = mkdirs(mainFolder, "res");    
+    File mainFolder = AndroidMode.mkdirs(moduleFolder, "src/main");
+    File javaFolder = AndroidMode.mkdirs(mainFolder, "java");
+    File resFolder = AndroidMode.mkdirs(mainFolder, "res");    
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
@@ -558,7 +553,7 @@ class AndroidBuild extends JavaBuild {
   
   private void createWearModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
-    File moduleFolder = mkdirs(exportFolder, "wear");
+    File moduleFolder = AndroidMode.mkdirs(exportFolder, "wear");
     
     File appBuildTemplate = mode.getContentFile("templates/" + WEARABLE_GRADLE_BUILD_TEMPLATE);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
@@ -574,17 +569,17 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);     
     
-    writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+    AndroidMode.writeFile(new File(moduleFolder, "proguard-rules.pro"), 
         new String[]{"# Add project specific ProGuard rules here."}); 
     
     File coreFile = new File(projectFolder, "libs/processing-core.jar");    
-    File libsFolder = mkdirs(moduleFolder, "libs");
+    File libsFolder = AndroidMode.mkdirs(moduleFolder, "libs");
     Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
         
-    File mainFolder = mkdirs(moduleFolder, "src/main");
-    File javaFolder = mkdirs(mainFolder, "java");
-    File resFolder = mkdirs(mainFolder, "res");
-    File assetsFolder = mkdirs(mainFolder, "assets");
+    File mainFolder = AndroidMode.mkdirs(moduleFolder, "src/main");
+    File javaFolder = AndroidMode.mkdirs(mainFolder, "java");
+    File resFolder = AndroidMode.mkdirs(mainFolder, "res");
+    File assetsFolder = AndroidMode.mkdirs(mainFolder, "assets");
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
@@ -800,6 +795,22 @@ class AndroidBuild extends JavaBuild {
   }  
   
   
+  private void writeLocalProps(final File file) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    final String sdkPath = sdk.getSdkFolder().getAbsolutePath();
+    if (Platform.isWindows()) {
+      // Windows needs backslashes escaped, or it will also accept forward
+      // slashes in the build file. We're using the forward slashes since this
+      // path gets concatenated with a lot of others that use forwards anyway.
+      writer.println("sdk.dir=" + sdkPath.replace('\\', '/'));
+    } else {
+      writer.println("sdk.dir=" + sdkPath);
+    }
+    writer.flush();
+    writer.close();
+  }  
+  
+  
   // ---------------------------------------------------------------------------
   // Icons
   
@@ -815,25 +826,25 @@ class AndroidBuild extends JavaBuild {
   static final String ICON_WATCHFACE_RECTANGULAR = "preview_rectangular.png";  
   
   private void writeRes(File resFolder) throws SketchException {
-    File layoutFolder = mkdirs(resFolder, "layout");    
+    File layoutFolder = AndroidMode.mkdirs(resFolder, "layout");    
     writeResLayoutMainActivity(layoutFolder);
 
     int comp = getAppComponent();
     if (comp == FRAGMENT) {
-      File valuesFolder = mkdirs(resFolder, "values");      
+      File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
       writeResStylesFragment(valuesFolder);
     }
     
     if (comp == WALLPAPER) {
-      File xmlFolder = mkdirs(resFolder, "xml");      
+      File xmlFolder = AndroidMode.mkdirs(resFolder, "xml");      
       writeResXMLWallpaper(xmlFolder);
             
-      File valuesFolder = mkdirs(resFolder, "values");      
+      File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
       writeResStringsWallpaper(valuesFolder);      
     }
     
     if (comp == VR) {
-      File valuesFolder = mkdirs(resFolder, "values");      
+      File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
       writeResStylesVR(valuesFolder);  
     }    
 
@@ -841,7 +852,7 @@ class AndroidBuild extends JavaBuild {
     writeIconFiles(sketchFolder, resFolder);
     
     if (comp == WATCHFACE) {
-      File xmlFolder = mkdirs(resFolder, "xml");      
+      File xmlFolder = AndroidMode.mkdirs(resFolder, "xml");      
       writeResXMLWatchFace(xmlFolder);      
       
       // write the preview files
@@ -995,11 +1006,8 @@ class AndroidBuild extends JavaBuild {
     // The wear jar is needed even when the app is not a watch face, because on
     // devices with android < 5 the dependencies of the PWatchFace* classes
     // cannot be resolved.
-    // TODO: temporary hack until I find a better way to include the wearable aar
-    // package included in the SDK:      
     File aarFile = new File(sdk.getWearableFolder(), wear_version + "/wearable-" + wear_version + ".aar");
-    File explodeDir = new File(tmpFolder, "aar");
-    AndroidMode.extractClassesJarFromAar(aarFile, explodeDir, new File(libsFolder, "wearable-" + wear_version + ".jar"));    
+    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
   }
   
   
@@ -1070,54 +1078,15 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  private void copyGVRLibs(File libsFolder) throws IOException {    
-    // TODO: temporary hack until I find a better way to include the VR aar
-    // packages included in the GVR SDK:
-    String targetID = getTargetID();
+  private void copyGVRLibs(File libsFolder) throws IOException {
+    File baseAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-base-" + gvr_sdk_version + ".aar");
+    Util.copyFile(baseAarFile, new File(libsFolder, baseAarFile.getName()));
     
-    ////////////////////////////////////////////////////////////////////////
-    // first step: unpack the VR packages in the project's 
-    // libs folder:
-    File baseZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-base.zip");
-    File commonZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-common.zip");
-    File audioZipFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-audio.zip");
-    AndroidMode.extractFolder(baseZipFile, libsFolder, true);
-    AndroidMode.extractFolder(commonZipFile, libsFolder, true);        
-    AndroidMode.extractFolder(audioZipFile, libsFolder, true);        
-    File baseLibsFolder = new File(libsFolder, "sdk-base");
-    File commonLibsFolder = new File(libsFolder, "sdk-common");
-    File audioLibsFolder = new File(libsFolder, "sdk-audio");
-
-    ////////////////////////////////////////////////////////////////////////
-    // second step: create library projects
-    boolean baseRes = createLibraryProject("sdk_base", targetID, 
-        baseLibsFolder.getAbsolutePath(), "com.google.vr.sdk.base");
-    boolean commonRes = createLibraryProject("sdk_common", targetID, 
-        commonLibsFolder.getAbsolutePath(), "com.google.vr.cardboard");        
-    boolean audioRes = createLibraryProject("sdk_audio", targetID, 
-        audioLibsFolder.getAbsolutePath(), "com.google.vr.sdk.audio");
-
-    ////////////////////////////////////////////////////////////////////////
-    // third step: reference library projects from main project        
-    if (baseRes && commonRes && audioRes) {
-      System.out.println("Library projects created succesfully in " + libsFolder.toString());          
-      baseRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/sdk-base");
-      commonRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/sdk-common");
-      audioRes = referenceLibraryProject(targetID, tmpFolder.getAbsolutePath(), "libs/sdk-audio");
-      if (baseRes && commonRes && audioRes) {
-        System.out.println("Library projects referenced succesfully!");
-        // Finally, re-write the build files so they use org.eclipse.jdt.core.JDTCompilerAdapter
-        // instead of com.sun.tools.javac.Main
-        // TODO: use the build file generated by the android tools, and 
-        // add the custom section redefining the target
-        File baseBuildFile = new File(baseLibsFolder, "build.xml");
-        writeBuildXML(baseBuildFile, "sdk-base");
-        File commonBuildFile = new File(commonLibsFolder, "build.xml");
-        writeBuildXML(commonBuildFile, "sdk-common");            
-        File audioBuildFile = new File(audioLibsFolder, "build.xml");
-        writeBuildXML(audioBuildFile, "sdk-audio");          
-      }
-    }    
+    File commonAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-common-" + gvr_sdk_version + ".aar");
+    Util.copyFile(commonAarFile, new File(libsFolder, commonAarFile.getName()));
+    
+    File audioAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + gvr_sdk_version + "/sdk-audio-" + gvr_sdk_version + ".aar");
+    Util.copyFile(audioAarFile, new File(libsFolder, audioAarFile.getName()));
   }
 
   // ---------------------------------------------------------------------------
@@ -1128,7 +1097,6 @@ class AndroidBuild extends JavaBuild {
     // Create the 'android' build folder, and move any existing version out.
     File androidFolder = new File(sketch.getFolder(), "android");
     if (androidFolder.exists()) {
-      //    Date mod = new Date(androidFolder.lastModified());
       String stamp = AndroidMode.getDateStamp(androidFolder.lastModified());
       File dest = new File(sketch.getFolder(), "android." + stamp);
       boolean result = androidFolder.renameTo(dest);
@@ -1295,23 +1263,6 @@ class AndroidBuild extends JavaBuild {
   // Utility methods 
   
   
-  private void writeFile(final File file, String[] lines) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    for (String line: lines) writer.println(line);
-    writer.flush();
-    writer.close();
-  }
-  
-  
-  private File mkdirs(final File parent, final String name) throws SketchException {
-    final File result = new File(parent, name);
-    if (!(result.exists() || result.mkdirs())) {
-      throw new SketchException("Could not create " + result);
-    }
-    return result;
-  }
-  
-  
   /**
    * Tell the PDE to not complain about android.* packages and others that are
    * part of the OS library set as if they're missing.
@@ -1344,6 +1295,10 @@ class AndroidBuild extends JavaBuild {
       // add each item from the library folder / export list to the output
       for (File exportFile : library.getAndroidExports()) {
         String exportName = exportFile.getName();
+        
+        // Skip the GVR jars, because the full aar packages will be copied next
+        if (exportName.toLowerCase().startsWith("gvr-")) continue; 
+        
         if (!exportFile.exists()) {
           System.err.println(exportFile.getName() +
                              " is mentioned in export.txt, but it's " +
@@ -1412,7 +1367,7 @@ class AndroidBuild extends JavaBuild {
       }
     }
     
-    File rawFolder = mkdirs(resFolder, "raw");
+    File rawFolder = AndroidMode.mkdirs(resFolder, "raw");
     File wearApk = new File(wearFolder, "bin/" + apkName + ".apk");
     Util.copyFile(wearApk, new File(rawFolder, apkName + ".apk"));    
     return apkName;
@@ -1623,21 +1578,6 @@ class AndroidBuild extends JavaBuild {
     writer.close();
   }
 
-
-  private void writeLocalProps(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    final String sdkPath = sdk.getSdkFolder().getAbsolutePath();
-    if (Platform.isWindows()) {
-      // Windows needs backslashes escaped, or it will also accept forward
-      // slashes in the build file. We're using the forward slashes since this
-      // path gets concatenated with a lot of others that use forwards anyway.
-      writer.println("sdk.dir=" + sdkPath.replace('\\', '/'));
-    } else {
-      writer.println("sdk.dir=" + sdkPath);
-    }
-    writer.flush();
-    writer.close();
-  }  
   
   private boolean createLibraryProject(String name, String target, 
       String path, String pck) {

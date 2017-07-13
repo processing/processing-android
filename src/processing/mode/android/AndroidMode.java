@@ -397,7 +397,36 @@ public class AndroidMode extends JavaMode {
   }
   
   
-  public boolean checkAppIcons(Sketch sketch) {
+  public void initManifest(Sketch sketch, int comp) {
+    new Manifest(sketch, comp, getFolder(), false);
+  }  
+  
+  
+  public void resetManifest(Sketch sketch, int comp) {
+    new Manifest(sketch, comp, getFolder(), true);
+  }
+  
+
+  // Utils
+  
+  static public void writeFile(final File file, String[] lines) {
+    final PrintWriter writer = PApplet.createWriter(file);
+    for (String line: lines) writer.println(line);
+    writer.flush();
+    writer.close();
+  }
+  
+  
+  static public File mkdirs(final File parent, final String name) throws SketchException {
+    final File result = new File(parent, name);
+    if (!(result.exists() || result.mkdirs())) {
+      throw new SketchException("Could not create " + result);
+    }
+    return result;
+  }
+  
+  
+  static public boolean checkAppIcons(Sketch sketch) {
     File sketchFolder = sketch.getFolder();
     File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
     File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
@@ -420,22 +449,12 @@ public class AndroidMode extends JavaMode {
   }
   
   
-  public void initManifest(Sketch sketch, int comp) {
-    new Manifest(sketch, comp, getFolder(), false);
-  }  
-  
-  
-  public void resetManifest(Sketch sketch, int comp) {
-    new Manifest(sketch, comp, getFolder(), true);
-  }
-  
-  
-  public static void createFileFromTemplate(final File tmplFile, final File destFile) {
+  static public void createFileFromTemplate(final File tmplFile, final File destFile) {
     createFileFromTemplate(tmplFile, destFile, null);
   }
   
   
-  public static void createFileFromTemplate(final File tmplFile, final File destFile, 
+  static public void createFileFromTemplate(final File tmplFile, final File destFile, 
       final HashMap<String, String> replaceMap) {
     PrintWriter pw = PApplet.createWriter(destFile);    
     String lines[] = PApplet.loadStrings(tmplFile);
@@ -458,12 +477,12 @@ public class AndroidMode extends JavaMode {
     pw.close();    
   }    
   
-  public static void extractFolder(File file, File newPath, 
+  static public void extractFolder(File file, File newPath, 
     boolean setExec) throws IOException {
     extractFolder(file, newPath, setExec, false);
   }
   
-  public static void extractFolder(File file, File newPath, 
+  static public void extractFolder(File file, File newPath, 
     boolean setExec, boolean remRoot) throws IOException {
     int BUFFER = 2048;
     ZipFile zip = new ZipFile(file);
