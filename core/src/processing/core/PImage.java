@@ -396,6 +396,8 @@ public class PImage implements PConstants, Cloneable {
     }
     this.width = w;
     this.height = h;
+    this.pixelWidth = w * pixelDensity;
+    this.pixelHeight = h * pixelDensity;
   }
 
 
