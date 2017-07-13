@@ -373,6 +373,10 @@ public class PImage implements PConstants, Cloneable {
    * Use 0 for wide or high to make that dimension scale proportionally.
    */
   public void resize(int w, int h) {  // ignore
+    if (bitmap == null) {
+      return; // Cannot resize an image not backed by a bitmap
+    }
+
     if (w <= 0 && h <= 0) {
       throw new IllegalArgumentException("width or height must be > 0 for resize");
     }
@@ -385,11 +389,13 @@ public class PImage implements PConstants, Cloneable {
       h = (int) (height * diff);
     }
     bitmap = Bitmap.createScaledBitmap(bitmap, w, h, true);
+    if (pixels != null) {
+      // Resize pixels array, if in use.
+      pixels = new int[w * h];
+      bitmap.getPixels(pixels, 0, w, 0, 0, w, h);
+    }
     this.width = w;
     this.height = h;
-
-    // Mark the pixels array as altered
-    updatePixels();
   }
 
 
@@ -513,6 +519,8 @@ public class PImage implements PConstants, Cloneable {
     target.parent = parent;  // parent may be null so can't use createImage()
     if (w > 0 && h > 0) {
       getImpl(x, y, w, h, target, targetX, targetY);
+      Bitmap nat = Bitmap.createBitmap(target.pixels, targetWidth, targetHeight, Config.ARGB_8888);
+      target.setNative(nat);
     }
     return target;
   }
@@ -527,11 +535,11 @@ public class PImage implements PConstants, Cloneable {
   protected void getImpl(int sourceX, int sourceY,
                          int sourceWidth, int sourceHeight,
                          PImage target, int targetX, int targetY) {
-    if (pixels == null) {
+    if (bitmap != null) {
       bitmap.getPixels(target.pixels,
                        targetY*target.width + targetX, target.width,
                        sourceX, sourceY, sourceWidth, sourceHeight);
-    } else {
+    } else if (pixels != null) {
       int sourceIndex = sourceY*width + sourceX;
       int targetIndex = targetY*target.width + targetX;
       for (int row = 0; row < sourceHeight; row++) {
