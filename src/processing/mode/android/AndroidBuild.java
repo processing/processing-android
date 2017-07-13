@@ -290,9 +290,9 @@ class AndroidBuild extends JavaBuild {
       writeMainClass(srcFolder, renderer, external);
 
       if (appComponent == WATCHFACE) {
-/*        createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
-        createMobileModule(projectFolder, exportFolder, buildToolVer);
-        createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);*/
+//        createTopModule(projectFolder, exportFolder, "':mobile', ':wear'");
+//        createMobileModule(projectFolder, exportFolder, buildToolVer);
+//        createWearModule(new File(projectFolder, "wear"), exportFolder, buildToolVer);
       } else {
         createTopModule(buildToolsVer, "':app'");
         createAppModule(tmpFolder, buildToolsVer);
@@ -493,11 +493,6 @@ class AndroidBuild extends JavaBuild {
     // and anything in the code folder contents to the project.
     copyImportedLibs(libsFolder, assetsFolder);
     copyCodeFolder(libsFolder);
-
-//    if (appComponent == VR) {
-//      File vrFile = new File(projectFolder, "libs/vr.jar");
-//      Util.copyFile(vrFile, new File(libsFolder, "vr.jar"));
-//    }
 
     // Copy any system libraries needed by the project
     copyWearLib(tmpFolder, libsFolder);
@@ -1045,6 +1040,10 @@ class AndroidBuild extends JavaBuild {
   
   private void copyAppCompatLib(File tmpFolder, File libsFolder) 
       throws IOException {
+    File aarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");
+    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
+    
+    /*
     String targetID = getTargetID();
     
     ////////////////////////////////////////////////////////////////////////
@@ -1082,6 +1081,7 @@ class AndroidBuild extends JavaBuild {
         writeBuildXML(appCompatBuildFile, "appcompat");
       }
     }
+    */
   }
   
   
@@ -1096,9 +1096,11 @@ class AndroidBuild extends JavaBuild {
     Util.copyFile(audioAarFile, new File(libsFolder, audioAarFile.getName()));
   }
 
+  
   // ---------------------------------------------------------------------------
   // Export Gradle project
 
+  
   protected File createExportFolder() throws IOException {
     //  Sketch sketch = editor.getSketch();
     // Create the 'android' build folder, and move any existing version out.
@@ -1114,11 +1116,6 @@ class AndroidBuild extends JavaBuild {
           System.err.println("createProject renameTo() failed, resorting to mv/move instead.");
           mv = new ProcessHelper("mv", androidFolder.getAbsolutePath(), dest.getAbsolutePath());
           pr = mv.execute();
-
-          //      } catch (IOException e) {
-          //        editor.statusError(e);
-          //        return null;
-          //
         } catch (InterruptedException e) {
           e.printStackTrace();
           return null;
@@ -1421,6 +1418,8 @@ class AndroidBuild extends JavaBuild {
     File execFile = new File(exportFolder, "gradlew");
     execFile.setExecutable(true);
   }  
+  
+  
   
   // ---------------------------------------------------------------------------
   // Ant stuff, to be removed shortly...
