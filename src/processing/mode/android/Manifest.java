@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2010-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
-
+/**
+ * Class encapsulating the manifest file associated with a Processing sketch
+ * in the Android mode.
+ *
+ */
 public class Manifest {
   static final String MANIFEST_XML = "AndroidManifest.xml";
 
@@ -208,7 +212,7 @@ public class Manifest {
       replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_gvr);
     }
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
   }
 
 

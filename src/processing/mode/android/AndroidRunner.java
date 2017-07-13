@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2011-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -35,7 +35,9 @@ import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
 
-
+/** 
+ * Launches an app on the device or in the emulator.
+ */
 public class AndroidRunner implements DeviceListener {
   AndroidBuild build;
   RunnerListener listener;

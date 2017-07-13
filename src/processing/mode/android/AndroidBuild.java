@@ -45,6 +45,13 @@ import processing.mode.java.preproc.SurfaceInfo;
 import java.io.*;
 import java.util.HashMap;
 
+/** 
+ * Class with all the infrastructure needed to build a sketch in the Android 
+ * mode and run it either on the device or in the emulator, using Gradle as the
+ * build system. It also exports the sketch as a Gradle project file to build 
+ * from the command line or import into Android Studio, and a signed and aligned
+ * package ready to upload to the Play Store.
+ */
 class AndroidBuild extends JavaBuild {
   static public final int FRAGMENT  = 0;
   static public final int WALLPAPER = 1;
@@ -353,14 +360,14 @@ class AndroidBuild extends JavaBuild {
     writeProjectProps(new File(tmpFolder, "project.properties"));
     writeLocalProps(new File(tmpFolder, "local.properties"));    
     
-    File libsFolder = AndroidMode.mkdirs(tmpFolder, "libs");    
+    File libsFolder = AndroidUtil.createPath(tmpFolder, "libs");    
     copySupportLibs(tmpFolder, libsFolder);
     copyAppCompatLib(tmpFolder, libsFolder);
     
     final File resFolder = new File(tmpFolder, "res");        
-    File layoutFolder = AndroidMode.mkdirs(resFolder, "layout");    
+    File layoutFolder = AndroidUtil.createPath(resFolder, "layout");    
     writeResLayoutMainActivity(layoutFolder);
-    File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
+    File valuesFolder = AndroidUtil.createPath(resFolder, "values");      
     writeResStylesFragment(valuesFolder);
     
     // Write icons for handheld app
@@ -426,20 +433,20 @@ class AndroidBuild extends JavaBuild {
     Util.copyFile(buildTemplate, buildlFile);
     
     writeLocalProps(new File(tmpFolder, "local.properties"));
-    AndroidMode.writeFile(new File(tmpFolder, "gradle.properties"),
+    AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
         new String[]{"org.gradle.jvmargs=-Xmx1536m"});
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
     File settingsFile = new File(tmpFolder, "settings.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@project_modules@@", projectModules);    
-    AndroidMode.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
   }
   
   
   private void createAppModule(File projectFolder, String buildToolsVer)
       throws SketchException, IOException {
-    File moduleFolder = AndroidMode.mkdirs(tmpFolder, "app");
+    File moduleFolder = AndroidUtil.createPath(tmpFolder, "app");
     
     String minSdk;
     String tmplFile;
@@ -465,15 +472,15 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@gvr_version@@", gvr_sdk_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
-    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);
+    AndroidUtil.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);
 
-    AndroidMode.writeFile(new File(moduleFolder, "proguard-rules.pro"),
+    AndroidUtil.writeFile(new File(moduleFolder, "proguard-rules.pro"),
         new String[]{"# Add project specific ProGuard rules here."});
 
-    File libsFolder = AndroidMode.mkdirs(moduleFolder, "libs");
+    File libsFolder = AndroidUtil.createPath(moduleFolder, "libs");
     File mainFolder = new File(moduleFolder, "src/main");
-    File resFolder = AndroidMode.mkdirs(mainFolder, "res");
-    File assetsFolder = AndroidMode.mkdirs(mainFolder, "assets");
+    File resFolder = AndroidUtil.createPath(mainFolder, "res");
+    File assetsFolder = AndroidUtil.createPath(mainFolder, "assets");
 
     writeRes(resFolder);
 
@@ -521,7 +528,7 @@ class AndroidBuild extends JavaBuild {
   
   private void createMobileModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
-    File moduleFolder = AndroidMode.mkdirs(exportFolder, "mobile");
+    File moduleFolder = AndroidUtil.createPath(exportFolder, "mobile");
     
     File appBuildTemplate = mode.getContentFile("templates/" + HANDHELD_GRADLE_BUILD_TEMPLATE);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
@@ -535,14 +542,14 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
-    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap); 
     
-    AndroidMode.writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+    AndroidUtil.writeFile(new File(moduleFolder, "proguard-rules.pro"), 
         new String[]{"# Add project specific ProGuard rules here."});    
     
-    File mainFolder = AndroidMode.mkdirs(moduleFolder, "src/main");
-    File javaFolder = AndroidMode.mkdirs(mainFolder, "java");
-    File resFolder = AndroidMode.mkdirs(mainFolder, "res");    
+    File mainFolder = AndroidUtil.createPath(moduleFolder, "src/main");
+    File javaFolder = AndroidUtil.createPath(mainFolder, "java");
+    File resFolder = AndroidUtil.createPath(mainFolder, "res");    
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
@@ -553,7 +560,7 @@ class AndroidBuild extends JavaBuild {
   
   private void createWearModule(File projectFolder, File exportFolder, String buildToolsVer) 
       throws SketchException, IOException {
-    File moduleFolder = AndroidMode.mkdirs(exportFolder, "wear");
+    File moduleFolder = AndroidUtil.createPath(exportFolder, "wear");
     
     File appBuildTemplate = mode.getContentFile("templates/" + WEARABLE_GRADLE_BUILD_TEMPLATE);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
@@ -567,19 +574,19 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@wear_version@@", wear_version);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
-    AndroidMode.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);     
+    AndroidUtil.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);     
     
-    AndroidMode.writeFile(new File(moduleFolder, "proguard-rules.pro"), 
+    AndroidUtil.writeFile(new File(moduleFolder, "proguard-rules.pro"), 
         new String[]{"# Add project specific ProGuard rules here."}); 
     
     File coreFile = new File(projectFolder, "libs/processing-core.jar");    
-    File libsFolder = AndroidMode.mkdirs(moduleFolder, "libs");
+    File libsFolder = AndroidUtil.createPath(moduleFolder, "libs");
     Util.copyFile(coreFile, new File(libsFolder, "processing-core.jar"));
         
-    File mainFolder = AndroidMode.mkdirs(moduleFolder, "src/main");
-    File javaFolder = AndroidMode.mkdirs(mainFolder, "java");
-    File resFolder = AndroidMode.mkdirs(mainFolder, "res");
-    File assetsFolder = AndroidMode.mkdirs(mainFolder, "assets");
+    File mainFolder = AndroidUtil.createPath(moduleFolder, "src/main");
+    File javaFolder = AndroidUtil.createPath(mainFolder, "java");
+    File resFolder = AndroidUtil.createPath(mainFolder, "res");
+    File assetsFolder = AndroidUtil.createPath(mainFolder, "assets");
     
     Util.copyFile(new File(projectFolder, "AndroidManifest.xml"), 
                   new File(mainFolder, "AndroidManifest.xml"));
@@ -622,7 +629,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
     
-    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
   
   
@@ -636,7 +643,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");    
     
-    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
   
   
@@ -651,7 +658,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");    
     
-    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap);     
   }
 
   
@@ -666,7 +673,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : ""); 
     
-    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }  
   
   
@@ -680,7 +687,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
     
-    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
 
   
@@ -691,28 +698,28 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@sketch_class_name@@",sketchClassName);
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
   }
   
   
   private void writeResStylesFragment(final File valuesFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + STYLES_FRAGMENT_TEMPLATE);
     File xmlFile = new File(valuesFolder, "styles.xml");
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile); 
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile); 
   }
   
   
   private void writeResStylesVR(final File valuesFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + STYLES_VR_TEMPLATE);
     File xmlFile = new File(valuesFolder, "styles.xml");
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
   }
   
 
   private void writeResXMLWallpaper(final File xmlFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + XML_WALLPAPER_TEMPLATE);
     File xmlFile = new File(xmlFolder, "wallpaper.xml");
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
   }
   
   
@@ -723,14 +730,14 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@sketch_class_name@@",sketchClassName);
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);  
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);  
   }
   
   
   private void writeResXMLWatchFace(final File xmlFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + XML_WATCHFACE_TEMPLATE);
     File xmlFile = new File(xmlFolder, "watch_face.xml");
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile);
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
   } 
   
   
@@ -741,7 +748,7 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@package_name@@", getPackageName());
     
-    AndroidMode.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
   }
   
   
@@ -764,7 +771,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@sketch_class_name@@", sketchClassName);
     replaceMap.put("@@uses_permissions@@", usesPermissions);
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap); 
   }  
   
   
@@ -791,7 +798,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@version_name@@", versionName);
     replaceMap.put("@@apk_name@@", apkName);
 
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);  
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);  
   }  
   
   
@@ -826,25 +833,25 @@ class AndroidBuild extends JavaBuild {
   static final String ICON_WATCHFACE_RECTANGULAR = "preview_rectangular.png";  
   
   private void writeRes(File resFolder) throws SketchException {
-    File layoutFolder = AndroidMode.mkdirs(resFolder, "layout");    
+    File layoutFolder = AndroidUtil.createPath(resFolder, "layout");    
     writeResLayoutMainActivity(layoutFolder);
 
     int comp = getAppComponent();
     if (comp == FRAGMENT) {
-      File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
+      File valuesFolder = AndroidUtil.createPath(resFolder, "values");      
       writeResStylesFragment(valuesFolder);
     }
     
     if (comp == WALLPAPER) {
-      File xmlFolder = AndroidMode.mkdirs(resFolder, "xml");      
+      File xmlFolder = AndroidUtil.createPath(resFolder, "xml");      
       writeResXMLWallpaper(xmlFolder);
             
-      File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
+      File valuesFolder = AndroidUtil.createPath(resFolder, "values");      
       writeResStringsWallpaper(valuesFolder);      
     }
     
     if (comp == VR) {
-      File valuesFolder = AndroidMode.mkdirs(resFolder, "values");      
+      File valuesFolder = AndroidUtil.createPath(resFolder, "values");      
       writeResStylesVR(valuesFolder);  
     }    
 
@@ -852,7 +859,7 @@ class AndroidBuild extends JavaBuild {
     writeIconFiles(sketchFolder, resFolder);
     
     if (comp == WATCHFACE) {
-      File xmlFolder = AndroidMode.mkdirs(resFolder, "xml");      
+      File xmlFolder = AndroidUtil.createPath(resFolder, "xml");      
       writeResXMLWatchFace(xmlFolder);      
       
       // write the preview files
@@ -1044,7 +1051,7 @@ class AndroidBuild extends JavaBuild {
     // first step: extract appcompat library project 
     File aarFile = new File(sdk.getSupportLibrary(), "/appcompat-v7/" + support_version + "/appcompat-v7-" + support_version + ".aar");        
     File appCompatFolder = new File(libsFolder, "appcompat");
-    AndroidMode.extractFolder(aarFile, appCompatFolder, false);
+    AndroidUtil.extractFolder(aarFile, appCompatFolder, false);
     Util.removeDir(new File(appCompatFolder, "aidl"));
     Util.removeDir(new File(appCompatFolder, "android"));
     Util.removeDir(new File(appCompatFolder, "assets"));
@@ -1367,7 +1374,7 @@ class AndroidBuild extends JavaBuild {
       }
     }
     
-    File rawFolder = AndroidMode.mkdirs(resFolder, "raw");
+    File rawFolder = AndroidUtil.createPath(resFolder, "raw");
     File wearApk = new File(wearFolder, "bin/" + apkName + ".apk");
     Util.copyFile(wearApk, new File(rawFolder, apkName + ".apk"));    
     return apkName;
@@ -1410,7 +1417,7 @@ class AndroidBuild extends JavaBuild {
   
   private void installGradlew(File exportFolder) throws IOException {
     File gradlewFile = mode.getContentFile("mode/gradlew.zip");
-    AndroidMode.extractFolder(gradlewFile, exportFolder, true, true); 
+    AndroidUtil.extractFolder(gradlewFile, exportFolder, true, true); 
     File execFile = new File(exportFolder, "gradlew");
     execFile.setExecutable(true);
   }  
@@ -1642,6 +1649,6 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@project_name@@", projectName);
     replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
         
-    AndroidMode.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);
   }  
 }

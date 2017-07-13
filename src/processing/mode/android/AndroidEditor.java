@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,6 @@ import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
-import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 import processing.mode.java.preproc.PdePreprocessor;
 
@@ -666,7 +665,7 @@ public class AndroidEditor extends JavaEditor {
       } else {
         text = USB_DRIVER_MESSAGEA;        
       }
-      AndroidMode.showMessage(USB_DRIVER_TITLE, text);
+      AndroidUtil.showMessage(USB_DRIVER_TITLE, text);
     } else {
       new Thread() {
         public void run() {

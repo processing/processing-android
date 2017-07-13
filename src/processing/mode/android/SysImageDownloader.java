@@ -197,7 +197,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       inputStream.close();
       outputStream.close();
 
-      AndroidMode.extractFolder(saveTo, unpackTo, setExec);
+      AndroidUtil.extractFolder(saveTo, unpackTo, setExec);
     }
 
     // For some reason the source.properties file includes Addon entries, 

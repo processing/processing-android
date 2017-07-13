@@ -27,7 +27,10 @@ import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import java.io.File;
 
-
+/** 
+ * Class handling the keystore where the users can store the credentials for 
+ * their apps.
+ */
 public class AndroidKeyStore {
   public static final String ALIAS_STRING = "processing-keystore";
   public static final String KEYSTORE_FILE_NAME = "android-release-key.keystore";

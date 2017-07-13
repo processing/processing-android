@@ -275,10 +275,10 @@ public class AVD {
       }
       if (createAvdResult.toString().contains("Target id is not valid")) {
         // They didn't install the Google APIs
-        AndroidMode.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
+        AndroidUtil.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
       } else {
         // Just generally not working
-        AndroidMode.showMessage(AVD_CREATE_TITLE, 
+        AndroidUtil.showMessage(AVD_CREATE_TITLE, 
                                 String.format(AVD_CREATE_MESSAGE, AndroidBuild.target_sdk));
         System.out.println(createAvdResult);
       }
@@ -306,7 +306,7 @@ public class AVD {
           return true;
         }
         if (wearAVD.badness()) {
-          AndroidMode.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
+          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
         if (wearAVD.noTargets(sdk)) {
@@ -323,7 +323,7 @@ public class AVD {
           return true;
         }
         if (mobileAVD.badness()) {
-          AndroidMode.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
+          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
         if (mobileAVD.noTargets(sdk)) {
@@ -338,7 +338,7 @@ public class AVD {
       }
     } catch (final Exception e) {
       e.printStackTrace();
-      AndroidMode.showMessage(AVD_CREATE_TITLE, 
+      AndroidUtil.showMessage(AVD_CREATE_TITLE, 
                               String.format(AVD_CREATE_MESSAGE, AndroidBuild.target_sdk));
     }
     return false;

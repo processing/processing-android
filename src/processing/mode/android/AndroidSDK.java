@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2013-16 The Processing Foundation
+ Copyright (c) 2013-17 The Processing Foundation
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -43,7 +43,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-
+/** 
+ * Class holding all needed references (path, tools, etc) to the SDK used by 
+ * the mode.
+ */
 class AndroidSDK {
   public static boolean adbDisabled = false;
   

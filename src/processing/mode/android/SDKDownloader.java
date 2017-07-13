@@ -227,7 +227,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       inputStream.close();
       outputStream.close();
 
-      AndroidMode.extractFolder(saveTo, unpackTo, setExec);
+      AndroidUtil.extractFolder(saveTo, unpackTo, setExec);
     }
 
     private void getMainDownloadUrls(SDKUrlHolder urlHolder, 
