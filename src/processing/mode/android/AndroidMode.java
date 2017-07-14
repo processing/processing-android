@@ -55,17 +55,16 @@ public class AndroidMode extends JavaMode {
   private boolean userCancelledSDKSearch = false;
 
   private static final String BLUETOOTH_DEBUG_URL = 
-      "http://developer.android.com/training/wearables/apps/bt-debugging.html";
+      "https://developer.android.com/training/wearables/apps/debugging.html";
   
   private static final String WATCHFACE_DEBUG_TITLE =
       "Is Debugging over Bluetooth enabled?";
   
   private static final String WATCHFACE_DEBUG_MESSAGE =
-      "Processing will access the smartwatch through the phone " +
-      "currently paired to it. Your watch won't show up in the device list, " +
-      "select the phone instead.<br><br>" +
-      "Make sure to enable <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging over bluetooth</a> " +
-      "for this to work.";
+      "Processing will install watch faces on a smartwatch either over Wi-Fi " +
+      "or via Bluetooth, in which case the watch needs to be paired with a phone.<br><br>" +
+      "Read this guide on <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging an Android Wear App</a> " +
+      "for more details.";
   
   private static final String WALLPAPER_INSTALL_TITLE =
       "Wallpaper installed!";

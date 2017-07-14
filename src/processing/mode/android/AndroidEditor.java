@@ -339,36 +339,6 @@ public class AndroidEditor extends JavaEditor {
     
     menu.addSeparator();
     
-    /*
-    // TODO: The SDK selection menu will be removed once app publishing is fully
-    // functional: correct minimum SDK level can be inferred from app type 
-    // (fragment, wallpaper, etc), and target SDK from the highest available in
-    // the SDK.
-    final JMenu sdkMenu = new JMenu("Target SDK");
-    
-    JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
-    defaultItem.setEnabled(false);
-    sdkMenu.add(defaultItem);
-
-    new Thread() {
-      @Override
-      public void run() {
-        while(androidMode == null || androidMode.getSDK() == null) {
-          try {
-            Thread.sleep(3000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-        updateSdkMenu(sdkMenu);
-      }
-    }.start();
-
-    menu.add(sdkMenu);
-    
-    menu.addSeparator();
-    */
-    
     item = new JMenuItem("Update SDK");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -403,72 +373,6 @@ public class AndroidEditor extends JavaEditor {
     return menu;
   }
 
-  /*
-  private void updateSdkMenu(final JMenu sdkMenu) {
-    try {
-      ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
-
-      if (targets.size() != 0) sdkMenu.removeAll();
-
-      AndroidSDK.SDKTarget lowestTargetAvailable = null;
-      JCheckBoxMenuItem lowestTargetMenuItem = null;
-
-//      String savedTargetVersion = Preferences.get("android.sdk.version");
-      String savedSdkName = Preferences.get("android.sdk.name");
-      boolean savedTargetSet = false;
-
-      for (final AndroidSDK.SDKTarget target : targets) {
-        if (target.version < 19) {
-          // TODO We do not support API level less than 19?
-          continue;
-        }
-        
-        final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
-
-        if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
-          lowestTargetAvailable = target;
-          lowestTargetMenuItem = item;
-        }
-
-        if (target.name.equals(savedSdkName)) {
-          AndroidBuild.setSdkTarget(target, sketch);
-          item.setState(true);
-          savedTargetSet = true;
-        }
-
-        item.addChangeListener(new ChangeListener() {
-          @Override
-          public void stateChanged(ChangeEvent e) {
-            if (target.name.equals(AndroidBuild.target_sdk_version)) item.setState(true);
-            else item.setState(false);
-          }
-        });
-
-        item.addActionListener(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            AndroidBuild.setSdkTarget(target, sketch);
-
-            for (int i = 0; i < sdkMenu.getItemCount(); i++) {
-              ((JCheckBoxMenuItem) sdkMenu.getItem(i)).setState(false);
-            }
-
-            item.setState(true);
-          }
-        });
-
-        sdkMenu.add(item);
-      }
-
-      if (!savedTargetSet && lowestTargetAvailable != null) {
-        AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
-        lowestTargetMenuItem.setState(true);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-*/
 
   private void setAppComponent(int comp) {
     if (appComponent != comp) {
@@ -487,7 +391,8 @@ public class AndroidEditor extends JavaEditor {
       androidMode.resetManifest(sketch, appComponent);
       androidMode.showSelectComponentMessage(comp); 
     }
-  }  
+  }
+  
   
   /**
    * Uses the main help menu, and adds a few extra options. If/when there's
@@ -528,87 +433,17 @@ public class AndroidEditor extends JavaEditor {
   }
 
 
-
-//  protected void updateMode() {
-//    // When the selection is made, the menu will update itself
-//    boolean active = toggleItem.isSelected();
-//    if (active) {
-//      boolean rolling = true;
-//      if (sdk == null) {
-//        rolling = loadAndroid();
-//      }
-//      if (rolling) {
-//        editor.setHandlers(new RunHandler(), new PresentHandler(),
-//                           new StopHandler(),
-//                           new ExportHandler(),  new ExportAppHandler());
-//        build = new AndroidBuild(editor, sdk);
-//        editor.statusNotice("Android mode enabled for this editor window.");
-//      }
-//    } else {
-//      editor.resetHandlers();
-//      editor.statusNotice("Android mode disabled.");
-//    }
-//  }
-
-
-//  protected boolean loadAndroid() {
-//    statusNotice("Loading Android tools.");
-//
-//    try {
-//      sdk = AndroidSDK.find(this);
-//    } catch (final Exception e) {
-//      Base.showWarning("Android Tools Error", e.getMessage(), null);
-//      statusNotice("Android mode canceled.");
-//      return false;
-//    }
-//
-//    // Make sure that the processing.android.core.* classes are available
-//    if (!checkCore()) {
-//      statusNotice("Android mode canceled.");
-//      return false;
-//    }
-//
-//    statusNotice("Done loading Android tools.");
-//    return true;
-//  }
-
-
-//  static protected File getCoreZipLocation() {
-//    if (coreZipLocation == null) {
-//      coreZipLocation = checkCoreZipLocation();
-//    }
-//    return coreZipLocation;
-//  }
-
-
-//  private boolean checkCore() {
-//    final File target = getCoreZipLocation();
-//    if (!target.exists()) {
-//      try {
-//        final URL url = new URL(ANDROID_CORE_URL);
-//        PApplet.saveStream(target, url.openStream());
-//      } catch (final Exception e) {
-//        Base.showWarning("Download Error",
-//          "Could not download Android core.zip", e);
-//        return false;
-//      }
-//    }
-//    return true;
-//  }
-
-
   @Override
   public void dispose() {
     if (updateDevicesTimer != null) {
       updateDevicesTimer.cancel();
     }
     super.dispose();
-  }  
+  }
+  
   
   public void statusError(String what) {
     super.statusError(what);
-//    new Exception("deactivating RUN").printStackTrace();
-//    toolbar.deactivate(AndroidToolbar.RUN);
     toolbar.deactivateRun();
   }
 
@@ -625,7 +460,6 @@ public class AndroidEditor extends JavaEditor {
   public void handleRunEmulator() {
     new Thread() {
       public void run() {
-//        toolbar.activate(AndroidToolbar.RUN);
         toolbar.activateRun();
         startIndeterminate();
         prepareRun();
@@ -661,7 +495,6 @@ public class AndroidEditor extends JavaEditor {
       new Thread() {
         public void run() {
           toolbar.activateRun();
-//          toolbar.activate(AndroidToolbar.RUN);
           startIndeterminate();
           prepareRun();
           try {
@@ -680,7 +513,6 @@ public class AndroidEditor extends JavaEditor {
 
   public void handleStop() {
     toolbar.deactivateRun();
-//    toolbar.deactivate(AndroidToolbar.RUN);
     stopIndeterminate();
     androidMode.handleStop(this);
   }
@@ -694,7 +526,6 @@ public class AndroidEditor extends JavaEditor {
     if (handleExportCheckModified()) {
       new Thread() {
         public void run() {
-//          toolbar.activate(AndroidToolbar.EXPORT);
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
@@ -711,19 +542,10 @@ public class AndroidEditor extends JavaEditor {
             statusError(e);
           }
           stopIndeterminate();
-//          toolbar.deactivate(AndroidToolbar.EXPORT);
           ((AndroidToolbar)toolbar).deactivateExport();
         }
       }.start();
     }
-
-//    try {
-//      buildReleaseForExport("debug");
-//    } catch (final MonitorCanceled ok) {
-//      statusNotice("Canceled.");
-//    } finally {
-//      deactivateExport();
-//    }
   }
 
 
@@ -738,6 +560,7 @@ public class AndroidEditor extends JavaEditor {
     }
   }
 
+  
   public void startExportPackage(final String keyStorePassword) {
     new Thread() {
       public void run() {
@@ -766,9 +589,11 @@ public class AndroidEditor extends JavaEditor {
     }.start();
   }
   
+  
   public int getAppComponent() {
     return appComponent;
   }
+  
   
   private void loadModeSettings() {
     File sketchProps = new File(sketch.getCodeFolder(), "sketch.properties");    

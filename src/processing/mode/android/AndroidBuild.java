@@ -198,7 +198,7 @@ class AndroidBuild extends JavaBuild {
    */
   public File build(String target) throws IOException, SketchException {
     this.target = target;        
-    File folder = createProject(true, false);
+    File folder = createProject(true);
     if (folder == null) return null;
     if (!gradleBuild()) return null;
     return folder;      
@@ -210,18 +210,14 @@ class AndroidBuild extends JavaBuild {
    * sketch. Creates the top and app modules in the case of regular, VR, and 
    * wallpapers, and top, mobile and wear modules in the case of watch faces.
    */
-  protected File createProject(boolean external, boolean wear) 
+  protected File createProject(boolean external) 
       throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
     System.out.println("Build folder: " + tmpFolder.getAbsolutePath());
-    if (wear) {
-      tmpFolder = new File(tmpFolder, "wear");
-    }
 
     // Create the 'src' folder with the preprocessed code.
-    srcFolder = new File(tmpFolder, "app/src/main/java");
-    // use the src folder, since 'bin' might be used by the ant build
-    binFolder = srcFolder;
+    srcFolder = new File(tmpFolder, module + "/src/main/java");
+    binFolder = srcFolder; // Needed in the the parent JavaBuild class
     if (processing.app.Base.DEBUG) {
       Platform.openFolder(tmpFolder);
     }
@@ -342,7 +338,8 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", TARGET_SDK);
-    replaceMap.put("@@support_version@@", SUPPORT_VER);    
+    replaceMap.put("@@support_version@@", SUPPORT_VER);  
+    replaceMap.put("@@play_services_version@@", PLAY_SERVICES_VER);
     replaceMap.put("@@wear_version@@", WEAR_VER);        
     replaceMap.put("@@gvr_version@@", GVR_VER);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
@@ -641,7 +638,7 @@ class AndroidBuild extends JavaBuild {
                   new File(resFolder, "drawable/preview_circular.png"), 
                   mode.getContentFile("icons/" + WATCHFACE_ICON_CIRCULAR));
     copyWatchIcon(new File(sketchFolder, WATCHFACE_ICON_RECTANGULAR), 
-        new File(resFolder, "drawable/preview_circular.png"), 
+        new File(resFolder, "drawable/preview_rectangular.png"), 
         mode.getContentFile("icons/" + WATCHFACE_ICON_RECTANGULAR));
   }
   
@@ -665,7 +662,8 @@ class AndroidBuild extends JavaBuild {
   
   
   private void copyIcon(File srcFile, File destFile) throws IOException {
-    if (destFile.getParentFile().mkdirs()) {
+    File parent = destFile.getParentFile();
+    if (parent.exists() || parent.mkdirs()) {
       Util.copyFile(srcFile, destFile);
     } else {
       System.err.println("Could not create \"" + destFile.getParentFile() + "\" folder.");
@@ -739,7 +737,7 @@ class AndroidBuild extends JavaBuild {
     target = "debug";
     
     exportProject = true;
-    File projectFolder = createProject(false, false);
+    File projectFolder = createProject(false);
     exportProject = false;
     
     File exportFolder = createExportFolder("android");      
@@ -901,11 +899,12 @@ class AndroidBuild extends JavaBuild {
 
   private void renameAPK() {
     String suffix = target.equals("release") ? "release-unsigned" : "debug";
-    String apkName = "app/build/outputs/apk/" + "app-" + suffix + ".apk";
+    String apkName = module + "/build/outputs/apk/" + module + "-" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (apkFile.exists()) {
       String suffixNew = target.equals("release") ? "release_unsigned" : "debug";
-      String apkNameNew = "app/build/outputs/apk/" + sketch.getName().toLowerCase() + "_" + suffixNew + ".apk";
+      String apkNameNew = module + "/build/outputs/apk/" + 
+        sketch.getName().toLowerCase() + "_" + suffixNew + ".apk";
       final File apkFileNew = new File(tmpFolder, apkNameNew);
       apkFile.renameTo(apkFileNew);
     }
