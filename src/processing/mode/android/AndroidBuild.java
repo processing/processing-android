@@ -574,11 +574,11 @@ class AndroidBuild extends JavaBuild {
       writeResStylesVR(valuesFolder);  
     }    
     
-    File sketchFolder = sketch.getFolder();        
+    File sketchFolder = sketch.getFolder();
+    writeAppIconFiles(sketchFolder, resFolder);
     if (comp == WATCHFACE) {
+      // Need the preview icons for watch faces.
       writeWatchIconFiles(sketchFolder, resFolder);
-    } else {
-      writeAppIconFiles(sketchFolder, resFolder);
     }
   }
 
