@@ -48,6 +48,9 @@ import java.util.TimerTask;
 
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
+  // Component selected by default
+  static public final String DEFAULT_COMPONENT = "app";  
+  
   private int appComponent;
   
   private Settings settings;
@@ -284,7 +287,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
-        setAppComponent(AndroidBuild.FRAGMENT);
+        setAppComponent(AndroidBuild.APP);
       }
     });
     wallpaperItem.addActionListener(new ActionListener() {
@@ -483,7 +486,7 @@ public class AndroidEditor extends JavaEditor {
     if (appComponent != comp) {
       appComponent = comp;
       
-      if (appComponent == AndroidBuild.FRAGMENT) {
+      if (appComponent == AndroidBuild.APP) {
         settings.set("component", "app");  
       } else if (appComponent == AndroidBuild.WALLPAPER) {
         settings.set("component", "wallpaper");
@@ -707,7 +710,7 @@ public class AndroidEditor extends JavaEditor {
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
-          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
+          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
@@ -742,7 +745,7 @@ public class AndroidEditor extends JavaEditor {
    */
   public void handleExportPackage() {
     if (androidMode.checkPackageName(sketch, appComponent) &&
-        androidMode.checkAppIcons(sketch) && handleExportCheckModified()) {
+        androidMode.checkAppIcons(sketch, appComponent) && handleExportCheckModified()) {
       new KeyStoreManager(this);
     }
   }
@@ -752,7 +755,7 @@ public class AndroidEditor extends JavaEditor {
       public void run() {
         startIndeterminate();
         statusNotice("Exporting signed package...");
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
@@ -786,13 +789,13 @@ public class AndroidEditor extends JavaEditor {
       boolean save = false;
       String component;
       if (!sketchProps.exists()) {
-        component = AndroidBuild.DEFAULT_COMPONENT;
+        component = DEFAULT_COMPONENT;
         settings.set("component", component);
         save = true;
       } else {
         component = settings.get("component");
         if (component == null) {
-          component = AndroidBuild.DEFAULT_COMPONENT;
+          component = DEFAULT_COMPONENT;
           settings.set("component", component);
           save = true;
         }
@@ -800,7 +803,7 @@ public class AndroidEditor extends JavaEditor {
       if (save) settings.save();
       
       if (component.equals("app")) {
-        appComponent = AndroidBuild.FRAGMENT;
+        appComponent = AndroidBuild.APP;
         fragmentItem.setState(true);
       } else if (component.equals("wallpaper")) {
         appComponent = AndroidBuild.WALLPAPER;

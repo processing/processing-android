@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Display;
@@ -68,36 +67,22 @@ public class PFragment extends Fragment implements AppComponent {
   public void initDimensions() {
     WindowManager wm = getActivity().getWindowManager();
     Display display = wm.getDefaultDisplay();
-    metrics = new DisplayMetrics();
-    display.getMetrics(metrics);
 
-//    display.getRealMetrics(metrics); // API 17 or higher
-//    display.getRealSize(size);
+    metrics = new DisplayMetrics();
+    display.getRealMetrics(metrics);
 
     size = new Point();
-    if (Build.VERSION.SDK_INT >= 17) {
-      display.getRealSize(size);
-    } else if (Build.VERSION.SDK_INT >= 14) {
-      // Use undocumented methods getRawWidth, getRawHeight
-      try {
-        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
-        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
-      } catch (Exception e) {
-        display.getSize(size);
-      }
-    }
+    display.getRealSize(size);
   }
 
 
   public int getDisplayWidth() {
     return size.x;
-//    return metrics.widthPixels;
   }
 
 
   public int getDisplayHeight() {
     return size.y;
-//    return metrics.heightPixels;
   }
 
 

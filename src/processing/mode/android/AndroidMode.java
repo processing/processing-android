@@ -29,32 +29,16 @@ import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
-import processing.app.Util;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
-import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 
 /** 
  * Programming mode to create and run Processing sketches on Android devices.
@@ -298,8 +282,7 @@ public class AndroidMode extends JavaMode {
       RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this, 
-        editor.getAppComponent(), true);
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -337,8 +320,7 @@ public class AndroidMode extends JavaMode {
     
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this, 
-        editor.getAppComponent(), false);
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice("Building Android project...");
     File projectFolder = build.build("debug");
@@ -388,7 +370,7 @@ public class AndroidMode extends JavaMode {
   
   public boolean checkPackageName(Sketch sketch, int comp) {
     Manifest manifest = new Manifest(sketch, comp, getFolder(), false);
-    String defName = AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();    
+    String defName = Manifest.BASE_PACKAGE + "." + sketch.getName().toLowerCase();    
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
@@ -399,20 +381,26 @@ public class AndroidMode extends JavaMode {
   }
   
   
-  static public boolean checkAppIcons(Sketch sketch) {
+  public boolean checkAppIcons(Sketch sketch, int comp) {
     File sketchFolder = sketch.getFolder();
-    File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
-    File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
-    File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
-    File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
-    File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
-    File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
-    boolean allExist = localIcon36.exists() &&
-                       localIcon48.exists() &&
-                       localIcon72.exists() &&
-                       localIcon96.exists() &&
-                       localIcon144.exists() &&
-                       localIcon192.exists();    
+    
+    boolean allExist = false;
+    if (comp == AndroidBuild.WATCHFACE) {
+      File localIconSquare = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_RECTANGULAR);
+      File localIconCircle = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_CIRCULAR);
+      allExist = localIconSquare.exists() && localIconCircle.exists();      
+    } else {  
+      File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
+      File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
+      File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
+      File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
+      File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
+      File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
+      allExist = localIcon36.exists() && localIcon48.exists() &&
+                 localIcon72.exists() && localIcon96.exists() &&
+                 localIcon144.exists() && localIcon192.exists();
+    }
+    
     if (!allExist) {
       // The user did not set custom icons, show error and stop
       AndroidUtil.showMessage(EXPORT_DEFAULT_ICONS_TITLE, EXPORT_DEFAULT_ICONS_MESSAGE);

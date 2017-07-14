@@ -168,7 +168,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         
          // Normalize built-tools and platform folders to android-<API LEVEL>
         String actualName = "android-" + downloadUrls.platformVersion;
-        renameFolder(platformsFolder, "android-" + AndroidBuild.target_sdk, actualName);
+        renameFolder(platformsFolder, "android-" + AndroidBuild.TARGET_SDK, actualName);
         renameFolder(buildToolsFolder, downloadUrls.buildToolsVersion, actualName);
         
         // Done, let's set the environment and load the new SDK!
@@ -379,7 +379,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private Node getLatestPlatform(NodeList platformList) {
     Node latest = null;
     int maxRevision = -1;
-    String platformDescription = "Android SDK Platform " +  AndroidBuild.target_sdk; 
+    String platformDescription = "Android SDK Platform " +  AndroidBuild.TARGET_SDK; 
     for (int i = 0; i < platformList.getLength(); i++) {
       Node platform = platformList.item(i);
       
@@ -389,7 +389,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // API level and platform description are both used to avoid ambiguity with 
       // preview versions, which might share the API level with the earlier stable 
       // platform, but use the letter codename in their description.        
-      if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) && 
+      if (level.item(0).getTextContent().equals(AndroidBuild.TARGET_SDK) && 
           desc.item(0).getTextContent().equals(platformDescription)) {
         int intRevision = PApplet.parseInt(revision.item(0).getTextContent());
         if (maxRevision < intRevision) {

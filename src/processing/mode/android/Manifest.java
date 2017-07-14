@@ -49,28 +49,22 @@ public class Manifest {
     "which means lots of things are likely to stop working properly.\n" +
     "To prevent losing any data, it's recommended that you use “Save As”\n" +
     "to save a separate copy of your sketch, and then restart Processing.";
-//  static final String MULTIPLE_ACTIVITIES =
-//    "Processing only supports a single Activity in the AndroidManifest.xml\n" +
-//    "file. Only the first activity entry will be updated, and you better \n" +
-//    "hope that's the right one, smartypants.";
-
   
   static private final String[] MANIFEST_TEMPLATE = {
-    "FragmentManifest.xml.tmpl",
+    "AppManifest.xml.tmpl",
     "WallpaperManifest.xml.tmpl",
     "WatchFaceManifest.xml.tmpl",
     "VRManifest.xml.tmpl",
   };
   
-//  private Editor editor;
-  private Sketch sketch;
+  // Default base package name, user need to change when exporting package. 
+  static final String BASE_PACKAGE = "processing.test";  
   
-  private int appComp;
+  static final String PERMISSION_PREFIX = "android.permission.";  
   
+  private Sketch sketch;  
+  private int appComp;  
   private File modeFolder;
-
-  // entries we care about from the manifest file
-//  private String packageName;
 
   /** the manifest data read from the file */
   private XML xml;
@@ -85,7 +79,7 @@ public class Manifest {
 
 
   private String defaultPackageName() {
-    return AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();
+    return BASE_PACKAGE + "." + sketch.getName().toLowerCase();
   }
 
   
@@ -120,24 +114,19 @@ public class Manifest {
   
   
   public void setPackageName(String packageName) {
-//    this.packageName = packageName;
-    // this is the package attribute in the root <manifest> object
     xml.setString("package", packageName);
     save();
   }
 
+  
   public void setSdkTarget(String version) {
     XML usesSdk = xml.getChild("uses-sdk");
     if (usesSdk != null) { 
-//      usesSdk.setString("android:minSdkVersion", "15");
       usesSdk.setString("android:targetSdkVersion", version);
       save();
     }    
   }
 
-//writer.println("  <uses-permission android:name=\"android.permission.INTERNET\" />");
-//writer.println("  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />");
-  static final String PERMISSION_PREFIX = "android.permission.";
 
   public String[] getPermissions() {
     XML[] elements = xml.getChildren("uses-permission");
@@ -202,14 +191,14 @@ public class Manifest {
     File xmlTemplate = new File(modeFolder, "templates/" + MANIFEST_TEMPLATE[appComp]);
     
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
-    if (appComp == AndroidBuild.FRAGMENT) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_fragment);
+    if (appComp == AndroidBuild.APP) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_APP);
     } else if (appComp == AndroidBuild.WALLPAPER) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_wallpaper);
+      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WALLPAPER);
     } else if (appComp == AndroidBuild.WATCHFACE) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_watchface);
+      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WATCHFACE);
     } else if (appComp == AndroidBuild.VR) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.min_sdk_gvr);
+      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_VR);
     }
         
     AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
@@ -250,17 +239,10 @@ public class Manifest {
         }       
       }
 
-//      XML activity = app.getChild("activity");
-      // the '.' prefix is just an alias for the full package name
-      // http://developer.android.com/guide/topics/manifest/activity-element.html#name
-//      activity.setString("android:name", "." + className);  // this has to be right
-
       PrintWriter writer = PApplet.createWriter(file);
       writer.print(mf.format(4));
       writer.flush();
-//    mf.write(writer);
       writer.close();
-
     } catch (Exception e) {
       e.printStackTrace();
     }

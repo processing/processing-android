@@ -88,13 +88,13 @@ public class AVD {
   /** Default virtual device used by Processing. */
   static public final AVD mobileAVD =
     new AVD("Processing-0" + Base.getRevision(),
-            AndroidBuild.target_platform, SysImageDownloader.SYSTEM_IMAGE_TAG, DEFAULT_SKIN);
+            AndroidBuild.TARGET_PLATFORM, SysImageDownloader.SYSTEM_IMAGE_TAG, DEFAULT_SKIN);
 //            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
 
   /** Default virtual wear device used by Processing. */
   static public final AVD wearAVD =
     new AVD("Processing-Wear-0" + Base.getRevision(),
-            AndroidBuild.target_platform, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG, WEAR_SKIN);  
+            AndroidBuild.TARGET_PLATFORM, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG, WEAR_SKIN);  
   
   public AVD(final String name, final String target, 
       final String tag, final String skin) {
@@ -243,7 +243,7 @@ public class AVD {
   protected boolean noTargets(final AndroidSDK sdk) throws IOException {
     initTargets(sdk); 
 //    return preferredAbi.size() == 0;
-    return preferredAbi.get(AndroidBuild.target_sdk) == null;
+    return preferredAbi.get(AndroidBuild.TARGET_SDK) == null;
   }
   
 
@@ -257,7 +257,7 @@ public class AVD {
       "-t", target,
       "-c", DEFAULT_SDCARD_SIZE,
       "-s", skin,
-      "--abi", preferredAbi.get(AndroidBuild.target_sdk)
+      "--abi", preferredAbi.get(AndroidBuild.TARGET_SDK)
     };
         
     // sdk/tools/android create avd -n "Wear-Processing-0254" -t android-23 -c 64M -s AndroidWearSquare --abi android-wear/x86
@@ -279,7 +279,7 @@ public class AVD {
       } else {
         // Just generally not working
         AndroidUtil.showMessage(AVD_CREATE_TITLE, 
-                                String.format(AVD_CREATE_MESSAGE, AndroidBuild.target_sdk));
+                                String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
         System.out.println(createAvdResult);
       }
       //System.err.println(createAvdResult);
@@ -339,7 +339,7 @@ public class AVD {
     } catch (final Exception e) {
       e.printStackTrace();
       AndroidUtil.showMessage(AVD_CREATE_TITLE, 
-                              String.format(AVD_CREATE_MESSAGE, AndroidBuild.target_sdk));
+                              String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
     }
     return false;
   }

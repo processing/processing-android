@@ -75,21 +75,21 @@ class AndroidSDK {
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
-      "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";
+      "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";
     
   private static final String INVALID_SDK_TITLE =
       "Is the required Android API installed?";
   
   private static final String INVALID_SDK_MESSAGE =
       "The Android SDK appears to be installed, " +
-      "however the SDK platform for API " + AndroidBuild.target_sdk + 
+      "however the SDK platform for API " + AndroidBuild.TARGET_SDK + 
       " was not found. If it is available in a different location, " +
       "click “Locate SDK path” to select the " +
       "location of the alternative SDK, or “Download SDK” to let " +
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
-      "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";  
+      "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";  
   
   private static final String COMMAND_LINE_TUT_URL = 
       "http://android.processing.org/tutorials/command_line/index.html";  
@@ -146,16 +146,16 @@ class AndroidSDK {
       throw new BadSDKException("There is no platforms folder in " + folder);
     }
     
-    targetPlatform = new File(platforms, AndroidBuild.target_platform);
+    targetPlatform = new File(platforms, AndroidBuild.TARGET_PLATFORM);
     if (!targetPlatform.exists()) {
       throw new BadSDKException("There is no Android " + 
-                                AndroidBuild.target_sdk + " in " + platforms.getAbsolutePath());
+                                AndroidBuild.TARGET_SDK + " in " + platforms.getAbsolutePath());
     }
 
     androidJar = new File(targetPlatform, "android.jar");
     if (!androidJar.exists()) {
       throw new BadSDKException("android.jar for plaform " + 
-                                AndroidBuild.target_sdk + " is missing from " + targetPlatform.getAbsolutePath());
+                                AndroidBuild.TARGET_SDK + " is missing from " + targetPlatform.getAbsolutePath());
     }
     
     wearablePath = new File(folder, "extras/google/m2repository/com/google/android/support/wearable");

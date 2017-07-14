@@ -126,7 +126,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         if (wear) {
           // wear system images
           File downloadedSysImgWear = new File(tempFolder, downloadUrls.sysImgWearFilename);
-          File tmp = new File(sysImgFolder, "android-" + AndroidBuild.target_sdk);
+          File tmp = new File(sysImgFolder, "android-" + AndroidBuild.TARGET_SDK);
           if (!tmp.exists()) tmp.mkdir();
           File sysImgWearFinalFolder = new File(tmp, downloadUrls.sysImgWearTag);
           if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir();
@@ -135,7 +135,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         } else {
           // mobile system images
           File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
-          File tmp = new File(sysImgFolder, "android-" + AndroidBuild.target_sdk);
+          File tmp = new File(sysImgFolder, "android-" + AndroidBuild.TARGET_SDK);
           if (!tmp.exists()) tmp.mkdir();
           File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
           if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
@@ -246,7 +246,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
           // Only considering nodes without a codename, which correspond to the platform
           // pre-releases.        
-          if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
+          if (level.item(0).getTextContent().equals(AndroidBuild.TARGET_SDK) &&
               desc.item(0).getTextContent().equals(systemImage) && 
               codename.item(0) == null) {          
             NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
@@ -278,7 +278,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
           // Only considering nodes without a codename, which correspond to the platform
           // pre-releases.  
-          if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) &&
+          if (level.item(0).getTextContent().equals(AndroidBuild.TARGET_SDK) &&
               desc.item(0).getTextContent().equals(systemImage) && 
               codename.item(0) == null) {          
             NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
