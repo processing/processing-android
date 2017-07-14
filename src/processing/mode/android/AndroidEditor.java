@@ -97,15 +97,8 @@ public class AndroidEditor extends JavaEditor {
       this.deviceMenu = deviceMenu;
     }
     
-    private Device selectFirstNonWatchDevice(java.util.List<Device> deviceList) {
-      for (Device device : deviceList) {
-        if (device.hasFeature("watch")) {
-          // Don't include the watch devices to the list, they get their watch
-          // faces through the handheld they are paired with.
-          continue;
-        }
-        return device;
-      }
+    private Device selectFirstDevice(java.util.List<Device> deviceList) {
+      if (0 < deviceList.size()) return deviceList.get(0);
       return null;
     }
 
@@ -134,7 +127,7 @@ public class AndroidEditor extends JavaEditor {
         deviceMenu.removeAll();
 
         if (selectedDevice == null) {
-          selectedDevice = selectFirstNonWatchDevice(deviceList);
+          selectedDevice = selectFirstDevice(deviceList);
           devices.setSelectedDevice(selectedDevice);  
         } else {
           // check if selected device is still connected
@@ -147,17 +140,12 @@ public class AndroidEditor extends JavaEditor {
           }
 
           if (!found) {
-            selectedDevice = selectFirstNonWatchDevice(deviceList);
+            selectedDevice = selectFirstDevice(deviceList);
             devices.setSelectedDevice(selectedDevice);  
           }
         }
 
         for (final Device device : deviceList) {
-          if (device.hasFeature("watch")) {
-            // Don't include the watch devices to the list, they get their watch
-            // faces through the handheld they are paired with.
-            continue;
-          }
           final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
           deviceItem.setEnabled(true);
 

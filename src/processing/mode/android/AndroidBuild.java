@@ -48,14 +48,11 @@ import java.util.HashMap;
  * package ready to upload to the Play Store.
  */
 class AndroidBuild extends JavaBuild {
-  // Move to...?
   static public final int APP       = 0;
   static public final int WALLPAPER = 1;
   static public final int WATCHFACE = 2;
   static public final int VR        = 3;
-  
-  
-  // Move to AndroidSDK
+
   // Minimum SDK's API levels required for each component:
   static public final String MIN_SDK_APP       = "17"; // Android 4.2
   static public final String MIN_SDK_WALLPAPER = "17"; // Android 4.2
@@ -82,9 +79,7 @@ class AndroidBuild extends JavaBuild {
   static public final String SUPPORT_VER       = "25.2.0";
   static public final String PLAY_SERVICES_VER = "10.2.0";  
   static public final String WEAR_VER          = "2.0.0";
-  static public final String GVR_VER           = "1.60.1";
-  
-  
+  static public final String GVR_VER           = "1.60.1";  
   
   // Main activity or service 
   static private final String APP_ACTIVITY_TEMPLATE = "AppActivity.java.tmpl";

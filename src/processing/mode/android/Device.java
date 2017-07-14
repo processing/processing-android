@@ -100,8 +100,14 @@ class Device {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    
+    name += " [" + id + "]";
+    
+//    if (hasFeature("watch")) {
+//      name += " (watch)";      
+//    }
 
-    return name + " [" + id + "]";
+    return name;
   }
 
   // adb -s emulator-5556 install helloWorld.apk
