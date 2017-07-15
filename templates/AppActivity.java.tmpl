@@ -7,7 +7,7 @@ import android.widget.FrameLayout;
 import android.support.v7.app.AppCompatActivity;
 
 import processing.android.PFragment;
-import processing.android.ViewIdGenerator;
+import processing.android.CompatUtils;
 import processing.core.PApplet;
 
 public class MainActivity extends AppCompatActivity {
@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     FrameLayout frame = new FrameLayout(this);
-    frame.setId(ViewIdGenerator.getUniqueId());
+    frame.setId(CompatUtils.getUniqueViewId());
     setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
     

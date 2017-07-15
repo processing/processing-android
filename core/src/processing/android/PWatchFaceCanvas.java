@@ -49,14 +49,11 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
   public void initDimensions() {
+    metrics = new DisplayMetrics();
+    size = new Point();
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();
-
-    metrics = new DisplayMetrics();
-    display.getRealMetrics(metrics);
-
-    size = new Point();
-    display.getRealSize(size);
+    CompatUtils.getDisplayParams(display, metrics, size);
   }
 
 

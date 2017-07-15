@@ -39,14 +39,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
 
 
   public void initDimensions() {
+    metrics = new DisplayMetrics();
+    size = new Point();
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();
-
-    metrics = new DisplayMetrics();
-    display.getRealMetrics(metrics);
-
-    size = new Point();
-    display.getRealSize(size);
+    CompatUtils.getDisplayParams(display, metrics, size);
   }
 
 
