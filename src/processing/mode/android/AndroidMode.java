@@ -48,7 +48,7 @@ public class AndroidMode extends JavaMode {
   private File coreZipLocation;
   private AndroidRunner runner;
   
-  private boolean showBluetoothDebugMessage = true;
+  private boolean showWatchFaceDebugMessage = true;
   private boolean showWallpaperSelectMessage = true;
   
   private boolean checkingSDK = false;
@@ -337,9 +337,9 @@ public class AndroidMode extends JavaMode {
 
   
   public void showSelectComponentMessage(int appComp) {
-    if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
+    if (showWatchFaceDebugMessage && appComp == AndroidBuild.WATCHFACE) {
       AndroidUtil.showMessage(WATCHFACE_DEBUG_TITLE, WATCHFACE_DEBUG_MESSAGE);
-      showBluetoothDebugMessage = false;
+      showWatchFaceDebugMessage = false;
     } 
   }
   
@@ -384,25 +384,28 @@ public class AndroidMode extends JavaMode {
     File sketchFolder = sketch.getFolder();
     
     boolean allExist = false;
+  
+    File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
+    File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
+    File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
+    File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
+    File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
+    File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
+    allExist = localIcon36.exists() && localIcon48.exists() &&
+               localIcon72.exists() && localIcon96.exists() &&
+               localIcon144.exists() && localIcon192.exists();
+    
     if (comp == AndroidBuild.WATCHFACE) {
+      // Additional preview icons are needed for watch faces
       File localIconSquare = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_RECTANGULAR);
       File localIconCircle = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_CIRCULAR);
-      allExist = localIconSquare.exists() && localIconCircle.exists();      
-    } else {  
-      File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
-      File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
-      File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
-      File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
-      File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
-      File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
-      allExist = localIcon36.exists() && localIcon48.exists() &&
-                 localIcon72.exists() && localIcon96.exists() &&
-                 localIcon144.exists() && localIcon192.exists();
+      allExist &= localIconSquare.exists() && localIconCircle.exists();      
     }
     
     if (!allExist) {
       // The user did not set custom icons, show error and stop
-      AndroidUtil.showMessage(EXPORT_DEFAULT_ICONS_TITLE, EXPORT_DEFAULT_ICONS_MESSAGE);
+      AndroidUtil.showMessage(EXPORT_DEFAULT_ICONS_TITLE, 
+                              EXPORT_DEFAULT_ICONS_MESSAGE);
       return false;      
     }
     return true;
