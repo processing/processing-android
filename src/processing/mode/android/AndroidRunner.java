@@ -61,7 +61,7 @@ public class AndroidRunner implements DeviceListener {
   }
 
 
-  public void launch(Future<Device> deviceFuture, int comp, boolean emu) {
+  public boolean launch(Future<Device> deviceFuture, int comp, boolean emu) {
     String devStr = emu ? "emulator" : "device";
     listener.statusNotice("Waiting for " + devStr + " to become available...");
     
@@ -71,17 +71,24 @@ public class AndroidRunner implements DeviceListener {
       // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
       Devices.killAdbServer();
-      return;
+      return false;
     }
     
-//    if (!wear && device.hasFeature("watch")) {
-//      listener.statusError("Trying to install a regular app or wallpaper on a watch.");
-//      System.err.println("For some reason, Processing is trying to install the sketch\n" + 
-//                         "on the paired watch instead of the mobile device.");
-//      
-//      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
-//      return;
-//    }
+    if (comp == AndroidBuild.WATCHFACE && !device.hasFeature("watch")) {
+      listener.statusError("Could not install the sketch.");
+      Messages.showWarning("Selected device is not a watch...",
+          "You are trying to install a watch face on a non-watch device.\n" +
+          "Select the correct device, or use the emulator.");      
+      return false;
+    }
+    
+    if (comp != AndroidBuild.WATCHFACE && device.hasFeature("watch")) {
+      listener.statusError("Could not install the sketch.");
+      Messages.showWarning("Selected device is a watch...",
+          "You are trying to install a non-watch app on a watch.\n" +
+          "Select the correct device, or use the emulator.");      
+      return false;
+    }
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
@@ -99,13 +106,15 @@ public class AndroidRunner implements DeviceListener {
           "ADB_INSTALL_TIMEOUT environmental variable to have a\n" +
           "longer timeout, for example 5 minutes or more.");
       }      Devices.killAdbServer();  // see above
-      return;
+      return false;
     }
 
+    boolean status = false;
     if (comp == AndroidBuild.WATCHFACE || comp == AndroidBuild.WALLPAPER) {
       if (startSketch(build, device)) {
         listener.statusNotice("Sketch installed "
                               + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+        status = true;
       } else {
         listener.statusError("Could not install the sketch.");
       }
@@ -114,6 +123,7 @@ public class AndroidRunner implements DeviceListener {
       if (startSketch(build, device)) {
         listener.statusNotice("Sketch launched "
                               + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+        status = true;
       } else {
         listener.statusError("Could not start the sketch.");
       }
@@ -121,6 +131,7 @@ public class AndroidRunner implements DeviceListener {
     
     listener.stopIndeterminate();
     lastRunDevice = device;
+    return status;
   }
 
 
