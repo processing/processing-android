@@ -52,20 +52,26 @@ import java.net.URLConnection;
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
   // Version 25.3.1 of the SDK tools break the mode, since the android tool
   // no longer works:
-  private static final int SDK_TOOLS_MAX_MAJOR = 25;
-  private static final int SDK_TOOLS_MAX_MINOR = 2;
-  
-  private static final int PLATFORM_TOOLS_MAX_MAJOR = 25;
-  private static final int PLATFORM_TOOLS_MAX_MINOR = 0;  
-
-  private static final int BUILD_TOOLS_MAX_MAJOR = 25;
-  private static final int BUILD_TOOLS_MAX_MINOR = 0;   
-  
   // https://code.google.com/p/android/issues/detail?id=235455
   // as well as removing the ant scripts.
   // https://code.google.com/p/android/issues/detail?id=235410
   // See release notes:
-  // https://developer.android.com/studio/releases/sdk-tools.html  
+  // https://developer.android.com/studio/releases/sdk-tools.html
+  
+  // The last versions of tools known to work with ant are hard-coded here:
+  private static final String SDK_TOOLS_VERSION = "25.2.5";  
+  private static final String PLATFORM_TOOLS_VERSION = "25.0.3";
+  private static final String BUILD_TOOLS_VERSION = "25.0.3";
+  
+  private static final int SDK_TOOLS_MAX_MAJOR = -1;
+  private static final int SDK_TOOLS_MAX_MINOR = -1;    
+
+  private static final int PLATFORM_TOOLS_MAX_MAJOR = -1;
+  private static final int PLATFORM_TOOLS_MAX_MINOR = -1;
+
+  private static final int BUILD_TOOLS_MAX_MAJOR = -1;
+  private static final int BUILD_TOOLS_MAX_MINOR = -1;  
+  
   private static final String REPOSITORY_URL = "https://dl.google.com/android/repository/";
   private static final String REPOSITORY_LIST = "repository-12.xml";
   private static final String ADDON_LIST = "addon.xml";
@@ -268,7 +274,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
           if (hostOs.equals(requiredHostOs)) {
             urlHolder.platformToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+            urlHolder.platformToolsFilename = replaceVersion(urlHolder.platformToolsFilename, PLATFORM_TOOLS_VERSION);
             urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
+            PApplet.println("PLATFORM TOOLS: " + urlHolder.platformToolsUrl);
             urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
             break;
           }
@@ -279,11 +287,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // build-tools
       Node buildToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:build-tool"), BUILD_TOOLS_MAX_MAJOR, BUILD_TOOLS_MAX_MINOR);
       if (buildToolsItem != null) {
-        Node revisionListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:revision").item(0);
-        String major = ((Element) revisionListItem).getElementsByTagName("sdk:major").item(0).getTextContent();
-        String minor = ((Element) revisionListItem).getElementsByTagName("sdk:minor").item(0).getTextContent();
-        String micro = ((Element) revisionListItem).getElementsByTagName("sdk:micro").item(0).getTextContent();        
-        urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
+//        Node revisionListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:revision").item(0);
+//        String major = ((Element) revisionListItem).getElementsByTagName("sdk:major").item(0).getTextContent();
+//        String minor = ((Element) revisionListItem).getElementsByTagName("sdk:minor").item(0).getTextContent();
+//        String micro = ((Element) revisionListItem).getElementsByTagName("sdk:micro").item(0).getTextContent();        
+        urlHolder.buildToolsVersion = BUILD_TOOLS_VERSION;
         archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
         for (int i = 0; i < archiveList.getLength(); i++) {
@@ -291,7 +299,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
           if (hostOs.equals(requiredHostOs)) {
             urlHolder.buildToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+            urlHolder.buildToolsFilename = replaceVersion(urlHolder.buildToolsFilename, BUILD_TOOLS_VERSION);
             urlHolder.buildToolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+            PApplet.println("BUILD TOOLS: " + urlHolder.buildToolsFilename);
             urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
             break;
           }
@@ -300,7 +310,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // tools
-      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"), SDK_TOOLS_MAX_MAJOR, SDK_TOOLS_MAX_MINOR);;
+      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"), SDK_TOOLS_MAX_MAJOR, SDK_TOOLS_MAX_MINOR);
       if (toolsItem != null) {
         archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
         archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
@@ -309,7 +319,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
           if (hostOs.equals(requiredHostOs)) {
             urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+            urlHolder.toolsFilename = replaceVersion(urlHolder.toolsFilename, SDK_TOOLS_VERSION);
             urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
+            PApplet.println("SDK TOOLS: " + urlHolder.toolsUrl);
             urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
             break;
           }
@@ -407,7 +419,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       int intMajor = PApplet.parseInt(major.item(0).getTextContent());
       int intMinor = PApplet.parseInt(minor.item(0).getTextContent());
       int intMicro = PApplet.parseInt(micro.item(0).getTextContent());      
-      if (max_major < intMajor || (max_major == intMajor && max_minor < intMinor)) continue;      
+      if ((0 <= max_major && 0 <= max_minor) &&
+          max_major < intMajor || (max_major == intMajor && max_minor < intMinor)) continue;      
       if (maxMajor <= intMajor && maxMinor <= intMinor && maxMicro <= intMicro) {        
         latest = item;
         maxMajor = intMajor;
@@ -417,6 +430,15 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     }
     return latest;
   } 
+  
+  private String replaceVersion(String fn, String newVer) {
+    int n1 = fn.indexOf("_r");
+    String ver = fn.substring(n1);
+    int n2 = ver.lastIndexOf("-");
+    ver = ver.substring(2, n2);
+    PApplet.println("Replacing version " + ver + " with " + newVer);
+    return fn.replace(ver, newVer);
+  }
   
   private void renameFolder(File baseFolder, String expected, String actual) 
       throws IOException {
