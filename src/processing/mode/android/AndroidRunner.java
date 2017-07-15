@@ -61,19 +61,10 @@ public class AndroidRunner implements DeviceListener {
   }
 
 
-  public void launch(Future<Device> deviceFuture, boolean emu, boolean wear) {
-//    try {
-//      runSketchOnDevice(Devices.getInstance().getEmulator(), "debug", AndroidEditor.this);
-//    } catch (final MonitorCanceled ok) {
-//      sketchStopped();
-//      statusNotice("Canceled.");
-//    }
-
-    
+  public void launch(Future<Device> deviceFuture, int comp, boolean emu) {
     String devStr = emu ? "emulator" : "device";
     listener.statusNotice("Waiting for " + devStr + " to become available...");
     
-//  final Device device = waitForDevice(deviceFuture, monitor);
     final Device device = waitForDevice(deviceFuture, listener);
     if (device == null || !device.isAlive()) {
       listener.statusError("Lost connection with " + devStr + " while launching. Try again.");
@@ -95,12 +86,6 @@ public class AndroidRunner implements DeviceListener {
     device.addListener(this);
     device.setPackageName(build.getPackageName());
 
-//  if (listener.isHalted()) {
-////  if (monitor.isCanceled()) {
-//    throw new MonitorCanceled();
-//  }
-
-//  monitor.setNote("Installing sketch on " + device.getId());
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
@@ -116,121 +101,30 @@ public class AndroidRunner implements DeviceListener {
       }      Devices.killAdbServer();  // see above
       return;
     }
-//    if (!build.antInstall()) {
-//    }
 
-//  if (monitor.isCanceled()) {
-//    throw new MonitorCanceled();
-//  }
-//  monitor.setNote("Starting sketch on " + device.getId());
-    listener.statusNotice("Starting sketch on " + device.getId());
-    if (startSketch(build, device)) {
-      listener.statusNotice("Sketch launched "
-                            + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+    if (comp == AndroidBuild.WATCHFACE || comp == AndroidBuild.WALLPAPER) {
+      if (startSketch(build, device)) {
+        listener.statusNotice("Sketch installed "
+                              + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+      } else {
+        listener.statusError("Could not install the sketch.");
+      }
     } else {
-      listener.statusError("Could not start the sketch.");
+      listener.statusNotice("Starting sketch on " + device.getId());
+      if (startSketch(build, device)) {
+        listener.statusNotice("Sketch launched "
+                              + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+      } else {
+        listener.statusError("Could not start the sketch.");
+      }
     }
+    
     listener.stopIndeterminate();
     lastRunDevice = device;
-//} finally {
-//  build.cleanup();
-//}
-//} finally {
-////monitor.close();
-//listener.stopIndeterminate();
-//}
   }
 
 
   private volatile Device lastRunDevice = null;
-
-  /**
-   * @param target "debug" or "release"
-   */
-  /*
-  private void runSketchOnDevice(Sketch sketch,
-                                 Future<Device> deviceFuture,
-                                 String target,
-                                 RunnerListener listener) {
-//    final IndeterminateProgressMonitor monitor =
-//      new IndeterminateProgressMonitor(this,
-//                                       "Building and launching...",
-//                                       "Creating project...");
-
-
-    AndroidBuild build = new AndroidBuild(sketch, listener);
-    try {
-      try {
-        if (build.createProject(target) == null) {
-          return;
-        }
-      } catch (SketchException se) {
-        listener.statusError(se);
-      } catch (IOException e) {
-        listener.statusError(e);
-      }
-      try {
-//        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-//        monitor.setNote("Building...");
-        listener.statusNotice("Building...");
-        try {
-          if (!build.antBuild(target)) {
-            return;
-          }
-        } catch (SketchException se) {
-          listener.statusError(se);
-        }
-
-//        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-//        monitor.setNote("Waiting for device to become available...");
-        listener.statusNotice("Waiting for device to become available...");
-//        final Device device = waitForDevice(deviceFuture, monitor);
-        final Device device = waitForDevice(deviceFuture, listener);
-        if (device == null || !device.isAlive()) {
-          listener.statusError("Device killed or disconnected.");
-          return;
-        }
-
-        device.addListener(this);
-
-//        if (listener.isHalted()) {
-////        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-
-//        monitor.setNote("Installing sketch on " + device.getId());
-        listener.statusNotice("Installing sketch on " + device.getId());
-        if (!device.installApp(build.getPathForAPK(target), listener)) {
-          listener.statusError("Device killed or disconnected.");
-          return;
-        }
-
-//        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-//        monitor.setNote("Starting sketch on " + device.getId());
-        listener.statusNotice("Starting sketch on " + device.getId());
-        if (startSketch(build, device)) {
-          listener.statusNotice("Sketch launched on the "
-              + (device.isEmulator() ? "emulator" : "device") + ".");
-        } else {
-          listener.statusError("Could not start the sketch.");
-        }
-
-        lastRunDevice = device;
-      } finally {
-        build.cleanup();
-      }
-    } finally {
-//      monitor.close();
-      listener.stopIndeterminate();
-    }
-  }
-  */
 
 
   // if user asks for 480x320, 320x480, 854x480 etc, then launch like that
@@ -251,10 +145,8 @@ public class AndroidRunner implements DeviceListener {
 
   private Device waitForDevice(Future<Device> deviceFuture, RunnerListener listener) {
     for (int i = 0; i < 120; i++) {
-//      if (monitor.isCanceled()) {
       if (listener.isHalted()) {
         deviceFuture.cancel(true);
-//        throw new MonitorCanceled();
         return null;
       }
       try {
@@ -298,9 +190,6 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     final String exceptionClass = m.group(1);
-//    if (Runner.handleCommonErrors(exceptionClass, exceptionLine, listener)) {
-//      return;
-//    }
     Runner.handleCommonErrors(exceptionClass, exceptionLine, listener, sketchErr);
 
     while (frames.hasNext()) {

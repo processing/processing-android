@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.Future;
 
 /** 
  * Programming mode to create and run Processing sketches on Android devices.
@@ -49,6 +50,7 @@ public class AndroidMode extends JavaMode {
   private AndroidRunner runner;
   
   private boolean showWatchFaceDebugMessage = true;
+  private boolean showWatchFaceSelectMessage = true;
   private boolean showWallpaperSelectMessage = true;
   
   private boolean checkingSDK = false;
@@ -75,6 +77,15 @@ public class AndroidMode extends JavaMode {
       "You need to open the wallpaper picker in the device in order "+ 
       "to select it as the new background.";
   
+  private static final String WATCHFACE_INSTALL_TITLE =
+      "Watch face installed!";
+  
+  private static final String WATCHFACE_INSTALL_MESSAGE = 
+      "Processing just built and installed your sketch as a " +
+      "watch face on the selected device.<br><br>" +
+      "You need to add it as a favourite watch face on the device "+ 
+      "and then select it from the watch face picker in order to run it.";
+    
   private static final String DISTRIBUTING_APPS_TUT_URL = 
       "http://android.processing.org/tutorials/distributing/index.html";  
   
@@ -269,14 +280,6 @@ public class AndroidMode extends JavaMode {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-//  public void handleRun(Sketch sketch, RunnerListener listener) throws SketchException {
-//    JavaBuild build = new JavaBuild(sketch);
-//    String appletClassName = build.build();
-//    if (appletClassName != null) {
-//      runtime = new Runner(build, listener);
-//      runtime.launch(false);
-//    }
-//  }
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
       RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
@@ -294,10 +297,10 @@ public class AndroidMode extends JavaMode {
       throw se;
     }
 
-    listener.statusNotice("Running sketch on emulator...");
+    int comp = build.getAppComponent();
+    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL());    
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL()), 
-        true, build.isWear());
+    runner.launch(emu, comp, true);
   }
 
 
@@ -328,11 +331,12 @@ public class AndroidMode extends JavaMode {
       return;
     }
     
-    listener.statusNotice("Running sketch on device...");
+    int comp = build.getAppComponent();
+    Future<Device> dev = Devices.getInstance().getHardware(); 
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getHardware(), false, build.isWear());
+    runner.launch(dev, comp, false);
     
-    showPostBuildMessage(build.getAppComponent());
+    showPostBuildMessage(comp);
   }
 
   
@@ -348,7 +352,11 @@ public class AndroidMode extends JavaMode {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
       AndroidUtil.showMessage(WALLPAPER_INSTALL_TITLE, WALLPAPER_INSTALL_MESSAGE);  
       showWallpaperSelectMessage = false;
-    }    
+    }
+    if (showWatchFaceSelectMessage && appComp == AndroidBuild.WATCHFACE) {
+      AndroidUtil.showMessage(WATCHFACE_INSTALL_TITLE, WATCHFACE_INSTALL_MESSAGE);  
+      showWatchFaceSelectMessage = false;
+    } 
   }
   
   

@@ -240,7 +240,7 @@ public class Commander implements RunnerListener {
           AndroidRunner runner = new AndroidRunner(build, this);
           runner.launch(runOnEmu ?
               Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL()) :
-              Devices.getInstance().getHardware(), runOnEmu, build.isWear());
+              Devices.getInstance().getHardware(), build.getAppComponent(), runOnEmu);
         }
 
         success = true;
