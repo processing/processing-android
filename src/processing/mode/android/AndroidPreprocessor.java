@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -30,9 +30,11 @@ import processing.app.*;
 import processing.core.PApplet;
 import processing.mode.java.preproc.PdePreprocessor;
 import processing.mode.java.preproc.SurfaceInfo;
-import processing.mode.java.preproc.PdePreprocessor.Mode;
 
 
+/** 
+ * Processing preprocessor, supporting the Android specifics.
+ */
 public class AndroidPreprocessor extends PdePreprocessor {
   protected Sketch sketch;
   protected String packageName;

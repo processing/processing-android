@@ -1,0 +1,82 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion @@target_sdk@@
+    buildToolsVersion "@@build_tools@@"
+    defaultConfig {
+        applicationId "@@package_name@@"
+        minSdkVersion @@min_sdk@@
+        targetSdkVersion @@target_sdk@@
+        versionCode @@version_code@@
+        versionName "@@version_name@@"
+    }
+    
+    buildTypes {
+        debug {
+            debuggable true
+        }    
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+    // We create a variant of the compile task, where we use the Eclipse Compiler for Java
+    // (ECJ) instead of the JDK (which would require the user to download and install
+    // the Oracle JDK). Inspired by the following:
+    // https://github.com/bytedeco/javacpp/wiki/Gradle
+    // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.compile.JavaCompile.html
+    applicationVariants.all { variant ->
+        variant.javaCompile.doFirst {
+            // The main class that runs the Eclipse batch compiler
+            String ecjMain = 'org.eclipse.jdt.internal.compiler.batch.Main'
+            
+            // We construct the list of arguments needed by the batch compiler 
+            // https://help.eclipse.org/neon/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_batch_compiler.htm            
+            List<String> ecjArgs = ['-nowarn',
+                                    '-source', variant.javaCompile.sourceCompatibility, 
+                                    '-target', variant.javaCompile.targetCompatibility, 
+                                    '-d', variant.javaCompile.destinationDir] as String[]
+
+            // Set the debug attributes level according to the build target
+            if (variant.name == 'debug') {
+              // All debug info
+              ecjArgs += '-g'
+            } else {
+              // No debug info
+              ecjArgs += '-g:none'
+            }
+
+            // Adding all the source files to the list of arguments
+            ecjArgs += variant.javaCompile.source
+             
+            // Add the Android jar to the classpath inherited from the task
+            FileCollection ecjClasspath = files('@@target_platform@@/android.jar', 
+                                                 variant.javaCompile.classpath)
+            
+            // Running the JavaExec task, which requires the main class to run,
+            // the classpath, and the list of arguments
+            // https://docs.gradle.org/3.5/dsl/org.gradle.api.tasks.JavaExec.html#org.gradle.api.tasks.JavaExec:main            
+            javaexec {
+                main ecjMain
+                classpath ecjClasspath
+                args ecjArgs
+            }
+            
+            // We skip the rest of the compileXxxJavaWithJavac task, since we
+            // source is already compiled with ecj
+            throw new StopExecutionException("skip javac")
+        }
+    }    
+}
+
+dependencies {
+    provided files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:@@support_version@@'
+    compile 'com.android.support:design:@@support_version@@'
+    compile 'com.google.vr:sdk-audio:@@gvr_version@@'
+    compile 'com.google.vr:sdk-base:@@gvr_version@@'
+    compile files('libs/processing-core.jar')
+    compile files('libs/vr.jar')
+}

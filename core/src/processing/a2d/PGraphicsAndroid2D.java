@@ -241,6 +241,8 @@ public class PGraphicsAndroid2D extends PGraphics {
           if (screen != null) {
             screen.drawBitmap(bitmap, new Matrix(), null);
           }
+        } catch (Exception e) {
+          e.printStackTrace();
         } finally {
           if (screen != null) {
             try {

@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.os.Build;
 import android.os.Bundle;
 import android.graphics.Rect;
 import android.support.wearable.complications.ComplicationData;
@@ -50,38 +49,21 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
   public void initDimensions() {
+    metrics = new DisplayMetrics();
+    size = new Point();
     WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();
-    metrics = new DisplayMetrics();
-    display.getMetrics(metrics);
-
-//  display.getRealMetrics(metrics); // API 17 or higher
-//  display.getRealSize(size);
-
-    size = new Point();
-    if (Build.VERSION.SDK_INT >= 17) {
-      display.getRealSize(size);
-    } else if (Build.VERSION.SDK_INT >= 14) {
-      // Use undocumented methods getRawWidth, getRawHeight
-      try {
-        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
-        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
-      } catch (Exception e) {
-        display.getSize(size);
-      }
-    }
+    CompatUtils.getDisplayParams(display, metrics, size);
   }
 
 
   public int getDisplayWidth() {
     return size.x;
-//    return metrics.widthPixels;
   }
 
 
   public int getDisplayHeight() {
     return size.y;
-//    return metrics.heightPixels;
   }
 
 

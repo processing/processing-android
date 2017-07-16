@@ -46,10 +46,10 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
     if (component.getKind() == AppComponent.FRAGMENT) {
       PFragment frag = (PFragment)component;
       activity = frag.getActivity();
-      surfaceView = new SketchSurfaceView(activity, null);
+      surfaceView = new SurfaceViewAndroid2D(activity, null);
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       wallpaper = (WallpaperService)component;
-      surfaceView = new SketchSurfaceView(wallpaper, holder);
+      surfaceView = new SurfaceViewAndroid2D(wallpaper, holder);
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (CanvasWatchFaceService)component;
       surfaceView = null;
@@ -60,10 +60,10 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
 
   // SurfaceView
 
-  public class SketchSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
+  public class SurfaceViewAndroid2D extends SurfaceView implements SurfaceHolder.Callback {
     SurfaceHolder holder;
 
-    public SketchSurfaceView(Context context, SurfaceHolder holder) {
+    public SurfaceViewAndroid2D(Context context, SurfaceHolder holder) {
       super(context);
       this.holder = holder;
 
@@ -79,6 +79,8 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
       setFocusableInTouchMode(true);
       requestFocus();
 //    println("done making surface view");
+
+      surfaceReady = false; // Will be ready when the surfaceCreated() event is called
     }
 
     @Override
@@ -89,18 +91,26 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
         return holder;
       }
     }
-//  public PGraphics getGraphics() {
-//    return g2;
-//  }
 
     // part of SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
+      surfaceReady = true;
+      if (requestedThreadStart) {
+        // Only start the thread once the surface has been created, otherwise
+        // it will not be able draw
+        startThread();
+      }
+      if (PApplet.DEBUG) {
+        System.out.println("surfaceCreated()");
+      }
     }
 
 
     // part of SurfaceHolder.Callback
     public void surfaceDestroyed(SurfaceHolder holder) {
-      //g2.dispose();
+      if (PApplet.DEBUG) {
+        System.out.println("surfaceDestroyed()");
+      }
     }
 
 

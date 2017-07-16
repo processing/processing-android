@@ -51,7 +51,7 @@ import android.view.Window;
 import android.view.WindowManager;
 
 public class PSurfaceVR extends PSurfaceGLES {
-  protected GLVRSurfaceView glview;
+  protected SurfaceViewVR vrView;
   protected PGraphicsVR pvr;
 
   protected GvrActivity vrActivity;
@@ -67,31 +67,35 @@ public class PSurfaceVR extends PSurfaceGLES {
     this.activity = vrActivity;
     pvr = (PGraphicsVR)graphics;
 
-    glview = new GLVRSurfaceView(vrActivity);
+    vrView = new SurfaceViewVR(vrActivity);
 
     // Enables/disables the transition view used to prompt the user to place
     // their phone into a GVR viewer.
-    glview.setTransitionViewEnabled(true);
+    vrView.setTransitionViewEnabled(true);
 
     // Enables Cardboard-trigger feedback with Daydream headsets. This is a simple way of supporting
     // Daydream controller input for basic interactions using the existing Cardboard trigger API.
-    glview.enableCardboardTriggerEmulation();
+    vrView.enableCardboardTriggerEmulation();
 
-    glview.setStereoModeEnabled(vr);
+    vrView.setStereoModeEnabled(vr);
     if (vr) {
-      glview.setDistortionCorrectionEnabled(true);
-      glview.setNeckModelEnabled(true);
+      vrView.setDistortionCorrectionEnabled(true);
+      vrView.setNeckModelEnabled(true);
     }
 
-    if (glview.setAsyncReprojectionEnabled(true)) {
+    if (vrView.setAsyncReprojectionEnabled(true)) {
       // Async reprojection decouples the app framerate from the display framerate,
       // allowing immersive interaction even at the throttled clockrates set by
       // sustained performance mode.
       AndroidCompat.setSustainedPerformanceMode(vrActivity, true);
     }
-    vrActivity.setGvrView(glview);
+    vrActivity.setGvrView(vrView);
 
     surfaceView = null;
+
+    // The glview is ready right after creation, does not need to wait for a
+    // surfaceCreate() event.
+    surfaceReady = true;
   }
 
   @Override
@@ -134,7 +138,7 @@ public class PSurfaceVR extends PSurfaceGLES {
     window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-    window.setContentView(glview);
+    window.setContentView(vrView);
   }
 
   @Override
@@ -176,19 +180,19 @@ public class PSurfaceVR extends PSurfaceGLES {
 
   @Override
   public void startThread() {
-    glview.onResume();
+    vrView.onResume();
     running = true;
   }
 
   @Override
   public void pauseThread() {
-    glview.onPause();
+    vrView.onPause();
     running = false;
   }
 
   @Override
   public void resumeThread() {
-    glview.onResume();
+    vrView.onResume();
     running = true;
   }
 
@@ -205,8 +209,8 @@ public class PSurfaceVR extends PSurfaceGLES {
 
   ///////////////////////////////////////////////////////////
 
-  public class GLVRSurfaceView extends GvrView {
-    public GLVRSurfaceView(Context context) {
+  public class SurfaceViewVR extends GvrView {
+    public SurfaceViewVR(Context context) {
       super(context);
 
       // Check if the system supports OpenGL ES 2.0.

@@ -45,21 +45,27 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.LayoutRes;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import processing.a2d.PGraphicsAndroid2D;
+import processing.android.ActivityAPI;
 import processing.android.AppComponent;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
 
-public class PApplet extends Object implements PConstants {
+public class PApplet extends Object implements ActivityAPI, PConstants {
 
-  static final public boolean DEBUG = true;
-//  static final public boolean DEBUG = false;
+//  static final public boolean DEBUG = true;
+  static final public boolean DEBUG = false;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
   static final public int SDK = Build.VERSION.SDK_INT;
@@ -573,15 +579,48 @@ public class PApplet extends Object implements PConstants {
 
 
   public void onCreate(Bundle savedInstanceState) {
+    create();
   }
 
 
   public void onDestroy() {
+    handleMethods("onDestroy");
     dispose();
   }
 
 
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    handleMethods("onActivityResult", new Object[] { requestCode, resultCode, data });
+  }
+
+
+  public void onNewIntent(Intent intent) {
+    handleMethods("onNewIntent", new Object[] { intent });
+  }
+
+
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
+
+  }
+
+
+  public boolean onOptionsItemSelected(MenuItem item) {
+    return false;
+  }
+
+
+  public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+
+  }
+
+
+  public boolean onContextItemSelected(MenuItem item) {
+    return false;
+  }
+
+
+  public void setHasOptionsMenu(boolean hasMenu) {
+    surface.setHasOptionsMenu(hasMenu);
   }
 
 
@@ -982,6 +1021,14 @@ public class PApplet extends Object implements PConstants {
 
     } else if (methodName.equals("touchEvent")) {
       registerWithArgs("touchEvent", target, new Class[] { processing.event.TouchEvent.class });
+
+    // Android-lifecycle event handlers
+    } else if (methodName.equals("onDestroy")) {
+      registerNoArgs(methodName, target);
+    } else if (methodName.equals("onActivityResult")) {
+      registerWithArgs("onActivityResult", target, new Class[] { int.class, int.class, Intent.class });
+    } else if (methodName.equals("onNewIntent")) {
+      registerWithArgs("onNewIntent", target, new Class[] { Intent.class });
 
     } else {
       registerNoArgs(methodName, target);
@@ -2742,6 +2789,16 @@ public class PApplet extends Object implements PConstants {
   public void die(String what, Exception e) {
     if (e != null) e.printStackTrace();
     die(what);
+  }
+
+
+  /**
+   * Conveniency method so perform initialization tasks when the activity is
+   * created, while avoiding the ackward call to onCreate() with the bundle
+   * and super.onCreate().
+   */
+  public void create() {
+
   }
 
   /*

@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2013-16 The Processing Foundation
+ Copyright (c) 2013-17 The Processing Foundation
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -43,7 +43,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-
+/** 
+ * Class holding all needed references (path, tools, etc) to the SDK used by 
+ * the mode.
+ */
 class AndroidSDK {
   public static boolean adbDisabled = false;
   
@@ -72,37 +75,42 @@ class AndroidSDK {
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
-      "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";
+      "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";
     
   private static final String INVALID_SDK_TITLE =
       "Is the required Android API installed?";
   
   private static final String INVALID_SDK_MESSAGE =
       "The Android SDK appears to be installed, " +
-      "however the SDK platform for API " + AndroidBuild.target_sdk + 
+      "however the SDK platform for API " + AndroidBuild.TARGET_SDK + 
       " was not found. If it is available in a different location, " +
       "click “Locate SDK path” to select the " +
       "location of the alternative SDK, or “Download SDK” to let " +
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
-      "Make sure to install the SDK platform for API " + AndroidBuild.target_sdk + ".";  
+      "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";  
+  
+  private static final String COMMAND_LINE_TUT_URL = 
+      "http://android.processing.org/tutorials/command_line/index.html";  
   
   private static final String ANDROID_SYS_IMAGE_PRIMARY =
       "Download emulator?";
 
   private static final String ANDROID_SYS_IMAGE_SECONDARY =
       "The emulator does not appear to be installed, <br>" +
-      "Do you want Processing to download and install it now? <br>" +
-      "Otherwise, you will need to do it through SDK manager.";
+      "Do you want Processing to download and install it now? <br><br>" +
+      "Otherwise, you will need to do it through the sdkmanager<br>" +
+      "command line tool, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";
 
   private static final String ANDROID_SYS_IMAGE_WEAR_PRIMARY =
       "Download watch emulator?";
 
   private static final String ANDROID_SYS_IMAGE_WEAR_SECONDARY =
       "The watch emulator does not appear to be installed, <br>" +
-      "Do you want Processing to download and install it now? <br>" +
-      "Otherwise, you will need to do it through SDK manager.";    
+      "Do you want Processing to download and install it now? <br><br>" +
+      "Otherwise, you will need to do it through the sdkmanager<br>" +
+      "command line tool, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";  
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
@@ -138,16 +146,16 @@ class AndroidSDK {
       throw new BadSDKException("There is no platforms folder in " + folder);
     }
     
-    targetPlatform = new File(platforms, AndroidBuild.target_platform);
+    targetPlatform = new File(platforms, AndroidBuild.TARGET_PLATFORM);
     if (!targetPlatform.exists()) {
       throw new BadSDKException("There is no Android " + 
-                                AndroidBuild.target_sdk + " in " + platforms.getAbsolutePath());
+                                AndroidBuild.TARGET_SDK + " in " + platforms.getAbsolutePath());
     }
 
     androidJar = new File(targetPlatform, "android.jar");
     if (!androidJar.exists()) {
       throw new BadSDKException("android.jar for plaform " + 
-                                AndroidBuild.target_sdk + " is missing from " + targetPlatform.getAbsolutePath());
+                                AndroidBuild.TARGET_SDK + " is missing from " + targetPlatform.getAbsolutePath());
     }
     
     wearablePath = new File(folder, "extras/google/m2repository/com/google/android/support/wearable");
@@ -234,8 +242,8 @@ class AndroidSDK {
   }
 
 
-  public File getAndroidTool() {
-    return androidTool;
+  public File getToolsFolder() {
+    return tools;
   }
 
 
@@ -249,6 +257,10 @@ class AndroidSDK {
   }
 
 
+  public File getTargetPlatform() {
+    return targetPlatform;
+  }
+  
   public File getAndroidJarPath() {
     return androidJar;  
   }
@@ -455,34 +467,33 @@ class AndroidSDK {
   
   
   static public int showDownloadSysImageDialog(Frame editor, boolean wear) {
-    String msg1 = wear ? ANDROID_SYS_IMAGE_WEAR_PRIMARY : ANDROID_SYS_IMAGE_PRIMARY;
-    String msg2 = wear ? ANDROID_SYS_IMAGE_WEAR_SECONDARY : ANDROID_SYS_IMAGE_SECONDARY;
+    String title = wear ? ANDROID_SYS_IMAGE_WEAR_PRIMARY : ANDROID_SYS_IMAGE_PRIMARY;    
+    String msg = wear ? ANDROID_SYS_IMAGE_WEAR_SECONDARY : ANDROID_SYS_IMAGE_SECONDARY;
+    String htmlString = "<html> " +
+        "<head> <style type=\"text/css\">"+
+        "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+        "</style> </head>" + "<body> <p>" + msg + "</p> </body> </html>";
+    JEditorPane pane = new JEditorPane("text/html", htmlString);
+    pane.addHyperlinkListener(new HyperlinkListener() {
+      @Override
+      public void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+          Platform.openURL(e.getURL().toString());
+        }
+      }
+    });
+    pane.setEditable(false);
+    JLabel label = new JLabel();
+    pane.setBackground(label.getBackground());
     
-    JOptionPane pane =
-        new JOptionPane("<html> " +
-            "<head> <style type=\"text/css\">"+
-            "b { font: 13pt \"Lucida Grande\" }"+
-            "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
-            "</style> </head>" +
-            "<b>" + msg1 + "</b>" +
-            "<p>" + msg2 + "</p>",
-            JOptionPane.QUESTION_MESSAGE);
-
     String[] options = new String[] { "Yes", "No" };
-    pane.setOptions(options);
-
-    // highlight the safest option ala apple hig
-    pane.setInitialValue(options[0]);
-
-    JDialog dialog = pane.createDialog(editor, null);
-    dialog.setTitle("");
-    dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);  
-    dialog.setVisible(true);
-
-    Object result = pane.getValue();
-    if (result == options[0]) {
+    
+    int result = JOptionPane.showOptionDialog(null, pane, title, 
+        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
+        null, options, options[0]);
+    if (result == JOptionPane.YES_OPTION) {
       return JOptionPane.YES_OPTION;
-    } else if (result == options[1]) {
+    } else if (result == JOptionPane.NO_OPTION) {
       return JOptionPane.NO_OPTION;
     } else {
       return JOptionPane.CLOSED_OPTION;

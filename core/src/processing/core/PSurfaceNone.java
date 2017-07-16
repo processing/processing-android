@@ -51,6 +51,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import processing.android.AppComponent;
+import processing.android.PFragment;
 import processing.android.ServiceEngine;
 import processing.android.PermissionRequestor;
 
@@ -64,12 +65,14 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected AppComponent component;
   protected Activity activity;
 
+  protected boolean surfaceReady;
   protected SurfaceView surfaceView;
   protected View view;
 
   protected WallpaperService wallpaper;
   protected WatchFaceService watchface;
 
+  protected boolean requestedThreadStart = false;
   protected Thread thread;
   protected boolean paused;
   protected Object pauseObject = new Object();
@@ -287,6 +290,14 @@ public class PSurfaceNone implements PSurface, PConstants {
   }
 
 
+  public void setHasOptionsMenu(boolean hasMenu) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      ((PFragment)component).setHasOptionsMenu(hasMenu);
+    }
+  }
+
+
+
   @Override
   public File getFilesDir() {
     if (component.getKind() == AppComponent.FRAGMENT) {
@@ -377,9 +388,15 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void startThread() {
+    if (!surfaceReady) {
+      requestedThreadStart = true;
+      return;
+    }
+
     if (thread == null) {
       thread = createThread();
       thread.start();
+      requestedThreadStart = false;
     } else {
       throw new IllegalStateException("Thread already started in " +
                                       getClass().getSimpleName());
@@ -389,12 +406,16 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void pauseThread() {
+    if (!surfaceReady) return;
+
     paused = true;
   }
 
 
   @Override
   public void resumeThread() {
+    if (!surfaceReady) return;
+
     if (thread == null) {
       thread = createThread();
       thread.start();
@@ -409,6 +430,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public boolean stopThread() {
+    if (!surfaceReady) return true;
+
     if (thread == null) {
       return false;
     }

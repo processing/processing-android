@@ -254,11 +254,7 @@ class Devices {
     final List<String> activeDevices = list();
     for (final String deviceId : activeDevices) {
       if (!devices.containsKey(deviceId)) {
-        Device device = new Device(this, deviceId);
-        if (device.hasFeature("watch")) {
-          // Watches are accessed through the paired mobile devices
-          continue;    
-        }        
+        Device device = new Device(this, deviceId); 
         addDevice(device);
       }
     }
