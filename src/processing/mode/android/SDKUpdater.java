@@ -1,5 +1,11 @@
 package processing.mode.android;
 
+import com.android.repository.api.*;
+import com.android.repository.impl.meta.RepositoryPackages;
+import com.android.repository.io.FileOpUtils;
+import com.android.repository.io.impl.FileSystemFileOp;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.legacy.LegacyDownloader;
 import processing.app.Platform;
 import processing.app.ui.Editor;
 
@@ -13,10 +19,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
@@ -25,10 +29,9 @@ import java.util.concurrent.ExecutionException;
 
 public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
-    private final Vector<String> columnsInstalled = new Vector<>(Arrays.asList("Path", "Version",
-            "Description", "Location"));
+    private final Vector<String> columnsInstalled = new Vector<>(Arrays.asList("Path", "Version", "Description"));
     private final Class[] columnClassI = new Class[]{
-            String.class, String.class, String.class, String.class
+            String.class, String.class, String.class
     };
 
     private final Vector<String> columnsUpdates = new Vector<>(Arrays.asList("ID", "Installed", "Available"));
@@ -100,43 +103,48 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     class QueryTask extends SwingWorker {
         @Override
         protected Object doInBackground() throws Exception {
-            ArrayList<String> cmd = new ArrayList<>();
-            String path = toolsFolder + File.separator + "bin" + File.separator;
-            if (Platform.isWindows())
-                path += "sdkmanager.bat";
-            else
-                path += "sdkmanager";
-            cmd.add(path);
-            cmd.add("--list");
-
-            ProcessBuilder process = new ProcessBuilder(cmd);
-            backgroundProcess = process.start();
-
-            BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(backgroundProcess.getInputStream()));
-            backgroundProcess.waitFor();
-
             updatesList = new Vector<>();
             installedList = new Vector<>();
-            String line;
-            boolean skip = false, updates = false;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty())
-                    skip = !skip;
 
-                if (!skip && !line.startsWith("d")) { //Skip all available packages
-                    if (line.startsWith("  I"))
-                        updates = true;
-                    else if (!line.startsWith("  P") && !line.startsWith("  -") && !line.startsWith("I") &&
-                            !line.startsWith("A") && !line.isEmpty()) {
-                        String[] result = line.split("\\|");
+            AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
 
-                        if (updates)
-                            updatesList.add(new Vector<>(Arrays.asList(result)));
-                        else
-                            installedList.add(new Vector<>(Arrays.asList(result)));
-                    }
+            ProgressIndicator progress = new ConsoleProgressIndicator();
+
+            FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
+            RepoManager mRepoManager = mHandler.getSdkManager(progress);
+            mRepoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, new SettingsController() {
+                @Override
+                public boolean getForceHttp() {
+                    return false;
                 }
+
+                @Override
+                public void setForceHttp(boolean b) { }
+
+                @Override
+                public Channel getChannel() {
+                    return null;
+                }
+            }), null);
+
+            RepositoryPackages packages = mRepoManager.getPackages();
+
+            for (LocalPackage local : packages.getLocalPackages().values()) {
+                Vector<String> localPackages = new Vector<>();
+                localPackages.add(local.getPath());
+                localPackages.add(local.getVersion().toString());
+                localPackages.add(local.getDisplayName());
+
+                installedList.add(localPackages);
+            }
+
+            for (UpdatablePackage update : packages.getUpdatedPkgs()) {
+                Vector<String> updatePackages = new Vector<>();
+                updatePackages.add(update.getPath());
+                updatePackages.add(update.getLocal().getVersion().toString());
+                updatePackages.add(update.getRemote().getVersion().toString());
+
+                updatesList.add(updatePackages);
             }
 
             return null;
@@ -162,6 +170,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             } catch (ExecutionException e) {
                 JOptionPane.showMessageDialog(null,
                         e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
             }
         }
     }
@@ -203,6 +212,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             } catch (ExecutionException e) {
                 JOptionPane.showMessageDialog(null,
                         e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
             } finally {
                 downloadTaskRunning = false;
                 progressBar.setIndeterminate(false);
