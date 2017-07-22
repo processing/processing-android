@@ -60,7 +60,7 @@ public class AndroidMode extends JavaMode {
       "https://developer.android.com/training/wearables/apps/debugging.html";
   
   private static final String WATCHFACE_DEBUG_TITLE =
-      "Is Debugging over Bluetooth enabled?";
+      "Is the watch connected to the computer?";
   
   private static final String WATCHFACE_DEBUG_MESSAGE =
       "Processing will install watch faces on a smartwatch either over Wi-Fi " +
