@@ -42,7 +42,8 @@
                   mode/guava-18.0.jar;
                   mode/httpcore-4.1.jar;
                   mode/repository-25.3.2.jar;
-                  mode/sdklib-25.3.2.jar"
+                  mode/sdklib-25.3.2.jar;
+                  mode/commons-compress-1.8.1.jar"
 	   debug="on">
       <src path="src" />
     </javac>

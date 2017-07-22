@@ -4,9 +4,11 @@ import com.android.repository.api.*;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.io.impl.FileSystemFileOp;
+import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
-import processing.app.Platform;
+import com.android.sdklib.tool.SdkManagerCli;
 import processing.app.ui.Editor;
 
 import javax.swing.*;
@@ -23,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -48,7 +51,6 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     private QueryTask queryTask;
     private DownloadTask downloadTask;
     private boolean downloadTaskRunning;
-    private Process backgroundProcess;
 
     private DefaultTableModel modelInstalled;
     private DefaultTableModel modelUpdates;
@@ -106,6 +108,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             updatesList = new Vector<>();
             installedList = new Vector<>();
 
+            /* Following code is from listPackages() of com.android.sdklib.tool.SdkManagerCli
+               with some changes
+             */
             AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
 
             ProgressIndicator progress = new ConsoleProgressIndicator();
@@ -166,8 +171,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
                     modelInstalled.fireTableDataChanged();
                 }
             } catch (InterruptedException | CancellationException e) {
-                backgroundProcess.destroy();
+                this.cancel(false);
             } catch (ExecutionException e) {
+                this.cancel(true);
                 JOptionPane.showMessageDialog(null,
                         e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
                 e.printStackTrace();
@@ -179,18 +185,44 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         @Override
         protected Object doInBackground() throws Exception {
             downloadTaskRunning = true;
-            ArrayList<String> cmd = new ArrayList<>();
-            String path = toolsFolder + File.separator + "bin" + File.separator;
-            if (Platform.isWindows())
-                path += "sdkmanager.bat";
-            else
-                path += "sdkmanager";
-            cmd.add(path);
-            cmd.add("--update");
 
-            ProcessBuilder process = new ProcessBuilder(cmd);
-            backgroundProcess = process.start();
-            backgroundProcess.waitFor();
+            /* Following code is from installPackages() of com.android.sdklib.tool.SdkManagerCli
+               with some changes
+             */
+            AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
+
+            FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
+            CustomSettings settings = new CustomSettings();
+            LegacyDownloader downloader = new LegacyDownloader(fop, settings);
+            ProgressIndicator progress = new ConsoleProgressIndicator();
+
+            RepoManager mRepoManager = mHandler.getSdkManager(progress);
+            mRepoManager.loadSynchronously(0, progress, downloader, settings);
+
+            List<RemotePackage> remotes = new ArrayList<>();
+            for (String path : settings.getPaths(mRepoManager)) {
+                RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
+                if (p == null) {
+                    progress.logWarning("Failed to find package " + path);
+                    throw new SdkManagerCli.CommandFailedException();
+                }
+                remotes.add(p);
+            }
+            remotes = InstallerUtil.computeRequiredPackages(
+                    remotes, mRepoManager.getPackages(), progress);
+            if (remotes != null) {
+                for (RemotePackage p : remotes) {
+                    Installer installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
+                            .createInstaller(p, mRepoManager, downloader, mHandler.getFileOp());
+                    if (!(installer.prepare(progress) && installer.complete(progress))) {
+                        // there was an error, abort.
+                        throw new SdkManagerCli.CommandFailedException();
+                    }
+                }
+            } else {
+                progress.logWarning("Unable to compute a complete list of dependencies.");
+                throw new SdkManagerCli.CommandFailedException();
+            }
 
             return null;
         }
@@ -208,14 +240,43 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
                 queryTask.addPropertyChangeListener(SDKUpdater.this);
                 queryTask.execute();
             } catch (InterruptedException | CancellationException e) {
-                backgroundProcess.destroy();
+                this.cancel(true);
             } catch (ExecutionException e) {
+                this.cancel(true);
                 JOptionPane.showMessageDialog(null,
                         e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
                 e.printStackTrace();
             } finally {
                 downloadTaskRunning = false;
                 progressBar.setIndeterminate(false);
+            }
+        }
+
+        class CustomSettings implements SettingsController {
+            /* Dummy implementation with some necessary methods from the original
+               implementation in com.android.sdklib.tool.SdkManagerCli
+             */
+            @Override
+            public boolean getForceHttp() {
+                return false;
+            }
+
+            @Override
+            public void setForceHttp(boolean b) { }
+
+            @Override
+            public Channel getChannel() {
+                return null;
+            }
+
+            public java.util.List<String> getPaths(RepoManager mgr) {
+                List<String> updates = new ArrayList<>();
+                for(UpdatablePackage upd : mgr.getPackages().getUpdatedPkgs()) {
+                    if(!upd.getRemote().obsolete()) {
+                        updates.add(upd.getRepresentative().getPath());
+                    }
+                }
+                return updates;
             }
         }
     }
