@@ -21,7 +21,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,8 +29,8 @@ import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
+@SuppressWarnings("serial")
 public class SDKUpdater extends JFrame implements PropertyChangeListener {
-
     private final Vector<String> columnsInstalled = new Vector<>(Arrays.asList("Path", "Version", "Description"));
     private final Class[] columnClassI = new Class[]{
             String.class, String.class, String.class
@@ -45,7 +44,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     private static final String PROPERTY_CHANGE_QUERY = "query";
 
     private AndroidSDK sdk;
-    private File toolsFolder;
+//    private File toolsFolder;
     private Vector<Vector<String>> updatesList;
     private Vector<Vector<String>> installedList;
     private QueryTask queryTask;
@@ -78,7 +77,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         if (sdk == null)
             return;
 
-        toolsFolder = sdk.getToolsFolder();
+//        toolsFolder = sdk.getToolsFolder();
         queryTask = new QueryTask();
         queryTask.addPropertyChangeListener(this);
         queryTask.execute();
@@ -102,7 +101,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         }
     }
 
-    class QueryTask extends SwingWorker {
+    class QueryTask extends SwingWorker<Object, Object> {
         @Override
         protected Object doInBackground() throws Exception {
             updatesList = new Vector<>();
@@ -181,7 +180,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         }
     }
 
-    class DownloadTask extends SwingWorker {
+    class DownloadTask extends SwingWorker<Object, Object> {
         @Override
         protected Object doInBackground() throws Exception {
             downloadTaskRunning = true;
