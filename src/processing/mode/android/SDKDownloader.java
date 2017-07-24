@@ -288,6 +288,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           String major = (((Element) revision.item(0)).getElementsByTagName("major")).item(0).getTextContent();
           String minor = (((Element) revision.item(0)).getElementsByTagName("minor")).item(0).getTextContent();
           String micro = (((Element) revision.item(0)).getElementsByTagName("micro")).item(0).getTextContent();
+          if(!major.equals(AndroidBuild.TARGET_SDK)) // Allows only the latest build tools for the target platform
+            continue;
           urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
 
           NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
