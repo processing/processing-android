@@ -65,7 +65,7 @@ class AndroidSDK {
       "https://developer.android.com/studio/index.html#downloads";
   
   private static final String MISSING_SDK_TITLE =
-    "Is the Android SDK installed?";
+    "Cannot find the Android SDK...";
   
   private static final String MISSING_SDK_MESSAGE =
       "The Android SDK does not appear to be installed, " +
@@ -78,7 +78,7 @@ class AndroidSDK {
       "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";
     
   private static final String INVALID_SDK_TITLE =
-      "Is the required Android API installed?";
+      "Cannot find the required SDK platform version...";
   
   private static final String INVALID_SDK_MESSAGE =
       "The Android SDK appears to be installed, " +
