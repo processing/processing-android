@@ -24,6 +24,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
@@ -31,28 +32,33 @@ import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("serial")
 public class SDKUpdater extends JFrame implements PropertyChangeListener {
-    private final Vector<String> columnsInstalled = new Vector<>(Arrays.asList("Path", "Version", "Description"));
-    private final Class[] columnClassI = new Class[]{
-            String.class, String.class, String.class
-    };
+    private final Vector<String> columns = new Vector<>(Arrays.asList("Package name", "Installed version", "New version"));
+//    private final Class[] columnClassI = new Class[]{
+//            String.class, String.class, String.class
+//    };
 
-    private final Vector<String> columnsUpdates = new Vector<>(Arrays.asList("ID", "Installed", "Available"));
-    private final Class[] columnClassU = new Class[]{
-            String.class, String.class, String.class
-    };
+//    private final Vector<String> columnsUpdates = new Vector<>(Arrays.asList("ID", "Installed", "Available"));
+//    private final Class[] columnClassU = new Class[]{
+//            String.class, String.class, String.class
+//    };
 
     private static final String PROPERTY_CHANGE_QUERY = "query";
 
     private AndroidSDK sdk;
-//    private File toolsFolder;
-    private Vector<Vector<String>> updatesList;
     private Vector<Vector<String>> installedList;
+//    private Vector<Vector<String>> updatesList;
+    
     private QueryTask queryTask;
     private DownloadTask downloadTask;
     private boolean downloadTaskRunning;
 
+//    private Vector<Vector<String>> packageInfo;
+//    private DefaultTableModel packageTable;
+    
     private DefaultTableModel modelInstalled;
-    private DefaultTableModel modelUpdates;
+    private int numUpdates;
+//    private DefaultTableModel modelUpdates;
+    
     private JProgressBar progressBar;
     private JLabel status;
     private JButton actionButton;
@@ -74,10 +80,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             e.printStackTrace();
         }
 
-        if (sdk == null)
-            return;
+        if (sdk == null) return;
 
-//        toolsFolder = sdk.getToolsFolder();
         queryTask = new QueryTask();
         queryTask.addPropertyChangeListener(this);
         queryTask.execute();
@@ -89,13 +93,16 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         switch (evt.getPropertyName()) {
             case PROPERTY_CHANGE_QUERY:
                 progressBar.setIndeterminate(false);
-                if (updatesList.size() == 0) {
+                if (numUpdates == 0) {
+                    actionButton.setEnabled(false);
                     status.setText("No updates available");
-                    status.setForeground(Color.GREEN);
                 } else {
-                    actionButton.setVisible(true);
-                    status.setText("Update(s) found!");
-                    status.setForeground(Color.BLUE);
+                    actionButton.setEnabled(true);
+                    if (numUpdates == 1) {
+                      status.setText("1 update found!");
+                    } else { 
+                      status.setText(numUpdates + " updates found!");                    
+                    }                    
                 }
                 break;
         }
@@ -104,7 +111,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     class QueryTask extends SwingWorker<Object, Object> {
         @Override
         protected Object doInBackground() throws Exception {
-            updatesList = new Vector<>();
+            numUpdates = 0;
             installedList = new Vector<>();
 
             /* Following code is from listPackages() of com.android.sdklib.tool.SdkManagerCli
@@ -132,13 +139,77 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
             }), null);
 
             RepositoryPackages packages = mRepoManager.getPackages();
-
+            HashMap<String, String[]> local = new HashMap();
+            for (LocalPackage pck : packages.getLocalPackages().values()) {
+              String path = pck.getPath();
+              String name = pck.getDisplayName();
+              String ver = pck.getVersion().toString();
+              int rev = name.indexOf(", rev");
+              if (-1 < rev) {
+                name = name.substring(0, rev);
+              }
+              int maj = ver.indexOf(".");
+              if (-1 < maj) {
+                String major = ver.substring(0, maj);
+                int pos = name.indexOf(major);
+                if (-1 < pos) {
+                  name = name.substring(0, pos).trim();  
+                }
+              }
+              local.put(path, new String[]{name, ver});
+            }
+            
+            HashMap<String, String[]> update = new HashMap();
+            for (UpdatablePackage pck : packages.getUpdatedPkgs()) {              
+              String path = pck.getPath();
+              String inst = pck.getLocal().getVersion().toString();
+              String updt = pck.getRemote().getVersion().toString();              
+              update.put(path, new String[]{inst, updt});
+            }
+            
+            for (String path: local.keySet()) {
+              Vector<String> info = new Vector<>();
+              String[] locInfo = local.get(path);
+              info.add(locInfo[0]);
+              info.add(locInfo[1]);
+              if (update.containsKey(path)) {
+                String[] updInfo = update.get(path);
+                info.add(updInfo[1]);  
+                numUpdates++;
+              } else {
+                info.add("");
+              }
+              installedList.add(info);  
+            }
+            
+            
+            /*
             for (LocalPackage local : packages.getLocalPackages().values()) {
                 Vector<String> localPackages = new Vector<>();
+                String name = local.getDisplayName();
+                String ver = local.getVersion().toString();
+                int rev = name.indexOf(", rev");
+                if (-1 < rev) {
+                  name = name.substring(0, rev);
+                }
+                int maj = ver.indexOf(".");
+                if (-1 < maj) {
+                  String major = ver.substring(0, maj);
+                  int pos = name.indexOf(major);
+                  if (-1 < pos) {
+                    name = name.substring(0, pos).trim();  
+                  }
+                }
+                
                 localPackages.add(local.getPath());
                 localPackages.add(local.getVersion().toString());
-                localPackages.add(local.getDisplayName());
-
+                localPackages.add(name);
+ 
+                System.out.println("*************************");
+                System.out.println(local.getDisplayName());               
+                System.out.println(name);
+                
+                
                 installedList.add(localPackages);
             }
 
@@ -150,6 +221,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
                 updatesList.add(updatePackages);
             }
+            */
+            
 
             return null;
         }
@@ -162,12 +235,13 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
                 get();
                 firePropertyChange(PROPERTY_CHANGE_QUERY, "query", "SUCCESS");
 
-                if (updatesList != null && installedList != null) {
-                    modelInstalled.setDataVector(installedList, columnsInstalled);
-                    modelUpdates.setDataVector(updatesList, columnsUpdates);
-
-                    modelUpdates.fireTableDataChanged();
+                if (installedList != null) {
+                    modelInstalled.setDataVector(installedList, columns);
                     modelInstalled.fireTableDataChanged();
+                    
+//                    modelUpdates.setDataVector(updatesList, columnsUpdates);
+//                    modelUpdates.fireTableDataChanged();
+                    
                 }
             } catch (InterruptedException | CancellationException e) {
                 this.cancel(false);
@@ -232,7 +306,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
             try {
                 get();
-                actionButton.setVisible(false); //Hide button after update completes
+//                actionButton.setVisible(false); //Hide button after update completes
+                actionButton.setEnabled(false);
                 status.setText("Refreshing packages...");
 
                 queryTask = new QueryTask();
@@ -290,19 +365,19 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
         /* Packages panel */
         JPanel packagesPanel = new JPanel();
-        packagesPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), "Packages"));
+//        packagesPanel.setBorder(BorderFactory.createTitledBorder(
+//                BorderFactory.createEtchedBorder(), "Packages"));
 
         BoxLayout boxLayout = new BoxLayout(packagesPanel, BoxLayout.Y_AXIS);
         packagesPanel.setLayout(boxLayout);
 
         /* Installed Packages panel */
-        JPanel installedPanel = new JPanel(new BorderLayout());
-        installedPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), "Installed"));
+//        JPanel installedPanel = new JPanel(new BorderLayout());
+//        installedPanel.setBorder(BorderFactory.createTitledBorder(
+//                BorderFactory.createEtchedBorder(), "Installed"));
 
         //Installed Packages table
-        modelInstalled = new DefaultTableModel(15, columnClassI.length) {
+        modelInstalled = new DefaultTableModel(15, columns.size()) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -310,27 +385,28 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                return columnClassI[columnIndex];
+                return String.class;
             }
         };
         JTable tInstalled = new JTable(modelInstalled) {
             @Override
             public String getColumnName(int column) {
-                return columnsInstalled.get(column);
+                return columns.get(column);
             }
         };
         tInstalled.setFillsViewportHeight(true);
 
         tInstalled.setPreferredScrollableViewportSize(new Dimension(tInstalled.getPreferredSize().width,
                 15 * tInstalled.getRowHeight()));
-        installedPanel.add(new JScrollPane(tInstalled));
+        packagesPanel.add(new JScrollPane(tInstalled));
 
 
         /* Updates panel */
-        JPanel updatesPanel = new JPanel(new BorderLayout());
-        updatesPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), "Available Updates"));
+//        JPanel updatesPanel = new JPanel(new BorderLayout());
+//        updatesPanel.setBorder(BorderFactory.createTitledBorder(
+//                BorderFactory.createEtchedBorder(), "Available Updates"));
 
+        /*
         //Updates table
         modelUpdates = new DefaultTableModel(5, columnClassU.length) {
             @Override
@@ -353,9 +429,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         tUpdates.setPreferredScrollableViewportSize(new Dimension(tUpdates.getPreferredSize().width,
                 5 * tUpdates.getRowHeight()));
         updatesPanel.add(new JScrollPane(tUpdates), BorderLayout.CENTER);
-
-        packagesPanel.add(installedPanel);
-        packagesPanel.add(updatesPanel);
+*/
+        
+        
+        
+//        packagesPanel.add(installedPanel);
+//        packagesPanel.add(updatesPanel);
 
         JPanel controlPanel = new JPanel();
         GridBagLayout gridBagLayout = new GridBagLayout();
@@ -393,7 +472,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
                 }
             }
         });
-        actionButton.setVisible(false);
+//        actionButton.setVisible(false);
+        actionButton.setEnabled(false);
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 0.0;
