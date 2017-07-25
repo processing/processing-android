@@ -42,7 +42,7 @@ import java.util.Arrays;
 @SuppressWarnings("serial")
 public class KeyStoreManager extends JFrame {
   static final String GUIDE_URL =
-      "http://developer.android.com/tools/publishing/app-signing.html#cert";
+      "https://developer.android.com/studio/publish/app-signing.html";
 
   File keyStore;
   AndroidEditor editor;
