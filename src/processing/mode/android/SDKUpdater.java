@@ -121,6 +121,13 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
   }
 
   class QueryTask extends SwingWorker<Object, Object> {
+    ProgressIndicator progress;
+    
+    QueryTask() {
+      super();
+      progress = new ConsoleProgressIndicator();
+    }
+    
     @Override
     protected Object doInBackground() throws Exception {
       numUpdates = 0;
@@ -130,8 +137,6 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
                with some changes
        */
       AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
-
-      ProgressIndicator progress = new ConsoleProgressIndicator();
 
       FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
@@ -222,6 +227,20 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
   }
 
   class DownloadTask extends SwingWorker<Object, Object> {
+    ProgressIndicator progress;
+
+    DownloadTask() {
+      super();
+      // This code can help understanding more advanced users of the progress 
+      // indicator and the download functionality:
+      // https://github.com/JetBrains/android/blob/master/android/src/com/android/tools/idea/welcome/wizard/InstallComponentsPath.java
+      // From Android Plugin for IntelliJ IDEA:
+      // https://github.com/JetBrains/android
+      // My impression is that the current progress has to be set using progress.setFraction()
+      //and then can be retrieved with progress.getFraction();      
+      progress = new ConsoleProgressIndicator();
+    }
+    
     @Override
     protected Object doInBackground() throws Exception {
       downloadTaskRunning = true;
@@ -233,12 +252,11 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
       FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       CustomSettings settings = new CustomSettings();
-      LegacyDownloader downloader = new LegacyDownloader(fop, settings);
-      ProgressIndicator progress = new ConsoleProgressIndicator();
+      Downloader downloader = new LegacyDownloader(fop, settings);
 
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
       mRepoManager.loadSynchronously(0, progress, downloader, settings);
-
+      
       List<RemotePackage> remotes = new ArrayList<>();
       for (String path : settings.getPaths(mRepoManager)) {
         RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
@@ -275,7 +293,6 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
         get();
         actionButton.setEnabled(false);
         status.setText("Refreshing packages...");
-
         queryTask = new QueryTask();
         queryTask.addPropertyChangeListener(SDKUpdater.this);
         queryTask.execute();
@@ -394,6 +411,21 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
           downloadTask = new DownloadTask();
           progressBar.setIndeterminate(true);
           downloadTask.execute();
+
+          // getFraction() always returns 0.0, needs to be set somewhere (??) 
+//          Thread update = new Thread() {
+//            @Override
+//            public void run() {
+//              while (downloadTaskRunning) {
+//                try {
+//                  Thread.sleep(100);
+//                } catch (InterruptedException e) { }              
+//                System.out.println("Updating: " + downloadTask.progress.getFraction());                  
+//              }
+//            }
+//          };
+//          update.start();    
+          
           status.setText("Downloading available updates...");
           actionButton.setText("Cancel");
         }
