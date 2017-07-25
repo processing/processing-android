@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012-17 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -1991,8 +1991,9 @@ public abstract class PGL {
     String[] src = new String[src0.length+offset];
     for (int i = 0; i < src0.length; i++) {
       String line = src0[i];
-      if (line.contains("#version")) {
-        line = "";
+      int versionIndex = line.indexOf("#version");
+      if (versionIndex >= 0) {
+        line = line.substring(0, versionIndex);
       }
       for (int j = 0; j < search.length; j++) {
         line = search[j].matcher(line).replaceAll(replace[j]);
@@ -2005,8 +2006,12 @@ public abstract class PGL {
   protected static boolean containsVersionDirective(String[] shSrc) {
     for (int i = 0; i < shSrc.length; i++) {
       String line = shSrc[i];
-      if (line.contains("#version")) {
-        return true;
+      int versionIndex = line.indexOf("#version");
+      if (versionIndex >= 0) {
+        int commentIndex = line.indexOf("//");
+        if (commentIndex < 0 || versionIndex < commentIndex) {
+          return true;
+        }
       }
     }
     return false;
