@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2014-16 The Processing Foundation
+ Copyright (c) 2014-17 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -84,7 +84,7 @@ public class KeyStoreManager extends JFrame {
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
     Dimension dim = new Dimension(Toolkit.getButtonWidth(),
-        okButton.getPreferredSize().height);
+                                  okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -120,7 +120,7 @@ public class KeyStoreManager extends JFrame {
 
     JButton resetKeystoreButton = new JButton("Reset password");
     dim = new Dimension(Toolkit.getButtonWidth()*2,
-        okButton.getPreferredSize().height);
+                        okButton.getPreferredSize().height);
     resetKeystoreButton.setPreferredSize(dim);
     resetKeystoreButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
