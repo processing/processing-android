@@ -21,6 +21,7 @@ allprojects {
         flatDir dirs: "$rootDir/core/library"
         flatDir dirs: "$rootDir/core/build/libs"
         flatDir dirs: "$rootDir/libraries/vr/library"
+        flatDir dirs: "$sdkdir/tools/lib"        
         flatDir dirs: android_platform
     }
 
@@ -35,8 +36,9 @@ dependencies {
     compile group: 'org.processing', name: 'core', version: '3.3.4'
     compile group: 'org.processing', name: 'pde', version: '3.3.4'
     compile group: 'org.processing', name: 'java-mode', version: '3.3.4'
-    compile "org.gradle:gradle-tooling-api:3.2.1"
-    runtime 'org.slf4j:slf4j-simple:1.7.10'    
+    compile "org.gradle:gradle-tooling-api:3.2.1"    
+    compile "com.android.repository:repository:25.3.2"
+    compile "com.android.sdklib:sdklib:25.3.2"
 }
 
 sourceSets {

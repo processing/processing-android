@@ -4,7 +4,8 @@
 
   <!-- path to the main processing repo --> 
   <property name="processing.dir" value="../processing" />
-
+  <property name="sdk.dir" value="/Users/andres/code/android/android-studio/sdk" />
+	
   <property name="core.jar.path" value="processing-core.zip" />
   <property name="mode.jar.path" value="mode/AndroidMode.jar" />
   <property name="mode.dist.path" value="release/AndroidMode.zip" />
@@ -38,12 +39,8 @@
                   ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
                   ${processing.dir}/app/pde.jar;
                   mode/gradle-tooling-api-4.0.jar;
-                  mode/common-25.3.2.jar;
-                  mode/guava-18.0.jar;
-                  mode/httpcore-4.1.jar;
-                  mode/repository-25.3.2.jar;
-                  mode/sdklib-25.3.2.jar;
-                  mode/commons-compress-1.8.1.jar"
+                  ${sdk.dir}/tools/lib/repository-25.3.2.jar;
+                  ${sdk.dir}/tools/lib/sdklib-25.3.2.jar"
 	   debug="on">
       <src path="src" />
     </javac>
