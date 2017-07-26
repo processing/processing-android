@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<project name="SDK Updater Tool" default="build">
+  
+  <!-- path to the main processing repo --> 
+  <property name="processing.dir" value="../../../processing" />
+	
+  <!-- path to the android sdk -->
+  <property name="sdk.dir" value="/Users/andres/code/android/android-studio/sdk" />
+	
+  <target name="clean" description="Clean the build directories">
+    <delete dir="bin" />
+    <delete file="tool/SDKUpdater.jar" />
+  </target>
+
+  <target name="compile" description="Compile sources">   
+    <mkdir dir="bin" />
+    <javac target="1.8"
+	   source="1.8"
+	   srcdir="src" 
+	   destdir="bin" 
+	   encoding="UTF-8"
+	   includeAntRuntime="false"
+	   classpath="${processing.dir}/app/bin;
+    	          ${sdk.dir}/tools/lib/sdklib-25.3.2.jar;
+    	          ${sdk.dir}/tools/lib/repository-25.3.2.jar" 
+	   nowarn="true"
+	   compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
+      <compilerclasspath path="${processing.dir}/java/mode/org.eclipse.jdt.core.jar; 
+      	                       ${processing.dir}/java/mode/jdtCompilerAdapter.jar" />
+    </javac>
+  </target>
+
+  <target name="build" depends="compile" description="Build SDK Updater Tool">
+    <mkdir dir="tool" />
+    <jar basedir="bin" destfile="tool/SDKUpdater.jar" />
+  </target>
+</project>

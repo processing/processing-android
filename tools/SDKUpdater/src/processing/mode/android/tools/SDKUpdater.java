@@ -19,7 +19,7 @@
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package processing.mode.android;
+package processing.mode.android.tools;
 
 import com.android.repository.api.*;
 import com.android.repository.impl.meta.RepositoryPackages;
@@ -30,6 +30,10 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.sdklib.tool.SdkManagerCli;
+
+import processing.app.Base;
+import processing.app.Preferences;
+import processing.app.tools.Tool;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -52,7 +56,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("serial")
-public class SDKUpdater extends JFrame implements PropertyChangeListener {
+public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   final static private int DEF_NUM_ROWS = 10; 
   final static private int DEF_COL_WIDTH = 200;
   private final Vector<String> columns = new Vector<>(Arrays.asList(
@@ -77,6 +81,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
   public ClassLoader loader;
   
+  /*
   public SDKUpdater(File path) {
     super("SDK Updater");
     
@@ -103,53 +108,34 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     queryTask.execute();
     createLayout();
   }
-  
-  /*
-  public SDKUpdater(Editor editor, AndroidMode androidMode, ClassLoader loader) {
-    super("SDK Updater");
-
-    this.loader = loader;
-    
-    androidMode.checkSDK(editor);
-    try {
-      sdk = AndroidSDK.load();
-      if (sdk == null) {
-        sdk = AndroidSDK.locate(editor, androidMode);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (AndroidSDK.CancelException e) {
-      e.printStackTrace();
-    } catch (AndroidSDK.BadSDKException e) {
-      e.printStackTrace();
-    }
-
-    if (sdk == null) return;
-
-//    queryTask = new QueryTask();
-//    queryTask.addPropertyChangeListener(this);
-//    queryTask.execute();
-//    createLayout();
-    
-    
-    System.out.println("Android mode CLASS loader "  + SDKUpdater.class.getClassLoader());
-    System.out.println("Android mode class loader "  + loader);    
-    
-    Object  progress;
-    Class<?> clazz;
-    Constructor con;
-    try {
-      clazz = loader.loadClass("com.android.repository.api.ConsoleProgressIndicator");
-      con = clazz.getConstructor();
-      progress = con.newInstance();
-      System.out.println("Success creating progress instance " + progress);
-    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } 
-  }
   */
 
+  
+  @Override
+  public void init(Base base) {
+    // TODO Auto-generated method stub
+    String path = Preferences.get("android.sdk.path");
+    sdkFolder = new File(path);
+    
+    
+    queryTask = new QueryTask();
+    queryTask.addPropertyChangeListener(this);
+    queryTask.execute();
+    createLayout(base.getActiveEditor() == null);    
+    
+  }
+
+  @Override
+  public void run() {
+    setVisible(true);    
+  }
+
+  @Override
+  public String getMenuTitle() {   
+    return "SDK Updater";
+  }
+  
+  
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     switch (evt.getPropertyName()) {
@@ -388,7 +374,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     }
   }
 
-  private void createLayout() {
+  private void createLayout(final boolean standalone) {
     Container outer = getContentPane();
     outer.removeAll();
 
@@ -522,6 +508,17 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
       }
     });
 
+    
+//    registerWindowCloseKeys(getRootPane(), new ActionListener() {
+//      public void actionPerformed(ActionEvent actionEvent) {
+//        if (standalone) {
+//          System.exit(0);
+//        } else {
+//          setVisible(false);
+//        }
+//      }
+//    });    
+    
     setLocationRelativeTo(null);
     setResizable(false);
     setVisible(true);

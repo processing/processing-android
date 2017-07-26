@@ -4,6 +4,8 @@
 
   <!-- path to the main processing repo --> 
   <property name="processing.dir" value="../processing" />
+
+  <!-- path to the android sdk -->
   <property name="sdk.dir" value="/Users/andres/code/android/android-studio/sdk" />
 	
   <property name="core.jar.path" value="processing-core.zip" />
@@ -38,9 +40,7 @@
  	              ${processing.dir}/java/mode/JavaMode.jar; 
                   ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
                   ${processing.dir}/app/pde.jar;
-                  mode/gradle-tooling-api-4.0.jar;
-                  ${sdk.dir}/tools/lib/repository-25.3.2.jar;
-                  ${sdk.dir}/tools/lib/sdklib-25.3.2.jar"
+                  mode/gradle-tooling-api-4.0.jar"
 	   debug="on">
       <src path="src" />
     </javac>
@@ -65,6 +65,7 @@
         <include name="examples/**" />
         <include name="icons/**" />
         <include name="theme/**" />
+      	<include name="tools/**" />
         <include name="libraries/vr/library.properties" />        
         <include name="libraries/vr/examples/**" />
         <include name="libraries/vr/gvrsdk/**" />
@@ -85,13 +86,14 @@
   
   <target name="subprojects-clean">
     <subant buildpath="core" target="clean"/>
-    <subant buildpath="libraries/vr" target="clean"/>    
+    <subant buildpath="tools/SDKUpdater" target="clean"/>  	
+    <subant buildpath="libraries/vr" target="clean"/>
   </target>
     
   <target name="subprojects-build">
     <subant buildpath="core" target="build"/>
-    <subant buildpath="libraries/vr" target="build"/>    
+  	<subant buildpath="tools/SDKUpdater" target="build"/>
+    <subant buildpath="libraries/vr" target="build"/>  	
   </target>
-  
 
 </project>

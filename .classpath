@@ -6,7 +6,5 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-java"/>
 	<classpathentry kind="lib" path="mode/gradle-tooling-api-4.0.jar"/>
-	<classpathentry kind="lib" path="/Users/andres/code/android/android-studio/sdk/tools/lib/repository-25.3.2.jar"/>
-	<classpathentry kind="lib" path="/Users/andres/code/android/android-studio/sdk/tools/lib/sdklib-25.3.2.jar"/>
 	<classpathentry kind="output" path="core/bin"/>
 </classpath>

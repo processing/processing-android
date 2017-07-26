@@ -14,6 +14,7 @@ allprojects {
     apply plugin: 'java'
     
     ext.android_platform = "$sdkdir/platforms/android-$sdkver"
+    ext.android_tools_lib = "$sdkdir/platforms/android-$sdkver/tools/lib"
     ext.core_jar_path = "$rootDir/processing-core.zip"
 
     repositories {
@@ -23,6 +24,7 @@ allprojects {
         flatDir dirs: "$rootDir/libraries/vr/library"
         flatDir dirs: "$sdkdir/tools/lib"        
         flatDir dirs: android_platform
+        flatDir dirs: android_tools_lib
     }
 
     sourceCompatibility = 1.7
@@ -36,9 +38,7 @@ dependencies {
     compile group: 'org.processing', name: 'core', version: '3.3.4'
     compile group: 'org.processing', name: 'pde', version: '3.3.4'
     compile group: 'org.processing', name: 'java-mode', version: '3.3.4'
-    compile "org.gradle:gradle-tooling-api:3.2.1"    
-    compile "com.android.repository:repository:25.3.2"
-    compile "com.android.sdklib:sdklib:25.3.2"
+    compile "org.gradle:gradle-tooling-api:4.0"
 }
 
 sourceSets {
@@ -64,6 +64,7 @@ task dist {
         FileUtils.copyDirectory(file("icons"), file("$root/icons"))
         FileUtils.copyDirectory(file("mode"), file("$root/mode"))
         FileUtils.copyDirectory(file("theme"), file("$root/theme"))
+        FileUtils.copyDirectory(file("tools"), file("$root/tools"))
 
         Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
                    file("$root/mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
@@ -80,8 +81,6 @@ task dist {
                                 file("$root/libraries/vr/examples"))
         FileUtils.copyDirectory(file("libraries/vr/gvrsdk"), 
                                 file("$root/libraries/vr/gvrsdk"))
-        FileUtils.copyDirectory(file("libraries/vr/lib"), 
-                                file("$root/libraries/vr/lib"))    
         FileUtils.copyDirectory(file("libraries/vr/library"), 
                                 file("$root/libraries/vr/library"))
         FileUtils.copyDirectory(file("libraries/vr/src"), 
