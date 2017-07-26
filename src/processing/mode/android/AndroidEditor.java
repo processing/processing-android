@@ -351,6 +351,20 @@ public class AndroidEditor extends JavaEditor {
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         
+      File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
+      AndroidTool tool = null;
+      try {
+        tool = new AndroidTool(toolPath, androidMode.getSDK());
+      } catch (Throwable e1) {
+        // TODO Auto-generated catch block
+        e1.printStackTrace();
+      } 
+      if (tool != null) {
+        tool.init(base);
+        tool.run();
+      }
+      
+        
         /*
         AndroidSDK sdk = androidMode.getSDK();
         File lib = new File(sdk.getToolsFolder(), "lib");
