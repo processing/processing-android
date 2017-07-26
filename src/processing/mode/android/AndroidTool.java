@@ -31,10 +31,9 @@ import processing.app.Util;
 import processing.app.contrib.ContributionType;
 import processing.app.contrib.IgnorableException;
 import processing.app.contrib.LocalContribution;
-import processing.app.contrib.ToolContribution;
 import processing.app.tools.Tool;
 
-public class AndroidTool extends LocalContribution implements Tool, Comparable<ToolContribution> {
+public class AndroidTool extends LocalContribution implements Tool, Comparable<AndroidTool> {
   private AndroidSDK sdk;
   private Tool tool;
   
@@ -118,7 +117,7 @@ public class AndroidTool extends LocalContribution implements Tool, Comparable<T
 
   
   @Override
-  public int compareTo(ToolContribution o) {
+  public int compareTo(AndroidTool o) {
     return getMenuTitle().compareTo(o.getMenuTitle());
   }
 
@@ -126,5 +125,5 @@ public class AndroidTool extends LocalContribution implements Tool, Comparable<T
   @Override
   public ContributionType getType() {
     return ContributionType.TOOL;
-  }  
+  }
 }

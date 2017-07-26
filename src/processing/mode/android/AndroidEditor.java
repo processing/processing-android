@@ -23,14 +23,12 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Messages;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.Settings;
 import processing.app.SketchException;
-import processing.app.Util;
-import processing.app.ui.Editor;
+import processing.app.tools.Tool;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
@@ -46,11 +44,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.TimerTask;
 
 
@@ -58,12 +54,16 @@ import java.util.TimerTask;
 public class AndroidEditor extends JavaEditor {
   // Component selected by default
   static public final String DEFAULT_COMPONENT = "app";  
+
+  private JMenu androidMenu;
   
   private int appComponent;
   
   private Settings settings;
   private AndroidMode androidMode;
 
+  private List<AndroidTool> androidTools;
+  
   private java.util.Timer updateDevicesTimer;
   
   private JCheckBoxMenuItem fragmentItem;
@@ -89,7 +89,10 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
     
-    loadModeSettings();
+    androidTools = loadAndroidTools();
+    addToolsToMenu();
+    
+    loadModeSettings();    
   }  
 
   @Override
@@ -258,7 +261,7 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildModeMenu() {
-    JMenu menu = new JMenu("Android");
+    androidMenu = new JMenu("Android");
     JMenuItem item;
 
     item = new JMenuItem("Sketch Permissions");
@@ -267,9 +270,9 @@ public class AndroidEditor extends JavaEditor {
         new Permissions(sketch, appComponent, androidMode.getFolder());
       }
     });
-    menu.add(item);
+    androidMenu.add(item);
 
-    menu.addSeparator();
+    androidMenu.addSeparator();
      
     fragmentItem = new JCheckBoxMenuItem("App");
     wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
@@ -322,19 +325,19 @@ public class AndroidEditor extends JavaEditor {
     watchfaceItem.setSelected(false);
     vrItem.setSelected(false);
 
-    menu.add(fragmentItem);
-    menu.add(wallpaperItem);
-    menu.add(watchfaceItem);
-    menu.add(vrItem);
+    androidMenu.add(fragmentItem);
+    androidMenu.add(wallpaperItem);
+    androidMenu.add(watchfaceItem);
+    androidMenu.add(vrItem);
     
-    menu.addSeparator();
+    androidMenu.addSeparator();
 
     final JMenu mobDeveMenu = new JMenu("Devices");
 
     JMenuItem noMobDevItem = new JMenuItem("No connected devices");
     noMobDevItem.setEnabled(false);
     mobDeveMenu.add(noMobDevItem);
-    menu.add(mobDeveMenu);
+    androidMenu.add(mobDeveMenu);
   
     // start updating device menus
     UpdateDeviceListTask task = new UpdateDeviceListTask(mobDeveMenu);
@@ -345,94 +348,9 @@ public class AndroidEditor extends JavaEditor {
     }
     updateDevicesTimer.schedule(task, 5000, 5000);
     
-    menu.addSeparator();
-    
-    item = new JMenuItem("Update SDK");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        
-      File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
-      AndroidTool tool = null;
-      try {
-        tool = new AndroidTool(toolPath, androidMode.getSDK());
-      } catch (Throwable e1) {
-        // TODO Auto-generated catch block
-        e1.printStackTrace();
-      } 
-      if (tool != null) {
-        tool.init(base);
-        tool.run();
-      }
-      
-        
-        /*
-        AndroidSDK sdk = androidMode.getSDK();
-        File lib = new File(sdk.getToolsFolder(), "lib");
-        File[] archives = Util.listJarFiles(lib);
-        URL[] urlList = new URL[archives.length];
-        for (int k = 0; k < archives.length; k++) {
-          try {
-            urlList[k] = archives[k].toURI().toURL();
-            System.out.println(urlList[k]);
-          } catch (MalformedURLException ex) {}
-        }
+    androidMenu.addSeparator();
 
-        
-        ClassLoader parent = androidMode.getClassLoader();        
-        System.out.println("Android mode CLASS loader "  + AndroidMode.class.getClassLoader());
-        System.out.println("Android mode class loader "  + parent);        
-        ClassLoader loader = new URLClassLoader(urlList, parent);
-        
-
-        try {
-          Class<?> updaterClass = loader.loadClass(SDKUpdater.class.getName());
-          Constructor con = updaterClass.getConstructor(Editor.class, AndroidMode.class, ClassLoader.class);
-          SDKUpdater updater = (SDKUpdater) con.newInstance(AndroidEditor.this, androidMode, loader);
-          
-        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
-          // TODO Auto-generated catch block
-          e1.printStackTrace();
-        }
-        
-        try {
-          // This cast should be safe, since the only case when loader is not a
-          // URLClassLoader is when no archives were found in the first place.
-          ((URLClassLoader) loader).close();
-        } catch (IOException e2) {
-          e2.printStackTrace();
-        }         
-*/
-    
-        
-//        AndroidSDK sdk = androidMode.getSDK();
-//        if (sdk != null) {
-//          new SDKUpdater(sdk.getSdkFolder());
-//        }
-        
-        
-      }
-    });
-    menu.add(item);
-
-//    item = new JMenuItem("AVD Manager");
-//    item.addActionListener(new ActionListener() {
-//      public void actionPerformed(ActionEvent e) {
-//        File file = androidMode.getSDK().getAndroidTool();
-//        PApplet.exec(new String[] { file.getAbsolutePath(), "avd" });
-//      }
-//    });
-//    menu.add(item);
-
-    item = new JMenuItem("Reset ADB");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-//        editor.statusNotice("Resetting the Android Debug Bridge server.");
-        Devices.killAdbServer();
-      }
-    });
-    menu.add(item);
-
-    return menu;
+    return androidMenu;
   }
 
 
@@ -694,6 +612,54 @@ public class AndroidEditor extends JavaEditor {
       if (save) androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
       System.err.println("While creating " + sketchProps + ": " + e.getMessage());
-    }   
+    }
   }
+  
+  private List<AndroidTool> loadAndroidTools() {
+    // This gets called before assigning mode to androidMode...
+    ArrayList<AndroidTool> outgoing = new ArrayList<AndroidTool>();
+    File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
+    AndroidTool tool = null;
+    try {
+      tool = new AndroidTool(toolPath, androidMode.getSDK());
+      tool.init(base);
+      outgoing.add(tool);
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }     
+    Collections.sort(outgoing);
+    return outgoing;
+  }
+  
+  private void addToolsToMenu() {
+    JMenuItem item;
+    
+    for (final Tool tool : androidTools) {
+      item = new JMenuItem(tool.getMenuTitle());
+      item.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          tool.run();
+        }
+      });
+      androidMenu.add(item);      
+    }
+
+//    item = new JMenuItem("AVD Manager");
+//    item.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent e) {
+//        File file = androidMode.getSDK().getAndroidTool();
+//        PApplet.exec(new String[] { file.getAbsolutePath(), "avd" });
+//      }
+//    });
+//    menu.add(item);
+
+    item = new JMenuItem("Reset ADB");
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+//        editor.statusNotice("Resetting the Android Debug Bridge server.");
+        Devices.killAdbServer();
+      }
+    });
+    androidMenu.add(item);    
+  }  
 }
