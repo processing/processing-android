@@ -24,6 +24,7 @@ package processing.mode.android;
 import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
+import processing.app.Util;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
@@ -179,10 +180,24 @@ class AndroidSDK {
     String javaHomeProp = System.getProperty("java.home");
     File javaHome = new File(javaHomeProp).getCanonicalFile();
     Platform.setenv("JAVA_HOME", javaHome.getCanonicalPath());
-
-    path = new File(javaHome, "bin").getCanonicalPath() + File.pathSeparator + path;
+    
+    path = new File(javaHome, "bin").getCanonicalPath() + File.pathSeparator + path;    
     Platform.setenv("PATH", path);
 
+
+    
+//    Util.contentsToClassPath()
+//    path = new File(tools, "lib").getCanonicalPath() + File.pathSeparator + path;    
+
+    
+//    repository-
+//    sdklib-
+//    common- 
+//    commons-compress-
+//    httpcore-
+//    guava-
+    
+    
     checkDebugCertificate();
   }
 

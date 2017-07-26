@@ -44,6 +44,8 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,9 +77,13 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
   private JButton actionButton;
   private JTable table;
 
+  public ClassLoader loader;
+  
   public SDKUpdater(Editor editor, AndroidMode androidMode) {
     super("SDK Updater");
 
+    this.loader = loader;
+    
     androidMode.checkSDK(editor);
     try {
       sdk = AndroidSDK.load();
@@ -98,6 +104,50 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     queryTask.addPropertyChangeListener(this);
     queryTask.execute();
     createLayout();
+  }
+  
+  public SDKUpdater(Editor editor, AndroidMode androidMode, ClassLoader loader) {
+    super("SDK Updater");
+
+    this.loader = loader;
+    
+    androidMode.checkSDK(editor);
+    try {
+      sdk = AndroidSDK.load();
+      if (sdk == null) {
+        sdk = AndroidSDK.locate(editor, androidMode);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (AndroidSDK.CancelException e) {
+      e.printStackTrace();
+    } catch (AndroidSDK.BadSDKException e) {
+      e.printStackTrace();
+    }
+
+    if (sdk == null) return;
+
+//    queryTask = new QueryTask();
+//    queryTask.addPropertyChangeListener(this);
+//    queryTask.execute();
+//    createLayout();
+    
+    
+    System.out.println("Android mode CLASS loader "  + SDKUpdater.class.getClassLoader());
+    System.out.println("Android mode class loader "  + loader);    
+    
+    Object  progress;
+    Class<?> clazz;
+    Constructor con;
+    try {
+      clazz = loader.loadClass("com.android.repository.api.ConsoleProgressIndicator");
+      con = clazz.getConstructor();
+      progress = con.newInstance();
+      System.out.println("Success creating progress instance " + progress);
+    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } 
   }
 
   @Override
@@ -137,7 +187,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
                with some changes
        */
       AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
-
+      
       FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
       mRepoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, new SettingsController() {

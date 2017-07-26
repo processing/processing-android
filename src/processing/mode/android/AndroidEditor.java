@@ -23,11 +23,14 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Messages;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.Settings;
 import processing.app.SketchException;
+import processing.app.Util;
+import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
@@ -43,6 +46,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.TimerTask;
 
 
@@ -342,6 +350,46 @@ public class AndroidEditor extends JavaEditor {
     item = new JMenuItem("Update SDK");
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
+        
+        /*
+        AndroidSDK sdk = androidMode.getSDK();
+        File lib = new File(sdk.getToolsFolder(), "lib");
+        File[] archives = Util.listJarFiles(lib);
+        URL[] urlList = new URL[archives.length];
+        for (int k = 0; k < archives.length; k++) {
+          try {
+            urlList[k] = archives[k].toURI().toURL();
+            System.out.println(urlList[k]);
+          } catch (MalformedURLException ex) {}
+        }
+
+        
+        ClassLoader parent = androidMode.getClassLoader();        
+        System.out.println("Android mode CLASS loader "  + AndroidMode.class.getClassLoader());
+        System.out.println("Android mode class loader "  + parent);        
+        ClassLoader loader = new URLClassLoader(urlList, parent);
+        
+
+        try {
+          Class<?> updaterClass = loader.loadClass(SDKUpdater.class.getName());
+          Constructor con = updaterClass.getConstructor(Editor.class, AndroidMode.class, ClassLoader.class);
+          SDKUpdater updater = (SDKUpdater) con.newInstance(AndroidEditor.this, androidMode, loader);
+          
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
+          // TODO Auto-generated catch block
+          e1.printStackTrace();
+        }
+        
+        try {
+          // This cast should be safe, since the only case when loader is not a
+          // URLClassLoader is when no archives were found in the first place.
+          ((URLClassLoader) loader).close();
+        } catch (IOException e2) {
+          e2.printStackTrace();
+        }         
+*/
+    
+        
         new SDKUpdater(AndroidEditor.this, androidMode);
       }
     });
