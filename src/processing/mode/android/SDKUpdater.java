@@ -30,7 +30,6 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.sdklib.tool.SdkManagerCli;
-import processing.app.ui.Editor;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -43,9 +42,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,10 +56,11 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
   final static private int DEF_NUM_ROWS = 10; 
   final static private int DEF_COL_WIDTH = 200;
   private final Vector<String> columns = new Vector<>(Arrays.asList(
-      "Package name", "Installed version", "New version"));
+      "Package name", "Installed version", "Available update"));
   private static final String PROPERTY_CHANGE_QUERY = "query";
 
-  private AndroidSDK sdk;
+//  private AndroidSDK sdk;
+  private File sdkFolder;
 
   private QueryTask queryTask;
   private DownloadTask downloadTask;
@@ -79,26 +77,26 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
 
   public ClassLoader loader;
   
-  public SDKUpdater(Editor editor, AndroidMode androidMode) {
+  public SDKUpdater(File path) {
     super("SDK Updater");
-
-    this.loader = loader;
     
-    androidMode.checkSDK(editor);
-    try {
-      sdk = AndroidSDK.load();
-      if (sdk == null) {
-        sdk = AndroidSDK.locate(editor, androidMode);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (AndroidSDK.CancelException e) {
-      e.printStackTrace();
-    } catch (AndroidSDK.BadSDKException e) {
-      e.printStackTrace();
-    }
+    sdkFolder = path;
+    
+//    androidMode.checkSDK(editor);
+//    try {
+//      sdk = AndroidSDK.load();
+//      if (sdk == null) {
+//        sdk = AndroidSDK.locate(editor, androidMode);
+//      }
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (AndroidSDK.CancelException e) {
+//      e.printStackTrace();
+//    } catch (AndroidSDK.BadSDKException e) {
+//      e.printStackTrace();
+//    }
 
-    if (sdk == null) return;
+    if (!sdkFolder.exists()) return;
 
     queryTask = new QueryTask();
     queryTask.addPropertyChangeListener(this);
@@ -106,6 +104,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
     createLayout();
   }
   
+  /*
   public SDKUpdater(Editor editor, AndroidMode androidMode, ClassLoader loader) {
     super("SDK Updater");
 
@@ -149,6 +148,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
       e.printStackTrace();
     } 
   }
+  */
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
@@ -186,7 +186,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
       /* Following code is from listPackages() of com.android.sdklib.tool.SdkManagerCli
                with some changes
        */
-      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
+      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(sdkFolder);
       
       FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
@@ -298,7 +298,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener {
       /* Following code is from installPackages() of com.android.sdklib.tool.SdkManagerCli
                with some changes
        */
-      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidSDK.load().getSdkFolder());
+      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(sdkFolder);
 
       FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       CustomSettings settings = new CustomSettings();

@@ -390,7 +390,10 @@ public class AndroidEditor extends JavaEditor {
 */
     
         
-        new SDKUpdater(AndroidEditor.this, androidMode);
+        AndroidSDK sdk = androidMode.getSDK();
+        if (sdk != null) {
+          new SDKUpdater(sdk.getSdkFolder());
+        }
       }
     });
     menu.add(item);
