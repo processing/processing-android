@@ -34,6 +34,7 @@ import com.android.sdklib.tool.SdkManagerCli;
 import processing.app.Base;
 import processing.app.Preferences;
 import processing.app.tools.Tool;
+import processing.app.ui.Toolkit;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -58,8 +59,15 @@ import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("serial")
 public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
-  final static private int DEF_NUM_ROWS = 10; 
-  final static private int DEF_COL_WIDTH = 220;
+  final static private int NUM_ROWS = 10; 
+  final static private int COL_WIDTH = Toolkit.zoom(220);
+  
+  final static private int BORDER = Toolkit.zoom(13);
+  final static private int GAP = Toolkit.zoom(13);
+  final static private int INSET = Toolkit.zoom(1);
+  final static private int BUTTON_WIDTH = Toolkit.zoom(75);
+  final static private int BUTTON_HEIGHT = Toolkit.zoom(25);
+  
   private final Vector<String> columns = new Vector<>(Arrays.asList(
       "Package name", "Installed version", "Available update"));
   private static final String PROPERTY_CHANGE_QUERY = "query";
@@ -234,14 +242,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     ProgressIndicator progress;
 
     DownloadTask() {
-      super();
-      // This code can help understanding more advanced users of the progress 
-      // indicator and the download functionality:
-      // https://github.com/JetBrains/android/blob/master/android/src/com/android/tools/idea/welcome/wizard/InstallComponentsPath.java
-      // From Android Plugin for IntelliJ IDEA:
-      // https://github.com/JetBrains/android
-      // My impression is that the current progress has to be set using progress.setFraction()
-      //and then can be retrieved with progress.getFraction();      
+      super();   
       progress = new ConsoleProgressIndicator();
     }
     
@@ -349,7 +350,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     outer.removeAll();
 
     Box verticalBox = Box.createVerticalBox();
-    verticalBox.setBorder(new EmptyBorder(13, 13, 13, 13));
+    verticalBox.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
     outer.add(verticalBox);
 
     /* Packages panel */
@@ -359,7 +360,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     packagesPanel.setLayout(boxLayout);
 
     // Packages table
-    packageTable = new DefaultTableModel(DEF_NUM_ROWS, columns.size()) {
+    packageTable = new DefaultTableModel(NUM_ROWS, columns.size()) {
       @Override
       public boolean isCellEditable(int row, int column) {
         return false;
@@ -379,9 +380,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     };    
     table.setFillsViewportHeight(true);
     table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-    Dimension dim = new Dimension(table.getColumnCount() * DEF_COL_WIDTH, 
-                                  table.getRowHeight() * DEF_NUM_ROWS);
-//    table.setPreferredSize(dim);
+    table.setRowHeight(Toolkit.zoom(table.getRowHeight()));
+    Dimension dim = new Dimension(table.getColumnCount() * COL_WIDTH, 
+                                  table.getRowHeight() * NUM_ROWS);
     table.setPreferredScrollableViewportSize(dim);
     
     packagesPanel.add(new JScrollPane(table));
@@ -391,13 +392,17 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     controlPanel.setLayout(gridBagLayout);
 
     GridBagConstraints gbc = new GridBagConstraints();
-
+    gbc.insets = new Insets(INSET, INSET, INSET, INSET);
+    
     status = new JLabel();
     status.setText("Starting up...");
     gbc.gridx = 0;
     gbc.gridy = 0;
     controlPanel.add(status, gbc);
 
+    // Using an indeterminate progress bar from now until we learn 
+    // how to update the fraction of the query/download process:
+    // https://github.com/processing/processing-android/issues/362
     progressBar = new JProgressBar();
     progressBar.setIndeterminate(true);
     gbc.gridx = 0;
@@ -438,21 +443,16 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       }
     });
     actionButton.setEnabled(false);
+    actionButton.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
     gbc.gridx = 1;
-    gbc.gridy = 0;
+    gbc.gridy = 0; 
     gbc.weightx = 0.0;
-    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.fill = GridBagConstraints.HORIZONTAL;   
     controlPanel.add(actionButton, gbc);
-
-//    ActionListener disposer = new ActionListener() {
-//      public void actionPerformed(ActionEvent actionEvent) {
-//        cancelTasks();
-//        dispose();
-//      }
-//    };
 
     ActionListener disposer = new ActionListener() {
       public void actionPerformed(ActionEvent actionEvent) {
+        cancelTasks();
         if (standalone) {
           System.exit(0);
         } else {
@@ -462,6 +462,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     };
     
     JButton closeButton = new JButton("Close");
+    closeButton.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
     closeButton.addActionListener(disposer);
     closeButton.setEnabled(true);
     gbc.gridx = 1;
@@ -471,7 +472,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     controlPanel.add(closeButton, gbc);
 
     verticalBox.add(packagesPanel);
-    verticalBox.add(Box.createVerticalStrut(13));
+    verticalBox.add(Box.createVerticalStrut(GAP));
     verticalBox.add(controlPanel);
     pack();
 
@@ -515,7 +516,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     root.registerKeyboardAction(disposer, stroke,
                                 JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-    int modifiers = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+    int modifiers = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
     stroke = KeyStroke.getKeyStroke('W', modifiers);
     root.registerKeyboardAction(disposer, stroke,
                                 JComponent.WHEN_IN_FOCUSED_WINDOW);
