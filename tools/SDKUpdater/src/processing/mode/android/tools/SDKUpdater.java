@@ -59,7 +59,7 @@ import java.util.concurrent.ExecutionException;
 @SuppressWarnings("serial")
 public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   final static private int DEF_NUM_ROWS = 10; 
-  final static private int DEF_COL_WIDTH = 200;
+  final static private int DEF_COL_WIDTH = 220;
   private final Vector<String> columns = new Vector<>(Arrays.asList(
       "Package name", "Installed version", "Available update"));
   private static final String PROPERTY_CHANGE_QUERY = "query";
@@ -381,7 +381,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
     Dimension dim = new Dimension(table.getColumnCount() * DEF_COL_WIDTH, 
                                   table.getRowHeight() * DEF_NUM_ROWS);
-    table.setPreferredSize(dim);
+//    table.setPreferredSize(dim);
     table.setPreferredScrollableViewportSize(dim);
     
     packagesPanel.add(new JScrollPane(table));
