@@ -53,7 +53,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   final static private int BOX_BORDER = Toolkit.zoom(13);
   final static private int BAR_BORDER = Toolkit.zoom(10);
   final static private int BAR_WIDTH = Toolkit.zoom(300); 
-  final static private int BAR_HEIGHT = Toolkit.zoom(15);
+  final static private int BAR_HEIGHT = Toolkit.zoom(30);
   final static private int GAP = Toolkit.zoom(13);
   
   private static final int PLATFORM_TOOLS = 2;
@@ -501,16 +501,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     vbox.add(textarea);
 
-    JPanel progressPanel = new JPanel();
+    // Needed to put the progressBar inside this panel so we can set its size
+    JPanel progressPanel = new JPanel(); 
+    BoxLayout boxLayout = new BoxLayout(progressPanel, BoxLayout.Y_AXIS);
+    progressPanel.setLayout(boxLayout);    
     progressBar = new JProgressBar(0, 100);
-//    progressBar.setPreferredSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
     progressBar.setPreferredSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
     progressBar.setValue(0);
     progressBar.setStringPainted(true);
     progressBar.setIndeterminate(true);
     progressBar.setBorder(new EmptyBorder(BAR_BORDER, BAR_BORDER, BAR_BORDER, BAR_BORDER));
     progressPanel.add(progressBar);
-//    vbox.add(progressBar);
     vbox.add(progressPanel);
 
     downloadedTextArea = new JLabel("0 / 0 MB");
