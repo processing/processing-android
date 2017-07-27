@@ -24,9 +24,9 @@ package processing.mode.android;
 import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
-import processing.app.Util;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
+import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
 import javax.swing.*;
@@ -51,6 +51,10 @@ import java.util.Date;
 class AndroidSDK {
   public static boolean adbDisabled = false;
   
+  final static private int FONT_SIZE = Toolkit.zoom(11);
+  final static private int TEXT_MARGIN = Toolkit.zoom(8);
+  final static private int TEXT_WIDTH = Toolkit.zoom(300);
+  
   private final File folder;
   private final File tools;
   private final File platforms;
@@ -71,8 +75,8 @@ class AndroidSDK {
   private static final String MISSING_SDK_MESSAGE =
       "The Android SDK does not appear to be installed, " +
       "because the ANDROID_SDK variable is not set. " +
-      "If it is installed, click “Locate SDK path” to select the " +
-      "location of the SDK, or “Download SDK” to let " +
+      "If it is installed, click \"Locate SDK path\" to select the " +
+      "location of the SDK, or \"Download SDK\" to let " +
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
@@ -85,8 +89,8 @@ class AndroidSDK {
       "The Android SDK appears to be installed, " +
       "however the SDK platform for API " + AndroidBuild.TARGET_SDK + 
       " was not found. If it is available in a different location, " +
-      "click “Locate SDK path” to select the " +
-      "location of the alternative SDK, or “Download SDK” to let " +
+      "click \"Locate SDK path\" to select the " +
+      "location of the alternative SDK, or \"Download SDK\" to let " +
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
@@ -183,20 +187,6 @@ class AndroidSDK {
     
     path = new File(javaHome, "bin").getCanonicalPath() + File.pathSeparator + path;    
     Platform.setenv("PATH", path);
-
-
-    
-//    Util.contentsToClassPath()
-//    path = new File(tools, "lib").getCanonicalPath() + File.pathSeparator + path;    
-
-    
-//    repository-
-//    sdklib-
-//    common- 
-//    commons-compress-
-//    httpcore-
-//    guava-
-    
     
     checkDebugCertificate();
   }
@@ -244,7 +234,7 @@ class AndroidSDK {
 //                  System.out.println("Nah, that won't expire until " + date); //timestamp);
                 }
               } catch (ParseException pe) {
-                System.err.println("The date “" + timestamp + "” could not be parsed.");
+                System.err.println("The date â€œ" + timestamp + "â€� could not be parsed.");
                 System.err.println("Please report this as a bug so we can fix it.");
               }
             }
@@ -441,8 +431,10 @@ class AndroidSDK {
     // How to show a option dialog containing clickable links:
     // http://stackoverflow.com/questions/8348063/clickable-links-in-joptionpane
     String htmlString = "<html> " +
-        "<head> <style type=\"text/css\">"+
-        "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+        "<head> <style type=\"text/css\">" +
+        "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
+            "margin: " + TEXT_MARGIN + "px; " + 
+            "width: " + TEXT_WIDTH + "px }" +
         "</style> </head>";
     String title = "";
     if (SDK_LOAD_ERROR == MISSING_SDK) {
@@ -486,7 +478,9 @@ class AndroidSDK {
     String msg = wear ? ANDROID_SYS_IMAGE_WEAR_SECONDARY : ANDROID_SYS_IMAGE_SECONDARY;
     String htmlString = "<html> " +
         "<head> <style type=\"text/css\">"+
-        "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+        "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
+            "margin: " + TEXT_MARGIN + "px; " + 
+            "width: " + TEXT_WIDTH + "px }" +
         "</style> </head>" + "<body> <p>" + msg + "</p> </body> </html>";
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
