@@ -50,6 +50,12 @@ import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
+  final static private int BOX_BORDER = Toolkit.zoom(13);
+  final static private int BAR_BORDER = Toolkit.zoom(10);
+  final static private int BAR_WIDTH = Toolkit.zoom(300); 
+  final static private int BAR_HEIGHT = Toolkit.zoom(15);
+  final static private int GAP = Toolkit.zoom(13);
+  
   private static final int PLATFORM_TOOLS = 2;
   private static final int ANDROID_REPO = 4;
   private static final int GOOGLE_REPO = 5;
@@ -486,26 +492,33 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     Container outer = getContentPane();
     outer.removeAll();
 
-    Box pain = Box.createVerticalBox();
-    pain.setBorder(new EmptyBorder(13, 13, 13, 13));
-    outer.add(pain);
+    Box vbox = Box.createVerticalBox();
+    vbox.setBorder(new EmptyBorder(BOX_BORDER, BOX_BORDER, BOX_BORDER, BOX_BORDER));
+    outer.add(vbox);
 
     String labelText = "Downloading Android SDK...";
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textarea);
+    vbox.add(textarea);
 
+    JPanel progressPanel = new JPanel();
     progressBar = new JProgressBar(0, 100);
+//    progressBar.setPreferredSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
+    progressBar.setPreferredSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
     progressBar.setValue(0);
     progressBar.setStringPainted(true);
     progressBar.setIndeterminate(true);
-    progressBar.setBorder(new EmptyBorder(10, 10, 10, 10) );
-    pain.add(progressBar);
+    progressBar.setBorder(new EmptyBorder(BAR_BORDER, BAR_BORDER, BAR_BORDER, BAR_BORDER));
+    progressPanel.add(progressBar);
+//    vbox.add(progressBar);
+    vbox.add(progressPanel);
 
-    downloadedTextArea = new JLabel("");
+    downloadedTextArea = new JLabel("0 / 0 MB");
     downloadedTextArea.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(downloadedTextArea);
+    vbox.add(downloadedTextArea);
 
+    vbox.add(Box.createVerticalStrut(GAP));
+    
     // buttons
     JPanel buttons = new JPanel();
 //    buttons.setPreferredSize(new Dimension(400, 35));
@@ -525,7 +538,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton cancelButton = new JButton("Cancel download");
     Dimension dim = new Dimension(Toolkit.getButtonWidth()*2,
-        cancelButton.getPreferredSize().height);
+                                  Toolkit.zoom(cancelButton.getPreferredSize().height));
 
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
@@ -541,7 +554,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     buttons.add(cancelButton);
 //    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
-    pain.add(buttons);
+    vbox.add(buttons);
 
     JRootPane root = getRootPane();
     root.setDefaultButton(cancelButton);
