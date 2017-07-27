@@ -1,6 +1,4 @@
 bin
 build
 /dist
-.classpath
-.project
 /library/vr.jar
