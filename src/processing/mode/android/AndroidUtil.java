@@ -42,12 +42,16 @@ import processing.app.Base;
 import processing.app.Platform;
 import processing.app.SketchException;
 import processing.app.Util;
+import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
 /** 
  * Some utilities.
  */
 public class AndroidUtil {
+  final static private int FONT_SIZE = Toolkit.zoom(11);
+  final static private int TEXT_MARGIN = Toolkit.zoom(8);
+  final static private int TEXT_WIDTH = Toolkit.zoom(300);  
   
   // Creates a message dialog, where the text can contain clickable links.
   static public void showMessage(String title, String text) {
@@ -56,8 +60,10 @@ public class AndroidUtil {
       System.out.println(title + ": " + text);
     } else {
       String htmlString = "<html> " +
-          "<head> <style type=\"text/css\">"+
-          "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
+          "<head> <style type=\"text/css\">" +
+          "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
+              "margin: " + TEXT_MARGIN + "px; " + 
+              "width: " + TEXT_WIDTH + "px }" +
           "</style> </head>" +
           "<body> <p>" + text + "</p> </body> </html>";      
       JEditorPane pane = new JEditorPane("text/html", htmlString);
