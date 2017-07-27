@@ -31,8 +31,10 @@ import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
+import processing.app.exec.LineProcessor;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
+import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import processing.mode.java.preproc.SurfaceInfo;
@@ -787,9 +789,16 @@ class AndroidBuild extends JavaBuild {
   private File zipalignPackage(File signedPackage, File projectFolder) 
       throws IOException, InterruptedException {
 
-    File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0];
+    File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0]; 
     String zipalignPath = buildToolsFolder.getAbsolutePath() + "/zipalign";
-
+    if (Platform.isWindows()) zipalignPath += ".exe";    
+    if (!new File(zipalignPath).exists()) {
+      Messages.showWarning("Cannot find zipaling...",
+          "The zipalign build tool needed to prepare the export pacakge is missing.\n" +
+          "Make sure that your Android SDK was downloaded correctly.");
+      return null;
+    }
+    
     File alignedPackage = new File(projectFolder, 
         module + "/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
 
@@ -800,6 +809,12 @@ class AndroidBuild extends JavaBuild {
 
     Process alignProcess = Runtime.getRuntime().exec(args);
     alignProcess.waitFor();
+    StreamPump errie = new StreamPump(alignProcess.getErrorStream(), "zipalign err: ");
+    errie.addTarget(new LineProcessor() {
+      public void processLine(String line) {
+        System.err.println(line);
+      }
+    });    
 
     if (alignedPackage.exists()) return alignedPackage;
     return null;
