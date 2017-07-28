@@ -31,10 +31,8 @@ import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
-import processing.app.exec.LineProcessor;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
-import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import processing.mode.java.preproc.SurfaceInfo;
@@ -794,7 +792,7 @@ class AndroidBuild extends JavaBuild {
     if (Platform.isWindows()) zipalignPath += ".exe";    
     if (!new File(zipalignPath).exists()) {
       Messages.showWarning("Cannot find zipaling...",
-          "The zipalign build tool needed to prepare the export pacakge is missing.\n" +
+          "The zipalign build tool needed to prepare the export package is missing.\n" +
           "Make sure that your Android SDK was downloaded correctly.");
       return null;
     }
@@ -817,7 +815,7 @@ class AndroidBuild extends JavaBuild {
 
     if (alignedPackage.exists()) return alignedPackage;
     return null;
-  }  
+  }   
   
   
   //---------------------------------------------------------------------------
