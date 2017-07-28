@@ -806,15 +806,14 @@ class AndroidBuild extends JavaBuild {
         zipalignPath, "-v", "-f", "4",
         signedPackage.getAbsolutePath(), alignedPackage.getAbsolutePath()
     };
-
+        
     Process alignProcess = Runtime.getRuntime().exec(args);
+    // Need to consume output for the process to finish, as discussed here
+    // https://stackoverflow.com/questions/5483830/process-waitfor-never-returns 
+    // Using StreamPump as in other parts of the mode does not seem to work for some reason
+    BufferedReader reader = new BufferedReader(new InputStreamReader(alignProcess.getInputStream()));
+    while ((reader.readLine()) != null) {}
     alignProcess.waitFor();
-    StreamPump errie = new StreamPump(alignProcess.getErrorStream(), "zipalign err: ");
-    errie.addTarget(new LineProcessor() {
-      public void processLine(String line) {
-        System.err.println(line);
-      }
-    });    
 
     if (alignedPackage.exists()) return alignedPackage;
     return null;
