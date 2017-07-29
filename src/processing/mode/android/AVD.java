@@ -73,6 +73,7 @@ public class AVD {
   /** "android-7" or "Google Inc.:Google APIs:7" */
   protected String sdkId;
 
+  static boolean invalidPackage;
   static ArrayList<String> avdList;
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
@@ -317,7 +318,8 @@ public class AVD {
       }
       if (output.toString().contains("Package path is not valid")) {
         // They didn't install the Google APIs
-        AndroidUtil.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
+        //AndroidUtil.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
+        invalidPackage = true;
       } else {
         // Just generally not working
         AndroidUtil.showMessage(AVD_CREATE_TITLE, 
@@ -353,15 +355,20 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-//        if (wearAVD.noTargets(sdk)) {
-//          boolean res = AndroidSDK.locateSysImage(window, mode, true);
-//          if (!res) {
-//            return false;
-//          }
-//        }
         if (wearAVD.create(sdk)) {
           return true;
-        }    
+        }
+        if (invalidPackage) {
+          boolean res = AndroidSDK.locateSysImage(window, mode, true);
+          if (!res) {
+            return false;
+          } else {
+            // Try again
+            if (wearAVD.create(sdk)) {
+              return true;
+            }
+          }
+        }
       } else {
         if (mobileAVD.exists(sdk)) {
           return true;
@@ -370,14 +377,19 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-//        if (mobileAVD.noTargets(sdk)) {
-//          boolean res = AndroidSDK.locateSysImage(window, mode, false);
-//          if (!res) {
-//            return false;
-//          }
-//        }
         if (mobileAVD.create(sdk)) {
           return true;
+        }
+        if (invalidPackage) {
+          boolean res = AndroidSDK.locateSysImage(window, mode, false);
+          if (!res) {
+            return false;
+          } else {
+            // Try again
+            if (mobileAVD.create(sdk)) {
+              return true;
+            }
+          }
         }
       }
     } catch (final Exception e) {
