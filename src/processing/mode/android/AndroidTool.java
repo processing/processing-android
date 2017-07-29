@@ -33,6 +33,10 @@ import processing.app.contrib.IgnorableException;
 import processing.app.contrib.LocalContribution;
 import processing.app.tools.Tool;
 
+/**
+ * Specialized local contribution for Android tools. Cannot use ToolContribution
+ * from processing-app since Android tools may need SDK jars in the classpath.
+ */
 public class AndroidTool extends LocalContribution implements Tool, Comparable<AndroidTool> {
   private AndroidSDK sdk;
   private Tool tool;
