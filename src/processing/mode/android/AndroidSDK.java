@@ -62,7 +62,7 @@ class AndroidSDK {
   private final File androidJar;
   private final File platformTools;
   private final File buildTools;
-  private final File androidTool;
+  private final File avdManager;
   private final File wearablePath;
   private final File supportLibPath;
 
@@ -173,7 +173,7 @@ class AndroidSDK {
       throw new BadSDKException("There is no support library folder in " + folder);
     }
     
-    androidTool = findAndroidTool(tools);
+    avdManager = findAvdManager(new File(tools, "bin"));
 
     String path = Platform.getenv("PATH");
 
@@ -252,8 +252,8 @@ class AndroidSDK {
   }
 
 
-  public String getAndroidToolPath() {
-    return androidTool.getAbsolutePath();
+  public String getAvdManagerPath() {
+    return avdManager.getAbsolutePath();
   }
 
 
@@ -296,17 +296,14 @@ class AndroidSDK {
    * for the SDK installation. Also figures out the name of android/android.bat
    * so that it can be called explicitly.
    */
-  private static File findAndroidTool(final File tools) throws BadSDKException {
-    if (new File(tools, "android.exe").exists()) {
-      return new File(tools, "android.exe");
+  private static File findAvdManager(final File tools) throws BadSDKException {
+    if (new File(tools, "avdmanager.bat").exists()) {
+      return new File(tools, "avdmanager.bat");
     }
-    if (new File(tools, "android.bat").exists()) {
-      return new File(tools, "android.bat");
+    if (new File(tools, "avdmanager").exists()) {
+      return new File(tools, "avdmanager");
     }
-    if (new File(tools, "android").exists()) {
-      return new File(tools, "android");
-    }
-    throw new BadSDKException("Cannot find the android tool in " + tools);
+    throw new BadSDKException("Cannot find avdmanager in " + tools);
   }
 
 
