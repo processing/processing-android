@@ -21,6 +21,7 @@
 
 package processing.mode.android;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
@@ -60,7 +61,7 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(boolean wear, boolean gpu) throws IOException {
+  synchronized public void launch(File sdkToolsPath, boolean wear, boolean gpu) throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
       throw new IllegalStateException(illegal);
@@ -90,8 +91,11 @@ class EmulatorController {
     }
     
     String gpuFlag = gpu ? "on" : "off";
+    File emulatorPath = new File(sdkToolsPath, "emulator");
+    if(!emulatorPath.exists())
+      emulatorPath = new File(sdkToolsPath, "emulator.exe"); //Windows
     final String[] cmd = new String[] {
-      "emulator",
+      emulatorPath.getCanonicalPath(),
       "-avd", avdName,
       "-port", portString,
 //      "-no-boot-anim",  // does this do anything?

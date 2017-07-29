@@ -298,7 +298,7 @@ public class AndroidMode extends JavaMode {
     }
 
     int comp = build.getAppComponent();
-    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL());    
+    Future<Device> emu = Devices.getInstance().getEmulator(sdk.getToolsFolder(), build.isWear(), build.usesOpenGL());
     runner = new AndroidRunner(build, listener);
     runner.launch(emu, comp, true);
   }
