@@ -24,6 +24,7 @@ package processing.mode.android;
 import processing.app.exec.ProcessResult;
 import processing.mode.android.EmulatorController.State;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,10 +112,10 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator(final boolean wear, final boolean gpu) {
+  public Future<Device> getEmulator(final File sdkToolsPath, final boolean wear, final boolean gpu) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator(wear, gpu);
+        return blockingGetEmulator(sdkToolsPath, wear, gpu);
       }
     };
     final FutureTask<Device> task = new FutureTask<Device>(androidFinder);
@@ -123,7 +124,7 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator(final boolean wear, final boolean gpu) {
+  private final Device blockingGetEmulator(File sdkToolsPath, final boolean wear, final boolean gpu) {
 //    System.out.println("going looking for emulator");
     String port = AVD.getPort(wear);
     Device emu = find(true, port);
@@ -138,7 +139,7 @@ class Devices {
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
 //        System.out.println("not running, gonna launch");
-        emuController.launch(wear, gpu); // this blocks until emulator boots
+        emuController.launch(sdkToolsPath, wear, gpu); // this blocks until emulator boots
 //        System.out.println("not just gonna, we've done the launch");
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");

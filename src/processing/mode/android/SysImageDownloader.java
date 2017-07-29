@@ -23,7 +23,6 @@ package processing.mode.android;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -37,6 +36,7 @@ import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -51,21 +51,15 @@ import java.net.URLConnection;
 @SuppressWarnings("serial")
 public class SysImageDownloader extends JDialog implements PropertyChangeListener {
   private static final String SYS_IMAGES_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
-  private static final String SYS_IMAGES_LIST = "sys-img.xml";
+  private static final String SYS_IMAGES_LIST = "sys-img2-1.xml";
   
   private static final String SYS_IMAGES_WEAR_URL = "https://dl.google.com/android/repository/sys-img/android-wear/";
-  private static final String SYS_IMAGES_WEAR_LIST = "sys-img.xml";
+  private static final String SYS_IMAGES_WEAR_LIST = "sys-img2-1.xml";
   
   public static final String SYSTEM_IMAGE_TAG = "google_apis";
-  private static final String SYSTEM_IMAGE_MACOSX = "Google APIs Intel x86 Atom System Image";  
-  private static final String SYSTEM_IMAGE_WINDOWS = "Google APIs Intel x86 Atom System Image";
-  private static final String SYSTEM_IMAGE_LINUX = "Google APIs Intel x86 Atom System Image";
-  
+
   public static final String SYSTEM_IMAGE_WEAR_TAG = "android-wear";
-  private static final String SYSTEM_IMAGE_WEAR_MACOSX = "Android Wear Intel x86 Atom System Image";
-  private static final String SYSTEM_IMAGE_WEAR_WINDOWS = "Android Wear Intel x86 Atom System Image";
-  private static final String SYSTEM_IMAGE_WEAR_LINUX = "Android Wear Intel x86 Atom System Image";
-  
+
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
 
@@ -223,74 +217,58 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     
     private void getDownloadUrls(UrlHolder urlHolder, 
         String repositoryUrl, String requiredHostOs) 
-        throws ParserConfigurationException, IOException, SAXException {
+        throws ParserConfigurationException, IOException, SAXException, XPathException {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = dbf.newDocumentBuilder();
+      XPathFactory xPathfactory = XPathFactory.newInstance();
+      XPath xpath = xPathfactory.newXPath();
+      XPathExpression expr;
+      NodeList remotePackages;
+
+      expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
+              "and contains(@path, \"x86\")]");
       
       if (wear) {
-        // wear system image
-        String systemImage = "";
-        if (Platform.isMacOS()) {
-          systemImage = SYSTEM_IMAGE_WEAR_MACOSX;
-        } else if (Platform.isWindows()) {
-          systemImage = SYSTEM_IMAGE_WEAR_WINDOWS;
-        } else if (Platform.isLinux()) {
-          systemImage = SYSTEM_IMAGE_WEAR_LINUX;
-        }         
         Document docSysImgWear = db.parse(new URL(repositoryUrl).openStream());
-        NodeList sysImgWearList = docSysImgWear.getElementsByTagName("sdk:system-image");
-        for (int i = 0; i < sysImgWearList.getLength(); i++) {
-          Node img = sysImgWearList.item(i);
-          NodeList level = ((Element) img).getElementsByTagName("sdk:api-level");
-          NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
-          NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
-          // Only considering nodes without a codename, which correspond to the platform
-          // pre-releases.        
-          if (level.item(0).getTextContent().equals(AndroidBuild.TARGET_SDK) &&
-              desc.item(0).getTextContent().equals(systemImage) && 
-              codename.item(0) == null) {          
-            NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
-            urlHolder.sysImgWearTag = tag.item(0).getTextContent();          
-            Node archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
-            Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-            urlHolder.sysImgWearFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-            urlHolder.sysImgWearUrl = SYS_IMAGES_WEAR_URL + urlHolder.sysImgWearFilename;
-            urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
-            break;
-          }
-        }        
+        remotePackages = (NodeList) expr.evaluate(docSysImgWear, XPathConstants.NODESET);
+        NodeList childNodes = remotePackages.item(0).getChildNodes();
+
+        NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
+        NodeList tag = ((Element) typeDetails.item(0)).getElementsByTagName("tag");
+        NodeList id = ((Element) tag.item(0)).getElementsByTagName("id");
+        urlHolder.sysImgWearTag = id.item(0).getTextContent();
+
+        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+        NodeList archive = archives.item(0).getChildNodes();
+        NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+        urlHolder.sysImgWearFilename  =  url.item(0).getTextContent();
+        urlHolder.sysImgWearUrl = SYS_IMAGES_WEAR_URL + urlHolder.sysImgWearFilename;
+        urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
       } else {
-        // default system image
-        String systemImage = "";
-        if (Platform.isMacOS()) {
-          systemImage = SYSTEM_IMAGE_MACOSX;
-        } else if (Platform.isWindows()) {
-          systemImage = SYSTEM_IMAGE_WINDOWS;
-        } else if (Platform.isLinux()) {
-          systemImage = SYSTEM_IMAGE_LINUX;
-        }        
         Document docSysImg = db.parse(new URL(repositoryUrl).openStream());
-        NodeList sysImgList = docSysImg.getElementsByTagName("sdk:system-image");
-        for (int i = 0; i < sysImgList.getLength(); i++) {
-          Node img = sysImgList.item(i);
-          NodeList level = ((Element) img).getElementsByTagName("sdk:api-level");
-          NodeList desc = ((Element) img).getElementsByTagName("sdk:description");
-          NodeList codename = ((Element) img).getElementsByTagName("sdk:codename");
-          // Only considering nodes without a codename, which correspond to the platform
-          // pre-releases.  
-          if (level.item(0).getTextContent().equals(AndroidBuild.TARGET_SDK) &&
-              desc.item(0).getTextContent().equals(systemImage) && 
-              codename.item(0) == null) {          
-            NodeList tag = ((Element) img).getElementsByTagName("sdk:tag-id");
-            urlHolder.sysImgTag = tag.item(0).getTextContent();          
-            Node archiveListItem = ((Element) img).getElementsByTagName("sdk:archives").item(0);
-            Node archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-            urlHolder.sysImgFilename = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-            urlHolder.sysImgUrl = SYS_IMAGES_URL + urlHolder.sysImgFilename;
-            urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());
-            break;
-          }
-        }
+        remotePackages = (NodeList) expr.evaluate(docSysImg, XPathConstants.NODESET);
+        NodeList childNodes = remotePackages.item(0).getChildNodes(); // Index 1 contains x86_64
+
+        NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
+        //NodeList abi = ((Element) typeDetails.item(0)).getElementsByTagName("abi");
+        NodeList tag = ((Element) typeDetails.item(0)).getElementsByTagName("tag");
+        NodeList id = ((Element) tag.item(0)).getElementsByTagName("id");
+        urlHolder.sysImgTag = id.item(0).getTextContent();
+
+        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+        NodeList archive = archives.item(0).getChildNodes();
+        NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+        urlHolder.sysImgFilename  =  url.item(0).getTextContent();
+        urlHolder.sysImgUrl = SYS_IMAGES_URL + urlHolder.sysImgFilename;
+        urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
       }
     }
   }
