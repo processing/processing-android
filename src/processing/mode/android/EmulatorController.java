@@ -90,7 +90,9 @@ class EmulatorController {
       avdName = AVD.mobileAVD.name;
     }
     
-    String gpuFlag = gpu ? "on" : "off";
+    // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
+    String gpuFlag = gpu ? "auto" : "off";
+    
     File emulatorPath = new File(sdkToolsPath, "emulator");
     if(!emulatorPath.exists())
       emulatorPath = new File(sdkToolsPath, "emulator.exe"); //Windows
