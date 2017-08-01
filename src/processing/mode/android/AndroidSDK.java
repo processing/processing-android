@@ -394,7 +394,7 @@ class AndroidSDK {
 
   static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
       throws BadSDKException, CancelException {
-    final SDKDownloader downloader = new SDKDownloader(editor, androidMode);    
+    final SDKDownloader downloader = new SDKDownloader(editor);    
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
     
     if (downloader.cancelled()) {
@@ -410,7 +410,7 @@ class AndroidSDK {
   static public boolean downloadSysImage(final Frame editor, 
       final AndroidMode androidMode, final boolean wear) 
       throws BadSDKException, CancelException {
-    final SysImageDownloader downloader = new SysImageDownloader(editor, androidMode, wear);    
+    final SysImageDownloader downloader = new SysImageDownloader(editor, wear);    
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
     
     if (downloader.cancelled()) {

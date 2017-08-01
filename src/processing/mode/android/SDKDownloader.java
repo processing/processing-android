@@ -74,7 +74,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private SDKDownloadTask downloadTask;
   
   private Frame editor;
-  private AndroidMode mode;
   private AndroidSDK sdk;
   private boolean cancelled;
   
@@ -96,11 +95,13 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     @Override
     protected Object doInBackground() throws Exception {
-      File modeFolder = mode.getFolder();
-      
+      File sketchbookFolder = processing.app.Base.getSketchbookFolder();
+      File androidFolder = new File(sketchbookFolder, "android");
+      if (!androidFolder.exists()) androidFolder.mkdir();
+            
       // creating sdk folders
-      File sdkFolder = new File(modeFolder, "sdk");
-      if (!sdkFolder.exists()) sdkFolder.mkdir();
+      File sdkFolder = new File(androidFolder, "sdk");
+      if (!sdkFolder.exists()) sdkFolder.mkdirs();
       File platformsFolder = new File(sdkFolder, "platforms");
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
@@ -113,7 +114,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!androidRepoFolder.exists()) androidRepoFolder.mkdir();      
       
       // creating temp folder for downloaded zip packages
-      File tempFolder = new File(modeFolder, "temp");
+      File tempFolder = new File(androidFolder, "temp");
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
@@ -463,10 +464,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  public SDKDownloader(Frame editor, AndroidMode mode) {
+  public SDKDownloader(Frame editor) {
     super(editor, "SDK download", true);
     this.editor = editor;
-    this.mode = mode;
     this.sdk = null;    
     createLayout();
   }

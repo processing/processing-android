@@ -43,7 +43,8 @@ public class AndroidKeyStore {
 
   public static File getKeyStoreLocation() {
     File sketchbookFolder = processing.app.Base.getSketchbookFolder();
-    File keyStoreFolder = new File(sketchbookFolder, "keystore");
+    File androidFolder = new File(sketchbookFolder, "android");    
+    File keyStoreFolder = new File(androidFolder, "keystore");
     if (!keyStoreFolder.exists()) {
       boolean result = keyStoreFolder.mkdirs();
 

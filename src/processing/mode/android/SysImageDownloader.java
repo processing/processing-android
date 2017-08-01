@@ -69,7 +69,6 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private DownloadTask downloadTask;
   
   private Frame editor;
-  private AndroidMode mode;
   private boolean result;
   private boolean wear;
   private boolean cancelled;
@@ -94,8 +93,12 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
 
       // The SDK should already be detected by the android mode
       String sdkPrefsPath = Preferences.get("android.sdk.path");
-      File sdkFolder = new File(sdkPrefsPath);
-      File modeFolder = mode.getFolder();      
+      
+      File sketchbookFolder = processing.app.Base.getSketchbookFolder();
+      File androidFolder = new File(sketchbookFolder, "android");
+      if (!androidFolder.exists()) androidFolder.mkdir();
+      
+      File sdkFolder = new File(sdkPrefsPath); 
       if (!sdkFolder.exists()) {
         throw new IOException("SDK folder does not exist " + sdkFolder.getAbsolutePath());
       }
@@ -105,7 +108,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       if (!sysImgFolder.exists()) sysImgFolder.mkdir();
 
       // creating temp folder for downloaded zip packages
-      File tempFolder = new File(modeFolder, "temp");
+      File tempFolder = new File(androidFolder, "temp");
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
@@ -295,10 +298,9 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  public SysImageDownloader(Frame editor, AndroidMode mode, boolean wear) {
+  public SysImageDownloader(Frame editor, boolean wear) {
     super(editor, "Emulator download", true);
     this.editor = editor;
-    this.mode = mode;
     this.wear = wear;
     this.result = false;    
     createLayout();
