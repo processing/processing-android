@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import processing.app.Base;
+import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.*;
 
@@ -82,7 +83,7 @@ class EmulatorController {
       }
     }
 
-    // See http://developer.android.com/guide/developing/tools/emulator.html
+    // https://developer.android.com/studio/run/emulator-commandline.html
     String avdName;
     if (wear) {
       avdName = AVD.wearAVD.name;
@@ -93,9 +94,8 @@ class EmulatorController {
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
     String gpuFlag = gpu ? "auto" : "off";
     
-    File emulatorPath = new File(sdkToolsPath, "emulator");
-    if(!emulatorPath.exists())
-      emulatorPath = new File(sdkToolsPath, "emulator.exe"); //Windows
+    File emulatorPath = Platform.isWindows() ? new File(sdkToolsPath, "emulator.exe") :
+                                               new File(sdkToolsPath, "emulator");
     final String[] cmd = new String[] {
       emulatorPath.getCanonicalPath(),
       "-avd", avdName,

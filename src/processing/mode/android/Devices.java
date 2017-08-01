@@ -124,36 +124,33 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator(File sdkToolsPath, final boolean wear, final boolean gpu) {
-//    System.out.println("going looking for emulator");
+  private final Device blockingGetEmulator(final File sdkToolsPath, 
+      final boolean wear, final boolean gpu) {
     String port = AVD.getPort(wear);
     Device emu = find(true, port);
     if (emu != null) {
-//      System.out.println("found emu " + emu);
       return emu;
     }
-//    System.out.println("no emu found");
 
     EmulatorController emuController = EmulatorController.getInstance(wear);
-//    System.out.println("checking emulator state");
+    if (emuController.getState() == State.RUNNING) {
+      // The emulator is in running state, but did not find any emulator device,
+      // to the most common cause is that it was closed, so we will re-launch it.
+      emuController.setState(State.NOT_RUNNING);
+    }
+    
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
-//        System.out.println("not running, gonna launch");
         emuController.launch(sdkToolsPath, wear, gpu); // this blocks until emulator boots
-//        System.out.println("not just gonna, we've done the launch");
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");
         e.printStackTrace(System.err);
         return null;
       }
     } else {
-      System.out.println("Emulator is " + emuController.getState() +
-                         ", which is not expected.");
-
+      return null;
     }
-//    System.out.println("and now we're out");
 
-//    System.out.println("Devices.blockingGet thread is " + Thread.currentThread());
     while (!Thread.currentThread().isInterrupted()) {
       //      System.err.println("AndroidEnvironment: looking for emulator in loop.");
       //      System.err.println("AndroidEnvironment: emulatorcontroller state is "

@@ -45,6 +45,7 @@ public class AndroidRunner implements DeviceListener {
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
 
+  protected boolean showedSlowEmuWarning = false;
 
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
@@ -97,7 +98,8 @@ public class AndroidRunner implements DeviceListener {
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
       listener.statusError("Lost connection with " + devStr + " while installing. Try again.");
-      if (emu) {
+      if (emu && !showedSlowEmuWarning) {
+        showedSlowEmuWarning = true; 
         // More detailed message when using the emulator, to following discussion in
         // https://code.google.com/p/android/issues/detail?id=104305
         Messages.showWarning("The emulator is slooow...",
