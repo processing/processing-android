@@ -28,8 +28,6 @@ import processing.core.PApplet;
 import java.awt.Frame;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -45,7 +43,7 @@ public class AVD {
     "and your sketch may be launching shortly.)";
 
   private static final String COMMAND_LINE_TUT_URL = 
-      "http://android.processing.org/tutorials/command_line/index.html";  
+      "https://developer.android.com/studio/command-line/avdmanager.html";  
   
   static private final String AVD_LOAD_TITLE =
     "Could not load the AVD.";
@@ -53,7 +51,7 @@ public class AVD {
     "This could mean that the Android tools need to be updated,<br>" +
     "or that the Processing AVD should be deleted (it will<br>" +
     "automatically re-created the next time you run Processing).<br><br>" +
-    "You can use the SDK command-line tools to update the SDK or list<br>" +
+    "You can use the avdmanager command line tool to create AVDs manually and list<br>" +
     "the current AVDs, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";
 
   private static final String GETTING_START_TUT_URL = 
@@ -66,52 +64,50 @@ public class AVD {
       "found in <a href=\"" + GETTING_START_TUT_URL + "\">this online tutorial</a>.";
   
   static final String DEFAULT_SDCARD_SIZE = "64M";
+  static final String DEVICE_DEFINITION = "Nexus 5";
+  static final String DEVICE_SKIN = "1080x1920";
+  
+  static final String DEVICE_WEAR_DEFINITION = "wear_square_280_280dpi";
+  static final String DEVICE_WEAR_SKIN = "280x280";  
   
   /** Name of this avd. */
   protected String name;
 
-  /** "android-7" or "Google Inc.:Google APIs:7" */
+  /** "system-images;android-25;google_apis;x86" */
   protected String sdkId;
+  
+  protected String device;
+  protected String skin;
 
   static boolean invalidPackage;
   static ArrayList<String> avdList;
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
 
-  private Map<String, String> preferredAbi = new HashMap<>(30);
-  private List<String> abiList = new ArrayList<>();
   private static Process process;
 
   /** Default virtual device used by Processing. */
   static public final AVD mobileAVD =
-    new AVD("Processing-0" + Base.getRevision(),
+    new AVD("processing-phone",
             "system-images;" + AndroidBuild.TARGET_PLATFORM + ";" +
-            SysImageDownloader.SYSTEM_IMAGE_TAG + ";x86", SysImageDownloader.SYSTEM_IMAGE_TAG);
-//            "Google Inc.:Google APIs:" + AndroidBuild.sdkVersion);
+            SysImageDownloader.SYSTEM_IMAGE_TAG + ";x86", 
+            DEVICE_DEFINITION, DEVICE_SKIN);
 
   /** Default virtual wear device used by Processing. */
   static public final AVD wearAVD =
-    new AVD("Processing-Wear-0" + Base.getRevision(),
+    new AVD("processing-watch",
             "system-images;" + AndroidBuild.TARGET_PLATFORM + ";" +
-            SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG + ";x86", SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
+            SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG + ";x86", 
+            DEVICE_WEAR_DEFINITION, DEVICE_WEAR_SKIN);
+
   
   public AVD(final String name, final String sdkId,
-      final String tag) {
+      final String device, final String skin) {
     this.name = name;
     this.sdkId = sdkId;
+    this.device = device;
+    this.skin = skin;
     //initializeAbiList(tag);
-  }
-
-  private void initializeAbiList(String tag) {
-    if (abiList.size() == 0) {
-      // The order in this list determines the preference of one abi over the other
-      abiList.add(tag + "/x86");
-      abiList.add(tag + "/x86_64");
-      abiList.add(tag + "/armeabi-v7a");
-//    abiList.add("google_apis/x86");      
-//    abiList.add("google_apis/x86_64");      
-//    abiList.add("google_apis/armeabi-v7a");      
-    }
   }
 
 
@@ -199,6 +195,183 @@ public class AVD {
     return false;
   }
 
+
+  protected boolean create(final AndroidSDK sdk) throws IOException {
+    //initTargets(sdk);
+    File sketchbookFolder = processing.app.Base.getSketchbookFolder();
+    File androidFolder = new File(sketchbookFolder, "android");
+    if (!androidFolder.exists()) androidFolder.mkdir();    
+    File avdPath = new File(androidFolder, "avd/" + name);
+    
+    ProcessBuilder pb = new ProcessBuilder(
+      sdk.getAvdManagerPath(),
+      "create", "avd",
+      "-n", name,      
+      "-k", sdkId,
+      "-c", DEFAULT_SDCARD_SIZE,
+      "-d", device,
+      "-p", avdPath.getAbsolutePath(),
+      "-f"
+    );
+        
+    // avdmanager create avd -n "Wear-Processing-0254" -k "system-images;android-25;google_apis;x86" -c 64M
+
+    // Set the list to null so that exists() will check again
+    avdList = null;
+
+    Map<String, String> env = pb.environment();
+    env.clear();
+    env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
+    pb.redirectErrorStream(true);
+
+    try {
+      process = pb.start();
+
+      InputStream stdout = process.getInputStream();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
+
+      // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
+      OutputStream os = process.getOutputStream();
+      PrintWriter pw = new PrintWriter(new OutputStreamWriter(os));
+      pw.println("no");
+      pw.flush();
+      pw.close();
+      os.flush();
+      os.close();
+      
+      process.waitFor();
+
+      if (process.exitValue() == 0) {
+        // Add skin to AVD's config file
+        File configFile = new File(avdPath, "config.ini");
+        if (configFile.exists()) {
+          try (PrintWriter output = new PrintWriter(new FileWriter(configFile.getAbsolutePath(), true))) 
+          {
+              output.printf("%s\r\n", "skin.name=" + skin);
+          } 
+          catch (Exception e) {}
+        }
+        return true;
+      }
+
+      String line;
+      StringBuilder output = new StringBuilder();
+      while ((line = reader.readLine()) != null) {
+        output.append(line);
+      }
+      if (output.toString().contains("Package path is not valid")) {
+        // They didn't install the Google APIs
+        AndroidUtil.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
+        invalidPackage = true;
+      } else {
+        // Just generally not working
+        AndroidUtil.showMessage(AVD_CREATE_TITLE, 
+                                String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
+      }
+      System.out.println(output.toString());
+      //System.err.println(createAvdResult);
+    } catch (final InterruptedException ie) { 
+      ie.printStackTrace(); 
+    } finally {
+      process.destroy();
+    }
+
+    return false;
+  }
+
+  
+  static public String getPort(boolean wear) {
+    if (wear) {
+      return EmulatorController.WEAR_PORT;
+    } else {
+      return EmulatorController.DEFAULT_PORT;
+    }
+  }
+  
+
+  static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
+      final AndroidSDK sdk, boolean wear) {
+    try {      
+      if (wear) {
+        if (wearAVD.exists(sdk)) {
+          return true;
+        }
+        if (wearAVD.badness()) {
+          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
+          return false;
+        }
+        if (wearAVD.create(sdk)) {
+          return true;
+        }
+        if (invalidPackage) {
+          boolean res = AndroidSDK.locateSysImage(window, mode, true);
+          if (!res) {
+            return false;
+          } else {
+            // Try again
+            if (wearAVD.create(sdk)) {
+              return true;
+            }
+          }
+        }
+      } else {
+        if (mobileAVD.exists(sdk)) {
+          return true;
+        }
+        if (mobileAVD.badness()) {
+          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
+          return false;
+        }
+        if (mobileAVD.create(sdk)) {
+          return true;
+        }
+        if (invalidPackage) {
+          boolean res = AndroidSDK.locateSysImage(window, mode, false);
+          if (!res) {
+            return false;
+          } else {
+            // Try again
+            if (mobileAVD.create(sdk)) {
+              return true;
+            }
+          }
+        }
+      }
+    } catch (final Exception e) {
+      e.printStackTrace();
+      AndroidUtil.showMessage(AVD_CREATE_TITLE, 
+                              String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
+    }
+    return false;
+  }
+  
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // To remove:
+  
+  /*
+
+  private Map<String, String> preferredAbi = new HashMap<>(30);
+  private List<String> abiList = new ArrayList<>();
+ 
+  protected boolean noTargets(final AndroidSDK sdk) throws IOException {
+    initTargets(sdk); 
+//    return preferredAbi.size() == 0;
+    return preferredAbi.get(AndroidBuild.TARGET_SDK) == null;
+  }
+  
+  
+  private void initializeAbiList(String tag) {
+    if (abiList.size() == 0) {
+      // The order in this list determines the preference of one abi over the other
+      abiList.add(tag + "/x86");
+      abiList.add(tag + "/x86_64");
+      abiList.add(tag + "/armeabi-v7a");
+//    abiList.add("google_apis/x86");      
+//    abiList.add("google_apis/x86_64");      
+//    abiList.add("google_apis/armeabi-v7a");      
+    }
+  }
   
   protected void initTargets(final AndroidSDK sdk) throws IOException {
     preferredAbi.clear();
@@ -260,143 +433,5 @@ public class AVD {
       process.destroy();
     }
   }
-  
-  
-  protected boolean noTargets(final AndroidSDK sdk) throws IOException {
-    initTargets(sdk); 
-//    return preferredAbi.size() == 0;
-    return preferredAbi.get(AndroidBuild.TARGET_SDK) == null;
-  }
-  
-
-  protected boolean create(final AndroidSDK sdk) throws IOException {
-    //initTargets(sdk);
-
-    ProcessBuilder pb = new ProcessBuilder(
-      sdk.getAvdManagerPath(),
-      "create", "avd",
-      "-n", name,
-      "-k", sdkId,
-      "-c", DEFAULT_SDCARD_SIZE
-    );
-        
-    // avdmanager create avd -n "Wear-Processing-0254" -k "system-images;android-25;google_apis;x86" -c 64M
-
-    // Set the list to null so that exists() will check again
-    avdList = null;
-
-    Map<String, String> env = pb.environment();
-    env.clear();
-    env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
-    pb.redirectErrorStream(true);
-
-    try {
-      process = pb.start();
-
-      InputStream stdout = process.getInputStream();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-
-      // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
-      OutputStream os = process.getOutputStream();
-      PrintWriter pw = new PrintWriter(new OutputStreamWriter(os));
-      pw.println("no");
-      pw.flush();
-      pw.close();
-      os.flush();
-      os.close();
-      
-      process.waitFor();
-
-      if (process.exitValue() == 0) {
-        return true;
-      }
-
-      String line;
-      StringBuilder output = new StringBuilder();
-      while((line = reader.readLine()) != null) {
-        output.append(line);
-      }
-      if (output.toString().contains("Package path is not valid")) {
-        // They didn't install the Google APIs
-        //AndroidUtil.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
-        invalidPackage = true;
-      } else {
-        // Just generally not working
-        AndroidUtil.showMessage(AVD_CREATE_TITLE, 
-                                String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
-      }
-      System.out.println(output.toString());
-      //System.err.println(createAvdResult);
-    } catch (final InterruptedException ie) { 
-      ie.printStackTrace(); 
-    } finally {
-      process.destroy();
-    }
-
-    return false;
-  }
-
-  static public String getPort(boolean wear) {
-    if (wear) {
-      return EmulatorController.WEAR_PORT;
-    } else {
-      return EmulatorController.DEFAULT_PORT;
-    }
-  }
-
-  static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
-      final AndroidSDK sdk, boolean wear) {
-    try {      
-      if (wear) {
-        if (wearAVD.exists(sdk)) {
-          return true;
-        }
-        if (wearAVD.badness()) {
-          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
-          return false;
-        }
-        if (wearAVD.create(sdk)) {
-          return true;
-        }
-        if (invalidPackage) {
-          boolean res = AndroidSDK.locateSysImage(window, mode, true);
-          if (!res) {
-            return false;
-          } else {
-            // Try again
-            if (wearAVD.create(sdk)) {
-              return true;
-            }
-          }
-        }
-      } else {
-        if (mobileAVD.exists(sdk)) {
-          return true;
-        }
-        if (mobileAVD.badness()) {
-          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
-          return false;
-        }
-        if (mobileAVD.create(sdk)) {
-          return true;
-        }
-        if (invalidPackage) {
-          boolean res = AndroidSDK.locateSysImage(window, mode, false);
-          if (!res) {
-            return false;
-          } else {
-            // Try again
-            if (mobileAVD.create(sdk)) {
-              return true;
-            }
-          }
-        }
-      }
-    } catch (final Exception e) {
-      e.printStackTrace();
-      AndroidUtil.showMessage(AVD_CREATE_TITLE, 
-                              String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
-    }
-    return false;
-  }
+  */
 }
