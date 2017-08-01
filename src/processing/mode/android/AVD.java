@@ -67,7 +67,7 @@ public class AVD {
   static final String DEVICE_DEFINITION = "Nexus 5";
   static final String DEVICE_SKIN = "1080x1920";
   
-  static final String DEVICE_WEAR_DEFINITION = "wear_square_280_280dpi";
+  static final String DEVICE_WEAR_DEFINITION = "wear_square";
   static final String DEVICE_WEAR_SKIN = "280x280";  
   
   /** Name of this avd. */
