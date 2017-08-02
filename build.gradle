@@ -64,7 +64,6 @@ task dist {
         FileUtils.copyDirectory(file("icons"), file("$root/icons"))
         FileUtils.copyDirectory(file("mode"), file("$root/mode"))
         FileUtils.copyDirectory(file("theme"), file("$root/theme"))
-        FileUtils.copyDirectory(file("tools"), file("$root/tools"))
 
         Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
                    file("$root/mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
@@ -76,6 +75,11 @@ task dist {
 
         Files.copy(file("mode.properties").toPath(),
                    file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+
+        FileUtils.copyDirectory(file("tools/SDKUpdater/tool"), 
+                                file("$root/tools/SDKUpdater/tool"))
+        FileUtils.copyDirectory(file("tools/SDKUpdater/src"), 
+                                file("$root/tools/SDKUpdater/src"))
         
         FileUtils.copyDirectory(file("libraries/vr/examples"), 
                                 file("$root/libraries/vr/examples"))
