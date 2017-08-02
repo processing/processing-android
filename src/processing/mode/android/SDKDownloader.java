@@ -81,8 +81,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   class SDKUrlHolder {
     public String platformVersion, buildToolsVersion;
-    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
-    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl, emulatorUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename, emulatorFilename;
     public String supportRepoUrl, googleRepoUrl, usbDriverUrl;
     public String supportRepoFilename, googleRepoFilename, usbDriverFilename;    
     public int totalSize = 0;
@@ -106,6 +106,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
+      File emulatorFolder = new File(sdkFolder, "emulator");
+      if (!emulatorFolder.exists()) emulatorFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
@@ -140,6 +142,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
+
+        // emulator
+        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
+        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, emulatorFolder, true);
         
         // google repository
         File downloadedGoogleRepo = new File(tempFolder, downloadUrls.googleRepoFilename);
@@ -347,7 +353,42 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
       } else {
         throw new IOException("Cannot find the tools");
-      }    
+      }
+
+      // -----------------------------------------------------------------------
+      // emulator
+      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        for(int i = 0; i < remotePackages.getLength(); ++i) {
+          NodeList childNodes = remotePackages.item(i).getChildNodes();
+
+          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+            continue; //Stable channel only, skip others
+
+          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+          for (int j = 0; j < archives.getLength(); ++j) {
+            NodeList archive = archives.item(j).getChildNodes();
+            NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+            NodeList os = ((Element) archive).getElementsByTagName("host-os");
+            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+            if (os.item(0).getTextContent().equals(requiredHostOs)) {
+              urlHolder.emulatorFilename = url.item(0).getTextContent();
+              urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
+              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              break;
+            }
+          }
+          break;
+        }
+      } else {
+        throw new IOException("Cannot find the emulator");
+      }
     }
   }
 
