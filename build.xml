@@ -65,7 +65,8 @@
         <include name="examples/**" />
         <include name="icons/**" />
         <include name="theme/**" />
-      	<include name="tools/**" />
+      	<include name="tools/SDKUpdater/tool/**" />
+        <include name="tools/SDKUpdater/src/**" />      	
         <include name="libraries/vr/library.properties" />        
         <include name="libraries/vr/examples/**" />
         <include name="libraries/vr/gvrsdk/**" />
