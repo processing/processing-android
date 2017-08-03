@@ -23,6 +23,9 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Platform;
+import processing.app.Preferences;
+import processing.app.exec.LineProcessor;
+import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 
 import java.awt.Frame;
@@ -74,12 +77,12 @@ public class AVD {
   protected String name;
 
   /** "system-images;android-25;google_apis;x86" */
-  protected String sdkId;
-  
+  protected ArrayList<String> watchImages;
+  protected ArrayList<String> phoneImages;
+
   protected String device;
   protected String skin;
 
-  static boolean invalidPackage;
   static ArrayList<String> avdList;
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
@@ -89,25 +92,23 @@ public class AVD {
   /** Default virtual device used by Processing. */
   static public final AVD mobileAVD =
     new AVD("processing-phone",
-            "system-images;" + AndroidBuild.TARGET_PLATFORM + ";" +
-            SysImageDownloader.SYSTEM_IMAGE_TAG + ";x86", 
             DEVICE_DEFINITION, DEVICE_SKIN);
 
   /** Default virtual wear device used by Processing. */
   static public final AVD wearAVD =
     new AVD("processing-watch",
-            "system-images;" + AndroidBuild.TARGET_PLATFORM + ";" +
-            SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG + ";x86", 
             DEVICE_WEAR_DEFINITION, DEVICE_WEAR_SKIN);
 
   
-  public AVD(final String name, final String sdkId,
-      final String device, final String skin) {
+  public AVD(final String name, final String device, final String skin) {
     this.name = name;
-    this.sdkId = sdkId;
     this.device = device;
     this.skin = skin;
-    //initializeAbiList(tag);
+
+    if (name.contains("phone"))
+      phoneImages = new ArrayList<>();
+    else
+      watchImages = new ArrayList<>();
   }
 
 
@@ -123,14 +124,16 @@ public class AVD {
       pb.redirectErrorStream(true);
 
       process = pb.start();
-      InputStream stdout = process.getInputStream();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
+
+      StringWriter outWriter = new StringWriter();
+      new StreamPump(process.getInputStream(), "out: ").addTarget(outWriter).start();
       process.waitFor();
+
+      String[] lines = PApplet.split(outWriter.toString(), '\n');
 
       if (process.exitValue() == 0) {
         boolean badness = false;
-        String line;
-        while ((line = reader.readLine()) != null) {
+        for (String line : lines) {
           String[] m = PApplet.match(line, "\\s+Name\\:\\s+(\\S+)");
           if (m != null) {
             if (!badness) {
@@ -154,9 +157,7 @@ public class AVD {
         }
       } else {
         System.err.println("Unhappy inside exists()");
-        String line;
-        while ((line = reader.readLine()) != null)
-          System.err.println(line);
+        System.err.println(outWriter.toString());
       }
     } catch (final InterruptedException ie) { }
     finally {
@@ -195,6 +196,65 @@ public class AVD {
     return false;
   }
 
+  protected void getImages(AndroidSDK sdk) throws IOException {
+    // Dummy avdmanager creation command to get the list of installed images
+    // TODO : Find a better way to get the list of installed images
+    ProcessBuilder pb = new ProcessBuilder(
+            sdk.getAvdManagerPath(),
+            "create", "avd",
+            "-n", "dummy",
+            "-k", "dummy"
+    );
+
+    Map<String, String> env = pb.environment();
+    env.clear();
+    env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
+    pb.redirectErrorStream(true);
+
+    try {
+      process = pb.start();
+
+      StreamPump output = new StreamPump(process.getInputStream(), "out: ");
+      output.addTarget(new LineProcessor() {
+        @Override
+        public void processLine(String line) {
+          if (phoneImages != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
+                  line.contains(SysImageDownloader.SYSTEM_IMAGE_TAG))
+            phoneImages.add(line);
+          else if (watchImages != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
+                  line.contains(SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG))
+            watchImages.add(line);
+        }
+      }).start();
+
+      process.waitFor();
+    } catch (final InterruptedException ie) {
+      ie.printStackTrace();
+    } finally {
+      process.destroy();
+    }
+  }
+
+  protected String getSdkId() throws IOException {
+    if (Preferences.get("android.system.image.type") == null)
+      Preferences.set("android.system.image.type", "x86"); // Prefer x86
+
+    if (this.name.contains("phone")) {
+      for (String image : phoneImages) {
+        if (image.contains(Preferences.get("android.system.image.type")))
+          return image;
+      }
+    } else {
+      for (String image : watchImages) {
+        if (image.contains(Preferences.get("android.system.image.type")))
+          return image;
+      }
+    }
+
+    // Could not find any suitable package
+    return "null";
+  }
+
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
     //initTargets(sdk);
@@ -207,7 +267,7 @@ public class AVD {
       sdk.getAvdManagerPath(),
       "create", "avd",
       "-n", name,      
-      "-k", sdkId,
+      "-k", getSdkId(),
       "-c", DEFAULT_SDCARD_SIZE,
       "-d", device,
       "-p", avdPath.getAbsolutePath(),
@@ -227,9 +287,6 @@ public class AVD {
     try {
       process = pb.start();
 
-      InputStream stdout = process.getInputStream();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
       OutputStream os = process.getOutputStream();
       PrintWriter pw = new PrintWriter(new OutputStreamWriter(os));
@@ -238,7 +295,10 @@ public class AVD {
       pw.close();
       os.flush();
       os.close();
-      
+
+      StringWriter outWriter = new StringWriter();
+      new StreamPump(process.getInputStream(), "out: ").addTarget(outWriter).start();
+
       process.waitFor();
 
       if (process.exitValue() == 0) {
@@ -253,21 +313,15 @@ public class AVD {
         return true;
       }
 
-      String line;
-      StringBuilder output = new StringBuilder();
-      while ((line = reader.readLine()) != null) {
-        output.append(line);
-      }
-      if (output.toString().contains("Package path is not valid")) {
+      if (outWriter.toString().contains("Package path is not valid")) {
         // They didn't install the Google APIs
         AndroidUtil.showMessage(AVD_TARGET_TITLE, AVD_TARGET_MESSAGE);
-        invalidPackage = true;
       } else {
         // Just generally not working
         AndroidUtil.showMessage(AVD_CREATE_TITLE, 
                                 String.format(AVD_CREATE_MESSAGE, AndroidBuild.TARGET_SDK));
       }
-      System.out.println(output.toString());
+      System.err.println(outWriter.toString());
       //System.err.println(createAvdResult);
     } catch (final InterruptedException ie) { 
       ie.printStackTrace(); 
@@ -299,19 +353,18 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-        if (wearAVD.create(sdk)) {
-          return true;
-        }
-        if (invalidPackage) {
+        wearAVD.getImages(sdk);
+        if (wearAVD.watchImages.isEmpty()) {
           boolean res = AndroidSDK.locateSysImage(window, mode, true);
           if (!res) {
             return false;
           } else {
-            // Try again
-            if (wearAVD.create(sdk)) {
-              return true;
-            }
+            // Refresh images list
+            wearAVD.getImages(sdk);
           }
+        }
+        if (wearAVD.create(sdk)) {
+          return true;
         }
       } else {
         if (mobileAVD.exists(sdk)) {
@@ -321,19 +374,18 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-        if (mobileAVD.create(sdk)) {
-          return true;
-        }
-        if (invalidPackage) {
+        mobileAVD.getImages(sdk);
+        if (mobileAVD.phoneImages.isEmpty()) {
           boolean res = AndroidSDK.locateSysImage(window, mode, false);
           if (!res) {
             return false;
           } else {
-            // Try again
-            if (mobileAVD.create(sdk)) {
-              return true;
-            }
+            // Refresh images list
+            mobileAVD.getImages(sdk);
           }
+        }
+        if (mobileAVD.create(sdk)) {
+          return true;
         }
       }
     } catch (final Exception e) {

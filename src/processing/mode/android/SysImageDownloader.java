@@ -33,6 +33,8 @@ import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -50,6 +52,21 @@ import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SysImageDownloader extends JDialog implements PropertyChangeListener {
+  final static private int FONT_SIZE = Toolkit.zoom(11);
+  final static private int TEXT_MARGIN = Toolkit.zoom(8);
+  final static private int TEXT_WIDTH = Toolkit.zoom(300);
+
+  private static final String EMULATOR_GUIDE_URL =
+          "https://developer.android.com/studio/run/emulator-acceleration.html";
+
+  private static final String SYS_IMAGE_SELECTION_MESSAGE =
+          "The Android emulator requires a system image to run." +
+                  "There are two types of system images available -" +
+                  "<ol><li>ARM image - slow but compatible with all computers, no extra configuration required</li>" +
+                  "<li>x86 image - fast but compatible only with Intel CPUs, extra configuration may be required</li>" +
+                  "</ol><br>If you choose to download the x86 image, please follow " +
+                  "<a href=\"" + EMULATOR_GUIDE_URL + "\">this guide</a> to setup the emulator correctly.<br>";
+
   private static final String SYS_IMAGES_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
   private static final String SYS_IMAGES_LIST = "sys-img2-1.xml";
   
@@ -228,7 +245,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       XPathExpression expr;
       NodeList remotePackages;
 
-      expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
+      if (Preferences.get("android.system.image.type").equals("arm"))
+        expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
+              "and contains(@path, \"armeabi-v7a\")]");
+      else
+        expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
               "and contains(@path, \"x86\")]");
       
       if (wear) {
@@ -298,6 +319,44 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
+  public int showMessage() {
+    String htmlString = "<html> " +
+            "<head> <style type=\"text/css\">" +
+            "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " +
+            "margin: " + TEXT_MARGIN + "px; " +
+            "width: " + TEXT_WIDTH + "px }" +
+            "</style> </head>";
+
+    htmlString += "<body>" + SYS_IMAGE_SELECTION_MESSAGE + "</body> </html>";
+    String title = "Choose system image type to download";
+    JEditorPane pane = new JEditorPane("text/html", htmlString);
+    pane.addHyperlinkListener(new HyperlinkListener() {
+      @Override
+      public void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+          Platform.openURL(e.getURL().toString());
+        }
+      }
+    });
+    pane.setEditable(false);
+    JLabel label = new JLabel();
+    pane.setBackground(label.getBackground());
+
+    String[] options = new String[] {
+            "Download ARM image", "Download x86 image"
+    };
+    int result = JOptionPane.showOptionDialog(null, pane, title,
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+            null, options, options[0]);
+    if (result == JOptionPane.YES_OPTION) {
+      return JOptionPane.YES_OPTION;
+    } else if (result == JOptionPane.NO_OPTION) {
+      return JOptionPane.NO_OPTION;
+    } else {
+      return JOptionPane.CLOSED_OPTION;
+    }
+  }
+
   public SysImageDownloader(Frame editor, boolean wear) {
     super(editor, "Emulator download", true);
     this.editor = editor;
@@ -308,6 +367,15 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   
   public void run() {
     cancelled = false;
+
+    final int result = showMessage();
+    if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
+      // ARM
+      Preferences.set("android.system.image.type", "arm");
+    } else {
+      // x86
+      Preferences.set("android.system.image.type", "x86");
+    }
     downloadTask = new DownloadTask();
     downloadTask.addPropertyChangeListener(this);
     downloadTask.execute();
