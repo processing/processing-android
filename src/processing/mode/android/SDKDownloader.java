@@ -62,6 +62,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final int USB_DRIVER = 6;
 
   private static final String REPOSITORY_URL = "https://dl.google.com/android/repository/";
+  private static final String HAXM_URL = "https://dl.google.com/android/repository/extras/intel/";
   private static final String REPOSITORY_LIST = "repository2-1.xml";
   private static final String ADDON_LIST = "addon2-1.xml";
   
@@ -81,10 +82,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   class SDKUrlHolder {
     public String platformVersion, buildToolsVersion;
-    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
-    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl, emulatorUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename, emulatorFilename;
     public String supportRepoUrl, googleRepoUrl, usbDriverUrl;
-    public String supportRepoFilename, googleRepoFilename, usbDriverFilename;    
+    public String supportRepoFilename, googleRepoFilename, usbDriverFilename;
+    public String haxmFilename, haxmUrl;
     public int totalSize = 0;
   }
   
@@ -106,6 +108,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
+      File emulatorFolder = new File(sdkFolder, "emulator");
+      if (!emulatorFolder.exists()) emulatorFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
@@ -120,9 +124,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       try {
         SDKUrlHolder downloadUrls = new SDKUrlHolder();
         String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
-        String addonUrl = REPOSITORY_URL + ADDON_LIST;        
+        String addonUrl = REPOSITORY_URL + ADDON_LIST;
+        String haxmUrl = HAXM_URL + ADDON_LIST;
         getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
         getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());        
+        getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
 
         // tools
@@ -140,6 +146,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
+
+        // emulator
+        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
+        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, emulatorFolder, true);
         
         // google repository
         File downloadedGoogleRepo = new File(tempFolder, downloadUrls.googleRepoFilename);
@@ -153,6 +163,22 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         if (Platform.isWindows()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
           downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
+        }
+
+        // HAXM
+        if (!Platform.isLinux()) {
+          File downloadedFolder = new File(tempFolder, downloadUrls.haxmFilename);
+          File haxmFolder = new File(tempFolder, "HAXM");
+          downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
+
+          ProcessBuilder pb;
+          if (Platform.isWindows())
+            pb = new ProcessBuilder("cmd.exe", "/c", "start", "silent_install.bat");
+          else
+            pb = new ProcessBuilder("silent_install.sh");
+
+          pb.directory(haxmFolder);
+          pb.start().waitFor();
         }
 
         if (Platform.isLinux() || Platform.isMacOS()) {
@@ -347,7 +373,42 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
       } else {
         throw new IOException("Cannot find the tools");
-      }    
+      }
+
+      // -----------------------------------------------------------------------
+      // emulator
+      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        for(int i = 0; i < remotePackages.getLength(); ++i) {
+          NodeList childNodes = remotePackages.item(i).getChildNodes();
+
+          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+            continue; //Stable channel only, skip others
+
+          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+          for (int j = 0; j < archives.getLength(); ++j) {
+            NodeList archive = archives.item(j).getChildNodes();
+            NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+            NodeList os = ((Element) archive).getElementsByTagName("host-os");
+            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+            if (os.item(0).getTextContent().equals(requiredHostOs)) {
+              urlHolder.emulatorFilename = url.item(0).getTextContent();
+              urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
+              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              break;
+            }
+          }
+          break;
+        }
+      } else {
+        throw new IOException("Cannot find the emulator");
+      }
     }
   }
 
@@ -385,6 +446,46 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     if (remotePackages != null && Platform.isWindows()) {
       parseAndSet(urlHolder, remotePackages, requiredHostOs, USB_DRIVER);
+    }
+  }
+
+  private void getHaxmDownloadUrl(SDKUrlHolder urlHolder,
+                                     String repositoryUrl, String requiredHostOs)
+          throws ParserConfigurationException, IOException, SAXException, XPathException {
+    if (requiredHostOs.equals("linux"))
+      return;
+
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db = dbf.newDocumentBuilder();
+    Document doc = db.parse(new URL(repositoryUrl).openStream());
+
+    XPathFactory xPathfactory = XPathFactory.newInstance();
+    XPath xpath = xPathfactory.newXPath();
+    XPathExpression expr;
+    NodeList remotePackages;
+
+    expr = xpath.compile("//remotePackage[@path=\"extras;intel;Hardware_Accelerated_Execution_Manager\"]");
+    remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    if (remotePackages != null) {
+      for (int i=0; i < remotePackages.getLength(); ++i) {
+        NodeList childNodes = remotePackages.item(i).getChildNodes();
+        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+        NodeList archive = archives.item(0).getChildNodes();
+        NodeList os = ((Element) archive).getElementsByTagName("host-os");
+
+        if (!os.item(0).getTextContent().equals(requiredHostOs))
+          continue;
+
+        NodeList complete = ((Element) archive).getElementsByTagName("complete");
+        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+        urlHolder.haxmFilename = url.item(0).getTextContent();
+        urlHolder.haxmUrl = HAXM_URL + urlHolder.haxmFilename;
+        urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+        break;
+      }
     }
   }
 
