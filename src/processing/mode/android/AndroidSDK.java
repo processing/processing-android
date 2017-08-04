@@ -120,19 +120,25 @@ class AndroidSDK {
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
 
-  /*
-  private static final String GOOGLE_INSTALL_TITLE = "Google USB Drivers";
-  
+  private static final String SDK_INSTALL_TITLE = "SDK installed!";
+
+  private static final String PROCESSING_FOR_ANDROID_URL = 
+      "http://android.processing.org/";    
+    
   private static final String DRIVER_INSTALL_URL = 
       "https://developer.android.com/studio/run/oem-usb.html#InstallingDriver";    
   
-  private static final String GOOGLE_INSTALL_MESSAGE =
-      "If you are planning to use Google Nexus devices, then need the " + 
-      "Google USB Driver to connect them to Processing. You would have to " + 
+  private static final String SDK_INSTALL_MESSAGE =
+      "Processing just downloaded and installed the Android SDK succesfully! " + 
+      "The Android mode is now ready to use, for more information visit " + 
+      "the <a href=\"" + PROCESSING_FOR_ANDROID_URL + "\">Processing for Android website</a>";
+  
+  private static final String DRIVER_INSTALL_MESSAGE = "<br><br>" +
+      "If you are planning to use Google Nexus devices, then you need the " + 
+      "Google USB Driver to connect them to Processing. You will have to " + 
       "install the driver manually following <a href=\"" + DRIVER_INSTALL_URL + 
       "\">these instructions</a>.<br><br>" +
-      "The installation files are available in this folder</br>";     
-  */
+      "The installation files are available in this folder:</br>";     
   
   private static final int NO_ERROR = 0;
   private static final int MISSING_SDK = 1;
@@ -439,11 +445,14 @@ class AndroidSDK {
     if (sdk == null) {
       throw new BadSDKException("SDK could not be downloaded");
     }
-//    File googDriv = AndroidSDK.getGoogleDriverFolder();
-//    if (googDriv.exists()) {
-//      AndroidUtil.showMessage(GOOGLE_INSTALL_TITLE, 
-//                              GOOGLE_INSTALL_MESSAGE + googDriv.getAbsolutePath());      
-//    }    
+
+    String msg = SDK_INSTALL_MESSAGE;
+    File driver = AndroidSDK.getGoogleDriverFolder();
+    if (Platform.isWindows() && driver.exists()) {
+      msg += DRIVER_INSTALL_MESSAGE + driver.getAbsolutePath();
+    }
+    AndroidUtil.showMessage(SDK_INSTALL_TITLE, msg);
+        
     return sdk;
   }
   

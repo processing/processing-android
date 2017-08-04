@@ -102,11 +102,13 @@ public class AndroidRunner implements DeviceListener {
         showedSlowEmuWarning = true; 
         // More detailed message when using the emulator, to following discussion in
         // https://code.google.com/p/android/issues/detail?id=104305
-        Messages.showWarning("The emulator is slooow...",
+        Messages.showWarning("Cannot run the sketch yet...",
           "This is common when the emulator is booting up for the first time.\n" +
           "Just try again once the emulator is ready, or set the\n" + 
           "ADB_INSTALL_TIMEOUT environmental variable to have a\n" +
-          "longer timeout, for example 5 minutes or more.");
+          "longer timeout, for example 5 minutes or more.<br><br>"+
+          "Once the emulator is running, don't close until you are done " + 
+          "working with Processing.\n");
       }      Devices.killAdbServer();  // see above
       return false;
     }

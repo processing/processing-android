@@ -225,14 +225,20 @@ public class AVD {
   
   protected void getImages(final ArrayList<String> images, final AndroidSDK sdk, 
       final String imageTag) throws IOException {
+    final String[] cmd = new String[] {
+        sdk.getAvdManagerPath(),
+        "create", "avd",
+        "-n", "dummy",
+        "-k", "dummy"
+      };      
+    
     // Dummy avdmanager creation command to get the list of installed images
     // TODO : Find a better way to get the list of installed images
-    ProcessBuilder pb = new ProcessBuilder(
-            sdk.getAvdManagerPath(),
-            "create", "avd",
-            "-n", "dummy",
-            "-k", "dummy"
-    );
+    ProcessBuilder pb = new ProcessBuilder(cmd);
+    
+    //if (Base.DEBUG) {
+    System.out.println(processing.core.PApplet.join(cmd, " "));
+  //}    
 
     Map<String, String> env = pb.environment();
     env.clear();
@@ -246,9 +252,10 @@ public class AVD {
       output.addTarget(new LineProcessor() {
         @Override
         public void processLine(String line) {
+          System.out.println("DUMMY ---> " + line);
           if (images != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
               line.contains(imageTag))
-            System.out.println("IMAGE ---> " + line);
+            System.out.println("  added!");
             images.add(line);
         }
       }).start();
@@ -290,17 +297,23 @@ public class AVD {
     if (!androidFolder.exists()) androidFolder.mkdir();    
     File avdPath = new File(androidFolder, "avd/" + name);
     
-    ProcessBuilder pb = new ProcessBuilder(
-      sdk.getAvdManagerPath(),
-      "create", "avd",
-      "-n", name,      
-      "-k", getSdkId(),
-      "-c", DEFAULT_SDCARD_SIZE,
-      "-d", device,
-      "-p", avdPath.getAbsolutePath(),
-      "-f"
-    );
-        
+    final String[] cmd = new String[] {
+        sdk.getAvdManagerPath(),
+        "create", "avd",
+        "-n", name,      
+        "-k", getSdkId(),
+        "-c", DEFAULT_SDCARD_SIZE,
+        "-d", device,
+        "-p", avdPath.getAbsolutePath(),
+        "-f"
+    };
+    
+    ProcessBuilder pb = new ProcessBuilder(cmd);
+    
+    //if (Base.DEBUG) {
+      System.out.println(processing.core.PApplet.join(cmd, " "));
+    //}
+    
     // avdmanager create avd -n "Wear-Processing-0254" -k "system-images;android-25;google_apis;x86" -c 64M
 
     // Set the list to null so that exists() will check again
@@ -380,7 +393,7 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-        if (wearAVD.hasWearImages(sdk)) {
+        if (!wearAVD.hasWearImages(sdk)) {
           boolean res = AndroidSDK.locateSysImage(window, mode, true);
           if (!res) {
             return false;
@@ -399,7 +412,7 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-        if (mobileAVD.hasImages(sdk)) {
+        if (!mobileAVD.hasImages(sdk)) {
           boolean res = AndroidSDK.locateSysImage(window, mode, false);
           if (!res) {
             return false;

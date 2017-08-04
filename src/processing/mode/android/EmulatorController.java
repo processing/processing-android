@@ -100,8 +100,6 @@ class EmulatorController {
       emulatorPath.getCanonicalPath(),
       "-avd", avdName,
       "-port", portString,
-//      "-no-boot-anim",  // does this do anything?
-      // http://code.google.com/p/processing/issues/detail?id=1059
       "-gpu", gpuFlag  // enable OpenGL
     };
     

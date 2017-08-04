@@ -73,8 +73,17 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private static final String HAXM_INSTALL_MESSAGE =
       "You chose to run x86 images in the emulator. This is great but you need " + 
       "to install the Intel Hardware Accelerated Execution Manager (Intel HAXM).<br><br>" + 
-      "Processing will try to run the HAXM installer now, which will ask you for " + 
-      "administrator password. Good luck!";
+      "Processing will try to run the HAXM installer now, which may ask for your " + 
+      "administrator password or additional permissions. Good luck!";
+  
+  private static final String KVM_LINUX_GUIDE_URL =
+      "https://developer.android.com/studio/run/emulator-acceleration.html#vm-linux";
+  
+  private static final String KVM_INSTALL_MESSAGE =
+      "You chose to run x86 images in the emulator. This is great but you need " + 
+      "to configure VM acceleration on Linux using the KVM package.<br><br>" + 
+      "Follow <a href=\"" + KVM_LINUX_GUIDE_URL + "\">these instructions</a> " + 
+      "to configure KVM. Good luck!";      
   
   private static final String SYS_IMAGES_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
   private static final String SYS_IMAGES_LIST = "sys-img2-1.xml";
@@ -401,21 +410,23 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   }
 
   static public void installHAXM() {
-    File haxmFolder = AndroidSDK.getHAXMInstallerFolder();     
-    if (haxmFolder.exists() && !Platform.isLinux()) {
+    File haxmFolder = AndroidSDK.getHAXMInstallerFolder();
+    if (Platform.isLinux()) {
+      AndroidUtil.showMessage(HAXM_INSTALL_TITLE, KVM_INSTALL_MESSAGE);      
+    } else if (haxmFolder.exists()) {
       AndroidUtil.showMessage(HAXM_INSTALL_TITLE, HAXM_INSTALL_MESSAGE);        
       
-      File exec = new File(haxmFolder, "HAXM installation");
-      System.out.println(exec.getAbsolutePath() + "  " + exec.exists());
-      
       ProcessBuilder pb;
-      if (Platform.isWindows())
-        pb = new ProcessBuilder("cmd.exe", "/c", "start", "silent_install.bat");
-      else
+      if (Platform.isWindows()) {
+        File exec = new File(haxmFolder, "silent_install.bat");
         pb = new ProcessBuilder(exec.getAbsolutePath());
-      pb.redirectErrorStream(true);
-
+      } else {
+        File exec = new File(haxmFolder, "HAXM installation");
+        pb = new ProcessBuilder(exec.getAbsolutePath());
+      }
       pb.directory(haxmFolder);
+      pb.redirectErrorStream(true);
+      
       Process process = null;      
       try {
         process = pb.start();

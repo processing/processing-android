@@ -113,9 +113,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
-      if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();
-      File googleDriverFolder = new File(googleRepoFolder, "usb_driver");
-      if (!googleDriverFolder.exists()) googleDriverFolder.mkdir();      
+      if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();   
       File haxmFolder = new File(extrasFolder, "intel/HAXM");
       if (!haxmFolder.exists()) haxmFolder.mkdirs();      
       File androidRepoFolder = new File(extrasFolder, "android");
@@ -166,7 +164,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // usb driver
         if (Platform.isWindows()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
-          downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleDriverFolder, false);
+          downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
         }
 
         // HAXM
