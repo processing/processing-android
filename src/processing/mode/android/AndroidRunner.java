@@ -106,10 +106,11 @@ public class AndroidRunner implements DeviceListener {
           "This is common when the emulator is booting up for the first time.\n" +
           "Just try again once the emulator is ready, or set the\n" + 
           "ADB_INSTALL_TIMEOUT environmental variable to have a\n" +
-          "longer timeout, for example 5 minutes or more.<br><br>"+
-          "Once the emulator is running, don't close until you are done " + 
+          "longer timeout, for example 5 minutes or more.\n\n"+
+          "Once the emulator is running, don't close until you are done\n" + 
           "working with Processing.\n");
-      }      Devices.killAdbServer();  // see above
+      }      
+      Devices.killAdbServer();  // see above
       return false;
     }
 
