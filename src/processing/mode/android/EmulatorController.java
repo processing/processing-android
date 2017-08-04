@@ -61,7 +61,8 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(File sdkToolsPath, boolean wear, boolean gpu) throws IOException {
+  synchronized public void launch(File sdkToolsPath, boolean wear) 
+      throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
       throw new IllegalStateException(illegal);
@@ -85,13 +86,13 @@ class EmulatorController {
     // https://developer.android.com/studio/run/emulator-commandline.html
     String avdName;
     if (wear) {
-      avdName = AVD.wearAVD.name;
+      avdName = AVD.watchAVD.name;
     } else {
-      avdName = AVD.mobileAVD.name;
+      avdName = AVD.phoneAVD.name;
     }
     
+    // We let the emulator decide what's better for hardware acceleration:
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
-//    String gpuFlag = gpu ? "auto" : "off";
     String gpuFlag = "auto";
     
     File emulatorPath = Platform.isWindows() ? new File(sdkToolsPath, "emulator.exe") :
@@ -100,7 +101,7 @@ class EmulatorController {
       emulatorPath.getCanonicalPath(),
       "-avd", avdName,
       "-port", portString,
-      "-gpu", gpuFlag  // enable OpenGL
+      "-gpu", gpuFlag
     };
     
     

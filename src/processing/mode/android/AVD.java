@@ -26,6 +26,7 @@ import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.StreamPump;
+import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
 import java.awt.Frame;
@@ -35,6 +36,9 @@ import java.util.Map;
 
 
 public class AVD {
+  final static private int PHONE = 0;
+  final static private int WEAR = 1;
+  
   static private final String AVD_CREATE_TITLE =
     "Could not create the AVD";
 
@@ -79,10 +83,10 @@ public class AVD {
 
   protected String device;
   protected String skin;
+  protected int type;
 
   static ArrayList<String> avdList;
   static ArrayList<String> badList;
-//  static ArrayList<String> skinList;
   
   /** "system-images;android-25;google_apis;x86" */
   static ArrayList<String> wearImages;
@@ -91,20 +95,21 @@ public class AVD {
   private static Process process;
 
   /** Default virtual device used by Processing. */
-  static public final AVD mobileAVD =
+  static public final AVD phoneAVD =
     new AVD("processing-phone",
-            DEVICE_DEFINITION, DEVICE_SKIN);
+            DEVICE_DEFINITION, DEVICE_SKIN, PHONE);
 
   /** Default virtual wear device used by Processing. */
-  static public final AVD wearAVD =
+  static public final AVD watchAVD =
     new AVD("processing-watch",
-            DEVICE_WEAR_DEFINITION, DEVICE_WEAR_SKIN);
+            DEVICE_WEAR_DEFINITION, DEVICE_WEAR_SKIN, WEAR);
 
   
-  public AVD(final String name, final String device, final String skin) {
+  public AVD(final String name, final String device, final String skin, int type) {
     this.name = name;
     this.device = device;
     this.skin = skin;
+    this.type = type;
   }
 
 
@@ -194,32 +199,30 @@ public class AVD {
 
   
   protected boolean hasImages(final AndroidSDK sdk) throws IOException {
-    if (phoneImages == null) {
-      phoneImages = new ArrayList<String>();
-      getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+    if (type == PHONE) {
+      if (phoneImages == null) {
+        phoneImages = new ArrayList<String>();
+        getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+      }
+      return !phoneImages.isEmpty();
+    } else {
+      if (wearImages == null) {
+        wearImages = new ArrayList<String>();
+        getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
+      }
+      return !wearImages.isEmpty();      
     }
-    return !phoneImages.isEmpty();
   }
   
 
   protected void refreshImages(final AndroidSDK sdk) throws IOException {
-    phoneImages = new ArrayList<String>();
-    getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
-  } 
-  
-  
-  protected boolean hasWearImages(final AndroidSDK sdk) throws IOException {
-    if (wearImages == null) {
+    if (type == PHONE) {
+      phoneImages = new ArrayList<String>();
+      getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+    } else {
       wearImages = new ArrayList<String>();
       getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
     }
-    return !wearImages.isEmpty();
-  }  
-  
-
-  protected void refreshWearImages(final AndroidSDK sdk) throws IOException {
-    wearImages = new ArrayList<String>();
-    getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
   } 
   
   
@@ -273,7 +276,7 @@ public class AVD {
     if (Preferences.get("android.system.image.type") == null)
       Preferences.set("android.system.image.type", "x86"); // Prefer x86
 
-    if (this.name.contains("phone")) {
+    if (type == PHONE) {
       for (String image : phoneImages) {
         if (image.contains(Preferences.get("android.system.image.type")))
           return image;
@@ -384,45 +387,25 @@ public class AVD {
 
   static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
       final AndroidSDK sdk, boolean wear) {
-    try {      
-      if (wear) {
-        if (wearAVD.exists(sdk)) {
-          return true;
-        }
-        if (wearAVD.badness()) {
-          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
+    try {
+      AVD avd = wear ? watchAVD : phoneAVD;
+      if (avd.exists(sdk)) {
+        return true;
+      }
+      if (avd.badness()) {
+        AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
+        return false;
+      }
+      if (!avd.hasImages(sdk)) {
+        boolean res = AndroidSDK.locateSysImage(window, mode, wear);
+        if (!res) {
           return false;
+        } else {
+          avd.refreshImages(sdk);
         }
-        if (!wearAVD.hasWearImages(sdk)) {
-          boolean res = AndroidSDK.locateSysImage(window, mode, true);
-          if (!res) {
-            return false;
-          } else {
-            wearAVD.refreshWearImages(sdk);
-          }
-        }
-        if (wearAVD.create(sdk)) {
-          return true;
-        }
-      } else {
-        if (mobileAVD.exists(sdk)) {
-          return true;
-        }
-        if (mobileAVD.badness()) {
-          AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
-          return false;
-        }
-        if (!mobileAVD.hasImages(sdk)) {
-          boolean res = AndroidSDK.locateSysImage(window, mode, false);
-          if (!res) {
-            return false;
-          } else {
-            mobileAVD.refreshImages(sdk);
-          }
-        }
-        if (mobileAVD.create(sdk)) {
-          return true;
-        }
+      }
+      if (avd.create(sdk)) {
+        return true;
       }
     } catch (final Exception e) {
       e.printStackTrace();

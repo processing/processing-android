@@ -112,10 +112,10 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator(final File sdkToolsPath, final boolean wear, final boolean gpu) {
+  public Future<Device> getEmulator(final File sdkToolsPath, final boolean wear) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator(sdkToolsPath, wear, gpu);
+        return blockingGetEmulator(sdkToolsPath, wear);
       }
     };
     final FutureTask<Device> task = new FutureTask<Device>(androidFinder);
@@ -124,8 +124,7 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator(final File sdkToolsPath, 
-      final boolean wear, final boolean gpu) {
+  private final Device blockingGetEmulator(final File sdkToolsPath, final boolean wear) {
     String port = AVD.getPort(wear);
     Device emu = find(true, port);
     if (emu != null) {
@@ -141,7 +140,7 @@ class Devices {
     
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
-        emuController.launch(sdkToolsPath, wear, gpu); // this blocks until emulator boots
+        emuController.launch(sdkToolsPath, wear); // this blocks until emulator boots
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");
         e.printStackTrace(System.err);
