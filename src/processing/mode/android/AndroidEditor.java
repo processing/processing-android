@@ -657,7 +657,8 @@ public class AndroidEditor extends JavaEditor {
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
-        Devices.killAdbServer();
+//        Devices.killAdbServer();
+        SysImageDownloader.installHAXM();
       }
     });
     androidMenu.add(item);    

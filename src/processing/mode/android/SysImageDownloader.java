@@ -28,6 +28,8 @@ import org.xml.sax.SAXException;
 
 import processing.app.Platform;
 import processing.app.Preferences;
+import processing.app.exec.LineProcessor;
+import processing.app.exec.StreamPump;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
@@ -381,28 +383,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     } else {
       // x86
       Preferences.set("android.system.image.type", "x86");
-      File haxmFolder = AndroidSDK.getHAXMInstallerFolder();     
-      if (haxmFolder.exists() && !Platform.isLinux()) {
-        AndroidUtil.showMessage(HAXM_INSTALL_TITLE, HAXM_INSTALL_MESSAGE);        
-        
-        File exec = new File(haxmFolder, "HAXM installation");
-        System.out.println(exec.getAbsolutePath() + "  " + exec.exists());
-        
-        ProcessBuilder pb;
-        if (Platform.isWindows())
-          pb = new ProcessBuilder("cmd.exe", "/c", "start", "silent_install.bat");
-        else
-          pb = new ProcessBuilder(exec.getAbsolutePath());
-
-//        pb.directory(haxmFolder);
-        try {
-          pb.start().waitFor();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
+      installHAXM();
     }
     downloadTask = new DownloadTask();
     downloadTask.addPropertyChangeListener(this);
@@ -417,6 +398,49 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   
   public boolean getResult() {
     return result;
+  }
+
+  static public void installHAXM() {
+    File haxmFolder = AndroidSDK.getHAXMInstallerFolder();     
+    if (haxmFolder.exists() && !Platform.isLinux()) {
+      AndroidUtil.showMessage(HAXM_INSTALL_TITLE, HAXM_INSTALL_MESSAGE);        
+      
+      File exec = new File(haxmFolder, "HAXM installation");
+      System.out.println(exec.getAbsolutePath() + "  " + exec.exists());
+      
+      ProcessBuilder pb;
+      if (Platform.isWindows())
+        pb = new ProcessBuilder("cmd.exe", "/c", "start", "silent_install.bat");
+      else
+        pb = new ProcessBuilder(exec.getAbsolutePath());
+      pb.redirectErrorStream(true);
+
+      pb.directory(haxmFolder);
+      Process process = null;      
+      try {
+        process = pb.start();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      
+      if (process != null) {
+        try {
+          StreamPump output = new StreamPump(process.getInputStream(), "HAXM: ");
+          output.addTarget(new LineProcessor() {
+            @Override
+            public void processLine(String line) {
+              System.out.println("HAXM: " + line);
+            }
+          }).start();
+
+          process.waitFor();
+        } catch (final InterruptedException ie) {
+          ie.printStackTrace();
+        } finally {
+          process.destroy();
+        }              
+      }
+    }    
   }
   
   private void createLayout() {

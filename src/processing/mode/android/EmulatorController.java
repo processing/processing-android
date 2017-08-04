@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-import processing.app.Base;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.*;
@@ -92,7 +91,8 @@ class EmulatorController {
     }
     
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
-    String gpuFlag = gpu ? "auto" : "off";
+//    String gpuFlag = gpu ? "auto" : "off";
+    String gpuFlag = "auto";
     
     File emulatorPath = Platform.isWindows() ? new File(sdkToolsPath, "emulator.exe") :
                                                new File(sdkToolsPath, "emulator");
