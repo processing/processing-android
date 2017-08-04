@@ -83,14 +83,14 @@ class AndroidSDK {
       "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";
     
   private static final String INVALID_SDK_TITLE =
-      "Cannot find the required SDK platform version...";
+      "The Android SDK is not valid...";
   
   private static final String INVALID_SDK_MESSAGE =
-      "The Android SDK appears to be installed, " +
-      "however the SDK platform for API " + AndroidBuild.TARGET_SDK + 
-      " was not found. If it is available in a different location, " +
+      "The found Android SDK cannot be used by Processing. " +
+      "It could be missing files, or does not include the required platform for " + 
+      "API " + AndroidBuild.TARGET_SDK + ". If a valid SDK is available in a different location, " +
       "click \"Locate SDK path\" to select the " +
-      "location of the alternative SDK, or \"Download SDK\" to let " +
+      "location of the valid SDK, or \"Download SDK\" to let " +
       "Processing download the SDK automatically.<br><br>" +
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
@@ -137,7 +137,7 @@ class AndroidSDK {
   private static final int NO_ERROR = 0;
   private static final int MISSING_SDK = 1;
   private static final int INVALID_SDK = 2;
-  private static int SDK_LOAD_ERROR = NO_ERROR;
+  private static int loadError = NO_ERROR;
 
   public AndroidSDK(File folder) throws BadSDKException, IOException {
     this.folder = folder;
@@ -336,11 +336,11 @@ class AndroidSDK {
 
 
   /**
+   * Check for a set android.sdk.path preference. If the pref
+   * is set, and refers to a legitimate Android SDK, then use that.
+   *
    * Check for the ANDROID_SDK environment variable. If the variable is set,
    * and refers to a legitimate Android SDK, then use that and save the pref.
-   *
-   * Check for a previously set android.sdk.path preference. If the pref
-   * is set, and refers to a legitimate Android SDK, then use that.
    *
    * Prompt the user to select an Android SDK. If the user selects a
    * legitimate Android SDK, then use that, and save the preference.
@@ -350,9 +350,29 @@ class AndroidSDK {
    * @throws IOException
    */
   public static AndroidSDK load() throws IOException {
-    SDK_LOAD_ERROR = NO_ERROR;
+    loadError = NO_ERROR;
     
-    // The environment variable is king. The preferences.txt entry is a page.
+    // Give priority to preferences. Rationale: when user runs the mode for the first time
+    // and there is a valid SDK in the environment, it will be stored in the 
+    // preferences. So in this case, priority is given to an existing (and valid) SDK. 
+    // From that point on, if the preference value is changed then it means that the user
+    // wants to use a custom SDK, so the mode should not revert back to the global SDK.
+    // Also, using the global SDK risks breaking the mode as that SDK is most likely
+    // going to be used by Android Studio, and we don't know what updates it may apply
+    // that could be incompatible with the mode. So better keep using the local SDK in 
+    // the preferences. 
+    final String sdkPrefsPath = Preferences.get("android.sdk.path");
+    if (sdkPrefsPath != null) {
+      try {
+        final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath));
+        Preferences.set("android.sdk.path", sdkPrefsPath);
+        return androidSDK;
+      } catch (final BadSDKException badPref) {
+        Preferences.unset("android.sdk.path");
+        loadError = INVALID_SDK;
+      }
+    }    
+    
     final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
     if (sdkEnvPath != null) {
       try {
@@ -362,27 +382,14 @@ class AndroidSDK {
         // which nukes all env variables when launching from the IDE.
         Preferences.set("android.sdk.path", sdkEnvPath);
         return androidSDK;
-      } catch (final BadSDKException drop) { }
-    }
-
-    // If android.sdk.path exists as a preference, make sure that the folder
-    // is not bogus, otherwise the SDK may have been removed or deleted.
-    final String sdkPrefsPath = Preferences.get("android.sdk.path");
-    if (sdkPrefsPath != null) {
-      try {
-        final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath));
-        // Set this value in preferences.txt, in case ANDROID_SDK
-        // gets knocked out later. For instance, by that pesky Eclipse,
-        // which nukes all env variables when launching from the IDE.
-        Preferences.set("android.sdk.path", sdkPrefsPath);
-        return androidSDK;
-      } catch (final BadSDKException wellThatsThat) {
-        Preferences.unset("android.sdk.path");
-        SDK_LOAD_ERROR = INVALID_SDK;
+      } catch (final BadSDKException badEnv) { 
+        Preferences.unset("android.sdk.path");        
+        loadError = INVALID_SDK;
       }
-    } else {
-      SDK_LOAD_ERROR = MISSING_SDK;
+    } else if (loadError == NO_ERROR) {
+      loadError = MISSING_SDK; 
     }
+    
     return null;
   }
 
@@ -467,10 +474,10 @@ class AndroidSDK {
             "width: " + TEXT_WIDTH + "px }" +
         "</style> </head>";
     String title = "";
-    if (SDK_LOAD_ERROR == MISSING_SDK) {
+    if (loadError == MISSING_SDK) {
       htmlString += "<body> <p>" + MISSING_SDK_MESSAGE + "</p> </body> </html>";
       title = MISSING_SDK_TITLE;
-    } else if (SDK_LOAD_ERROR == INVALID_SDK) {
+    } else if (loadError == INVALID_SDK) {
       htmlString += "<body> <p>" + INVALID_SDK_MESSAGE + "</p> </body> </html>";
       title = INVALID_SDK_TITLE;
     }    
