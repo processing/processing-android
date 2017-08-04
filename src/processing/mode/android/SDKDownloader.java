@@ -114,6 +114,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
       if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();
+      File googleDriverFolder = new File(googleRepoFolder, "usb_driver");
+      if (!googleDriverFolder.exists()) googleDriverFolder.mkdir();      
+      File haxmFolder = new File(extrasFolder, "intel/HAXM");
+      if (!haxmFolder.exists()) haxmFolder.mkdirs();      
       File androidRepoFolder = new File(extrasFolder, "android");
       if (!androidRepoFolder.exists()) androidRepoFolder.mkdir();      
       
@@ -147,9 +151,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
 
-        // emulator
+        // emulator, unpacks directly to sdk folder 
         File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
-        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, emulatorFolder, true);
+        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
         
         // google repository
         File downloadedGoogleRepo = new File(tempFolder, downloadUrls.googleRepoFilename);
@@ -162,23 +166,13 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // usb driver
         if (Platform.isWindows()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
-          downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
+          downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleDriverFolder, false);
         }
 
         // HAXM
         if (!Platform.isLinux()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.haxmFilename);
-          File haxmFolder = new File(tempFolder, "HAXM");
           downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
-
-          ProcessBuilder pb;
-          if (Platform.isWindows())
-            pb = new ProcessBuilder("cmd.exe", "/c", "start", "silent_install.bat");
-          else
-            pb = new ProcessBuilder("silent_install.sh");
-
-          pb.directory(haxmFolder);
-          pb.start().waitFor();
         }
 
         if (Platform.isLinux() || Platform.isMacOS()) {

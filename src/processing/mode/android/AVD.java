@@ -54,7 +54,7 @@ public class AVD {
     "This could mean that the Android tools need to be updated,<br>" +
     "or that the Processing AVD should be deleted (it will<br>" +
     "automatically re-created the next time you run Processing).<br><br>" +
-    "You can use the avdmanager command line tool to create AVDs manually and list<br>" +
+    "You can use the avdmanager command line tool to create AVDs manually and list " +
     "the current AVDs, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";
 
   private static final String GETTING_START_TUT_URL = 
@@ -67,8 +67,9 @@ public class AVD {
       "found in <a href=\"" + GETTING_START_TUT_URL + "\">this online tutorial</a>.";
   
   static final String DEFAULT_SDCARD_SIZE = "64M";
-  static final String DEVICE_DEFINITION = "Nexus 5";
-  static final String DEVICE_SKIN = "1080x1920";
+  
+  static final String DEVICE_DEFINITION = "Nexus One";
+  static final String DEVICE_SKIN = "480x800";
   
   static final String DEVICE_WEAR_DEFINITION = "wear_square_280_280dpi";
   static final String DEVICE_WEAR_SKIN = "280x280";  
@@ -76,17 +77,17 @@ public class AVD {
   /** Name of this avd. */
   protected String name;
 
-  /** "system-images;android-25;google_apis;x86" */
-  protected ArrayList<String> watchImages;
-  protected ArrayList<String> phoneImages;
-
   protected String device;
   protected String skin;
 
   static ArrayList<String> avdList;
   static ArrayList<String> badList;
 //  static ArrayList<String> skinList;
-
+  
+  /** "system-images;android-25;google_apis;x86" */
+  static ArrayList<String> wearImages;
+  static ArrayList<String> phoneImages;
+  
   private static Process process;
 
   /** Default virtual device used by Processing. */
@@ -104,11 +105,6 @@ public class AVD {
     this.name = name;
     this.device = device;
     this.skin = skin;
-
-    if (name.contains("phone"))
-      phoneImages = new ArrayList<>();
-    else
-      watchImages = new ArrayList<>();
   }
 
 
@@ -196,7 +192,39 @@ public class AVD {
     return false;
   }
 
-  protected void getImages(AndroidSDK sdk) throws IOException {
+  
+  protected boolean hasImages(final AndroidSDK sdk) throws IOException {
+    if (phoneImages == null) {
+      phoneImages = new ArrayList<String>();
+      getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+    }
+    return !phoneImages.isEmpty();
+  }
+  
+
+  protected void refreshImages(final AndroidSDK sdk) throws IOException {
+    phoneImages = new ArrayList<String>();
+    getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+  } 
+  
+  
+  protected boolean hasWearImages(final AndroidSDK sdk) throws IOException {
+    if (wearImages == null) {
+      wearImages = new ArrayList<String>();
+      getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
+    }
+    return !wearImages.isEmpty();
+  }  
+  
+
+  protected void refreshWearImages(final AndroidSDK sdk) throws IOException {
+    wearImages = new ArrayList<String>();
+    getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
+  } 
+  
+  
+  protected void getImages(final ArrayList<String> images, final AndroidSDK sdk, 
+      final String imageTag) throws IOException {
     // Dummy avdmanager creation command to get the list of installed images
     // TODO : Find a better way to get the list of installed images
     ProcessBuilder pb = new ProcessBuilder(
@@ -218,12 +246,10 @@ public class AVD {
       output.addTarget(new LineProcessor() {
         @Override
         public void processLine(String line) {
-          if (phoneImages != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
-                  line.contains(SysImageDownloader.SYSTEM_IMAGE_TAG))
-            phoneImages.add(line);
-          else if (watchImages != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
-                  line.contains(SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG))
-            watchImages.add(line);
+          if (images != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
+              line.contains(imageTag))
+            System.out.println("IMAGE ---> " + line);
+            images.add(line);
         }
       }).start();
 
@@ -235,6 +261,7 @@ public class AVD {
     }
   }
 
+  
   protected String getSdkId() throws IOException {
     if (Preferences.get("android.system.image.type") == null)
       Preferences.set("android.system.image.type", "x86"); // Prefer x86
@@ -245,7 +272,7 @@ public class AVD {
           return image;
       }
     } else {
-      for (String image : watchImages) {
+      for (String image : wearImages) {
         if (image.contains(Preferences.get("android.system.image.type")))
           return image;
       }
@@ -353,14 +380,12 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-        wearAVD.getImages(sdk);
-        if (wearAVD.watchImages.isEmpty()) {
+        if (wearAVD.hasWearImages(sdk)) {
           boolean res = AndroidSDK.locateSysImage(window, mode, true);
           if (!res) {
             return false;
           } else {
-            // Refresh images list
-            wearAVD.getImages(sdk);
+            wearAVD.refreshWearImages(sdk);
           }
         }
         if (wearAVD.create(sdk)) {
@@ -374,14 +399,12 @@ public class AVD {
           AndroidUtil.showMessage(AVD_LOAD_TITLE, AVD_LOAD_MESSAGE);
           return false;
         }
-        mobileAVD.getImages(sdk);
-        if (mobileAVD.phoneImages.isEmpty()) {
+        if (mobileAVD.hasImages(sdk)) {
           boolean res = AndroidSDK.locateSysImage(window, mode, false);
           if (!res) {
             return false;
           } else {
-            // Refresh images list
-            mobileAVD.getImages(sdk);
+            mobileAVD.refreshImages(sdk);
           }
         }
         if (mobileAVD.create(sdk)) {

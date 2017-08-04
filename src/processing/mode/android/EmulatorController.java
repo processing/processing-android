@@ -107,9 +107,9 @@ class EmulatorController {
     
     
     //System.err.println("EmulatorController: Launching emulator");
-    if (Base.DEBUG) {
+    //if (Base.DEBUG) {
       System.out.println(processing.core.PApplet.join(cmd, " "));
-    }
+//    }
     //ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
     final Process p = Runtime.getRuntime().exec(cmd);
     ProcessRegistry.watch(p);

@@ -44,7 +44,7 @@ import java.util.HashMap;
 public class Manifest {
   static final String MANIFEST_XML = "AndroidManifest.xml";
 
-  static final String WORLD_OF_HURT_COMING =
+  static final String MANIFEST_ERROR =
     "Errors occurred while reading or writing " + MANIFEST_XML + ",\n" +
     "which means lots of things are likely to stop working properly.\n" +
     "To prevent losing any data, it's recommended that you use “Save As”\n" +
@@ -311,7 +311,7 @@ public class Manifest {
       }
     }
     if (xml == null) {
-      Messages.showWarning("Error handling " + MANIFEST_XML, WORLD_OF_HURT_COMING);
+      Messages.showWarning("Error handling " + MANIFEST_XML, MANIFEST_ERROR);
     }
   }
 

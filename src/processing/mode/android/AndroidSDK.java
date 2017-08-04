@@ -65,7 +65,7 @@ class AndroidSDK {
   private final File avdManager;
   private final File wearablePath;
   private final File supportLibPath;
-
+  
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
   
@@ -119,6 +119,20 @@ class AndroidSDK {
     
   private static final String SELECT_ANDROID_SDK_FOLDER =
     "Choose the location of the Android SDK";
+
+  /*
+  private static final String GOOGLE_INSTALL_TITLE = "Google USB Drivers";
+  
+  private static final String DRIVER_INSTALL_URL = 
+      "https://developer.android.com/studio/run/oem-usb.html#InstallingDriver";    
+  
+  private static final String GOOGLE_INSTALL_MESSAGE =
+      "If you are planning to use Google Nexus devices, then need the " + 
+      "Google USB Driver to connect them to Processing. You would have to " + 
+      "install the driver manually following <a href=\"" + DRIVER_INSTALL_URL + 
+      "\">these instructions</a>.<br><br>" +
+      "The installation files are available in this folder</br>";     
+  */
   
   private static final int NO_ERROR = 0;
   private static final int MISSING_SDK = 1;
@@ -130,7 +144,7 @@ class AndroidSDK {
     if (!folder.exists()) {
       throw new BadSDKException(folder + " does not exist");
     }
-
+    
     tools = new File(folder, "tools");
     if (!tools.exists()) {
       throw new BadSDKException("There is no tools folder in " + folder);
@@ -172,7 +186,7 @@ class AndroidSDK {
     if (!supportLibPath.exists()) {
       throw new BadSDKException("There is no support library folder in " + folder);
     }
-    
+        
     avdManager = findAvdManager(new File(tools, "bin"));
 
     String path = Platform.getenv("PATH");
@@ -290,6 +304,20 @@ class AndroidSDK {
     return supportLibPath;
   } 
   
+  
+  static public File getHAXMInstallerFolder() {
+    String sdkPrefsPath = Preferences.get("android.sdk.path");    
+    File sdkPath = new File(sdkPrefsPath);
+    return new File(sdkPath, "extras/intel/HAXM");
+  }
+  
+
+  static public File getGoogleDriverFolder() {
+    String sdkPrefsPath = Preferences.get("android.sdk.path");    
+    File sdkPath = new File(sdkPrefsPath);
+    return new File(sdkPath, "extras/google_usb");
+  }  
+  
 
   /**
    * Checks a path to see if there's a tools/android file inside, a rough check
@@ -404,6 +432,11 @@ class AndroidSDK {
     if (sdk == null) {
       throw new BadSDKException("SDK could not be downloaded");
     }
+//    File googDriv = AndroidSDK.getGoogleDriverFolder();
+//    if (googDriv.exists()) {
+//      AndroidUtil.showMessage(GOOGLE_INSTALL_TITLE, 
+//                              GOOGLE_INSTALL_MESSAGE + googDriv.getAbsolutePath());      
+//    }    
     return sdk;
   }
   

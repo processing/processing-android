@@ -55,18 +55,25 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   final static private int FONT_SIZE = Toolkit.zoom(11);
   final static private int TEXT_MARGIN = Toolkit.zoom(8);
   final static private int TEXT_WIDTH = Toolkit.zoom(300);
-
+  
   private static final String EMULATOR_GUIDE_URL =
-          "https://developer.android.com/studio/run/emulator-acceleration.html";
+      "https://developer.android.com/studio/run/emulator-acceleration.html";
 
   private static final String SYS_IMAGE_SELECTION_MESSAGE =
-          "The Android emulator requires a system image to run." +
-                  "There are two types of system images available -" +
-                  "<ol><li>ARM image - slow but compatible with all computers, no extra configuration required</li>" +
-                  "<li>x86 image - fast but compatible only with Intel CPUs, extra configuration may be required</li>" +
-                  "</ol><br>If you choose to download the x86 image, please follow " +
-                  "<a href=\"" + EMULATOR_GUIDE_URL + "\">this guide</a> to setup the emulator correctly.<br>";
+      "The Android emulator requires a system image to run. " +
+      "There are two types of system images available:<br><br>" +
+      "<b>1) ARM image -</b> slow but compatible with all computers, no extra configuration needed.<br><br>" +
+      "<b>2) x86 image -</b> fast but compatible only with Intel CPUs, extra configuration may be needed, see " + 
+      "<a href=\"" + EMULATOR_GUIDE_URL + "\">this guide</a> for more details.";
 
+  private static final String HAXM_INSTALL_TITLE = "Some words of caution...";
+  
+  private static final String HAXM_INSTALL_MESSAGE =
+      "You chose to run x86 images in the emulator. This is great but you need " + 
+      "to install the Intel Hardware Accelerated Execution Manager (Intel HAXM).<br><br>" + 
+      "Processing will try to run the HAXM installer now, which will ask you for " + 
+      "administrator password. Good luck!";
+  
   private static final String SYS_IMAGES_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
   private static final String SYS_IMAGES_LIST = "sys-img2-1.xml";
   
@@ -319,16 +326,15 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  public int showMessage() {
+  static public int showMessage() {
     String htmlString = "<html> " +
             "<head> <style type=\"text/css\">" +
             "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " +
             "margin: " + TEXT_MARGIN + "px; " +
             "width: " + TEXT_WIDTH + "px }" +
             "</style> </head>";
-
-    htmlString += "<body>" + SYS_IMAGE_SELECTION_MESSAGE + "</body> </html>";
-    String title = "Choose system image type to download";
+    htmlString += "<body> <p> " + SYS_IMAGE_SELECTION_MESSAGE + " </p> </body> </html>";
+    String title = "Choose system image type to download...";
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
       @Override
@@ -343,7 +349,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pane.setBackground(label.getBackground());
 
     String[] options = new String[] {
-            "Download ARM image", "Download x86 image"
+            "Slow but safe", "I like speed!"
     };
     int result = JOptionPane.showOptionDialog(null, pane, title,
             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -375,6 +381,28 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     } else {
       // x86
       Preferences.set("android.system.image.type", "x86");
+      File haxmFolder = AndroidSDK.getHAXMInstallerFolder();     
+      if (haxmFolder.exists() && !Platform.isLinux()) {
+        AndroidUtil.showMessage(HAXM_INSTALL_TITLE, HAXM_INSTALL_MESSAGE);        
+        
+        File exec = new File(haxmFolder, "HAXM installation");
+        System.out.println(exec.getAbsolutePath() + "  " + exec.exists());
+        
+        ProcessBuilder pb;
+        if (Platform.isWindows())
+          pb = new ProcessBuilder("cmd.exe", "/c", "start", "silent_install.bat");
+        else
+          pb = new ProcessBuilder(exec.getAbsolutePath());
+
+//        pb.directory(haxmFolder);
+        try {
+          pb.start().waitFor();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
     }
     downloadTask = new DownloadTask();
     downloadTask.addPropertyChangeListener(this);
@@ -399,8 +427,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
-    String labelText = wear ? "Downloading Android Watch Emulator..." :
-                              "Downloading Android Emulator...";
+    String labelText = wear ? "Downloading Wear system image..." :
+                              "Downloading system image...";
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textarea);
