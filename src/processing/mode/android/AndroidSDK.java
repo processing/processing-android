@@ -342,7 +342,7 @@ class AndroidSDK {
   static public File getGoogleDriverFolder() {
     String sdkPrefsPath = Preferences.get("android.sdk.path");    
     File sdkPath = new File(sdkPrefsPath);
-    return new File(sdkPath, "extras/google_usb");
+    return new File(sdkPath, "extras/google/usb_driver");
   }  
   
 
