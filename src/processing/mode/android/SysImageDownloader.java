@@ -85,6 +85,14 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       "Follow <a href=\"" + KVM_LINUX_GUIDE_URL + "\">these instructions</a> " + 
       "to configure KVM. Good luck!";      
   
+  private static final String IA32LIBS_TITLE = "Additional setup may be required...";
+  private static final String IA32LIBS_MESSAGE = 
+      "Looks like you are running a 64-bit version of Linux. In order<br>" +
+      "to create the SD card in the emulator, Processing needs the<br>" +
+      "ia32-libs compatibility package. On Ubuntu Linux, you can<br>" +
+      "install it by runing the following command: <br><br>" +
+      "sudo apt-get install lib32stdc++6";  
+  
   private static final String SYS_IMAGES_ARM_URL = "https://dl.google.com/android/repository/sys-img/android/";
   
   private static final String SYS_IMAGES_PHONE_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
@@ -191,6 +199,10 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
 
         for (File f: tempFolder.listFiles()) f.delete();    
         tempFolder.delete();
+
+        if (Platform.isLinux() && Platform.getVariant().equals("64")) {          
+          AndroidUtil.showMessage(IA32LIBS_TITLE, IA32LIBS_MESSAGE);          
+        }
         
         result = true;
       } catch (ParserConfigurationException e) {
