@@ -39,9 +39,12 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
 import processing.app.Base;
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.SketchException;
 import processing.app.Util;
+import processing.app.exec.ProcessHelper;
+import processing.app.exec.ProcessResult;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
@@ -127,6 +130,47 @@ public class AndroidUtil {
     }
     pw.flush();
     pw.close();    
+  }
+  
+  
+  static public File createSubFolder(File parent, String name) throws IOException {
+    File newFolder = new File(parent, name);
+    if (newFolder.exists()) {
+      String stamp = AndroidMode.getDateStamp(newFolder.lastModified());
+      File dest = new File(parent, name + "." + stamp);
+      boolean result = newFolder.renameTo(dest);
+      if (!result) {
+        ProcessHelper mv;
+        ProcessResult pr;
+        try {
+          System.err.println("Cannot rename existing " + name + " folder, resorting to mv/move instead.");
+          mv = new ProcessHelper("mv", newFolder.getAbsolutePath(), dest.getAbsolutePath());
+          pr = mv.execute();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+          return null;
+        }
+        if (!pr.succeeded()) {
+          System.err.println(pr.getStderr());
+          Messages.showWarning("Failed to rename",
+              "Could not rename the old \"" + name + "\" folder.\n" +
+              "Please delete, close, or rename the folder\n" +
+              newFolder.getAbsolutePath() + "\n" +
+              "and try again." , null);
+          Platform.openFolder(newFolder);
+          return null;
+        }
+      }
+    } else {
+      boolean result = newFolder.mkdirs();
+      if (!result) {
+        Messages.showWarning("Folders, folders, folders",
+            "Could not create the necessary folders to build.\n" +
+            "Perhaps you have some file permissions to sort out?", null);
+        return null;
+      }
+    }
+    return newFolder;
   }
   
   

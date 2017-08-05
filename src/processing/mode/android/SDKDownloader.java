@@ -100,10 +100,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       File sketchbookFolder = processing.app.Base.getSketchbookFolder();
       File androidFolder = new File(sketchbookFolder, "android");
       if (!androidFolder.exists()) androidFolder.mkdir();
+      
+      File sdkFolder = AndroidUtil.createSubFolder(androidFolder, "sdk");
             
       // creating sdk folders
-      File sdkFolder = new File(androidFolder, "sdk");
-      if (!sdkFolder.exists()) sdkFolder.mkdirs();
       File platformsFolder = new File(sdkFolder, "platforms");
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");

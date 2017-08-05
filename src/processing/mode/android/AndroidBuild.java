@@ -951,44 +951,6 @@ class AndroidBuild extends JavaBuild {
   
   
   private File createExportFolder(String name) throws IOException {
-    //  Sketch sketch = editor.getSketch();
-    // Create the 'android' build folder, and move any existing version out.
-    File androidFolder = new File(sketch.getFolder(), name);
-    if (androidFolder.exists()) {
-      String stamp = AndroidMode.getDateStamp(androidFolder.lastModified());
-      File dest = new File(sketch.getFolder(), name + "." + stamp);
-      boolean result = androidFolder.renameTo(dest);
-      if (!result) {
-        ProcessHelper mv;
-        ProcessResult pr;
-        try {
-          System.err.println("createProject renameTo() failed, resorting to mv/move instead.");
-          mv = new ProcessHelper("mv", androidFolder.getAbsolutePath(), dest.getAbsolutePath());
-          pr = mv.execute();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-          return null;
-        }
-        if (!pr.succeeded()) {
-          System.err.println(pr.getStderr());
-          Messages.showWarning("Failed to rename",
-              "Could not rename the old \"" + name + "\" build folder.\n" +
-                  "Please delete, close, or rename the folder\n" +
-                  androidFolder.getAbsolutePath() + "\n" +
-                  "and try again." , null);
-          Platform.openFolder(sketch.getFolder());
-          return null;
-        }
-      }
-    } else {
-      boolean result = androidFolder.mkdirs();
-      if (!result) {
-        Messages.showWarning("Folders, folders, folders",
-            "Could not create the necessary folders to build.\n" +
-                "Perhaps you have some file permissions to sort out?", null);
-        return null;
-      }
-    }
-    return androidFolder;
+    return AndroidUtil.createSubFolder(sketch.getFolder(), name);
   }  
 }
