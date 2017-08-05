@@ -189,7 +189,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
         Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());        
-        sdk = AndroidSDK.load();        
+        sdk = AndroidSDK.load(false, null);        
       } catch (ParserConfigurationException e) {
         // TODO Handle exceptions here somehow (ie show error message)
         // and handle at least mkdir() results (above)

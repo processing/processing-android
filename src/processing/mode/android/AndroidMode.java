@@ -181,22 +181,6 @@ public class AndroidMode extends JavaMode {
     return coreZipLocation;
   }
 
-
-//  public AndroidSDK loadSDK() throws BadSDKException, IOException {
-//    if (sdk == null) {
-//      sdk = AndroidSDK.load();
-//    }
-//    return sdk;
-//  }
-
-  public void loadSDK() {
-    try {
-      sdk = AndroidSDK.load();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
   
   public void resetUserSelection() {
     userCancelledSDKSearch = false;
@@ -220,7 +204,7 @@ public class AndroidMode extends JavaMode {
     Throwable tr = null;
     if (sdk == null) {      
       try {
-        sdk = AndroidSDK.load();
+        sdk = AndroidSDK.load(true, editor);
         if (sdk == null) {
           sdk = AndroidSDK.locate(editor, this);
         }
