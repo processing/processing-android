@@ -25,7 +25,6 @@ package processing.mode.android;
 import processing.app.Base;
 import processing.app.Mode;
 import processing.app.Platform;
-import processing.app.Preferences;
 import processing.app.Settings;
 import processing.app.SketchException;
 import processing.app.tools.Tool;
@@ -70,16 +69,6 @@ public class AndroidEditor extends JavaEditor {
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
   private JCheckBoxMenuItem vrItem;
-    
-  private static final String USB_DRIVER_TITLE = "USB Driver warning";
-  private static final String USB_DRIVER_URL = 
-      "http://developer.android.com/sdk/win-usb.html";
-  private static final String USB_DRIVER_MESSAGEA = 
-      "You might need to install Google USB Driver to run " +
-      "the sketch on your device. Please follow <a href=\"" + USB_DRIVER_URL + "\">this guide</a> " +
-      "to install the driver.<br>";  
-  private static final String USB_DRIVER_MESSAGEB = 
-      "<br>For your reference, the driver is located in:<br>";
   
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
@@ -460,34 +449,21 @@ public class AndroidEditor extends JavaEditor {
    * Build the sketch and run it on a device with the debugger connected.
    */
   public void handleRunDevice() {
-    if (Platform.isWindows() && !Preferences.getBoolean("android.warnings.usb_driver")) {
-      Preferences.setBoolean("android.warnings.usb_driver", true);      
-      File sdkFolder = androidMode.getSDK().getSdkFolder();
-      String text = "";
-      File usbDriverFile = new File(sdkFolder, "extras/google/usb_driver");      
-      if (usbDriverFile.exists()) {
-        text = USB_DRIVER_MESSAGEA + USB_DRIVER_MESSAGEB + usbDriverFile.getAbsolutePath();
-      } else {
-        text = USB_DRIVER_MESSAGEA;        
-      }
-      AndroidUtil.showMessage(USB_DRIVER_TITLE, text);
-    } else {
-      new Thread() {
-        public void run() {
-          toolbar.activateRun();
-          startIndeterminate();
-          prepareRun();
-          try {
-            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
-          } catch (SketchException e) {
-            statusError(e);
-          } catch (IOException e) {
-            statusError(e);
-          }
-          stopIndeterminate();
+    new Thread() {
+      public void run() {
+        toolbar.activateRun();
+        startIndeterminate();
+        prepareRun();
+        try {
+          androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (IOException e) {
+          statusError(e);
         }
-      }.start();
-    }
+        stopIndeterminate();
+      }
+    }.start();
   }
 
 
@@ -657,8 +633,7 @@ public class AndroidEditor extends JavaEditor {
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
-//        Devices.killAdbServer();
-        SysImageDownloader.installHAXM();
+        Devices.killAdbServer();
       }
     });
     androidMenu.add(item);    

@@ -100,19 +100,19 @@ class AndroidSDK {
       "http://android.processing.org/tutorials/command_line/index.html";  
   
   private static final String ANDROID_SYS_IMAGE_PRIMARY =
-      "Download emulator?";
+      "Download phone system image?";
 
   private static final String ANDROID_SYS_IMAGE_SECONDARY =
-      "The emulator does not appear to be installed, <br>" +
+      "The system image needed by the emulator does not appear to be installed. " +
       "Do you want Processing to download and install it now? <br><br>" +
       "Otherwise, you will need to do it through the sdkmanager<br>" +
       "command line tool, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";
 
   private static final String ANDROID_SYS_IMAGE_WEAR_PRIMARY =
-      "Download watch emulator?";
+      "Download watch system image?";
 
   private static final String ANDROID_SYS_IMAGE_WEAR_SECONDARY =
-      "The watch emulator does not appear to be installed, <br>" +
+      "The system image needed by the emulator does not appear to be installed. " +
       "Do you want Processing to download and install it now? <br><br>" +
       "Otherwise, you will need to do it through the sdkmanager<br>" +
       "command line tool, check <a href=\"" + COMMAND_LINE_TUT_URL + "\">this online tutorial</a> for more info.";  

@@ -25,17 +25,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
+import processing.app.Base;
 import processing.app.Platform;
-import processing.app.Preferences;
 import processing.app.exec.*;
 
 import processing.core.PApplet;
 
 
 class EmulatorController {
-  public final static String DEFAULT_PORT = "5566";
-  public final static String WEAR_PORT = "5576";
-  
   public static enum State {
     NOT_RUNNING, WAITING_FOR_BOOT, RUNNING
   }
@@ -68,29 +65,12 @@ class EmulatorController {
       throw new IllegalStateException(illegal);
     }
 
-    String portString = null;
-    if (wear) {
-      portString = Preferences.get("android.emulator.wear.port");
-      if (portString == null) {
-        portString = WEAR_PORT;
-        Preferences.set("android.emulator.wear.port", portString);
-      }
-    } else {
-      portString = Preferences.get("android.emulator.default.port");
-      if (portString == null) {
-        portString = DEFAULT_PORT;
-        Preferences.set("android.emulator.default.port", portString);
-      }
-    }
-
+    // Emulator options:
     // https://developer.android.com/studio/run/emulator-commandline.html
-    String avdName;
-    if (wear) {
-      avdName = AVD.watchAVD.name;
-    } else {
-      avdName = AVD.phoneAVD.name;
-    }
+    String avdName = AVD.getName(wear);
     
+    String portString = AVD.getPreferredPort(wear);
+        
     // We let the emulator decide what's better for hardware acceleration:
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
     String gpuFlag = "auto";
@@ -104,11 +84,10 @@ class EmulatorController {
       "-gpu", gpuFlag
     };
     
-    
     //System.err.println("EmulatorController: Launching emulator");
-    //if (Base.DEBUG) {
+    if (Base.DEBUG) {
       System.out.println(processing.core.PApplet.join(cmd, " "));
-//    }
+    }
     //ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
     final Process p = Runtime.getRuntime().exec(cmd);
     ProcessRegistry.watch(p);

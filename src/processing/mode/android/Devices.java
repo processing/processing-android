@@ -125,7 +125,7 @@ class Devices {
 
 
   private final Device blockingGetEmulator(final File sdkToolsPath, final boolean wear) {
-    String port = AVD.getPort(wear);
+    String port = AVD.getPreferredPort(wear);
     Device emu = find(true, port);
     if (emu != null) {
       return emu;

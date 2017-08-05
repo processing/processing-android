@@ -26,7 +26,6 @@ import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.StreamPump;
-import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
 import java.awt.Frame;
@@ -37,7 +36,14 @@ import java.util.Map;
 
 public class AVD {
   final static private int PHONE = 0;
-  final static private int WEAR = 1;
+  final static private int WEAR  = 1;
+
+  final static public String DEFAULT_ABI = "x86";
+  
+  public static final String TARGET_SDK_ARM = "24";   
+
+  public final static String DEFAULT_PHONE_PORT = "5566";
+  public final static String DEFAULT_WEAR_PORT  = "5576";  
   
   static private final String AVD_CREATE_TITLE =
     "Could not create the AVD";
@@ -113,7 +119,72 @@ public class AVD {
   }
 
 
+  static public String getName(boolean wear) {
+    if (wear) {
+      return AVD.watchAVD.name;
+    } else {
+      return AVD.phoneAVD.name;
+    }
+  }
+  
+  
+  static public String getPreferredPlatform(boolean wear, String abi) {
+    if (wear) {
+      return AndroidBuild.TARGET_PLATFORM;
+    } else if (abi.equals("arm")) {
+      // The ARM images using Google APIs are too slow, so use the 
+      // older Android (AOSP) images.      
+      return "android-" + TARGET_SDK_ARM;
+    } else {
+      return AndroidBuild.TARGET_PLATFORM;
+    }
+  }
+  
+  static public String getPreferredPort(boolean wear) {
+    String port = "";
+    if (wear) {
+      port = Preferences.get("android.emulator.port.wear");
+      if (port == null) {
+        port = DEFAULT_WEAR_PORT;
+        Preferences.set("android.emulator.port.wear", port);
+      }
+    } else {
+      port = Preferences.get("android.emulator.port.phone");
+      if (port == null) {
+        port = DEFAULT_PHONE_PORT;
+        Preferences.set("android.emulator.port.phone", port);
+      }
+    }
+    return port;
+  }
+
+  
+  static protected String getPreferredTag(boolean wear, String abi) {
+    if (wear) {
+      return "android-wear";
+    } else if (abi.equals("arm")) {
+      // The ARM images using Google APIs are too slow, so use the 
+      // older Android (AOSP) images.      
+      return "default";
+    } else {
+      return "google_apis";
+    }
+  }  
+    
+  
+  static protected String getPreferredABI() {
+    String abi = Preferences.get("android.emulator.image.abi");
+    if (abi == null) {
+      abi = DEFAULT_ABI;
+      Preferences.set("android.emulator.image.abi", abi); 
+    }
+    return abi;
+  }
+
+  
   static protected void list(final AndroidSDK sdk) throws IOException {
+    String prefABI = getPreferredABI();
+
     try {
       avdList = new ArrayList<String>();
       badList = new ArrayList<String>();
@@ -133,20 +204,32 @@ public class AVD {
       String[] lines = PApplet.split(outWriter.toString(), '\n');
 
       if (process.exitValue() == 0) {
+        String name = "";
+        String abi = "";
         boolean badness = false;
         for (String line : lines) {
           String[] m = PApplet.match(line, "\\s+Name\\:\\s+(\\S+)");
+          String[] t = PApplet.match(line, "\\s+Tag/ABI\\:\\s+(\\S+)");
+          
           if (m != null) {
-            if (!badness) {
+            name = m[1];
+          }  
+          if (t != null) {
+            abi = t[1];
+            if (-1 < abi.indexOf("/" + prefABI)) {
+              if (!badness) {
 //              System.out.println("good: " + m[1]);
-              avdList.add(m[1]);
-            } else {
+                avdList.add(name);
+              } else {
 //              System.out.println("bad: " + m[1]);
-              badList.add(m[1]);
-            }
+                badList.add(name);
+              }
 //          } else {
-//            System.out.println("nope: " + line);
-          }
+//            System.out.println("nope: " + line);              
+            }
+          } 
+          
+
           // "The following Android Virtual Devices could not be loaded:"
           if (line.contains("could not be loaded:")) {
 //            System.out.println("starting the bad list");
@@ -199,16 +282,17 @@ public class AVD {
 
   
   protected boolean hasImages(final AndroidSDK sdk) throws IOException {
+    String abi = getPreferredABI(); 
     if (type == PHONE) {
       if (phoneImages == null) {
         phoneImages = new ArrayList<String>();
-        getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+        getImages(phoneImages, sdk, abi);
       }
       return !phoneImages.isEmpty();
     } else {
       if (wearImages == null) {
         wearImages = new ArrayList<String>();
-        getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
+        getImages(wearImages, sdk, abi);
       }
       return !wearImages.isEmpty();      
     }
@@ -216,18 +300,24 @@ public class AVD {
   
 
   protected void refreshImages(final AndroidSDK sdk) throws IOException {
+    String abi = getPreferredABI();
+    
     if (type == PHONE) {
       phoneImages = new ArrayList<String>();
-      getImages(phoneImages, sdk, SysImageDownloader.SYSTEM_IMAGE_TAG);
+      getImages(phoneImages, sdk, abi);
     } else {
       wearImages = new ArrayList<String>();
-      getImages(wearImages, sdk, SysImageDownloader.SYSTEM_IMAGE_WEAR_TAG);
+      getImages(wearImages, sdk, abi);
     }
   } 
   
   
   protected void getImages(final ArrayList<String> images, final AndroidSDK sdk, 
-      final String imageTag) throws IOException {
+      final String imageAbi) throws IOException {
+    boolean wear = type == WEAR;
+    final String imagePlatform = getPreferredPlatform(wear, imageAbi);
+    final String imageTag = getPreferredTag(wear, imageAbi); 
+    
     final String[] cmd = new String[] {
         sdk.getAvdManagerPath(),
         "create", "avd",
@@ -247,7 +337,7 @@ public class AVD {
     env.clear();
     env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
     pb.redirectErrorStream(true);
-
+    
     try {
       process = pb.start();
 
@@ -256,10 +346,13 @@ public class AVD {
         @Override
         public void processLine(String line) {
           System.out.println("DUMMY ---> " + line);
-          if (images != null && line.contains(AndroidBuild.TARGET_PLATFORM) &&
-              line.contains(imageTag))
+          if (images != null && 
+              line.contains(";" + imagePlatform) &&
+              line.contains(";" + imageTag) &&
+              line.contains(";" + imageAbi)) {
             System.out.println("  added!");
             images.add(line);
+          }
         }
       }).start();
 
@@ -273,18 +366,15 @@ public class AVD {
 
   
   protected String getSdkId() throws IOException {
-    if (Preferences.get("android.system.image.type") == null)
-      Preferences.set("android.system.image.type", "x86"); // Prefer x86
-
+    String abi = getPreferredABI();
+    
     if (type == PHONE) {
       for (String image : phoneImages) {
-        if (image.contains(Preferences.get("android.system.image.type")))
-          return image;
+        if (image.contains(";" + abi)) return image;
       }
     } else {
       for (String image : wearImages) {
-        if (image.contains(Preferences.get("android.system.image.type")))
-          return image;
+        if (image.contains(";" + abi)) return image;
       }
     }
 
@@ -294,7 +384,6 @@ public class AVD {
 
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
-    //initTargets(sdk);
     File sketchbookFolder = processing.app.Base.getSketchbookFolder();
     File androidFolder = new File(sketchbookFolder, "android");
     if (!androidFolder.exists()) androidFolder.mkdir();    
@@ -375,15 +464,6 @@ public class AVD {
     return false;
   }
 
-  
-  static public String getPort(boolean wear) {
-    if (wear) {
-      return EmulatorController.WEAR_PORT;
-    } else {
-      return EmulatorController.DEFAULT_PORT;
-    }
-  }
-  
 
   static public boolean ensureProperAVD(final Frame window, final AndroidMode mode, 
       final AndroidSDK sdk, boolean wear) {
@@ -414,94 +494,4 @@ public class AVD {
     }
     return false;
   }
-  
-  
-  //////////////////////////////////////////////////////////////////////////////
-  // To remove:
-  
-  /*
-
-  private Map<String, String> preferredAbi = new HashMap<>(30);
-  private List<String> abiList = new ArrayList<>();
- 
-  protected boolean noTargets(final AndroidSDK sdk) throws IOException {
-    initTargets(sdk); 
-//    return preferredAbi.size() == 0;
-    return preferredAbi.get(AndroidBuild.TARGET_SDK) == null;
-  }
-  
-  
-  private void initializeAbiList(String tag) {
-    if (abiList.size() == 0) {
-      // The order in this list determines the preference of one abi over the other
-      abiList.add(tag + "/x86");
-      abiList.add(tag + "/x86_64");
-      abiList.add(tag + "/armeabi-v7a");
-//    abiList.add("google_apis/x86");      
-//    abiList.add("google_apis/x86_64");      
-//    abiList.add("google_apis/armeabi-v7a");      
-    }
-  }
-  
-  protected void initTargets(final AndroidSDK sdk) throws IOException {
-    preferredAbi.clear();
-    ProcessBuilder pb = new ProcessBuilder(sdk.getAvdManagerPath(), "list", "target");
-
-    Map<String, String> env = pb.environment();
-    env.clear();
-    env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
-    pb.redirectErrorStream(true);
-
-    process = pb.start();
-    InputStream stdout = process.getInputStream();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-
-    try {
-      process.waitFor();
-      
-      String api = null;
-      String[] abis = null;
-      String line;
-      while ((line = reader.readLine()) != null) {
-        line = line.trim();
-        if (line.equals("")) continue;
-
-        if (line.indexOf("API level") == 0) {
-          String[] m = line.split(":");
-          if (1 < m.length) {
-            api = m[1];
-            api = api.trim();            
-          }
-        }
-        
-        if (line.indexOf("Tag/ABIs") == 0) {
-          String[] m = line.split(":");
-          if (1 < m.length) {
-            String str = m[1];
-            abis = str.split(",");
-            for (int i = 0; i < abis.length; i++) {
-              abis[i] = abis[i].trim();  
-            }
-          }
-        }
-        
-        if (api != null && abis != null) {
-          for (String abi: abis) {
-            if (abiList.indexOf(abi) == -1) continue;
-            if (preferredAbi.get(api) == null) {
-              preferredAbi.put(api, abi);
-            } else if (abiList.indexOf(preferredAbi.get(api)) < abiList.indexOf(abi)) {
-              preferredAbi.put(api, abi);
-            }            
-          }
-          api = null;
-          abis = null; 
-        }
-      }
-    } catch (InterruptedException e) {
-    } finally {
-      process.destroy();
-    }
-  }
-  */
 }

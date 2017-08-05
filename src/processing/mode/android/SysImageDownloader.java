@@ -85,15 +85,13 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       "Follow <a href=\"" + KVM_LINUX_GUIDE_URL + "\">these instructions</a> " + 
       "to configure KVM. Good luck!";      
   
-  private static final String SYS_IMAGES_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
-  private static final String SYS_IMAGES_LIST = "sys-img2-1.xml";
+  private static final String SYS_IMAGES_ARM_URL = "https://dl.google.com/android/repository/sys-img/android/";
+  
+  private static final String SYS_IMAGES_PHONE_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
+  private static final String SYS_IMAGES_PHONE_LIST = "sys-img2-1.xml";
   
   private static final String SYS_IMAGES_WEAR_URL = "https://dl.google.com/android/repository/sys-img/android-wear/";
   private static final String SYS_IMAGES_WEAR_LIST = "sys-img2-1.xml";
-  
-  public static final String SYSTEM_IMAGE_TAG = "google_apis";
-
-  public static final String SYSTEM_IMAGE_WEAR_TAG = "android-wear";
 
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -106,6 +104,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private Frame editor;
   private boolean result;
   private boolean wear;
+  private String abi;
   private boolean cancelled;
   
   private int totalSize = 0;  
@@ -147,8 +146,16 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        String repo = wear ? SYS_IMAGES_WEAR_URL + SYS_IMAGES_WEAR_LIST : 
-                             SYS_IMAGES_URL + SYS_IMAGES_LIST;
+        String repo;
+        if (wear) {
+          repo = SYS_IMAGES_WEAR_URL + SYS_IMAGES_WEAR_LIST;
+        } else if (abi.equals("arm")) {
+          // The ARM images using Google APIs are too slow, so use the 
+          // older Android (AOSP) images.
+          repo = SYS_IMAGES_ARM_URL + SYS_IMAGES_PHONE_LIST;
+        } else {
+          repo = SYS_IMAGES_PHONE_URL + SYS_IMAGES_PHONE_LIST;
+        }
         
         UrlHolder downloadUrls = new UrlHolder();
         getDownloadUrls(downloadUrls, repo, Platform.getName());
@@ -167,7 +174,10 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         } else {
           // mobile system images
           File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
-          File tmp = new File(sysImgFolder, "android-" + AndroidBuild.TARGET_SDK);
+          
+          String level = abi.equals("arm") ? AVD.TARGET_SDK_ARM : AndroidBuild.TARGET_SDK;
+          File tmp = new File(sysImgFolder, "android-" + level);
+          
           if (!tmp.exists()) tmp.mkdir();
           File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
           if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
@@ -263,8 +273,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       XPathExpression expr;
       NodeList remotePackages;
 
-      if (Preferences.get("android.system.image.type").equals("arm"))
-        expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
+      if (abi.equals("arm"))
+        expr = xpath.compile("//remotePackage[contains(@path, '" + AVD.TARGET_SDK_ARM + "')" +
               "and contains(@path, \"armeabi-v7a\")]");
       else
         expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
@@ -292,11 +302,14 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
       } else {
         Document docSysImg = db.parse(new URL(repositoryUrl).openStream());
-        remotePackages = (NodeList) expr.evaluate(docSysImg, XPathConstants.NODESET);
+        remotePackages = (NodeList) expr.evaluate(docSysImg, XPathConstants.NODESET); 
         NodeList childNodes = remotePackages.item(0).getChildNodes(); // Index 1 contains x86_64
-
+          
         NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
         //NodeList abi = ((Element) typeDetails.item(0)).getElementsByTagName("abi");
+        //NodeList api = ((Element) typeDetails.item(0)).getElementsByTagName("api-level");
+        //System.out.println(api.item(0).getTextContent());          
+          
         NodeList tag = ((Element) typeDetails.item(0)).getElementsByTagName("tag");
         NodeList id = ((Element) tag.item(0)).getElementsByTagName("id");
         urlHolder.sysImgTag = id.item(0).getTextContent();
@@ -309,7 +322,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
 
         urlHolder.sysImgFilename  =  url.item(0).getTextContent();
-        urlHolder.sysImgUrl = SYS_IMAGES_URL + urlHolder.sysImgFilename;
+        String imgUrl = abi.equals("arm") ? SYS_IMAGES_ARM_URL : SYS_IMAGES_PHONE_URL;
+        urlHolder.sysImgUrl = imgUrl + urlHolder.sysImgFilename;
         urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
       }
     }
@@ -337,7 +351,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  static public int showMessage() {
+  static public int showSysImageMessage() {
     String htmlString = "<html> " +
             "<head> <style type=\"text/css\">" +
             "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " +
@@ -375,7 +389,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   }
 
   public SysImageDownloader(Frame editor, boolean wear) {
-    super(editor, "Emulator download", true);
+    super(editor, "System image download", true);
     this.editor = editor;
     this.wear = wear;
     this.result = false;    
@@ -385,15 +399,20 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   public void run() {
     cancelled = false;
 
-    final int result = showMessage();
-    if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
-      // ARM
-      Preferences.set("android.system.image.type", "arm");
-    } else {
-      // x86
-      Preferences.set("android.system.image.type", "x86");
-      installHAXM();
+    abi = Preferences.get("android.emulator.image.abi");
+    if (abi == null || abi.equals(AVD.DEFAULT_ABI)) {
+      // Either there was no image architecture selected, or the default was set.
+      // In this case, we give the user the option to choose between ARM and x86
+      final int result = showSysImageMessage();
+      if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
+        abi = "arm";
+      } else {
+        abi = "x86";
+        installHAXM();
+      }
+      Preferences.set("android.emulator.image.abi", abi);
     }
+    
     downloadTask = new DownloadTask();
     downloadTask.addPropertyChangeListener(this);
     downloadTask.execute();
@@ -462,8 +481,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
-    String labelText = wear ? "Downloading Wear system image..." :
-                              "Downloading system image...";
+    String labelText = wear ? "Downloading watch system image..." :
+                              "Downloading phone system image...";
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textarea);
