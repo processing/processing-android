@@ -329,9 +329,9 @@ public class AVD {
     // TODO : Find a better way to get the list of installed images
     ProcessBuilder pb = new ProcessBuilder(cmd);
     
-    //if (Base.DEBUG) {
-    System.out.println(processing.core.PApplet.join(cmd, " "));
-  //}    
+    if (Base.DEBUG) {
+      System.out.println(processing.core.PApplet.join(cmd, " "));
+    }
 
     Map<String, String> env = pb.environment();
     env.clear();
@@ -345,12 +345,12 @@ public class AVD {
       output.addTarget(new LineProcessor() {
         @Override
         public void processLine(String line) {
-          System.out.println("DUMMY ---> " + line);
+          System.out.println("dummy output ---> " + line);
           if (images != null && 
               line.contains(";" + imagePlatform) &&
               line.contains(";" + imageTag) &&
               line.contains(";" + imageAbi)) {
-            System.out.println("  added!");
+            System.out.println("  added image!");
             images.add(line);
           }
         }
@@ -402,9 +402,9 @@ public class AVD {
     
     ProcessBuilder pb = new ProcessBuilder(cmd);
     
-    //if (Base.DEBUG) {
+    if (Base.DEBUG) {
       System.out.println(processing.core.PApplet.join(cmd, " "));
-    //}
+    }
     
     // avdmanager create avd -n "Wear-Processing-0254" -k "system-images;android-25;google_apis;x86" -c 64M
 

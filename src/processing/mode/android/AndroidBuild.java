@@ -786,11 +786,8 @@ class AndroidBuild extends JavaBuild {
   
   private File zipalignPackage(File signedPackage, File projectFolder) 
       throws IOException, InterruptedException {
-
-    File buildToolsFolder = new File(sdk.getSdkFolder(), "build-tools").listFiles()[0]; 
-    String zipalignPath = buildToolsFolder.getAbsolutePath() + "/zipalign";
-    if (Platform.isWindows()) zipalignPath += ".exe";    
-    if (!new File(zipalignPath).exists()) {
+    File zipAlign = sdk.getZipAlignTool();
+    if (zipAlign == null || !zipAlign.exists()) {
       Messages.showWarning("Cannot find zipaling...",
           "The zipalign build tool needed to prepare the export package is missing.\n" +
           "Make sure that your Android SDK was downloaded correctly.");
@@ -801,7 +798,7 @@ class AndroidBuild extends JavaBuild {
         module + "/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
 
     String[] args = {
-        zipalignPath, "-v", "-f", "4",
+        zipAlign.getAbsolutePath(), "-v", "-f", "4",
         signedPackage.getAbsolutePath(), alignedPackage.getAbsolutePath()
     };
         

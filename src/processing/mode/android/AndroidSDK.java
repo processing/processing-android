@@ -322,6 +322,16 @@ class AndroidSDK {
   } 
   
   
+  public File getZipAlignTool() {    
+    File[] files = buildTools.listFiles();
+    String name = Platform.isWindows() ? "zipalign.exe" : "zipalign";
+    for (File f: files) {
+      File z = new File(f, name);
+      if (z.exists()) return z;
+    }
+    return null;
+  }
+  
   static public File getHAXMInstallerFolder() {
     String sdkPrefsPath = Preferences.get("android.sdk.path");    
     File sdkPath = new File(sdkPrefsPath);
@@ -385,12 +395,9 @@ class AndroidSDK {
     }    
     
     final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
-    System.out.println("ANDROID_SDK: " + sdkEnvPath);
     if (sdkEnvPath != null) {
       try {
         final AndroidSDK androidSDK = new AndroidSDK(new File(sdkEnvPath));
-        
-        System.out.println("ENVIRONMENT SDK CAN BE USED BY PROCESSING!!");
         
         if (checkEnvSDK && editor != null) {
           // There is a valid SDK in the environment, but let's give the user
