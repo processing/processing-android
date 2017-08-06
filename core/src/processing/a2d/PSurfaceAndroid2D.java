@@ -53,6 +53,9 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (CanvasWatchFaceService)component;
       surfaceView = null;
+      // Set as ready here, as watch faces don't have a surface view with a
+      // surfaceCreate() event to do it.
+      surfaceReady = true;
     }
   }
 

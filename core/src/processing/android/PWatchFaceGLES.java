@@ -143,16 +143,10 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     private boolean lowBitAmbient = false;
     private boolean burnInProtection = false;
 
-
-    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
       setWatchFaceStyle(new WatchFaceStyle.Builder(PWatchFaceGLES.this)
-              .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
-              .setAmbientPeekMode(WatchFaceStyle.AMBIENT_PEEK_MODE_HIDDEN)
-              .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
-              .setShowSystemUiTime(false)
               .setAcceptsTapEvents(true)
               .build());
       sketch = createSketch();

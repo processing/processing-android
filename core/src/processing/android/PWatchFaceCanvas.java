@@ -108,8 +108,8 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
   public boolean canDraw() {
-    // The rendering loop should never call handleDraw() directly, it only needs to invalidate the
-    // screen
+    // The rendering loop should never call handleDraw() directly,
+    // it only needs to invalidate the screen
     return false;
   }
 
@@ -144,15 +144,10 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     private boolean lowBitAmbient = false;
     private boolean burnInProtection = false;
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(SurfaceHolder surfaceHolder) {
       super.onCreate(surfaceHolder);
       setWatchFaceStyle(new WatchFaceStyle.Builder(PWatchFaceCanvas.this)
-              .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
-              .setAmbientPeekMode(WatchFaceStyle.AMBIENT_PEEK_MODE_HIDDEN)
-              .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
-              .setShowSystemUiTime(false)
               .setAcceptsTapEvents(true)
               .build());
       sketch = createSketch();
