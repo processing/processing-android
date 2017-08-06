@@ -66,7 +66,9 @@ public class PSurfaceGLES extends PSurfaceNone {
       surfaceView = new SurfaceViewGLES(wallpaper, holder);
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (Gles2WatchFaceService)component;
-      surfaceView = null;
+      // Set as ready here, as watch faces don't have a surface view with a
+      // surfaceCreate() event to do it.
+      surfaceReady = true;
     }
     glsurf = (SurfaceViewGLES)surfaceView;
   }
