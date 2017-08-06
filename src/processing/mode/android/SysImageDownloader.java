@@ -74,7 +74,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       "You chose to run x86 images in the emulator. This is great but you need " + 
       "to install the Intel Hardware Accelerated Execution Manager (Intel HAXM).<br><br>" + 
       "Processing will try to run the HAXM installer now, which may ask for your " + 
-      "administrator password or additional permissions. Good luck!";
+      "administrator password or additional permissions.";
   
   private static final String KVM_LINUX_GUIDE_URL =
       "https://developer.android.com/studio/run/emulator-acceleration.html#vm-linux";
@@ -83,7 +83,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       "You chose to run x86 images in the emulator. This is great but you need " + 
       "to configure VM acceleration on Linux using the KVM package.<br><br>" + 
       "Follow <a href=\"" + KVM_LINUX_GUIDE_URL + "\">these instructions</a> " + 
-      "to configure KVM. Good luck!";      
+      "to configure KVM.";      
   
   private static final String IA32LIBS_TITLE = "Additional setup may be required...";
   private static final String IA32LIBS_MESSAGE = 
@@ -386,7 +386,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pane.setBackground(label.getBackground());
 
     String[] options = new String[] {
-            "Slow but safe", "I like speed!"
+            "Use x86 image", "Use ARM image"
     };
     int result = JOptionPane.showOptionDialog(null, pane, title,
             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -417,10 +417,10 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       // In this case, we give the user the option to choose between ARM and x86
       final int result = showSysImageMessage();
       if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
-        abi = "arm";
-      } else {
         abi = "x86";
         installHAXM();
+      } else {
+        abi = "arm";        
       }
       Preferences.set("android.emulator.image.abi", abi);
     }

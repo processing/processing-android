@@ -345,12 +345,12 @@ public class AVD {
       output.addTarget(new LineProcessor() {
         @Override
         public void processLine(String line) {
-          System.out.println("dummy output ---> " + line);
+//          System.out.println("dummy output ---> " + line);
           if (images != null && 
               line.contains(";" + imagePlatform) &&
               line.contains(";" + imageTag) &&
               line.contains(";" + imageAbi)) {
-            System.out.println("  added image!");
+//            System.out.println("  added image!");
             images.add(line);
           }
         }

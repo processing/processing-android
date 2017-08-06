@@ -133,15 +133,28 @@ class AndroidSDK {
 
   private static final String PROCESSING_FOR_ANDROID_URL = 
       "http://android.processing.org/";    
-    
+  
+  private static final String WHATS_NEW_URL =
+      "http://android.processing.org/whatsnew.html";
+  
   private static final String DRIVER_INSTALL_URL = 
       "https://developer.android.com/studio/run/oem-usb.html#InstallingDriver";    
   
   private static final String SDK_INSTALL_MESSAGE =
       "Processing just downloaded and installed the Android SDK succesfully. " + 
       "The Android mode is now ready to use!<br><br>" + 
-      "For more information (reference, examples, and tutorials) " + 
-      "visit the <a href=\"" + PROCESSING_FOR_ANDROID_URL + "\">Processing for Android website</a>";
+      "For documentation, examples, and tutorials, " + 
+      "visit the <a href=\"" + PROCESSING_FOR_ANDROID_URL + "\">Processing for Android website</a>, and " +
+      "if you updated from version 3 of the mode, check the <a href=\"" + WHATS_NEW_URL + "\">what's new page</a>."; 
+  
+  private static final String SDK_EXISTS_TITLE = "SDK configured!";
+  
+  private static final String SDK_EXISTS_MESSAGE =
+      "Processing will use the existing Android SDK. " + 
+      "The Android mode is now ready to use!<br><br>" + 
+      "For documentation, examples, and tutorials, " + 
+      "visit the <a href=\"" + PROCESSING_FOR_ANDROID_URL + "\">Processing for Android website</a>, and " +
+      "if you updated from version 3 of the mode, check the <a href=\"" + WHATS_NEW_URL + "\">what's new page</a>.";
   
   private static final String DRIVER_INSTALL_MESSAGE = "<br><br>" +
       "If you are planning to use Google Nexus devices, then you need the " + 
@@ -414,6 +427,13 @@ class AndroidSDK {
         // gets knocked out later. For instance, by that pesky Eclipse,
         // which nukes all env variables when launching from the IDE.
         Preferences.set("android.sdk.path", sdkEnvPath);
+        
+        // If we are here, it means that there was no SDK path in the preferences
+        // and the user wants to use the SDK found in the environment. This
+        // means we just installed the mode for the first time, so we show a 
+        // welcome message with some useful info.
+        AndroidUtil.showMessage(SDK_EXISTS_TITLE, SDK_EXISTS_MESSAGE);
+        
         return androidSDK;
       } catch (final BadSDKException badEnv) { 
         Preferences.unset("android.sdk.path");        
