@@ -95,7 +95,7 @@ class AndroidSDK {
   private static final String INVALID_SDK_MESSAGE =
       "Processing found an Android SDK, but is not valid. It could be missing " +
       "some files, or might not be including the required platform for " + 
-      "API " + AndroidBuild.TARGET_SDK + "<br><br>" + 
+      "API " + AndroidBuild.TARGET_SDK + ".<br><br>" + 
       "If a valid SDK is available in a different location, " +
       "click \"Locate SDK path\" to select it, or \"Download SDK\" to let " +
       "Processing download the SDK automatically.<br><br>" +
@@ -395,8 +395,7 @@ class AndroidSDK {
     // Give priority to preferences:
     // https://github.com/processing/processing-android/issues/372
     final String sdkPrefsPath = Preferences.get("android.sdk.path");
-    System.out.println("Processing preferences: " + sdkPrefsPath);
-    if (sdkPrefsPath != null) {
+    if (sdkPrefsPath != null && !sdkPrefsPath.equals("")) {
       try {
         final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath));
         Preferences.set("android.sdk.path", sdkPrefsPath);
@@ -408,7 +407,7 @@ class AndroidSDK {
     }    
     
     final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
-    if (sdkEnvPath != null) {
+    if (sdkEnvPath != null && !sdkEnvPath.equals("")) {
       try {
         final AndroidSDK androidSDK = new AndroidSDK(new File(sdkEnvPath));
         
@@ -417,7 +416,7 @@ class AndroidSDK {
           // the option to not to use it. After this, we should go straight to 
           // download a new SDK.
           int result = showEnvSDKDialog(editor);
-          if (result == JOptionPane.NO_OPTION) {
+          if (result != JOptionPane.YES_OPTION) {
             loadError = SKIP_ENV_SDK;
             return null;
           } 
