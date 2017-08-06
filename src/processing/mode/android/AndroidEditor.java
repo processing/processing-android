@@ -107,7 +107,7 @@ public class AndroidEditor extends JavaEditor {
       if (androidMode == null || androidMode.getSDK() == null) return;
       
       if (appComponent == AndroidBuild.WATCHFACE) {
-        Devices.enableBlueToothDebugging();
+        Devices.enableBluetoothDebugging();
       }
 
       final Devices devices = Devices.getInstance();

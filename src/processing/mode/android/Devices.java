@@ -80,11 +80,22 @@ class Devices {
     }
   }
 
-  public static void enableBlueToothDebugging() {
+  public static void enableBluetoothDebugging() {
+    final Devices devices = Devices.getInstance();
+    java.util.List<Device> deviceList = devices.findMultiple(false);
+    
+    if (deviceList.size() != 1) {
+      // There is more than one non-emulator device connected to the computer,
+      // but don't know which one the watch could be paired to... or the watch
+      // is already paired to the phone, in which case we don't need to keep
+      // trying to connect.
+      return;
+    }
+    Device device = deviceList.get(0);
     try {
-      // Enable debugging over bluetooth
+      // Try Enable debugging over bluetooth
       // http://developer.android.com/training/wearables/apps/bt-debugging.html
-      AndroidSDK.runADB("forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
+      AndroidSDK.runADB("-s", device.getId(), "forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
       AndroidSDK.runADB("connect", "127.0.0.1:" + BT_DEBUG_PORT);
     } catch (final Exception e) {
       e.printStackTrace();
