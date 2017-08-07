@@ -5,6 +5,9 @@
   <!-- path to the main processing repo --> 
   <property name="processing.dir" value="../processing" />
 
+  <!-- path to the android sdk -->
+  <property name="sdk.dir" value="/Users/andres/code/android/android-studio/sdk" />
+	
   <property name="core.jar.path" value="processing-core.zip" />
   <property name="mode.jar.path" value="mode/AndroidMode.jar" />
   <property name="mode.dist.path" value="release/AndroidMode.zip" />
@@ -28,9 +31,6 @@
     <!-- env used to set classpath below -->
     <property environment="env" />
 
-<!--
-	   classpath="../core/library/core.jar; lib/ant.jar; lib/ant-launcher.jar; lib/antlr.jar; lib/apple.jar; lib/jdt-core.jar; lib/jna.jar; lib/org-netbeans-swing-outline.jar;lib/com.ibm.icu_4.4.2.v20110823.jar;lib/jdi.jar;lib/jdimodel.jar;lib/org.eclipse.osgi_3.8.1.v20120830-144521.jar"
--->
     <javac source="1.7" 
 	   target="1.7" 
 	   destdir="bin" 
@@ -38,11 +38,9 @@
 	   includeAntRuntime="false"
  	   classpath="${processing.dir}/core/library/core.jar;
  	              ${processing.dir}/java/mode/JavaMode.jar; 
-      		      ${processing.dir}/java/mode/antlr.jar;
-		            ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
-                ${processing.dir}/app/pde.jar;
-                ${processing.dir}/app/lib/ant.jar;
-                ${processing.dir}/app/lib/ant-launcher.jar"
+                  ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
+                  ${processing.dir}/app/pde.jar;
+                  mode/gradle-tooling-api-4.0.jar"
 	   debug="on">
       <src path="src" />
     </javac>
@@ -53,35 +51,10 @@
     <jar basedir="bin" destfile="${mode.jar.path}" />
   </target>
 
- 
-  <!-- now that this is standalone, probably not really needed -->
-<!--
-  <target name="android-dist-check">
--->
-    <!-- ensure that the processing-core.zip file has been built -->
-<!--
-    <available file="${core.jar.path}" 
-	       property="android-core-present" />
--->
-    <!--<echo message="${target.path}/modes/android/processing-core.zip" />-->
-<!--
-    <fail unless="android-core-present" 
-	  message="processing-core.zip was not built, but is required for dist. Install the Android tools, set ANDROID_SDK, and try again." />
-  </target>
--->
-
 
   <target name="dist" depends="build" 
 	  description="Create AndroidMode.zip and AndroidMode.txt">
     <mkdir dir="release" />
-
-<!--  	
-    <copy todir="mode">
-      <fileset dir="core/library">
-	    <include name="*.jar" />
-      </fileset>
-    </copy>
--->
   	
     <zip destfile="${mode.dist.path}">
       <zipfileset dir="." prefix="AndroidMode">
@@ -92,6 +65,8 @@
         <include name="examples/**" />
         <include name="icons/**" />
         <include name="theme/**" />
+      	<include name="tools/SDKUpdater/tool/**" />
+        <include name="tools/SDKUpdater/src/**" />      	
         <include name="libraries/vr/library.properties" />        
         <include name="libraries/vr/examples/**" />
         <include name="libraries/vr/gvrsdk/**" />
@@ -112,13 +87,14 @@
   
   <target name="subprojects-clean">
     <subant buildpath="core" target="clean"/>
-    <subant buildpath="libraries/vr" target="clean"/>    
+    <subant buildpath="tools/SDKUpdater" target="clean"/>  	
+    <subant buildpath="libraries/vr" target="clean"/>
   </target>
     
   <target name="subprojects-build">
     <subant buildpath="core" target="build"/>
-    <subant buildpath="libraries/vr" target="build"/>    
+  	<subant buildpath="tools/SDKUpdater" target="build"/>
+    <subant buildpath="libraries/vr" target="build"/>  	
   </target>
-  
 
 </project>

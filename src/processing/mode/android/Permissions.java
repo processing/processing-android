@@ -44,15 +44,21 @@ public class Permissions extends JFrame {
   static final String GUIDE_URL =
     "https://developer.android.com/training/articles/security-tips.html#Permissions";
 
-  static final int BORDER_HORIZ = 5;
-  static final int BORDER_VERT = 3;
-
+  static final int BORDER_HORIZ = Toolkit.zoom(5);
+  static final int BORDER_VERT = Toolkit.zoom(3);
+  static final int CELL_HEIGHT = Toolkit.zoom(20);
+  static final int BORDER = Toolkit.zoom(13);
+  static final int TEXT_WIDTH = Toolkit.zoom(400);
+  static final int TEXT_HEIGHT = Toolkit.zoom(80);
+  static final int URL_WIDTH = Toolkit.zoom(400);
+  static final int URL_HEIGHT = Toolkit.zoom(30);
+  static final int DESC_WIDTH = Toolkit.zoom(400);
+  static final int DESC_HEIGHT = Toolkit.zoom(50);
+  static final int GAP = Toolkit.zoom(8);
+  
   JScrollPane permissionScroller;
   JList<JCheckBox> permissionList;
   JLabel descriptionLabel;
-//  JTextArea descriptionLabel;
-
-//  Editor editor;
   Sketch sketch;
   
   int appComp;
@@ -61,43 +67,12 @@ public class Permissions extends JFrame {
 
 
   public Permissions(Sketch sketch, int appComp, File modeFolder) {
-  //public Permissions(Editor editor) {
     super("Android Permissions Selector");
     this.appComp = appComp;
     this.sketch = sketch;
     this.modeFolder = modeFolder;
-//    this.editor = editor;
-
-//    XMLElement xml =
 
     permissionList = new CheckBoxList();
-//    permissionList.addMouseListener(new MouseAdapter() {
-//      public void mousePressed(MouseEvent e) {
-//        if (isEnabled()) {
-//          int index = permissionList.locationToIndex(e.getPoint());
-//          if (index == -1) {
-//            descriptionLabel.setText("");
-//          } else {
-////            descriptionLabel.setText("<html>" + description[index] + "</html>");
-//            descriptionLabel.setText(description[index]);
-//          }
-//        }
-//      }
-//    });
-
-//    ListSelectionModel lsm = permissionList.getSelectionModel();
-//    lsm.addListSelectionListener(new ListSelectionListener() {
-//      public void valueChanged(ListSelectionEvent e) {
-////        ListSelectionModel lsm = (ListSelectionModel) e.getSource();
-//        int index = e.getFirstIndex();
-//        if (index == -1) {
-//          descriptionLabel.setText("");
-//        } else {
-//          descriptionLabel.setText("<html>" + description[index] + "</html>");
-////          descriptionLabel.setText(description[index]);
-//        }
-//      }
-//    });
     permissionList.addListSelectionListener(new ListSelectionListener() {
       public void valueChanged(ListSelectionEvent e) {
         if (e.getValueIsAdjusting() == false) {
@@ -106,16 +81,11 @@ public class Permissions extends JFrame {
             descriptionLabel.setText("");
           } else {
             descriptionLabel.setText("<html>" + description[index] + "</html>");
-            //descriptionLabel.setText(description[index]);
           }
         }
       }
     });
-//    permissionList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-//    permissionList.setFixedCellWidth(300);
-//    int h = permissionList.getFixedCellHeight();
-//    permissionList.setFixedCellHeight(h + 8);
-    permissionList.setFixedCellHeight(20);
+    permissionList.setFixedCellHeight(CELL_HEIGHT);
     permissionList.setBorder(new EmptyBorder(BORDER_VERT, BORDER_HORIZ,
                                              BORDER_VERT, BORDER_HORIZ));
 
@@ -129,10 +99,7 @@ public class Permissions extends JFrame {
       new JScrollPane(permissionList,
                       ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                       ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//    permissionList.setVisibleRowCount(20);
     permissionList.setVisibleRowCount(12);
-//    permissionList.setPreferredSize(new Dimension(400, 300));
-//    permissionsScroller.setPreferredSize(new Dimension(400, 300));
     permissionList.addKeyListener(new KeyAdapter() {
       public void keyTyped(KeyEvent e) {
         if (e.getKeyChar() == ' ') {
@@ -146,14 +113,9 @@ public class Permissions extends JFrame {
     });
 
     Container outer = getContentPane();
-//    outer.setLayout(new BorderLayout());
-
-//    JPanel pain = new JPanel();
-    Box pain = Box.createVerticalBox();
-    pain.setBorder(new EmptyBorder(13, 13, 13, 13));
-//    outer.add(pain, BorderLayout.CENTER);
-    outer.add(pain);
-//    pain.setLayout(new BoxLayout(pain, BoxLayout.Y_AXIS));
+    Box vbox = Box.createVerticalBox();
+    vbox.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
+    outer.add(vbox);
 
     String labelText =
       "<html>" +
@@ -162,104 +124,41 @@ public class Permissions extends JFrame {
       "or make phone calls. When installing your application,\n" +
       "users will be asked whether they want to allow such access.</html>";
     String urlText = "<html>More about permissions can be found " +
-        "<a href=\"" + GUIDE_URL + "\">here</a>.</html>"; 
-    
-//      "<html>" +
-//      "Android applications must specifically ask for permission\n" +
-//      "to do things like connect to the internet, write a file,\n" +
-//      "or make phone calls. When installing your application,\n" +
-//      "users will be asked whether they want to allow such access.\n" +
-//      "More about permissions can be found " +
-//      "<a href=\"" + GUIDE_URL + "\">here</a>.</body></html>";
-//    JTextArea textarea = new JTextArea(labelText);
-//    JTextArea textarea = new JTextArea(5, 40);
-//    textarea.setText(labelText);
+        "<a href=\"" + GUIDE_URL + "\">here</a>.</html>";     
     JLabel textarea = new JLabel(labelText);
     JLabel urlarea = new JLabel(urlText);
-//    JLabel textarea = new JLabel(labelText) {
-//      public Dimension getPreferredSize() {
-//        return new Dimension(400, 100);
-//      }
-//      public Dimension getMinimumSize() {
-//        return getPreferredSize();
-//      }
-//      public Dimension getMaximumSize() {
-//        return getPreferredSize();
-//      }
-//    };
-    textarea.setPreferredSize(new Dimension(400, 80));
-    urlarea.setPreferredSize(new Dimension(400, 30));
+    textarea.setPreferredSize(new Dimension(TEXT_WIDTH, TEXT_HEIGHT));
+    urlarea.setPreferredSize(new Dimension(URL_WIDTH, URL_HEIGHT));
     urlarea.addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent e) {
         Platform.openURL(GUIDE_URL);
       }
     });
     urlarea.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-    //textarea.setHorizontalAlignment(SwingConstants.LEFT);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     urlarea.setAlignmentX(LEFT_ALIGNMENT);
-
-//    textarea.setBorder(new EmptyBorder(13, 8, 13, 8));
-
-//    textarea.setBackground(null);
-//    textarea.setBackground(Color.RED);
-//    textarea.setEditable(false);
-//    textarea.setHighlighter(null);
-//    textarea.setFont(new Font("Dialog", Font.PLAIN, 12));
-    pain.add(textarea);
-    pain.add(urlarea);
-//    textarea.setForeground(Color.RED);
-//    pain.setBackground(Color.GREEN);
-
-//    permissionList.setEnabled(false);
+    vbox.add(textarea);
+    vbox.add(urlarea);
 
     permissionScroller.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(permissionScroller);
-//    pain.add(permissionList);
-    pain.add(Box.createVerticalStrut(8));
+    vbox.add(permissionScroller);
+    vbox.add(Box.createVerticalStrut(GAP));
 
-//    descriptionLabel = new JTextArea(4, 10);
     descriptionLabel = new JLabel();
-//    descriptionLabel = new JLabel() {
-//      public Dimension getPreferredSize() {
-//        return new Dimension(400, 100);
-//      }
-//      public Dimension getMinimumSize() {
-//        return new Dimension(400, 100);
-//      }
-//      public Dimension getMaximumSize() {
-//        return new Dimension(400, 100);
-//      }
-//    };
-    descriptionLabel.setPreferredSize(new Dimension(400, 50));
+    descriptionLabel.setPreferredSize(new Dimension(DESC_WIDTH, DESC_HEIGHT));
     descriptionLabel.setVerticalAlignment(SwingConstants.TOP);
     descriptionLabel.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(descriptionLabel);
-    pain.add(Box.createVerticalStrut(8));
+    vbox.add(descriptionLabel);
+    vbox.add(Box.createVerticalStrut(GAP));
 
     JPanel buttons = new JPanel();
-//    buttons.setPreferredSize(new Dimension(400, 35));
-//    JPanel buttons = new JPanel() {
-//      public Dimension getPreferredSize() {
-//        return new Dimension(400, 35);
-//      }
-//      public Dimension getMinimumSize() {
-//        return new Dimension(400, 35);
-//      }
-//      public Dimension getMaximumSize() {
-//        return new Dimension(400, 35);
-//      }
-//    };
-
-//    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
     Dimension dim = new Dimension(Toolkit.getButtonWidth(),
-                                  okButton.getPreferredSize().height);
+                                  Toolkit.zoom(okButton.getPreferredSize().height));
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        //PApplet.println(getSelections());
         saveSelections();
         setVisible(false);
       }
@@ -278,15 +177,12 @@ public class Permissions extends JFrame {
     // think different, biznatchios!
     if (Platform.isMacOS()) {
       buttons.add(cancelButton);
-//      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(okButton);
     } else {
       buttons.add(okButton);
-//      buttons.add(Box.createHorizontalStrut(8));
       buttons.add(cancelButton);
     }
-//    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
-    pain.add(buttons);
+    vbox.add(buttons);
 
     JRootPane root = getRootPane();
     root.setDefaultButton(okButton);
@@ -354,21 +250,6 @@ public class Permissions extends JFrame {
   public String getMenuTitle() {
     return "Android Permissions";
   }
-
-
-//  public void init(Editor editor) {
-//    this.editor = editor;
-//  }
-
-
-//  public void run() {
-//    // parse the manifest file here and figure out what permissions are set
-//    Manifest mf = new Manifest(editor);
-//    setSelections(mf.getPermissions());
-//
-//    // show the window and get to work
-//    setVisible(true);
-//  }
 
 
   /**
@@ -590,10 +471,8 @@ class CheckBoxList extends JList<JCheckBox> {
                                                   JCheckBox checkbox,
                                                   int index, boolean isSelected,
                                                   boolean cellHasFocus) {
-//      checkbox.setBorder(new EmptyBorder(13, 5, 3, 5));  // trying again
       checkbox.setBackground(isSelected ? getSelectionBackground() : getBackground());
       checkbox.setForeground(isSelected ? getSelectionForeground() : getForeground());
-      //checkbox.setEnabled(isEnabled());
       checkbox.setEnabled(list.isEnabled());
       checkbox.setFont(getFont());
       checkbox.setFocusPainted(false);
@@ -601,14 +480,5 @@ class CheckBoxList extends JList<JCheckBox> {
       checkbox.setBorder(isSelected ? UIManager.getBorder("List.focusCellHighlightBorder") : noFocusBorder);
       return checkbox;
     }
-
-//    @Override
-//    public Component getListCellRendererComponent(JList<? extends JCheckBox> list,
-//                                                  JCheckBox value, int index,
-//                                                  boolean isSelected,
-//                                                  boolean cellHasFocus) {
-//      // TODO Auto-generated method stub
-//      return null;
-//    }
   }
 }

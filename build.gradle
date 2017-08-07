@@ -14,6 +14,7 @@ allprojects {
     apply plugin: 'java'
     
     ext.android_platform = "$sdkdir/platforms/android-$sdkver"
+    ext.android_tools_lib = "$sdkdir/platforms/android-$sdkver/tools/lib"
     ext.core_jar_path = "$rootDir/processing-core.zip"
 
     repositories {
@@ -21,7 +22,9 @@ allprojects {
         flatDir dirs: "$rootDir/core/library"
         flatDir dirs: "$rootDir/core/build/libs"
         flatDir dirs: "$rootDir/libraries/vr/library"
+        flatDir dirs: "$sdkdir/tools/lib"        
         flatDir dirs: android_platform
+        flatDir dirs: android_tools_lib
     }
 
     sourceCompatibility = 1.7
@@ -32,9 +35,10 @@ dependencies {
     compile name: 'android'
     compile project(":core")
     compile project(":libraries:vr")
-    compile group: 'org.processing', name: 'core', version: '3.2.3'
-    compile group: 'org.processing', name: 'pde', version: '3.2.3'
-    compile group: 'org.processing', name: 'java-mode', version: '3.2.3'
+    compile group: 'org.processing', name: 'core', version: '3.3.4'
+    compile group: 'org.processing', name: 'pde', version: '3.3.4'
+    compile group: 'org.processing', name: 'java-mode', version: '3.3.4'
+    compile "org.gradle:gradle-tooling-api:4.0"
 }
 
 sourceSets {
@@ -71,13 +75,16 @@ task dist {
 
         Files.copy(file("mode.properties").toPath(),
                    file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+
+        FileUtils.copyDirectory(file("tools/SDKUpdater/tool"), 
+                                file("$root/tools/SDKUpdater/tool"))
+        FileUtils.copyDirectory(file("tools/SDKUpdater/src"), 
+                                file("$root/tools/SDKUpdater/src"))
         
         FileUtils.copyDirectory(file("libraries/vr/examples"), 
                                 file("$root/libraries/vr/examples"))
         FileUtils.copyDirectory(file("libraries/vr/gvrsdk"), 
                                 file("$root/libraries/vr/gvrsdk"))
-        FileUtils.copyDirectory(file("libraries/vr/lib"), 
-                                file("$root/libraries/vr/lib"))    
         FileUtils.copyDirectory(file("libraries/vr/library"), 
                                 file("$root/libraries/vr/library"))
         FileUtils.copyDirectory(file("libraries/vr/src"), 

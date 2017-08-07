@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# This script downloads the GVR SDK, explodes the AAR files, and creates zip packages than
-# can be used by the mode to generate the required libraries to build a VR sketch.
+# This script downloads the GVR SDK, explodes the AAR files, and creates zip 
+# packages than can be used by the mode to generate the required libraries to 
+# build a VR sketch.
 # The steps in the AAR to ZIP conversion were based on this blogpost:
 # https://commonsware.com/blog/2014/07/03/consuming-aars-eclipse.html
 
 # Usage:
 # call with the version number of the GVR SDK package to download and extract, i.e.:
-# ./gvrsdk-update.sh 1.20.0
+# ./gvrsdk-update.sh 1.60.1
 
 ver=$1
 sdk=v$1
@@ -66,9 +67,8 @@ mv gvr-base.jar sdk-base/libs
 # Need the jar also in VR's lib folder
 cp sdk-base/libs/gvr-base.jar ../libraries/vr/library
 
-# Finally, create zip file and mode to the sdk location
-zip -r sdk-base.zip sdk-base
-mv sdk-base.zip ../libraries/vr/gvrsdk/$ver
+# Finally, move aar file to the sdk location
+mv gvr-android-sdk-$ver/libraries/sdk-base-$ver.aar ../libraries/vr/gvrsdk/$ver
 
 ################################################
 # Common package
@@ -96,9 +96,8 @@ mv $nanojar sdk-common/libs
 # Need the jar also in VR's lib folder
 cp sdk-common/libs/gvr-common.jar ../libraries/vr/library
 
-# Finally, create zip file and mode to the sdk location
-zip -r sdk-common.zip sdk-common
-mv sdk-common.zip ../libraries/vr/gvrsdk/$ver
+# Finally, move aar file to the sdk location
+mv gvr-android-sdk-$ver/libraries/sdk-common-$ver.aar ../libraries/vr/gvrsdk/$ver
 
 ################################################
 # Audio package
@@ -126,12 +125,12 @@ mv gvr-audio.jar sdk-audio/libs
 # Need the jar also in VR's lib folder
 cp sdk-audio/libs/gvr-audio.jar ../libraries/vr/library
 
-# Finally, create zip file and mode to the sdk location
-zip -r sdk-audio.zip sdk-audio
-mv sdk-audio.zip ../libraries/vr/gvrsdk/$ver
+# Finally, move aar file to the sdk location
+mv gvr-android-sdk-$ver/libraries/sdk-audio-$ver.aar ../libraries/vr/gvrsdk/$ver
 
 ################################################
 # Cleanup
+
 rm -Rf sdk-base
 rm -Rf base.aar
 

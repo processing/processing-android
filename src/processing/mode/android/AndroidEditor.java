@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -25,14 +25,13 @@ package processing.mode.android;
 import processing.app.Base;
 import processing.app.Mode;
 import processing.app.Platform;
-import processing.app.Preferences;
 import processing.app.Settings;
 import processing.app.SketchException;
+import processing.app.tools.Tool;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
-import processing.core.PApplet;
 import processing.mode.java.JavaEditor;
 import processing.mode.java.preproc.PdePreprocessor;
 
@@ -44,32 +43,32 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.TimerTask;
 
 
 @SuppressWarnings("serial")
 public class AndroidEditor extends JavaEditor {
+  // Component selected by default
+  static public final String DEFAULT_COMPONENT = "app";  
+
+  private JMenu androidMenu;
+  
   private int appComponent;
   
   private Settings settings;
   private AndroidMode androidMode;
 
+  private List<AndroidTool> androidTools;
+  
   private java.util.Timer updateDevicesTimer;
   
   private JCheckBoxMenuItem fragmentItem;
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
   private JCheckBoxMenuItem vrItem;
-    
-  private static final String USB_DRIVER_TITLE = "USB Driver warning";
-  private static final String USB_DRIVER_URL = 
-      "http://developer.android.com/sdk/win-usb.html";
-  private static final String USB_DRIVER_MESSAGEA = 
-      "You might need to install Google USB Driver to run " +
-      "the sketch on your device. Please follow <a href=\"" + USB_DRIVER_URL + "\">this guide</a> " +
-      "to install the driver.<br>";  
-  private static final String USB_DRIVER_MESSAGEB = 
-      "<br>For your reference, the driver is located in:<br>";
   
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
@@ -79,7 +78,10 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
     
-    loadModeSettings();
+    androidTools = loadAndroidTools();
+    addToolsToMenu();
+    
+    loadModeSettings();    
   }  
 
   @Override
@@ -95,15 +97,8 @@ public class AndroidEditor extends JavaEditor {
       this.deviceMenu = deviceMenu;
     }
     
-    private Device selectFirstNonWatchDevice(java.util.List<Device> deviceList) {
-      for (Device device : deviceList) {
-        if (device.hasFeature("watch")) {
-          // Don't include the watch devices to the list, they get their watch
-          // faces through the handheld they are paired with.
-          continue;
-        }
-        return device;
-      }
+    private Device selectFirstDevice(java.util.List<Device> deviceList) {
+      if (0 < deviceList.size()) return deviceList.get(0);
       return null;
     }
 
@@ -112,7 +107,7 @@ public class AndroidEditor extends JavaEditor {
       if (androidMode == null || androidMode.getSDK() == null) return;
       
       if (appComponent == AndroidBuild.WATCHFACE) {
-        Devices.enableBlueToothDebugging();
+        Devices.enableBluetoothDebugging();
       }
 
       final Devices devices = Devices.getInstance();
@@ -132,7 +127,7 @@ public class AndroidEditor extends JavaEditor {
         deviceMenu.removeAll();
 
         if (selectedDevice == null) {
-          selectedDevice = selectFirstNonWatchDevice(deviceList);
+          selectedDevice = selectFirstDevice(deviceList);
           devices.setSelectedDevice(selectedDevice);  
         } else {
           // check if selected device is still connected
@@ -145,17 +140,12 @@ public class AndroidEditor extends JavaEditor {
           }
 
           if (!found) {
-            selectedDevice = selectFirstNonWatchDevice(deviceList);
+            selectedDevice = selectFirstDevice(deviceList);
             devices.setSelectedDevice(selectedDevice);  
           }
         }
 
         for (final Device device : deviceList) {
-          if (device.hasFeature("watch")) {
-            // Don't include the watch devices to the list, they get their watch
-            // faces through the handheld they are paired with.
-            continue;
-          }
           final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
           deviceItem.setEnabled(true);
 
@@ -260,7 +250,7 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildModeMenu() {
-    JMenu menu = new JMenu("Android");
+    androidMenu = new JMenu("Android");
     JMenuItem item;
 
     item = new JMenuItem("Sketch Permissions");
@@ -269,9 +259,9 @@ public class AndroidEditor extends JavaEditor {
         new Permissions(sketch, appComponent, androidMode.getFolder());
       }
     });
-    menu.add(item);
+    androidMenu.add(item);
 
-    menu.addSeparator();
+    androidMenu.addSeparator();
      
     fragmentItem = new JCheckBoxMenuItem("App");
     wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
@@ -285,7 +275,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
-        setAppComponent(AndroidBuild.FRAGMENT);
+        setAppComponent(AndroidBuild.APP);
       }
     });
     wallpaperItem.addActionListener(new ActionListener() {
@@ -324,19 +314,19 @@ public class AndroidEditor extends JavaEditor {
     watchfaceItem.setSelected(false);
     vrItem.setSelected(false);
 
-    menu.add(fragmentItem);
-    menu.add(wallpaperItem);
-    menu.add(watchfaceItem);
-    menu.add(vrItem);
+    androidMenu.add(fragmentItem);
+    androidMenu.add(wallpaperItem);
+    androidMenu.add(watchfaceItem);
+    androidMenu.add(vrItem);
     
-    menu.addSeparator();
+    androidMenu.addSeparator();
 
     final JMenu mobDeveMenu = new JMenu("Devices");
 
     JMenuItem noMobDevItem = new JMenuItem("No connected devices");
     noMobDevItem.setEnabled(false);
     mobDeveMenu.add(noMobDevItem);
-    menu.add(mobDeveMenu);
+    androidMenu.add(mobDeveMenu);
   
     // start updating device menus
     UpdateDeviceListTask task = new UpdateDeviceListTask(mobDeveMenu);
@@ -347,144 +337,17 @@ public class AndroidEditor extends JavaEditor {
     }
     updateDevicesTimer.schedule(task, 5000, 5000);
     
-    menu.addSeparator();
-    
-    /*
-    // TODO: The SDK selection menu will be removed once app publishing is fully
-    // functional: correct minimum SDK level can be inferred from app type 
-    // (fragment, wallpaper, etc), and target SDK from the highest available in
-    // the SDK.
-    final JMenu sdkMenu = new JMenu("Target SDK");
-    
-    JMenuItem defaultItem = new JCheckBoxMenuItem("No available targets");
-    defaultItem.setEnabled(false);
-    sdkMenu.add(defaultItem);
+    androidMenu.addSeparator();
 
-    new Thread() {
-      @Override
-      public void run() {
-        while(androidMode == null || androidMode.getSDK() == null) {
-          try {
-            Thread.sleep(3000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-        updateSdkMenu(sdkMenu);
-      }
-    }.start();
-
-    menu.add(sdkMenu);
-    
-    menu.addSeparator();
-    */
-    
-    item = new JMenuItem("SDK Manager");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        File file = androidMode.getSDK().getAndroidTool();
-        try {
-          Runtime.getRuntime().exec(new String[] { file.getAbsolutePath(), "sdk" });
-        } catch (IOException e1) {
-          e1.printStackTrace();
-        }
-      }
-    });
-    menu.add(item);
-
-    item = new JMenuItem("AVD Manager");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        File file = androidMode.getSDK().getAndroidTool();
-        PApplet.exec(new String[] { file.getAbsolutePath(), "avd" });
-      }
-    });
-    menu.add(item);
-
-    item = new JMenuItem("Reset ADB");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-//        editor.statusNotice("Resetting the Android Debug Bridge server.");
-        Devices.killAdbServer();
-      }
-    });
-    menu.add(item);
-
-    return menu;
+    return androidMenu;
   }
 
-  /*
-  private void updateSdkMenu(final JMenu sdkMenu) {
-    try {
-      ArrayList<AndroidSDK.SDKTarget> targets = androidMode.getSDK().getAvailableSdkTargets();
-
-      if (targets.size() != 0) sdkMenu.removeAll();
-
-      AndroidSDK.SDKTarget lowestTargetAvailable = null;
-      JCheckBoxMenuItem lowestTargetMenuItem = null;
-
-//      String savedTargetVersion = Preferences.get("android.sdk.version");
-      String savedSdkName = Preferences.get("android.sdk.name");
-      boolean savedTargetSet = false;
-
-      for (final AndroidSDK.SDKTarget target : targets) {
-        if (target.version < 19) {
-          // TODO We do not support API level less than 19?
-          continue;
-        }
-        
-        final JCheckBoxMenuItem item = new JCheckBoxMenuItem("API " + target.name + " (" + target.version + ")");
-
-        if (savedTargetSet == false && (lowestTargetAvailable == null || lowestTargetAvailable.version > target.version)) {
-          lowestTargetAvailable = target;
-          lowestTargetMenuItem = item;
-        }
-
-        if (target.name.equals(savedSdkName)) {
-          AndroidBuild.setSdkTarget(target, sketch);
-          item.setState(true);
-          savedTargetSet = true;
-        }
-
-        item.addChangeListener(new ChangeListener() {
-          @Override
-          public void stateChanged(ChangeEvent e) {
-            if (target.name.equals(AndroidBuild.target_sdk_version)) item.setState(true);
-            else item.setState(false);
-          }
-        });
-
-        item.addActionListener(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            AndroidBuild.setSdkTarget(target, sketch);
-
-            for (int i = 0; i < sdkMenu.getItemCount(); i++) {
-              ((JCheckBoxMenuItem) sdkMenu.getItem(i)).setState(false);
-            }
-
-            item.setState(true);
-          }
-        });
-
-        sdkMenu.add(item);
-      }
-
-      if (!savedTargetSet && lowestTargetAvailable != null) {
-        AndroidBuild.setSdkTarget(lowestTargetAvailable, sketch);
-        lowestTargetMenuItem.setState(true);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-*/
 
   private void setAppComponent(int comp) {
     if (appComponent != comp) {
       appComponent = comp;
       
-      if (appComponent == AndroidBuild.FRAGMENT) {
+      if (appComponent == AndroidBuild.APP) {
         settings.set("component", "app");  
       } else if (appComponent == AndroidBuild.WALLPAPER) {
         settings.set("component", "wallpaper");
@@ -497,7 +360,8 @@ public class AndroidEditor extends JavaEditor {
       androidMode.resetManifest(sketch, appComponent);
       androidMode.showSelectComponentMessage(comp); 
     }
-  }  
+  }
+  
   
   /**
    * Uses the main help menu, and adds a few extra options. If/when there's
@@ -538,87 +402,17 @@ public class AndroidEditor extends JavaEditor {
   }
 
 
-
-//  protected void updateMode() {
-//    // When the selection is made, the menu will update itself
-//    boolean active = toggleItem.isSelected();
-//    if (active) {
-//      boolean rolling = true;
-//      if (sdk == null) {
-//        rolling = loadAndroid();
-//      }
-//      if (rolling) {
-//        editor.setHandlers(new RunHandler(), new PresentHandler(),
-//                           new StopHandler(),
-//                           new ExportHandler(),  new ExportAppHandler());
-//        build = new AndroidBuild(editor, sdk);
-//        editor.statusNotice("Android mode enabled for this editor window.");
-//      }
-//    } else {
-//      editor.resetHandlers();
-//      editor.statusNotice("Android mode disabled.");
-//    }
-//  }
-
-
-//  protected boolean loadAndroid() {
-//    statusNotice("Loading Android tools.");
-//
-//    try {
-//      sdk = AndroidSDK.find(this);
-//    } catch (final Exception e) {
-//      Base.showWarning("Android Tools Error", e.getMessage(), null);
-//      statusNotice("Android mode canceled.");
-//      return false;
-//    }
-//
-//    // Make sure that the processing.android.core.* classes are available
-//    if (!checkCore()) {
-//      statusNotice("Android mode canceled.");
-//      return false;
-//    }
-//
-//    statusNotice("Done loading Android tools.");
-//    return true;
-//  }
-
-
-//  static protected File getCoreZipLocation() {
-//    if (coreZipLocation == null) {
-//      coreZipLocation = checkCoreZipLocation();
-//    }
-//    return coreZipLocation;
-//  }
-
-
-//  private boolean checkCore() {
-//    final File target = getCoreZipLocation();
-//    if (!target.exists()) {
-//      try {
-//        final URL url = new URL(ANDROID_CORE_URL);
-//        PApplet.saveStream(target, url.openStream());
-//      } catch (final Exception e) {
-//        Base.showWarning("Download Error",
-//          "Could not download Android core.zip", e);
-//        return false;
-//      }
-//    }
-//    return true;
-//  }
-
-
   @Override
   public void dispose() {
     if (updateDevicesTimer != null) {
       updateDevicesTimer.cancel();
     }
     super.dispose();
-  }  
+  }
+  
   
   public void statusError(String what) {
     super.statusError(what);
-//    new Exception("deactivating RUN").printStackTrace();
-//    toolbar.deactivate(AndroidToolbar.RUN);
     toolbar.deactivateRun();
   }
 
@@ -635,7 +429,6 @@ public class AndroidEditor extends JavaEditor {
   public void handleRunEmulator() {
     new Thread() {
       public void run() {
-//        toolbar.activate(AndroidToolbar.RUN);
         toolbar.activateRun();
         startIndeterminate();
         prepareRun();
@@ -656,41 +449,26 @@ public class AndroidEditor extends JavaEditor {
    * Build the sketch and run it on a device with the debugger connected.
    */
   public void handleRunDevice() {
-    if (Platform.isWindows() && !Preferences.getBoolean("android.warnings.usb_driver")) {
-      Preferences.setBoolean("android.warnings.usb_driver", true);      
-      File sdkFolder = androidMode.getSDK().getSdkFolder();
-      String text = "";
-      File usbDriverFile = new File(sdkFolder, "extras/google/usb_driver");      
-      if (usbDriverFile.exists()) {
-        text = USB_DRIVER_MESSAGEA + USB_DRIVER_MESSAGEB + usbDriverFile.getAbsolutePath();
-      } else {
-        text = USB_DRIVER_MESSAGEA;        
-      }
-      AndroidMode.showMessage(USB_DRIVER_TITLE, text);
-    } else {
-      new Thread() {
-        public void run() {
-          toolbar.activateRun();
-//          toolbar.activate(AndroidToolbar.RUN);
-          startIndeterminate();
-          prepareRun();
-          try {
-            androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
-          } catch (SketchException e) {
-            statusError(e);
-          } catch (IOException e) {
-            statusError(e);
-          }
-          stopIndeterminate();
+    new Thread() {
+      public void run() {
+        toolbar.activateRun();
+        startIndeterminate();
+        prepareRun();
+        try {
+          androidMode.handleRunDevice(sketch, AndroidEditor.this, AndroidEditor.this);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (IOException e) {
+          statusError(e);
         }
-      }.start();
-    }
+        stopIndeterminate();
+      }
+    }.start();
   }
 
 
   public void handleStop() {
     toolbar.deactivateRun();
-//    toolbar.deactivate(AndroidToolbar.RUN);
     stopIndeterminate();
     androidMode.handleStop(this);
   }
@@ -704,11 +482,10 @@ public class AndroidEditor extends JavaEditor {
     if (handleExportCheckModified()) {
       new Thread() {
         public void run() {
-//          toolbar.activate(AndroidToolbar.EXPORT);
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
           statusNotice("Exporting a debug version of the sketch...");
-          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
+          AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
@@ -721,19 +498,10 @@ public class AndroidEditor extends JavaEditor {
             statusError(e);
           }
           stopIndeterminate();
-//          toolbar.deactivate(AndroidToolbar.EXPORT);
           ((AndroidToolbar)toolbar).deactivateExport();
         }
       }.start();
     }
-
-//    try {
-//      buildReleaseForExport("debug");
-//    } catch (final MonitorCanceled ok) {
-//      statusNotice("Canceled.");
-//    } finally {
-//      deactivateExport();
-//    }
   }
 
 
@@ -743,17 +511,18 @@ public class AndroidEditor extends JavaEditor {
    */
   public void handleExportPackage() {
     if (androidMode.checkPackageName(sketch, appComponent) &&
-        androidMode.checkAppIcons(sketch) && handleExportCheckModified()) {
+        androidMode.checkAppIcons(sketch, appComponent) && handleExportCheckModified()) {
       new KeyStoreManager(this);
     }
   }
 
+  
   public void startExportPackage(final String keyStorePassword) {
     new Thread() {
       public void run() {
         startIndeterminate();
         statusNotice("Exporting signed package...");
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
@@ -776,9 +545,11 @@ public class AndroidEditor extends JavaEditor {
     }.start();
   }
   
+  
   public int getAppComponent() {
     return appComponent;
   }
+  
   
   private void loadModeSettings() {
     File sketchProps = new File(sketch.getCodeFolder(), "sketch.properties");    
@@ -787,13 +558,13 @@ public class AndroidEditor extends JavaEditor {
       boolean save = false;
       String component;
       if (!sketchProps.exists()) {
-        component = AndroidBuild.DEFAULT_COMPONENT;
+        component = DEFAULT_COMPONENT;
         settings.set("component", component);
         save = true;
       } else {
         component = settings.get("component");
         if (component == null) {
-          component = AndroidBuild.DEFAULT_COMPONENT;
+          component = DEFAULT_COMPONENT;
           settings.set("component", component);
           save = true;
         }
@@ -801,7 +572,7 @@ public class AndroidEditor extends JavaEditor {
       if (save) settings.save();
       
       if (component.equals("app")) {
-        appComponent = AndroidBuild.FRAGMENT;
+        appComponent = AndroidBuild.APP;
         fragmentItem.setState(true);
       } else if (component.equals("wallpaper")) {
         appComponent = AndroidBuild.WALLPAPER;
@@ -817,6 +588,54 @@ public class AndroidEditor extends JavaEditor {
       if (save) androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
       System.err.println("While creating " + sketchProps + ": " + e.getMessage());
-    }   
+    }
   }
+  
+  private List<AndroidTool> loadAndroidTools() {
+    // This gets called before assigning mode to androidMode...
+    ArrayList<AndroidTool> outgoing = new ArrayList<AndroidTool>();
+    File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
+    AndroidTool tool = null;
+    try {
+      tool = new AndroidTool(toolPath, androidMode.getSDK());
+      tool.init(base);
+      outgoing.add(tool);
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }     
+    Collections.sort(outgoing);
+    return outgoing;
+  }
+  
+  private void addToolsToMenu() {
+    JMenuItem item;
+    
+    for (final Tool tool : androidTools) {
+      item = new JMenuItem(tool.getMenuTitle());
+      item.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          tool.run();
+        }
+      });
+      androidMenu.add(item);      
+    }
+
+//    item = new JMenuItem("AVD Manager");
+//    item.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent e) {
+//        File file = androidMode.getSDK().getAndroidTool();
+//        PApplet.exec(new String[] { file.getAbsolutePath(), "avd" });
+//      }
+//    });
+//    menu.add(item);
+
+    item = new JMenuItem("Reset ADB");
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+//        editor.statusNotice("Resetting the Android Debug Bridge server.");
+        Devices.killAdbServer();
+      }
+    });
+    androidMenu.add(item);    
+  }  
 }

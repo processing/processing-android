@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-17 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -33,14 +33,17 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
-import android.os.Build;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-
+import android.view.ContextMenu.ContextMenuInfo;
 import processing.core.PApplet;
 
 public class PFragment extends Fragment implements AppComponent {
@@ -62,38 +65,21 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   public void initDimensions() {
+    metrics = new DisplayMetrics();
+    size = new Point();
     WindowManager wm = getActivity().getWindowManager();
     Display display = wm.getDefaultDisplay();
-    metrics = new DisplayMetrics();
-    display.getMetrics(metrics);
-
-//    display.getRealMetrics(metrics); // API 17 or higher
-//    display.getRealSize(size);
-
-    size = new Point();
-    if (Build.VERSION.SDK_INT >= 17) {
-      display.getRealSize(size);
-    } else if (Build.VERSION.SDK_INT >= 14) {
-      // Use undocumented methods getRawWidth, getRawHeight
-      try {
-        size.x = (Integer) Display.class.getMethod("getRawWidth").invoke(display);
-        size.y = (Integer) Display.class.getMethod("getRawHeight").invoke(display);
-      } catch (Exception e) {
-        display.getSize(size);
-      }
-    }
+    CompatUtils.getDisplayParams(display, metrics, size);
   }
 
 
   public int getDisplayWidth() {
     return size.x;
-//    return metrics.widthPixels;
   }
 
 
   public int getDisplayHeight() {
     return size.y;
-//    return metrics.heightPixels;
   }
 
 
@@ -225,6 +211,27 @@ public class PFragment extends Fragment implements AppComponent {
     if (sketch != null) sketch.onActivityResult(requestCode, resultCode, data);
   }
 
+  @Override
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    if (sketch != null) sketch.onCreateOptionsMenu(menu, inflater);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item){
+    if (sketch != null) return sketch.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+    if (sketch != null) sketch.onCreateContextMenu(menu, v, menuInfo);
+  }
+
+  @Override
+  public boolean onContextItemSelected(MenuItem item) {
+    if (sketch != null) return sketch.onContextItemSelected(item);
+    return super.onContextItemSelected(item);
+  }
 
   @Override
   public void onConfigurationChanged(Configuration newConfig) {

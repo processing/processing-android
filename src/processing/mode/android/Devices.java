@@ -24,6 +24,7 @@ package processing.mode.android;
 import processing.app.exec.ProcessResult;
 import processing.mode.android.EmulatorController.State;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,11 +80,22 @@ class Devices {
     }
   }
 
-  public static void enableBlueToothDebugging() {
+  public static void enableBluetoothDebugging() {
+    final Devices devices = Devices.getInstance();
+    java.util.List<Device> deviceList = devices.findMultiple(false);
+    
+    if (deviceList.size() != 1) {
+      // There is more than one non-emulator device connected to the computer,
+      // but don't know which one the watch could be paired to... or the watch
+      // is already paired to the phone, in which case we don't need to keep
+      // trying to connect.
+      return;
+    }
+    Device device = deviceList.get(0);
     try {
-      // Enable debugging over bluetooth
+      // Try Enable debugging over bluetooth
       // http://developer.android.com/training/wearables/apps/bt-debugging.html
-      AndroidSDK.runADB("forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
+      AndroidSDK.runADB("-s", device.getId(), "forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
       AndroidSDK.runADB("connect", "127.0.0.1:" + BT_DEBUG_PORT);
     } catch (final Exception e) {
       e.printStackTrace();
@@ -111,10 +123,10 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator(final boolean wear, final boolean gpu) {
+  public Future<Device> getEmulator(final File sdkToolsPath, final boolean wear) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator(wear, gpu);
+        return blockingGetEmulator(sdkToolsPath, wear);
       }
     };
     final FutureTask<Device> task = new FutureTask<Device>(androidFinder);
@@ -123,36 +135,32 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator(final boolean wear, final boolean gpu) {
-//    System.out.println("going looking for emulator");
-    String port = AVD.getPort(wear);
+  private final Device blockingGetEmulator(final File sdkToolsPath, final boolean wear) {
+    String port = AVD.getPreferredPort(wear);
     Device emu = find(true, port);
     if (emu != null) {
-//      System.out.println("found emu " + emu);
       return emu;
     }
-//    System.out.println("no emu found");
 
     EmulatorController emuController = EmulatorController.getInstance(wear);
-//    System.out.println("checking emulator state");
+    if (emuController.getState() == State.RUNNING) {
+      // The emulator is in running state, but did not find any emulator device,
+      // to the most common cause is that it was closed, so we will re-launch it.
+      emuController.setState(State.NOT_RUNNING);
+    }
+    
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
-//        System.out.println("not running, gonna launch");
-        emuController.launch(wear, gpu); // this blocks until emulator boots
-//        System.out.println("not just gonna, we've done the launch");
+        emuController.launch(sdkToolsPath, wear); // this blocks until emulator boots
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");
         e.printStackTrace(System.err);
         return null;
       }
     } else {
-      System.out.println("Emulator is " + emuController.getState() +
-                         ", which is not expected.");
-
+      return null;
     }
-//    System.out.println("and now we're out");
 
-//    System.out.println("Devices.blockingGet thread is " + Thread.currentThread());
     while (!Thread.currentThread().isInterrupted()) {
       //      System.err.println("AndroidEnvironment: looking for emulator in loop.");
       //      System.err.println("AndroidEnvironment: emulatorcontroller state is "
@@ -254,11 +262,7 @@ class Devices {
     final List<String> activeDevices = list();
     for (final String deviceId : activeDevices) {
       if (!devices.containsKey(deviceId)) {
-        Device device = new Device(this, deviceId);
-        if (device.hasFeature("watch")) {
-          // Watches are accessed through the paired mobile devices
-          continue;    
-        }        
+        Device device = new Device(this, deviceId); 
         addDevice(device);
       }
     }

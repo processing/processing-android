@@ -6075,7 +6075,7 @@ public class PGraphicsOpenGL extends PGraphics {
       Texture.Parameters params = new Texture.Parameters(ARGB,
                                                          sampling, mipmap);
       texture = new Texture(this, pixelWidth, pixelHeight, params);
-      texture.invertedY(cameraUp);
+      texture.invertedY(!cameraUp);
       texture.colorBuffer(true);
       setCache(this, texture);
     }
@@ -6086,7 +6086,7 @@ public class PGraphicsOpenGL extends PGraphics {
     updatePixelSize();
     if (texture != null) {
       ptexture = new Texture(this, pixelWidth, pixelHeight, texture.getParameters());
-      ptexture.invertedY(cameraUp);
+      ptexture.invertedY(!cameraUp);
       ptexture.colorBuffer(true);
     }
   }
@@ -6226,7 +6226,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height,
                                   texture.getParameters());
-      filterTexture.invertedY(cameraUp);
+      filterTexture.invertedY(!cameraUp);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.set(texture);
@@ -6296,7 +6296,7 @@ public class PGraphicsOpenGL extends PGraphics {
     loadTexture();
     if (filterTexture == null || filterTexture.contextIsOutdated()) {
       filterTexture = new Texture(this, texture.width, texture.height, texture.getParameters());
-      filterTexture.invertedY(cameraUp);
+      filterTexture.invertedY(!cameraUp);
       filterImage = wrapTexture(filterTexture);
     }
     filterTexture.put(texture, sx, height - (sy + sh), sw, height - sy);
@@ -6616,7 +6616,7 @@ public class PGraphicsOpenGL extends PGraphics {
       img.parent = parent;
     }
     Texture tex = new Texture(this, img.pixelWidth, img.pixelHeight, params);
-    tex.invertedY(!cameraUp); // Pixels are read upside down
+    tex.invertedY(cameraUp); // Pixels are read upside down if camera us pointing up
     setCache(img, tex);
     return tex;
   }

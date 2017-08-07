@@ -48,7 +48,7 @@ import processing.core.PSurfaceNone;
 
 public class PSurfaceGLES extends PSurfaceNone {
   public PGLES pgl;
-  private SketchSurfaceViewGL glsurf;
+  private SurfaceViewGLES glsurf;
 
   public PSurfaceGLES() { }
 
@@ -60,15 +60,17 @@ public class PSurfaceGLES extends PSurfaceNone {
     if (component.getKind() == AppComponent.FRAGMENT) {
       PFragment frag = (PFragment)component;
       activity = frag.getActivity();
-      surfaceView = new SketchSurfaceViewGL(activity, null);
+      surfaceView = new SurfaceViewGLES(activity, null);
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       wallpaper = (WallpaperService)component;
-      surfaceView = new SketchSurfaceViewGL(wallpaper, holder);
+      surfaceView = new SurfaceViewGLES(wallpaper, holder);
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       watchface = (Gles2WatchFaceService)component;
-      surfaceView = null;
+      // Set as ready here, as watch faces don't have a surface view with a
+      // surfaceCreate() event to do it.
+      surfaceReady = true;
     }
-    glsurf = (SketchSurfaceViewGL)surfaceView;
+    glsurf = (SurfaceViewGLES)surfaceView;
   }
 
   @Override
@@ -96,10 +98,10 @@ public class PSurfaceGLES extends PSurfaceNone {
 
   // GL SurfaceView
 
-  public class SketchSurfaceViewGL extends GLSurfaceView {
+  public class SurfaceViewGLES extends GLSurfaceView {
     SurfaceHolder holder;
 
-    public SketchSurfaceViewGL(Context context, SurfaceHolder holder) {
+    public SurfaceViewGLES(Context context, SurfaceHolder holder) {
       super(context);
       this.holder = holder;
 
@@ -139,6 +141,8 @@ public class PSurfaceGLES extends PSurfaceNone {
       setFocusable(true);
       setFocusableInTouchMode(true);
       requestFocus();
+
+      surfaceReady = false; // Will be ready when the surfaceCreated() event is called
     }
 
     @Override
@@ -167,16 +171,18 @@ public class PSurfaceGLES extends PSurfaceNone {
 //        sketch.surfaceChanged();
     }
 
-    // part of SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
       super.surfaceCreated(holder);
+      surfaceReady = true;
+      if (requestedThreadStart) {
+        startThread();
+      }
       if (PApplet.DEBUG) {
         System.out.println("surfaceCreated()");
       }
     }
 
-    // part of SurfaceHolder.Callback
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
       super.surfaceDestroyed(holder);
@@ -234,33 +240,33 @@ public class PSurfaceGLES extends PSurfaceNone {
   // Android specific classes (Renderer, ConfigChooser)
 
 
-  public AndroidRenderer getRenderer() {
+  public RendererGLES getRenderer() {
 //    renderer = new AndroidRenderer();
 //    return renderer;
-    return new AndroidRenderer();
+    return new RendererGLES();
   }
 
 
-  public AndroidContextFactory getContextFactory() {
-    return new AndroidContextFactory();
+  public ContextFactoryGLES getContextFactory() {
+    return new ContextFactoryGLES();
   }
 
 
-  public AndroidConfigChooser getConfigChooser(int samples) {
-    return new AndroidConfigChooser(5, 6, 5, 4, 16, 1, samples);
+  public ConfigChooserGLES getConfigChooser(int samples) {
+    return new ConfigChooserGLES(5, 6, 5, 4, 16, 1, samples);
 //  return new AndroidConfigChooser(8, 8, 8, 8, 16, 8, samples);
   }
 
 
-  public AndroidConfigChooser getConfigChooser(int r, int g, int b, int a,
+  public ConfigChooserGLES getConfigChooser(int r, int g, int b, int a,
                                                int d, int s, int samples) {
-    return new AndroidConfigChooser(r, g, b, a, d, s, samples);
+    return new ConfigChooserGLES(r, g, b, a, d, s, samples);
   }
 
 
-  protected class AndroidRenderer implements Renderer {
+  protected class RendererGLES implements Renderer {
 
-    public AndroidRenderer() {
+    public RendererGLES() {
     }
 
     @Override
@@ -292,7 +298,7 @@ public class PSurfaceGLES extends PSurfaceNone {
   }
 
 
-  protected class AndroidContextFactory implements
+  protected class ContextFactoryGLES implements
     GLSurfaceView.EGLContextFactory {
     public EGLContext createContext(EGL10 egl, EGLDisplay display,
         EGLConfig eglConfig) {
@@ -311,7 +317,7 @@ public class PSurfaceGLES extends PSurfaceNone {
   }
 
 
-  protected class AndroidConfigChooser implements EGLConfigChooser {
+  protected class ConfigChooserGLES implements EGLConfigChooser {
     // Desired size (in bits) for the rgba color, depth and stencil buffers.
     public int redTarget;
     public int greenTarget;
@@ -405,7 +411,7 @@ public class PSurfaceGLES extends PSurfaceNone {
       EGL10.EGL_SAMPLE_BUFFERS, 0,
       EGL10.EGL_NONE };
 
-    public AndroidConfigChooser(int rbits, int gbits, int bbits, int abits,
+    public ConfigChooserGLES(int rbits, int gbits, int bbits, int abits,
                                 int dbits, int sbits, int samples) {
       redTarget = rbits;
       greenTarget = gbits;

@@ -21,20 +21,18 @@
 
 package processing.mode.android;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import processing.app.Base;
-import processing.app.Preferences;
+import processing.app.Platform;
 import processing.app.exec.*;
 
 import processing.core.PApplet;
 
 
 class EmulatorController {
-  public final static String DEFAULT_PORT = "5566";
-  public final static String WEAR_PORT = "5576";
-  
   public static enum State {
     NOT_RUNNING, WAITING_FOR_BOOT, RUNNING
   }
@@ -60,45 +58,31 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(boolean wear, boolean gpu) throws IOException {
+  synchronized public void launch(File sdkToolsPath, boolean wear) 
+      throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
       throw new IllegalStateException(illegal);
     }
 
-    String portString = null;
-    if (wear) {
-      portString = Preferences.get("android.emulator.wear.port");
-      if (portString == null) {
-        portString = WEAR_PORT;
-        Preferences.set("android.emulator.wear.port", portString);
-      }
-    } else {
-      portString = Preferences.get("android.emulator.default.port");
-      if (portString == null) {
-        portString = DEFAULT_PORT;
-        Preferences.set("android.emulator.default.port", portString);
-      }
-    }
-
-    // See http://developer.android.com/guide/developing/tools/emulator.html
-    String avdName;
-    if (wear) {
-      avdName = AVD.wearAVD.name;
-    } else {
-      avdName = AVD.mobileAVD.name;
-    }
+    // Emulator options:
+    // https://developer.android.com/studio/run/emulator-commandline.html
+    String avdName = AVD.getName(wear);
     
-    String gpuFlag = gpu ? "on" : "off";
+    String portString = AVD.getPreferredPort(wear);
+        
+    // We let the emulator decide what's better for hardware acceleration:
+    // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
+    String gpuFlag = "auto";
+    
+    File emulatorPath = Platform.isWindows() ? new File(sdkToolsPath, "emulator.exe") :
+                                               new File(sdkToolsPath, "emulator");
     final String[] cmd = new String[] {
-      "emulator",
+      emulatorPath.getCanonicalPath(),
       "-avd", avdName,
       "-port", portString,
-//      "-no-boot-anim",  // does this do anything?
-      // http://code.google.com/p/processing/issues/detail?id=1059
-      "-gpu", gpuFlag  // enable OpenGL
+      "-gpu", gpuFlag
     };
-    
     
     //System.err.println("EmulatorController: Launching emulator");
     if (Base.DEBUG) {

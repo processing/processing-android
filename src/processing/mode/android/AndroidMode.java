@@ -29,57 +29,44 @@ import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.Sketch;
 import processing.app.SketchException;
-import processing.app.Util;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
-import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.concurrent.Future;
 
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-
-
+/** 
+ * Programming mode to create and run Processing sketches on Android devices.
+ */
 public class AndroidMode extends JavaMode {
   private AndroidSDK sdk;
   private File coreZipLocation;
   private AndroidRunner runner;
   
-  private boolean showBluetoothDebugMessage = true;
+  private boolean showWatchFaceDebugMessage = true;
+  private boolean showWatchFaceSelectMessage = true;
   private boolean showWallpaperSelectMessage = true;
   
   private boolean checkingSDK = false;
   private boolean userCancelledSDKSearch = false;
 
   private static final String BLUETOOTH_DEBUG_URL = 
-      "http://developer.android.com/training/wearables/apps/bt-debugging.html";
+      "https://developer.android.com/training/wearables/apps/debugging.html";
   
   private static final String WATCHFACE_DEBUG_TITLE =
-      "Is Debugging over Bluetooth enabled?";
+      "Is the watch connected to the computer?";
   
   private static final String WATCHFACE_DEBUG_MESSAGE =
-      "Processing will access the smartwatch through the phone " +
-      "currently paired to it. Your watch won't show up in the device list, " +
-      "select the phone instead.<br><br>" +
-      "Make sure to enable <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging over bluetooth</a> " +
-      "for this to work.";
+      "Processing will install watch faces on a smartwatch either over Wi-Fi " +
+      "or via Bluetooth, in which case the watch needs to be paired with a phone.<br><br>" +
+      "Read this guide on <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging an Android Wear App</a> " +
+      "for more details.";
   
   private static final String WALLPAPER_INSTALL_TITLE =
       "Wallpaper installed!";
@@ -90,6 +77,15 @@ public class AndroidMode extends JavaMode {
       "You need to open the wallpaper picker in the device in order "+ 
       "to select it as the new background.";
   
+  private static final String WATCHFACE_INSTALL_TITLE =
+      "Watch face installed!";
+  
+  private static final String WATCHFACE_INSTALL_MESSAGE = 
+      "Processing just built and installed your sketch as a " +
+      "watch face on the selected device.<br><br>" +
+      "You need to add it as a favourite watch face on the device "+ 
+      "and then select it from the watch face picker in order to run it.";
+    
   private static final String DISTRIBUTING_APPS_TUT_URL = 
       "http://android.processing.org/tutorials/distributing/index.html";  
   
@@ -109,9 +105,9 @@ public class AndroidMode extends JavaMode {
       "Cannot export package...";
 
   private static final String EXPORT_DEFAULT_ICONS_MESSAGE =
-      "The sketch does not include any app icons. " +
-      "Processing could use use its default set of Android icons, which are okay " +
-      "to test the app on your devices, but a bad idea to distribute on the Play store. " +
+      "The sketch does not include all required app icons. " +
+      "Processing could use its default set of Android icons, which are okay " +
+      "to test the app on your device, but a bad idea to distribute it on the Play store. " +
       "Create a full set of unique icons for your app, and copy them into the sketch folder. " +
       "Once you have done that, try exporting the sketch again.<br><br>" +
       "For more info on distributing apps from Processing,<br>" +
@@ -185,22 +181,6 @@ public class AndroidMode extends JavaMode {
     return coreZipLocation;
   }
 
-
-//  public AndroidSDK loadSDK() throws BadSDKException, IOException {
-//    if (sdk == null) {
-//      sdk = AndroidSDK.load();
-//    }
-//    return sdk;
-//  }
-
-  public void loadSDK() {
-    try {
-      sdk = AndroidSDK.load();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
   
   public void resetUserSelection() {
     userCancelledSDKSearch = false;
@@ -224,7 +204,7 @@ public class AndroidMode extends JavaMode {
     Throwable tr = null;
     if (sdk == null) {      
       try {
-        sdk = AndroidSDK.load();
+        sdk = AndroidSDK.load(true, editor);
         if (sdk == null) {
           sdk = AndroidSDK.locate(editor, this);
         }
@@ -284,20 +264,11 @@ public class AndroidMode extends JavaMode {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-//  public void handleRun(Sketch sketch, RunnerListener listener) throws SketchException {
-//    JavaBuild build = new JavaBuild(sketch);
-//    String appletClassName = build.build();
-//    if (appletClassName != null) {
-//      runtime = new Runner(build, listener);
-//      runtime.launch(false);
-//    }
-//  }
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
       RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this, 
-        editor.getAppComponent(), true);
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice("Building Android project...");
     build.build("debug");
@@ -310,10 +281,10 @@ public class AndroidMode extends JavaMode {
       throw se;
     }
 
-    listener.statusNotice("Running sketch on emulator...");
+    int comp = build.getAppComponent();
+    Future<Device> emu = Devices.getInstance().getEmulator(sdk.getToolsFolder(), build.isWear());
     runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL()), 
-        build.isWear());
+    runner.launch(emu, comp, true);
   }
 
 
@@ -335,33 +306,41 @@ public class AndroidMode extends JavaMode {
     
     listener.startIndeterminate();
     listener.statusNotice("Starting build...");
-    AndroidBuild build = new AndroidBuild(sketch, this, 
-        editor.getAppComponent(), false);
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice("Building Android project...");
-    build.build("debug");
-
-    listener.statusNotice("Running sketch on device...");
-    runner = new AndroidRunner(build, listener);
-    runner.launch(Devices.getInstance().getHardware(), build.isWear());
+    File projectFolder = build.build("debug");
+    if (projectFolder == null) {
+      listener.statusError("Build failed.");      
+      return;
+    }
     
-    showPostBuildMessage(build.getAppComponent());
+    int comp = build.getAppComponent();
+    Future<Device> dev = Devices.getInstance().getHardware(); 
+    runner = new AndroidRunner(build, listener);
+    if (runner.launch(dev, comp, false)) {    
+      showPostBuildMessage(comp);
+    }
   }
 
   
   public void showSelectComponentMessage(int appComp) {
-    if (showBluetoothDebugMessage && appComp == AndroidBuild.WATCHFACE) {
-      showMessage(WATCHFACE_DEBUG_TITLE, WATCHFACE_DEBUG_MESSAGE);
-      showBluetoothDebugMessage = false;
+    if (showWatchFaceDebugMessage && appComp == AndroidBuild.WATCHFACE) {
+      AndroidUtil.showMessage(WATCHFACE_DEBUG_TITLE, WATCHFACE_DEBUG_MESSAGE);
+      showWatchFaceDebugMessage = false;
     } 
   }
   
   
   public void showPostBuildMessage(int appComp) {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
-      showMessage(WALLPAPER_INSTALL_TITLE, WALLPAPER_INSTALL_MESSAGE);  
+      AndroidUtil.showMessage(WALLPAPER_INSTALL_TITLE, WALLPAPER_INSTALL_MESSAGE);  
       showWallpaperSelectMessage = false;
-    }    
+    }
+    if (showWatchFaceSelectMessage && appComp == AndroidBuild.WATCHFACE) {
+      AndroidUtil.showMessage(WATCHFACE_INSTALL_TITLE, WATCHFACE_INSTALL_MESSAGE);  
+      showWatchFaceSelectMessage = false;
+    } 
   }
   
   
@@ -382,38 +361,47 @@ public class AndroidMode extends JavaMode {
   
   public boolean checkPackageName(Sketch sketch, int comp) {
     Manifest manifest = new Manifest(sketch, comp, getFolder(), false);
-    String defName = AndroidBuild.basePackage + "." + sketch.getName().toLowerCase();    
+    String defName = Manifest.BASE_PACKAGE + "." + sketch.getName().toLowerCase();    
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
-      AndroidMode.showMessage(EXPORT_DEFAULT_PACKAGE_TITLE, EXPORT_DEFAULT_PACKAGE_MESSAGE);
+      AndroidUtil.showMessage(EXPORT_DEFAULT_PACKAGE_TITLE, EXPORT_DEFAULT_PACKAGE_MESSAGE);
       return false;
     }
     return true;
   }
   
   
-  public boolean checkAppIcons(Sketch sketch) {
+  public boolean checkAppIcons(Sketch sketch, int comp) {
     File sketchFolder = sketch.getFolder();
+    
+    boolean allExist = false;
+  
     File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
     File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
     File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
     File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
     File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
     File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
-    boolean allExist = localIcon36.exists() &&
-                       localIcon48.exists() &&
-                       localIcon72.exists() &&
-                       localIcon96.exists() &&
-                       localIcon144.exists() &&
-                       localIcon192.exists();    
+    allExist = localIcon36.exists() && localIcon48.exists() &&
+               localIcon72.exists() && localIcon96.exists() &&
+               localIcon144.exists() && localIcon192.exists();
+    
+    if (comp == AndroidBuild.WATCHFACE) {
+      // Additional preview icons are needed for watch faces
+      File localIconSquare = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_RECTANGULAR);
+      File localIconCircle = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_CIRCULAR);
+      allExist &= localIconSquare.exists() && localIconCircle.exists();      
+    }
+    
     if (!allExist) {
       // The user did not set custom icons, show error and stop
-      AndroidMode.showMessage(EXPORT_DEFAULT_ICONS_TITLE, EXPORT_DEFAULT_ICONS_MESSAGE);
+      AndroidUtil.showMessage(EXPORT_DEFAULT_ICONS_TITLE, 
+                              EXPORT_DEFAULT_ICONS_MESSAGE);
       return false;      
     }
     return true;
-  }
+  }  
   
   
   public void initManifest(Sketch sketch, int comp) {
@@ -424,139 +412,4 @@ public class AndroidMode extends JavaMode {
   public void resetManifest(Sketch sketch, int comp) {
     new Manifest(sketch, comp, getFolder(), true);
   }
-  
-  
-  public static void createFileFromTemplate(final File tmplFile, final File destFile) {
-    createFileFromTemplate(tmplFile, destFile, null);
-  }
-  
-  
-  public static void createFileFromTemplate(final File tmplFile, final File destFile, 
-      final HashMap<String, String> replaceMap) {
-    PrintWriter pw = PApplet.createWriter(destFile);    
-    String lines[] = PApplet.loadStrings(tmplFile);
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf("@@") != -1 && replaceMap != null) {
-        StringBuilder sb = new StringBuilder(lines[i]);
-        int index = 0;
-        for (String key: replaceMap.keySet()) {
-          String val = replaceMap.get(key);
-          while ((index = sb.indexOf(key)) != -1) {
-            sb.replace(index, index + key.length(), val);
-          }          
-        }    
-        lines[i] = sb.toString();
-      }
-      // explicit newlines to avoid Windows CRLF
-      pw.print(lines[i] + "\n");
-    }
-    pw.flush();
-    pw.close();    
-  }    
-  
-  public static void extractFolder(File file, File newPath, 
-    boolean setExec) throws IOException {
-    extractFolder(file, newPath, setExec, false);
-  }
-  
-  public static void extractFolder(File file, File newPath, 
-    boolean setExec, boolean remRoot) throws IOException {
-    int BUFFER = 2048;
-    ZipFile zip = new ZipFile(file);
-    Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
-
-    // Process each entry
-    while (zipFileEntries.hasMoreElements()) {
-      // grab a zip file entry
-      ZipEntry entry = zipFileEntries.nextElement();
-      String currentEntry = entry.getName();
-      
-      if (remRoot) {
-        // Remove root folder from path
-        int idx = currentEntry.indexOf(File.separator); 
-        currentEntry = currentEntry.substring(idx + 1);
-      }
-      
-      File destFile = new File(newPath, currentEntry);
-      //destFile = new File(newPath, destFile.getName());
-      File destinationParent = destFile.getParentFile();
-
-      // create the parent directory structure if needed
-      destinationParent.mkdirs();
-
-      String ext = PApplet.getExtension(currentEntry);
-      if (setExec && ext.equals("unknown")) {        
-        // On some OS X machines the android binaries lose their executable
-        // attribute, rendering the mode unusable
-        destFile.setExecutable(true);
-      }
-      
-      if (!entry.isDirectory()) {
-        // should preserve permissions
-        // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
-        BufferedInputStream is = new BufferedInputStream(zip
-            .getInputStream(entry));
-        int currentByte;
-        // establish buffer for writing file
-        byte data[] = new byte[BUFFER];
-
-        // write the current file to disk
-        FileOutputStream fos = new FileOutputStream(destFile);
-        BufferedOutputStream dest = new BufferedOutputStream(fos,
-            BUFFER);
-
-        // read and write until last byte is encountered
-        while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
-          dest.write(data, 0, currentByte);
-        }
-        dest.flush();
-        dest.close();
-        is.close();
-      }
-    }
-    zip.close();
-  }
-
-  
-  static public void extractClassesJarFromAar(File wearFile, File explodeDir, 
-      File jarFile) throws IOException {
-    extractClassesJarFromAar(wearFile, explodeDir, jarFile, true);
-  }
-  
-  
-  static public void extractClassesJarFromAar(File wearFile, File explodeDir, 
-      File jarFile, boolean removeDir) throws IOException {
-    extractFolder(wearFile, explodeDir, false);
-    File classFile = new File(explodeDir, "classes.jar");
-    Util.copyFile(classFile, jarFile);
-    Util.removeDir(explodeDir);
-  }
-  
-
-  static public void showMessage(String title, String text) {
-    if (title == null) title = "Message";
-    if (Base.isCommandLine()) {      
-      System.out.println(title + ": " + text);
-    } else {
-      String htmlString = "<html> " +
-          "<head> <style type=\"text/css\">"+
-          "p { font: 11pt \"Lucida Grande\"; margin-top: 8px; width: 300px }"+
-          "</style> </head>" +
-          "<body> <p>" + text + "</p> </body> </html>";      
-      JEditorPane pane = new JEditorPane("text/html", htmlString);
-      pane.addHyperlinkListener(new HyperlinkListener() {
-        @Override
-        public void hyperlinkUpdate(HyperlinkEvent e) {
-          if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
-            Platform.openURL(e.getURL().toString());
-          }
-        }
-      });
-      pane.setEditable(false);
-      JLabel label = new JLabel();
-      pane.setBackground(label.getBackground());      
-      JOptionPane.showMessageDialog(null, pane, title, 
-          JOptionPane.INFORMATION_MESSAGE);
-    }
-  }   
 }

@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-16 The Processing Foundation
+ Copyright (c) 2012-17 The Processing Foundation
  Copyright (c) 2011-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -35,7 +35,9 @@ import processing.app.RunnerListener;
 import processing.app.SketchException;
 import processing.mode.java.runner.Runner;
 
-
+/** 
+ * Launches an app on the device or in the emulator.
+ */
 public class AndroidRunner implements DeviceListener {
   AndroidBuild build;
   RunnerListener listener;
@@ -43,6 +45,7 @@ public class AndroidRunner implements DeviceListener {
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
 
+  protected boolean showedSlowEmuWarning = false;
 
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
@@ -59,176 +62,85 @@ public class AndroidRunner implements DeviceListener {
   }
 
 
-  public void launch(Future<Device> deviceFuture, boolean wear) {
-//    try {
-//      runSketchOnDevice(Devices.getInstance().getEmulator(), "debug", AndroidEditor.this);
-//    } catch (final MonitorCanceled ok) {
-//      sketchStopped();
-//      statusNotice("Canceled.");
-//    }
-
-    listener.statusNotice("Waiting for device to become available...");
-//  final Device device = waitForDevice(deviceFuture, monitor);
+  public boolean launch(Future<Device> deviceFuture, int comp, boolean emu) {
+    String devStr = emu ? "emulator" : "device";
+    listener.statusNotice("Waiting for " + devStr + " to become available...");
+    
     final Device device = waitForDevice(deviceFuture, listener);
     if (device == null || !device.isAlive()) {
-      listener.statusError("Lost connection with device while launching. Try again.");
+      listener.statusError("Lost connection with " + devStr + " while launching. Try again.");
       // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
       Devices.killAdbServer();
-      return;
+      return false;
     }
     
-//    if (!wear && device.hasFeature("watch")) {
-//      listener.statusError("Trying to install a regular app or wallpaper on a watch.");
-//      System.err.println("For some reason, Processing is trying to install the sketch\n" + 
-//                         "on the paired watch instead of the mobile device.");
-//      
-//      listener.statusError("Trying to install a watch face on a non-watch device. Select correct device.");
-//      return;
-//    }
+    if (comp == AndroidBuild.WATCHFACE && !device.hasFeature("watch")) {
+      listener.statusError("Could not install the sketch.");
+      Messages.showWarning("Selected device is not a watch...",
+          "You are trying to install a watch face on a non-watch device.\n" +
+          "Select the correct device, or use the emulator.");      
+      return false;
+    }
+    
+    if (comp != AndroidBuild.WATCHFACE && device.hasFeature("watch")) {
+      listener.statusError("Could not install the sketch.");
+      Messages.showWarning("Selected device is a watch...",
+          "You are trying to install a non-watch app on a watch.\n" +
+          "Select the correct device, or use the emulator.");      
+      return false;
+    }
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
 
-//  if (listener.isHalted()) {
-////  if (monitor.isCanceled()) {
-//    throw new MonitorCanceled();
-//  }
-
-//  monitor.setNote("Installing sketch on " + device.getId());
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
-      if (device.getId().contains("emulator")) {
+      listener.statusError("Lost connection with " + devStr + " while installing. Try again.");
+      if (emu && !showedSlowEmuWarning) {
+        showedSlowEmuWarning = true; 
         // More detailed message when using the emulator, to following discussion in
         // https://code.google.com/p/android/issues/detail?id=104305
-        listener.statusError("Lost connection with emulator while installing. Try again.");
-        Messages.showWarning("The emulator is slooow...",
+        Messages.showWarning("Cannot run the sketch yet...",
           "This is common when the emulator is booting up for the first time.\n" +
           "Just try again once the emulator is ready, or set the\n" + 
-          "ADB_INSTALL_TIMEOUT environmental variable to have a.\n" +
-          "longer timeout, for example 5 minutes or more");
-      } else {
-        listener.statusError("Lost connection with device while installing. Try again.");
-      }
+          "ADB_INSTALL_TIMEOUT environmental variable to have a\n" +
+          "longer timeout, for example 5 minutes or more.\n\n"+
+          "Once the emulator is running, don't close until you are done\n" + 
+          "working with Processing.\n");
+      }      
       Devices.killAdbServer();  // see above
-      return;
+      return false;
     }
-//    if (!build.antInstall()) {
-//    }
 
-//  if (monitor.isCanceled()) {
-//    throw new MonitorCanceled();
-//  }
-//  monitor.setNote("Starting sketch on " + device.getId());
-    listener.statusNotice("Starting sketch on " + device.getId());
-    if (startSketch(build, device)) {
-      listener.statusNotice("Sketch launched "
-                            + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+    boolean status = false;
+    if (comp == AndroidBuild.WATCHFACE || comp == AndroidBuild.WALLPAPER) {
+      if (startSketch(build, device)) {
+        listener.statusNotice("Sketch installed "
+                              + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+        status = true;
+      } else {
+        listener.statusError("Could not install the sketch.");
+      }
     } else {
-      listener.statusError("Could not start the sketch.");
+      listener.statusNotice("Starting sketch on " + device.getId());
+      if (startSketch(build, device)) {
+        listener.statusNotice("Sketch launched "
+                              + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+        status = true;
+      } else {
+        listener.statusError("Could not start the sketch.");
+      }
     }
+    
     listener.stopIndeterminate();
     lastRunDevice = device;
-//} finally {
-//  build.cleanup();
-//}
-//} finally {
-////monitor.close();
-//listener.stopIndeterminate();
-//}
+    return status;
   }
 
 
   private volatile Device lastRunDevice = null;
-
-  /**
-   * @param target "debug" or "release"
-   */
-  /*
-  private void runSketchOnDevice(Sketch sketch,
-                                 Future<Device> deviceFuture,
-                                 String target,
-                                 RunnerListener listener) {
-//    final IndeterminateProgressMonitor monitor =
-//      new IndeterminateProgressMonitor(this,
-//                                       "Building and launching...",
-//                                       "Creating project...");
-
-
-    AndroidBuild build = new AndroidBuild(sketch, listener);
-    try {
-      try {
-        if (build.createProject(target) == null) {
-          return;
-        }
-      } catch (SketchException se) {
-        listener.statusError(se);
-      } catch (IOException e) {
-        listener.statusError(e);
-      }
-      try {
-//        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-//        monitor.setNote("Building...");
-        listener.statusNotice("Building...");
-        try {
-          if (!build.antBuild(target)) {
-            return;
-          }
-        } catch (SketchException se) {
-          listener.statusError(se);
-        }
-
-//        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-//        monitor.setNote("Waiting for device to become available...");
-        listener.statusNotice("Waiting for device to become available...");
-//        final Device device = waitForDevice(deviceFuture, monitor);
-        final Device device = waitForDevice(deviceFuture, listener);
-        if (device == null || !device.isAlive()) {
-          listener.statusError("Device killed or disconnected.");
-          return;
-        }
-
-        device.addListener(this);
-
-//        if (listener.isHalted()) {
-////        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-
-//        monitor.setNote("Installing sketch on " + device.getId());
-        listener.statusNotice("Installing sketch on " + device.getId());
-        if (!device.installApp(build.getPathForAPK(target), listener)) {
-          listener.statusError("Device killed or disconnected.");
-          return;
-        }
-
-//        if (monitor.isCanceled()) {
-//          throw new MonitorCanceled();
-//        }
-//        monitor.setNote("Starting sketch on " + device.getId());
-        listener.statusNotice("Starting sketch on " + device.getId());
-        if (startSketch(build, device)) {
-          listener.statusNotice("Sketch launched on the "
-              + (device.isEmulator() ? "emulator" : "device") + ".");
-        } else {
-          listener.statusError("Could not start the sketch.");
-        }
-
-        lastRunDevice = device;
-      } finally {
-        build.cleanup();
-      }
-    } finally {
-//      monitor.close();
-      listener.stopIndeterminate();
-    }
-  }
-  */
 
 
   // if user asks for 480x320, 320x480, 854x480 etc, then launch like that
@@ -249,10 +161,8 @@ public class AndroidRunner implements DeviceListener {
 
   private Device waitForDevice(Future<Device> deviceFuture, RunnerListener listener) {
     for (int i = 0; i < 120; i++) {
-//      if (monitor.isCanceled()) {
       if (listener.isHalted()) {
         deviceFuture.cancel(true);
-//        throw new MonitorCanceled();
         return null;
       }
       try {
@@ -296,9 +206,6 @@ public class AndroidRunner implements DeviceListener {
       return;
     }
     final String exceptionClass = m.group(1);
-//    if (Runner.handleCommonErrors(exceptionClass, exceptionLine, listener)) {
-//      return;
-//    }
     Runner.handleCommonErrors(exceptionClass, exceptionLine, listener, sketchErr);
 
     while (frames.hasNext()) {

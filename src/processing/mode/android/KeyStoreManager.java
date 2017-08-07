@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2014-16 The Processing Foundation
+ Copyright (c) 2014-17 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -41,8 +41,14 @@ import java.util.Arrays;
 
 @SuppressWarnings("serial")
 public class KeyStoreManager extends JFrame {
+  final static private int BOX_BORDER = Toolkit.zoom(13);
+  final static private int PASS_BORDER = Toolkit.zoom(15);
+  final static private int LABEL_WIDTH = Toolkit.zoom(400);
+  final static private int LABEL_HEIGHT = Toolkit.zoom(100);
+  final static private int GAP = Toolkit.zoom(13);
+  
   static final String GUIDE_URL =
-      "http://developer.android.com/tools/publishing/app-signing.html#cert";
+      "https://developer.android.com/studio/publish/app-signing.html";
 
   File keyStore;
   AndroidEditor editor;
@@ -68,23 +74,25 @@ public class KeyStoreManager extends JFrame {
     Container outer = getContentPane();
     outer.removeAll();
 
-    Box pain = Box.createVerticalBox();
-    pain.setBorder(new EmptyBorder(13, 13, 13, 13));
-    outer.add(pain);
+    Box vbox = Box.createVerticalBox();
+    vbox.setBorder(new EmptyBorder(BOX_BORDER, BOX_BORDER, BOX_BORDER, BOX_BORDER));
+    outer.add(vbox);
 
     keyStore = AndroidKeyStore.getKeyStore();
     if (keyStore != null) {
-      showKeystorePasswordLayout(pain);
+      showKeystorePasswordLayout(vbox);
     } else {
-      showKeystoreCredentialsLayout(pain);
+      showKeystoreCredentialsLayout(vbox);
     }
 
+    vbox.add(Box.createVerticalStrut(GAP));
+    
     // buttons
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton okButton = new JButton("OK");
     Dimension dim = new Dimension(Toolkit.getButtonWidth(),
-        okButton.getPreferredSize().height);
+                                  Toolkit.zoom(okButton.getPreferredSize().height));
     okButton.setPreferredSize(dim);
     okButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -120,14 +128,16 @@ public class KeyStoreManager extends JFrame {
 
     JButton resetKeystoreButton = new JButton("Reset password");
     dim = new Dimension(Toolkit.getButtonWidth()*2,
-        okButton.getPreferredSize().height);
+                        Toolkit.zoom(resetKeystoreButton.getPreferredSize().height));
     resetKeystoreButton.setPreferredSize(dim);
     resetKeystoreButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         setVisible(false);
         int result = Messages.showYesNoQuestion(editor, "Android keystore",
-            "Are you sure you want to reset the password?", "We will have to reset the keystore to do this, " +
-            "which means you won't be able to upload an update for your app signed with the new keystore to Google Play.\n\n" +
+            "Are you sure you want to reset the password?", 
+            "We will have to reset the keystore to do this, which means \n" + 
+            "you won't be able to upload an update for your app signed with\n" + 
+            "the new keystore to Google Play.\n\n" +
             "We will make a backup for the old keystore.");
 
         if (result == JOptionPane.NO_OPTION) {
@@ -160,7 +170,7 @@ public class KeyStoreManager extends JFrame {
       buttons.add(cancelButton);
     }
 //    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
-    pain.add(buttons);
+    vbox.add(buttons);
 
     JRootPane root = getRootPane();
     root.setDefaultButton(okButton);
@@ -211,7 +221,7 @@ public class KeyStoreManager extends JFrame {
     }
   }
 
-  private void showKeystoreCredentialsLayout(Box pain) {
+  private void showKeystoreCredentialsLayout(Box box) {
     String labelText =
         "<html>" +
             "Please enter the information below so we can generate a private key for you.<br/>" +
@@ -220,14 +230,14 @@ public class KeyStoreManager extends JFrame {
             "More about private keys can be found " +
             "<a href=\"" + GUIDE_URL + "\">here</a>.</body></html>";
     JLabel textarea = new JLabel(labelText);
-    textarea.setPreferredSize(new Dimension(400, 100));
+    textarea.setPreferredSize(new Dimension(LABEL_WIDTH, LABEL_HEIGHT));
     textarea.addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent e) {
         Platform.openURL(GUIDE_URL);
       }
     });
     textarea.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textarea);
+    box.add(textarea);
 
     // password field
     passwordField = new JPasswordField(15);
@@ -238,7 +248,7 @@ public class KeyStoreManager extends JFrame {
     textPane.add(passwordLabel);
     textPane.add(passwordField);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
 
     // repeat password field
     repeatPasswordField = new JPasswordField(15);
@@ -249,14 +259,14 @@ public class KeyStoreManager extends JFrame {
     textPane.add(repeatPasswordLabel);
     textPane.add(repeatPasswordField);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    textPane.setBorder(new EmptyBorder(0, 0, 15, 0));
-    pain.add(textPane);
+    textPane.setBorder(new EmptyBorder(0, 0, PASS_BORDER, 0));
+    box.add(textPane);
 
     MatteBorder mb = new MatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY);
     TitledBorder tb = new TitledBorder(mb, "Keystore issuer credentials", TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION);
     JPanel separatorPanel = new JPanel();
     separatorPanel.setBorder(tb);
-    pain.add(separatorPanel);
+    box.add(separatorPanel);
 
     // common name (CN)
     commonName = new JTextField(15);
@@ -267,7 +277,7 @@ public class KeyStoreManager extends JFrame {
     textPane.add(commonNameLabel);
     textPane.add(commonName);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
 
     // organizational unit (OU)
     organizationalUnit = new JTextField(15);
@@ -278,7 +288,7 @@ public class KeyStoreManager extends JFrame {
     textPane.add(organizationalUnitLabel);
     textPane.add(organizationalUnit);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
 
     // organization name (O)
     organizationName = new JTextField(15);
@@ -289,7 +299,7 @@ public class KeyStoreManager extends JFrame {
     textPane.add(organizationNameLabel);
     textPane.add(organizationName);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
 
     // locality name (L)
     localityName = new JTextField(15);
@@ -300,7 +310,7 @@ public class KeyStoreManager extends JFrame {
     textPane.add(localityNameLabel);
     textPane.add(localityName);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
 
     // state name (S)
     stateName = new JTextField(15);
@@ -311,7 +321,7 @@ public class KeyStoreManager extends JFrame {
     textPane.add(stateNameLabel);
     textPane.add(stateName);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
 
     // country (C)
     country = new JTextField(15);
@@ -322,6 +332,6 @@ public class KeyStoreManager extends JFrame {
     textPane.add(countryLabel);
     textPane.add(country);
     textPane.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textPane);
+    box.add(textPane);
   }
 }

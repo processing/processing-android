@@ -100,8 +100,14 @@ class Device {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    
+    name += " [" + id + "]";
+    
+//    if (hasFeature("watch")) {
+//      name += " (watch)";      
+//    }
 
-    return name + " [" + id + "]";
+    return name;
   }
 
   // adb -s emulator-5556 install helloWorld.apk
@@ -122,8 +128,16 @@ class Device {
       return false;
     }
     bringLauncherToFront();
+    
+    String apkPath = build.getPathForAPK();
+    if (apkPath == null) {
+      status.statusError("Could not install the sketch.");
+      System.err.println("The APK file is missing");      
+      return false;
+    }
+    
     try {
-      final ProcessResult installResult = adb("install", "-r", build.getPathForAPK());
+      final ProcessResult installResult = adb("install", "-r", apkPath);
       if (!installResult.succeeded()) {
         status.statusError("Could not install the sketch.");
         System.err.println(installResult);

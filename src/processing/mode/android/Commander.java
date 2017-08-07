@@ -81,7 +81,7 @@ public class Commander implements RunnerListener {
   private String outputPath = null;
   private File outputFolder = null;
   
-  private int appComponent = AndroidBuild.FRAGMENT;
+  private int appComponent = AndroidBuild.APP;
 
   private boolean force = false; // replace that no good output folder
   private String device = runArg_DEVICE;
@@ -128,7 +128,7 @@ public class Commander implements RunnerListener {
       } else if (arg.startsWith(componentArg)) {
         String compStr = extractValue(arg, targetArg, targetArg_FRAGMENT);
         if (compStr.equals(targetArg_FRAGMENT)) {
-          appComponent = AndroidBuild.FRAGMENT;
+          appComponent = AndroidBuild.APP;
         } else if (compStr.equals(targetArg_WALLPAPER)) {
           appComponent = AndroidBuild.WALLPAPER;
         } else if (compStr.equals(targetArg_WATCHFACE)) {
@@ -233,20 +233,20 @@ public class Commander implements RunnerListener {
       boolean runOnEmu = runArg_EMULATOR.equals(device);
       sketch = new Sketch(pdePath, androidMode);
       if (task == BUILD || task == RUN) {
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, runOnEmu);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         build.build(target);
 
         if (task == RUN) {
           AndroidRunner runner = new AndroidRunner(build, this);
           runner.launch(runOnEmu ?
-              Devices.getInstance().getEmulator(build.isWear(), build.usesOpenGL()) :
-              Devices.getInstance().getHardware(), build.isWear());
+              Devices.getInstance().getEmulator(androidMode.getSDK().getToolsFolder(), build.isWear()) :
+              Devices.getInstance().getHardware(), build.getAppComponent(), runOnEmu);
         }
 
         success = true;
 
       } else if (task == EXPORT) {
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent, false);
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         build.exportProject();
 
         success = true;

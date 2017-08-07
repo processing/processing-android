@@ -1,1 +1,1 @@
-include 'core', 'libraries:vr'
+include 'core', 'tools:SDKUpdater', 'libraries:vr'

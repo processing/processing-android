@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2014-16 The Processing Foundation
+ Copyright (c) 2014-17 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -23,52 +23,48 @@ package processing.mode.android;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
-import processing.core.PApplet;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
+import javax.xml.xpath.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
-  // Version 25.3.1 of the SDK tools break the mode, since the android tool
-  // no longer works:
-  private static final int SDK_TOOLS_MAX_MAJOR = 25;
-  private static final int SDK_TOOLS_MAX_MINOR = 2;
+  final static private int BOX_BORDER = Toolkit.zoom(13);
+  final static private int BAR_BORDER = Toolkit.zoom(10);
+  final static private int BAR_WIDTH = Toolkit.zoom(300); 
+  final static private int BAR_HEIGHT = Toolkit.zoom(30);
+  final static private int GAP = Toolkit.zoom(13);
   
-  private static final int PLATFORM_TOOLS_MAX_MAJOR = 25;
-  private static final int PLATFORM_TOOLS_MAX_MINOR = 0;  
+  private static final int PLATFORM_TOOLS = 2;
+  private static final int ANDROID_REPO = 4;
+  private static final int GOOGLE_REPO = 5;
+  private static final int USB_DRIVER = 6;
 
-  private static final int BUILD_TOOLS_MAX_MAJOR = 25;
-  private static final int BUILD_TOOLS_MAX_MINOR = 0;   
-  
-  // https://code.google.com/p/android/issues/detail?id=235455
-  // as well as removing the ant scripts.
-  // https://code.google.com/p/android/issues/detail?id=235410
-  // See release notes:
-  // https://developer.android.com/studio/releases/sdk-tools.html  
   private static final String REPOSITORY_URL = "https://dl.google.com/android/repository/";
-  private static final String REPOSITORY_LIST = "repository-12.xml";
-  private static final String ADDON_LIST = "addon.xml";
+  private static final String HAXM_URL = "https://dl.google.com/android/repository/extras/intel/";
+  private static final String REPOSITORY_LIST = "repository2-1.xml";
+  private static final String ADDON_LIST = "addon2-1.xml";
   
   private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
   private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
@@ -79,7 +75,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private SDKDownloadTask downloadTask;
   
   private Frame editor;
-  private AndroidMode mode;
   private AndroidSDK sdk;
   private boolean cancelled;
   
@@ -87,10 +82,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   class SDKUrlHolder {
     public String platformVersion, buildToolsVersion;
-    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl;
-    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl, emulatorUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename, emulatorFilename;
     public String supportRepoUrl, googleRepoUrl, usbDriverUrl;
-    public String supportRepoFilename, googleRepoFilename, usbDriverFilename;    
+    public String supportRepoFilename, googleRepoFilename, usbDriverFilename;
+    public String haxmFilename, haxmUrl;
     public int totalSize = 0;
   }
   
@@ -101,32 +97,40 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     @Override
     protected Object doInBackground() throws Exception {
-      File modeFolder = mode.getFolder();
+      File sketchbookFolder = processing.app.Base.getSketchbookFolder();
+      File androidFolder = new File(sketchbookFolder, "android");
+      if (!androidFolder.exists()) androidFolder.mkdir();
       
+      File sdkFolder = AndroidUtil.createSubFolder(androidFolder, "sdk");
+            
       // creating sdk folders
-      File sdkFolder = new File(modeFolder, "sdk");
-      if (!sdkFolder.exists()) sdkFolder.mkdir();
       File platformsFolder = new File(sdkFolder, "platforms");
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
+      File emulatorFolder = new File(sdkFolder, "emulator");
+      if (!emulatorFolder.exists()) emulatorFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
-      if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();
+      if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();   
+      File haxmFolder = new File(extrasFolder, "intel/HAXM");
+      if (!haxmFolder.exists()) haxmFolder.mkdirs();      
       File androidRepoFolder = new File(extrasFolder, "android");
       if (!androidRepoFolder.exists()) androidRepoFolder.mkdir();      
       
       // creating temp folder for downloaded zip packages
-      File tempFolder = new File(modeFolder, "temp");
+      File tempFolder = new File(androidFolder, "temp");
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
         SDKUrlHolder downloadUrls = new SDKUrlHolder();
         String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
-        String addonUrl = REPOSITORY_URL + ADDON_LIST;        
+        String addonUrl = REPOSITORY_URL + ADDON_LIST;
+        String haxmUrl = HAXM_URL + ADDON_LIST;
         getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
         getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());        
+        getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
         firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
 
         // tools
@@ -144,6 +148,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
+
+        // emulator, unpacks directly to sdk folder 
+        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
+        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
         
         // google repository
         File downloadedGoogleRepo = new File(tempFolder, downloadUrls.googleRepoFilename);
@@ -159,6 +167,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
         }
 
+        // HAXM
+        if (!Platform.isLinux()) {
+          File downloadedFolder = new File(tempFolder, downloadUrls.haxmFilename);
+          downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
+        }
+
         if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
@@ -167,14 +181,15 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         tempFolder.delete();
         
          // Normalize built-tools and platform folders to android-<API LEVEL>
-        String actualName = "android-" + downloadUrls.platformVersion;
-        renameFolder(platformsFolder, "android-" + AndroidBuild.target_sdk, actualName);
+        String actualName = platformsFolder.listFiles()[0].getName();
+        renameFolder(platformsFolder, "android-" + AndroidBuild.TARGET_SDK, actualName);
+        actualName = buildToolsFolder.listFiles()[0].getName();
         renameFolder(buildToolsFolder, downloadUrls.buildToolsVersion, actualName);
         
         // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
         Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());        
-        sdk = AndroidSDK.load();        
+        sdk = AndroidSDK.load(false, null);        
       } catch (ParserConfigurationException e) {
         // TODO Handle exceptions here somehow (ie show error message)
         // and handle at least mkdir() results (above)
@@ -227,30 +242,45 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       inputStream.close();
       outputStream.close();
 
-      AndroidMode.extractFolder(saveTo, unpackTo, setExec);
+      AndroidUtil.extractFolder(saveTo, unpackTo, setExec);
     }
 
     private void getMainDownloadUrls(SDKUrlHolder urlHolder, 
         String repositoryUrl, String requiredHostOs) 
-        throws ParserConfigurationException, IOException, SAXException {
+        throws ParserConfigurationException, IOException, SAXException, XPathException {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = dbf.newDocumentBuilder();
       Document doc = db.parse(new URL(repositoryUrl).openStream());
-      Node archiveListItem;
-      NodeList archiveList;
-      Node archiveItem;
+
+      XPathFactory xPathfactory = XPathFactory.newInstance();
+      XPath xpath = xPathfactory.newXPath();
+      XPathExpression expr;
+      NodeList remotePackages;
       
       // -----------------------------------------------------------------------
-      // platform      
-      Node platform = getLatestPlatform(doc.getElementsByTagName("sdk:platform"));
-      if (platform != null) {
-        NodeList version = ((Element) platform).getElementsByTagName("sdk:version");
-        archiveListItem = ((Element) platform).getElementsByTagName("sdk:archives").item(0);
-        archiveItem = ((Element) archiveListItem).getElementsByTagName("sdk:archive").item(0);
-        urlHolder.platformVersion = version.item(0).getTextContent();
-        urlHolder.platformUrl = ((Element) archiveItem).getElementsByTagName("sdk:url").item(0).getTextContent();
-        urlHolder.platformFilename = urlHolder.platformUrl.split("/")[urlHolder.platformUrl.split("/").length-1];
-        urlHolder.totalSize += Integer.parseInt(((Element) archiveItem).getElementsByTagName("sdk:size").item(0).getTextContent());        
+      // platform
+      expr = xpath.compile("//remotePackage[starts-with(@path, \"platforms;\")" +
+              "and contains(@path, '" + AndroidBuild.TARGET_SDK + "')]"); // Skip latest platform; download only the targeted
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        NodeList childNodes = remotePackages.item(0).getChildNodes();
+
+        NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
+        NodeList apiLevel = ((Element) typeDetails.item(0)).getElementsByTagName("api-level");
+        urlHolder.platformVersion = apiLevel.item(0).getTextContent();
+
+        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+        NodeList archive = archives.item(0).getChildNodes();
+        NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+        urlHolder.platformFilename = url.item(0).getTextContent();
+        urlHolder.platformUrl = REPOSITORY_URL + urlHolder.platformFilename;
+        urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+      } else {
+        throw new IOException("Cannot find the platform files");
       }
 
       // Difference between platform tools, build tools, and SDK tools: 
@@ -259,164 +289,237 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // platform-tools
-      Node platformToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:platform-tool"), PLATFORM_TOOLS_MAX_MAJOR, PLATFORM_TOOLS_MAX_MINOR);
-      if (platformToolsItem != null) {
-        archiveListItem = ((Element) platformToolsItem).getElementsByTagName("sdk:archives").item(0);
-        archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-        for (int i = 0; i < archiveList.getLength(); i++) {
-          Node archive = archiveList.item(i);
-          String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-          if (hostOs.equals(requiredHostOs)) {
-            urlHolder.platformToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-            urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
-            urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-            break;
-          }
-        }
+      expr = xpath.compile("//remotePackage[@path=\"platform-tools\"]");
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        parseAndSet(urlHolder, remotePackages, requiredHostOs, PLATFORM_TOOLS);
+      } else {
+        throw new IOException("Cannot find the platform-tools");
       }
 
       // -----------------------------------------------------------------------
       // build-tools
-      Node buildToolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:build-tool"), BUILD_TOOLS_MAX_MAJOR, BUILD_TOOLS_MAX_MINOR);
-      if (buildToolsItem != null) {
-        Node revisionListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:revision").item(0);
-        String major = ((Element) revisionListItem).getElementsByTagName("sdk:major").item(0).getTextContent();
-        String minor = ((Element) revisionListItem).getElementsByTagName("sdk:minor").item(0).getTextContent();
-        String micro = ((Element) revisionListItem).getElementsByTagName("sdk:micro").item(0).getTextContent();        
-        urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
-        archiveListItem = ((Element) buildToolsItem).getElementsByTagName("sdk:archives").item(0);
-        archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-        for (int i = 0; i < archiveList.getLength(); i++) {
-          Node archive = archiveList.item(i);
-          String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-          if (hostOs.equals(requiredHostOs)) {
-            urlHolder.buildToolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
-            urlHolder.buildToolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
-            urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-            break;
+      expr = xpath.compile("//remotePackage[starts-with(@path, \"build-tools;\")]");
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        for(int buildTool=0; buildTool < remotePackages.getLength(); buildTool++) {
+          NodeList childNodes = remotePackages.item(buildTool).getChildNodes();
+
+          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+            continue; //Stable channel only, skip others
+
+          NodeList revision = ((Element) childNodes).getElementsByTagName("revision");
+          String major = (((Element) revision.item(0)).getElementsByTagName("major")).item(0).getTextContent();
+          String minor = (((Element) revision.item(0)).getElementsByTagName("minor")).item(0).getTextContent();
+          String micro = (((Element) revision.item(0)).getElementsByTagName("micro")).item(0).getTextContent();
+          if(!major.equals(AndroidBuild.TARGET_SDK)) // Allows only the latest build tools for the target platform
+            continue;
+          urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
+
+          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+          for (int j = 0; j < archives.getLength(); ++j) {
+            NodeList archive = archives.item(j).getChildNodes();
+            NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+            NodeList os = ((Element) archive).getElementsByTagName("host-os");
+            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+            if (os.item(0).getTextContent().equals(requiredHostOs)) {
+              urlHolder.buildToolsFilename = url.item(0).getTextContent();
+              urlHolder.buildToolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              break;
+            }
           }
+          break;
         }
+      } else {
+        throw new IOException("Cannot find the build-tools");
       }
       
       // -----------------------------------------------------------------------
       // tools
-      Node toolsItem = getLatestToolItem(doc.getElementsByTagName("sdk:tool"), SDK_TOOLS_MAX_MAJOR, SDK_TOOLS_MAX_MINOR);;
-      if (toolsItem != null) {
-        archiveListItem = ((Element) toolsItem).getElementsByTagName("sdk:archives").item(0);
-        archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");
-        for (int i = 0; i < archiveList.getLength(); i++) {
-          Node archive = archiveList.item(i);
-          String hostOs = ((Element) archive).getElementsByTagName("sdk:host-os").item(0).getTextContent();
-          if (hostOs.equals(requiredHostOs)) {
-            urlHolder.toolsFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+      expr = xpath.compile("//remotePackage[@path=\"tools\"]"); //Matches two items according to xml file
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        NodeList childNodes = remotePackages.item(1).getChildNodes(); //Second item is the latest tools for now
+        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+        for (int i = 0; i < archives.getLength(); ++i) {
+          NodeList archive = archives.item(i).getChildNodes();
+          NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+          NodeList os = ((Element) archive).getElementsByTagName("host-os");
+          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+          if (os.item(0).getTextContent().equals(requiredHostOs)) {
+            urlHolder.toolsFilename =  url.item(0).getTextContent();
             urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
-            urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
+            urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
             break;
           }
         }
-      }      
+      } else {
+        throw new IOException("Cannot find the tools");
+      }
+
+      // -----------------------------------------------------------------------
+      // emulator
+      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      if (remotePackages != null) {
+        for(int i = 0; i < remotePackages.getLength(); ++i) {
+          NodeList childNodes = remotePackages.item(i).getChildNodes();
+
+          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+            continue; //Stable channel only, skip others
+
+          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+          for (int j = 0; j < archives.getLength(); ++j) {
+            NodeList archive = archives.item(j).getChildNodes();
+            NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+            NodeList os = ((Element) archive).getElementsByTagName("host-os");
+            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+            if (os.item(0).getTextContent().equals(requiredHostOs)) {
+              urlHolder.emulatorFilename = url.item(0).getTextContent();
+              urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
+              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              break;
+            }
+          }
+          break;
+        }
+      } else {
+        throw new IOException("Cannot find the emulator");
+      }
     }
   }
 
   private void getExtrasDownloadUrls(SDKUrlHolder urlHolder, 
       String repositoryUrl, String requiredHostOs) 
-      throws ParserConfigurationException, IOException, SAXException {
+      throws ParserConfigurationException, IOException, SAXException, XPathException {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     DocumentBuilder db = dbf.newDocumentBuilder();
     Document doc = db.parse(new URL(repositoryUrl).openStream());
-    Node archiveListItem;
-    NodeList archiveList;
-    
-    NodeList nodeList = doc.getElementsByTagName("sdk:extra");
-    for (int i = 0; i < nodeList.getLength(); i++) {
-      Node sdkExtraItem = nodeList.item(i);
-      if (sdkExtraItem != null) { 
-        String name = ((Element) sdkExtraItem).getElementsByTagName("sdk:name-display").item(0).getTextContent();
-        // ---------------------------------------------------------------------
-        // Android Support repository
-        if (name.equals("Android Support Repository")) {
-          archiveListItem = ((Element) sdkExtraItem).getElementsByTagName("sdk:archives").item(0);
-          archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");        
-          Node archive = archiveList.item(0);
-          urlHolder.supportRepoFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+
+    XPathFactory xPathfactory = XPathFactory.newInstance();
+    XPath xpath = xPathfactory.newXPath();
+    XPathExpression expr;
+    NodeList remotePackages;
+
+    // ---------------------------------------------------------------------
+    // Android Support repository
+    expr = xpath.compile("//remotePackage[@path=\"extras;android;m2repository\"]");
+    remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    if (remotePackages != null) {
+      parseAndSet(urlHolder, remotePackages, requiredHostOs, ANDROID_REPO);
+    }
+
+    // ---------------------------------------------------------------------
+    // Google repository
+    expr = xpath.compile("//remotePackage[@path=\"extras;google;m2repository\"]");
+    remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    if (remotePackages != null) {
+      parseAndSet(urlHolder, remotePackages, requiredHostOs, GOOGLE_REPO);
+    }
+
+    // ---------------------------------------------------------------------
+    // USB driver
+    expr = xpath.compile("//remotePackage[@path=\"extras;google;usb_driver\"]");
+    remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    if (remotePackages != null && Platform.isWindows()) {
+      parseAndSet(urlHolder, remotePackages, requiredHostOs, USB_DRIVER);
+    }
+  }
+
+  private void getHaxmDownloadUrl(SDKUrlHolder urlHolder,
+                                     String repositoryUrl, String requiredHostOs)
+          throws ParserConfigurationException, IOException, SAXException, XPathException {
+    if (requiredHostOs.equals("linux"))
+      return;
+
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db = dbf.newDocumentBuilder();
+    Document doc = db.parse(new URL(repositoryUrl).openStream());
+
+    XPathFactory xPathfactory = XPathFactory.newInstance();
+    XPath xpath = xPathfactory.newXPath();
+    XPathExpression expr;
+    NodeList remotePackages;
+
+    expr = xpath.compile("//remotePackage[@path=\"extras;intel;Hardware_Accelerated_Execution_Manager\"]");
+    remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    if (remotePackages != null) {
+      for (int i=0; i < remotePackages.getLength(); ++i) {
+        NodeList childNodes = remotePackages.item(i).getChildNodes();
+        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+        NodeList archive = archives.item(0).getChildNodes();
+        NodeList os = ((Element) archive).getElementsByTagName("host-os");
+
+        if (!os.item(0).getTextContent().equals(requiredHostOs))
+          continue;
+
+        NodeList complete = ((Element) archive).getElementsByTagName("complete");
+        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+        urlHolder.haxmFilename = url.item(0).getTextContent();
+        urlHolder.haxmUrl = HAXM_URL + urlHolder.haxmFilename;
+        urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+        break;
+      }
+    }
+  }
+
+  private void parseAndSet(SDKUrlHolder urlHolder, NodeList remotePackages, String requiredHostOs, int packageN) {
+    NodeList childNodes = remotePackages.item(0).getChildNodes();
+    NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+    for (int i = 0; i < archives.getLength(); ++i) {
+      NodeList archive = archives.item(i).getChildNodes();
+      NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+      NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+      NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+      switch (packageN) {
+        case PLATFORM_TOOLS:
+          NodeList os = ((Element) archive).getElementsByTagName("host-os");
+          if (!os.item(0).getTextContent().equals(requiredHostOs))
+            continue;
+          urlHolder.platformToolsFilename = url.item(0).getTextContent();
+          urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
+          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+          break;
+        case ANDROID_REPO:
+          urlHolder.supportRepoFilename = url.item(0).getTextContent();
           urlHolder.supportRepoUrl = REPOSITORY_URL + urlHolder.supportRepoFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-        }
-        
-        // ---------------------------------------------------------------------
-        // Google repository        
-        if (name.equals("Google Repository")) {
-          archiveListItem = ((Element) sdkExtraItem).getElementsByTagName("sdk:archives").item(0);
-          archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");        
-          Node archive = archiveList.item(0);
-          urlHolder.googleRepoFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+          break;
+        case GOOGLE_REPO:
+          urlHolder.googleRepoFilename = url.item(0).getTextContent();
           urlHolder.googleRepoUrl = REPOSITORY_URL + urlHolder.googleRepoFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-        }
-        
-        // ---------------------------------------------------------------------
-        // USB driver        
-        if (name.equals("Google USB Driver")) {
-          archiveListItem = ((Element) sdkExtraItem).getElementsByTagName("sdk:archives").item(0);
-          archiveList = ((Element) archiveListItem).getElementsByTagName("sdk:archive");        
-          Node archive = archiveList.item(0);
-          urlHolder.usbDriverFilename = (((Element) archive).getElementsByTagName("sdk:url").item(0).getTextContent());
+          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+          break;
+        case USB_DRIVER:
+          urlHolder.usbDriverFilename = url.item(0).getTextContent();
           urlHolder.usbDriverUrl = REPOSITORY_URL + urlHolder.usbDriverFilename;
-          urlHolder.totalSize += Integer.parseInt(((Element) archive).getElementsByTagName("sdk:size").item(0).getTextContent());
-        }        
+          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+          break;
       }
+      break;
     }
   }
-  
-  private Node getLatestPlatform(NodeList platformList) {
-    Node latest = null;
-    int maxRevision = -1;
-    String platformDescription = "Android SDK Platform " +  AndroidBuild.target_sdk; 
-    for (int i = 0; i < platformList.getLength(); i++) {
-      Node platform = platformList.item(i);
-      
-      NodeList level = ((Element) platform).getElementsByTagName("sdk:api-level");
-      NodeList desc = ((Element) platform).getElementsByTagName("sdk:description");
-      NodeList revision = ((Element) platform).getElementsByTagName("sdk:revision");
-      // API level and platform description are both used to avoid ambiguity with 
-      // preview versions, which might share the API level with the earlier stable 
-      // platform, but use the letter codename in their description.        
-      if (level.item(0).getTextContent().equals(AndroidBuild.target_sdk) && 
-          desc.item(0).getTextContent().equals(platformDescription)) {
-        int intRevision = PApplet.parseInt(revision.item(0).getTextContent());
-        if (maxRevision < intRevision) {
-          latest = platform;
-          maxRevision = intRevision;
-        }
-      }
-    }
-    return latest;
-  }
-  
-  private Node getLatestToolItem(NodeList list, int max_major, int max_minor) {
-    Node latest = null;
-    int maxMajor = -1;
-    int maxMinor = -1;
-    int maxMicro = -1; 
-    for (int i = 0; i < list.getLength(); i++) {
-      Node item = list.item(i);
-      Node revision = ((Element)item).getElementsByTagName("sdk:revision").item(0);        
-      NodeList major = ((Element)revision).getElementsByTagName("sdk:major");
-      NodeList minor = ((Element)revision).getElementsByTagName("sdk:minor");
-      NodeList micro = ((Element)revision).getElementsByTagName("sdk:micro");        
-      int intMajor = PApplet.parseInt(major.item(0).getTextContent());
-      int intMinor = PApplet.parseInt(minor.item(0).getTextContent());
-      int intMicro = PApplet.parseInt(micro.item(0).getTextContent());      
-      if (max_major < intMajor || (max_major == intMajor && max_minor < intMinor)) continue;      
-      if (maxMajor <= intMajor && maxMinor <= intMinor && maxMicro <= intMicro) {        
-        latest = item;
-        maxMajor = intMajor;
-        maxMinor = intMinor;
-        maxMicro = intMicro;
-      }
-    }
-    return latest;
-  } 
   
   private void renameFolder(File baseFolder, String expected, String actual) 
       throws IOException {
@@ -454,10 +557,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
-  public SDKDownloader(Frame editor, AndroidMode mode) {
+  public SDKDownloader(Frame editor) {
     super(editor, "SDK download", true);
     this.editor = editor;
-    this.mode = mode;
     this.sdk = null;    
     createLayout();
   }
@@ -483,26 +585,34 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     Container outer = getContentPane();
     outer.removeAll();
 
-    Box pain = Box.createVerticalBox();
-    pain.setBorder(new EmptyBorder(13, 13, 13, 13));
-    outer.add(pain);
+    Box vbox = Box.createVerticalBox();
+    vbox.setBorder(new EmptyBorder(BOX_BORDER, BOX_BORDER, BOX_BORDER, BOX_BORDER));
+    outer.add(vbox);
 
     String labelText = "Downloading Android SDK...";
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(textarea);
+    vbox.add(textarea);
 
+    // Needed to put the progressBar inside this panel so we can set its size
+    JPanel progressPanel = new JPanel(); 
+    BoxLayout boxLayout = new BoxLayout(progressPanel, BoxLayout.Y_AXIS);
+    progressPanel.setLayout(boxLayout);    
     progressBar = new JProgressBar(0, 100);
+    progressBar.setPreferredSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
     progressBar.setValue(0);
     progressBar.setStringPainted(true);
     progressBar.setIndeterminate(true);
-    progressBar.setBorder(new EmptyBorder(10, 10, 10, 10) );
-    pain.add(progressBar);
+    progressBar.setBorder(new EmptyBorder(BAR_BORDER, BAR_BORDER, BAR_BORDER, BAR_BORDER));
+    progressPanel.add(progressBar);
+    vbox.add(progressPanel);
 
-    downloadedTextArea = new JLabel("");
+    downloadedTextArea = new JLabel("0 / 0 MB");
     downloadedTextArea.setAlignmentX(LEFT_ALIGNMENT);
-    pain.add(downloadedTextArea);
+    vbox.add(downloadedTextArea);
 
+    vbox.add(Box.createVerticalStrut(GAP));
+    
     // buttons
     JPanel buttons = new JPanel();
 //    buttons.setPreferredSize(new Dimension(400, 35));
@@ -522,7 +632,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton cancelButton = new JButton("Cancel download");
     Dimension dim = new Dimension(Toolkit.getButtonWidth()*2,
-        cancelButton.getPreferredSize().height);
+                                  Toolkit.zoom(cancelButton.getPreferredSize().height));
 
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
@@ -538,7 +648,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     buttons.add(cancelButton);
 //    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
-    pain.add(buttons);
+    vbox.add(buttons);
 
     JRootPane root = getRootPane();
     root.setDefaultButton(cancelButton);
