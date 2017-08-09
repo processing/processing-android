@@ -69,7 +69,7 @@ class EmulatorController {
     // https://developer.android.com/studio/run/emulator-commandline.html
     String avdName = AVD.getName(wear);
     
-    String portString = AVD.getPreferredPort(wear);
+    final String portString = AVD.getPreferredPort(wear);
         
     // We let the emulator decide what's better for hardware acceleration:
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
@@ -143,12 +143,11 @@ class EmulatorController {
             }
             Thread.sleep(2000);
             //System.out.println("done sleeping");
-            for (final String device : Devices.list()) {
-              if (device.contains("emulator")) {
-                //System.err.println("EmulatorController: Emulator booted.");
-                setState(State.RUNNING);
-                return;
-              }
+            ProcessResult result = AndroidSDK.runADB("-s", "emulator-" + portString,
+                    "shell", "getprop", "dev.bootcomplete");
+            if (result.getStdout().equals("1\n")) {
+              setState(State.RUNNING);
+              return;
             }
           }
           System.err.println("EmulatorController: Emulator never booted. " + state);

@@ -45,8 +45,6 @@ public class AndroidRunner implements DeviceListener {
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
 
-  protected boolean showedSlowEmuWarning = false;
-
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
     this.listener = listener;
@@ -98,18 +96,6 @@ public class AndroidRunner implements DeviceListener {
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
       listener.statusError("Lost connection with " + devStr + " while installing. Try again.");
-      if (emu && !showedSlowEmuWarning) {
-        showedSlowEmuWarning = true; 
-        // More detailed message when using the emulator, to following discussion in
-        // https://code.google.com/p/android/issues/detail?id=104305
-        Messages.showWarning("Cannot run the sketch yet...",
-          "This is common when the emulator is booting up for the first time.\n" +
-          "Just try again once the emulator is ready, or set the\n" + 
-          "ADB_INSTALL_TIMEOUT environmental variable to have a\n" +
-          "longer timeout, for example 5 minutes or more.\n\n"+
-          "Once the emulator is running, don't close until you are done\n" + 
-          "working with Processing.\n");
-      }      
       Devices.killAdbServer();  // see above
       return false;
     }
