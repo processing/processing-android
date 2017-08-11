@@ -688,7 +688,7 @@ class AndroidSDK {
   private static final String ADB_DAEMON_MSG_1 = "daemon not running";
   private static final String ADB_DAEMON_MSG_2 = "daemon started successfully";
     
-  public static ProcessResult runADB(final String... cmd)
+  public ProcessResult runADB(final String... cmd)
     throws InterruptedException, IOException {
     
     if (adbDisabled) {
@@ -696,15 +696,17 @@ class AndroidSDK {
     }
         
     final String[] adbCmd;
-    if (!cmd[0].equals("adb")) {
-      adbCmd = PApplet.splice(cmd, "adb", 0);
+    if (!cmd[0].contains("adb")) {      
+      File abdPath = Platform.isWindows() ? new File(platformTools, "adb.exe") :
+                                            new File(platformTools, "adb");
+      adbCmd = PApplet.splice(cmd, abdPath.getCanonicalPath(), 0);
     } else {
       adbCmd = cmd;
     }
     // printing this here to see if anyone else is killing the adb server
-    if (processing.app.Base.DEBUG) {
+//    if (processing.app.Base.DEBUG) {
       PApplet.printArray(adbCmd);
-    }
+//    }
     try {
       ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
       // Ignore messages about starting up an adb daemon

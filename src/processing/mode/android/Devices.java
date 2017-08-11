@@ -24,7 +24,6 @@ package processing.mode.android;
 import processing.app.exec.ProcessResult;
 import processing.mode.android.EmulatorController.State;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +49,8 @@ class Devices {
 
   private static final String BT_DEBUG_PORT = "4444";
   
+  private AndroidSDK sdk;
+  
   private Device selectedDevice;
 
   public static Devices getInstance() {
@@ -61,6 +62,14 @@ class Devices {
   private final ExecutorService deviceLaunchThread =
     Executors.newSingleThreadExecutor();
 
+  public void setSDK(AndroidSDK sdk) {
+    this.sdk = sdk;
+  }
+
+  public AndroidSDK getSDK() {
+    return sdk;
+  }  
+  
   public Device getSelectedDevice() {
     return selectedDevice;
   }
@@ -69,18 +78,18 @@ class Devices {
     this.selectedDevice = selectedDevice;
   }
 
-  public static void killAdbServer() {
+  public void killAdbServer() {
     System.out.println("Shutting down any existing adb server...");
     System.out.flush();
     try {
-      AndroidSDK.runADB("kill-server");
+      sdk.runADB("kill-server");
     } catch (final Exception e) {
       System.err.println("Devices.killAdbServer() failed.");
       e.printStackTrace();
     }
   }
 
-  public static void enableBluetoothDebugging() {
+  public void enableBluetoothDebugging() {
     final Devices devices = Devices.getInstance();
     java.util.List<Device> deviceList = devices.findMultiple(false);
     
@@ -95,8 +104,8 @@ class Devices {
     try {
       // Try Enable debugging over bluetooth
       // http://developer.android.com/training/wearables/apps/bt-debugging.html
-      AndroidSDK.runADB("-s", device.getId(), "forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
-      AndroidSDK.runADB("connect", "127.0.0.1:" + BT_DEBUG_PORT);
+      sdk.runADB("-s", device.getId(), "forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
+      sdk.runADB("connect", "127.0.0.1:" + BT_DEBUG_PORT);
     } catch (final Exception e) {
       e.printStackTrace();
     }    
@@ -123,10 +132,10 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator(final File sdkToolsPath, final boolean wear) {
+  public Future<Device> getEmulator(final boolean wear) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator(sdkToolsPath, wear);
+        return blockingGetEmulator( wear);
       }
     };
     final FutureTask<Device> task = new FutureTask<Device>(androidFinder);
@@ -135,7 +144,7 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator(final File sdkToolsPath, final boolean wear) {
+  private final Device blockingGetEmulator(final boolean wear) {
     String port = AVD.getPreferredPort(wear);
     Device emu = find(true, port);
     if (emu != null) {
@@ -151,7 +160,7 @@ class Devices {
     
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
-        emuController.launch(sdkToolsPath, wear); // this blocks until emulator boots
+        emuController.launch(sdk, wear); // this blocks until emulator boots
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");
         e.printStackTrace(System.err);
@@ -309,7 +318,7 @@ class Devices {
    * @return list of device identifiers
    * @throws IOException
    */
-  public static List<String> list() {
+  public List<String> list() {
     if (AndroidSDK.adbDisabled) {
       return Collections.emptyList();
     }
@@ -317,7 +326,7 @@ class Devices {
     ProcessResult result;
     try {
 //      System.out.println("listing devices 00");
-      result = AndroidSDK.runADB("devices");
+      result = sdk.runADB("devices");
 //      System.out.println("listing devices 05");
     } catch (InterruptedException e) {
       return Collections.emptyList();

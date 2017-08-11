@@ -22,6 +22,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.ProcessRegistry;
@@ -30,6 +31,7 @@ import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.android.LogEntry.Severity;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -86,12 +88,12 @@ class Device {
     String name = "";
 
     try {
-      ProcessResult result = AndroidSDK.runADB("-s", id, "shell", "getprop", "ro.product.brand");
+      ProcessResult result = env.getSDK().runADB("-s", id, "shell", "getprop", "ro.product.brand");
       if (result.succeeded()) {
         name += result.getStdout() + " ";
       }
 
-      result = AndroidSDK.runADB("-s", id, "shell", "getprop", "ro.product.model");
+      result = env.getSDK().runADB("-s", id, "shell", "getprop", "ro.product.model");
       if (result.succeeded()) {
         name += result.getStdout();
       }
@@ -407,17 +409,14 @@ class Device {
 
   private ProcessResult adb(final String... cmd) throws InterruptedException, IOException {
     final String[] adbCmd = generateAdbCommand(cmd);
-    return AndroidSDK.runADB(adbCmd);
+    return env.getSDK().runADB(adbCmd);
   }
 
-  private String[] generateAdbCommand(final String... cmd) {
-    //    final String[] adbCmd = new String[3 + cmd.length];
-    //    adbCmd[0] = "adb";
-    //    adbCmd[1] = "-s";
-    //    adbCmd[2] = getId();
-    //    System.arraycopy(cmd, 0, adbCmd, 3, cmd.length);
-    //    return adbCmd;
-    return PApplet.concat(new String[] { "adb", "-s", getId() }, cmd);
+  private String[] generateAdbCommand(final String... cmd) throws IOException {
+    File toolsPath = env.getSDK().getPlatformToolsFolder();
+    File abdPath = Platform.isWindows() ? new File(toolsPath, "adb.exe") :
+                                          new File(toolsPath, "adb");    
+    return PApplet.concat(new String[] { abdPath.getCanonicalPath(), "-s", getId() }, cmd);
   }
 
   @Override

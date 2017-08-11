@@ -105,12 +105,13 @@ public class AndroidEditor extends JavaEditor {
     @Override
     public void run() {
       if (androidMode == null || androidMode.getSDK() == null) return;
-      
-      if (appComponent == AndroidBuild.WATCHFACE) {
-        Devices.enableBluetoothDebugging();
-      }
 
       final Devices devices = Devices.getInstance();
+      
+      if (appComponent == AndroidBuild.WATCHFACE) {
+        devices.enableBluetoothDebugging();
+      }
+      
       java.util.List<Device> deviceList = devices.findMultiple(false);
       Device selectedDevice = devices.getSelectedDevice();
 
@@ -633,7 +634,8 @@ public class AndroidEditor extends JavaEditor {
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
-        Devices.killAdbServer();
+        final Devices devices = Devices.getInstance();
+        devices.killAdbServer();
       }
     });
     androidMenu.add(item);    

@@ -219,6 +219,9 @@ public class AndroidMode extends JavaMode {
       Messages.showWarning("Bad news...",
                            "The Android SDK could not be loaded.\n" +
                            "The Android Mode will be disabled.", tr);
+    } else {
+      Devices devices = Devices.getInstance();
+      devices.setSDK(sdk);
     }
     checkingSDK = false;
   }
@@ -282,7 +285,7 @@ public class AndroidMode extends JavaMode {
     }
 
     int comp = build.getAppComponent();
-    Future<Device> emu = Devices.getInstance().getEmulator(sdk.getToolsFolder(), build.isWear());
+    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear());
     runner = new AndroidRunner(build, listener);
     runner.launch(emu, comp, true);
   }

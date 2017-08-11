@@ -239,7 +239,7 @@ public class Commander implements RunnerListener {
         if (task == RUN) {
           AndroidRunner runner = new AndroidRunner(build, this);
           runner.launch(runOnEmu ?
-              Devices.getInstance().getEmulator(androidMode.getSDK().getToolsFolder(), build.isWear()) :
+              Devices.getInstance().getEmulator(build.isWear()) :
               Devices.getInstance().getHardware(), build.getAppComponent(), runOnEmu);
         }
 

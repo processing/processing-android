@@ -58,7 +58,7 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(File sdkToolsPath, boolean wear) 
+  synchronized public void launch(final AndroidSDK sdk, final boolean wear) 
       throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
@@ -75,8 +75,8 @@ class EmulatorController {
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
     String gpuFlag = "auto";
     
-    File emulatorPath = Platform.isWindows() ? new File(sdkToolsPath, "emulator.exe") :
-                                               new File(sdkToolsPath, "emulator");
+    File emulatorPath = Platform.isWindows() ? new File(sdk.getToolsFolder(), "emulator.exe") :
+                                               new File(sdk.getToolsFolder(), "emulator");
     final String[] cmd = new String[] {
       emulatorPath.getCanonicalPath(),
       "-avd", avdName,
@@ -143,8 +143,8 @@ class EmulatorController {
             }
             Thread.sleep(2000);
             //System.out.println("done sleeping");
-            ProcessResult result = AndroidSDK.runADB("-s", "emulator-" + portString,
-                    "shell", "getprop", "dev.bootcomplete");
+            ProcessResult result = sdk.runADB("-s", "emulator-" + portString,
+              "shell", "getprop", "dev.bootcomplete");
             if (result.getStdout().equals("1\n")) {
               setState(State.RUNNING);
               return;

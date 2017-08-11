@@ -69,7 +69,8 @@ public class AndroidRunner implements DeviceListener {
       listener.statusError("Lost connection with " + devStr + " while launching. Try again.");
       // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
-      Devices.killAdbServer();
+      final Devices devices = Devices.getInstance();
+      devices.killAdbServer();
       return false;
     }
     
@@ -96,7 +97,8 @@ public class AndroidRunner implements DeviceListener {
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
       listener.statusError("Lost connection with " + devStr + " while installing. Try again.");
-      Devices.killAdbServer();  // see above
+      final Devices devices = Devices.getInstance();
+      devices.killAdbServer();  // see above
       return false;
     }
 
