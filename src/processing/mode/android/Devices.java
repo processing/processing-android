@@ -44,10 +44,25 @@ class Devices {
   private static final String ADB_DEVICES_ERROR =
     "Received unfamiliar output from “adb devices”.\n" +
     "The device list may have errors.";
+  
+  private static final String DEVICE_PERMISSIONS_URL = 
+	"https://developer.android.com/studio/run/device.html";
+	  
+  private static final String DEVICE_PERMISSIONS_TITLE =
+	"Found devices with no permissions!";
+	  
+  private static final String DEVICE_PERMISSIONS_MESSAGE =
+    "Make sure that the device has USB debugging enabled, and that the required " + 
+    "USB drivers are installed on Windows, and that permissions are properly configured on Linux. " + 
+    "Also, on Linux, don't set the USB configuration to \"charging\" while debugging.<br><br>" +
+	"Read this guide on <a href=\"" + DEVICE_PERMISSIONS_URL + "\">runnings apps on hardware device</a> " +
+	"for more details.";
 
   private static final Devices INSTANCE = new Devices();
 
   private static final String BT_DEBUG_PORT = "4444";
+  
+  private boolean showPermissionsErrorMessage = true;
   
   private AndroidSDK sdk;
   
@@ -364,6 +379,9 @@ class Devices {
         final String[] fields = line.split("\t");
         if (fields[1].equals("device")) {
           devices.add(fields[0]);
+        } else if (fields[1].contains("no permissions") && showPermissionsErrorMessage) {
+          AndroidUtil.showMessage(DEVICE_PERMISSIONS_TITLE, DEVICE_PERMISSIONS_MESSAGE);     	
+          showPermissionsErrorMessage = false;
         }
       }
     }
