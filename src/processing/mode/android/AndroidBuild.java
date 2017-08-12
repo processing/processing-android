@@ -31,8 +31,6 @@ import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
-import processing.app.exec.ProcessHelper;
-import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import processing.mode.java.preproc.SurfaceInfo;

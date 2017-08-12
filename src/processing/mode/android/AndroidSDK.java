@@ -478,11 +478,11 @@ class AndroidSDK {
   }
   
   static public boolean locateSysImage(final Frame window, 
-      final AndroidMode androidMode, boolean wear)
+      final AndroidMode androidMode, final boolean wear, final boolean ask)
       throws BadSDKException, CancelException, IOException {
     final int result = showDownloadSysImageDialog(window, wear);
     if (result == JOptionPane.YES_OPTION) {
-      return downloadSysImage(window, androidMode, wear);
+      return downloadSysImage(window, androidMode, wear, ask);
     } else if (result == JOptionPane.NO_OPTION) {
       return false;
     } else {
@@ -514,9 +514,9 @@ class AndroidSDK {
   }
   
   static public boolean downloadSysImage(final Frame editor, 
-      final AndroidMode androidMode, final boolean wear) 
+      final AndroidMode androidMode, final boolean wear, final boolean ask) 
       throws BadSDKException, CancelException {
-    final SysImageDownloader downloader = new SysImageDownloader(editor, wear);    
+    final SysImageDownloader downloader = new SysImageDownloader(editor, wear, ask);    
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
     
     if (downloader.cancelled()) {
@@ -704,9 +704,9 @@ class AndroidSDK {
       adbCmd = cmd;
     }
     // printing this here to see if anyone else is killing the adb server
-//    if (processing.app.Base.DEBUG) {
+    if (processing.app.Base.DEBUG) {
       PApplet.printArray(adbCmd);
-//    }
+    }
     try {
       ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
       // Ignore messages about starting up an adb daemon

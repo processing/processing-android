@@ -112,6 +112,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private Frame editor;
   private boolean result;
   private boolean wear;
+  private boolean askABI;
   private String abi;
   private boolean cancelled;
   
@@ -400,10 +401,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     }
   }
 
-  public SysImageDownloader(Frame editor, boolean wear) {
+  public SysImageDownloader(Frame editor, boolean wear, boolean ask) {
     super(editor, "System image download", true);
     this.editor = editor;
     this.wear = wear;
+    this.askABI = ask;
     this.result = false;    
     createLayout();
   }
@@ -412,7 +414,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     cancelled = false;
 
     abi = Preferences.get("android.emulator.image.abi");
-    if (abi == null || abi.equals(AVD.DEFAULT_ABI)) {
+    if (abi == null || askABI) {
       // Either there was no image architecture selected, or the default was set.
       // In this case, we give the user the option to choose between ARM and x86
       final int result = showSysImageMessage();

@@ -477,7 +477,12 @@ public class AVD {
         return false;
       }
       if (!avd.hasImages(sdk)) {
-        boolean res = AndroidSDK.locateSysImage(window, mode, wear);
+        // Check that the AVD for the other kind of device has been already
+        // downloaded, and if so, the downloader should not ask for an 
+        // ABI again.
+        AVD other = wear ? phoneAVD : watchAVD;
+        boolean ask = !other.hasImages(sdk);        
+        boolean res = AndroidSDK.locateSysImage(window, mode, wear, ask);
         if (!res) {
           return false;
         } else {
