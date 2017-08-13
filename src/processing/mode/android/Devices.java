@@ -308,10 +308,15 @@ class Devices {
 
 
   void deviceRemoved(final Device device) {
-    //    System.err.println("AndroidEnvironment: removing " + device.getId());
-    if (devices.remove(device.getId()) == null) {
-      throw new IllegalStateException("I didn't know about device "
-          + device.getId() + "!");
+    String id = device.getId();
+    if (devices.containsKey(id)) {
+      devices.remove(device.getId());
+    } else {
+      // TODO: Device already removed, don't throw exception as this seems to 
+      // happen quite often when removing a device, perhaps shutdown() gets 
+      // called twice?
+//      throw new IllegalStateException("I didn't know about device "
+//          + device.getId() + "!");      
     }
   }
 
