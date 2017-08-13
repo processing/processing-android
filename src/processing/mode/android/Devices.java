@@ -298,8 +298,11 @@ class Devices {
     try {
       device.initialize();
       if (devices.put(device.getId(), device) != null) {
-        throw new IllegalStateException("Adding " + device
-            + ", which already exists!");
+        // TODO: Silently add existing device, this may be indicating, like in 
+        // deviceRemoved() below, different threads trying to add the same 
+        // device. Does not seem to have any negative effect.
+//        throw new IllegalStateException("Adding " + device
+//            + ", which already exists!");
       }
     } catch (final Exception e) {
       System.err.println("While initializing " + device.getId() + ": " + e);
