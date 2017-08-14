@@ -415,9 +415,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     actionButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if (downloadTaskRunning) { // i.e button state is Cancel
-          downloadTask.cancel(true);
-          status.setText("Download cancelled");
-          actionButton.setText("Update");
+          cancelTasks();
         } else { // i.e button state is Update
           downloadTask = new DownloadTask();
           progressBar.setIndeterminate(true);
@@ -499,9 +497,11 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   public void cancelTasks() {
     queryTask.cancel(true);
     if (downloadTaskRunning) {
+      downloadTask.cancel(true);
+      status.setText("Download cancelled");
       JOptionPane.showMessageDialog(null,
           "Download cancelled", "Warning", JOptionPane.WARNING_MESSAGE);
-      downloadTask.cancel(true);
+      actionButton.setText("Update");
     }
   }
   
