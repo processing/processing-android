@@ -30,7 +30,6 @@ import android.os.Bundle;
 import android.graphics.Rect;
 import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.watchface.CanvasWatchFaceService;
-import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -40,7 +39,6 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.core.PApplet;
-import processing.event.MouseEvent;
 
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
   private Point size;
@@ -172,7 +170,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
     private void initComplications() {
       try {
-        compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
+        compUpdatedMethod = sketch.getClass().getMethod("onComplicationDataUpdate",
           new Class[] {int.class, ComplicationData.class});
       } catch (Exception e) {
         compUpdatedMethod = null;
@@ -268,8 +266,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
     @Override
-    public void onTapCommand(
-            @TapType int tapType, int x, int y, long eventTime) {
+    public void onTapCommand(@TapType int tapType, int x, int y, long eventTime) {
       if (tapCommandMethod != null) {
         try {
           tapCommandMethod.invoke(tapType, x, y, eventTime);
@@ -280,8 +277,8 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
     @Override
-    public void onComplicationDataUpdate(
-            int complicationId, ComplicationData complicationData) {
+    public void onComplicationDataUpdate(int complicationId,
+                                         ComplicationData complicationData) {
       if (compUpdatedMethod != null) {
         try {
           compUpdatedMethod.invoke(complicationId, complicationData);

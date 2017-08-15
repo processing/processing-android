@@ -28,15 +28,12 @@ import android.view.Display;
 import android.view.WindowInsets;
 import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.watchface.Gles2WatchFaceService;
-import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.support.wearable.watchface.WatchFaceService.TapType;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import processing.core.PApplet;
-import processing.event.MouseEvent;
 import java.lang.reflect.Method;
 
 import android.graphics.Rect;
@@ -189,8 +186,8 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
     private void initComplications() {
       try {
-        compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
-                                                        new Class[] {int.class, ComplicationData.class});
+        compUpdatedMethod = sketch.getClass().getMethod("onComplicationDataUpdate",
+          new Class[] {int.class, ComplicationData.class});
       } catch (Exception e) {
         compUpdatedMethod = null;
       }
@@ -268,8 +265,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
 
     @Override
-    public void onTapCommand(
-            @TapType int tapType, int x, int y, long eventTime) {
+    public void onTapCommand(@TapType int tapType, int x, int y, long eventTime) {
       if (tapCommandMethod != null) {
         try {
           tapCommandMethod.invoke(tapType, x, y, eventTime);
@@ -280,8 +276,8 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
 
     @Override
-    public void onComplicationDataUpdate(
-            int complicationId, ComplicationData complicationData) {
+    public void onComplicationDataUpdate(int complicationId,
+                                         ComplicationData complicationData) {
       if (compUpdatedMethod != null) {
         try {
           compUpdatedMethod.invoke(complicationId, complicationData);
