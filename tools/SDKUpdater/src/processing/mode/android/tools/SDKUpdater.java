@@ -498,9 +498,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     queryTask.cancel(true);
     if (downloadTaskRunning) {
       downloadTask.cancel(true);
-      status.setText("Download cancelled");
+      status.setText("Download canceled");
       JOptionPane.showMessageDialog(null,
-          "Download cancelled", "Warning", JOptionPane.WARNING_MESSAGE);
+          "Download canceled", "Warning", JOptionPane.WARNING_MESSAGE);
       actionButton.setText("Update");
     }
   }
