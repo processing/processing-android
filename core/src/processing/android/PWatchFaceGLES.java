@@ -30,6 +30,7 @@ import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.support.wearable.watchface.WatchFaceService.TapType;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -138,6 +139,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
+    private Method tapCommandMethod;
     private boolean isRound = false;
     private Rect insets = new Rect();
     private boolean lowBitAmbient = false;
@@ -151,6 +153,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
               .build());
       sketch = createSketch();
       sketch.initSurface(PWatchFaceGLES.this, null);
+      initTapEvents();
       initComplications();
       requestPermissions();
     }
@@ -170,6 +173,16 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
         sketch.displayHeight = height;
         sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
         sketch.surfaceChanged();
+      }
+    }
+
+
+    private void initTapEvents() {
+      try {
+        tapCommandMethod = sketch.getClass().getMethod("onTapCommand",
+          new Class[] {int.class, int.class, int.class, long.class});
+      } catch (Exception e) {
+        tapCommandMethod = null;
       }
     }
 
@@ -231,9 +244,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
 
 
     @Override
-    public void onPeekCardPositionUpdate(Rect rect) {
-
-    }
+    public void onPeekCardPositionUpdate(Rect rect) { }
 
 
     @Override
@@ -245,64 +256,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     @Override
     public void onDraw() {
       super.onDraw();
-//      PApplet.println("Calling handleDraw: " + sketch.width + " " + sketch.height);
       if (sketch != null) sketch.handleDraw();
-    }
-
-
-    @Override
-    public void onTapCommand(
-            @TapType int tapType, int x, int y, long eventTime) {
-      switch (tapType) {
-        case WatchFaceService.TAP_TYPE_TOUCH:
-          // The system sends the first command, TAP_TYPE_TOUCH, when the user initially touches the screen
-//          if (withinTapRegion(x, y)) {
-//            // Provide visual feedback of touch event
-//            startTapHighlight(x, y, eventTime);
-//          }
-          sketch.postEvent(new MouseEvent(null, eventTime,
-                  MouseEvent.PRESS, 0,
-                  x, y, LEFT, 1));
-          invalidate();
-          break;
-
-
-        case WatchFaceService.TAP_TYPE_TAP:
-          // Before sending the next command, the system judges whether the contact is a single tap,
-          // which is the only gesture allowed. If the user immediately lifts their finger,
-          // the system determines that a single tap took place, and forwards a TAP_TYPE_TAP event
-          sketch.postEvent(new MouseEvent(null, eventTime,
-                  MouseEvent.RELEASE, 0,
-                  x, y, LEFT, 1));
-
-//          hideTapHighlight();
-//          if (withinTapRegion(x, y)) {
-//            // Implement the tap action
-//            // (e.g. show detailed step count)
-//            onWatchFaceTap();
-//          }
-
-
-          invalidate();
-          break;
-
-        case WatchFaceService.TAP_TYPE_TOUCH_CANCEL:
-          // If the user does not immediately lift their finger, the system forwards a
-          // TAP_TYPE_TOUCH_CANCEL event. Once the user has triggered a TAP_TYPE_TOUCH_CANCEL event,
-          // they cannot trigger a TAP_TYPE_TAP event until they make a new contact with the screen.
-          //hideTapHighlight();
-
-          // New type of event...
-          sketch.postEvent(new MouseEvent(null, eventTime,
-                  MouseEvent.RELEASE, 0,
-                  x, y, LEFT, 1));
-          invalidate();
-          break;
-
-        default:
-          super.onTapCommand(tapType, x, y, eventTime);
-          break;
-      }
     }
 
 
@@ -310,6 +264,18 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public void onTouchEvent(MotionEvent event) {
       super.onTouchEvent(event);
       if (sketch != null) sketch.surfaceTouchEvent(event);
+    }
+
+
+    @Override
+    public void onTapCommand(
+            @TapType int tapType, int x, int y, long eventTime) {
+      if (tapCommandMethod != null) {
+        try {
+          tapCommandMethod.invoke(tapType, x, y, eventTime);
+        } catch (Exception e) { }
+        invalidate();
+      }
     }
 
 

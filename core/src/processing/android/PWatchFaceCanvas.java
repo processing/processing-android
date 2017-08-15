@@ -139,6 +139,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   private class CanvasEngine extends CanvasWatchFaceService.Engine implements ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
+    private Method tapCommandMethod;
     private boolean isRound = false;
     private Rect insets = new Rect();
     private boolean lowBitAmbient = false;
@@ -153,15 +154,26 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       sketch = createSketch();
       PGraphicsAndroid2D.useBitmap = false;
       sketch.initSurface(PWatchFaceCanvas.this, null);
+      initTapEvents();
       initComplications();
       requestPermissions();
+    }
+
+
+    private void initTapEvents() {
+      try {
+        tapCommandMethod = sketch.getClass().getMethod("onTapCommand",
+          new Class[] {int.class, int.class, int.class, long.class});
+      } catch (Exception e) {
+        tapCommandMethod = null;
+      }
     }
 
 
     private void initComplications() {
       try {
         compUpdatedMethod = sketch.getClass().getMethod("complicationsUpdated",
-                                                        new Class[] {int.class, ComplicationData.class});
+          new Class[] {int.class, ComplicationData.class});
       } catch (Exception e) {
         compUpdatedMethod = null;
       }
@@ -228,9 +240,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
     @Override
-    public void onPeekCardPositionUpdate(Rect rect) {
-
-    }
+    public void onPeekCardPositionUpdate(Rect rect) { }
 
 
     @Override
@@ -251,65 +261,21 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
 
 
     @Override
-    public void onTapCommand(
-            @TapType int tapType, int x, int y, long eventTime) {
-      switch (tapType) {
-        case WatchFaceService.TAP_TYPE_TOUCH:
-          // The system sends the first command, TAP_TYPE_TOUCH, when the user initially touches the screen
-//          if (withinTapRegion(x, y)) {
-//            // Provide visual feedback of touch event
-//            startTapHighlight(x, y, eventTime);
-//          }
-          sketch.postEvent(new MouseEvent(null, eventTime,
-                  MouseEvent.PRESS, 0,
-                  x, y, LEFT, 1));
-          invalidate();
-          break;
-
-
-        case WatchFaceService.TAP_TYPE_TAP:
-          // Before sending the next command, the system judges whether the contact is a single tap,
-          // which is the only gesture allowed. If the user immediately lifts their finger,
-          // the system determines that a single tap took place, and forwards a TAP_TYPE_TAP event
-          sketch.postEvent(new MouseEvent(null, eventTime,
-                  MouseEvent.RELEASE, 0,
-                  x, y, LEFT, 1));
-
-//          hideTapHighlight();
-//          if (withinTapRegion(x, y)) {
-//            // Implement the tap action
-//            // (e.g. show detailed step count)
-//            onWatchFaceTap();
-//          }
-
-
-          invalidate();
-          break;
-
-        case WatchFaceService.TAP_TYPE_TOUCH_CANCEL:
-          // If the user does not immediately lift their finger, the system forwards a
-          // TAP_TYPE_TOUCH_CANCEL event. Once the user has triggered a TAP_TYPE_TOUCH_CANCEL event,
-          // they cannot trigger a TAP_TYPE_TAP event until they make a new contact with the screen.
-          //hideTapHighlight();
-
-          // New type of event...
-          sketch.postEvent(new MouseEvent(null, eventTime,
-                  MouseEvent.RELEASE, 0,
-                  x, y, LEFT, 1));
-          invalidate();
-          break;
-
-        default:
-          super.onTapCommand(tapType, x, y, eventTime);
-          break;
-      }
+    public void onTouchEvent(MotionEvent event) {
+      super.onTouchEvent(event);
+      if (sketch != null) sketch.surfaceTouchEvent(event);
     }
 
 
     @Override
-    public void onTouchEvent(MotionEvent event) {
-      super.onTouchEvent(event);
-      if (sketch != null) sketch.surfaceTouchEvent(event);
+    public void onTapCommand(
+            @TapType int tapType, int x, int y, long eventTime) {
+      if (tapCommandMethod != null) {
+        try {
+          tapCommandMethod.invoke(tapType, x, y, eventTime);
+        } catch (Exception e) { }
+        invalidate();
+      }
     }
 
 
@@ -319,8 +285,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
       if (compUpdatedMethod != null) {
         try {
           compUpdatedMethod.invoke(complicationId, complicationData);
-        } catch (Exception e) {
-        }
+        } catch (Exception e) { }
         invalidate();
       }
     }
