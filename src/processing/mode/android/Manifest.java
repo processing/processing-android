@@ -149,32 +149,43 @@ public class Manifest {
 
 
   public void setPermissions(String[] names) {
-    // just remove all the old ones
+    boolean hasWakeLock = false;
+    boolean hasVibrate = false;
+    boolean hasReadExtStorage = false;
+    
+    // Remove all the old permissions...
     for (XML kid : xml.getChildren("uses-permission")) {
       String name = kid.getString("android:name");
-      // Don't remove required permissions for wallpapers, watchfaces and VR.
-      if (appComp == AndroidBuild.WALLPAPER) {
-      } else if (appComp == AndroidBuild.WATCHFACE) {
-        if (name.equals("WAKE_LOCK")) continue;
-      } else if (appComp == AndroidBuild.VR) {
-        if (name.equals("VIBRATE") ||
-            name.equals("READ_EXTERNAL_STORAGE")) continue;
+      
+      // ...except the ones for watch faces and VR apps.   
+      if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) {
+        hasWakeLock = true;
+        continue;
       }
+      if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) {
+        hasVibrate = true;
+        continue;
+      }
+      if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) {
+        hasReadExtStorage = true;
+        continue;
+      }
+      
       // Don't remove non-standard permissions, such as
       // com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA
+      // because these are set manually by the user.
       if (-1 < name.indexOf("com.google.android")) continue;
       xml.removeChild(kid);
     }
-    // ...and add the new kids back
+    
+    // ...and add the new permissions back
     for (String name : names) {
-      // Don't add required permissions for wallpapers, watchfaces and VR again.      
-      if (appComp == AndroidBuild.WALLPAPER) {
-      } else if (appComp == AndroidBuild.WATCHFACE) {
-        if (name.equals("WAKE_LOCK")) continue;
-      } else if (appComp == AndroidBuild.VR) {
-        if (name.equals("VIBRATE") ||
-            name.equals("READ_EXTERNAL_STORAGE")) continue;
-      }
+      
+      // Don't add required permissions for watch faces and VR again...
+      if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) continue;
+      if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) continue;
+      if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) continue;
+         
       XML newbie = xml.addChild("uses-permission");
       if (-1 < name.indexOf(".")) {
         // Permission string contains path
@@ -183,9 +194,58 @@ public class Manifest {
         newbie.setString("android:name", PERMISSION_PREFIX + name);
       }
     }
+
+    // ...unless they were initially missing.
+    if (appComp == AndroidBuild.WATCHFACE && !hasWakeLock) {
+      xml.addChild("uses-permission").
+          setString("android:name", PERMISSION_PREFIX + "WAKE_LOCK");
+    }
+    if (appComp == AndroidBuild.VR && !hasVibrate) {
+      xml.addChild("uses-permission").
+          setString("android:name", PERMISSION_PREFIX + "VIBRATE");      
+    }
+    if (appComp == AndroidBuild.VR && !hasReadExtStorage) {
+      xml.addChild("uses-permission").
+          setString("android:name", PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE");       
+    }
+    
     save();
   }
 
+  
+  private void fixPermissions(XML mf) {
+    boolean hasWakeLock = false;
+    boolean hasVibrate = false;
+    boolean hasReadExtStorage = false;      
+    for (XML kid : mf.getChildren("uses-permission")) {
+      String name = kid.getString("android:name");
+      if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) {
+        hasWakeLock = true;
+        continue;
+      }
+      if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) {
+        hasVibrate = true;
+        continue;
+      }
+      if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) {
+        hasReadExtStorage = true;
+        continue;
+      }
+    }
+    if (appComp == AndroidBuild.WATCHFACE && !hasWakeLock) {
+      mf.addChild("uses-permission").
+         setString("android:name", PERMISSION_PREFIX + "WAKE_LOCK");
+    }
+    if (appComp == AndroidBuild.VR && !hasVibrate) {
+      mf.addChild("uses-permission").
+         setString("android:name", PERMISSION_PREFIX + "VIBRATE");      
+    }
+    if (appComp == AndroidBuild.VR && !hasReadExtStorage) {
+      mf.addChild("uses-permission").
+         setString("android:name", PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE");       
+    }    
+  }
+  
 
   private void writeBlankManifest(final File xmlFile, final int appComp) {
     File xmlTemplate = new File(modeFolder, "templates/" + MANIFEST_TEMPLATE[appComp]);
@@ -231,12 +291,19 @@ public class Manifest {
         app.setString("android:label", className);
       }      
       
+      // Services need the label also in the service section
       if (appComp == AndroidBuild.WALLPAPER || appComp == AndroidBuild.WATCHFACE) {
         XML serv = app.getChild("service");
         label = serv.getString("android:label");
         if (label.length() == 0) {
           serv.setString("android:label", className);
         }       
+      }
+      
+      // Make sure that the required permissions for watch faces and VR apps are
+      // included. 
+      if (appComp == AndroidBuild.WATCHFACE || appComp == AndroidBuild.VR) {
+        fixPermissions(mf);
       }
 
       PrintWriter writer = PApplet.createWriter(file);
