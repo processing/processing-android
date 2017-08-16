@@ -38,6 +38,8 @@ import processing.mode.java.preproc.PdePreprocessor;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -63,8 +65,6 @@ public class AndroidEditor extends JavaEditor {
 
   private List<AndroidTool> androidTools;
   
-  private java.util.Timer updateDevicesTimer;
-  
   private JCheckBoxMenuItem fragmentItem;
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
@@ -87,97 +87,6 @@ public class AndroidEditor extends JavaEditor {
   @Override
   public PdePreprocessor createPreprocessor(final String sketchName) {
     return new AndroidPreprocessor(sketchName);  
-  }
-
-  class UpdateDeviceListTask extends TimerTask {
-
-    private JMenu deviceMenu;
-
-    public UpdateDeviceListTask(JMenu deviceMenu) {
-      this.deviceMenu = deviceMenu;
-    }
-    
-    private Device selectFirstDevice(java.util.List<Device> deviceList) {
-      if (0 < deviceList.size()) return deviceList.get(0);
-      return null;
-    }
-
-    @Override
-    public void run() {
-      if (androidMode == null || androidMode.getSDK() == null) return;
-
-      final Devices devices = Devices.getInstance();
-      
-      if (appComponent == AndroidBuild.WATCHFACE) {
-        devices.enableBluetoothDebugging();
-      }
-      
-      java.util.List<Device> deviceList = devices.findMultiple(false);
-      Device selectedDevice = devices.getSelectedDevice();
-
-      if (deviceList.size() == 0) {
-        //if (deviceMenu.getItem(0).isEnabled()) {
-        if (0 < deviceMenu.getItemCount()) {
-          deviceMenu.removeAll();
-          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
-          noDevicesItem.setEnabled(false);
-          deviceMenu.add(noDevicesItem);
-        }
-        devices.setSelectedDevice(null);
-      } else {
-        deviceMenu.removeAll();
-
-        if (selectedDevice == null) {
-          selectedDevice = selectFirstDevice(deviceList);
-          devices.setSelectedDevice(selectedDevice);  
-        } else {
-          // check if selected device is still connected
-          boolean found = false;
-          for (Device device : deviceList) {
-            if (device.equals(selectedDevice)) {
-              found = true;
-              break;
-            }
-          }
-
-          if (!found) {
-            selectedDevice = selectFirstDevice(deviceList);
-            devices.setSelectedDevice(selectedDevice);  
-          }
-        }
-
-        for (final Device device : deviceList) {
-          final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
-          deviceItem.setEnabled(true);
-
-          if (device.equals(selectedDevice)) deviceItem.setState(true);
-
-          // prevent checkboxmenuitem automatic state changing onclick
-          deviceItem.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-              if (device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
-              else deviceItem.setState(false);
-            }
-          });
-
-          deviceItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-              devices.setSelectedDevice(device);
-
-              for (int i = 0; i < deviceMenu.getItemCount(); i++) {
-                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
-              }
-
-              deviceItem.setState(true);
-            }
-          });
-
-          deviceMenu.add(deviceItem);
-        }
-      }
-    }
   }
 
 
@@ -322,21 +231,35 @@ public class AndroidEditor extends JavaEditor {
     
     androidMenu.addSeparator();
 
-    final JMenu mobDeveMenu = new JMenu("Devices");
+    final JMenu devicesMenu = new JMenu("Devices");
 
-    JMenuItem noMobDevItem = new JMenuItem("No connected devices");
-    noMobDevItem.setEnabled(false);
-    mobDeveMenu.add(noMobDevItem);
-    androidMenu.add(mobDeveMenu);
+    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+    noDevicesItem.setEnabled(false);
+    devicesMenu.add(noDevicesItem);
+    androidMenu.add(devicesMenu);
   
-    // start updating device menus
-    UpdateDeviceListTask task = new UpdateDeviceListTask(mobDeveMenu);
-    if (updateDevicesTimer == null) {
-      updateDevicesTimer = new java.util.Timer();
-    } else {
-      updateDevicesTimer.cancel();
-    }
-    updateDevicesTimer.schedule(task, 5000, 5000);
+    // Update the device list only when the Android menu is selected.
+    androidMenu.addMenuListener(new MenuListener() {
+      UpdateDeviceListTask task;
+      java.util.Timer timer;
+      
+      @Override
+      public void menuSelected(MenuEvent e) {
+        task = new UpdateDeviceListTask(devicesMenu);
+        timer = new java.util.Timer();
+        timer.schedule(task, 400, 3000);        
+      }
+
+      @Override
+      public void menuDeselected(MenuEvent e) {
+        timer.cancel();
+      }
+
+      @Override
+      public void menuCanceled(MenuEvent e) {
+        timer.cancel();
+      }
+    });    
     
     androidMenu.addSeparator();
 
@@ -400,15 +323,6 @@ public class AndroidEditor extends JavaEditor {
     File javaReferenceFolder = Platform.getContentFile("modes/java/reference");
     File file = new File(javaReferenceFolder, filename);
     Platform.openURL(file.toURI().toString());
-  }
-
-
-  @Override
-  public void dispose() {
-    if (updateDevicesTimer != null) {
-      updateDevicesTimer.cancel();
-    }
-    super.dispose();
   }
   
   
@@ -636,8 +550,100 @@ public class AndroidEditor extends JavaEditor {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
         final Devices devices = Devices.getInstance();
         devices.killAdbServer();
+        devices.startAdbServer();
       }
     });
-    androidMenu.add(item);    
+    androidMenu.add(item);
+  }
+  
+  
+  class UpdateDeviceListTask extends TimerTask {
+
+    private JMenu deviceMenu;
+
+    public UpdateDeviceListTask(JMenu deviceMenu) {
+      this.deviceMenu = deviceMenu;
+    }
+    
+    private Device selectFirstDevice(java.util.List<Device> deviceList) {
+      if (0 < deviceList.size()) return deviceList.get(0);
+      return null;
+    }
+
+    @Override
+    public void run() {
+      if (androidMode == null || androidMode.getSDK() == null) return;
+
+      final Devices devices = Devices.getInstance();
+      
+      if (appComponent == AndroidBuild.WATCHFACE) {        
+        devices.enableBluetoothDebugging();
+      }
+      
+      java.util.List<Device> deviceList = devices.findMultiple(false);
+      Device selectedDevice = devices.getSelectedDevice();
+
+      if (deviceList.size() == 0) {
+        if (0 < deviceMenu.getItemCount()) {
+          deviceMenu.removeAll();
+          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+          noDevicesItem.setEnabled(false);
+          deviceMenu.add(noDevicesItem);
+        }
+        devices.setSelectedDevice(null);
+      } else {
+        deviceMenu.removeAll();
+
+        if (selectedDevice == null) {
+          selectedDevice = selectFirstDevice(deviceList);
+          devices.setSelectedDevice(selectedDevice);  
+        } else {
+          // check if selected device is still connected
+          boolean found = false;
+          for (Device device : deviceList) {
+            if (device.equals(selectedDevice)) {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            selectedDevice = selectFirstDevice(deviceList);
+            devices.setSelectedDevice(selectedDevice);  
+          }
+        }
+
+        for (final Device device : deviceList) {
+          final JCheckBoxMenuItem deviceItem = new JCheckBoxMenuItem(device.getName());
+          deviceItem.setEnabled(true);
+
+          if (device.equals(selectedDevice)) deviceItem.setState(true);
+
+          // prevent checkboxmenuitem automatic state changing onclick
+          deviceItem.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+              if (device.equals(devices.getSelectedDevice())) deviceItem.setState(true);
+              else deviceItem.setState(false);
+            }
+          });
+
+          deviceItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              devices.setSelectedDevice(device);
+
+              for (int i = 0; i < deviceMenu.getItemCount(); i++) {
+                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
+              }
+
+              deviceItem.setState(true);
+            }
+          });
+
+          deviceMenu.add(deviceItem);
+        }
+      }
+    }
   }  
 }
