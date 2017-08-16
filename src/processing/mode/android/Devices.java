@@ -94,16 +94,29 @@ class Devices {
   }
 
   public void killAdbServer() {
-    System.out.println("Shutting down any existing adb server...");
+    System.out.print("Shutting down any existing adb server...");
     System.out.flush();
     try {
       sdk.runADB("kill-server");
+      System.out.println(" Done.");
     } catch (final Exception e) {
-      System.err.println("Devices.killAdbServer() failed.");
+      System.err.println("/nDevices.killAdbServer() failed.");
       e.printStackTrace();
     }
   }
 
+  public void startAdbServer() {
+    System.out.print("Starting a new adb server...");
+    System.out.flush();
+    try {
+      sdk.runADB("start-server");
+      System.out.println(" Done.");
+    } catch (final Exception e) {
+      System.err.println("/nDevices.startAdbServer() failed.");
+      e.printStackTrace();
+    }
+  }  
+  
   public void enableBluetoothDebugging() {
     final Devices devices = Devices.getInstance();
     java.util.List<Device> deviceList = devices.findMultiple(false);
@@ -119,7 +132,8 @@ class Devices {
     try {
       // Try Enable debugging over bluetooth
       // http://developer.android.com/training/wearables/apps/bt-debugging.html
-      sdk.runADB("-s", device.getId(), "forward", "tcp:" + BT_DEBUG_PORT, "localabstract:/adb-hub");
+      sdk.runADB("-s", device.getId(), "forward", "tcp:" + BT_DEBUG_PORT, 
+                "localabstract:/adb-hub");
       sdk.runADB("connect", "127.0.0.1:" + BT_DEBUG_PORT);
     } catch (final Exception e) {
       e.printStackTrace();
