@@ -2008,7 +2008,10 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void loadPixels() {
-    if (bitmap == null) return;
+    if (bitmap == null) {
+      throw new RuntimeException("The pixels array is not available in this " +
+                                 "renderer withouth a backing bitmap");
+    }
 
     if ((pixels == null) || (pixels.length != width * height)) {
       pixels = new int[width * height];
@@ -2027,7 +2030,10 @@ public class PGraphicsAndroid2D extends PGraphics {
    */
   @Override
   public void updatePixels() {
-    if (bitmap == null) return;
+    if (bitmap == null) {
+      throw new RuntimeException("The pixels array is not available in this " +
+                                 "renderer withouth a backing bitmap");
+    }
 
 //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.setDataElements(0, 0, width, height, pixels);
@@ -2236,7 +2242,10 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void copy(int sx, int sy, int sw, int sh,
                    int dx, int dy, int dw, int dh) {
-    if (bitmap == null) return;
+    if (bitmap == null) {
+      throw new RuntimeException("The pixels array is not available in this " +
+                                 "renderer withouth a backing bitmap");
+    }
 
 //    Bitmap bitsy = Bitmap.createBitmap(image, sx, sy, sw, sh);
 //    rect.set(dx, dy, dx + dw, dy + dh);
