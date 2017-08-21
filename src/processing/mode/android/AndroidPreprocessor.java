@@ -68,11 +68,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
       System.err.println("found here: http://wiki.processing.org/w/Android");
       throw new SketchException("Could not parse the size() command.");
     }
-    /*
-    sizeStatement = surfaceInfo.getStatement();
-    sketchWidth = surfaceInfo.getWidth();
-    sketchHeight = surfaceInfo.getHeight();
-    sketchRenderer = surfaceInfo.getRenderer();*/
     return surfaceInfo;
   }
 
@@ -108,7 +103,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
           "value (not variables) for the smooth() command.\n" +
           "See the smooth() reference for an explanation.";
         Messages.showWarning("Could not find smooth level", message, null);
-//        new Exception().printStackTrace(System.out);
         return null;
       }
 
@@ -117,6 +111,131 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return new String[] { null, null };  // not an error, just empty
   }
 
+
+  @Override
+  protected int writeImports(final PrintWriter out,
+                             final List<String> programImports,
+                             final List<String> codeFolderImports) {
+    out.println("package " + packageName + ";");
+    out.println();
+    int count = 2;
+    count += super.writeImports(out, programImports, codeFolderImports);
+//    count += writeImportList(out, getAndroidImports());
+    return count;
+  }
+
+  
+  @Override
+  protected void writeFooter(PrintWriter out, String className) {
+    SurfaceInfo info = null;
+    try {
+      info = initSketchSize(sketch.getMainProgram());
+    } catch (SketchException e) {
+      e.printStackTrace();
+    }
+    
+    if (info == null) {
+      // Cannot get size info, just use parent's implementation.
+      super.writeFooter(out, className);
+    } else {
+      // Same as in the parent, but without writing the main() method, which is
+      // not needed in Android.
+      
+      if (mode == Mode.STATIC) {
+        // close off setup() definition
+        out.println(indent + indent + "noLoop();");
+        out.println(indent + "}");
+        out.println();
+      }
+
+      if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
+        // doesn't remove the original size() method, but calling size()
+        // again in setup() is harmless.        
+        if (!hasMethod("settings") && info.hasSettings()) {
+          out.println(indent + "public void settings() { " + info.getSettings() + " }");
+        }
+        
+        // close off the class definition
+        out.println("}");
+      }
+    }
+  }
+  
+  
+////////////////////////////////////////////////////////////////////////////////
+// Assorted commented out code
+//
+
+  // As of revision 0215 (2.0b7-ish), the default imports are now identical
+  // between desktop and Android (to avoid unintended incompatibilities).
+  /*
+  @Override
+  public String[] getCoreImports() {
+    return new String[] {
+      "processing.core.*",
+      "processing.data.*",
+      "processing.event.*",
+      "processing.opengl.*"
+    };
+  }
+
+
+  @Override
+  public String[] getDefaultImports() {
+    final String prefsLine = Preferences.get("android.preproc.imports");
+    if (prefsLine != null) {
+      return PApplet.splitTokens(prefsLine, ", ");
+    }
+
+    // The initial values are stored in here for the day when Android
+    // is broken out as a separate mode.
+
+    // In the future, this may include standard classes for phone or
+    // accelerometer access within the Android APIs. This is currently living
+    // in code rather than preferences.txt because Android mode needs to
+    // maintain its independence from the rest of processing.app.
+    final String[] androidImports = new String[] {
+//      "android.view.MotionEvent", "android.view.KeyEvent",
+//      "android.graphics.Bitmap", //"java.awt.Image",
+      "java.io.*", // for BufferedReader, InputStream, etc
+      //"java.net.*", "java.text.*", // leaving otu for now
+      "java.util.*" // for ArrayList and friends
+      //"java.util.zip.*", "java.util.regex.*" // not necessary w/ newer i/o
+    };
+
+    Preferences.set("android.preproc.imports",
+                    PApplet.join(androidImports, ","));
+
+    return androidImports;
+  }
+  */
+  
+  // No need for it now
+  /*
+  public String[] getDefaultImports() {
+//    String[] defs = super.getDefaultImports();    
+//    return defs;
+    return new String[] {
+        "java.util.HashMap",
+        "java.util.ArrayList",
+        "java.io.File",
+        "java.io.BufferedReader",
+        "java.io.PrintWriter",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.io.IOException",
+        "android.app.Activity",
+        "android.app.Fragment"
+      };    
+  } 
+
+  
+  public String[] getAndroidImports() {
+    return new String[] {
+      "processing.android.ServiceEngine"
+    };
+  }  
+  */  
   
   /*
   protected boolean parseSketchSize() {
@@ -198,120 +317,5 @@ public class AndroidPreprocessor extends PdePreprocessor {
     //program = program.replaceAll("import\\s+processing\\.opengl\\.\\S+;", "");
     return super.write(out, program, codeFolderPackages);
   }
-  */
-
-
-  @Override
-  protected int writeImports(final PrintWriter out,
-                             final List<String> programImports,
-                             final List<String> codeFolderImports) {
-    out.println("package " + packageName + ";");
-    out.println();
-    int count = 2;
-    count += super.writeImports(out, programImports, codeFolderImports);
-//    count += writeImportList(out, getAndroidImports());
-    return count;
-  }
-
-  
-/*
-  @Override
-  protected void writeFooter(PrintWriter out, String className) {
-    SurfaceInfo info = null;
-    try {
-      info = initSketchSize(sketch.getMainProgram());
-    } catch (SketchException e) {
-    }
-    
-    if (info == null) {
-      // Cannot get size info, just use parent's implementation.
-      super.writeFooter(out, className);
-    } else {
-      if (mode == Mode.STATIC) {
-        // close off setup() definition
-        out.println(indent + indent + "noLoop();");
-        out.println(indent + "}");
-        out.println();
-      }
-
-      if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
-        if (!hasMethod("settings") && info.hasSettings()) {
-          out.println(indent + "public void settings() { " + info.getSettings() + " }");
-        }
-        out.println("}");
-      }
-    }
-  }
-*/
-
-  // As of revision 0215 (2.0b7-ish), the default imports are now identical
-  // between desktop and Android (to avoid unintended incompatibilities).
-  /*
-  @Override
-  public String[] getCoreImports() {
-    return new String[] {
-      "processing.core.*",
-      "processing.data.*",
-      "processing.event.*",
-      "processing.opengl.*"
-    };
-  }
-
-
-  @Override
-  public String[] getDefaultImports() {
-    final String prefsLine = Preferences.get("android.preproc.imports");
-    if (prefsLine != null) {
-      return PApplet.splitTokens(prefsLine, ", ");
-    }
-
-    // The initial values are stored in here for the day when Android
-    // is broken out as a separate mode.
-
-    // In the future, this may include standard classes for phone or
-    // accelerometer access within the Android APIs. This is currently living
-    // in code rather than preferences.txt because Android mode needs to
-    // maintain its independence from the rest of processing.app.
-    final String[] androidImports = new String[] {
-//      "android.view.MotionEvent", "android.view.KeyEvent",
-//      "android.graphics.Bitmap", //"java.awt.Image",
-      "java.io.*", // for BufferedReader, InputStream, etc
-      //"java.net.*", "java.text.*", // leaving otu for now
-      "java.util.*" // for ArrayList and friends
-      //"java.util.zip.*", "java.util.regex.*" // not necessary w/ newer i/o
-    };
-
-    Preferences.set("android.preproc.imports",
-                    PApplet.join(androidImports, ","));
-
-    return androidImports;
-  }
-  */
-  
-  // No need for it now
-  /*
-  public String[] getDefaultImports() {
-//    String[] defs = super.getDefaultImports();    
-//    return defs;
-    return new String[] {
-        "java.util.HashMap",
-        "java.util.ArrayList",
-        "java.io.File",
-        "java.io.BufferedReader",
-        "java.io.PrintWriter",
-        "java.io.InputStream",
-        "java.io.OutputStream",
-        "java.io.IOException",
-        "android.app.Activity",
-        "android.app.Fragment"
-      };    
-  } 
-
-  
-  public String[] getAndroidImports() {
-    return new String[] {
-      "processing.android.ServiceEngine"
-    };
-  }  
   */  
 }
