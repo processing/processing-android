@@ -244,16 +244,36 @@ class Device {
                  entry.message.contains("Start proc") &&                  
                  entry.message.contains(packageName)) {
         // Sample message string from logcat when starting process:
-        // "Start proc 29318:processing.test.sketch001/u0a403 for activity processing.test.sketch001/.MainActivity"
+        // "Start proc 29318:processing.test.sketch001/u0a403 for activity processing.test.sketch001/.MainActivity"        
+        boolean pidFound = false;
+        
         try {
           int idx0 = entry.message.indexOf("Start proc") + 11;
           int idx1 = entry.message.indexOf(packageName) - 1;
           String pidStr = entry.message.substring(idx0, idx1);
           int pid = Integer.parseInt(pidStr);
           startProc(entry.source, pid);
-        } catch (Exception ex) {
-          System.err.println("AndroidDevice: cannot find process id, console output will be disabled.");
-        }        
+          pidFound = true;
+        } catch (Exception ex) { }
+        
+        if (!pidFound) {
+          // In some cases (old adb maybe?):
+          // https://github.com/processing/processing-android/issues/331
+          // the process start line is slightly different:
+          // I/ActivityManager(  648): Start proc processing.test.sketch_170818a for activity processing.test.sketch_170818a/.MainActivity: pid=4256 uid=10175 gids={50175}          
+          try {
+            int idx0 = entry.message.indexOf("pid=") + 4;
+            int idx1 = entry.message.indexOf("uid") - 1;
+            String pidStr = entry.message.substring(idx0, idx1);
+            int pid = Integer.parseInt(pidStr);
+            startProc(entry.source, pid);
+            pidFound = true;            
+          } catch (Exception ex) { }
+          
+          if (!pidFound) {
+            System.err.println("AndroidDevice: cannot find process id, console output will be disabled.");
+          }
+        }
       } else if (packageName != null && !packageName.equals("") &&
                  entry.message.contains("Killing") &&                
                  entry.message.contains(packageName)) { 
