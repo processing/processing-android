@@ -36,12 +36,16 @@ public class AndroidKeyStore {
   public static final String KEYSTORE_FILE_NAME = "android-release-key.keystore";
 
   public static File getKeyStore() {
-    File keyStore = getKeyStoreLocation();
+    return getKeyStore(KEYSTORE_FILE_NAME);  
+  }
+  
+  public static File getKeyStore(String name) {
+    File keyStore = getKeyStoreLocation(name);
     if (!keyStore.exists()) return null;
     return keyStore;
   }
 
-  public static File getKeyStoreLocation() {
+  public static File getKeyStoreLocation(String name) {
     File sketchbookFolder = processing.app.Base.getSketchbookFolder();
     File androidFolder = new File(sketchbookFolder, "android");    
     File keyStoreFolder = new File(androidFolder, "keystore");
@@ -56,7 +60,7 @@ public class AndroidKeyStore {
       }
     }
 
-    File keyStore = new File(keyStoreFolder, KEYSTORE_FILE_NAME);
+    File keyStore = new File(keyStoreFolder, name);
     return keyStore;
   }
 
@@ -71,7 +75,7 @@ public class AndroidKeyStore {
 
     ProcessHelper ph = new ProcessHelper(new String[] {
         "keytool", "-genkey",
-        "-keystore", getKeyStoreLocation().getAbsolutePath(),
+        "-keystore", getKeyStoreLocation(KEYSTORE_FILE_NAME).getAbsolutePath(),
         "-alias", ALIAS_STRING,
         "-keyalg", "RSA",
         "-keysize", "2048",
@@ -105,7 +109,7 @@ public class AndroidKeyStore {
     File keyStore = getKeyStore();
     if (keyStore == null) return true;
 
-    File keyStoreBackup = new File(processing.app.Base.getSketchbookFolder(), "keystore/" + KEYSTORE_FILE_NAME + "-" + AndroidMode.getDateStamp());
+    File keyStoreBackup = getKeyStoreLocation(KEYSTORE_FILE_NAME + "-" + AndroidMode.getDateStamp());
     if (!keyStore.renameTo(keyStoreBackup)) return false;
     return true;
   }
