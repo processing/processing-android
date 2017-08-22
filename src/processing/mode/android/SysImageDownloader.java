@@ -531,7 +531,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     buttons.setAlignmentX(LEFT_ALIGNMENT);
     JButton cancelButton = new JButton("Cancel download");
     Dimension dim = new Dimension(Toolkit.getButtonWidth()*2,
-        cancelButton.getPreferredSize().height);
+                                  cancelButton.getPreferredSize().height);
 
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
