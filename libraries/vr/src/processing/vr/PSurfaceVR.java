@@ -57,6 +57,8 @@ public class PSurfaceVR extends PSurfaceGLES {
   protected GvrActivity vrActivity;
   protected AndroidVRStereoRenderer renderer;
 
+  private boolean needCalculate;
+
   public PSurfaceVR(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
@@ -281,12 +283,20 @@ public class PSurfaceVR extends PSurfaceGLES {
       hadnleGVREnumError();
       pgl.getGL(null);
       pvr.headTransform(transform);
-      sketch.calculate();
+      needCalculate = true;
     }
 
     @Override
     public void onDrawEye(Eye eye) {
       pvr.eyeTransform(eye);
+      if (needCalculate) {
+        // Call calculate() right after we have the first eye transform.
+        // This allows to update the modelview and projection matrices, so
+        // geometry-related calculations can also be conducted in calculate().
+        pvr.updateView();
+        sketch.calculate();
+        needCalculate = false;
+      }
       sketch.handleDraw();
     }
 
