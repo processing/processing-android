@@ -62,9 +62,9 @@ class AndroidBuild extends JavaBuild {
   static public String TARGET_PLATFORM;
   static {
     TARGET_SDK = Preferences.get("android.sdk.target");
-    if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) < 25) { 
-      // Must be 7.1.1 or higher
-      TARGET_SDK = "25"; 
+    if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) < 26) { 
+      // Must be 8.0 or higher
+      TARGET_SDK = "26"; 
       Preferences.set("android.sdk.target", TARGET_SDK);
     }
     TARGET_PLATFORM = "android-" + TARGET_SDK;
