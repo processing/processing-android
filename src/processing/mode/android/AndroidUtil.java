@@ -194,7 +194,12 @@ public class AndroidUtil {
         
       if (remRoot) {
         // Remove root folder from path
-        int idx = currentEntry.indexOf(File.separator); 
+        int idx = currentEntry.indexOf("/");
+        if (idx == -1) {
+          // Let's try the system file separator
+          // https://stackoverflow.com/a/16485210
+          idx = currentEntry.indexOf(File.separator);
+        }
         currentEntry = currentEntry.substring(idx + 1);
       }
         
