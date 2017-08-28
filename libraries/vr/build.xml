@@ -1,21 +1,24 @@
 <?xml version="1.0"?>
 <project name="Processing VR Library" default="build">
-
-  <property name="processing.dir" value="../../../processing" />
   <property environment="env"/>
+	
+  <!-- path to the android sdk -->
+  <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
+
+  <!-- path to the main processing repo --> 
+  <property name="processing.dir" value="../../../processing" />	
+	
+  <!-- Android platform to build the core library -->
+  <property name="android.platform" value="android-26" />	
 
   <target name="clean" description="Clean the build directories">
     <delete dir="bin" />
     <delete file="library/vr.jar" />
   </target>
 
-  <target name="build" depends="sdk_chatter,compile" description="Build VR library for Processing Android" >
+  <target name="build" depends="compile" description="Build VR library for Processing Android" >
     <mkdir dir="library" />
     <jar basedir="bin" destfile="library/vr.jar" />
-  </target>
-
-  <target name="sdk_chatter" unless="env.ANDROID_SDK">
-    <echo message="ANDROID_SDK not set, skipping build." />
   </target>
 
   <target name="compile" description="Compile sources">
@@ -34,7 +37,7 @@
                   library/gvr-common.jar;
                   library/gvr-audio.jar;
 	              ../../processing-core.zip;
-	              ${env.ANDROID_SDK}/platforms/android-25/android.jar"
+    	          ${sdk.dir}/platforms/${android.platform}/android.jar"
 	   nowarn="true"
 	   compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
       <compilerclasspath path="../../../processing/java/mode/org.eclipse.jdt.core.jar;
