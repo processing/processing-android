@@ -13,7 +13,7 @@
   <property name="core.jar.path" value="../processing-core.zip" />
 
   <!-- Android platform to build the core library -->
-  <property name="android.platform" value="android-25" />
+  <property name="android.platform" value="android-26" />
 
   <!-- Wear version to build the core library -->
   <property name="wear.version" value="2.0.0" />	
