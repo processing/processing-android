@@ -158,15 +158,15 @@ public class Manifest {
       String name = kid.getString("android:name");
       
       // ...except the ones for watch faces and VR apps.   
-      if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) {
+      if (appComp == AndroidBuild.WATCHFACE && name.equals(PERMISSION_PREFIX + "WAKE_LOCK")) {
         hasWakeLock = true;
         continue;
       }
-      if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "VIBRATE")) {
         hasVibrate = true;
         continue;
       }
-      if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
         hasReadExtStorage = true;
         continue;
       }
@@ -219,15 +219,15 @@ public class Manifest {
     boolean hasReadExtStorage = false;      
     for (XML kid : mf.getChildren("uses-permission")) {
       String name = kid.getString("android:name");
-      if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) {
+      if (appComp == AndroidBuild.WATCHFACE && name.equals(PERMISSION_PREFIX + "WAKE_LOCK")) {
         hasWakeLock = true;
         continue;
       }
-      if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "VIBRATE")) {
         hasVibrate = true;
         continue;
       }
-      if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
         hasReadExtStorage = true;
         continue;
       }
