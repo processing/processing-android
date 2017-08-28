@@ -55,8 +55,8 @@ class Devices {
     "Make sure that the device has USB debugging enabled, and that the required " + 
     "USB drivers are installed on Windows, and that permissions are properly configured on Linux. " + 
     "Also, on Linux, don't set the USB configuration to \"charging\" while debugging.<br><br>" +
-	"Read this guide on <a href=\"" + DEVICE_PERMISSIONS_URL + "\">runnings apps on hardware device</a> " +
-	"for more details.";
+	  "Read this guide on <a href=\"" + DEVICE_PERMISSIONS_URL + "\">runnings apps on hardware device</a> " +
+	  "for more details.";
 
   private static final Devices INSTANCE = new Devices();
 
