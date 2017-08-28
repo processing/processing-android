@@ -74,9 +74,9 @@ class AndroidBuild extends JavaBuild {
   // All of these are hard-coded, as the TARGET_SDK. Should obtained from the
   // repository files? Or users being able to change them in the preferences 
   // file?
-  static public final String SUPPORT_VER       = "25.3.1";
-  static public final String PLAY_SERVICES_VER = "11.2.0";  
-  static public final String WEAR_VER          = "2.0.4";
+  static public final String SUPPORT_VER       = "25.2.0";
+  static public final String PLAY_SERVICES_VER = "10.2.0";  
+  static public final String WEAR_VER          = "2.0.0";
   static public final String GVR_VER           = "1.60.1";  
   
   // Main activity or service 
