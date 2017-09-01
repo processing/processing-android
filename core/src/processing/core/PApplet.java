@@ -2415,12 +2415,12 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
-  boolean wearLowBit() {
+  public boolean wearLowBit() {
     return surface.getEngine().useLowBitAmbient();
   }
 
 
-  boolean wearBurnIn() {
+  public boolean wearBurnIn() {
     return surface.getEngine().requireBurnInProtection();
   }
 
