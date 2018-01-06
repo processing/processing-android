@@ -29,7 +29,7 @@ import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
-import com.android.sdklib.tool.SdkManagerCli;
+import com.android.sdklib.tool.sdkmanager.*;
 
 import processing.app.Base;
 import processing.app.Preferences;
