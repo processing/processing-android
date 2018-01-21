@@ -1,25 +1,3 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-
-/*
-  Part of the Processing project - http://processing.org
-
-  Copyright (c) 2013-16 The Processing Foundation
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation, version 2.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty
-  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  See the GNU Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General
-  Public License along with this library; if not, write to the
-  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-  Boston, MA  02111-1307  USA
-*/
-
 package processing.data;
 
 import java.io.*;
@@ -45,7 +23,7 @@ public class StringDict {
   protected String[] values;
 
   /** Internal implementation for faster lookups */
-  private HashMap<String, Integer> indices = new HashMap<String, Integer>();
+  private HashMap<String, Integer> indices = new HashMap<>();
 
 
   public StringDict() {
@@ -160,6 +138,29 @@ public class StringDict {
 
 
   /**
+   * Resize the internal data, this can only be used to shrink the list.
+   * Helpful for situations like sorting and then grabbing the top 50 entries.
+   */
+  public void resize(int length) {
+    if (length > count) {
+      throw new IllegalArgumentException("resize() can only be used to shrink the dictionary");
+    }
+    if (length < 1) {
+      throw new IllegalArgumentException("resize(" + length + ") is too small, use 1 or higher");
+    }
+
+    String[] newKeys = new String[length];
+    String[] newValues = new String[length];
+    PApplet.arrayCopy(keys, newKeys, length);
+    PApplet.arrayCopy(values, newValues, length);
+    keys = newKeys;
+    values = newValues;
+    count = length;
+    resetIndices();
+  }
+
+
+  /**
    * Remove all entries.
    *
    * @webref stringdict:method
@@ -167,7 +168,15 @@ public class StringDict {
    */
   public void clear() {
     count = 0;
-    indices = new HashMap<String, Integer>();
+    indices = new HashMap<>();
+  }
+
+
+  private void resetIndices() {
+    indices = new HashMap<>(count);
+    for (int i = 0; i < count; i++) {
+      indices.put(keys[i], i);
+    }
   }
 
 
@@ -205,8 +214,8 @@ public class StringDict {
       }
 
       public Entry next() {
+        ++index;
         Entry e = new Entry(keys[index], values[index]);
-        index++;
         return e;
       }
 
@@ -385,10 +394,20 @@ public class StringDict {
   }
 
 
+  public void setIndex(int index, String key, String value) {
+    if (index < 0 || index >= count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
+    keys[index] = key;
+    values[index] = value;
+  }
+
+
   public int index(String what) {
     Integer found = indices.get(what);
     return (found == null) ? -1 : found.intValue();
   }
+
 
   /**
    * @webref stringdict:method
@@ -527,10 +546,7 @@ public class StringDict {
     s.run();
 
     // Set the indices after sort/swaps (performance fix 160411)
-    indices = new HashMap<String, Integer>();
-    for (int i = 0; i < count; i++) {
-      indices.put(keys[i], i);
-    }
+    resetIndices();
   }
 
 

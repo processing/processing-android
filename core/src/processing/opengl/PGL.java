@@ -512,6 +512,8 @@ public abstract class PGL {
   }
 
 
+  abstract public void queueEvent(Runnable runnable);
+
   protected boolean isMultisampled() {
     return 1 < numSamples;
   }

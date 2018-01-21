@@ -113,6 +113,12 @@ public class PGLES extends PGL {
   }
 
 
+  public void queueEvent(Runnable runnable) {
+    glview.queueEvent(runnable);
+
+  }
+
+
   @Override
   protected void initSurface(int antialias) {
     SurfaceView surf = sketch.getSurface().getSurfaceView();

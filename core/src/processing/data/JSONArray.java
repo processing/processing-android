@@ -109,7 +109,7 @@ public class JSONArray {
    * Construct an empty JSONArray.
    */
   public JSONArray() {
-    this.myArrayList = new ArrayList<Object>();
+    this.myArrayList = new ArrayList<>();
   }
 
 
@@ -144,17 +144,17 @@ public class JSONArray {
           myArrayList.add(x.nextValue());
         }
         switch (x.nextClean()) {
-        case ';':
-        case ',':
-          if (x.nextClean() == ']') {
+          case ';':
+          case ',':
+            if (x.nextClean() == ']') {
+              return;
+            }
+            x.back();
+            break;
+          case ']':
             return;
-          }
-          x.back();
-          break;
-        case ']':
-          return;
-        default:
-          throw new RuntimeException("Expected a ',' or ']'");
+          default:
+            throw new RuntimeException("Expected a ',' or ']'");
         }
       }
     }
@@ -165,7 +165,7 @@ public class JSONArray {
    * @nowebref
    */
   public JSONArray(IntList list) {
-    myArrayList = new ArrayList<Object>();
+    myArrayList = new ArrayList<>();
     for (int item : list.values()) {
       myArrayList.add(Integer.valueOf(item));
     }
@@ -176,9 +176,9 @@ public class JSONArray {
    * @nowebref
    */
   public JSONArray(FloatList list) {
-    myArrayList = new ArrayList<Object>();
+    myArrayList = new ArrayList<>();
     for (float item : list.values()) {
-      myArrayList.add(new Float(item));
+      myArrayList.add(Float.valueOf(item));
     }
   }
 
@@ -187,7 +187,7 @@ public class JSONArray {
    * @nowebref
    */
   public JSONArray(StringList list) {
-    myArrayList = new ArrayList<Object>();
+    myArrayList = new ArrayList<>();
     for (String item : list.values()) {
       myArrayList.add(item);
     }
@@ -323,8 +323,8 @@ public class JSONArray {
     Object object = this.get(index);
     try {
       return object instanceof Number
-        ? ((Number)object).intValue()
-          : Integer.parseInt((String)object);
+              ? ((Number)object).intValue()
+              : Integer.parseInt((String)object);
     } catch (Exception e) {
       throw new RuntimeException("JSONArray[" + index + "] is not a number.");
     }
@@ -360,8 +360,8 @@ public class JSONArray {
     Object object = this.get(index);
     try {
       return object instanceof Number
-        ? ((Number)object).longValue()
-          : Long.parseLong((String)object);
+              ? ((Number)object).longValue()
+              : Long.parseLong((String)object);
     } catch (Exception e) {
       throw new RuntimeException("JSONArray[" + index + "] is not a number.");
     }
@@ -422,8 +422,8 @@ public class JSONArray {
     Object object = this.get(index);
     try {
       return object instanceof Number
-        ? ((Number)object).doubleValue()
-          : Double.parseDouble((String)object);
+              ? ((Number)object).doubleValue()
+              : Double.parseDouble((String)object);
     } catch (Exception e) {
       throw new RuntimeException("JSONArray[" + index + "] is not a number.");
     }
@@ -465,12 +465,12 @@ public class JSONArray {
   public boolean getBoolean(int index) {
     Object object = this.get(index);
     if (object.equals(Boolean.FALSE) ||
-      (object instanceof String &&
-        ((String)object).equalsIgnoreCase("false"))) {
+            (object instanceof String &&
+                    ((String)object).equalsIgnoreCase("false"))) {
       return false;
     } else if (object.equals(Boolean.TRUE) ||
-      (object instanceof String &&
-        ((String)object).equalsIgnoreCase("true"))) {
+            (object instanceof String &&
+                    ((String)object).equalsIgnoreCase("true"))) {
       return true;
     }
     throw new RuntimeException("JSONArray[" + index + "] is not a boolean.");
@@ -1205,7 +1205,7 @@ public class JSONArray {
 
       if (length == 1) {
         JSONObject.writeValue(writer, this.myArrayList.get(0),
-                              indentFactor, indent);
+                indentFactor, indent);
 //                              thisFactor, indent);
       } else if (length != 0) {
         final int newIndent = indent + thisFactor;
@@ -1221,7 +1221,7 @@ public class JSONArray {
 //          JSONObject.writeValue(writer, this.myArrayList.get(i),
 //                                thisFactor, newIndent);
           JSONObject.writeValue(writer, this.myArrayList.get(i),
-                                indentFactor, newIndent);
+                  indentFactor, newIndent);
           commanate = true;
         }
         if (indentFactor != -1) {

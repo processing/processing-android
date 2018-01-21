@@ -1,25 +1,3 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-
-/*
-  Part of the Processing project - http://processing.org
-
-  Copyright (c) 2013-16 The Processing Foundation
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation, version 2.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty
-  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  See the GNU Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General
-  Public License along with this library; if not, write to the
-  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-  Boston, MA  02111-1307  USA
-*/
-
 package processing.data;
 
 import java.io.*;
@@ -45,7 +23,7 @@ public class FloatDict {
   protected float[] values;
 
   /** Internal implementation for faster lookups */
-  private HashMap<String, Integer> indices = new HashMap<String, Integer>();
+  private HashMap<String, Integer> indices = new HashMap<>();
 
 
   public FloatDict() {
@@ -138,6 +116,31 @@ public class FloatDict {
 
 
   /**
+   * Resize the internal data, this can only be used to shrink the list.
+   * Helpful for situations like sorting and then grabbing the top 50 entries.
+   */
+  public void resize(int length) {
+    if (length == count) return;
+
+    if (length > count) {
+      throw new IllegalArgumentException("resize() can only be used to shrink the dictionary");
+    }
+    if (length < 1) {
+      throw new IllegalArgumentException("resize(" + length + ") is too small, use 1 or higher");
+    }
+
+    String[] newKeys = new String[length];
+    float[] newValues = new float[length];
+    PApplet.arrayCopy(keys, newKeys, length);
+    PApplet.arrayCopy(values, newValues, length);
+    keys = newKeys;
+    values = newValues;
+    count = length;
+    resetIndices();
+  }
+
+
+  /**
    * Remove all entries.
    *
    * @webref floatdict:method
@@ -145,7 +148,15 @@ public class FloatDict {
    */
   public void clear() {
     count = 0;
-    indices = new HashMap<String, Integer>();
+    indices = new HashMap<>();
+  }
+
+
+  private void resetIndices() {
+    indices = new HashMap<>(count);
+    for (int i = 0; i < count; i++) {
+      indices.put(keys[i], i);
+    }
   }
 
 
@@ -183,8 +194,8 @@ public class FloatDict {
       }
 
       public Entry next() {
+        ++index;
         Entry e = new Entry(keys[index], values[index]);
-        index++;
         return e;
       }
 
@@ -368,6 +379,15 @@ public class FloatDict {
   }
 
 
+  public void setIndex(int index, String key, float value) {
+    if (index < 0 || index >= count) {
+      throw new ArrayIndexOutOfBoundsException(index);
+    }
+    keys[index] = key;
+    values[index] = value;
+  }
+
+
   /**
    * @webref floatdict:method
    * @brief Check if a key is a part of the data structure
@@ -427,7 +447,7 @@ public class FloatDict {
   private void checkMinMax(String functionName) {
     if (count == 0) {
       String msg =
-        String.format("Cannot use %s() on an empty %s.",
+              String.format("Cannot use %s() on an empty %s.",
                       functionName, getClass().getSimpleName());
       throw new RuntimeException(msg);
     }
@@ -541,6 +561,27 @@ public class FloatDict {
       return Float.NaN;
     }
     return values[index];
+  }
+
+
+  public float sum() {
+    double amount = sumDouble();
+    if (amount > Float.MAX_VALUE) {
+      throw new RuntimeException("sum() exceeds " + Float.MAX_VALUE + ", use sumDouble()");
+    }
+    if (amount < -Float.MAX_VALUE) {
+      throw new RuntimeException("sum() lower than " + -Float.MAX_VALUE + ", use sumDouble()");
+    }
+    return (float) amount;
+  }
+
+
+  public double sumDouble() {
+    double sum = 0;
+    for (int i = 0; i < count; i++) {
+      sum += values[i];
+    }
+    return sum;
   }
 
 
@@ -717,10 +758,7 @@ public class FloatDict {
     s.run();
 
     // Set the indices after sort/swaps (performance fix 160411)
-    indices = new HashMap<String, Integer>();
-    for (int i = 0; i < count; i++) {
-      indices.put(keys[i], i);
-    }
+    resetIndices();
   }
 
 
@@ -730,10 +768,7 @@ public class FloatDict {
    * @return a FloatDict with the original keys, mapped to their pct of the total
    */
   public FloatDict getPercent() {
-    double sum = 0;
-    for (int i = 0; i < count; i++) {
-      sum += values[i];
-    }
+    double sum = sum();
     FloatDict outgoing = new FloatDict();
     for (int i = 0; i < size(); i++) {
       double percent = value(i) / sum;

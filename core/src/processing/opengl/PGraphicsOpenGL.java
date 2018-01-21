@@ -32,7 +32,6 @@ import java.net.URL;
 import java.nio.*;
 import java.util.*;
 
-import android.opengl.GLSurfaceView;
 import android.view.SurfaceHolder;
 
 /**
@@ -5710,9 +5709,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void saveState() {
-    GLSurfaceView surf = (GLSurfaceView)parent.getSurface().getSurfaceView();
     // Queue the pixel read operation so it is performed when the surface is ready
-    surf.queueEvent(new Runnable() {
+    pgl.queueEvent(new Runnable() {
       @Override
       public void run() {
         restorePixels = new int[pixelWidth * pixelHeight];
