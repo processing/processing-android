@@ -3616,53 +3616,109 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   Random internalRandom;
 
   /**
-   * Return a random number in the range [0, howbig).
-   * <P>
-   * The number returned will range from zero up to
-   * (but not including) 'howbig'.
+   *
    */
-  public final float random(float howbig) {
+  public final float random(float high) {
+    // avoid an infinite loop when 0 or NaN are passed in
+    if (high == 0 || high != high) {
+      return 0;
+    }
+
+    if (internalRandom == null) {
+      internalRandom = new Random();
+    }
+
     // for some reason (rounding error?) Math.random() * 3
     // can sometimes return '3' (once in ~30 million tries)
     // so a check was added to avoid the inclusion of 'howbig'
-
-    // avoid an infinite loop
-    if (howbig == 0) return 0;
-
-    // internal random number object
-    if (internalRandom == null) internalRandom = new Random();
-
     float value = 0;
     do {
-      //value = (float)Math.random() * howbig;
-      value = internalRandom.nextFloat() * howbig;
-    } while (value == howbig);
+      value = internalRandom.nextFloat() * high;
+    } while (value == high);
+    return value;
+  }
+
+  /**
+   * ( begin auto-generated from randomGaussian.xml )
+   *
+   * Returns a float from a random series of numbers having a mean of 0
+   * and standard deviation of 1. Each time the <b>randomGaussian()</b>
+   * function is called, it returns a number fitting a Gaussian, or
+   * normal, distribution. There is theoretically no minimum or maximum
+   * value that <b>randomGaussian()</b> might return. Rather, there is
+   * just a very low probability that values far from the mean will be
+   * returned; and a higher probability that numbers near the mean will
+   * be returned.
+   *
+   * ( end auto-generated )
+   * @webref math:random
+   * @see PApplet#random(float,float)
+   * @see PApplet#noise(float, float, float)
+   */
+  public final float randomGaussian() {
+    if (internalRandom == null) {
+      internalRandom = new Random();
+    }
+    return (float) internalRandom.nextGaussian();
+  }
+
+
+  /**
+   * ( begin auto-generated from random.xml )
+   *
+   * Generates random numbers. Each time the <b>random()</b> function is
+   * called, it returns an unexpected value within the specified range. If
+   * one parameter is passed to the function it will return a <b>float</b>
+   * between zero and the value of the <b>high</b> parameter. The function
+   * call <b>random(5)</b> returns values between 0 and 5 (starting at zero,
+   * up to but not including 5). If two parameters are passed, it will return
+   * a <b>float</b> with a value between the the parameters. The function
+   * call <b>random(-5, 10.2)</b> returns values starting at -5 up to (but
+   * not including) 10.2. To convert a floating-point random number to an
+   * integer, use the <b>int()</b> function.
+   *
+   * ( end auto-generated )
+   * @webref math:random
+   * @param low lower limit
+   * @param high upper limit
+   * @see PApplet#randomSeed(long)
+   * @see PApplet#noise(float, float, float)
+   */
+  public final float random(float low, float high) {
+    if (low >= high) return low;
+    float diff = high - low;
+    float value = 0;
+    // because of rounding error, can't just add low, otherwise it may hit high
+    // https://github.com/processing/processing/issues/4551
+    do {
+      value = random(diff) + low;
+    } while (value == high);
     return value;
   }
 
 
   /**
-   * Return a random number in the range [howsmall, howbig).
-   * <P>
-   * The number returned will range from 'howsmall' up to
-   * (but not including 'howbig'.
-   * <P>
-   * If howsmall is >= howbig, howsmall will be returned,
-   * meaning that random(5, 5) will return 5 (useful)
-   * and random(7, 4) will return 7 (not useful.. better idea?)
+   * ( begin auto-generated from randomSeed.xml )
+   *
+   * Sets the seed value for <b>random()</b>. By default, <b>random()</b>
+   * produces different results each time the program is run. Set the
+   * <b>value</b> parameter to a constant to return the same pseudo-random
+   * numbers each time the software is run.
+   *
+   * ( end auto-generated )
+   * @webref math:random
+   * @param seed seed value
+   * @see PApplet#random(float,float)
+   * @see PApplet#noise(float, float, float)
+   * @see PApplet#noiseSeed(long)
    */
-  public final float random(float howsmall, float howbig) {
-    if (howsmall >= howbig) return howsmall;
-    float diff = howbig - howsmall;
-    return random(diff) + howsmall;
+  public final void randomSeed(long seed) {
+    if (internalRandom == null) {
+      internalRandom = new Random();
+    }
+    internalRandom.setSeed(seed);
   }
 
-
-  public final void randomSeed(long what) {
-    // internal random number object
-    if (internalRandom == null) internalRandom = new Random();
-    internalRandom.setSeed(what);
-  }
 
 
 
@@ -3700,7 +3756,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   /**
-   * Computes the Perlin noise function value at point x.
    */
   public float noise(float x) {
     // is this legit? it's a dumb way to do it (but repair it later)
@@ -3708,14 +3763,49 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
   /**
-   * Computes the Perlin noise function value at the point x, y.
    */
   public float noise(float x, float y) {
     return noise(x, y, 0f);
   }
 
   /**
-   * Computes the Perlin noise function value at x, y, z.
+   * ( begin auto-generated from noise.xml )
+   *
+   * Returns the Perlin noise value at specified coordinates. Perlin noise is
+   * a random sequence generator producing a more natural ordered, harmonic
+   * succession of numbers compared to the standard <b>random()</b> function.
+   * It was invented by Ken Perlin in the 1980s and been used since in
+   * graphical applications to produce procedural textures, natural motion,
+   * shapes, terrains etc.<br /><br /> The main difference to the
+   * <b>random()</b> function is that Perlin noise is defined in an infinite
+   * n-dimensional space where each pair of coordinates corresponds to a
+   * fixed semi-random value (fixed only for the lifespan of the program).
+   * The resulting value will always be between 0.0 and 1.0. Processing can
+   * compute 1D, 2D and 3D noise, depending on the number of coordinates
+   * given. The noise value can be animated by moving through the noise space
+   * as demonstrated in the example above. The 2nd and 3rd dimension can also
+   * be interpreted as time.<br /><br />The actual noise is structured
+   * similar to an audio signal, in respect to the function's use of
+   * frequencies. Similar to the concept of harmonics in physics, perlin
+   * noise is computed over several octaves which are added together for the
+   * final result. <br /><br />Another way to adjust the character of the
+   * resulting sequence is the scale of the input coordinates. As the
+   * function works within an infinite space the value of the coordinates
+   * doesn't matter as such, only the distance between successive coordinates
+   * does (eg. when using <b>noise()</b> within a loop). As a general rule
+   * the smaller the difference between coordinates, the smoother the
+   * resulting noise sequence will be. Steps of 0.005-0.03 work best for most
+   * applications, but this will differ depending on use.
+   *
+   * ( end auto-generated )
+   *
+   * @webref math:random
+   * @param x x-coordinate in noise space
+   * @param y y-coordinate in noise space
+   * @param z z-coordinate in noise space
+   * @see PApplet#noiseSeed(long)
+   * @see PApplet#noiseDetail(int, float)
+   * @see PApplet#random(float,float)
    */
   public float noise(float x, float y, float z) {
     if (perlin == null) {
@@ -3739,9 +3829,9 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     if (z<0) z=-z;
 
     int xi=(int)x, yi=(int)y, zi=(int)z;
-    float xf = (float)(x-xi);
-    float yf = (float)(y-yi);
-    float zf = (float)(z-zi);
+    float xf = x - xi;
+    float yf = y - yi;
+    float zf = z - zi;
     float rxf, ryf;
 
     float r=0;
@@ -3796,18 +3886,61 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   // for different levels of detail. lower values will produce
   // smoother results as higher octaves are surpressed
 
+  /**
+   * ( begin auto-generated from noiseDetail.xml )
+   *
+   * Adjusts the character and level of detail produced by the Perlin noise
+   * function. Similar to harmonics in physics, noise is computed over
+   * several octaves. Lower octaves contribute more to the output signal and
+   * as such define the overal intensity of the noise, whereas higher octaves
+   * create finer grained details in the noise sequence. By default, noise is
+   * computed over 4 octaves with each octave contributing exactly half than
+   * its predecessor, starting at 50% strength for the 1st octave. This
+   * falloff amount can be changed by adding an additional function
+   * parameter. Eg. a falloff factor of 0.75 means each octave will now have
+   * 75% impact (25% less) of the previous lower octave. Any value between
+   * 0.0 and 1.0 is valid, however note that values greater than 0.5 might
+   * result in greater than 1.0 values returned by <b>noise()</b>.<br /><br
+   * />By changing these parameters, the signal created by the <b>noise()</b>
+   * function can be adapted to fit very specific needs and characteristics.
+   *
+   * ( end auto-generated )
+   * @webref math:random
+   * @param lod number of octaves to be used by the noise
+   * @see PApplet#noise(float, float, float)
+   */
   public void noiseDetail(int lod) {
     if (lod>0) perlin_octaves=lod;
   }
 
+  /**
+   * @see #noiseDetail(int)
+   * @param falloff falloff factor for each octave
+   */
   public void noiseDetail(int lod, float falloff) {
     if (lod>0) perlin_octaves=lod;
     if (falloff>0) perlin_amp_falloff=falloff;
   }
 
-  public void noiseSeed(long what) {
+  /**
+   * ( begin auto-generated from noiseSeed.xml )
+   *
+   * Sets the seed value for <b>noise()</b>. By default, <b>noise()</b>
+   * produces different results each time the program is run. Set the
+   * <b>value</b> parameter to a constant to return the same pseudo-random
+   * numbers each time the software is run.
+   *
+   * ( end auto-generated )
+   * @webref math:random
+   * @param seed seed value
+   * @see PApplet#noise(float, float, float)
+   * @see PApplet#noiseDetail(int, float)
+   * @see PApplet#random(float,float)
+   * @see PApplet#randomSeed(long)
+   */
+  public void noiseSeed(long seed) {
     if (perlinRandom == null) perlinRandom = new Random();
-    perlinRandom.setSeed(what);
+    perlinRandom.setSeed(seed);
     // force table reset after changing the random number seed [0122]
     perlin = null;
   }
