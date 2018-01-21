@@ -8,7 +8,7 @@
   <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
 
   <!-- Library version -->
-  <property name="lib.ver" value="25.3.2" />	
+  <property name="lib.ver" value="26.0.0-dev" />	
 	
   <target name="clean" description="Clean the build directories">
     <delete dir="bin" />
