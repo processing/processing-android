@@ -31,6 +31,8 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.*;
 import java.util.*;
+
+import android.opengl.GLSurfaceView;
 import android.view.SurfaceHolder;
 
 /**
@@ -305,6 +307,11 @@ public class PGraphicsOpenGL extends PGraphics {
    */
   protected boolean sized;
 
+  /**
+   * Marks when some changes have occurred, to the surface view.
+   */
+  protected boolean changed;
+
   static protected final int MATRIX_STACK_DEPTH = 32;
 
   protected int modelviewStackDepth;
@@ -502,6 +509,10 @@ public class PGraphicsOpenGL extends PGraphics {
   static protected IntBuffer intBuffer;
   static protected FloatBuffer floatBuffer;
 
+  /** To save the surface contents before the activity is taken to the background. */
+  private int restoreCount;
+  private int[] restorePixels;
+
   // ........................................................
 
   // Error strings:
@@ -638,7 +649,14 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
+  public void surfaceChanged() {
+    changed = true;
+  }
+
+
+  @Override
   public void setSize(int iwidth, int iheight) {
+    sized = iwidth != width || iheight != height;
     super.setSize(iwidth, iheight);
 
     updatePixelSize();
@@ -659,8 +677,6 @@ public class PGraphicsOpenGL extends PGraphics {
     cameraNear = defCameraNear;
     cameraFar = defCameraFar;
     cameraAspect = defCameraAspect;
-
-    sized = true;
   }
 
 
@@ -5623,6 +5639,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected void drawPixels(int x, int y, int w, int h) {
+    drawPixels(pixels, x, y, w, h);
+  }
+
+
+  protected void drawPixels(int[] pixBuffer, int x, int y, int w, int h) {
     int f = (int)pgl.getPixelScale();
     int len = f * w * f * h;
     if (nativePixels == null || nativePixels.length < len) {
@@ -5639,12 +5660,12 @@ public class PGraphicsOpenGL extends PGraphics {
         int offset1 = 0;
 
         for (int yc = f * y; yc < f * (y + h); yc++) {
-          System.arraycopy(pixels, offset0, nativePixels, offset1, f * w);
+          System.arraycopy(pixBuffer, offset0, nativePixels, offset1, f * w);
           offset0 += f * width;
           offset1 += f * w;
         }
       } else {
-        PApplet.arrayCopy(pixels, 0, nativePixels, 0, len);
+        PApplet.arrayCopy(pixBuffer, 0, nativePixels, 0, len);
       }
       PGL.javaToNativeARGB(nativePixels, f * w, f * h);
     } catch (ArrayIndexOutOfBoundsException e) {
@@ -5686,6 +5707,54 @@ public class PGraphicsOpenGL extends PGraphics {
     }
   }
 
+
+  @Override
+  protected void saveState() {
+    GLSurfaceView surf = (GLSurfaceView)parent.getSurface().getSurfaceView();
+    // Queue the pixel read operation so it is performed when the surface is ready
+    surf.queueEvent(new Runnable() {
+      @Override
+      public void run() {
+        restorePixels = new int[pixelWidth * pixelHeight];
+        int[] pix = new int[pixelWidth * pixelHeight];
+        IntBuffer buf = IntBuffer.wrap(pix);
+        buf.position(0);
+        beginPixelsOp(OP_READ);
+        pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
+        endPixelsOp();
+        try {
+          // Convert pixels to ARGB
+          PGL.getIntArray(buf, restorePixels);
+          PGL.nativeToJavaARGB(restorePixels, pixelWidth, pixelHeight);
+        } catch (ArrayIndexOutOfBoundsException e) {}
+      }
+    });
+  }
+
+
+  @Override
+  protected void restoreState() {
+  }
+
+  @Override
+  protected void restoreSurface() {
+    if (changed) {
+      changed = false;
+      if (restorePixels != null) {
+        // Set restore count to 2 so it draws the bitmap two frames after surface change, otherwise
+        // the restoration does not work because the OpenGL renderer sometimes resizes the surface
+        // twice after restoring the app to the foreground (?)
+        restoreCount = 2;
+      }
+    } else if (restoreCount > 0) {
+      restoreCount--;
+      if (restoreCount == 0) {
+        // Draw and dispose pixels
+        drawPixels(restorePixels, 0, 0, pixelWidth, pixelHeight);
+        restorePixels = null;
+      }
+    }
+  }
 
   //////////////////////////////////////////////////////////////
 
@@ -6726,7 +6795,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   protected void beginOnscreenDraw() {
     updatePixelSize();
-
+    restoreSurface();
     pgl.beginRender();
 
     if (drawFramebuffer == null) {
@@ -6941,7 +7010,7 @@ public class PGraphicsOpenGL extends PGraphics {
       pgl.disable(PGL.POLYGON_SMOOTH);
     }
 
-    if (sized) {
+    if (sized || parent.frameCount == 0) {
 //      reapplySettings();
 
       // To avoid having garbage in the screen after a resize,

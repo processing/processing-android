@@ -679,6 +679,7 @@ public abstract class PGL {
       clearStencil(0);
       clear(DEPTH_BUFFER_BIT | STENCIL_BUFFER_BIT | COLOR_BUFFER_BIT);
       if (0 < sketch.frameCount) {
+        clearColor = true;
         clearDepth = true;
         clearStencil = true;
       }
@@ -686,19 +687,24 @@ public abstract class PGL {
       clearDepth(1);
       clear(DEPTH_BUFFER_BIT | COLOR_BUFFER_BIT);
       if (0 < sketch.frameCount) {
+        clearColor = true;
         clearDepth = true;
       }
     } else if (stencil) {
       clearStencil(0);
       clear(STENCIL_BUFFER_BIT | COLOR_BUFFER_BIT);
       if (0 < sketch.frameCount) {
+        clearColor = true;
         clearStencil = true;
       }
     } else {
       clear(PGL.COLOR_BUFFER_BIT);
+      if (0 < sketch.frameCount) {
+        clearColor = true;
+      }
     }
-    if (0 < sketch.frameCount) {
-      clearColor = true;
+    if (fboLayerEnabled) {
+      clearFrontColorBuffer();
     }
   }
 
@@ -715,7 +721,7 @@ public abstract class PGL {
     clearColor = false;
 
     pclearDepth = clearDepth;
-    clearColor = false;
+    clearDepth = false;
 
     pclearStencil = clearStencil;
     clearStencil = false;
@@ -1123,6 +1129,11 @@ public abstract class PGL {
                                 RENDERBUFFER, stencilBuf.get(0));
       }
     }
+  }
+
+
+  protected void clearFrontColorBuffer() {
+
   }
 
 
@@ -2655,12 +2666,17 @@ public abstract class PGL {
 
 
   protected interface Tessellator {
-    public void beginPolygon();
-    public void endPolygon();
+    public void setCallback(int flag);
     public void setWindingRule(int rule);
+    public void setProperty(int property, int value);
+
+    public void beginPolygon();
+    public void beginPolygon(Object data);
+    public void endPolygon();
     public void beginContour();
     public void endContour();
     public void addVertex(double[] v);
+    public void addVertex(double[] v, int n, Object data);
   }
 
 
@@ -2772,6 +2788,7 @@ public abstract class PGL {
 
   public static int TESS_WINDING_NONZERO;
   public static int TESS_WINDING_ODD;
+  public static int TESS_EDGE_FLAG;
 
   public static int GENERATE_MIPMAP_HINT;
   public static int FASTEST;

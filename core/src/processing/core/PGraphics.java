@@ -687,6 +687,9 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
+  public void surfaceChanged() {  // ignore
+   }
+
   /**
    * The final step in setting up a renderer, set its size of this renderer.
    * This was formerly handled by the constructor, but instead it's been broken
@@ -903,7 +906,7 @@ public class PGraphics extends PImage implements PConstants {
    * size(), which is safely called from inside beginDraw(). And it cannot be
    * called before defaultSettings(), so we should be safe.
    */
-  protected void reapplySettings() {
+  protected void reapplySettings() {  // ignore
 //    System.out.println("attempting reapplySettings()");
     if (!settingsInited) return;  // if this is the initial setup, no need to reapply
 
@@ -961,6 +964,18 @@ public class PGraphics extends PImage implements PConstants {
     reapplySettings = false;
   }
 
+
+  protected void saveState() {  // ignore
+
+  }
+
+  protected void restoreState() {  // ignore
+
+  }
+
+  protected void restoreSurface() { // ignore
+
+  }
 
   //////////////////////////////////////////////////////////////
 

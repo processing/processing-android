@@ -23,6 +23,7 @@
 
 package processing.a2d;
 
+import java.nio.ByteBuffer;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
@@ -38,12 +39,15 @@ import processing.core.PShape;
 import processing.core.PShapeSVG;
 import processing.core.PSurface;
 import processing.data.XML;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
+import android.os.Build;
 import android.view.SurfaceHolder;
 
 
@@ -110,6 +114,17 @@ public class PGraphicsAndroid2D extends PGraphics {
    */
   protected boolean sized;
 
+  /**
+   * Marks when some changes have occurred, to the surface view.
+   */
+  protected boolean changed;
+
+  //////////////////////////////////////////////////////////////
+
+  /** To save the surface contents before the activity is taken to the background. */
+  private int restoreCount;
+  private ByteBuffer restoreBitmap;
+
   //////////////////////////////////////////////////////////////
 
   // INTERNAL
@@ -140,11 +155,16 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   //public void setPath(String path)
 
+  @Override
+  public void surfaceChanged() {
+    changed = true;
+  }
+
 
   @Override
   public void setSize(int iwidth, int iheight) {
+    sized = iwidth != width || iheight != height;
     super.setSize(iwidth, iheight);
-    sized = true;
   }
 
 
@@ -180,34 +200,29 @@ public class PGraphicsAndroid2D extends PGraphics {
 //parent.handleDraw();
 //  }
 
-
+  @SuppressLint("NewApi")
   protected Canvas checkCanvas() {
     if ((canvas == null || sized) && (useBitmap || !primaryGraphics)) {
-      if (bitmap == null || bitmap.getWidth() * bitmap.getHeight() < width * height) {
+      if (bitmap == null || bitmap.getWidth() * bitmap.getHeight() < width * height ||
+          Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
         if (bitmap != null) bitmap.recycle();
         bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
       } else {
+        // reconfigure is only available in API level 19 or higher.
         bitmap.reconfigure(width, height, bitmap.getConfig());
       }
       canvas = new Canvas(bitmap);
       sized = false;
     }
+    restoreSurface();
     return canvas;
   }
 
 
   @Override
   public void beginDraw() {
-    canvas = checkCanvas();
 
-//    if (primaryGraphics) {
-//      canvas = parent.getSurfaceHolder().lockCanvas(null);
-//      if (canvas == null) {
-//        throw new RuntimeException("canvas is still null");
-//      }
-//    } else {
-//      throw new RuntimeException("not primary surface");
-//    }
+    canvas = checkCanvas();
 
     checkSettings();
 
@@ -221,16 +236,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void endDraw() {
     if (bitmap == null) return;
-
-    // hm, mark pixels as changed, because this will instantly do a full
-    // copy of all the pixels to the surface.. so that's kind of a mess.
-    //updatePixels();
-
-//    if (primaryGraphics) {
-//      if (canvas != null) {
-//        parent.getSurfaceHolder().unlockCanvasAndPost(canvas);
-//      }
-//    }
 
     if (primaryGraphics) {
       SurfaceHolder holder = parent.getSurface().getSurfaceHolder();
@@ -2063,6 +2068,40 @@ public class PGraphicsAndroid2D extends PGraphics {
     showMethodWarning("resize");
   }
 
+
+  @Override
+  protected void saveState() {
+    if (bitmap != null) {
+      int size = bitmap.getHeight() * bitmap.getRowBytes();
+      restoreBitmap = ByteBuffer.allocate(size);
+      bitmap.copyPixelsToBuffer(restoreBitmap);
+    }
+  }
+
+
+  @Override
+  protected void restoreState() {
+  }
+
+
+  @Override
+  protected void restoreSurface() {
+    if (changed) {
+      changed = false;
+      if (restoreBitmap != null) {
+        // Set the counter to 1 so the restore bitmap is drawn in the next frame.
+        restoreCount = 1;
+      }
+    } else if (restoreCount > 0) {
+      restoreCount--;
+      if (restoreCount == 0) {
+        // Draw and dispose bitmap
+        restoreBitmap.rewind();
+        bitmap.copyPixelsFromBuffer(restoreBitmap);
+        restoreBitmap = null;
+      }
+    }
+  }
 
 
   //////////////////////////////////////////////////////////////

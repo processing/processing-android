@@ -240,6 +240,19 @@ public class PGLES extends PGL {
   }
 
 
+  @Override
+  protected void clearFrontColorBuffer() {
+    // Need to front clear color buffer, otherwise one can lead to the screen not clearning
+    // properly in sketches that do not call background() continously in draw() but only at
+    // specific events.
+    framebufferTexture2D(FRAMEBUFFER, COLOR_ATTACHMENT0,
+                         TEXTURE_2D, glColorTex.get(frontTex), 0);
+    clear(COLOR_BUFFER_BIT);
+    framebufferTexture2D(FRAMEBUFFER, COLOR_ATTACHMENT0,
+                         TEXTURE_2D, glColorTex.get(backTex), 0);
+  }
+
+
   ///////////////////////////////////////////////////////////
 
   // Tessellator interface
@@ -268,28 +281,53 @@ public class PGLES extends PGL {
       PGLU.gluTessCallback(tess, PGLU.GLU_TESS_ERROR, gluCallback);
     }
 
-    public void beginPolygon() {
-      PGLU.gluTessBeginPolygon(tess, null);
+    @Override
+    public void setCallback(int flag) {
+      PGLU.gluTessCallback(tess, flag, gluCallback);
     }
 
+    @Override
+    public void setWindingRule(int rule) {
+      setProperty(PGLU.GLU_TESS_WINDING_RULE, rule);
+    }
+
+    public void setProperty(int property, int value) {
+      PGLU.gluTessProperty(tess, property, value);
+    }
+
+    @Override
+    public void beginPolygon() {
+      beginPolygon(null);
+    }
+
+    @Override
+    public void beginPolygon(Object data) {
+      PGLU.gluTessBeginPolygon(tess, data);
+    }
+
+    @Override
     public void endPolygon() {
       PGLU.gluTessEndPolygon(tess);
     }
 
-    public void setWindingRule(int rule) {
-      PGLU.gluTessProperty(tess, PGLU.GLU_TESS_WINDING_RULE, rule);
-    }
-
+    @Override
     public void beginContour() {
       PGLU.gluTessBeginContour(tess);
     }
 
+    @Override
     public void endContour() {
       PGLU.gluTessEndContour(tess);
     }
 
+    @Override
     public void addVertex(double[] v) {
-      PGLU.gluTessVertex(tess, v, 0, v);
+      addVertex(v, 0, v);
+    }
+
+    @Override
+    public void addVertex(double[] v, int n, Object data) {
+      PGLU.gluTessVertex(tess, v, n, data);
     }
 
     protected class GLUCallback extends PGLUtessellatorCallbackAdapter {
@@ -389,6 +427,7 @@ public class PGLES extends PGL {
 
     TESS_WINDING_NONZERO = PGLU.GLU_TESS_WINDING_NONZERO;
     TESS_WINDING_ODD     = PGLU.GLU_TESS_WINDING_ODD;
+    TESS_EDGE_FLAG       = PGLU.GLU_TESS_EDGE_FLAG;
 
     GENERATE_MIPMAP_HINT = GLES20.GL_GENERATE_MIPMAP_HINT;
     FASTEST              = GLES20.GL_FASTEST;

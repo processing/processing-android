@@ -310,9 +310,11 @@ public class PSurfaceVR extends PSurfaceGLES {
 
     @Override
     public void onSurfaceChanged(int iwidth, int iheight) {
+      sketch.surfaceChanged();
+      graphics.surfaceChanged();
+
       sketch.setSize(iwidth, iheight);
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
-      sketch.surfaceChanged();
     }
 
     @Override

@@ -65,7 +65,7 @@ import processing.opengl.*;
 public class PApplet extends Object implements ActivityAPI, PConstants {
 
 //  static final public boolean DEBUG = true;
-  static final public boolean DEBUG = false;
+  static final public boolean DEBUG = true;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
   static final public int SDK = Build.VERSION.SDK_INT;
@@ -532,13 +532,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     // TODO need to bring back app state here!
     // At least we restore the current style.
     if (savedStyle != null && g != null) {
+      g.restoreState();
       g.style(savedStyle);
       savedStyle = null;
     }
 
     handleMethods("resume");
 
-    surface.resumeThread();
     if (0 < frameCount) {
       // Don't call resume() when the app is starting and setup() has not been
       // called yet
@@ -549,21 +549,25 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       // https://developer.android.com/guide/components/activities/activity-lifecycle.html
       resume();
     }
+
+    surface.resumeThread();
   }
 
 
   public void onPause() {
+    surface.pauseThread();
+
     // TODO need to save all application state here!
     // At least we save the current style (once we had at least drawn one
     // frame, otherwise we might be saving a "null" style with all zeroes).
     if (g != null && 0 < frameCount) {
       savedStyle = new PStyle();
       g.getStyle(savedStyle);
+      g.saveState();
     }
 
     handleMethods("pause");
 
-    surface.pauseThread();
     pause();  // handler for others to write
   }
 
@@ -844,7 +848,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * PAppletGL needs to have a usable screen before getting things rolling.
    */
   public void start() {
-    surface.resumeThread();
   }
 
 
@@ -857,11 +860,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * or when moving between web pages), and it's not always called.
    */
   public void stop() {
-    // this used to shut down the sketch, but that code has
-    // been moved to dispose()
-    surface.pauseThread();
-
-    //TODO listeners
   }
 
 
@@ -1322,30 +1320,27 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
- public void smooth() {
+  public void smooth() {
    smooth(1);
  }
 
 
- public void smooth(int level) {
-   if (insideSettings) {
-     this.smooth = level;
+  public void smooth(int level) {
+    if (insideSettings) {
+      this.smooth = level;
+    } else if (this.smooth != level) {
+      smoothWarning("smooth");
+    }
+  }
 
-   } else if (this.smooth != level) {
-     smoothWarning("smooth");
-   }
- }
 
-
- public void noSmooth() {
-   if (insideSettings) {
-     this.smooth = 0;
-
-   } else if (this.smooth != 0) {
-     smoothWarning("noSmooth");
-   }
- }
-
+  public void noSmooth() {
+    if (insideSettings) {
+      this.smooth = 0;
+    } else if (this.smooth != 0) {
+      smoothWarning("noSmooth");
+    }
+  }
 
  private void smoothWarning(String method) {
    // When running from the PDE, say setup(), otherwise say settings()
@@ -1357,7 +1352,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
- public void orientation(int which) {
+  public PGraphics getGraphics() {
+    return g;
+  }
+
+  public void orientation(int which) {
    surface.setOrientation(which);
  }
 
@@ -1756,11 +1755,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       return;
     }
 
-//    if (surfaceChanged) {
-//      surfaceChanged = false;
-//      surfaceReady = true;
-//    }
-
     if (!looping && !redraw) return;
 
     if (insideDraw) {
@@ -1837,12 +1831,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     frameRateLastNanos = now;
     frameCount++;
   }
-
-
-  /** Not official API, not guaranteed to work in the future. */
-//  public boolean canDraw() {
-//    return g != null && surfaceReady && !paused && (looping || redraw);
-//  }
 
 
   //////////////////////////////////////////////////////////////

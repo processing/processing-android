@@ -526,7 +526,7 @@ public class PShapeOpenGL extends PShape {
       dest = (PShapeOpenGL) pg.createShapeFamily(GROUP);
       copyGroup(pg, src, dest);
     } else if (src.getFamily() == PRIMITIVE) {
-      //dest = PGraphics3D.createShapeImpl(pg, src.getKind(), src.getParams());
+      //dest = PGraphics3D.createShapeImpl(pg, pixCache.getKind(), pixCache.getParams());
       dest = (PShapeOpenGL) pg.createShapePrimitive(src.getKind(), src.getParams());
       PShape.copyPrimitive(src, dest);
     } else if (src.getFamily() == GEOMETRY) {
@@ -547,28 +547,28 @@ public class PShapeOpenGL extends PShape {
 
 
   /*
-  static public PShapeOpenGL createShape2D(PGraphicsOpenGL pg, PShape src) {
+  static public PShapeOpenGL createShape2D(PGraphicsOpenGL pg, PShape pixCache) {
     PShapeOpenGL dest = null;
-    if (src.getFamily() == GROUP) {
+    if (pixCache.getFamily() == GROUP) {
       //dest = PGraphics2D.createShapeImpl(pg, GROUP);
       dest = (PShapeOpenGL) pg.createShapeFamily(GROUP);
-      copyGroup2D(pg, src, dest);
-    } else if (src.getFamily() == PRIMITIVE) {
-      //dest = PGraphics2D.createShapeImpl(pg, src.getKind(), src.getParams());
-      dest = (PShapeOpenGL) pg.createShapePrimitive(src.getKind(), src.getParams());
-      PShape.copyPrimitive(src, dest);
-    } else if (src.getFamily() == GEOMETRY) {
+      copyGroup2D(pg, pixCache, dest);
+    } else if (pixCache.getFamily() == PRIMITIVE) {
+      //dest = PGraphics2D.createShapeImpl(pg, pixCache.getKind(), pixCache.getParams());
+      dest = (PShapeOpenGL) pg.createShapePrimitive(pixCache.getKind(), pixCache.getParams());
+      PShape.copyPrimitive(pixCache, dest);
+    } else if (pixCache.getFamily() == GEOMETRY) {
       //dest = PGraphics2D.createShapeImpl(pg, PShape.GEOMETRY);
       dest = (PShapeOpenGL) pg.createShapeFamily(PShape.GEOMETRY);
-      PShape.copyGeometry(src, dest);
-    } else if (src.getFamily() == PATH) {
+      PShape.copyGeometry(pixCache, dest);
+    } else if (pixCache.getFamily() == PATH) {
       //dest = PGraphics2D.createShapeImpl(pg, PATH);
       dest = (PShapeOpenGL) pg.createShapeFamily(PShape.PATH);
-      PShape.copyPath(src, dest);
+      PShape.copyPath(pixCache, dest);
     }
-    dest.setName(src.getName());
-    dest.width = src.width;
-    dest.height = src.height;
+    dest.setName(pixCache.getName());
+    dest.width = pixCache.width;
+    dest.height = pixCache.height;
     return dest;
   }
 */
@@ -586,13 +586,13 @@ public class PShapeOpenGL extends PShape {
 
 
   /*
-  static public void copyGroup2D(PGraphicsOpenGL pg, PShape src, PShape dest) {
-    copyMatrix(src, dest);
-    copyStyles(src, dest);
-    copyImage(src, dest);
+  static public void copyGroup2D(PGraphicsOpenGL pg, PShape pixCache, PShape dest) {
+    copyMatrix(pixCache, dest);
+    copyStyles(pixCache, dest);
+    copyImage(pixCache, dest);
 
-    for (int i = 0; i < src.getChildCount(); i++) {
-      PShape c = createShape2D(pg, src.getChild(i));
+    for (int i = 0; i < pixCache.getChildCount(); i++) {
+      PShape c = createShape2D(pg, pixCache.getChild(i));
       dest.addChild(c);
     }
   }

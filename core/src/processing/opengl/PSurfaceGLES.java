@@ -189,17 +189,6 @@ public class PSurfaceGLES extends PSurfaceNone {
       if (PApplet.DEBUG) {
         System.out.println("surfaceDestroyed()");
       }
-
-
-      // TODO: Check how to make sure of calling g3.dispose() when this call to
-      // surfaceDestoryed corresponds to the sketch being shut down instead of just
-      // taken to the background.
-
-      // For instance, something like this would be ok?
-      // The sketch is being stopped, so we dispose the resources.
-//      if (!paused) {
-//        g3.dispose();
-//      }
     }
 
 
@@ -286,9 +275,11 @@ public class PSurfaceGLES extends PSurfaceNone {
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
+      sketch.surfaceChanged();
+      graphics.surfaceChanged();
+
       sketch.setSize(iwidth, iheight);
       graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
-      sketch.surfaceChanged();
     }
 
     @Override

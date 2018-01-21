@@ -57,7 +57,7 @@ import processing.android.PermissionRequestor;
 
 /**
  * Base surface for Android2D and OpenGL renderers.
- * It includes the standard rendering loop.
+ * It includes the implementation of the rendering thread.
  */
 public class PSurfaceNone implements PSurface, PConstants {
   protected PApplet sketch;
@@ -375,7 +375,6 @@ public class PSurfaceNone implements PSurface, PConstants {
 //    }
   }
 
-
   ///////////////////////////////////////////////////////////
 
   // Thread handling
@@ -453,8 +452,9 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   protected void checkPause() {
-    if (paused) {
+//    if (paused) {
       synchronized (pauseObject) {
+        while (paused) {
         try {
           pauseObject.wait();
         } catch (InterruptedException e) {
