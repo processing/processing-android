@@ -501,24 +501,29 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   private void setFullScreenVisibility() {
     if (fullScreen) {
-      int visibility;
-      if (SDK < 19) {
-        // Pre-4.4
-        visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-      } else {
-        // 4.4 and higher. Integer instead of constants defined in View so it can
-        // build with SDK < 4.4
-        visibility = 256 |   // View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                     512 |   // View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                     1024 |  // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                     View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                     4 |     // View.SYSTEM_UI_FLAG_FULLSCREEN
-                     4096;   // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        // However, this visibility does not fix a bug where the navigation area
-        // turns black after resuming the app:
-        // https://code.google.com/p/android/issues/detail?id=170752
-      }
-      surface.setSystemUiVisibility(visibility);
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          int visibility;
+          if (SDK < 19) {
+            // Pre-4.4
+            visibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+          } else {
+            // 4.4 and higher. Integer instead of constants defined in View so it can
+            // build with SDK < 4.4
+            visibility = 256 |   // View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    512 |   // View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    1024 |  // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                    4 |     // View.SYSTEM_UI_FLAG_FULLSCREEN
+                    4096;   // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            // However, this visibility does not fix a bug where the navigation area
+            // turns black after resuming the app:
+            // https://code.google.com/p/android/issues/detail?id=170752
+          }
+          surface.setSystemUiVisibility(visibility);
+        }
+      });
     }
   }
 
@@ -556,6 +561,9 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void onPause() {
     surface.pauseThread();
+
+    // Make sure that the keyboard is not left open after leaving the app
+    closeKeyboard();
 
     // TODO need to save all application state here!
     // At least we save the current style (once we had at least drawn one
@@ -2156,8 +2164,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
         button = state;
     }
 
-    enqueueTouchEvents(motionEvent, button, modifiers);
     enqueueMouseEvents(motionEvent, button, modifiers);
+    enqueueTouchEvents(motionEvent, button, modifiers);
   }
 
 
@@ -2504,6 +2512,9 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     Context context = surface.getContext();
     InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
     imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+    if (parentLayout == -1) {
+      setFullScreenVisibility();
+    }
   }
 
 
