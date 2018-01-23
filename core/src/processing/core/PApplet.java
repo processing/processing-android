@@ -338,8 +338,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   // https://github.com/processing/processing/issues/2297
   int windowColor = 0xffDDDDDD;
 
-  PStyle savedStyle;
-
   ///////////////////////////////////////////////////////////////
   // Error messages
 
@@ -535,12 +533,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       setFullScreenVisibility();
     }
 
-    // TODO need to bring back app state here!
-    // At least we restore the current style.
-    if (savedStyle != null && g != null) {
+    if (g != null) {
       g.restoreState();
-      g.style(savedStyle);
-      savedStyle = null;
     }
 
     handleMethods("resume");
@@ -566,12 +560,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     // Make sure that the keyboard is not left open after leaving the app
     closeKeyboard();
 
-    // TODO need to save all application state here!
-    // At least we save the current style (once we had at least drawn one
-    // frame, otherwise we might be saving a "null" style with all zeroes).
-    if (g != null && 0 < frameCount) {
-      savedStyle = new PStyle();
-      g.getStyle(savedStyle);
+    if (g != null) {
       g.saveState();
     }
 
