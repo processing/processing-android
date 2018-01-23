@@ -349,12 +349,12 @@ public interface PConstants {
   // for 0125, these were changed to 'char' values, because they
   // can be upgraded to ints automatically by Java, but having them
   // as ints prevented split(blah, TAB) from working
-  static final char BACKSPACE = 8;
-  static final char TAB       = 9;
-  static final char ENTER     = 10;
-  static final char RETURN    = 13;
-  static final char ESC       = 27;
-  static final char DELETE    = 127;
+  static final char BACKSPACE = KeyEvent.KEYCODE_DEL;
+  static final char TAB       = KeyEvent.KEYCODE_TAB;
+  static final char ENTER     = KeyEvent.KEYCODE_ENTER;
+  static final char RETURN    = KeyEvent.KEYCODE_ENTER;
+  static final char ESC       = KeyEvent.KEYCODE_ESCAPE;
+  static final char DELETE    = KeyEvent.KEYCODE_DEL;
 
   // i.e. if ((key == CODED) && (keyCode == UP))
   static final int CODED     = 0xffff;
@@ -376,8 +376,7 @@ public interface PConstants {
   // key will be CODED and keyCode will be this value
 //  static final int ALT       = KeyEvent.VK_ALT;
 //  static final int CONTROL   = KeyEvent.VK_CONTROL;
-//  static final int SHIFT     = KeyEvent.VK_SHIFT;
-
+  static final int SHIFT     = KeyEvent.KEYCODE_SHIFT_LEFT;
 
   // cursor types
 

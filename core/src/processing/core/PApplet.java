@@ -58,6 +58,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.ActivityAPI;
 import processing.android.AppComponent;
+import processing.android.CompatUtils;
 import processing.data.*;
 import processing.event.*;
 import processing.opengl.*;
@@ -2492,8 +2493,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     // TODO set up proper key modifier handling
     int keModifiers = 0;
 
-//    KeyEvent ke = new KeyEvent(event, event.getEventTime(),
-//                               keAction, keModifiers, key, keyCode);
     KeyEvent ke = new KeyEvent(event, event.getEventTime(),
                                keAction, keModifiers, key, keyCode, 0 < event.getRepeatCount());
 
@@ -4776,7 +4775,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    */
   static public BufferedReader createReader(InputStream input) {
     InputStreamReader isr =
-      new InputStreamReader(input, StandardCharsets.UTF_8);
+      new InputStreamReader(input, CompatUtils.getCharsetUTF8());
 
     BufferedReader reader = new BufferedReader(isr);
     // consume the Unicode BOM (byte order marker) if present
@@ -4834,7 +4833,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   static public PrintWriter createWriter(OutputStream output) {
     BufferedOutputStream bos = new BufferedOutputStream(output, 8192);
     OutputStreamWriter osw =
-      new OutputStreamWriter(bos, StandardCharsets.UTF_8);
+      new OutputStreamWriter(bos, CompatUtils.getCharsetUTF8());
     return new PrintWriter(osw);
   }
 

@@ -22,6 +22,8 @@
 
 package processing.android;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 import android.annotation.SuppressLint;
 import android.os.Build;
@@ -29,7 +31,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
 import android.graphics.Point;
-
+import android.view.PixelCopy;
 
 /**
  * Compatibility utilities that work across versions of Android. Even though
@@ -55,7 +57,7 @@ public class CompatUtils {
     if (Build.VERSION_CODES.JELLY_BEAN_MR1 <= Build.VERSION.SDK_INT) {
       display.getRealMetrics(metrics);
       display.getRealSize(size);
-    } if (Build.VERSION_CODES.ICE_CREAM_SANDWICH  <= Build.VERSION.SDK_INT) {
+    } if (Build.VERSION_CODES.ICE_CREAM_SANDWICH <= Build.VERSION.SDK_INT) {
       display.getMetrics(metrics);
       // Use undocumented methods getRawWidth, getRawHeight
       try {
@@ -79,7 +81,7 @@ public class CompatUtils {
    */
   @SuppressLint("NewApi")
   static public int getUniqueViewId() {
-    if (Build.VERSION_CODES.JELLY_BEAN_MR1 < Build.VERSION.SDK_INT) {
+    if (Build.VERSION_CODES.JELLY_BEAN_MR1 <= Build.VERSION.SDK_INT) {
       return View.generateViewId();
     } else {
       for (;;) {
@@ -91,6 +93,20 @@ public class CompatUtils {
           return result;
         }
       }
+    }
+  }
+
+
+  /**
+   * This method returns the UTF-8 charset
+   * @return UTF-8 charset
+   */
+  @SuppressLint("NewApi")
+  static public Charset getCharsetUTF8() {
+    if (Build.VERSION_CODES.KITKAT <= Build.VERSION.SDK_INT) {
+      return StandardCharsets.UTF_8;
+    } else {
+      return Charset.forName("UTF-8");
     }
   }
 }
