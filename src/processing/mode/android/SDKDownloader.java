@@ -256,6 +256,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       XPath xpath = xPathfactory.newXPath();
       XPathExpression expr;
       NodeList remotePackages;
+      boolean found;
       
       // -----------------------------------------------------------------------
       // platform
@@ -301,6 +302,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // build-tools
       expr = xpath.compile("//remotePackage[starts-with(@path, \"build-tools;\")]");
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      found = false;
       if (remotePackages != null) {
         for(int buildTool=0; buildTool < remotePackages.getLength(); buildTool++) {
           NodeList childNodes = remotePackages.item(buildTool).getChildNodes();
@@ -331,12 +333,14 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
               urlHolder.buildToolsFilename = url.item(0).getTextContent();
               urlHolder.buildToolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
               urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              found = true;
               break;
             }
           }
-          break;
+          if (found) break;
         }
-      } else {
+      } 
+      if (!found) {
         throw new IOException("Cannot find the build-tools");
       }
       
@@ -344,6 +348,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // tools
       expr = xpath.compile("//remotePackage[@path=\"tools\"]"); //Matches two items according to xml file
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      found = false;
       if (remotePackages != null) {
         NodeList childNodes = remotePackages.item(1).getChildNodes(); //Second item is the latest tools for now
         NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
@@ -360,10 +365,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             urlHolder.toolsFilename =  url.item(0).getTextContent();
             urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
             urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+            found = true;
             break;
           }
         }
-      } else {
+      } 
+      if (!found) {
         throw new IOException("Cannot find the tools");
       }
 
@@ -371,10 +378,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       // emulator
       expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+      found = false;
       if (remotePackages != null) {
         for(int i = 0; i < remotePackages.getLength(); ++i) {
           NodeList childNodes = remotePackages.item(i).getChildNodes();
-
+          
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
           if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
             continue; //Stable channel only, skip others
@@ -388,17 +396,19 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             NodeList os = ((Element) archive).getElementsByTagName("host-os");
             NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
             NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
+            
             if (os.item(0).getTextContent().equals(requiredHostOs)) {
               urlHolder.emulatorFilename = url.item(0).getTextContent();
               urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
               urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              found = true;
               break;
             }
           }
-          break;
+          if (found) break;
         }
-      } else {
+      } 
+      if (!found) {
         throw new IOException("Cannot find the emulator");
       }
     }
