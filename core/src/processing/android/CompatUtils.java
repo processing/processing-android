@@ -31,7 +31,6 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
 import android.graphics.Point;
-import android.view.PixelCopy;
 
 /**
  * Compatibility utilities that work across versions of Android. Even though
