@@ -38,7 +38,7 @@ dependencies {
     compile group: 'org.processing', name: 'core', version: '3.3.4'
     compile group: 'org.processing', name: 'pde', version: '3.3.4'
     compile group: 'org.processing', name: 'java-mode', version: '3.3.4'
-    compile "org.gradle:gradle-tooling-api:4.0"
+    compile "org.gradle:gradle-tooling-api:4.4.1"
 }
 
 sourceSets {

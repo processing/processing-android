@@ -3,7 +3,7 @@
 
 # Usage:
 # call with the version number of the gradle version to be used by gradlew, i.e.:
-# ./gradlew-update.sh 3.2.1:
+# ./gradlew-update.sh 4.4.1:
 
 version=$1
 
