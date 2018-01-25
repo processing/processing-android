@@ -77,7 +77,7 @@ class AndroidBuild extends JavaBuild {
   static public final String SUPPORT_VER       = "25.3.1";
   static public final String PLAY_SERVICES_VER = "11.8.0";  
   static public final String WEAR_VER          = "2.0.5";
-  static public final String GVR_VER           = "1.60.1";  
+  static public final String GVR_VER           = "1.120.0";  
   
   // Main activity or service 
   static private final String APP_ACTIVITY_TEMPLATE = "AppActivity.java.tmpl";

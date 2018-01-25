@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="">
-    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="25"/>
+    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="26"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>

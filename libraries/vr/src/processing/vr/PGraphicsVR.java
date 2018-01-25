@@ -166,6 +166,21 @@ public class PGraphicsVR extends PGraphics3D {
   }
 
 
+  @Override
+  protected void saveState() {
+  }
+
+
+  @Override
+  protected void restoreState() {
+  }
+
+
+  @Override
+  protected void restoreSurface() {
+  }
+
+
   protected void updateView() {
     setVRViewport();
     setVRCamera();

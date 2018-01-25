@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion @@target_sdk@@
-    buildToolsVersion "@@build_tools@@"
     defaultConfig {
         applicationId "@@package_name@@"
         minSdkVersion @@min_sdk@@
@@ -10,7 +9,10 @@ android {
         versionCode @@version_code@@
         versionName "@@version_name@@"
     }
-    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }    
     buildTypes {
         debug {
             debuggable true
@@ -71,12 +73,12 @@ android {
 }
 
 dependencies {
-    provided files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:@@support_version@@'
-    compile 'com.android.support:design:@@support_version@@'
-    compile 'com.google.vr:sdk-audio:@@gvr_version@@'
-    compile 'com.google.vr:sdk-base:@@gvr_version@@'
-    compile files('libs/processing-core.jar')
-    compile files('libs/vr.jar')
+    compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:@@support_version@@'
+    implementation 'com.android.support:design:@@support_version@@'
+    implementation 'com.google.vr:sdk-audio:@@gvr_version@@'
+    implementation 'com.google.vr:sdk-base:@@gvr_version@@'
+    implementation files('libs/processing-core.jar')
+    implementation files('libs/vr.jar')
 }
