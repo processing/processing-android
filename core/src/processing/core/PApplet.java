@@ -255,6 +255,12 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    */
   protected boolean keyRepeatEnabled = false;
 
+  /**
+   * Set to open when openKeyboard() is called, and used to close the keyboard when the sketch is
+   * paused, otherwise it remains visible.
+   */
+  boolean keyboardIsOpen = false;
+
   ///////////////////////////////////////////////////////////////
   // Permission handling
 
@@ -2493,15 +2499,19 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     Context context = surface.getContext();
     InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
     imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+    keyboardIsOpen = true;
   }
 
 
   public void closeKeyboard() {
-    Context context = surface.getContext();
-    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
-    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-    if (parentLayout == -1) {
-      setFullScreenVisibility();
+    if (keyboardIsOpen) {
+      Context context = surface.getContext();
+      InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+      imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+      keyboardIsOpen = false;
+      if (parentLayout == -1) {
+        setFullScreenVisibility();
+      }
     }
   }
 
