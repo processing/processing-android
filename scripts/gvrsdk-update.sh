@@ -8,7 +8,7 @@
 
 # Usage:
 # call with the version number of the GVR SDK package to download and extract, i.e.:
-# ./gvrsdk-update.sh 1.60.1
+# ./gvrsdk-update.sh 1.120.0
 
 ver=$1
 sdk=v$1
@@ -35,8 +35,8 @@ unzip gvr-android-sdk-$ver/libraries/sdk-audio-$ver.aar -d audio.aar
 
 # protobuf-javanano was unbundled from the SDK:
 # https://github.com/googlevr/gvr-android-sdk/issues/264
-# but required by sdk-common, the correspond pom file alongside the aar contains the 
-# details of the dependency.
+# but required by sdk-common, the correspond pom file alongside the aar in the GVR SDK 
+# contains the details of the dependency.
 #wget http://central.maven.org/maven2/com/google/protobuf/nano/protobuf-javanano/$nano/protobuf-javanano-$nano.jar
 nanojar=protobuf-javanano-$nano.jar
 curl -o $nanojar -L http://central.maven.org/maven2/com/google/protobuf/nano/protobuf-javanano/$nano/$nanojar
