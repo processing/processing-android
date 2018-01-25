@@ -24,6 +24,7 @@ package processing.android;
 
 import java.lang.reflect.Method;
 
+import android.annotation.TargetApi;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -40,6 +41,7 @@ import android.view.WindowManager;
 import processing.a2d.PGraphicsAndroid2D;
 import processing.core.PApplet;
 
+@TargetApi(21)
 public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppComponent {
   private Point size;
   private DisplayMetrics metrics;

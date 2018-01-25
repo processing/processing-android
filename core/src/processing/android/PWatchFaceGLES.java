@@ -22,7 +22,11 @@
 
 package processing.android;
 
+import android.annotation.TargetApi;
 import android.graphics.Point;
+import android.opengl.EGL14;
+import android.opengl.EGLConfig;
+import android.opengl.EGLDisplay;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.WindowInsets;
@@ -38,7 +42,17 @@ import java.lang.reflect.Method;
 
 import android.graphics.Rect;
 
+@TargetApi(21)
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {
+  private static final int[] CONFIG_ATTRIB_LIST = new int[]{
+          EGL14.EGL_RENDERABLE_TYPE, 4,
+          EGL14.EGL_RED_SIZE, 8,
+          EGL14.EGL_GREEN_SIZE, 8,
+          EGL14.EGL_BLUE_SIZE, 8,
+          EGL14.EGL_ALPHA_SIZE, 8,
+          EGL14.EGL_DEPTH_SIZE, 16, // this was missing
+          EGL14.EGL_NONE};
+
   private Point size;
   private DisplayMetrics metrics;
   private GLES2Engine engine;
@@ -132,8 +146,7 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
   }
 
 
-  private class GLES2Engine extends Gles2WatchFaceService.Engine implements
-  ServiceEngine {
+  private class GLES2Engine extends Gles2WatchFaceService.Engine implements ServiceEngine {
     private PApplet sketch;
     private Method compUpdatedMethod;
     private Method tapCommandMethod;
@@ -155,6 +168,18 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
       requestPermissions();
     }
 
+
+    public EGLConfig chooseEglConfig(EGLDisplay eglDisplay) {
+      int[] numEglConfigs = new int[1];
+      EGLConfig[] eglConfigs = new EGLConfig[1];
+      if(!EGL14.eglChooseConfig(eglDisplay, CONFIG_ATTRIB_LIST, 0, eglConfigs, 0, eglConfigs.length, numEglConfigs, 0)) {
+        throw new RuntimeException("eglChooseConfig failed");
+      } else if(numEglConfigs[0] == 0) {
+        throw new RuntimeException("no matching EGL configs");
+      } else {
+        return eglConfigs[0];
+      }
+    }
 
     @Override
     public void onGlContextCreated() {
