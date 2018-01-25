@@ -115,7 +115,9 @@ public class PGLES extends PGL {
 
   @Override
   public void queueEvent(Runnable runnable) {
-    glview.queueEvent(runnable);
+    if (glview != null) {
+      glview.queueEvent(runnable);
+    }
   }
 
 
