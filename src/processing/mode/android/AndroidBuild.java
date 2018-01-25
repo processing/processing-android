@@ -74,9 +74,9 @@ class AndroidBuild extends JavaBuild {
   // All of these are hard-coded, as the TARGET_SDK. Should obtained from the
   // repository files? Or users being able to change them in the preferences 
   // file?
-  static public final String SUPPORT_VER       = "25.2.0";
-  static public final String PLAY_SERVICES_VER = "10.2.0";  
-  static public final String WEAR_VER          = "2.0.0";
+  static public final String SUPPORT_VER       = "25.3.1";
+  static public final String PLAY_SERVICES_VER = "11.8.0";  
+  static public final String WEAR_VER          = "2.0.5";
   static public final String GVR_VER           = "1.60.1";  
   
   // Main activity or service 
@@ -179,7 +179,7 @@ class AndroidBuild extends JavaBuild {
   
   public String getPathForAPK() {
     String suffix = target.equals("release") ? "release_unsigned" : "debug";
-    String apkName = module + "/build/outputs/apk/" + sketch.getName().toLowerCase() + "_" + suffix + ".apk";
+    String apkName = getPathToAPK() + sketch.getName().toLowerCase() + "_" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (!apkFile.exists()) {
       return null;
@@ -233,16 +233,12 @@ class AndroidBuild extends JavaBuild {
     File folder = sdk.getBuildToolsFolder();
     String[] versions = folder.list();
     String[] sorted = PApplet.sort(versions, versions.length);
-    String buildToolsVer = "";
-    if (sorted != null && 0 < sorted.length) {
-      buildToolsVer = sorted[sorted.length - 1];
-    } 
 
     if (sketchClassName != null) {
       renderer = info.getRenderer();
       writeMainClass(srcFolder, renderer, external);
-      createTopModule(buildToolsVer, "':" + module +"'");
-      createAppModule(buildToolsVer, module);
+      createTopModule("':" + module +"'");
+      createAppModule(module);
     }
     
     return tmpFolder;
@@ -292,7 +288,7 @@ class AndroidBuild extends JavaBuild {
   // Gradle modules  
   
   
-  private void createTopModule(String buildToolsVer, String projectModules) 
+  private void createTopModule(String projectModules) 
       throws IOException {
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
@@ -310,7 +306,7 @@ class AndroidBuild extends JavaBuild {
   }
   
   
-  private void createAppModule(String buildToolsVer, String moduleName)
+  private void createAppModule(String moduleName)
       throws SketchException, IOException {
     File moduleFolder = AndroidUtil.createPath(tmpFolder, moduleName);
     
@@ -332,7 +328,6 @@ class AndroidBuild extends JavaBuild {
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
     replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath().replace('\\', '/'));
-    replaceMap.put("@@build_tools@@", buildToolsVer);    
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", TARGET_SDK);
@@ -700,10 +695,6 @@ class AndroidBuild extends JavaBuild {
     aarFile = new File(sdk.getSupportLibrary(), 
         "/support-vector-drawable/" + SUPPORT_VER + "/support-vector-drawable-" + SUPPORT_VER + ".aar");
     Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
-    
-    File compatJarFile = new File(sdk.getSupportLibrary(), 
-        "/support-annotations/" + SUPPORT_VER + "/support-annotations-" + SUPPORT_VER + ".jar");
-    Util.copyFile(compatJarFile, new File(libsFolder, "support-annotations-" + SUPPORT_VER + ".jar"));      
   }
   
   
@@ -758,7 +749,7 @@ class AndroidBuild extends JavaBuild {
 
     // Final export folder
     File exportFolder = createExportFolder("build");
-    Util.copyDir(new File(projectFolder, module + "/build/outputs/apk"), exportFolder);    
+    Util.copyDir(new File(projectFolder, getPathToAPK()), exportFolder);    
     return exportFolder;
   }
 
@@ -768,10 +759,10 @@ class AndroidBuild extends JavaBuild {
     if (keyStore == null) return null;
     
     File unsignedPackage = new File(projectFolder, 
-        module + "/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_unsigned.apk");
+        getPathToAPK() + sketch.getName().toLowerCase() + "_release_unsigned.apk");
     if (!unsignedPackage.exists()) return null;
     File signedPackage = new File(projectFolder, 
-        module + "/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_signed.apk");
+        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed.apk");
 
     JarSigner.signJar(unsignedPackage, signedPackage, 
         AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
@@ -793,7 +784,7 @@ class AndroidBuild extends JavaBuild {
     }
     
     File alignedPackage = new File(projectFolder, 
-        module + "/build/outputs/apk/" + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
+        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
 
     String[] args = {
         zipAlign.getAbsolutePath(), "-v", "-f", "4",
@@ -906,16 +897,21 @@ class AndroidBuild extends JavaBuild {
 
   private void renameAPK() {
     String suffix = target.equals("release") ? "release-unsigned" : "debug";
-    String apkName = module + "/build/outputs/apk/" + module + "-" + suffix + ".apk";
+    String apkName = getPathToAPK() + module + "-" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (apkFile.exists()) {
       String suffixNew = target.equals("release") ? "release_unsigned" : "debug";
-      String apkNameNew = module + "/build/outputs/apk/" + 
+      String apkNameNew = getPathToAPK() + 
         sketch.getName().toLowerCase() + "_" + suffixNew + ".apk";
       final File apkFileNew = new File(tmpFolder, apkNameNew);
       apkFile.renameTo(apkFileNew);
     }
   }  
+  
+  
+  private String getPathToAPK() {
+    return module + "/build/outputs/apk/" + target + "/";
+  }
   
   
   /**

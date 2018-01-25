@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion @@target_sdk@@
-    buildToolsVersion "@@build_tools@@"
     defaultConfig {
         applicationId "@@package_name@@"
         minSdkVersion @@min_sdk@@
@@ -12,6 +11,10 @@ android {
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }      
     buildTypes {
         debug {
             debuggable true
@@ -24,14 +27,12 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    compile 'com.android.support:appcompat-v7:@@support_version@@'
-    compile 'com.android.support:design:@@support_version@@'
-    provided 'com.google.android.wearable:wearable:@@wear_version@@'
-    compile 'com.google.android.support:wearable:@@wear_version@@'
-    testCompile 'junit:junit:4.12'
-    compile files('libs/processing-core.jar')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:@@support_version@@'
+    implementation 'com.android.support:design:@@support_version@@'
+    compileOnly 'com.google.android.wearable:wearable:@@wear_version@@'
+    implementation files('libs/processing-core.jar')    
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'    
 }

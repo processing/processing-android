@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion @@target_sdk@@
-    buildToolsVersion "@@build_tools@@"
     defaultConfig {
         applicationId "@@package_name@@"
         minSdkVersion @@min_sdk@@
@@ -10,6 +9,10 @@ android {
         versionCode @@version_code@@
         versionName "@@version_name@@"
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }    
     buildTypes {
         debug {
             debuggable true
@@ -23,11 +26,13 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:palette-v7:@@support_version@@'
-    compile 'com.google.android.gms:play-services-fitness:@@play_services_version@@'
-    compile 'com.google.android.gms:play-services-wearable:@@play_services_version@@'
-    compile 'com.android.support:support-v13:@@support_version@@'
-    provided 'com.google.android.wearable:wearable:@@wear_version@@'
-    compile 'com.google.android.support:wearable:@@wear_version@@'    
-    compile files('libs/processing-core.jar')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:palette-v7:@@support_version@@'
+    implementation 'com.android.support:support-v4:@@support_version@@'
+    implementation 'com.google.android.gms:play-services-wearable:@@play_services_version@@'
+    implementation 'com.android.support:percent:@@support_version@@'
+    implementation 'com.android.support:recyclerview-v7:@@support_version@@'
+    implementation 'com.google.android.support:wearable:@@wear_version@@'
+    compileOnly 'com.google.android.wearable:wearable:@@wear_version@@'       
+    implementation files('libs/processing-core.jar')
 }
