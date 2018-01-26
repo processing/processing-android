@@ -38,6 +38,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -63,11 +65,15 @@ class AndroidSDK {
   private final File platformTools;
   private final File buildTools;
   private final File avdManager;
+  private final File sdkManager;
   private final File wearablePath;
   private final File supportLibPath;
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
+
+  private static final String SDK_LICENSE_URL = 
+      "https://developer.android.com/studio/terms.html"; 
   
   private static final String USE_ENV_SDK_TITLE = "Found an Android SDK!";
   private static final String USE_ENV_SDK_MESSAGE = 
@@ -218,6 +224,7 @@ class AndroidSDK {
     }
         
     avdManager = findAvdManager(new File(tools, "bin"));
+    sdkManager = findSdkManager(new File(tools, "bin"));
 
     String path = Platform.getenv("PATH");
 
@@ -345,6 +352,60 @@ class AndroidSDK {
     return null;
   }
   
+  
+  public void acceptLicenses() {
+    ArrayList<String> commands = new ArrayList<String>();
+    commands.add(sdkManager.getAbsolutePath());
+    commands.add("--licenses");
+    ProcessBuilder pb = new ProcessBuilder(commands);
+    pb.redirectErrorStream(true);
+    try {
+
+        Process prs = pb.start();
+        OutputStream writeTo = prs.getOutputStream();
+        for (int i = 0; i < 7; i++) {
+          Thread inThread = new Thread(new In(prs.getInputStream()));
+          inThread.start();
+          Thread.sleep(100);          
+          writeTo.write("y\n".getBytes());
+          writeTo.flush();
+        }
+        
+        writeTo.close();        
+
+    } catch (IOException e) {
+        e.printStackTrace();
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }    
+  }
+  
+  
+  class In implements Runnable {
+    private InputStream is;
+
+    public In(InputStream is) {
+        this.is = is;
+    }
+
+    @Override
+    public void run() {
+        byte[] b = new byte[1024];
+        int size = 0;
+        try {
+            while ((size = is.read(b)) != -1) {
+                System.err.println(new String(b));
+            }
+            is.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+  }  
+  
   static public File getHAXMInstallerFolder() {
     String sdkPrefsPath = Preferences.get("android.sdk.path");    
     File sdkPath = new File(sdkPrefsPath);
@@ -374,6 +435,16 @@ class AndroidSDK {
     throw new BadSDKException("Cannot find avdmanager in " + tools);
   }
 
+  
+  private static File findSdkManager(final File tools) throws BadSDKException {
+    if (new File(tools, "sdkmanager.bat").exists()) {
+      return new File(tools, "sdkmanager.bat");
+    }
+    if (new File(tools, "sdkmanager").exists()) {
+      return new File(tools, "sdkmanager");
+    }
+    throw new BadSDKException("Cannot find sdkdmanager in " + tools);
+  }  
 
   /**
    * Check for a set android.sdk.path preference. If the pref
@@ -399,6 +470,7 @@ class AndroidSDK {
       try {
         final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath));
         Preferences.set("android.sdk.path", sdkPrefsPath);
+        androidSDK.acceptLicenses();
         return androidSDK;
       } catch (final BadSDKException badPref) {
         Preferences.unset("android.sdk.path");
@@ -433,6 +505,7 @@ class AndroidSDK {
         // welcome message with some useful info.
         AndroidUtil.showMessage(SDK_EXISTS_TITLE, SDK_EXISTS_MESSAGE);
         
+        androidSDK.acceptLicenses();
         return androidSDK;
       } catch (final BadSDKException badEnv) { 
         Preferences.unset("android.sdk.path");        
@@ -509,7 +582,9 @@ class AndroidSDK {
       msg += DRIVER_INSTALL_MESSAGE + driver.getAbsolutePath();
     }
     AndroidUtil.showMessage(SDK_INSTALL_TITLE, msg);
-        
+
+    sdk.acceptLicenses();
+    
     return sdk;
   }
   
