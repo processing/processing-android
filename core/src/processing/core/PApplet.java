@@ -27,7 +27,6 @@ package processing.core;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.*;
@@ -65,8 +64,8 @@ import processing.opengl.*;
 
 public class PApplet extends Object implements ActivityAPI, PConstants {
 
+  static final public boolean DEBUG = false;
 //  static final public boolean DEBUG = true;
-  static final public boolean DEBUG = true;
 
   // Convenience public constant holding the SDK version, akin to platform in Java mode
   static final public int SDK = Build.VERSION.SDK_INT;

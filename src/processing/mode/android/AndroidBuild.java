@@ -36,7 +36,6 @@ import processing.mode.java.JavaBuild;
 import processing.mode.java.preproc.SurfaceInfo;
 
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.HashMap;
 
 /** 
@@ -71,14 +70,44 @@ class AndroidBuild extends JavaBuild {
     TARGET_PLATFORM = "android-" + TARGET_SDK;
   }
 
-  // Versions of Support, AppCompat, Wear and VR in use
-  // All of these are hard-coded, as the TARGET_SDK. Should obtained from the
-  // repository files? Or users being able to change them in the preferences 
-  // file?
-  static public final String SUPPORT_VER       = "25.3.1";
-  static public final String PLAY_SERVICES_VER = "11.8.0";  
-  static public final String WEAR_VER          = "2.0.5";
-  static public final String GVR_VER           = "1.120.0";  
+  // Versions of support, play services, wear and VR in use, also stored in
+  // preferences file so they can be changed without having to rebuilt/reinstall
+  // the mode.
+  static public String SUPPORT_VER;
+  static {
+    SUPPORT_VER = Preferences.get("android.sdk.support");
+    if (SUPPORT_VER == null) { 
+      SUPPORT_VER = "25.3.1"; 
+      Preferences.set("android.sdk.support", SUPPORT_VER);
+    }
+  }
+
+  static public String PLAY_SERVICES_VER;
+  static {
+    PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
+    if (PLAY_SERVICES_VER == null) { 
+      PLAY_SERVICES_VER = "11.8.0"; 
+      Preferences.set("android.sdk.play_services", PLAY_SERVICES_VER);
+    }
+  }  
+  
+  static public String WEAR_VER;
+  static {
+    WEAR_VER = Preferences.get("android.sdk.wear");
+    if (WEAR_VER == null) { 
+      WEAR_VER = "2.0.5"; 
+      Preferences.set("android.sdk.wear", WEAR_VER);
+    }
+  }  
+  
+  static public String GVR_VER;
+  static {
+    GVR_VER = Preferences.get("android.sdk.gvr");
+    if (GVR_VER == null) { 
+      GVR_VER = "1.120.0";
+      Preferences.set("android.sdk.gvr", GVR_VER);
+    }
+  }  
   
   // Main activity or service 
   static private final String APP_ACTIVITY_TEMPLATE = "AppActivity.java.tmpl";
@@ -231,10 +260,6 @@ class AndroidBuild extends JavaBuild {
     preproc.initSketchSmooth(sketch.getMainProgram());
     
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
-    File folder = sdk.getBuildToolsFolder();
-    String[] versions = folder.list();
-    String[] sorted = PApplet.sort(versions, versions.length);
-
     if (sketchClassName != null) {
       renderer = info.getRenderer();
       writeMainClass(srcFolder, renderer, external);
@@ -361,10 +386,10 @@ class AndroidBuild extends JavaBuild {
     copyCodeFolder(libsFolder);
 
     // Copy any system libraries needed by the project
-    copyWearLib(tmpFolder, libsFolder);
-    copySupportLibs(tmpFolder, libsFolder);
+    copyWearLib(libsFolder);
+    copySupportLibs(libsFolder);
     if (getAppComponent() == APP) {
-      copyAppCompatLib(tmpFolder, libsFolder);
+      copyAppCompatLib(libsFolder);
     }
     if (getAppComponent() == VR) {
       copyGVRLibs(libsFolder);
@@ -669,68 +694,63 @@ class AndroidBuild extends JavaBuild {
   // Dependencies
   
   
-  private void copyWearLib(File tmpFolder, File libsFolder) throws IOException {
-    // The wear jar is needed even when the app is not a watch face, because on
+  private void copyWearLib(File libsFolder) throws IOException {
+    // The wear aar is needed even when the app is not a watch face, because on
     // devices with android < 5 the dependencies of the PWatchFace* classes
     // cannot be resolved.
-    File aarFile = new File(sdk.getWearableFolder(), WEAR_VER + "/wearable-" + WEAR_VER + ".aar");
-    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
+    copyAARFileFromSDK(sdk.getWearableFolder() + "/$VER", "wearable-$VER.aar", WEAR_VER, libsFolder);    
   }
   
   
-  private void copySupportLibs(File tmpFolder, File libsFolder) throws IOException {
-    // Copy support packages (core-utils, compat, fragment, annotations, and 
-    // vector-drawable)
-//    copyDepFile(sdk.getSupportLibrary(), "/support-core-utils/$VER/support-core-utils-$VER.aar", SUPPORT_VER);
-    
-    File aarFile = new File(sdk.getSupportLibrary(), 
-        "/support-core-utils/" + SUPPORT_VER + "/support-core-utils-" + SUPPORT_VER + ".aar");
-    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
-    
-    aarFile = new File(sdk.getSupportLibrary(), 
-        "/support-compat/" + SUPPORT_VER + "/support-compat-" + SUPPORT_VER + ".aar");
-    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
-    
-    aarFile = new File(sdk.getSupportLibrary(), 
-        "/support-fragment/" + SUPPORT_VER + "/support-fragment-" + SUPPORT_VER + ".aar");
-    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
-
-    aarFile = new File(sdk.getSupportLibrary(), 
-        "/support-vector-drawable/" + SUPPORT_VER + "/support-vector-drawable-" + SUPPORT_VER + ".aar");
-    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
+  private void copySupportLibs(File libsFolder) throws IOException {
+    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-core-utils/$VER", "support-core-utils-$VER.aar", SUPPORT_VER, libsFolder);
+    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-compat/$VER", "support-compat-$VER.aar", SUPPORT_VER, libsFolder);
+    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-fragment/$VER", "support-fragment-$VER.aar", SUPPORT_VER, libsFolder);
+    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-vector-drawable/$VER", "support-vector-drawable-$VER.aar", SUPPORT_VER, libsFolder);
   }
   
   
-  private void copyAppCompatLib(File tmpFolder, File libsFolder) 
-      throws IOException {
-    File aarFile = new File(sdk.getSupportLibrary(), 
-        "/appcompat-v7/" + SUPPORT_VER + "/appcompat-v7-" + SUPPORT_VER + ".aar");
-    Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
+  private void copyAppCompatLib(File libsFolder) throws IOException {
+    copyAARFileFromSDK(sdk.getSupportLibrary() + "/appcompat-v7/$VER", "appcompat-v7-$VER.aar", SUPPORT_VER, libsFolder);
   }
   
   
   private void copyGVRLibs(File libsFolder) throws IOException {
-    File baseAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + GVR_VER + "/sdk-base-" + GVR_VER + ".aar");
-    Util.copyFile(baseAarFile, new File(libsFolder, baseAarFile.getName()));
-    
-    File commonAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + GVR_VER + "/sdk-common-" + GVR_VER + ".aar");
-    Util.copyFile(commonAarFile, new File(libsFolder, commonAarFile.getName()));
-    
-    File audioAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + GVR_VER + "/sdk-audio-" + GVR_VER + ".aar");
-    Util.copyFile(audioAarFile, new File(libsFolder, audioAarFile.getName()));
+    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-base-$VER.aar", GVR_VER, libsFolder);
+    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-common-$VER.aar", GVR_VER, libsFolder);
+    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-audio-$VER.aar", GVR_VER, libsFolder);
   }
   
   
-  private void copyDepFile(String baseFolder, String subfolder, String filename) {
-//    File aarFile = new File(sdk.getSupportLibrary(), 
-//        "/support-core-utils/" + SUPPORT_VER + "/support-core-utils-" + SUPPORT_VER + ".aar");
-//    if (aarFile.exists()) {
-//      Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
-//    } else {
-//      // The specified version does not exist in the installed SDK, so gradle should be able to download it.
-//    }
+  private void copyAARFileFromSDK(String srcFolder, String filename, String version, File destFolder) 
+      throws IOException {
+    String fn = filename.replace("$VER", version);
+    File srcFile = new File(srcFolder.replace("$VER", version), fn);
+    File destFile = new File(destFolder, fn);
+    if (srcFile.exists()) {
+      Util.copyFile(srcFile, destFile);
+    } else {
+      // If the AAR file does not exist in the installed SDK, gradle should be able to download it, and so
+      // we don't to anything besides printing a warning.      
+      System.out.println("Warning: cannot find AAR package " + fn + " in installed SDK, gradle will try to download.");
+    }
   }
 
+  
+  private void copyAARFileFromMode(String srcFolder, String filename, String version, File destFolder) 
+      throws IOException {
+    String fn = filename.replace("$VER", version);
+    File srcFile = mode.getContentFile(srcFolder.replace("$VER", version) + "/" + fn);
+    File destFile = new File(destFolder, fn);
+    if (srcFile.exists()) {
+      Util.copyFile(srcFile, destFile);
+    } else {
+      // If the AAR file does not exist in the mode, gradle should be able to download it, and so
+      // we don't to anything besides printing a warning.      
+      System.out.println("Warning: cannot find AAR package " + fn + " in Android mode, gradle will try to download");
+    }
+  }  
+  
   
   // ---------------------------------------------------------------------------
   // Export project
