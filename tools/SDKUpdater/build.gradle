@@ -9,9 +9,9 @@ buildscript {
 }
 
 dependencies {
-    compile group: 'org.processing', name: 'pde', version: '3.3.4'
-    compile name: "sdklib-25.3.2"
-    compile name: "repository-25.3.2"
+    compile group: 'org.processing', name: 'pde', version: '3.3.6'
+    compile name: "sdklib-26.0.0-dev"
+    compile name: "repository-26.0.0-dev"
 }
 
 sourceSets {

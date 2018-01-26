@@ -16,10 +16,10 @@
   <property name="android.platform" value="android-26" />
 
   <!-- Wear version to build the core library -->
-  <property name="wear.version" value="2.0.0" />	
+  <property name="wear.version" value="2.0.5" />	
 	
   <!-- Support version to build the core library -->
-  <property name="support.version" value="25.2.0" />	
+  <property name="support.version" value="25.3.1" />	
 	
   <target name="build">
     <taskdef name="methods" 

@@ -36,6 +36,7 @@ import processing.mode.java.JavaBuild;
 import processing.mode.java.preproc.SurfaceInfo;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 /** 
@@ -680,6 +681,8 @@ class AndroidBuild extends JavaBuild {
   private void copySupportLibs(File tmpFolder, File libsFolder) throws IOException {
     // Copy support packages (core-utils, compat, fragment, annotations, and 
     // vector-drawable)
+//    copyDepFile(sdk.getSupportLibrary(), "/support-core-utils/$VER/support-core-utils-$VER.aar", SUPPORT_VER);
+    
     File aarFile = new File(sdk.getSupportLibrary(), 
         "/support-core-utils/" + SUPPORT_VER + "/support-core-utils-" + SUPPORT_VER + ".aar");
     Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
@@ -715,6 +718,17 @@ class AndroidBuild extends JavaBuild {
     
     File audioAarFile = mode.getContentFile("libraries/vr/gvrsdk/" + GVR_VER + "/sdk-audio-" + GVR_VER + ".aar");
     Util.copyFile(audioAarFile, new File(libsFolder, audioAarFile.getName()));
+  }
+  
+  
+  private void copyDepFile(String baseFolder, String subfolder, String filename) {
+//    File aarFile = new File(sdk.getSupportLibrary(), 
+//        "/support-core-utils/" + SUPPORT_VER + "/support-core-utils-" + SUPPORT_VER + ".aar");
+//    if (aarFile.exists()) {
+//      Util.copyFile(aarFile, new File(libsFolder, aarFile.getName()));
+//    } else {
+//      // The specified version does not exist in the installed SDK, so gradle should be able to download it.
+//    }
   }
 
   

@@ -2,7 +2,7 @@
 
 # Usage:
 # call with the version number of the support packages to copy from local SDK and extract, i.e.:
-# ./support-update.sh 25.2.0:
+# ./support-update.sh 25.3.1:
 
 version=$1
 
