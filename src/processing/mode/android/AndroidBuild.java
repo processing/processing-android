@@ -86,7 +86,7 @@ class AndroidBuild extends JavaBuild {
   static {
     PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
     if (PLAY_SERVICES_VER == null) { 
-      PLAY_SERVICES_VER = "11.8.0"; 
+      PLAY_SERVICES_VER = "11.0.4"; 
       Preferences.set("android.sdk.play_services", PLAY_SERVICES_VER);
     }
   }  
