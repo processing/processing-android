@@ -71,9 +71,6 @@ class AndroidSDK {
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
-
-  private static final String SDK_LICENSE_URL = 
-      "https://developer.android.com/studio/terms.html"; 
   
   private static final String USE_ENV_SDK_TITLE = "Found an Android SDK!";
   private static final String USE_ENV_SDK_MESSAGE = 
@@ -169,6 +166,24 @@ class AndroidSDK {
       "\">these instructions</a>.<br><br>" +
       "The installation files are available in this folder:</br>";     
   
+  private static final String SDK_LICENSE_URL = 
+      "https://developer.android.com/studio/terms.html";
+  
+  private static final String SDK_LICENSE_TITLE = "Accept SDK license?";
+
+  private static final String SDK_LICENSE_MESSAGE = 
+      "You need to accept the terms of the Android SDK license from Google in " +
+      "order to use the SDK. Read the license <a href=\"" + SDK_LICENSE_URL + 
+      "\">from here</a>.";  
+  
+  private static final String NO_SDK_LICENSE_TITLE = "SDK license not accepted";
+  
+  private static final String NO_SDK_LICENSE_MESSAGE = 
+      "The Android SDK was installed, but will not be usable. You can accept " + 
+      "the license at a later time by opening a terminal, changing to the " +
+      "SDK folder, and then running the following command:<br><br>" +
+      "tools/bin/sdkmanager --licenses";
+  
   private static final int NO_ERROR     = 0;
   private static final int SKIP_ENV_SDK = 1;
   private static final int MISSING_SDK  = 2;
@@ -223,8 +238,8 @@ class AndroidSDK {
       throw new BadSDKException("There is no support library folder in " + folder);
     }
         
-    avdManager = findAvdManager(new File(tools, "bin"));
-    sdkManager = findSdkManager(new File(tools, "bin"));
+    avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
+    sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
 
     String path = Platform.getenv("PATH");
 
@@ -353,58 +368,44 @@ class AndroidSDK {
   }
   
   
-  public void acceptLicenses() {
-    ArrayList<String> commands = new ArrayList<String>();
-    commands.add(sdkManager.getAbsolutePath());
-    commands.add("--licenses");
-    ProcessBuilder pb = new ProcessBuilder(commands);
+  // Write to the process input, so the licenses will be accepted. In 
+  // principle, We only need 7 'y', one for the 'yes' to the first 
+  // 'review licenses?' question, the rest for the 6 licenses, but adding
+  // 10 just in case, having more does not cause any trouble.  
+  private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
+  
+  private void acceptLicenses() {
+    ProcessBuilder pb = new ProcessBuilder(sdkManager.getAbsolutePath(), 
+                                           "--licenses");
     pb.redirectErrorStream(true);
     try {
-
-        Process prs = pb.start();
-        OutputStream writeTo = prs.getOutputStream();
-        for (int i = 0; i < 7; i++) {
-          Thread inThread = new Thread(new In(prs.getInputStream()));
-          inThread.start();
-          Thread.sleep(100);          
-          writeTo.write("y\n".getBytes());
-          writeTo.flush();
+      Process process = pb.start();
+      final OutputStream os = process.getOutputStream();
+      final InputStream is = process.getInputStream();
+      // Read the process output, otherwise read() will block and wait for new 
+      // data to read
+      new Thread(new Runnable() {
+        public void run() {
+          byte[] b = new byte[1024];
+          try {
+            while (is.read(b) != -1) { }
+            is.close();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
         }
-        
-        writeTo.close();        
-
+      }, "AndroidSDK: reading licenses").start();
+      Thread.sleep(1000);
+      os.write(response.getBytes());
+      os.flush();
+      os.close();
     } catch (IOException e) {
-        e.printStackTrace();
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
-    }    
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
   
-  
-  class In implements Runnable {
-    private InputStream is;
-
-    public In(InputStream is) {
-        this.is = is;
-    }
-
-    @Override
-    public void run() {
-        byte[] b = new byte[1024];
-        int size = 0;
-        try {
-            while ((size = is.read(b)) != -1) {
-                System.err.println(new String(b));
-            }
-            is.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
-  }  
   
   static public File getHAXMInstallerFolder() {
     String sdkPrefsPath = Preferences.get("android.sdk.path");    
@@ -425,26 +426,17 @@ class AndroidSDK {
    * for the SDK installation. Also figures out the name of android/android.bat
    * so that it can be called explicitly.
    */
-  private static File findAvdManager(final File tools) throws BadSDKException {
-    if (new File(tools, "avdmanager.bat").exists()) {
-      return new File(tools, "avdmanager.bat");
+  private static File findCliTool(final File tools, String name) 
+      throws BadSDKException {
+    if (new File(tools, name + ".bat").exists()) {
+      return new File(tools, name + ".bat");
     }
-    if (new File(tools, "avdmanager").exists()) {
-      return new File(tools, "avdmanager");
+    if (new File(tools, name).exists()) {
+      return new File(tools, name);
     }
-    throw new BadSDKException("Cannot find avdmanager in " + tools);
+    throw new BadSDKException("Cannot find " + name + " in " + tools);
   }
-
   
-  private static File findSdkManager(final File tools) throws BadSDKException {
-    if (new File(tools, "sdkmanager.bat").exists()) {
-      return new File(tools, "sdkmanager.bat");
-    }
-    if (new File(tools, "sdkmanager").exists()) {
-      return new File(tools, "sdkmanager");
-    }
-    throw new BadSDKException("Cannot find sdkdmanager in " + tools);
-  }  
 
   /**
    * Check for a set android.sdk.path preference. If the pref
@@ -470,7 +462,6 @@ class AndroidSDK {
       try {
         final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath));
         Preferences.set("android.sdk.path", sdkPrefsPath);
-        androidSDK.acceptLicenses();
         return androidSDK;
       } catch (final BadSDKException badPref) {
         Preferences.unset("android.sdk.path");
@@ -504,8 +495,7 @@ class AndroidSDK {
         // means we just installed the mode for the first time, so we show a 
         // welcome message with some useful info.
         AndroidUtil.showMessage(SDK_EXISTS_TITLE, SDK_EXISTS_MESSAGE);
-        
-        androidSDK.acceptLicenses();
+
         return androidSDK;
       } catch (final BadSDKException badEnv) { 
         Preferences.unset("android.sdk.path");        
@@ -575,15 +565,19 @@ class AndroidSDK {
     if (sdk == null) {
       throw new BadSDKException("SDK could not be downloaded");
     }
-
-    String msg = SDK_INSTALL_MESSAGE;
-    File driver = AndroidSDK.getGoogleDriverFolder();
-    if (Platform.isWindows() && driver.exists()) {
-      msg += DRIVER_INSTALL_MESSAGE + driver.getAbsolutePath();
-    }
-    AndroidUtil.showMessage(SDK_INSTALL_TITLE, msg);
-
-    sdk.acceptLicenses();
+    
+    final int result = showSDKLicenseDialog(editor);
+    if (result == JOptionPane.YES_OPTION) {
+      sdk.acceptLicenses();   
+      String msg = SDK_INSTALL_MESSAGE;
+      File driver = AndroidSDK.getGoogleDriverFolder();
+      if (Platform.isWindows() && driver.exists()) {
+        msg += DRIVER_INSTALL_MESSAGE + driver.getAbsolutePath();
+      }
+      AndroidUtil.showMessage(SDK_INSTALL_TITLE, msg);      
+    } else {
+      AndroidUtil.showMessage(NO_SDK_LICENSE_TITLE, NO_SDK_LICENSE_MESSAGE);
+    }    
     
     return sdk;
   }
@@ -722,6 +716,43 @@ class AndroidSDK {
       return JOptionPane.CLOSED_OPTION;
     }
   }
+  
+  
+  static public int showSDKLicenseDialog(Frame editor) {
+    String title = SDK_LICENSE_TITLE;    
+    String msg = SDK_LICENSE_MESSAGE;
+    String htmlString = "<html> " +
+        "<head> <style type=\"text/css\">"+
+        "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
+            "margin: " + TEXT_MARGIN + "px; " + 
+            "width: " + TEXT_WIDTH + "px }" +
+        "</style> </head>" + "<body> <p>" + msg + "</p> </body> </html>";
+    JEditorPane pane = new JEditorPane("text/html", htmlString);
+    pane.addHyperlinkListener(new HyperlinkListener() {
+      @Override
+      public void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+          Platform.openURL(e.getURL().toString());
+        }
+      }
+    });
+    pane.setEditable(false);
+    JLabel label = new JLabel();
+    pane.setBackground(label.getBackground());
+    
+    String[] options = new String[] { "Yes", "No" };
+    
+    int result = JOptionPane.showOptionDialog(null, pane, title, 
+        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
+        null, options, options[0]);
+    if (result == JOptionPane.YES_OPTION) {
+      return JOptionPane.YES_OPTION;
+    } else if (result == JOptionPane.NO_OPTION) {
+      return JOptionPane.NO_OPTION;
+    } else {
+      return JOptionPane.CLOSED_OPTION;
+    }
+  }  
   
 
   // this was banished from Base because it encourages bad practice.
