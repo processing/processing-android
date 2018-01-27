@@ -7,6 +7,7 @@ buildscript {
         classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
     }
 }
+apply plugin: 'maven'
 
 dependencies {
     compile name: 'android'
@@ -43,6 +44,45 @@ clean.doFirst {
 import groovy.util.AntBuilder
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.*;
+
+// Creates the pom file, but for now let's just use the template in the core folder
+task createPom {
+    pom {
+       project {
+           groupId 'org.p5android'
+           artifactId 'processing-core'
+           version '4.0.1'
+           packaging 'jar'
+           licenses {
+               license {
+                   name 'GNU Lesser General Public License, version 2.1'
+                   url 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
+                   distribution 'repo'
+               }
+           }
+        }
+    }.writeTo("$buildDir/libs/core.pom")        
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+// Does not work because of Processing-specific tags in source code, such as @webref
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+//     archives javadocJar
+    archives sourcesJar
+}
+
+jar.doLast { task ->
+    ant.checksum file: task.archivePath
+}
 
 task dist {
     doLast {
