@@ -71,8 +71,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private static final String HAXM_INSTALL_TITLE = "Some words of caution...";
   
   private static final String HAXM_INSTALL_MESSAGE =
-      "You chose to run x86 images in the emulator. This is great but you need " + 
-      "to install the Intel Hardware Accelerated Execution Manager (Intel HAXM).<br><br>" + 
+      "Processing will install x86 images in the emulator. These images are fast, but " + 
+      "also need the Intel Hardware Accelerated Execution Manager (Intel HAXM).<br><br>" + 
       "Processing will try to run the HAXM installer now, which may ask for your " + 
       "administrator password or additional permissions.";
   
@@ -417,7 +417,25 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     if (abi == null || askABI) {
       // Either there was no image architecture selected, or the default was set.
       // In this case, we give the user the option to choose between ARM and x86
-      final int result = showSysImageMessage();
+      
+      final int result;
+      // PROCESSOR_IDENTIFIER is only defined on Windows. For cross-platform CPU
+      // info, in the future we could use OSHI: https://github.com/oshi/oshi
+      String procId = System.getenv("PROCESSOR_IDENTIFIER");
+      if (procId != null) {
+        if (-1 < procId.indexOf("Intel")) {
+          // Intel CPU: we go for the x86 abi
+          result = JOptionPane.YES_OPTION;
+        } else {
+          // Another CPU, can only be AMD, so we go for ARM abi          
+          result = JOptionPane.NO_OPTION;
+        }
+      } else if (Platform.isMacOS()) {
+        // Macs only have Intel CPUs, so we also go for the x86 abi
+        result = JOptionPane.YES_OPTION;
+      } else {
+        result = showSysImageMessage();  
+      }
       if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
         abi = "x86";
         installHAXM();
