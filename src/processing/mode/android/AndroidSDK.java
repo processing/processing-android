@@ -184,6 +184,15 @@ class AndroidSDK {
       "SDK folder, and then running the following command:<br><br>" +
       "tools/bin/sdkmanager --licenses";
   
+  private static final String SYSTEM_32BIT_TITLE = "System is 32 bit...";
+  
+  private static final String SYSTEM_32BIT_URL = 
+      "https://askubuntu.com/questions/710426/android-sdk-on-ubuntu-32bit";  
+  
+  private static final String SYSTEM_32BIT_MESSAGE =
+      "The Android SDK no longer includes 32 bit platform tools (adb, etc), so they will not work.<br><br>" +
+      "<a href=\"" + SYSTEM_32BIT_URL + "\">This thread</a> provides some possible workarounds.";    
+  
   private static final int NO_ERROR     = 0;
   private static final int SKIP_ENV_SDK = 1;
   private static final int MISSING_SDK  = 2;
@@ -577,7 +586,11 @@ class AndroidSDK {
       AndroidUtil.showMessage(SDK_INSTALL_TITLE, msg);      
     } else {
       AndroidUtil.showMessage(NO_SDK_LICENSE_TITLE, NO_SDK_LICENSE_MESSAGE);
-    }    
+    }
+    
+    if (Platform.isLinux() && Platform.getNativeBits() == 32) {      
+      AndroidUtil.showMessage(SYSTEM_32BIT_TITLE, SYSTEM_32BIT_MESSAGE);
+    }
     
     return sdk;
   }
