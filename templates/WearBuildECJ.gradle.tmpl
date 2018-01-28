@@ -22,6 +22,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        abortOnError false
+    }    
     
     // We create a variant of the compile task, where we use the Eclipse Compiler for Java
     // (ECJ) instead of the JDK (which would require the user to download and install
