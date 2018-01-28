@@ -15,7 +15,7 @@
   </licenses>
   <dependencies>
     <dependency>
-      <groupId>com.google.android.support</groupId>
+      <groupId>com.android.support</groupId>
       <artifactId>support-v4</artifactId>
       <version>25.3.1</version>
       <scope>compile</scope>
