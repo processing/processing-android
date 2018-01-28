@@ -190,7 +190,7 @@ class AndroidSDK {
       "https://askubuntu.com/questions/710426/android-sdk-on-ubuntu-32bit";  
   
   private static final String SYSTEM_32BIT_MESSAGE =
-      "The Android SDK no longer includes 32 bit platform tools (adb, etc), so they will not work.<br><br>" +
+      "The Android SDK no longer includes 32 bit platform tools (adb, etc.), and so they will not work.<br><br>" +
       "<a href=\"" + SYSTEM_32BIT_URL + "\">This thread</a> provides some possible workarounds.";    
   
   private static final int NO_ERROR     = 0;
