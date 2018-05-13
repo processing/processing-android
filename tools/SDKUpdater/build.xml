@@ -5,7 +5,7 @@
   <property name="processing.dir" value="../../../processing" />
 	
   <!-- path to the android sdk -->
-  <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
+  <property name="sdk.dir" value="C:\Users\YourFather\AppData\Local\Android\Sdk" />
 
   <!-- Library version -->
   <property name="lib.ver" value="26.0.0-dev" />	

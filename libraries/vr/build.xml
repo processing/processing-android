@@ -3,10 +3,10 @@
   <property environment="env"/>
 	
   <!-- path to the android sdk -->
-  <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
+  <property name="sdk.dir" value="C:\Users\YourFather\AppData\Local\Android\Sdk" />
 
   <!-- path to the main processing repo --> 
-  <property name="processing.dir" value="../../../processing" />	
+  <property name="processing.dir" value="../../../processingn" />	
 	
   <!-- Android platform to build the core library -->
   <property name="android.platform" value="android-26" />	

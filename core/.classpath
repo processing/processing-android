@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="library/support-compat-25.3.1.jar"/>
 	<classpathentry kind="lib" path="library/support-fragment-25.3.1.jar"/>
 	<classpathentry kind="lib" path="library/wearable-2.0.5.jar"/>
+	<classpathentry kind="var" path="ANDROID_JAR"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

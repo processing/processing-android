@@ -21,6 +21,10 @@
 
 package processing.mode.android;
 
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.Connector;
 import processing.app.Base;
 import processing.app.Platform;
 import processing.app.RunnerListener;
@@ -30,6 +34,7 @@ import processing.app.exec.ProcessResult;
 import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.android.LogEntry.Severity;
+import processing.mode.android.debugger.VMAcquirer;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +62,7 @@ class Device {
   public Device(final Devices env, final String id) {
     this.env = env;
     this.id = id;
-    
+
     // http://android.stackexchange.com/questions/82169/howto-get-devices-features-with-adb
     String concat = ""; 
     try {
@@ -197,6 +202,7 @@ class Device {
     };
 //    PApplet.println(cmd);
     ProcessResult pr = adb(cmd);
+    VirtualMachine vm = new VMAcquirer().connect(12345);
     if (Base.DEBUG) {
       System.out.println(pr.toString());
     }
@@ -231,6 +237,8 @@ class Device {
 //      System.out.println(line);
 //      System.err.println(activeProcesses);
 //      System.err.println(entry.message);
+
+        System.out.println(line);
       
       if (entry.message.startsWith("PROCESSING")) {
         // Old start/stop process detection, does not seem to work anymore. 
@@ -349,7 +357,7 @@ class Device {
 
   void initialize() throws IOException, InterruptedException {
     adb("logcat", "-c");
-    final String[] cmd = generateAdbCommand("logcat", "-v", "brief");
+    final String[] cmd = generateAdbCommand("logcat");
     final String title = PApplet.join(cmd, ' ');
     logcat = Runtime.getRuntime().exec(cmd);
     ProcessRegistry.watch(logcat);
