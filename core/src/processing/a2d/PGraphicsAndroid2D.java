@@ -1464,7 +1464,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void rotate(float angle) {
-    transform.rotate(angle * RAD_TO_DEG);
+    transform.rotate(angle);
     canvas.rotate(angle * RAD_TO_DEG);
   }
 
