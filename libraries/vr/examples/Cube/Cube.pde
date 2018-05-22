@@ -10,5 +10,5 @@ void draw() {
   translate(width/2, height/2);
   rotateX(frameCount * 0.01f);
   rotateY(frameCount * 0.01f);  
-  box(500);
+  box(350);
 }
