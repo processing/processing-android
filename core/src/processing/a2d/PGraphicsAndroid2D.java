@@ -1433,6 +1433,7 @@ public class PGraphicsAndroid2D extends PGraphics {
     transform.get(transformStack[transformCount]);
     transformCount++;
 //    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+    canvas.save(); 
   }
 
 
@@ -1445,8 +1446,8 @@ public class PGraphicsAndroid2D extends PGraphics {
     transformCount--;
     transform.set(transformStack[transformCount]);
     updateTmpMatrix();
-    canvas.setMatrix(tmpMatrix);
-//    canvas.restore();
+    //canvas.setMatrix(tmpMatrix);
+    canvas.restore();
   }
 
 
