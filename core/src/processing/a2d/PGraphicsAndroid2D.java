@@ -73,8 +73,8 @@ public class PGraphicsAndroid2D extends PGraphics {
   static protected final int MATRIX_STACK_DEPTH = 32;
   protected float[][] transformStack;
   public PMatrix2D transform;
-  protected Matrix tmpMatrix;
-  protected float[] tmpArray;
+  protected Matrix transformMatrix;
+  protected float[] transformArray;
   int transformCount;
 
 //  Line2D.Float line = new Line2D.Float();
@@ -133,8 +133,8 @@ public class PGraphicsAndroid2D extends PGraphics {
   public PGraphicsAndroid2D() {
     transformStack = new float[MATRIX_STACK_DEPTH][6];
     transform = new PMatrix2D();
-    tmpMatrix = new Matrix();
-    tmpArray = new float[9];
+    transformMatrix = new Matrix();
+    transformArray = new float[9];
 
     path = new Path();
     rect = new RectF();
@@ -1432,7 +1432,8 @@ public class PGraphicsAndroid2D extends PGraphics {
     }
     transform.get(transformStack[transformCount]);
     transformCount++;
-//    canvas.save(Canvas.MATRIX_SAVE_FLAG);
+
+//    canvas.save();
   }
 
 
@@ -1444,8 +1445,15 @@ public class PGraphicsAndroid2D extends PGraphics {
     }
     transformCount--;
     transform.set(transformStack[transformCount]);
-    updateTmpMatrix();
-    canvas.setMatrix(tmpMatrix);
+    updateTransformMatrix();
+
+    // Using canvas.restore() here and canvas.save() in popMatrix() and  should achieve
+    // the same effect as setting copying transform into transformMatrix with updateTransformMatrix()
+    // and setting it below, although it has been reported that with the later approach, a push/pop
+    // would not result in the initial matrix state:
+    // https://github.com/processing/processing-android/issues/445
+    // However, cannot find
+    canvas.setMatrix(transformMatrix);
 //    canvas.restore();
   }
 
@@ -1548,8 +1556,8 @@ public class PGraphicsAndroid2D extends PGraphics {
   public void applyMatrix(float n00, float n01, float n02,
                           float n10, float n11, float n12) {
     transform.apply(n00, n01, n02, n10, n11, n12);
-    updateTmpMatrix();
-    canvas.concat(tmpMatrix);
+    updateTransformMatrix();
+    canvas.concat(transformMatrix);
   }
 
 
@@ -1600,8 +1608,8 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void setMatrix(PMatrix2D source) {
     transform.set(source);
-    updateTmpMatrix();
-    canvas.setMatrix(tmpMatrix);
+    updateTransformMatrix();
+    canvas.setMatrix(transformMatrix);
   }
 
 
@@ -1619,24 +1627,24 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   protected Matrix getMatrixImp() {
     Matrix m = new Matrix();
-    updateTmpMatrix();
-    m.set(tmpMatrix);
+    updateTransformMatrix();
+    m.set(transformMatrix);
     return m;
 //    return canvas.getMatrix();
   }
 
 
-  protected void updateTmpMatrix() {
-    tmpArray[0] = transform.m00;
-    tmpArray[1] = transform.m01;
-    tmpArray[2] = transform.m02;
-    tmpArray[3] = transform.m10;
-    tmpArray[4] = transform.m11;
-    tmpArray[5] = transform.m12;
-    tmpArray[6] = 0;
-    tmpArray[7] = 0;
-    tmpArray[8] = 1;
-    tmpMatrix.setValues(tmpArray);
+  public void updateTransformMatrix() {
+    transformArray[0] = transform.m00;
+    transformArray[1] = transform.m01;
+    transformArray[2] = transform.m02;
+    transformArray[3] = transform.m10;
+    transformArray[4] = transform.m11;
+    transformArray[5] = transform.m12;
+    transformArray[6] = 0;
+    transformArray[7] = 0;
+    transformArray[8] = 1;
+    transformMatrix.setValues(transformArray);
   }
 
 
@@ -1676,14 +1684,11 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public float screenX(float x, float y) {
-//    canvas.getTransform().getMatrix(transform);
-//    return (float)transform[0]*x + (float)transform[2]*y + (float)transform[4];
     if (screenPoint == null) {
       screenPoint = new float[2];
     }
     screenPoint[0] = x;
     screenPoint[1] = y;
-//    canvas.getMatrix().mapPoints(screenPoint);
     getMatrixImp().mapPoints(screenPoint);
     return screenPoint[0];
   }
@@ -1691,14 +1696,11 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public float screenY(float x, float y) {
-//    canvas.getTransform().getMatrix(transform);
-//    return (float)transform[1]*x + (float)transform[3]*y + (float)transform[5];
     if (screenPoint == null) {
       screenPoint = new float[2];
     }
     screenPoint[0] = x;
     screenPoint[1] = y;
-//    canvas.getMatrix().mapPoints(screenPoint);
     getMatrixImp().mapPoints(screenPoint);
     return screenPoint[1];
   }
@@ -2188,12 +2190,10 @@ public class PGraphicsAndroid2D extends PGraphics {
       src.setModified(false);
     }
     // set() happens in screen coordinates, so need to clear the ctm
-//    canvas.save(Canvas.MATRIX_SAVE_FLAG);
     pushMatrix();
     canvas.setMatrix(null);  // set to identity
     canvas.drawBitmap(bitmap, x, y, null);
     popMatrix();
-//    canvas.restore();
   }
 
 
