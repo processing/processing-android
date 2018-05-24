@@ -1,32 +1,16 @@
 <?xml version="1.0"?>
 
-<project name="Android Mode for Processing" default="build">
+<project default="build" name="Create .jar file for mode">
+  <property environment="env" />
 
   <!-- path to the main processing repo --> 
-  <property name="processing.dir" value="../processing" />
-	
-  <property name="core.jar.path" value="processing-core.zip" />
+  <property name="processing.dir" value="../../processing" />
+
+  <!-- path to the mode jar --> 
   <property name="mode.jar.path" value="mode/AndroidMode.jar" />
-  <property name="mode.dist.path" value="release/AndroidMode.zip" />
-  <property name="tools.jar.path" value="mode/tools.jar" />
-  
-  <target name="clean" depends="subprojects-clean" description="Clean the build directories">
-    <delete dir="bin" />
-    <delete file="${mode.jar.path}" />
-  </target>
 
-  <target name="compile" depends="subprojects-build" description="Compile sources">
-
-    <condition property="core-built">
-      <available file="${processing.dir}/core/library/core.jar" />
-    </condition>
-    <fail unless="core-built" 
-	  message="Please build the core library first and make sure it sits in ${processing.dir}/core/library/core.jar" />
-
+  <target name="compile" description="Compile sources">
     <mkdir dir="bin" />
-
-    <!-- env used to set classpath below -->
-    <property environment="env" />
 
     <javac source="1.7" 
 	   target="1.7" 
@@ -43,55 +27,12 @@
     </javac>
   </target>
 
-
   <target name="build" depends="compile" description="Build Android mode">
     <jar basedir="bin" destfile="${mode.jar.path}" />
   </target>
-
-
-  <target name="dist" depends="build" 
-	  description="Create AndroidMode.zip and AndroidMode.txt">
-    <mkdir dir="release" />
-  	
-    <zip destfile="${mode.dist.path}">
-      <zipfileset dir="." prefix="AndroidMode">
-	      <include name="processing-core.zip" />
-        <include name="mode.properties" />	
-        <include name="mode/**" />
-        <include name="templates/**" />	
-        <include name="examples/**" />
-        <include name="icons/**" />
-        <include name="theme/**" />
-      	<include name="tools/SDKUpdater/tool/**" />
-        <include name="tools/SDKUpdater/src/**" />      	
-        <include name="libs/vr/library.properties" />        
-        <include name="libs/vr/examples/**" />
-        <include name="libs/vr/gvrsdk/**" />
-        <include name="libs/vr/lib/**" />
-        <include name="libs/vr/library/**" />
-        <include name="libs/vr/src/**" />        
-        <exclude name="**/._*" />
-      </zipfileset>
-    </zip>
-
-    <copy file="mode.properties" 
-          tofile="release/AndroidMode.txt" />
-  </target>
-
-  <!-- - - - - - - - - - - - - - - - - - -->
-  <!-- Subprojects: libraries, tools     -->
-  <!-- - - - - - - - - - - - - - - - - - -->
   
-  <target name="subprojects-clean">
-    <subant buildpath="libs/core" target="clean"/>
-    <subant buildpath="libs/vr" target="clean"/>
-    <subant buildpath="tools/SDKUpdater" target="clean"/>  	    
-  </target>
-    
-  <target name="subprojects-build">
-    <subant buildpath="libs/core" target="build"/>
-    <subant buildpath="libs/vr" target="build"/>  	
-  	<subant buildpath="tools/SDKUpdater" target="build"/>
-  </target>
-
+  <target name="clean" description="Clean the build directories">
+    <delete dir="bin" />
+    <delete file="${mode.jar.path}" />
+  </target>  
 </project>

@@ -28,11 +28,7 @@ sourceSets {
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.*;
 
-task dist {
-    doLast {
-        Files.copy(file("$buildDir/libs/mode.jar").toPath(),
-                   file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
-    }
+build.doLast {
+    Files.copy(file("$buildDir/libs/mode.jar").toPath(),
+               file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
 }
-
-dist.dependsOn build

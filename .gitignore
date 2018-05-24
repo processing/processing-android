@@ -1,15 +1,13 @@
-bin
-processing-core.zip
-release
+dist
+mode/processing-core.zip
 
-.AppleDouble
-._*
-*~
 .DS_Store
-/sdk/
-/temp/
+*/**/.DS_Store
 
-libraries/build/**
-build/**
+build
+*/**/build
+bin
+*/**/bin
+
 .gradle
 

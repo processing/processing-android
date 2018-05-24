@@ -42,15 +42,11 @@ import groovy.util.AntBuilder
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.*;
 
-task dist {
-    doLast {
-        // copy jar file to tool folder
-        File toolJar = file("tool/SDKUpdater.jar");
-        //create intermediate folder if they don't exist
-        toolJar.mkdirs();
-        Files.copy(file("$buildDir/libs/SDKUpdater.jar").toPath(),
-                   toolJar.toPath(), REPLACE_EXISTING);                   
-    }
+build.doLast {
+    // copy jar file to tool folder
+    File toolJar = file("tool/SDKUpdater.jar");
+    //create intermediate folder if they don't exist
+    toolJar.mkdirs();
+    Files.copy(file("$buildDir/libs/SDKUpdater.jar").toPath(),
+               toolJar.toPath(), REPLACE_EXISTING);                   
 }
-
-dist.dependsOn build

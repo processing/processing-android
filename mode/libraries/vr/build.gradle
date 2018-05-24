@@ -84,15 +84,11 @@ jar.doLast { task ->
     ant.checksum file: task.archivePath
 }
 
-task dist {
-    doLast {
-        File vrJar = file("library/vr.jar");
-        //create intermediate folder if they don't exist
-        vrJar.mkdirs();
-        // make copy of jar file to library folder
-        Files.copy(file("$buildDir/libs/vr.jar").toPath(),
-                   vrJar.toPath(), REPLACE_EXISTING);             
-    }
+build.doLast {
+    File vrJar = file("library/vr.jar");
+    //create intermediate folder if they don't exist
+    vrJar.mkdirs();
+    // make copy of jar file to library folder
+    Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+               vrJar.toPath(), REPLACE_EXISTING);             
 }
-
-dist.dependsOn build

@@ -6,7 +6,10 @@
   <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
 
   <!-- path to the main processing repo --> 
-  <property name="processing.dir" value="../../../processing" />	
+  <property name="processing.dir" value="../../../../processing" />	
+	
+  <!-- path to the core library -->
+  <property name="core.jar.path" value="../../processing-core.zip" />	
 	
   <!-- Android platform to build the core library -->
   <property name="android.platform" value="android-26" />	
@@ -23,9 +26,9 @@
 
   <target name="compile" description="Compile sources">
     <condition property="core-built">
-      <available file="../../processing-core.zip" />
+      <available file="${core.jar.path}" />
     </condition>
-    <fail unless="core-built" message="Please build the core library first and make sure it sits in ../../processing-core.zip" />
+    <fail unless="core-built" message="Please build the core library first and make sure it sits in ../../mode/processing-core.zip" />
 
     <mkdir dir="bin" />
     <javac source="1.7"
@@ -34,14 +37,14 @@
 	   encoding="UTF-8"
 	   includeAntRuntime="false"
 	   classpath="library/gvr-base.jar;
-                  library/gvr-common.jar;
-                  library/gvr-audio.jar;
-	              ../../processing-core.zip;
+                library/gvr-common.jar;
+                library/gvr-audio.jar;
+	              ${core.jar.path};
     	          ${sdk.dir}/platforms/${android.platform}/android.jar"
 	   nowarn="true"
 	   compiler="org.eclipse.jdt.core.JDTCompilerAdapter">
-      <compilerclasspath path="../../../processing/java/mode/org.eclipse.jdt.core.jar;
-                               ../../../processing/java/mode/jdtCompilerAdapter.jar" />
+      <compilerclasspath path="${processing.dir}/java/mode/org.eclipse.jdt.core.jar;
+                               ${processing.dir}/java/mode/jdtCompilerAdapter.jar" />
     </javac>
   </target>
 </project>

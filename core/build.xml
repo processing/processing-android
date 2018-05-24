@@ -7,10 +7,10 @@
   <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
 	
   <!-- path to the main processing repo --> 
-  <property name="processing.dir" value="../../../processing" />
+  <property name="processing.dir" value="../../processing" />
 
   <!-- path to the core library -->
-  <property name="core.jar.path" value="../../processing-core.zip" />
+  <property name="core.jar.path" value="../mode/processing-core.zip" />
 
   <!-- Android platform to build the core library -->
   <property name="android.platform" value="android-26" />

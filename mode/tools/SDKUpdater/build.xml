@@ -2,7 +2,7 @@
 <project name="SDK Updater Tool" default="build">
   
   <!-- path to the main processing repo --> 
-  <property name="processing.dir" value="../../../processing" />
+  <property name="processing.dir" value="../../../../processing" />
 	
   <!-- path to the android sdk -->
   <property name="sdk.dir" value="/Users/andres/code/android/sdk" />
