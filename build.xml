@@ -35,9 +35,9 @@
 	   includeAntRuntime="false"
  	   classpath="${processing.dir}/core/library/core.jar;
  	              ${processing.dir}/java/mode/JavaMode.jar; 
-                  ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
-                  ${processing.dir}/app/pde.jar;
-                  mode/gradle-tooling-api-4.4.1.jar"
+                ${processing.dir}/java/mode/org.eclipse.core.runtime.jar;
+                ${processing.dir}/app/pde.jar;
+                mode/gradle-tooling-api-4.4.1.jar"
 	   debug="on">
       <src path="src" />
     </javac>
@@ -64,12 +64,12 @@
         <include name="theme/**" />
       	<include name="tools/SDKUpdater/tool/**" />
         <include name="tools/SDKUpdater/src/**" />      	
-        <include name="libraries/vr/library.properties" />        
-        <include name="libraries/vr/examples/**" />
-        <include name="libraries/vr/gvrsdk/**" />
-        <include name="libraries/vr/lib/**" />
-        <include name="libraries/vr/library/**" />
-        <include name="libraries/vr/src/**" />        
+        <include name="libs/vr/library.properties" />        
+        <include name="libs/vr/examples/**" />
+        <include name="libs/vr/gvrsdk/**" />
+        <include name="libs/vr/lib/**" />
+        <include name="libs/vr/library/**" />
+        <include name="libs/vr/src/**" />        
         <exclude name="**/._*" />
       </zipfileset>
     </zip>
@@ -79,19 +79,19 @@
   </target>
 
   <!-- - - - - - - - - - - - - - - - - - -->
-  <!-- Subprojects: Core, Libraries -->
+  <!-- Subprojects: libraries, tools     -->
   <!-- - - - - - - - - - - - - - - - - - -->
   
   <target name="subprojects-clean">
-    <subant buildpath="core" target="clean"/>
-    <subant buildpath="tools/SDKUpdater" target="clean"/>  	
-    <subant buildpath="libraries/vr" target="clean"/>
+    <subant buildpath="libs/core" target="clean"/>
+    <subant buildpath="libs/vr" target="clean"/>
+    <subant buildpath="tools/SDKUpdater" target="clean"/>  	    
   </target>
     
   <target name="subprojects-build">
-    <subant buildpath="core" target="build"/>
+    <subant buildpath="libs/core" target="build"/>
+    <subant buildpath="libs/vr" target="build"/>  	
   	<subant buildpath="tools/SDKUpdater" target="build"/>
-    <subant buildpath="libraries/vr" target="build"/>  	
   </target>
 
 </project>
