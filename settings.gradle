@@ -1,1 +1,1 @@
-include 'libs:core', 'tools:SDKUpdater', 'libs:vr'
+include ':mode', 'libs:core', 'tools:SDKUpdater', 'libs:vr'

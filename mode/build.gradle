@@ -1,0 +1,38 @@
+apply plugin: 'java'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
+    }
+}
+
+dependencies {
+    compile group: 'org.processing', name: 'core', version: '3.3.6'
+    compile group: 'org.processing', name: 'pde', version: '3.3.6'
+    compile group: 'org.processing', name: 'java-mode', version: '3.3.6'
+    compile "org.gradle:gradle-tooling-api:4.2.1"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/']
+        }
+    }
+}
+
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.*;
+
+task dist {
+    doLast {
+        Files.copy(file("$buildDir/libs/mode.jar").toPath(),
+                   file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
+    }
+}
+
+dist.dependsOn build
