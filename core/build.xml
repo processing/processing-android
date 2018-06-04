@@ -42,8 +42,8 @@
     <!-- Copy the shaders to the bin folder. 
 	 Eclipse does this automatically. -->
     <copy todir="bin">
-      <fileset dir="assets">
-	    <include name="shaders/*.glsl" />
+      <fileset dir="src">
+	    <include name="assets/shaders/*.glsl" />
       </fileset>
     </copy>
 	   

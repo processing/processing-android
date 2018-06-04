@@ -23,7 +23,7 @@ sourceSets {
             srcDirs = ['src/']
         }
         resources {
-            srcDirs = ['assets/']
+            srcDirs = ['src/']
         }        
     }
 }
