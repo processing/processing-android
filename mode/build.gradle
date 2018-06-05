@@ -28,6 +28,13 @@ sourceSets {
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.*;
 
+task permissions(type:Exec) {
+   // This task retrieves the latest list of Android permissions and adds them
+   // to the Permissions.java file. The python scripts requries BeautifulSoup
+   workingDir 'scripts'
+   commandLine 'python', 'permissions_update.py'
+} 
+
 build.doLast {
     Files.copy(file("$buildDir/libs/mode.jar").toPath(),
                file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
