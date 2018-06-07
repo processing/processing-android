@@ -1,6 +1,6 @@
 package processing.mode.android.debugger;
 
-import com.sun.jdi.Bootstrap;
+import org.eclipse.jdi.Bootstrap;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VirtualMachineManager;
 import com.sun.jdi.connect.AttachingConnector;

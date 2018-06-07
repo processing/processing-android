@@ -24,9 +24,6 @@ package processing.mode.android;
 import com.sun.jdi.Field;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.VirtualMachineManager;
-import com.sun.jdi.connect.AttachingConnector;
-import com.sun.jdi.connect.Connector;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
@@ -83,8 +80,8 @@ class Device {
 
   public void bringLauncherToFront() {
     try {
-      adb("shell", "am", "start", 
-          "-a", "android.intent.action.MAIN", 
+      adb("shell", "am", "start",
+          "-a", "android.intent.action.MAIN",
           "-c", "android.intent.category.HOME");
     } catch (final Exception e) {
       e.printStackTrace(System.err);
@@ -224,6 +221,7 @@ class Device {
   public static final String FIELD_NAME = "mouseX";
   public static final int TCP_PORT = 7777;
   private static int pId;
+  private VirtualMachine vm;
 
   private void attachDebugger() throws IOException, InterruptedException {
     String[] cmd = {
@@ -234,7 +232,7 @@ class Device {
             "-n", packageName + "/.MainActivity"
     };
 //    PApplet.println(cmd);
-    ProcessResult pr = adb(cmd);
+    adb(cmd);
     // fetch details
     adb("devices");
     // find jdwp pid
@@ -250,7 +248,7 @@ class Device {
     adb("forward", "tcp:" + TCP_PORT, "jdwp:" + pId);
     // connect
     System.out.println(":debugger:Attaching Debugger");
-    VirtualMachine vm = new VMAcquirer().connect(TCP_PORT);
+    vm = new VMAcquirer().connect(TCP_PORT);
     // wait to connect
     Thread.sleep(3000);
     // set watch field on already loaded classes
@@ -266,36 +264,40 @@ class Device {
     vm.resume();
 
     // process events
-    EventQueue eventQueue = vm.eventQueue();
-    new Thread(() -> {
-      while (true) {
-        EventSet eventSet = null;
-        try {
-          eventSet = eventQueue.remove();
-        } catch (InterruptedException e) {}
-        for (Event event : eventSet) {
-          if (event instanceof VMDeathEvent
-                  || event instanceof VMDisconnectEvent) {
-            // exit
-            System.out.println(":debugger:app killed");
-            return;
-          } else if (event instanceof ClassPrepareEvent) {
-            // watch field on loaded class
-            ClassPrepareEvent classPrepEvent = (ClassPrepareEvent) event;
-            ReferenceType refType = classPrepEvent
-                    .referenceType();
-            addFieldWatch(vm, refType);
-          } else if (event instanceof ModificationWatchpointEvent) {
-            // a Test.foo has changed
-            ModificationWatchpointEvent modEvent = (ModificationWatchpointEvent) event;
-            System.out.println("watching mouseX:");
-            System.out.println("old="
-                    + modEvent.valueCurrent());
-            System.out.println("new=" + modEvent.valueToBe());
-            System.out.println();
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        EventQueue eventQueue = vm.eventQueue();
+        while (true) {
+          EventSet eventSet = null;
+          try {
+            eventSet = eventQueue.remove();
+          } catch (InterruptedException e) {
           }
+          for (Event event : eventSet) {
+            if (event instanceof VMDeathEvent
+                    || event instanceof VMDisconnectEvent) {
+              // exit
+              System.out.println(":debugger:app killed");
+              return;
+            } else if (event instanceof ClassPrepareEvent) {
+              // watch field on loaded class
+              ClassPrepareEvent classPrepEvent = (ClassPrepareEvent) event;
+              ReferenceType refType = classPrepEvent
+                      .referenceType();
+              Device.this.addFieldWatch(vm, refType);
+            } else if (event instanceof ModificationWatchpointEvent) {
+              // a Test.foo has changed
+              ModificationWatchpointEvent modEvent = (ModificationWatchpointEvent) event;
+              System.out.println("watching mouseX:");
+              System.out.println("old="
+                      + modEvent.valueCurrent());
+              System.out.println("new=" + modEvent.valueToBe());
+              System.out.println();
+            }
+          }
+          eventSet.resume();
         }
-        eventSet.resume();
       }
     }).start();
   }
