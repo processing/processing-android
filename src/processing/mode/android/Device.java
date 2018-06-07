@@ -21,10 +21,16 @@
 
 package processing.mode.android;
 
+import com.sun.jdi.Field;
+import com.sun.jdi.ReferenceType;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VirtualMachineManager;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
+import com.sun.jdi.event.*;
+import com.sun.jdi.request.ClassPrepareRequest;
+import com.sun.jdi.request.EventRequestManager;
+import com.sun.jdi.request.ModificationWatchpointRequest;
 import processing.app.Base;
 import processing.app.Platform;
 import processing.app.RunnerListener;
@@ -193,16 +199,11 @@ class Device {
     if (!isAlive()) {
       return false;
     }
-    String[] cmd = {
-      "shell", "am", "start",
-      "-e", "debug", "true",
-      "-a", "android.intent.action.MAIN",
-      "-c", "android.intent.category.LAUNCHER",
-      "-n", packageName + "/.MainActivity"
-    };
-//    PApplet.println(cmd);
-    ProcessResult pr = adb(cmd);
-    VirtualMachine vm = new VMAcquirer().connect(12345);
+
+    ProcessResult pr = new ProcessResult("",0,"","",1);
+
+
+    attachDebugger();
     if (Base.DEBUG) {
       System.out.println(pr.toString());
     }
@@ -216,6 +217,116 @@ class Device {
     return pr.succeeded();
   }
 
+  // XXXXXXXXXXXX-----prototype-start-XXXXXXXXXXXXXXXXXX
+
+  public static final String PKG_NAME = "processing.test.androidsketch";
+  public static final String CLASS_NAME = "androidsketch";
+  public static final String FIELD_NAME = "mouseX";
+  public static final int TCP_PORT = 7777;
+  private static int pId;
+
+  private void attachDebugger() throws IOException, InterruptedException {
+    String[] cmd = {
+            "shell", "am", "start",
+            "-e", "debug", "true",
+            "-a", "android.intent.action.MAIN",
+            "-c", "android.intent.category.LAUNCHER",
+            "-n", packageName + "/.MainActivity"
+    };
+//    PApplet.println(cmd);
+    ProcessResult pr = adb(cmd);
+    // fetch details
+    adb("devices");
+    // find jdwp pid
+    final String[] jdwpcmd = generateAdbCommand("jdwp");
+    Process deviceId = Runtime.getRuntime().exec(jdwpcmd);
+    new StreamPump(deviceId.getInputStream(), "jdwp: ").addTarget(
+            new JDWPProcessor()).start();
+    new StreamPump(deviceId.getErrorStream(), "jdwperr: ").addTarget(
+            System.err).start();
+
+    Thread.sleep(1000);
+    // forward to tcp port
+    adb("forward", "tcp:" + TCP_PORT, "jdwp:" + pId);
+    // connect
+    System.out.println(":debugger:Attaching Debugger");
+    VirtualMachine vm = new VMAcquirer().connect(TCP_PORT);
+    // wait to connect
+    Thread.sleep(3000);
+    // set watch field on already loaded classes
+    List<ReferenceType> referenceTypes = vm.classesByName(PKG_NAME + "." + CLASS_NAME);
+
+    for (ReferenceType refType : referenceTypes) {
+      addFieldWatch(vm, refType);
+    }
+    // watch for loaded classes
+    addClassWatch(vm);
+
+    // resume the vm
+    vm.resume();
+
+    // process events
+    EventQueue eventQueue = vm.eventQueue();
+    new Thread(() -> {
+      while (true) {
+        EventSet eventSet = null;
+        try {
+          eventSet = eventQueue.remove();
+        } catch (InterruptedException e) {}
+        for (Event event : eventSet) {
+          if (event instanceof VMDeathEvent
+                  || event instanceof VMDisconnectEvent) {
+            // exit
+            System.out.println(":debugger:app killed");
+            return;
+          } else if (event instanceof ClassPrepareEvent) {
+            // watch field on loaded class
+            ClassPrepareEvent classPrepEvent = (ClassPrepareEvent) event;
+            ReferenceType refType = classPrepEvent
+                    .referenceType();
+            addFieldWatch(vm, refType);
+          } else if (event instanceof ModificationWatchpointEvent) {
+            // a Test.foo has changed
+            ModificationWatchpointEvent modEvent = (ModificationWatchpointEvent) event;
+            System.out.println("watching mouseX:");
+            System.out.println("old="
+                    + modEvent.valueCurrent());
+            System.out.println("new=" + modEvent.valueToBe());
+            System.out.println();
+          }
+        }
+        eventSet.resume();
+      }
+    }).start();
+  }
+
+  /**
+   * Watch all classes of name "androidsketch"
+   */
+  private void addClassWatch(VirtualMachine vm) {
+    EventRequestManager erm = vm.eventRequestManager();
+    ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
+    classPrepareRequest.addClassFilter(CLASS_NAME);
+    classPrepareRequest.setEnabled(true);
+  }
+
+  /**
+   * Watch field of name "mouseX"
+   */
+  private void addFieldWatch(VirtualMachine vm,
+                                    ReferenceType refType) {
+    EventRequestManager erm = vm.eventRequestManager();
+    Field field = refType.fieldByName(FIELD_NAME);
+    ModificationWatchpointRequest modificationWatchpointRequest = erm.createModificationWatchpointRequest(field);
+    modificationWatchpointRequest.setEnabled(true);
+  }
+
+  private class JDWPProcessor implements LineProcessor {
+    public void processLine(final String line) {
+      pId = Integer.parseInt(line);
+    }
+  }
+  // XXXXXXXXXXXX-----prototype-end-XXXXXXXXXXXXXXXXXX
   public boolean isEmulator() {
     return id.startsWith("emulator");
   }
