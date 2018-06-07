@@ -23,12 +23,14 @@
 package processing.mode.android;
 
 import java.io.PrintStream;
+import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jdk.nashorn.internal.runtime.linker.Bootstrap;
 import processing.app.ui.Editor;
 import processing.app.Messages;
 import processing.app.RunnerListener;
@@ -44,6 +46,8 @@ public class AndroidRunner implements DeviceListener {
 
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
+
+  public boolean debugEnabled;
 
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
@@ -93,7 +97,7 @@ public class AndroidRunner implements DeviceListener {
     device.addListener(this);
     device.setPackageName(build.getPackageName());
     device.setSketchClassName(build.getSketchClassName());
-
+    device.debugEnabled = debugEnabled;
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {

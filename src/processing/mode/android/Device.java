@@ -123,14 +123,14 @@ class Device {
 
   // adb -s emulator-5556 install helloWorld.apk
 
-  // : adb -s HT91MLC00031 install bin/Brightness-debug.apk
+  // : adb -s HT91MLC00031 install bin/Brightness-debugEnabled.apk
   // 532 KB/s (190588 bytes in 0.349s)
-  // pkg: /data/local/tmp/Brightness-debug.apk
+  // pkg: /data/local/tmp/Brightness-debugEnabled.apk
   // Failure [INSTALL_FAILED_ALREADY_EXISTS]
 
-  // : adb -s HT91MLC00031 install -r bin/Brightness-debug.apk
+  // : adb -s HT91MLC00031 install -r bin/Brightness-debugEnabled.apk
   // 1151 KB/s (190588 bytes in 0.161s)
-  // pkg: /data/local/tmp/Brightness-debug.apk
+  // pkg: /data/local/tmp/Brightness-debugEnabled.apk
   // Success
 
   // safe to just always include the -r (reinstall) flag
@@ -198,10 +198,20 @@ class Device {
       return false;
     }
 
-    ProcessResult pr = new ProcessResult("",0,"","",1);
+    String[] cmd = {
+            "shell", "am", "start",
+            "-e", "debugEnabled", "true",
+            "-a", "android.intent.action.MAIN",
+            "-c", "android.intent.category.LAUNCHER",
+            "-n", packageName + "/.MainActivity"
+    };
+//    PApplet.println(cmd);
+    ProcessResult pr = adb(cmd);
 
+    if (debugEnabled){
+      attachDebugger();
+    }
 
-    attachDebugger();
     if (Base.DEBUG) {
       System.out.println(pr.toString());
     }
@@ -218,20 +228,15 @@ class Device {
   // XXXXXXXXXXXX-----prototype-start-XXXXXXXXXXXXXXXXXX
 
   public static final String FIELD_NAME = "mouseX";
+
   public static final int TCP_PORT = 7777;
   private static int pId;
+
   private VirtualMachine vm;
 
+  public boolean debugEnabled;
+
   private void attachDebugger() throws IOException, InterruptedException {
-    String[] cmd = {
-            "shell", "am", "start",
-            "-e", "debug", "true",
-            "-a", "android.intent.action.MAIN",
-            "-c", "android.intent.category.LAUNCHER",
-            "-n", packageName + "/.MainActivity"
-    };
-//    PApplet.println(cmd);
-    adb(cmd);
     // fetch details
     adb("devices");
     // find jdwp pid

@@ -321,6 +321,7 @@ public class AndroidMode extends JavaMode {
     int comp = build.getAppComponent();
     Future<Device> dev = Devices.getInstance().getHardware(); 
     runner = new AndroidRunner(build, listener);
+    runner.debugEnabled = editor.isDebuggerEnabled();
     if (runner.launch(dev, comp, false)) {    
       showPostBuildMessage(comp);
     }
