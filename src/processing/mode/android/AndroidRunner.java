@@ -92,6 +92,7 @@ public class AndroidRunner implements DeviceListener {
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
+    device.setSketchClassName(build.getSketchClassName());
 
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17

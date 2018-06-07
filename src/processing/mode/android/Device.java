@@ -58,6 +58,7 @@ class Device {
 //  public static final String APP_ENDED = "android.device.app.ended";
 
   private String packageName = "";
+  private String sketchClassName = "";
   
   // mutable state
   private Process logcat;
@@ -216,8 +217,6 @@ class Device {
 
   // XXXXXXXXXXXX-----prototype-start-XXXXXXXXXXXXXXXXXX
 
-  public static final String PKG_NAME = "processing.test.androidsketch";
-  public static final String CLASS_NAME = "androidsketch";
   public static final String FIELD_NAME = "mouseX";
   public static final int TCP_PORT = 7777;
   private static int pId;
@@ -252,7 +251,7 @@ class Device {
     // wait to connect
     Thread.sleep(3000);
     // set watch field on already loaded classes
-    List<ReferenceType> referenceTypes = vm.classesByName(PKG_NAME + "." + CLASS_NAME);
+    List<ReferenceType> referenceTypes = vm.classesByName(packageName + "." + sketchClassName);
 
     for (ReferenceType refType : referenceTypes) {
       addFieldWatch(vm, refType);
@@ -287,7 +286,6 @@ class Device {
                       .referenceType();
               Device.this.addFieldWatch(vm, refType);
             } else if (event instanceof ModificationWatchpointEvent) {
-              // a Test.foo has changed
               ModificationWatchpointEvent modEvent = (ModificationWatchpointEvent) event;
               System.out.println("watching mouseX:");
               System.out.println("old="
@@ -303,12 +301,12 @@ class Device {
   }
 
   /**
-   * Watch all classes of name "androidsketch"
+   * Watch all classes of name `sketchClassName` variable
    */
   private void addClassWatch(VirtualMachine vm) {
     EventRequestManager erm = vm.eventRequestManager();
     ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
-    classPrepareRequest.addClassFilter(CLASS_NAME);
+    classPrepareRequest.addClassFilter(sketchClassName);
     classPrepareRequest.setEnabled(true);
   }
 
@@ -336,6 +334,10 @@ class Device {
   public void setPackageName(String pkgName) {
     packageName = pkgName;
   }
+
+    public void setSketchClassName(String className) {
+        sketchClassName = className;
+    }
   
   // I/Process ( 9213): Sending signal. PID: 9213 SIG: 9
   private static final Pattern SIG = Pattern
