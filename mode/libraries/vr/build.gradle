@@ -11,7 +11,6 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-apply plugin: 'java-library'
 apply plugin: 'maven'
 
 /**
@@ -132,9 +131,6 @@ sourceSets {
         java {
             srcDirs = ['src/']
         }
-        resources {
-            srcDirs = ['src/']
-        }
     }
 }
 
@@ -160,12 +156,15 @@ jar.doLast { task ->
 
 clean.doFirst {
     delete "dist"
+    delete "library"
 }
 
 build.doLast {
     // // Copying vr jar to library folder
+    File vrJar = file("library/vr.jar")
+    vrJar.mkdirs();
     Files.copy(file("$buildDir/libs/vr.jar").toPath(),
-               file("library/vr.jar").toPath(), REPLACE_EXISTING);   
+               vrJar.toPath(), REPLACE_EXISTING);   
 
     // // Copying the files for release on JCentral
     File distFolder = file("dist");

@@ -1,8 +1,6 @@
 import java.nio.file.Files
+import org.zeroturnaround.zip.ZipUtil
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
-apply plugin: 'java'
-apply plugin: 'java-library'
 
 dependencies {
 
@@ -38,8 +36,9 @@ task permissions(type:Exec) {
    commandLine 'python', 'permissions.py'
 } 
 
+
 task wrapper(type: Wrapper) {
-   gradleVersion = '4.4.1' //version required
+   gradleVersion = '4.4.1' //version required for gradle wrapper
 }
 wrapper.doLast {
   File wrapperFolder = file("mode/gradlew");
@@ -47,16 +46,12 @@ wrapper.doLast {
   file("gradle").renameTo(file("mode/gradlew/gradle"))
   file("gradlew").renameTo(file("mode/gradlew/gradlew"))
   file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
+  ZipUtil.pack(file("mode/gradlew"), new File("mode/gradlew.zip"));
+  delete "mode/gradlew"
 
   println("Done with creating wrapper")
 }
-task myZip(type: Zip) {
-   from 'mode/gradlew/'
-   include '*'
-   include '*/*' //to include contents of a folder present inside Reports directory
-   archiveName 'gradlew.zip'
-   destinationDir(file('mode'))
-}
+
 
 task updateGradlew(type:Exec) {
    // This task retrieves the latest list of Android permissions and adds them

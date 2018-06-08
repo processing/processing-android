@@ -1,3 +1,8 @@
+import java.nio.file.Files
+import org.zeroturnaround.zip.ZipUtil
+import org.apache.commons.io.FileUtils
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 apply plugin: 'java'
 
 buildscript {
@@ -7,10 +12,15 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'        
     }
 }
 
 allprojects {
+    apply plugin: 'java'    
+    apply plugin: 'java-library'
+
     Properties modeProperties = new Properties()
     modeProperties.load(project.rootProject.file('mode/mode.properties').newDataInputStream())
     ext.modeVersion = modeProperties.getProperty('prettyVersion')
@@ -42,4 +52,44 @@ allprojects {
 
 clean.doFirst {
     delete "dist"
+}
+
+task dist {
+  dependsOn subprojects.build
+  doLast {
+        def root = "$buildDir/zip/AndroidMode"
+        
+        // Copy assets to build dir
+        FileUtils.copyDirectory(file("mode/templates"), file("$root/templates"))
+        FileUtils.copyDirectory(file("mode/examples"), file("$root/examples"))
+        FileUtils.copyDirectory(file("mode/icons"), file("$root/icons"))
+        FileUtils.copyDirectory(file("mode/mode"), file("$root/mode"))
+        FileUtils.copyDirectory(file("mode/theme"), file("$root/theme"))
+                   
+        Files.copy(file("mode/processing-core.zip").toPath(),
+                   file("$root/processing-core.zip").toPath(), REPLACE_EXISTING);
+
+        Files.copy(file("mode/mode.properties").toPath(),
+                   file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"), 
+                                file("$root/tools/SDKUpdater/tool"))
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"), 
+                                file("$root/tools/SDKUpdater/src"))
+        
+        FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 
+                                file("$root/libraries/vr/examples"))
+        FileUtils.copyDirectory(file("mode/libraries/vr/library"), 
+                                file("$root/libraries/vr/library"))
+        FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
+                                file("$root/libraries/vr/src"))
+        Files.copy(file("mode/libraries/vr/library.properties").toPath(),
+                   file("$root/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
+
+        File distFolder = file("dist");
+        distFolder.mkdirs();
+        ZipUtil.pack(file("$buildDir/zip"), new File("dist/AndroidMode.zip"));
+        Files.copy(file("mode/mode.properties").toPath(),
+                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING);
+    }
 }

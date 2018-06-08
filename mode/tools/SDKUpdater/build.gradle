@@ -1,9 +1,6 @@
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-apply plugin: 'java'
-apply plugin: 'java-library'
-
 dependencies {
     def PROCESSING_VERSION = '3.3.7'
     compile group: 'org.processing', name: 'pde', version: "$PROCESSING_VERSION"
@@ -17,21 +14,17 @@ sourceSets {
     main {
         java {
             srcDirs = ['src/']
-        }
-        resources {
-            srcDirs = ['src/']
-        }        
+        } 
     }
 }
 
 clean.doFirst {
-    delete "tool/SDKUpdater.jar"
+    delete "tool"
 }
 
 build.doLast {
-    // copy jar file to tool folder
+    // Copy jar file to tool folder
     File toolJar = file("tool/SDKUpdater.jar");
-    //create intermediate folder if they don't exist
     toolJar.mkdirs();
     Files.copy(file("$buildDir/libs/SDKUpdater.jar").toPath(),
                toolJar.toPath(), REPLACE_EXISTING);                   

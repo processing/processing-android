@@ -1,13 +1,18 @@
-dist
 mode/processing-core.zip
+mode/mode/*.jar
 
-.DS_Store
-*/**/.DS_Store
+mode/libraries/vr/library
+mode/tools/SDKUpdated/tool
 
-build
-*/**/build
-bin
-*/**/bin
+core/debug/.gradle
+core/debug/.idea
+core/debug/gradle
 
+**/.DS_Store
+**/build
+**/bin
+**/dist
+
+.local.properties
 .gradle
 
