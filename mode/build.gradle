@@ -1,21 +1,27 @@
-apply plugin: 'java'
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
-    }
-}
+apply plugin: 'java'
+apply plugin: 'java-library'
 
 dependencies {
-    compile group: 'org.processing', name: 'core', version: '3.3.6'
-    compile group: 'org.processing', name: 'pde', version: '3.3.6'
-    compile group: 'org.processing', name: 'java-mode', version: '3.3.6'
-    compile "org.gradle:gradle-tooling-api:4.2.1"
+
+    def PROCESSING_VERSION = '3.3.7'
+    compile group: 'org.processing', name: 'core', version: "$PROCESSING_VERSION"
+    compile group: 'org.processing', name: 'pde', version: "$PROCESSING_VERSION"
+    compile group: 'org.processing', name: 'java-mode', version: "$PROCESSING_VERSION"
+
+    
+    def TOOLING_VERSION = '4.3'
+    compileOnly "org.gradle:gradle-tooling-api:$TOOLING_VERSION"
 }
+
+// This task copies the gradle tooling jar into the mode folder
+task copyToLib(type: Copy) {
+  from configurations.compileOnly.files
+  into "mode"
+}
+build.dependsOn(copyToLib)
 
 sourceSets {
     main {
@@ -25,14 +31,38 @@ sourceSets {
     }
 }
 
-import java.nio.file.Files
-import static java.nio.file.StandardCopyOption.*;
-
 task permissions(type:Exec) {
    // This task retrieves the latest list of Android permissions and adds them
    // to the Permissions.java file. The python scripts requries BeautifulSoup
    workingDir 'scripts'
-   commandLine 'python', 'permissions_update.py'
+   commandLine 'python', 'permissions.py'
+} 
+
+task wrapper(type: Wrapper) {
+   gradleVersion = '4.4.1' //version required
+}
+wrapper.doLast {
+  File wrapperFolder = file("mode/gradlew");
+  wrapperFolder.mkdirs();
+  file("gradle").renameTo(file("mode/gradlew/gradle"))
+  file("gradlew").renameTo(file("mode/gradlew/gradlew"))
+  file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
+
+  println("Done with creating wrapper")
+}
+task myZip(type: Zip) {
+   from 'mode/gradlew/'
+   include '*'
+   include '*/*' //to include contents of a folder present inside Reports directory
+   archiveName 'gradlew.zip'
+   destinationDir(file('mode'))
+}
+
+task updateGradlew(type:Exec) {
+   // This task retrieves the latest list of Android permissions and adds them
+   // to the Permissions.java file. The python scripts requries BeautifulSoup
+   workingDir 'scripts'
+   commandLine 'python', 'update-permissions.py'
 } 
 
 build.doLast {

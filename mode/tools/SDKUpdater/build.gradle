@@ -1,17 +1,16 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
-    }
-}
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+apply plugin: 'java'
+apply plugin: 'java-library'
 
 dependencies {
-    compile group: 'org.processing', name: 'pde', version: '3.3.6'
-    compile name: "sdklib-26.0.0-dev"
-    compile name: "repository-26.0.0-dev"
+    def PROCESSING_VERSION = '3.3.7'
+    compile group: 'org.processing', name: 'pde', version: "$PROCESSING_VERSION"
+
+    def TOOLS_LIB_VERSION = '26.0.0-dev'
+    compile name: "sdklib-$TOOLS_LIB_VERSION"
+    compile name: "repository-$TOOLS_LIB_VERSION"
 }
 
 sourceSets {
@@ -25,22 +24,9 @@ sourceSets {
     }
 }
 
-jar {    
-    manifest {
-        attributes(
-                "Manifest-Version": "1.0",
-                "Gradle-Version": "$gradle.gradleVersion"
-        )
-    }
-}
-
 clean.doFirst {
     delete "tool/SDKUpdater.jar"
 }
-
-import groovy.util.AntBuilder
-import java.nio.file.Files
-import static java.nio.file.StandardCopyOption.*;
 
 build.doLast {
     // copy jar file to tool folder

@@ -59,8 +59,9 @@ def replaceDanger(source, strList):
     idx1 = source[idx0:].find('  };')
     return source[:idx0] + strList + source[idx0+idx1+5:]
 
+javaFile = '../src/processing/mode/android/Permissions.java'
 print 'Reading Permissions.java...'
-with open('src/processing/mode/android/Permissions.java', 'r') as f:
+with open(javaFile, 'r') as f:
     source = f.read()
 
 allList = parseAll()
@@ -70,6 +71,6 @@ dangerList = parseDanger()
 source = replaceDanger(source, dangerList)
 
 print 'Writing Permissions.java...'
-with open('src/processing/mode/android/Permissions.java', 'w') as f:
+with open(javaFile, 'w') as f:
     f.write(source)
 print 'Done.'

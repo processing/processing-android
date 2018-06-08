@@ -1,20 +1,130 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
-    }
-}
+import com.android.build.gradle.internal.dependency.ExtractAarTransform
+import com.android.build.gradle.internal.dependency.AarTransform
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.google.common.collect.ImmutableList
+import org.gradle.api.artifacts.transform.ArtifactTransform
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+
+import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
+
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+apply plugin: 'java-library'
 apply plugin: 'maven'
 
+/**
+ * Custom aar configuration needed to use aar files as dependencies in a pure java 
+ * library project, lifted from the following repo:
+ * https://github.com/nekocode/Gradle-Import-Aar
+ */
+configurations {
+    aar {
+        attributes {
+            attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
+        }
+
+        // Add the aar inner jars to the compileClasspath
+        sourceSets.main.compileClasspath += it
+
+        // Put our custom dependencies onto IDEA's PROVIDED scope
+        apply plugin: 'idea'
+        idea.module.scopes.PROVIDED.plus += [it]
+    }
+}
+
 dependencies {
-    compile name: 'android'
-    compile name: 'core' 
-    compile name: 'gvr-base'
-    compile name: 'gvr-common'
-    compile name: 'gvr-audio'
+    // Transforamtions to extract the classes.jar in the aar package
+    def explodedAarType = ArtifactType.EXPLODED_AAR.getType()
+    registerTransform {
+        from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR)
+        to.attribute(ARTIFACT_FORMAT, explodedAarType)
+        artifactTransform(ExtractAarTransform)
+    }
+
+    registerTransform {
+        from.attribute(ARTIFACT_FORMAT, explodedAarType)
+        to.attribute(ARTIFACT_FORMAT, "classes.jar")
+        artifactTransform(AarTransform) { params(ArtifactType.JAR) }
+    }
+
+    registerTransform {
+        from.attribute(ARTIFACT_FORMAT, "classes.jar")
+        to.attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
+        artifactTransform(ClassesJarArtifactTransform)
+    }
+
+    compileOnly name: "android"
+
+    compileOnly "org.p5android:processing-core:${modeVersion}"
+
+    def GVR_VERSION = '1.150.0'
+
+    aar "com.google.vr:sdk-audio:$GVR_VERSION"
+    aar "com.google.vr:sdk-base:$GVR_VERSION"
+}
+
+/**
+ * An ArtifactTransform for renaming the classes.jar
+ */
+class ClassesJarArtifactTransform extends ArtifactTransform {
+    @Override
+    List<File> transform(File file) {
+        final String[] names = file.getPath().split("/")
+        final String aarName = names[names.length - 4].replace(".aar", "")
+        final File renamedJar = new File(getOutputDirectory(), aarName + ".jar")
+        renamedJar << file.bytes
+        File libraryFolder = new File(System.getProperty("user.dir"), "mode/libraries/vr/library")
+        libraryFolder.mkdirs();
+        final File libraryJar = new File(libraryFolder, aarName + ".jar")
+        // println("******************")
+        // println(renamedJar.toPath())
+        // println(libraryJar.toPath())
+        Files.copy(renamedJar.toPath(), libraryJar.toPath(), REPLACE_EXISTING);
+        return ImmutableList.of(renamedJar)
+    }
+}
+
+task createPom {
+    def GVR_VERSION = '1.150.0'
+
+    pom {
+       project {
+           groupId "org.p5android"
+           artifactId "processing-vr"
+           version "${vrVersion}"
+           packaging "jar"
+           licenses {
+               license {
+                   name "GNU Lesser General Public License, version 2.1"
+                   url "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
+                   distribution "repo"
+               }
+           }
+           dependencies {
+               dependency {
+                   groupId "org.p5android"
+                   artifactId "processing-core"
+                   version "${modeVersion}"
+                   scope "compile"
+               }
+
+               dependency {
+                   groupId "com.google.vr"
+                   artifactId "sdk-base"
+                   version "$GVR_VERSION"
+                   scope "compile"
+               }
+               dependency {
+                   groupId "com.google.vr"
+                   artifactId "sdk-audio"
+                   version "$GVR_VERSION"
+                   scope "compile"
+               }               
+           }
+        }
+    }.writeTo("dist/processing-vr-${vrVersion}.pom")
 }
 
 sourceSets {
@@ -24,44 +134,8 @@ sourceSets {
         }
         resources {
             srcDirs = ['src/']
-        }        
-    }
-}
-
-jar {    
-    manifest {
-        attributes(
-                "Manifest-Version": "1.0",
-                "Gradle-Version": "$gradle.gradleVersion"
-        )
-    }
-}
-
-clean.doFirst {
-    delete "library/vr.jar"
-}
-
-import groovy.util.AntBuilder
-import java.nio.file.Files
-import static java.nio.file.StandardCopyOption.*;
-
-// Creates the pom file, but for now let's just use the template in the core folder
-task createPom {
-    pom {
-       project {
-           groupId 'org.p5android'
-           artifactId 'processing-vr'
-           version '4.0.1'
-           packaging 'jar'
-           licenses {
-               license {
-                   name 'GNU Lesser General Public License, version 2.1'
-                   url 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt'
-                   distribution 'repo'
-               }
-           }
         }
-    }.writeTo("$buildDir/libs/vr.pom")        
+    }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -84,11 +158,22 @@ jar.doLast { task ->
     ant.checksum file: task.archivePath
 }
 
+clean.doFirst {
+    delete "dist"
+}
+
 build.doLast {
-    File vrJar = file("library/vr.jar");
-    //create intermediate folder if they don't exist
-    vrJar.mkdirs();
-    // make copy of jar file to library folder
+    // // Copying vr jar to library folder
     Files.copy(file("$buildDir/libs/vr.jar").toPath(),
-               vrJar.toPath(), REPLACE_EXISTING);             
+               file("library/vr.jar").toPath(), REPLACE_EXISTING);   
+
+    // // Copying the files for release on JCentral
+    File distFolder = file("dist");
+    distFolder.mkdirs();
+    Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+               file("dist/processing-vr-${vrVersion}.jar").toPath(), REPLACE_EXISTING);
+    Files.copy(file("$buildDir/libs/vr-sources.jar").toPath(),
+               file("dist/processing-vr-${vrVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+    Files.copy(file("$buildDir/libs/vr.jar.MD5").toPath(),
+               file("dist/processing-vr-${vrVersion}.jar.md5").toPath(), REPLACE_EXISTING);
 }

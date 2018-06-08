@@ -386,14 +386,14 @@ class AndroidBuild extends JavaBuild {
     copyCodeFolder(libsFolder);
 
     // Copy any system libraries needed by the project
-    copyWearLib(libsFolder);
-    copySupportLibs(libsFolder);
-    if (getAppComponent() == APP) {
-      copyAppCompatLib(libsFolder);
-    }
-    if (getAppComponent() == VR) {
-      copyGVRLibs(libsFolder);
-    }
+//    copyWearLib(libsFolder);
+//    copySupportLibs(libsFolder);
+//    if (getAppComponent() == APP) {
+//      copyAppCompatLib(libsFolder);
+//    }
+//    if (getAppComponent() == VR) {
+//      copyGVRLibs(libsFolder);
+//    }
 
     // Copy the data folder (if one exists) to the project's 'assets' folder
     final File sketchDataFolder = sketch.getDataFolder();
@@ -694,34 +694,34 @@ class AndroidBuild extends JavaBuild {
   // Dependencies
   
   
-  private void copyWearLib(File libsFolder) throws IOException {
+//  private void copyWearLib(File libsFolder) throws IOException {
     // The wear aar is needed even when the app is not a watch face, because on
     // devices with android < 5 the dependencies of the PWatchFace* classes
     // cannot be resolved.
-    copyAARFileFromSDK(sdk.getWearableFolder() + "/$VER", "wearable-$VER.aar", WEAR_VER, libsFolder);    
-  }
+//    copyAARFileFromSDK(sdk.getWearableFolder() + "/$VER", "wearable-$VER.aar", WEAR_VER, libsFolder);    
+//  }
   
   
-  private void copySupportLibs(File libsFolder) throws IOException {
-    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-core-utils/$VER", "support-core-utils-$VER.aar", SUPPORT_VER, libsFolder);
-    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-compat/$VER", "support-compat-$VER.aar", SUPPORT_VER, libsFolder);
-    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-fragment/$VER", "support-fragment-$VER.aar", SUPPORT_VER, libsFolder);
-    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-vector-drawable/$VER", "support-vector-drawable-$VER.aar", SUPPORT_VER, libsFolder);
-  }
+//  private void copySupportLibs(File libsFolder) throws IOException {
+//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-core-utils/$VER", "support-core-utils-$VER.aar", SUPPORT_VER, libsFolder);
+//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-compat/$VER", "support-compat-$VER.aar", SUPPORT_VER, libsFolder);
+//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-fragment/$VER", "support-fragment-$VER.aar", SUPPORT_VER, libsFolder);
+//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-vector-drawable/$VER", "support-vector-drawable-$VER.aar", SUPPORT_VER, libsFolder);
+//  }
   
   
-  private void copyAppCompatLib(File libsFolder) throws IOException {
-    copyAARFileFromSDK(sdk.getSupportLibrary() + "/appcompat-v7/$VER", "appcompat-v7-$VER.aar", SUPPORT_VER, libsFolder);
-  }
+//  private void copyAppCompatLib(File libsFolder) throws IOException {
+//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/appcompat-v7/$VER", "appcompat-v7-$VER.aar", SUPPORT_VER, libsFolder);
+//  }
   
   
-  private void copyGVRLibs(File libsFolder) throws IOException {
-    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-base-$VER.aar", GVR_VER, libsFolder);
-    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-common-$VER.aar", GVR_VER, libsFolder);
-    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-audio-$VER.aar", GVR_VER, libsFolder);
-  }
+//  private void copyGVRLibs(File libsFolder) throws IOException {
+//    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-base-$VER.aar", GVR_VER, libsFolder);
+//    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-common-$VER.aar", GVR_VER, libsFolder);
+//    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-audio-$VER.aar", GVR_VER, libsFolder);
+//  }
   
-  
+  /*
   private void copyAARFileFromSDK(String srcFolder, String filename, String version, File destFolder) 
       throws IOException {
     String fn = filename.replace("$VER", version);
@@ -750,7 +750,7 @@ class AndroidBuild extends JavaBuild {
       System.out.println("Warning: cannot find AAR package " + fn + " in Android mode, gradle will try to download");
     }
   }  
-  
+  */
   
   // ---------------------------------------------------------------------------
   // Export project
