@@ -36,7 +36,6 @@ task permissions(type:Exec) {
    commandLine 'python', 'permissions.py'
 } 
 
-
 task wrapper(type: Wrapper) {
    gradleVersion = '4.4.1' //version required for gradle wrapper
 }
@@ -48,17 +47,13 @@ wrapper.doLast {
   file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
   ZipUtil.pack(file("mode/gradlew"), new File("mode/gradlew.zip"));
   delete "mode/gradlew"
-
-  println("Done with creating wrapper")
 }
 
-
-task updateGradlew(type:Exec) {
-   // This task retrieves the latest list of Android permissions and adds them
-   // to the Permissions.java file. The python scripts requries BeautifulSoup
-   workingDir 'scripts'
-   commandLine 'python', 'update-permissions.py'
-} 
+clean.doFirst {
+    delete fileTree("mode") {
+        include '**/*.jar'
+    }
+}
 
 build.doLast {
     Files.copy(file("$buildDir/libs/mode.jar").toPath(),
