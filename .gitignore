@@ -7,9 +7,9 @@ mode/tools/SDKUpdated/tool
 core/debug/.gradle
 core/debug/.idea
 core/debug/gradle
-core/debug/gradlew
-code/debug/gradlew.bat
+core/debug/gradlew*
 
+**/*.iml
 **/.DS_Store
 **/build
 **/bin
