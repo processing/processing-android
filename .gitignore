@@ -13,6 +13,6 @@ core/debug/gradle
 **/bin
 **/dist
 
-.local.properties
+local.properties
 .gradle
 
