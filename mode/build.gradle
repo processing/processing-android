@@ -8,6 +8,8 @@ dependencies {
     compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
 
     compileOnly "org.gradle:gradle-tooling-api:${toolingVersion}"
+    compileOnly "org.slf4j:slf4j-api:${slf4jVersion}"
+    compileOnly "org.slf4j:slf4j-simple:${slf4jVersion}"
 }
 
 // This task copies the gradle tooling jar into the mode folder
