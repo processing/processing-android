@@ -77,7 +77,7 @@ class AndroidBuild extends JavaBuild {
   static {
     SUPPORT_VER = Preferences.get("android.sdk.support");
     if (SUPPORT_VER == null) { 
-      SUPPORT_VER = "25.3.1"; 
+      SUPPORT_VER = "26.0.2"; 
       Preferences.set("android.sdk.support", SUPPORT_VER);
     }
   }
@@ -95,7 +95,7 @@ class AndroidBuild extends JavaBuild {
   static {
     WEAR_VER = Preferences.get("android.sdk.wear");
     if (WEAR_VER == null) { 
-      WEAR_VER = "2.0.5"; 
+      WEAR_VER = "2.1.0"; 
       Preferences.set("android.sdk.wear", WEAR_VER);
     }
   }  
@@ -104,7 +104,7 @@ class AndroidBuild extends JavaBuild {
   static {
     GVR_VER = Preferences.get("android.sdk.gvr");
     if (GVR_VER == null) { 
-      GVR_VER = "1.120.0";
+      GVR_VER = "1.150.0";
       Preferences.set("android.sdk.gvr", GVR_VER);
     }
   }  
@@ -875,9 +875,9 @@ class AndroidBuild extends JavaBuild {
       for (File exportFile : library.getAndroidExports()) {
         String exportName = exportFile.getName();
         
-        // Skip the GVR jars, because the full aar packages will be copied next
-        if (exportName.toLowerCase().startsWith("gvr-")) continue; 
-        
+        // Skip the GVR jars, because the gradle will resolve the dependencies
+        if (appComponent == VR && exportName.toLowerCase().startsWith("sdk-")) continue; 
+
         if (!exportFile.exists()) {
           System.err.println(exportFile.getName() +
                              " is mentioned in export.txt, but it's " +
