@@ -28,7 +28,7 @@ allprojects {
     ext.gvrVersion = '1.150.0'
     ext.processingVersion = '3.3.7'
     ext.toolingVersion = '4.3'
-    ext.slf4jVersion = '1.7.25'
+    ext.slf4jVersion = '1.7.10'
     ext.gradlewVersion = '4.4.1'
     ext.toolsLibVersion = '26.0.0-dev'
 
