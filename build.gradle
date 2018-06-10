@@ -33,16 +33,16 @@ allprojects {
     ext.toolsLibVersion = '26.0.0-dev'
 
     Properties modeProperties = new Properties()
-    modeProperties.load(project.rootProject.file('mode/mode.properties').newDataInputStream())
-    ext.modeVersion = modeProperties.getProperty('prettyVersion')
+    modeProperties.load(project.rootProject.file("mode/mode.properties").newDataInputStream())
+    ext.modeVersion = modeProperties.getProperty("prettyVersion")
 
     Properties vrProperties = new Properties()
-    vrProperties.load(project.rootProject.file('mode/libraries/vr/library.properties').newDataInputStream())
-    ext.vrLibVersion = vrProperties.getProperty('prettyVersion')
+    vrProperties.load(project.rootProject.file("mode/libraries/vr/library.properties").newDataInputStream())
+    ext.vrLibVersion = vrProperties.getProperty("prettyVersion")
 
     Properties localProperties = new Properties()
-    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def sdkDir = localProperties.getProperty('sdk.dir')
+    localProperties.load(project.rootProject.file("local.properties").newDataInputStream())
+    def sdkDir = localProperties.getProperty("sdk.dir")
     ext.androidPlatformPath = "${sdkDir}/platforms/android-${targetSdkVersion}"
     ext.androidToolsLibPath = "${sdkDir}/tools/lib"
 
@@ -67,38 +67,38 @@ clean.doFirst {
 task dist {
   dependsOn subprojects.build
   doLast {
-        def root = "$buildDir/zip/AndroidMode"
+        def root = "${buildDir}/zip/AndroidMode"
         
         // Copy assets to build dir
-        FileUtils.copyDirectory(file("mode/templates"), file("$root/templates"))
-        FileUtils.copyDirectory(file("mode/examples"), file("$root/examples"))
-        FileUtils.copyDirectory(file("mode/icons"), file("$root/icons"))
-        FileUtils.copyDirectory(file("mode/mode"), file("$root/mode"))
-        FileUtils.copyDirectory(file("mode/theme"), file("$root/theme"))
+        FileUtils.copyDirectory(file("mode/templates"), file("${root}/templates"))
+        FileUtils.copyDirectory(file("mode/examples"), file("${root}/examples"))
+        FileUtils.copyDirectory(file("mode/icons"), file("${root}/icons"))
+        FileUtils.copyDirectory(file("mode/mode"), file("${root}/mode"))
+        FileUtils.copyDirectory(file("mode/theme"), file("${root}/theme"))
                    
         Files.copy(file("mode/processing-core.zip").toPath(),
-                   file("$root/processing-core.zip").toPath(), REPLACE_EXISTING);
+                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING);
 
         Files.copy(file("mode/mode.properties").toPath(),
-                   file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING);
 
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"), 
-                                file("$root/tools/SDKUpdater/tool"))
+                                file("${root}/tools/SDKUpdater/tool"))
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"), 
-                                file("$root/tools/SDKUpdater/src"))
+                                file("${root}/tools/SDKUpdater/src"))
         
         FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 
-                                file("$root/libraries/vr/examples"))
+                                file("${root}/libraries/vr/examples"))
         FileUtils.copyDirectory(file("mode/libraries/vr/library"), 
-                                file("$root/libraries/vr/library"))
+                                file("${root}/libraries/vr/library"))
         FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
-                                file("$root/libraries/vr/src"))
+                                file("${root}/libraries/vr/src"))
         Files.copy(file("mode/libraries/vr/library.properties").toPath(),
-                   file("$root/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
+                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
 
         File distFolder = file("dist");
         distFolder.mkdirs();
-        ZipUtil.pack(file("$buildDir/zip"), new File("dist/AndroidMode.zip"));
+        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"));
         Files.copy(file("mode/mode.properties").toPath(),
                    file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING);
     }

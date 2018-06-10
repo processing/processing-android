@@ -81,6 +81,8 @@ class ClassesJarArtifactTransform extends ArtifactTransform {
 }
 
 task createPom {
+    // The compile configuration should be replaced by implementation eventually:
+    // https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration#new_configurations  
     pom {
        project {
            groupId "org.p5android"
