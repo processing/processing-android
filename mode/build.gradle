@@ -2,19 +2,26 @@ import java.nio.file.Files
 import org.zeroturnaround.zip.ZipUtil
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+
+// Extend compile to copy the jars from gradle-tooling and slf4j:
+// https://stackoverflow.com/a/43602463
+configurations {
+    compile.extendsFrom compileAndCopy
+}
+
 dependencies {
     compile group: "org.processing", name: "core", version: "${processingVersion}"
     compile group: "org.processing", name: "pde", version: "${processingVersion}"
     compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
 
-    compileOnly "org.gradle:gradle-tooling-api:${toolingVersion}"
-    compileOnly "org.slf4j:slf4j-api:${slf4jVersion}"
-    compileOnly "org.slf4j:slf4j-simple:${slf4jVersion}"
+    compileAndCopy "org.gradle:gradle-tooling-api:${toolingVersion}"
+    compileAndCopy "org.slf4j:slf4j-api:${slf4jVersion}"
+    compileAndCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
 }
 
 // This task copies the gradle tooling jar into the mode folder
 task copyToLib(type: Copy) {
-  from configurations.compileOnly.files
+  from configurations.compileAndCopy.files
   into "mode"
 }
 build.dependsOn(copyToLib)
