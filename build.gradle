@@ -18,8 +18,18 @@ buildscript {
 }
 
 allprojects {
-    apply plugin: 'java'    
+    apply plugin: 'java'
     apply plugin: 'java-library'
+
+    // Versions of all dependencies
+    ext.targetSdkVersion = '26'
+    ext.supportLibsVersion = '26.0.2'
+    ext.wearVersion = '2.1.0'
+    ext.gvrVersion = '1.150.0'
+    ext.processingVersion = '3.3.7'
+    ext.toolingVersion = '4.3'
+    ext.gradlewVersion = '4.4.1'
+    ext.toolsLibVersion = '26.0.0-dev'
 
     Properties modeProperties = new Properties()
     modeProperties.load(project.rootProject.file('mode/mode.properties').newDataInputStream())
@@ -27,23 +37,22 @@ allprojects {
 
     Properties vrProperties = new Properties()
     vrProperties.load(project.rootProject.file('mode/libraries/vr/library.properties').newDataInputStream())
-    ext.vrVersion = vrProperties.getProperty('prettyVersion')
+    ext.vrLibVersion = vrProperties.getProperty('prettyVersion')
 
-    def targetSdkVersion = 26
     Properties localProperties = new Properties()
     localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
     def sdkDir = localProperties.getProperty('sdk.dir')
     ext.androidPlatformPath = "${sdkDir}/platforms/android-${targetSdkVersion}"
     ext.androidToolsLibPath = "${sdkDir}/tools/lib"
 
-    ext.coreZipPath = "$rootDir/mode/processing-core.zip"
-    
+    ext.coreZipPath = "${rootDir}/mode/processing-core.zip"
+
     repositories {
         google()
         jcenter()
         flatDir dirs: androidPlatformPath
         flatDir dirs: androidToolsLibPath
-        flatDir dirs: "$rootDir/core/dist"
+        flatDir dirs: "${rootDir}/core/dist"
     }
 
     sourceCompatibility = 1.7

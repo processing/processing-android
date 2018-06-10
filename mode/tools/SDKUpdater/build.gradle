@@ -2,18 +2,16 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 dependencies {
-    def PROCESSING_VERSION = '3.3.7'
-    compile group: 'org.processing', name: 'pde', version: "$PROCESSING_VERSION"
+    compile group: "org.processing", name: "pde", version: "${processingVersion}"
 
-    def TOOLS_LIB_VERSION = '26.0.0-dev'
-    compile name: "sdklib-$TOOLS_LIB_VERSION"
-    compile name: "repository-$TOOLS_LIB_VERSION"
+    compile name: "sdklib-${toolsLibVersion}"
+    compile name: "repository-${toolsLibVersion}"
 }
 
 sourceSets {
     main {
         java {
-            srcDirs = ['src/']
+            srcDirs = ["src/"]
         } 
     }
 }

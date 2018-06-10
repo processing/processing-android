@@ -28,7 +28,7 @@ configurations {
         sourceSets.main.compileClasspath += it
 
         // Put our custom dependencies onto IDEA's PROVIDED scope
-        apply plugin: 'idea'
+        apply plugin: "idea"
         idea.module.scopes.PROVIDED.plus += [it]
     }
 }
@@ -58,10 +58,8 @@ dependencies {
 
     compileOnly "org.p5android:processing-core:${modeVersion}"
 
-    def GVR_VERSION = '1.150.0'
-
-    aar "com.google.vr:sdk-audio:$GVR_VERSION"
-    aar "com.google.vr:sdk-base:$GVR_VERSION"
+    aar "com.google.vr:sdk-audio:${gvrVersion}"
+    aar "com.google.vr:sdk-base:${gvrVersion}"
 }
 
 /**
@@ -77,22 +75,17 @@ class ClassesJarArtifactTransform extends ArtifactTransform {
         File libraryFolder = new File(System.getProperty("user.dir"), "mode/libraries/vr/library")
         libraryFolder.mkdirs();
         final File libraryJar = new File(libraryFolder, aarName + ".jar")
-        // println("******************")
-        // println(renamedJar.toPath())
-        // println(libraryJar.toPath())
         Files.copy(renamedJar.toPath(), libraryJar.toPath(), REPLACE_EXISTING);
         return ImmutableList.of(renamedJar)
     }
 }
 
 task createPom {
-    def GVR_VERSION = '1.150.0'
-
     pom {
        project {
            groupId "org.p5android"
            artifactId "processing-vr"
-           version "${vrVersion}"
+           version "${vrLibVersion}"
            packaging "jar"
            licenses {
                license {
@@ -112,36 +105,36 @@ task createPom {
                dependency {
                    groupId "com.google.vr"
                    artifactId "sdk-base"
-                   version "$GVR_VERSION"
+                   version "${gvrVersion}"
                    scope "compile"
                }
                dependency {
                    groupId "com.google.vr"
                    artifactId "sdk-audio"
-                   version "$GVR_VERSION"
+                   version "${gvrVersion}"
                    scope "compile"
                }               
            }
         }
-    }.writeTo("dist/processing-vr-${vrVersion}.pom")
+    }.writeTo("dist/processing-vr-${vrLibVersion}.pom")
 }
 
 sourceSets {
     main {
         java {
-            srcDirs = ['src/']
+            srcDirs = ["src/"]
         }
     }
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    classifier = "sources"
     from sourceSets.main.allSource
 }
 
 // Does not work because of Processing-specific tags in source code, such as @webref
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    classifier = "javadoc"
     from javadoc.destinationDir
 }
 
@@ -156,7 +149,7 @@ jar.doLast { task ->
 
 clean.doFirst {
     delete "dist"
-    delete "library"
+    delete "library/vr.jar"
 }
 
 build.doLast {
@@ -170,9 +163,9 @@ build.doLast {
     File distFolder = file("dist");
     distFolder.mkdirs();
     Files.copy(file("$buildDir/libs/vr.jar").toPath(),
-               file("dist/processing-vr-${vrVersion}.jar").toPath(), REPLACE_EXISTING);
+               file("dist/processing-vr-${vrLibVersion}.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/vr-sources.jar").toPath(),
-               file("dist/processing-vr-${vrVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+               file("dist/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/vr.jar.MD5").toPath(),
-               file("dist/processing-vr-${vrVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+               file("dist/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
 }

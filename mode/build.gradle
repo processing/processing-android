@@ -3,15 +3,11 @@ import org.zeroturnaround.zip.ZipUtil
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 dependencies {
+    compile group: "org.processing", name: "core", version: "${processingVersion}"
+    compile group: "org.processing", name: "pde", version: "${processingVersion}"
+    compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
 
-    def PROCESSING_VERSION = '3.3.7'
-    compile group: 'org.processing', name: 'core', version: "$PROCESSING_VERSION"
-    compile group: 'org.processing', name: 'pde', version: "$PROCESSING_VERSION"
-    compile group: 'org.processing', name: 'java-mode', version: "$PROCESSING_VERSION"
-
-    
-    def TOOLING_VERSION = '4.3'
-    compileOnly "org.gradle:gradle-tooling-api:$TOOLING_VERSION"
+    compileOnly "org.gradle:gradle-tooling-api:${toolingVersion}"
 }
 
 // This task copies the gradle tooling jar into the mode folder
@@ -24,7 +20,7 @@ build.dependsOn(copyToLib)
 sourceSets {
     main {
         java {
-            srcDirs = ['src/']
+            srcDirs = ["src/"]
         }
     }
 }
@@ -32,12 +28,12 @@ sourceSets {
 task permissions(type:Exec) {
    // This task retrieves the latest list of Android permissions and adds them
    // to the Permissions.java file. The python scripts requries BeautifulSoup
-   workingDir 'scripts'
-   commandLine 'python', 'permissions.py'
+   workingDir "scripts"
+   commandLine "python", "permissions.py"
 } 
 
 task wrapper(type: Wrapper) {
-   gradleVersion = '4.4.1' //version required for gradle wrapper
+   gradleVersion = "${gradlewVersion}" //version required for gradle wrapper
 }
 wrapper.doLast {
   File wrapperFolder = file("mode/gradlew");
@@ -51,7 +47,7 @@ wrapper.doLast {
 
 clean.doFirst {
     delete fileTree("mode") {
-        include '**/*.jar'
+        include "**/*.jar"
     }
 }
 
