@@ -7,12 +7,14 @@ mode/tools/SDKUpdated/tool
 core/debug/.gradle
 core/debug/.idea
 core/debug/gradle
+core/debug/gradlew
+code/debug/gradlew.bat
 
 **/.DS_Store
 **/build
 **/bin
 **/dist
 
-local.properties
+**/local.properties
 .gradle
 
