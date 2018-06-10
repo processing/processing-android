@@ -4,10 +4,10 @@ mode/mode/*.jar
 mode/libraries/vr/library
 mode/tools/SDKUpdated/tool
 
-core/debug/.gradle
-core/debug/.idea
-core/debug/gradle
-core/debug/gradlew*
+studio/.gradle
+studio/.idea
+studio/gradle
+studio/gradlew*
 
 **/*.iml
 **/.DS_Store

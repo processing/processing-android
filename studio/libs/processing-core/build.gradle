@@ -4,13 +4,14 @@ android {
     compileSdkVersion 26
     buildToolsVersion '27.0.3'
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion 17
+        targetSdkVersion 21
     }
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['../../../../mode/libraries/vr/src/']
+            java.srcDirs = ['../../../core/src']
+            assets.srcDirs = ['../../../core/src/assets']
         }
     }
     compileOptions {
@@ -22,7 +23,6 @@ android {
 }
 
 dependencies {
-    implementation project(':libs:processing-core')
-    implementation 'com.google.vr:sdk-audio:1.150.0'
-    implementation 'com.google.vr:sdk-base:1.150.0'
+    implementation "com.android.support:support-v4:26.0.2"
+    implementation 'com.google.android.support:wearable:2.1.0'
 }
