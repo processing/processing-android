@@ -63,7 +63,6 @@ class AndroidBuild extends JavaBuild {
   static {
     TARGET_SDK = Preferences.get("android.sdk.target");
     if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) < 26) { 
-      // Must be 8.0 or higher
       TARGET_SDK = "26"; 
       Preferences.set("android.sdk.target", TARGET_SDK);
     }
@@ -76,7 +75,7 @@ class AndroidBuild extends JavaBuild {
   static public String SUPPORT_VER;
   static {
     SUPPORT_VER = Preferences.get("android.sdk.support");
-    if (SUPPORT_VER == null) { 
+    if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, "26.0.2")) {
       SUPPORT_VER = "26.0.2"; 
       Preferences.set("android.sdk.support", SUPPORT_VER);
     }
@@ -85,7 +84,7 @@ class AndroidBuild extends JavaBuild {
   static public String PLAY_SERVICES_VER;
   static {
     PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
-    if (PLAY_SERVICES_VER == null) { 
+    if (PLAY_SERVICES_VER == null || !versionCheck(PLAY_SERVICES_VER, "11.0.4")) {
       PLAY_SERVICES_VER = "11.0.4"; 
       Preferences.set("android.sdk.play_services", PLAY_SERVICES_VER);
     }
@@ -94,7 +93,7 @@ class AndroidBuild extends JavaBuild {
   static public String WEAR_VER;
   static {
     WEAR_VER = Preferences.get("android.sdk.wear");
-    if (WEAR_VER == null) { 
+    if (WEAR_VER == null || !versionCheck(WEAR_VER, "2.1.0")) {
       WEAR_VER = "2.1.0"; 
       Preferences.set("android.sdk.wear", WEAR_VER);
     }
@@ -103,7 +102,7 @@ class AndroidBuild extends JavaBuild {
   static public String GVR_VER;
   static {
     GVR_VER = Preferences.get("android.sdk.gvr");
-    if (GVR_VER == null) { 
+    if (GVR_VER == null || !versionCheck(GVR_VER, "1.150.0")) {
       GVR_VER = "1.150.0";
       Preferences.set("android.sdk.gvr", GVR_VER);
     }
@@ -980,4 +979,43 @@ class AndroidBuild extends JavaBuild {
   private File createExportFolder(String name) throws IOException {
     return AndroidUtil.createSubFolder(sketch.getFolder(), name);
   }  
+  
+  
+  static private boolean versionCheck(String currentVersion, String minVersion) {
+    String[] currentPieces = currentVersion.split("\\.");
+    String[] minPieces = minVersion.split("\\.");
+    
+    if (currentPieces.length == 3 && minPieces.length == 3) {
+      int currentMajor = PApplet.parseInt(currentPieces[0], -1);
+      int currentMinor = PApplet.parseInt(currentPieces[1], -1);
+      int currentMicro = PApplet.parseInt(currentPieces[2], -1);
+      
+      int minMajor = PApplet.parseInt(minPieces[0], -1);
+      int minMinor = PApplet.parseInt(minPieces[1], -1);
+      int minMicro = PApplet.parseInt(minPieces[2], -1);
+      
+      if (-1 < currentMajor && -1 < currentMinor && -1 < currentMicro &&
+          -1 < minMajor && -1 < minMinor && -1 < minMicro) {
+        if (currentMajor < minMajor) {
+          return false;
+        } else if (currentMajor == minMajor) {
+          if (currentMinor < minMinor) {
+            return false;  
+          } if (currentMinor == minMinor) {
+            if (currentMicro < minMicro) {
+              return false;
+            } else {
+              return true;
+            }
+          } else {
+            return true;
+          }
+        } else {
+          return true;
+        }
+      }      
+    }
+    
+    return false;
+  }
 }
