@@ -1,22 +1,23 @@
-package core_debug;
+package simple;
 
 import processing.core.PApplet;
 import processing.core.PImage;
 
 public class Sketch extends PApplet {
 
-  PImage maple;
+  PImage leaf;
 
   public void settings() {
     fullScreen();
   }
 
   public void setup() {
-    maple = loadImage("maple.png");
+    leaf = loadImage("leaf.png");
+    imageMode(CENTER);
   }
 
   public void draw() {
     background(9);
-    image(maple, mouseX, mouseY);
+    image(leaf, mouseX, mouseY);
   }
 }

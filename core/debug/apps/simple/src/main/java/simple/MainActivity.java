@@ -1,4 +1,4 @@
-package core_debug;
+package simple;
 
 import android.os.Bundle;
 import android.content.Intent;

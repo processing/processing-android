@@ -1,0 +1,28 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion '27.0.3'
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 26
+    }
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['../../../../mode/libraries/vr/src/']
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+    productFlavors {
+    }
+}
+
+dependencies {
+    implementation project(':libs:processing-core')
+    implementation 'com.google.vr:sdk-audio:1.150.0'
+    implementation 'com.google.vr:sdk-base:1.150.0'
+}

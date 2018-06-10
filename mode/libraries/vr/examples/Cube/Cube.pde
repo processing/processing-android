@@ -8,7 +8,7 @@ void draw() {
   background(157);
   lights();
   translate(width/2, height/2);
-  rotateX(frameCount * 0.01f);
-  rotateY(frameCount * 0.01f);  
+  rotateX(frameCount * 0.01);
+  rotateY(frameCount * 0.01);  
   box(350);
 }
