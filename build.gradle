@@ -40,6 +40,27 @@ allprojects {
     vrProperties.load(project.rootProject.file("mode/libraries/vr/library.properties").newDataInputStream())
     ext.vrLibVersion = vrProperties.getProperty("prettyVersion")
 
+
+    def fn = project.rootProject.file("local.properties")
+    if (!fn.exists()) {
+        if (System.env["ANDROID_SDK"] != null) {
+            def path = System.env["ANDROID_SDK"]
+            fn.withWriterAppend { w ->
+                w << "sdk.dir=${path}\n"
+            }
+        } else {
+            throw new GradleException(
+                "The file local.properties does not exist, and there is no ANDROID_SDK environmental variable defined in the system.\n" +
+                "Define ANDROID_SDK so it points to the location of the Android SDK, or create the local.properties file manually\n" +
+                "and add the following line to it:\n" +
+                "sdk.dir=<path to Android SDK>")
+      }
+
+
+      // new File( folder, 'file.txt' )
+    }
+
+
     Properties localProperties = new Properties()
     localProperties.load(project.rootProject.file("local.properties").newDataInputStream())
     def sdkDir = localProperties.getProperty("sdk.dir")
