@@ -5,6 +5,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.transform.ArtifactTransform
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+import java.util.regex.Pattern
 
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
 
@@ -68,7 +69,7 @@ dependencies {
 class ClassesJarArtifactTransform extends ArtifactTransform {
     @Override
     List<File> transform(File file) {
-        final String[] names = file.getPath().split("/")
+        final String[] names = file.getPath().split(Pattern.quote(File.separator))
         final String aarName = names[names.length - 4].replace(".aar", "")
         final File renamedJar = new File(getOutputDirectory(), aarName + ".jar")
         renamedJar << file.bytes
