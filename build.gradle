@@ -45,7 +45,9 @@ allprojects {
     def fn = project.rootProject.file("local.properties")
     if (!fn.exists()) {
         if (System.env["ANDROID_SDK"] != null) {
-            def path = System.env["ANDROID_SDK"].replace(Pattern.quote(File.separator), "/")
+            def syspath = System.env["ANDROID_SDK"]
+            def parts = syspath.split(Pattern.quote(File.separator))
+            def path = String.join("/", parts)
             fn.withWriterAppend { w ->
                 w << "sdk.dir=${path}\n"
             }
@@ -55,10 +57,7 @@ allprojects {
                 "Define ANDROID_SDK so it points to the location of the Android SDK, or create the local.properties file manually\n" +
                 "and add the following line to it:\n" +
                 "sdk.dir=<path to Android SDK>")
-      }
-
-
-      // new File( folder, 'file.txt' )
+        }
     }
 
 
