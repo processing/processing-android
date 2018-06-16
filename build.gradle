@@ -1,6 +1,7 @@
 import java.nio.file.Files
 import org.zeroturnaround.zip.ZipUtil
 import org.apache.commons.io.FileUtils
+import java.util.regex.Pattern
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'java'
@@ -44,7 +45,7 @@ allprojects {
     def fn = project.rootProject.file("local.properties")
     if (!fn.exists()) {
         if (System.env["ANDROID_SDK"] != null) {
-            def path = System.env["ANDROID_SDK"]
+            def path = System.env["ANDROID_SDK"].replace(Pattern.quote(File.separator), "/")
             fn.withWriterAppend { w ->
                 w << "sdk.dir=${path}\n"
             }
