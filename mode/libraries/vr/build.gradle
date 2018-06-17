@@ -57,8 +57,10 @@ dependencies {
 
     compileOnly name: "android"
 
-    aar "com.android.support:support-v4:${supportLibsVersion}"
-    aar "com.google.android.support:wearable:${wearVersion}"
+    compileOnly "org.p5android:processing-core:${modeVersion}"
+
+    aar "com.google.vr:sdk-audio:${gvrVersion}"
+    aar "com.google.vr:sdk-base:${gvrVersion}"
 }
 
 /**
@@ -71,18 +73,22 @@ class ClassesJarArtifactTransform extends ArtifactTransform {
         final String aarName = names[names.length - 4].replace(".aar", "")
         final File renamedJar = new File(getOutputDirectory(), aarName + ".jar")
         renamedJar << file.bytes
+        File libraryFolder = new File(System.getProperty("user.dir"), "mode/libraries/vr/library")
+        libraryFolder.mkdirs();
+        final File libraryJar = new File(libraryFolder, aarName + ".jar")
+        Files.copy(renamedJar.toPath(), libraryJar.toPath(), REPLACE_EXISTING);
         return ImmutableList.of(renamedJar)
     }
 }
 
 task createPom {
     // The compile configuration should be replaced by implementation eventually:
-    // https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration#new_configurations
+    // https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration#new_configurations  
     pom {
        project {
            groupId "org.p5android"
-           artifactId "processing-core"
-           version "${modeVersion}"
+           artifactId "processing-vr"
+           version "${vrLibVersion}"
            packaging "jar"
            licenses {
                license {
@@ -93,28 +99,32 @@ task createPom {
            }
            dependencies {
                dependency {
-                   groupId "com.android.support"
-                   artifactId "support-v4"
-                   version "${supportLibsVersion}"
+                   groupId "org.p5android"
+                   artifactId "processing-core"
+                   version "${modeVersion}"
+                   scope "compile"
+               }
+
+               dependency {
+                   groupId "com.google.vr"
+                   artifactId "sdk-base"
+                   version "${gvrVersion}"
                    scope "compile"
                }
                dependency {
-                   groupId "com.google.android.support"
-                   artifactId "wearable"
-                   version "${wearVersion}"
+                   groupId "com.google.vr"
+                   artifactId "sdk-audio"
+                   version "${gvrVersion}"
                    scope "compile"
                }               
            }
         }
-    }.writeTo("dist/processing-core-${modeVersion}.pom")
+    }.writeTo("dist/processing-vr-${vrLibVersion}.pom")
 }
 
 sourceSets {
     main {
         java {
-            srcDirs = ["src/"]
-        }
-        resources {
             srcDirs = ["src/"]
         }
     }
@@ -142,21 +152,23 @@ jar.doLast { task ->
 
 clean.doFirst {
     delete "dist"
-    delete "${coreZipPath}"
+    delete "library/vr.jar"
 }
 
 build.doLast {
-    // Copying core jar as zip inside the mode folder
-    Files.copy(file("${buildDir}/libs/core.jar").toPath(),
-               file("${coreZipPath}").toPath(), REPLACE_EXISTING);
+    // // Copying vr jar to library folder
+    File vrJar = file("library/vr.jar")
+    vrJar.mkdirs();
+    Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+               vrJar.toPath(), REPLACE_EXISTING);   
 
-    // Copying the files for release on JCentral
+    // // Copying the files for release on JCentral
     File distFolder = file("dist");
     distFolder.mkdirs();
-    Files.copy(file("$buildDir/libs/core.jar").toPath(),
-               file("dist/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
-    Files.copy(file("$buildDir/libs/core-sources.jar").toPath(),
-               file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    Files.copy(file("$buildDir/libs/core.jar.MD5").toPath(),
-               file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+               file("dist/processing-vr-${vrLibVersion}.jar").toPath(), REPLACE_EXISTING);
+    Files.copy(file("$buildDir/libs/vr-sources.jar").toPath(),
+               file("dist/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+    Files.copy(file("$buildDir/libs/vr.jar.MD5").toPath(),
+               file("dist/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
 }

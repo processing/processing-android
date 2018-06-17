@@ -1,15 +1,20 @@
-bin
-processing-core.zip
-release
+mode/processing-core.zip
+mode/mode/*.jar
 
-.AppleDouble
-._*
-*~
-.DS_Store
-/sdk/
-/temp/
+mode/libraries/vr/library
+mode/tools/SDKUpdated/tool
 
-libraries/build/**
-build/**
+studio/.gradle
+studio/.idea
+studio/gradle
+studio/gradlew*
+
+**/*.iml
+**/.DS_Store
+**/build
+**/bin
+**/dist
+
+**/local.properties
 .gradle
 
