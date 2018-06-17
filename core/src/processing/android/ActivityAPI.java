@@ -52,4 +52,7 @@ public interface ActivityAPI {
   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo);
   public boolean onContextItemSelected(MenuItem item);
   public void setHasOptionsMenu(boolean hasMenu);
+
+  // IO events
+  public void onBackPressed();
 }

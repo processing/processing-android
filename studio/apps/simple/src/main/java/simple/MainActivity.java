@@ -40,4 +40,13 @@ public class MainActivity extends AppCompatActivity {
       sketch.onNewIntent(intent);
     }
   }
+
+  @Override
+  public void onBackPressed() {
+    if (sketch != null) {
+      sketch.onBackPressed();
+      if (sketch.handledBackPressed) return;
+    }
+    super.onBackPressed();
+  }
 }

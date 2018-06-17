@@ -260,6 +260,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    */
   boolean keyboardIsOpen = false;
 
+  /**
+   * Flag to determine if the user handled the back press.
+   */
+  public boolean handledBackPressed = true;
+
   ///////////////////////////////////////////////////////////////
   // Permission handling
 
@@ -555,6 +560,10 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       resume();
     }
 
+    // Set the default to true to handle the situation where a fragment is popping back
+    // after pressing back (app does not exit)
+    handledBackPressed = true;
+
     surface.resumeThread();
   }
 
@@ -630,6 +639,10 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     surface.setHasOptionsMenu(hasMenu);
   }
 
+
+  public void onBackPressed() {
+    handledBackPressed = false;
+  }
 
   public void startActivity(Intent intent) {
     surface.startActivity(intent);
