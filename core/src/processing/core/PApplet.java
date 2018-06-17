@@ -5572,20 +5572,31 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Return a full path to an item in the data folder.
    * <p>
-   * In this method, the data path is defined not as the applet's actual
-   * data path, but a folder titled "data" in the sketch's working
-   * directory. When running inside the PDE, this will be the sketch's
-   * "data" folder. However, when exported (as application or applet),
-   * sketch's data folder is exported as part of the applications jar file,
-   * and it's not possible to read/write from the jar file in a generic way.
-   * If you need to read data from the jar file, you should use createInput().
+   * The behavior of this function differs from the equivalent on the Java mode: files stored in
+   * the data folder of the sketch get packed as assets in the apk, and the path to the data folder
+   * is no longer valid. Only the name is needed to open them. However, if the file is not an asset,
+   * we can assume it has been created by the sketch, so it should have the sketch path.
+   * Discussed here:
+   * https://github.com/processing/processing-android/issues/450
    */
   public String dataPath(String where) {
-    // isAbsolute() could throw an access exception, but so will writing
-    // to the local disk using the sketch path, so this is safe here.
-    if (new File(where).isAbsolute()) return where;
-
-    return sketchPath + File.separator + "data" + File.separator + where;
+    // First, we check if it is asset:
+    boolean isAsset = false;
+    AssetManager assets = surface.getAssets();
+    InputStream is = null;
+    try {
+      is = assets.open(where);
+      isAsset = true;
+    } catch (IOException ex) {
+      //file does not exist
+    } finally {
+      try {
+        is.close();
+      } catch (Exception ex) { }
+    }
+    if (isAsset) return where;
+    // Not an asset, let's just use sketch path:
+    return sketchPath(where);
   }
 
 
