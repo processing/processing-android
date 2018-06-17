@@ -7,6 +7,7 @@ The core and VR libraries are available on JCentral, so they can be easily impor
 into Gradle projects:
 
 [processing-core](https://bintray.com/p5android/processing-android/processing-core)
+
 [processing-vr](https://bintray.com/p5android/processing-android/processing-vr)
 
 
