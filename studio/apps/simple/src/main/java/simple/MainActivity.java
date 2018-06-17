@@ -42,6 +42,13 @@ public class MainActivity extends AppCompatActivity {
   }
 
   @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (sketch != null) {
+      sketch.onActivityResult(requestCode, resultCode, data);
+    }
+  }
+
+  @Override
   public void onBackPressed() {
     if (sketch != null) {
       sketch.onBackPressed();

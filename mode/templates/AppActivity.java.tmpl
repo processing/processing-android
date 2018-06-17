@@ -28,9 +28,7 @@ public class MainActivity extends AppCompatActivity {
   }
   
   @Override
-  public void onRequestPermissionsResult(int requestCode,
-                                         String permissions[],
-                                         int[] grantResults) {
+  public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
     if (sketch != null) {
       sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
@@ -42,6 +40,13 @@ public class MainActivity extends AppCompatActivity {
       sketch.onNewIntent(intent);
     }  
   }
+  
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (sketch != null) {
+      sketch.onActivityResult(requestCode, resultCode, data);
+    }
+  }  
   
   @Override
   public void onBackPressed() {

@@ -25,6 +25,7 @@ package processing.vr;
 import com.google.vr.sdk.base.GvrActivity;
 import com.google.vr.sdk.base.Eye;
 
+import android.content.Intent;
 import android.util.DisplayMetrics;
 import processing.android.AppComponent;
 import processing.android.ServiceEngine;
@@ -171,5 +172,31 @@ public class PVR extends GvrActivity implements AppComponent {
     if (sketch != null) {
       sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+  }
+
+
+  @Override
+  public void onNewIntent(Intent intent) {
+    if (sketch != null) {
+      sketch.onNewIntent(intent);
+    }
+  }
+
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (sketch != null) {
+      sketch.onActivityResult(requestCode, resultCode, data);
+    }
+  }
+
+
+  @Override
+  public void onBackPressed() {
+    if (sketch != null) {
+      sketch.onBackPressed();
+      if (sketch.handledBackPressed) return;
+    }
+    super.onBackPressed();
   }
 }
