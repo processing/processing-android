@@ -66,8 +66,8 @@ class AndroidSDK {
   private final File buildTools;
   private final File avdManager;
   private final File sdkManager;
-  private final File wearablePath;
-  private final File supportLibPath;
+//  private final File wearablePath;
+//  private final File supportLibPath;
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
@@ -237,15 +237,15 @@ class AndroidSDK {
                                 AndroidBuild.TARGET_SDK + " is missing from " + targetPlatform.getAbsolutePath());
     }
     
-    wearablePath = new File(folder, "extras/google/m2repository/com/google/android/support/wearable");
-    if (!wearablePath.exists()) {
-      throw new BadSDKException("There is no wearable folder in " + folder);
-    }
-    
-    supportLibPath = new File(folder, "extras/android/m2repository/com/android/support");
-    if (!supportLibPath.exists()) {
-      throw new BadSDKException("There is no support library folder in " + folder);
-    }
+//    wearablePath = new File(folder, "extras/google/m2repository/com/google/android/support/wearable");
+//    if (!wearablePath.exists()) {
+//      throw new BadSDKException("There is no wearable folder in " + folder);
+//    }
+//    
+//    supportLibPath = new File(folder, "extras/android/m2repository/com/android/support");
+//    if (!supportLibPath.exists()) {
+//      throw new BadSDKException("There is no support library folder in " + folder);
+//    }
         
     avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
@@ -356,14 +356,14 @@ class AndroidSDK {
   }
 
   
-  public File getWearableFolder() {
-    return wearablePath;
-  }
+//  public File getWearableFolder() {
+//    return wearablePath;
+//  }
   
 
-  public File getSupportLibrary() {
-    return supportLibPath;
-  } 
+//  public File getSupportLibrary() {
+//    return supportLibPath;
+//  } 
   
   
   public File getZipAlignTool() {    
