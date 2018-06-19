@@ -29,4 +29,5 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation project(':libs:processing-core')
     implementation 'com.android.support:appcompat-v7:26.0.2'
+    implementation project(':libs:processing-sound')
 }

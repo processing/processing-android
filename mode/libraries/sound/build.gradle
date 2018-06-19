@@ -1,0 +1,104 @@
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+apply plugin: 'maven'
+
+
+dependencies {
+    compileOnly name: "android"
+
+    compileOnly "org.p5android:processing-core:${modeVersion}"
+    implementation fileTree(dir: 'library', include: ['*.jar'])
+}
+
+// task createPom {
+//     // The compile configuration should be replaced by implementation eventually:
+//     // https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration#new_configurations  
+//     pom {
+//        project {
+//            groupId "org.p5android"
+//            artifactId "processing-vr"
+//            version "${vrLibVersion}"
+//            packaging "jar"
+//            licenses {
+//                license {
+//                    name "GNU Lesser General Public License, version 2.1"
+//                    url "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
+//                    distribution "repo"
+//                }
+//            }
+//            dependencies {
+//                dependency {
+//                    groupId "org.p5android"
+//                    artifactId "processing-core"
+//                    version "${modeVersion}"
+//                    scope "compile"
+//                }
+
+//                dependency {
+//                    groupId "com.google.vr"
+//                    artifactId "sdk-base"
+//                    version "${gvrVersion}"
+//                    scope "compile"
+//                }
+//                dependency {
+//                    groupId "com.google.vr"
+//                    artifactId "sdk-audio"
+//                    version "${gvrVersion}"
+//                    scope "compile"
+//                }               
+//            }
+//         }
+//     }.writeTo("dist/processing-vr-${vrLibVersion}.pom")
+// }
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/"]
+        }
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = "sources"
+    from sourceSets.main.allSource
+}
+
+// Does not work because of Processing-specific tags in source code, such as @webref
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+//     archives javadocJar
+    archives sourcesJar
+}
+
+jar.doLast { task ->
+    ant.checksum file: task.archivePath
+}
+
+clean.doFirst {
+    delete "dist"
+    delete "library/sound.jar"
+}
+
+build.doLast {
+    // // Copying vr jar to library folder
+    File vrJar = file("library/sound.jar")
+    vrJar.mkdirs();
+    Files.copy(file("$buildDir/libs/sound.jar").toPath(),
+               vrJar.toPath(), REPLACE_EXISTING);   
+
+    // // Copying the files for release on JCentral
+    // File distFolder = file("dist");
+    // distFolder.mkdirs();
+    // Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+    //            file("dist/processing-vr-${vrLibVersion}.jar").toPath(), REPLACE_EXISTING);
+    // Files.copy(file("$buildDir/libs/vr-sources.jar").toPath(),
+    //            file("dist/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+    // Files.copy(file("$buildDir/libs/vr.jar.MD5").toPath(),
+    //            file("dist/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+}

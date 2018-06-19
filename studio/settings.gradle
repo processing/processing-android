@@ -1,1 +1,1 @@
-include ':apps:simple', ':apps:vrcube', ':libs:processing-core', ':libs:processing-vr'
+include ':apps:simple', ':apps:vrcube', ':libs:processing-core', ':libs:processing-vr', ':libs:processing-sound'
