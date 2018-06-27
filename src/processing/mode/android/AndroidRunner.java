@@ -47,8 +47,6 @@ public class AndroidRunner implements DeviceListener {
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
 
-  public boolean debugEnabled;
-
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
     this.listener = listener;
@@ -96,8 +94,6 @@ public class AndroidRunner implements DeviceListener {
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
-    device.setSketchClassName(build.getSketchClassName());
-    device.debugEnabled = debugEnabled;
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
@@ -126,7 +122,14 @@ public class AndroidRunner implements DeviceListener {
         listener.statusError("Could not start the sketch.");
       }
     }
-    
+
+    if (listener instanceof AndroidEditor){
+      AndroidDebugger debugger = ((AndroidEditor) listener).getDebugger();
+      if (debugger.isEnabled()) {
+        debugger.startDebug(this, device);
+      }
+    }
+
     listener.stopIndeterminate();
     lastRunDevice = device;
     return status;

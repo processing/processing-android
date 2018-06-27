@@ -207,10 +207,6 @@ class Device {
 //    PApplet.println(cmd);
     ProcessResult pr = adb(cmd);
 
-    if (debugEnabled){
-      attachDebugger();
-    }
-
     if (Base.DEBUG) {
       System.out.println(pr.toString());
     }
@@ -226,127 +222,31 @@ class Device {
 
   // XXXXXXXXXXXX-----prototype-start-XXXXXXXXXXXXXXXXXX
 
-  public static final String FIELD_NAME = "mouseX";
-
-  public static final int TCP_PORT = 7777;
-  private static int pId;
-
-  private VirtualMachine vm;
-
-  public boolean debugEnabled;
-
-  private void attachDebugger() throws IOException, InterruptedException {
-    // fetch details
-    adb("devices");
-    // find jdwp pid
+  public void forwardPort(int tcpPort) throws IOException, InterruptedException {
     final String[] jdwpcmd = generateAdbCommand("jdwp");
     Process deviceId = Runtime.getRuntime().exec(jdwpcmd);
+    JDWPProcessor pIDProcessor = new JDWPProcessor();
     new StreamPump(deviceId.getInputStream(), "jdwp: ").addTarget(
-            new JDWPProcessor()).start();
+        pIDProcessor).start();
     new StreamPump(deviceId.getErrorStream(), "jdwperr: ").addTarget(
-            System.err).start();
+        System.err).start();
 
     Thread.sleep(1000);
     // forward to tcp port
-    adb("forward", "tcp:" + TCP_PORT, "jdwp:" + pId);
-    // connect
-    System.out.println(":debugger:Attaching Debugger");
-    vm = new VMAcquirer().connect(TCP_PORT);
-    // wait to connect
-    Thread.sleep(3000);
-    // set watch field on already loaded classes
-    List<ReferenceType> referenceTypes = vm.classesByName(packageName + "." + sketchClassName);
-
-    for (ReferenceType refType : referenceTypes) {
-      addFieldWatch(vm, refType);
-
-      // Adding breakpoint at line 27
-      try {
-        List<Location> locations = refType.locationsOfLine(28);
-        if (locations.isEmpty()){
-          System.out.println("no location found for line 27");
-        } else {
-          BreakpointRequest bpr = vm.eventRequestManager().createBreakpointRequest(locations.get(0));
-          bpr.enable();
-        }
-      } catch (AbsentInformationException e) {
-        e.printStackTrace();
-      }
-    }
-    // watch for loaded classes
-    addClassWatch(vm);
-
-    // resume the vm
-    vm.resume();
-
-    // process events
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        EventQueue eventQueue = vm.eventQueue();
-        while (true) {
-          EventSet eventSet = null;
-          try {
-            eventSet = eventQueue.remove();
-          } catch (InterruptedException e) {
-          }
-          for (Event event : eventSet) {
-            if (event instanceof VMDeathEvent
-                    || event instanceof VMDisconnectEvent) {
-              // exit
-              System.out.println(":debugger:app killed");
-              return;
-            } else if (event instanceof ClassPrepareEvent) {
-              // watch field on loaded class
-              ClassPrepareEvent classPrepEvent = (ClassPrepareEvent) event;
-              ReferenceType refType = classPrepEvent
-                      .referenceType();
-              Device.this.addFieldWatch(vm, refType);
-            } else if (event instanceof ModificationWatchpointEvent) {
-              ModificationWatchpointEvent modEvent = (ModificationWatchpointEvent) event;
-              System.out.println("watching mouseX:");
-              System.out.println("old="
-                      + modEvent.valueCurrent());
-              System.out.println("new=" + modEvent.valueToBe());
-              System.out.println();
-            } else if (event instanceof BreakpointEvent) {
-              System.out.println("breakpoint at : " + ((BreakpointEvent) event).location().lineNumber());
-              vm.suspend();
-            }
-          }
-          eventSet.resume();
-        }
-      }
-    }).start();
-  }
-
-  /**
-   * Watch all classes of name `sketchClassName` variable
-   */
-  private void addClassWatch(VirtualMachine vm) {
-    EventRequestManager erm = vm.eventRequestManager();
-    ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
-    classPrepareRequest.addClassFilter(sketchClassName);
-    classPrepareRequest.setEnabled(true);
-  }
-
-  /**
-   * Watch field of name "mouseX"
-   */
-  private void addFieldWatch(VirtualMachine vm,
-                                    ReferenceType refType) {
-    EventRequestManager erm = vm.eventRequestManager();
-    Field field = refType.fieldByName(FIELD_NAME);
-    ModificationWatchpointRequest modificationWatchpointRequest = erm.createModificationWatchpointRequest(field);
-    modificationWatchpointRequest.setEnabled(true);
+    adb("forward", "tcp:" + tcpPort, "jdwp:" + pIDProcessor.getId());
   }
 
   private class JDWPProcessor implements LineProcessor {
+    private int pId;
     public void processLine(final String line) {
       pId = Integer.parseInt(line);
     }
+    public int getId(){
+      return pId;
+    }
   }
   // XXXXXXXXXXXX-----prototype-end-XXXXXXXXXXXXXXXXXX
+
   public boolean isEmulator() {
     return id.startsWith("emulator");
   }
@@ -354,10 +254,6 @@ class Device {
   public void setPackageName(String pkgName) {
     packageName = pkgName;
   }
-
-    public void setSketchClassName(String className) {
-        sketchClassName = className;
-    }
 
   // I/Process ( 9213): Sending signal. PID: 9213 SIG: 9
   private static final Pattern SIG = Pattern
