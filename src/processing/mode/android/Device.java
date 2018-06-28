@@ -21,12 +21,6 @@
 
 package processing.mode.android;
 
-import com.sun.jdi.*;
-import com.sun.jdi.event.*;
-import com.sun.jdi.request.BreakpointRequest;
-import com.sun.jdi.request.ClassPrepareRequest;
-import com.sun.jdi.request.EventRequestManager;
-import com.sun.jdi.request.ModificationWatchpointRequest;
 import processing.app.Base;
 import processing.app.Platform;
 import processing.app.RunnerListener;
@@ -36,7 +30,6 @@ import processing.app.exec.ProcessResult;
 import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.android.LogEntry.Severity;
-import processing.mode.android.debugger.VMAcquirer;
 
 import java.io.File;
 import java.io.IOException;

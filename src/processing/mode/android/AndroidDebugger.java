@@ -2,13 +2,9 @@ package processing.mode.android;
 
 import com.sun.jdi.*;
 import com.sun.jdi.event.*;
-import com.sun.jdi.request.BreakpointRequest;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ModificationWatchpointRequest;
-import processing.app.Sketch;
-import processing.app.SketchException;
-import processing.mode.android.debugger.VMAcquirer;
 import processing.mode.java.Debugger;
 import processing.mode.java.debug.LineBreakpoint;
 import processing.mode.java.debug.LineID;
@@ -19,14 +15,12 @@ import java.util.List;
 public class AndroidDebugger extends Debugger {
   /// editor window, acting as main view
   protected AndroidEditor editor;
-  protected AndroidRunner runner;
+  protected AndroidRunner runtime;
   protected AndroidMode androidMode;
 
   protected boolean isEnabled;
 
   private static final int TCP_PORT = 7777;
-
-  protected VirtualMachine vm;
 
   private String pkgName = "";
   private String sketchClassName = "";
@@ -43,7 +37,7 @@ public class AndroidDebugger extends Debugger {
     return isEnabled;
   }
 
-  public void toggleDebug(){
+  public void toggleDebug() {
     isEnabled = !isEnabled;
   }
 
@@ -58,44 +52,24 @@ public class AndroidDebugger extends Debugger {
       return; // do nothing
     }
 
-//    // we are busy now
-//    this.editor.statusBusy();
-//
-//    // clear console
-//    this.editor.clearConsole();
-//
-//    // clear variable inspector (also resets expanded states)
-//    this.editor.variableInspector().reset();
-//
-//    // load edits into sketch obj, etc...
-//    this.editor.prepareRun();
-
+    runtime = runner;
     pkgName = runner.build.getPackageName();
     sketchClassName = runner.build.getSketchClassName();
 
     try {
       device.forwardPort(TCP_PORT);
-      attachDebugger();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
 
-  private void attachDebugger() throws IOException, InterruptedException {
-    // connect
-    System.out.println(":debugger:Attaching Debugger");
-    vm = new VMAcquirer().connect(TCP_PORT);
-    // wait to connect
-    Thread.sleep(3000);
-    // set watch field on already loaded classes
-    List<ReferenceType> referenceTypes = vm.classesByName(pkgName+ "." + sketchClassName);
+      // connect
+      System.out.println("\n\n\n:debugger:Attaching Debugger");
+      VirtualMachine vm = runner.connectVirtualMachine(TCP_PORT);
 
-    for (ReferenceType refType : referenceTypes) {
-      addFieldWatch(vm, refType);
+      // set watch field on already loaded classes
+      List<ReferenceType> referenceTypes = vm.classesByName(pkgName + "." + sketchClassName);
 
-      // Adding breakpoint at line 27
+      for (ReferenceType refType : referenceTypes) {
+        addFieldWatch(vm, refType);
+
+        // Adding breakpoint at line 27
 //      try {
 //        List<Location> locations = refType.locationsOfLine(28);
 //        if (locations.isEmpty()){
@@ -107,56 +81,25 @@ public class AndroidDebugger extends Debugger {
 //      } catch (AbsentInformationException e) {
 //        e.printStackTrace();
 //      }
-    }
-    // watch for loaded classes
-    addClassWatch(vm);
-
-    // resume the vm
-    vm.resume();
-
-    // process events
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        EventQueue eventQueue = vm.eventQueue();
-        while (true) {
-          EventSet eventSet = null;
-          try {
-            eventSet = eventQueue.remove();
-          } catch (InterruptedException e) {
-          }
-          for (Event event : eventSet) {
-            if (event instanceof VMDeathEvent
-                || event instanceof VMDisconnectEvent) {
-              // exit
-              System.out.println(":debugger:app killed");
-              return;
-            } else if (event instanceof ClassPrepareEvent) {
-              // watch field on loaded class
-              ClassPrepareEvent classPrepEvent = (ClassPrepareEvent) event;
-              ReferenceType refType = classPrepEvent
-                  .referenceType();
-              addFieldWatch(vm, refType);
-            } else if (event instanceof ModificationWatchpointEvent) {
-              ModificationWatchpointEvent modEvent = (ModificationWatchpointEvent) event;
-              System.out.println("watching mouseX:");
-              System.out.println("old="
-                  + modEvent.valueCurrent());
-              System.out.println("new=" + modEvent.valueToBe());
-              System.out.println();
-            } else if (event instanceof BreakpointEvent) {
-              System.out.println("breakpoint at : " + ((BreakpointEvent) event).location().lineNumber());
-              vm.suspend();
-            }
-          }
-          eventSet.resume();
-        }
       }
-    }).start();
+      // watch for loaded classes
+      addClassWatch(vm);
+
+      // resume the vm
+      vm.resume();
+
+      // start receiving vm events
+      VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
+      eventThread.start();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
-   * Watch all classes of name `sketchClassName` variable
+   * Watch all classes ({@value sketchClassName}) variable
    */
   private void addClassWatch(VirtualMachine vm) {
     EventRequestManager erm = vm.eventRequestManager();
@@ -166,7 +109,7 @@ public class AndroidDebugger extends Debugger {
   }
 
   /**
-   * Watch field of name "mouseX"
+   * Watch field ({@value FIELD_NAME})
    */
   private void addFieldWatch(VirtualMachine vm,
                              ReferenceType refType) {
@@ -179,7 +122,7 @@ public class AndroidDebugger extends Debugger {
   @Override
   public VirtualMachine vm() {
     if (runtime != null) {
-      return vm;
+      return runtime.vm();
     }
     return null;
   }
