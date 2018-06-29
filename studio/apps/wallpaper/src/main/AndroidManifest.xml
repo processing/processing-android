@@ -10,5 +10,11 @@
             <meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper"/>
         </service>
         <activity android:name="processing.android.PermissionRequestor"/>
+        <activity android:name=".DebuggerEntryPointActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

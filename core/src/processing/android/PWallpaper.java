@@ -119,12 +119,16 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (engine != null) engine.onDestroy();
+
+    if (engine != null){
+      //engine.sketch = null;
+      engine.onDestroy();
+    }
   }
 
 
   public class WallpaperEngine extends Engine implements ServiceEngine {
-    private PApplet sketch;
+    PApplet sketch;
     private float xOffset, xOffsetStep;
     private float yOffset, yOffsetStep;
     private int xPixelOffset, yPixelOffset;
