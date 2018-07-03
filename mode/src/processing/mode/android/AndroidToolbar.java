@@ -33,6 +33,9 @@ import processing.app.ui.Editor;
 import processing.app.ui.EditorButton;
 import processing.app.ui.EditorToolbar;
 import processing.app.Language;
+import processing.mode.java.JavaEditor;
+
+import javax.swing.*;
 
 
 @SuppressWarnings("serial")
@@ -45,9 +48,14 @@ public class AndroidToolbar extends EditorToolbar {
   static protected final int SAVE   = 4;
   static protected final int EXPORT = 5;
 
+  private AndroidEditor aEditor;
+
+  EditorButton stepButton;
+  EditorButton continueButton;
 
   public AndroidToolbar(Editor editor, Base base) {
     super(editor);
+    aEditor = (AndroidEditor) editor;
   }
 
 
@@ -122,10 +130,15 @@ public class AndroidToolbar extends EditorToolbar {
 
   @Override
   public List<EditorButton> createButtons() {
+    // aEditor not ready yet because this is called by super()
+    final boolean debug = ((AndroidEditor) editor).isDebuggerEnabled();
+
     ArrayList<EditorButton> toReturn = new ArrayList<EditorButton>();
+    final String runText = debug ?
+            Language.text("toolbar.debug") : Language.text("Run on Device");
     runButton = new EditorButton(this,
                                  "/lib/toolbar/run",
-                                 "Run on device",
+                                        runText,
                                  "Run on emulator") {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -133,6 +146,31 @@ public class AndroidToolbar extends EditorToolbar {
       }
     };
     toReturn.add(runButton);
+
+    if (debug) {
+      stepButton = new EditorButton(this,
+              "/lib/toolbar/step",
+              Language.text("menu.debug.step"),
+              Language.text("menu.debug.step_into"),
+              Language.text("menu.debug.step_out")) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          final int mask = ActionEvent.SHIFT_MASK | ActionEvent.ALT_MASK;
+          aEditor.handleStep(e.getModifiers() & mask);
+        }
+      };
+      toReturn.add(stepButton);
+
+      continueButton = new EditorButton(this,
+              "/lib/toolbar/continue",
+              Language.text("menu.debug.continue")) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          aEditor.handleContinue();
+        }
+      };
+      toReturn.add(continueButton);
+    }
 
     stopButton = new EditorButton(this,
                                   "/lib/toolbar/stop",
@@ -143,12 +181,31 @@ public class AndroidToolbar extends EditorToolbar {
       }
     };
     toReturn.add(stopButton);
+
     return toReturn;
   }
 
   @Override
+  public void addModeButtons(Box box, JLabel label) {
+    EditorButton debugButton =
+            new EditorButton(this, "/lib/toolbar/debug",
+                    Language.text("toolbar.debug")) {
+              @Override
+              public void actionPerformed(ActionEvent e) {
+                aEditor.toggleDebug();
+              }
+            };
+
+    if (((AndroidEditor) editor).isDebuggerEnabled()) {
+      debugButton.setSelected(true);
+    }
+//    debugButton.setRolloverLabel(label);
+    box.add(debugButton);
+    addGap(box);
+  }
+
+  @Override
   public void handleRun(int modifiers) {
-    AndroidEditor aEditor = (AndroidEditor) editor;
     boolean shift = (modifiers & InputEvent.SHIFT_MASK) != 0;
     if (!shift) {
       aEditor.handleRunDevice();
@@ -161,7 +218,6 @@ public class AndroidToolbar extends EditorToolbar {
   @Override
   public void handleStop() {
     // TODO Auto-generated method stub
-    AndroidEditor aEditor = (AndroidEditor) editor;
     aEditor.handleStop();
   }
 

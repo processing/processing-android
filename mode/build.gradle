@@ -7,6 +7,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 // https://stackoverflow.com/a/43602463
 configurations {
     compile.extendsFrom compileAndCopy
+    compile.extendsFrom compileAndExtract
 }
 
 dependencies {
@@ -14,9 +15,13 @@ dependencies {
     compile group: "org.processing", name: "pde", version: "${processingVersion}"
     compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
 
+    compileAndExtract "org.eclipse.jdt:org.eclipse.jdt.debug:${jdtVersion}"
+
     compileAndCopy "org.gradle:gradle-tooling-api:${toolingVersion}"
     compileAndCopy "org.slf4j:slf4j-api:${slf4jVersion}"
-    compileAndCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
+    compileAndCopy "org.slf4j:slf4j-simple:${slf4jVersion}"    
+
+    compile fileTree(include: ["jdi.jar", "jdimodel.jar"], dir: 'mode')
 }
 
 // This task copies the gradle tooling jar into the mode folder
@@ -32,6 +37,16 @@ sourceSets {
             srcDirs = ["src/"]
         }
     }
+}
+
+task getjdi(type: Copy) {
+  // This task extracts the jar files inside org.eclipse.jdt.debug, which are
+  // jdi.jar and jdimodel.jar and needed to build the debugger.
+  from(zipTree(configurations.compileAndExtract.files[0])) {
+    include '**/*.jar'
+    exclude 'META-INF'
+  }
+  into "mode"  
 }
 
 task permissions(type:Exec) {
