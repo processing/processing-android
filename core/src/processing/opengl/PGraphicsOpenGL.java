@@ -5790,14 +5790,17 @@ public class PGraphicsOpenGL extends PGraphics {
                          int targetX, int targetY) {
     updatePixelSize();
 
-    // Copies the pixels
-    loadPixels();
-    int sourceOffset = sourceY * sourceImage.pixelWidth + sourceX;
-    int targetOffset = targetY * pixelWidth + targetX;
-    for (int y = sourceY; y < sourceY + sourceHeight; y++) {
-      System.arraycopy(sourceImage.pixels, sourceOffset, pixels, targetOffset, sourceWidth);
-      sourceOffset += sourceImage.pixelWidth;
-      targetOffset += pixelWidth;
+    if (sourceImage.pixels == null) {
+      // Copies the pixels
+      loadPixels();
+      sourceImage.loadPixels();
+      int sourceOffset = sourceY * sourceImage.pixelWidth + sourceX;
+      int targetOffset = targetY * pixelWidth + targetX;
+      for (int y = sourceY; y < sourceY + sourceHeight; y++) {
+        System.arraycopy(sourceImage.pixels, sourceOffset, pixels, targetOffset, sourceWidth);
+        sourceOffset += sourceImage.pixelWidth;
+        targetOffset += pixelWidth;
+      }
     }
 
     // Draws the texture, copy() is very efficient because it simply renders

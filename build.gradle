@@ -1,103 +1,129 @@
+import java.nio.file.Files
+import org.zeroturnaround.zip.ZipUtil
+import org.apache.commons.io.FileUtils
+import java.util.regex.Pattern
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 apply plugin: 'java'
 
 buildscript {
     repositories {
+        google()
         jcenter()
     }
     dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.1'
         classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'        
     }
 }
 
 allprojects {
     apply plugin: 'java'
-    
-    ext.android_platform = "$sdkdir/platforms/android-$sdkver"
-    ext.android_tools_lib = "$sdkdir/platforms/android-$sdkver/tools/lib"
-    ext.core_jar_path = "$rootDir/processing-core.zip"
+    apply plugin: 'java-library'
+
+    // Versions of all dependencies
+    ext.targetSdkVersion = '26'
+    ext.supportLibsVersion = '26.0.2'
+    ext.wearVersion = '2.1.0'
+    ext.gvrVersion = '1.150.0'
+    ext.processingVersion = '3.3.7'
+    ext.toolingVersion = '4.3'
+    ext.slf4jVersion = '1.7.10'
+    ext.gradlewVersion = '4.4.1'
+    ext.toolsLibVersion = '26.0.0-dev'
+    ext.jdtVersion = '3.11.100'
+
+    Properties modeProperties = new Properties()
+    modeProperties.load(project.rootProject.file("mode/mode.properties").newDataInputStream())
+    ext.modeVersion = modeProperties.getProperty("prettyVersion")
+
+    Properties vrProperties = new Properties()
+    vrProperties.load(project.rootProject.file("mode/libraries/vr/library.properties").newDataInputStream())
+    ext.vrLibVersion = vrProperties.getProperty("prettyVersion")
+
+
+    def fn = project.rootProject.file("local.properties")
+    if (!fn.exists()) {
+        if (System.env["ANDROID_SDK"] != null) {
+            def syspath = System.env["ANDROID_SDK"]
+            def parts = syspath.split(Pattern.quote(File.separator))
+            def path = String.join("/", parts)
+            fn.withWriterAppend { w ->
+                w << "sdk.dir=${path}\n"
+            }
+        } else {
+            throw new GradleException(
+                "The file local.properties does not exist, and there is no ANDROID_SDK environmental variable defined in the system.\n" +
+                "Define ANDROID_SDK so it points to the location of the Android SDK, or create the local.properties file manually\n" +
+                "and add the following line to it:\n" +
+                "sdk.dir=<path to Android SDK>")
+        }
+    }
+
+
+    Properties localProperties = new Properties()
+    localProperties.load(project.rootProject.file("local.properties").newDataInputStream())
+    def sdkDir = localProperties.getProperty("sdk.dir")
+    ext.androidPlatformPath = "${sdkDir}/platforms/android-${targetSdkVersion}"
+    ext.androidToolsLibPath = "${sdkDir}/tools/lib"
+
+    ext.coreZipPath = "${rootDir}/mode/processing-core.zip"
 
     repositories {
+        google()
         jcenter()
-        flatDir dirs: "$rootDir/core/library"
-        flatDir dirs: "$rootDir/core/build/libs"
-        flatDir dirs: "$rootDir/libraries/vr/library"
-        flatDir dirs: "$sdkdir/tools/lib"        
-        flatDir dirs: android_platform
-        flatDir dirs: android_tools_lib
+        flatDir dirs: androidPlatformPath
+        flatDir dirs: androidToolsLibPath
+        flatDir dirs: "${rootDir}/core/dist"
     }
 
     sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    targetCompatibility = 1.7    
 }
 
-dependencies {
-    compile name: 'android'
-    compile project(":core")
-    compile project(":libraries:vr")
-    compile group: 'org.processing', name: 'core', version: '3.3.6'
-    compile group: 'org.processing', name: 'pde', version: '3.3.6'
-    compile group: 'org.processing', name: 'java-mode', version: '3.3.6'
-    compile "org.gradle:gradle-tooling-api:4.2.1"
+clean.doFirst {
+    delete "dist"
 }
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/']
-        }
-    }
-}
-
-import java.nio.file.Files
-import org.zeroturnaround.zip.ZipUtil
-import org.apache.commons.io.FileUtils
-import static java.nio.file.StandardCopyOption.*;
 
 task dist {
-    try {
-        def root = "$buildDir/zip/AndroidMode"
+  dependsOn subprojects.build
+  doLast {
+        def root = "${buildDir}/zip/AndroidMode"
         
         // Copy assets to build dir
-        FileUtils.copyDirectory(file("templates"), file("$root/templates"))
-        FileUtils.copyDirectory(file("examples"), file("$root/examples"))
-        FileUtils.copyDirectory(file("icons"), file("$root/icons"))
-        FileUtils.copyDirectory(file("mode"), file("$root/mode"))
-        FileUtils.copyDirectory(file("theme"), file("$root/theme"))
-
-        Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
-                   file("$root/mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
-        Files.copy(file("$buildDir/libs/processing-android.jar").toPath(),
-                   file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
+        FileUtils.copyDirectory(file("mode/templates"), file("${root}/templates"))
+        FileUtils.copyDirectory(file("mode/examples"), file("${root}/examples"))
+        FileUtils.copyDirectory(file("mode/icons"), file("${root}/icons"))        
+        FileUtils.copyDirectory(file("mode/theme"), file("${root}/theme"))
+        FileUtils.copyDirectory(file("mode/mode"), file("${root}/mode"))
+        delete "${root}/mode/jdi.jar"
+        delete "${root}/mode/jdimodel.jar"
                    
-        Files.copy(file("core/build/libs/processing-core.zip").toPath(),
-                   file("$root/processing-core.zip").toPath(), REPLACE_EXISTING);
+        Files.copy(file("mode/processing-core.zip").toPath(),
+                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING);
 
-        Files.copy(file("mode.properties").toPath(),
-                   file("$root/mode.properties").toPath(), REPLACE_EXISTING);
+        Files.copy(file("mode/mode.properties").toPath(),
+                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING);
 
-        FileUtils.copyDirectory(file("tools/SDKUpdater/tool"), 
-                                file("$root/tools/SDKUpdater/tool"))
-        FileUtils.copyDirectory(file("tools/SDKUpdater/src"), 
-                                file("$root/tools/SDKUpdater/src"))
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"), 
+                                file("${root}/tools/SDKUpdater/tool"))
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"), 
+                                file("${root}/tools/SDKUpdater/src"))
         
-        FileUtils.copyDirectory(file("libraries/vr/examples"), 
-                                file("$root/libraries/vr/examples"))
-        FileUtils.copyDirectory(file("libraries/vr/gvrsdk"), 
-                                file("$root/libraries/vr/gvrsdk"))
-        FileUtils.copyDirectory(file("libraries/vr/library"), 
-                                file("$root/libraries/vr/library"))
-        FileUtils.copyDirectory(file("libraries/vr/src"), 
-                                file("$root/libraries/vr/src"))
-        Files.copy(file("libraries/vr/library.properties").toPath(),
-                   file("$root/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
+        FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 
+                                file("${root}/libraries/vr/examples"))
+        FileUtils.copyDirectory(file("mode/libraries/vr/library"), 
+                                file("${root}/libraries/vr/library"))
+        FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
+                                file("${root}/libraries/vr/src"))
+        Files.copy(file("mode/libraries/vr/library.properties").toPath(),
+                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
 
-        ZipUtil.pack(file("$buildDir/zip"), new File("release/AndroidMode.zip"))        
-        Files.copy(file("mode.properties").toPath(),
-                   file("release/AndroidMode.txt").toPath(), REPLACE_EXISTING);
-    } catch (Exception ex) {
-        logger.error ex.getMessage()
+        File distFolder = file("dist");
+        distFolder.mkdirs();
+        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"));
+        Files.copy(file("mode/mode.properties").toPath(),
+                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING);
     }
 }
-
-dist.dependsOn build

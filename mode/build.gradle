@@ -1,0 +1,81 @@
+import java.nio.file.Files
+import org.zeroturnaround.zip.ZipUtil
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+
+// Extend compile to copy the jars from gradle-tooling and slf4j:
+// https://stackoverflow.com/a/43602463
+configurations {
+    compile.extendsFrom compileAndCopy
+    compile.extendsFrom compileAndExtract
+}
+
+dependencies {
+    compile group: "org.processing", name: "core", version: "${processingVersion}"
+    compile group: "org.processing", name: "pde", version: "${processingVersion}"
+    compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
+
+    compileAndExtract "org.eclipse.jdt:org.eclipse.jdt.debug:${jdtVersion}"
+
+    compileAndCopy "org.gradle:gradle-tooling-api:${toolingVersion}"
+    compileAndCopy "org.slf4j:slf4j-api:${slf4jVersion}"
+    compileAndCopy "org.slf4j:slf4j-simple:${slf4jVersion}"    
+
+    compile fileTree(include: ["jdi.jar", "jdimodel.jar"], dir: 'mode')
+}
+
+// This task copies the gradle tooling jar into the mode folder
+task copyToLib(type: Copy) {
+  from configurations.compileAndCopy.files
+  into "mode"
+}
+build.dependsOn(copyToLib)
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/"]
+        }
+    }
+}
+
+task getjdi(type: Copy) {
+  // This task extracts the jar files inside org.eclipse.jdt.debug, which are
+  // jdi.jar and jdimodel.jar and needed to build the debugger.
+  from(zipTree(configurations.compileAndExtract.files[0])) {
+    include '**/*.jar'
+    exclude 'META-INF'
+  }
+  into "mode"  
+}
+
+task permissions(type:Exec) {
+   // This task retrieves the latest list of Android permissions and adds them
+   // to the Permissions.java file. The python scripts requries BeautifulSoup
+   workingDir "scripts"
+   commandLine "python", "permissions.py"
+} 
+
+task wrapper(type: Wrapper) {
+   gradleVersion = "${gradlewVersion}" //version required for gradle wrapper
+}
+wrapper.doLast {
+  File wrapperFolder = file("mode/gradlew");
+  wrapperFolder.mkdirs();
+  file("gradle").renameTo(file("mode/gradlew/gradle"))
+  file("gradlew").renameTo(file("mode/gradlew/gradlew"))
+  file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
+  ZipUtil.pack(file("mode/gradlew"), new File("mode/gradlew.zip"));
+  delete "mode/gradlew"
+}
+
+clean.doFirst {
+    delete fileTree("mode") {
+        include "**/*.jar"
+    }
+}
+
+build.doLast {
+    Files.copy(file("$buildDir/libs/mode.jar").toPath(),
+               file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
+}

@@ -1,0 +1,29 @@
+import java.nio.file.Files
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+dependencies {
+    compile group: "org.processing", name: "pde", version: "${processingVersion}"
+
+    compile name: "sdklib-${toolsLibVersion}"
+    compile name: "repository-${toolsLibVersion}"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/"]
+        } 
+    }
+}
+
+clean.doFirst {
+    delete "tool"
+}
+
+build.doLast {
+    // Copy jar file to tool folder
+    File toolJar = file("tool/SDKUpdater.jar");
+    toolJar.mkdirs();
+    Files.copy(file("$buildDir/libs/SDKUpdater.jar").toPath(),
+               toolJar.toPath(), REPLACE_EXISTING);                   
+}
