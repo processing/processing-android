@@ -194,7 +194,7 @@ class Device {
             "shell", "am", "start",
             "-e", "debugEnabled", "true",
             "-a", "android.intent.action.MAIN",
-            "-c", "android.intent.category.LAUNCHER",
+            "-c", "android.intent.category.LAUNCHER", "-D",
             "-n", packageName + "/.MainActivity"
     };
 //    PApplet.println(cmd);

@@ -6,10 +6,12 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ModificationWatchpointRequest;
 import processing.mode.java.Debugger;
+import processing.mode.java.debug.ClassLoadListener;
 import processing.mode.java.debug.LineBreakpoint;
 import processing.mode.java.debug.LineID;
 
 import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.List;
 
 public class AndroidDebugger extends Debugger {
@@ -60,15 +62,20 @@ public class AndroidDebugger extends Debugger {
       device.forwardPort(TCP_PORT);
 
       // connect
-      System.out.println("\n\n\n:debugger:Attaching Debugger");
+      System.out.println("\n:debugger:Attaching Debugger");
       VirtualMachine vm = runner.connectVirtualMachine(TCP_PORT);
+      System.out.println("ATTACHED");
 
+      // watch for loaded classes
+      addClassWatch(vm);
       // set watch field on already loaded classes
       List<ReferenceType> referenceTypes = vm.classesByName(pkgName + "." + sketchClassName);
 
       for (ReferenceType refType : referenceTypes) {
         addFieldWatch(vm, refType);
-
+        for (ClassLoadListener listener : classLoadListeners){
+          listener.classLoaded(refType);
+        }
         // Adding breakpoint at line 27
 //      try {
 //        List<Location> locations = refType.locationsOfLine(28);
@@ -82,8 +89,7 @@ public class AndroidDebugger extends Debugger {
 //        e.printStackTrace();
 //      }
       }
-      // watch for loaded classes
-      addClassWatch(vm);
+
 
       // resume the vm
       vm.resume();
@@ -92,10 +98,77 @@ public class AndroidDebugger extends Debugger {
       VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
       eventThread.start();
     } catch (IOException e) {
-      e.printStackTrace();
+      System.out.println("ERROR : Cannot connect debugger");
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
+
+  @Override public synchronized void vmEvent(EventSet es) {
+    VirtualMachine vm = vm();
+    if (vm != null && vm != es.virtualMachine()) {
+      // This is no longer VM we are interested in,
+      // we already cleaned up and run different VM now.
+      return;
+    }
+    for (Event e : es) {
+      System.out.println("VM Event: " + e);
+      if (e instanceof VMStartEvent) {
+        System.out.println("start");
+        vmStartEvent();
+
+      } else if (e instanceof ClassPrepareEvent) {
+        vmClassPrepareEvent((ClassPrepareEvent) e);
+
+      } else if (e instanceof BreakpointEvent) {
+        vmBreakPointEvent((BreakpointEvent) e);
+
+      } else if (e instanceof StepEvent) {
+
+      } else if (e instanceof VMDisconnectEvent) {
+        stopDebug();
+
+      } else if (e instanceof VMDeathEvent) {
+        started = false;
+        editor.statusEmpty();
+      }
+      vm.resume();
+    }
+  }
+
+  private void vmStartEvent(){
+
+  }
+
+  private void vmBreakPointEvent(BreakpointEvent e){
+    System.out.println(e.location().lineNumber());
+  }
+
+  private void vmClassPrepareEvent(ClassPrepareEvent ce) {
+    System.out.println("in class prepare");
+    ReferenceType rt = ce.referenceType();
+    currentThread = ce.thread();
+    paused = true; // for now we're paused
+
+    if (rt.name().equals(mainClassName)) {
+      //printType(rt);
+      mainClass = rt;
+      classes.add(rt);
+//      log("main class load: " + rt.name());
+      started = true; // now that main class is loaded, we're started
+    } else {
+      classes.add(rt); // save loaded classes
+//      log("class load: {0}" + rt.name());
+    }
+
+    // notify listeners
+    for (ClassLoadListener listener : classLoadListeners) {
+      if (listener != null) {
+        listener.classLoaded(rt);
+      }
+    }
+    paused = false; // resuming now
+    runtime.vm().resume();
   }
 
   /**
