@@ -389,9 +389,18 @@ public class AndroidEditor extends JavaEditor {
 
 
   public void handleStop() {
-    toolbar.deactivateRun();
-    stopIndeterminate();
-    androidMode.handleStop(this);
+    if (debugger.isStarted()) {
+      debugger.stopDebug();
+
+    } else {
+      toolbar.activateStop();
+      androidMode.handleStop(this);
+      toolbar.deactivateStop();
+      toolbar.deactivateRun();
+
+      // focus the PDE again after quitting presentation mode [toxi 030903]
+      toFront();
+    }
   }
 
   @Override
