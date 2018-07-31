@@ -399,6 +399,18 @@ public class AndroidEditor extends JavaEditor {
     return debugger;
   }
 
+  @Override protected void deactivateDebug() {
+    super.deactivateDebug();
+  }
+
+  @Override protected void deactivateContinue() {
+    super.deactivateContinue();
+  }
+
+  @Override protected void deactivateStep() {
+    super.deactivateStep();
+  }
+
   @Override
   public void toggleDebug() {
     super.toggleDebug();

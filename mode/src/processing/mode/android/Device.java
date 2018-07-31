@@ -216,6 +216,8 @@ class Device {
   // XXXXXXXXXXXX-----prototype-start-XXXXXXXXXXXXXXXXXX
 
   public void forwardPort(int tcpPort) throws IOException, InterruptedException {
+    // Start ADB Server
+    adb("start-server");
     final String[] jdwpcmd = generateAdbCommand("jdwp");
     Process deviceId = Runtime.getRuntime().exec(jdwpcmd);
     JDWPProcessor pIDProcessor = new JDWPProcessor();

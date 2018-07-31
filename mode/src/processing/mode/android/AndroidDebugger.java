@@ -11,7 +11,6 @@ import processing.mode.java.debug.LineBreakpoint;
 import processing.mode.java.debug.LineID;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
 import java.util.List;
 
 public class AndroidDebugger extends Debugger {
@@ -65,17 +64,19 @@ public class AndroidDebugger extends Debugger {
       VirtualMachine vm = runner.connectVirtualMachine(port);
       System.out.println("ATTACHED");
 
+      // start receiving vm events
+      VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
+      eventThread.start();
+
       // watch for loaded classes
       addClassWatch(vm);
       // set watch field on already loaded classes
       List<ReferenceType> referenceTypes = vm.classesByName(pkgName + "." + sketchClassName);
 
-      for (ReferenceType refType : referenceTypes) {
-        addFieldWatch(vm, refType);
-        for (ClassLoadListener listener : classLoadListeners){
-          listener.classLoaded(refType);
-        }
-        // Adding breakpoint at line 27
+      System.out.println("referenceTypes size " + referenceTypes.size());
+//      for (ReferenceType refType : referenceTypes) {
+//        addFieldWatch(vm, refType);
+//        // Adding breakpoint at line 27
 //      try {
 //        List<Location> locations = refType.locationsOfLine(28);
 //        if (locations.isEmpty()){
@@ -87,17 +88,16 @@ public class AndroidDebugger extends Debugger {
 //      } catch (AbsentInformationException e) {
 //        e.printStackTrace();
 //      }
-      }
+//      }
 
 
       // resume the vm
       vm.resume();
 
-      // start receiving vm events
-      VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
-      eventThread.start();
     } catch (IOException e) {
       System.out.println("ERROR : " + e.getMessage());
+      // Retry
+      startDebug(runner, device);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -114,7 +114,6 @@ public class AndroidDebugger extends Debugger {
       System.out.println("VM Event: " + e);
       if (e instanceof VMStartEvent) {
         System.out.println("start");
-        vmStartEvent();
 
       } else if (e instanceof ClassPrepareEvent) {
         vmClassPrepareEvent((ClassPrepareEvent) e);
@@ -131,12 +130,9 @@ public class AndroidDebugger extends Debugger {
         started = false;
         editor.statusEmpty();
       }
+      // TODO : Remove this line. Added only for debugging purpose
       vm.resume();
     }
-  }
-
-  private void vmStartEvent(){
-
   }
 
   private void vmBreakPointEvent(BreakpointEvent e){
@@ -144,7 +140,6 @@ public class AndroidDebugger extends Debugger {
   }
 
   private void vmClassPrepareEvent(ClassPrepareEvent ce) {
-    System.out.println("in class prepare");
     ReferenceType rt = ce.referenceType();
     currentThread = ce.thread();
     paused = true; // for now we're paused
@@ -170,13 +165,38 @@ public class AndroidDebugger extends Debugger {
     runtime.vm().resume();
   }
 
+  @Override public synchronized void stopDebug() {
+    editor.variableInspector().lock();
+    if (runtime != null) {
+
+      for (LineBreakpoint bp : breakpoints) {
+        bp.detach();
+      }
+
+      runtime.close();
+      runtime = null;
+      //build = null;
+      classes.clear();
+      // need to clear highlight here because, VMDisconnectedEvent seems to be unreliable. TODO: likely synchronization problem
+      editor.clearCurrentLine();
+    }
+    stopTrackingLineChanges();
+    started = false;
+
+    editor.deactivateDebug();
+    editor.deactivateContinue();
+    editor.deactivateStep();
+
+    editor.statusEmpty();
+  }
+
   /**
    * Watch all classes ({@value sketchClassName}) variable
    */
   private void addClassWatch(VirtualMachine vm) {
     EventRequestManager erm = vm.eventRequestManager();
     ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
-    classPrepareRequest.addClassFilter(sketchClassName);
+    classPrepareRequest.addClassFilter(pkgName + "." + sketchClassName);
     classPrepareRequest.setEnabled(true);
   }
 

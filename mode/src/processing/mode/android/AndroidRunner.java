@@ -37,7 +37,6 @@ import com.sun.jdi.VirtualMachineManager;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-import jdk.nashorn.internal.runtime.linker.Bootstrap;
 import processing.app.ui.Editor;
 import processing.app.Messages;
 import processing.app.RunnerListener;
@@ -271,6 +270,17 @@ public class AndroidRunner implements DeviceListener {
   public void close() {
     if (lastRunDevice != null) {
       lastRunDevice.bringLauncherToFront();
+    }
+
+    if (vm != null) {
+      try {
+        vm.exit(0);
+
+      } catch (com.sun.jdi.VMDisconnectedException vmde) {
+        // if the vm has disconnected on its own, ignore message
+        //System.out.println("harmless disconnect " + vmde.getMessage());
+        // TODO shouldn't need to do this, need to do more cleanup
+      }
     }
   }
 
