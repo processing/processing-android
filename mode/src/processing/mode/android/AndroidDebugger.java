@@ -5,6 +5,7 @@ import com.sun.jdi.event.*;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.ModificationWatchpointRequest;
+import com.sun.jdi.request.StepRequest;
 import processing.mode.java.Debugger;
 import processing.mode.java.debug.ClassLoadListener;
 import processing.mode.java.debug.LineBreakpoint;
@@ -135,8 +136,30 @@ public class AndroidDebugger extends Debugger {
     }
   }
 
-  private void vmBreakPointEvent(BreakpointEvent e){
+  private void vmBreakPointEvent(BreakpointEvent be) {
+    currentThread = be.thread(); // save this thread
+    updateVariableInspector(currentThread); // this is already on the EDT
+    final LineID newCurrentLine = locationToLineID(be.location());
+    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+      @Override public void run() {
+        editor.setCurrentLine(newCurrentLine);
+        editor.deactivateStep();
+        editor.deactivateContinue();
+      }
+    });
 
+    // hit a breakpoint during a step, need to cancel the step.
+    if (requestedStep != null) {
+      runtime.vm().eventRequestManager().deleteEventRequest(requestedStep);
+      requestedStep = null;
+    }
+
+    // fix canvas update issue
+    // TODO: is this a good solution?
+    resumeOtherThreads(currentThread);
+
+    paused = true;
+    editor.statusHalted();
   }
 
   private void vmClassPrepareEvent(ClassPrepareEvent ce) {
@@ -163,6 +186,38 @@ public class AndroidDebugger extends Debugger {
     }
     paused = false; // resuming now
     runtime.vm().resume();
+  }
+
+  @Override public synchronized void continueDebug() {
+    editor.activateContinue();
+    editor.variableInspector().lock();
+    //editor.clearSelection();
+    //clearHighlight();
+    editor.clearCurrentLine();
+    if (!isStarted()) {
+      startDebug();
+    } else if (isPaused()) {
+      runtime.vm().resume();
+      paused = false;
+      editor.statusBusy();
+    }
+  }
+
+  @Override protected void step(int stepDepth) {
+    if (!isStarted()) {
+      startDebug();
+    } else if (isPaused()) {
+      editor.variableInspector().lock();
+      editor.activateStep();
+
+      // use global to mark that there is a step request pending
+      requestedStep = runtime.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth);
+      requestedStep.addCountFilter(1); // valid for one step only
+      requestedStep.enable();
+      paused = false;
+      runtime.vm().resume();
+      editor.statusBusy();
+    }
   }
 
   @Override public synchronized void stopDebug() {
@@ -263,7 +318,6 @@ public class AndroidDebugger extends Debugger {
     setBreakpoint(editor.getLineIDInCurrentTab(lineIdx));
   }
 
-
   synchronized void setBreakpoint(LineID line) {
     // do nothing if we are kinda busy
     if (isStarted() && !isPaused()) {
@@ -276,14 +330,12 @@ public class AndroidDebugger extends Debugger {
     breakpoints.add(new AndroidLineBreakpoint(line, this));
   }
 
-
   /**
    * Remove a breakpoint from the current line (if set).
    */
   synchronized void removeBreakpoint() {
     removeBreakpoint(editor.getCurrentLineID().lineIdx());
   }
-
 
   /**
    * Remove a breakpoint from a line in the current tab.
@@ -304,7 +356,7 @@ public class AndroidDebugger extends Debugger {
     }
   }
 
-  public String getPackageName(){
+  public String getPackageName() {
     return pkgName;
   }
 }

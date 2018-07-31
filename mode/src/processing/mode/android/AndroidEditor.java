@@ -403,12 +403,20 @@ public class AndroidEditor extends JavaEditor {
     super.deactivateDebug();
   }
 
+  @Override protected void activateContinue() {
+    ((AndroidToolbar) toolbar).activateContinue();
+  }
+
   @Override protected void deactivateContinue() {
-    super.deactivateContinue();
+    ((AndroidToolbar) toolbar).deactivateContinue();
+  }
+
+  @Override protected void activateStep() {
+    ((AndroidToolbar) toolbar).activateStep();
   }
 
   @Override protected void deactivateStep() {
-    super.deactivateStep();
+    ((AndroidToolbar) toolbar).deactivateStep();
   }
 
   @Override

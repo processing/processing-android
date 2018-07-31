@@ -230,4 +230,24 @@ public class AndroidToolbar extends EditorToolbar {
   public void deactivateExport() {
     // TODO added to match the new API in EditorToolbar (activateRun, etc).
   }
+
+  public void activateContinue() {
+    continueButton.setSelected(true);
+    repaint();
+  }
+
+  public void deactivateContinue() {
+    continueButton.setSelected(false);
+    repaint();
+  }
+
+  public void activateStep() {
+    stepButton.setSelected(true);
+    repaint();
+  }
+
+  public void deactivateStep() {
+    stepButton.setSelected(false);
+    repaint();
+  }
 }
