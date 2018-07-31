@@ -22,8 +22,6 @@ public class AndroidDebugger extends Debugger {
 
   protected boolean isEnabled;
 
-  private static final int TCP_PORT = 7777;
-
   private String pkgName = "";
   private String sketchClassName = "";
 
@@ -59,11 +57,12 @@ public class AndroidDebugger extends Debugger {
     sketchClassName = runner.build.getSketchClassName();
 
     try {
-      device.forwardPort(TCP_PORT);
+      int port = 8000 + (int) (Math.random() * 1000);
+      device.forwardPort(port);
 
       // connect
       System.out.println("\n:debugger:Attaching Debugger");
-      VirtualMachine vm = runner.connectVirtualMachine(TCP_PORT);
+      VirtualMachine vm = runner.connectVirtualMachine(port);
       System.out.println("ATTACHED");
 
       // watch for loaded classes
@@ -98,7 +97,7 @@ public class AndroidDebugger extends Debugger {
       VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
       eventThread.start();
     } catch (IOException e) {
-      System.out.println("ERROR : Cannot connect debugger");
+      System.out.println("ERROR : " + e.getMessage());
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
