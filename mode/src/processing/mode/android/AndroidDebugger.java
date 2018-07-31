@@ -55,6 +55,8 @@ public class AndroidDebugger extends Debugger {
     pkgName = runner.build.getPackageName();
     sketchClassName = runner.build.getSketchClassName();
 
+    mainClassName = pkgName + "." + sketchClassName;
+
     try {
       int port = 8000 + (int) (Math.random() * 1000);
       device.forwardPort(port);
@@ -70,10 +72,10 @@ public class AndroidDebugger extends Debugger {
 
       // watch for loaded classes
       addClassWatch(vm);
-      // set watch field on already loaded classes
-      List<ReferenceType> referenceTypes = vm.classesByName(pkgName + "." + sketchClassName);
-
-      System.out.println("referenceTypes size " + referenceTypes.size());
+//      // set watch field on already loaded classes
+//      List<ReferenceType> referenceTypes = vm.classesByName(pkgName + "." + sketchClassName);
+//
+//      System.out.println("referenceTypes size " + referenceTypes.size());
 //      for (ReferenceType refType : referenceTypes) {
 //        addFieldWatch(vm, refType);
 //        // Adding breakpoint at line 27
@@ -130,13 +132,11 @@ public class AndroidDebugger extends Debugger {
         started = false;
         editor.statusEmpty();
       }
-      // TODO : Remove this line. Added only for debugging purpose
-      vm.resume();
     }
   }
 
   private void vmBreakPointEvent(BreakpointEvent e){
-    System.out.println(e.location().lineNumber());
+
   }
 
   private void vmClassPrepareEvent(ClassPrepareEvent ce) {
@@ -196,7 +196,7 @@ public class AndroidDebugger extends Debugger {
   private void addClassWatch(VirtualMachine vm) {
     EventRequestManager erm = vm.eventRequestManager();
     ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
-    classPrepareRequest.addClassFilter(pkgName + "." + sketchClassName);
+    classPrepareRequest.addClassFilter(mainClassName);
     classPrepareRequest.setEnabled(true);
   }
 
@@ -217,6 +217,10 @@ public class AndroidDebugger extends Debugger {
       return runtime.vm();
     }
     return null;
+  }
+
+  @Override public synchronized boolean isStarted() {
+    return started && runtime != null && runtime.vm() != null;
   }
 
   /**
@@ -269,7 +273,7 @@ public class AndroidDebugger extends Debugger {
     if (hasBreakpoint(line)) {
       return;
     }
-    breakpoints.add(new LineBreakpoint(line, this));
+    breakpoints.add(new AndroidLineBreakpoint(line, this));
   }
 
 
@@ -298,5 +302,9 @@ public class AndroidDebugger extends Debugger {
       bp.remove();
       breakpoints.remove(bp);
     }
+  }
+
+  public String getPackageName(){
+    return pkgName;
   }
 }
