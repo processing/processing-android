@@ -125,6 +125,7 @@ public class AndroidDebugger extends Debugger {
         vmBreakPointEvent((BreakpointEvent) e);
 
       } else if (e instanceof StepEvent) {
+        vmStepEvent(((StepEvent) e));
 
       } else if (e instanceof VMDisconnectEvent) {
         stopDebug();
@@ -134,6 +135,32 @@ public class AndroidDebugger extends Debugger {
         editor.statusEmpty();
       }
     }
+  }
+
+  private void vmClassPrepareEvent(ClassPrepareEvent ce) {
+    ReferenceType rt = ce.referenceType();
+    currentThread = ce.thread();
+    paused = true; // for now we're paused
+
+    if (rt.name().equals(mainClassName)) {
+      //printType(rt);
+      mainClass = rt;
+      classes.add(rt);
+//      log("main class load: " + rt.name());
+      started = true; // now that main class is loaded, we're started
+    } else {
+      classes.add(rt); // save loaded classes
+//      log("class load: {0}" + rt.name());
+    }
+
+    // notify listeners
+    for (ClassLoadListener listener : classLoadListeners) {
+      if (listener != null) {
+        listener.classLoaded(rt);
+      }
+    }
+    paused = false; // resuming now
+    runtime.vm().resume();
   }
 
   private void vmBreakPointEvent(BreakpointEvent be) {
@@ -162,30 +189,38 @@ public class AndroidDebugger extends Debugger {
     editor.statusHalted();
   }
 
-  private void vmClassPrepareEvent(ClassPrepareEvent ce) {
-    ReferenceType rt = ce.referenceType();
-    currentThread = ce.thread();
-    paused = true; // for now we're paused
+  private void vmStepEvent(StepEvent se) {
+    currentThread = se.thread();
 
-    if (rt.name().equals(mainClassName)) {
-      //printType(rt);
-      mainClass = rt;
-      classes.add(rt);
-//      log("main class load: " + rt.name());
-      started = true; // now that main class is loaded, we're started
-    } else {
-      classes.add(rt); // save loaded classes
-//      log("class load: {0}" + rt.name());
-    }
-
-    // notify listeners
-    for (ClassLoadListener listener : classLoadListeners) {
-      if (listener != null) {
-        listener.classLoaded(rt);
+    //printSourceLocation(currentThread);
+    updateVariableInspector(currentThread); // this is already on the EDT
+    final LineID newCurrentLine = locationToLineID(se.location());
+    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        editor.setCurrentLine(newCurrentLine);
+        editor.deactivateStep();
+        editor.deactivateContinue();
       }
+    });
+
+    // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
+    EventRequestManager mgr = runtime.vm().eventRequestManager();
+    mgr.deleteEventRequest(se.request());
+    requestedStep = null; // mark that there is no step request pending
+    paused = true;
+    editor.statusHalted();
+
+    // disallow stepping into invisible lines
+    if (!locationIsVisible(se.location())) {
+      // TODO: this leads to stepping, should it run on the EDT?
+      javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          stepOutIntoViewOrContinue();
+        }
+      });
     }
-    paused = false; // resuming now
-    runtime.vm().resume();
   }
 
   @Override public synchronized void continueDebug() {
