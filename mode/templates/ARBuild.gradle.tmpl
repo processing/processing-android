@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion @@target_sdk@@
+    defaultConfig {
+        applicationId "@@target_sdk@@"
+        // 24 is the minimum since ARCore only works with 24 and higher.
+        minSdkVersion @@min_sdk@@
+        targetSdkVersion @@target_sdk@@
+        versionCode @@version_code@@
+        versionName "@@version_name@@"
+    }
+    compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildTypes {
+        debug {
+                debuggable true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lintOptions {
+            abortOnError false
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.google.ar:core:@@gar_version@@'
+    implementation 'de.javagl:obj:0.2.1'
+    implementation 'com.android.support:appcompat-v7:@@support_version@@'
+    implementation 'com.android.support:design:@@support_version@@'
+    implementation files('libs/processing-core.jar')
+    implementation files('libs/ar.jar')
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}

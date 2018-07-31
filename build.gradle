@@ -27,6 +27,7 @@ allprojects {
     ext.supportLibsVersion = '26.0.2'
     ext.wearVersion = '2.1.0'
     ext.gvrVersion = '1.150.0'
+    ext.garVersion = '1.2.0'
     ext.processingVersion = '3.3.7'
     ext.toolingVersion = '4.3'
     ext.slf4jVersion = '1.7.10'
@@ -40,6 +41,10 @@ allprojects {
     Properties vrProperties = new Properties()
     vrProperties.load(project.rootProject.file("mode/libraries/vr/library.properties").newDataInputStream())
     ext.vrLibVersion = vrProperties.getProperty("prettyVersion")
+
+    Properties arProperties = new Properties()
+    arProperties.load(project.rootProject.file("mode/libraries/ar/library.properties").newDataInputStream())
+    ext.arLibVersion = vrProperties.getProperty("prettyVersion")
 
 
     def fn = project.rootProject.file("local.properties")
@@ -115,7 +120,16 @@ task dist {
         FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
                                 file("${root}/libraries/vr/src"))
         Files.copy(file("mode/libraries/vr/library.properties").toPath(),
-                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);                             
+                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);   
+
+        FileUtils.copyDirectory(file("mode/libraries/ar/examples"), 
+                                file("${root}/libraries/ar/examples"))
+        FileUtils.copyDirectory(file("mode/libraries/ar/library"), 
+                                file("${root}/libraries/ar/library"))
+        FileUtils.copyDirectory(file("mode/libraries/ar/src"), 
+                                file("${root}/libraries/ar/src"))
+        Files.copy(file("mode/libraries/ar/library.properties").toPath(),
+                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING); 
 
         File distFolder = file("dist");
         distFolder.mkdirs();
