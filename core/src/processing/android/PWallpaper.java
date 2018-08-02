@@ -32,6 +32,7 @@ import android.view.Display;
 import android.graphics.Point;
 import android.graphics.Rect;
 
+
 public class PWallpaper extends WallpaperService implements AppComponent {
   private Point size;
   private DisplayMetrics metrics;
@@ -209,7 +210,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       // surface. If you have a rendering thread that directly accesses the
       // surface, you must ensure that thread is no longer touching the Surface
       // before returning from this function.
-      super.onSurfaceDestroyed(holder);
+        super.onSurfaceDestroyed(holder);
     }
 
 
