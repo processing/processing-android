@@ -3,6 +3,9 @@ package arscene;
 import processing.core.PApplet;
 import processing.ar.*;
 import processing.ar.render.*;
+import processing.core.PShape;
+
+import static processing.core.PGraphics.AR;
 
 public class Sketch extends PApplet {
   PShape sphere;
@@ -11,7 +14,7 @@ public class Sketch extends PApplet {
     fullScreen(AR);
   }
 
-  public void setup() { 
+  public void setup() {
     sphere = createShape(SPHERE, 400);
   }
 
