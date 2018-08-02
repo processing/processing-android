@@ -5,16 +5,18 @@ import processing.ar.*;
 import processing.ar.render.*;
 import processing.core.PShape;
 
-import static processing.core.PGraphics.AR;
-
 public class Sketch extends PApplet {
   PShape sphere;
   
   public void settings() {
-    fullScreen(AR);
+    fullScreen(ARCORE);
   }
 
   public void setup() {
+    // I think this should go here but not 100% sure
+//    if (!hasPermission("android.permission.CAMERA")) {
+//      requestPermission("android.permission.CAMERA");
+//    }
     sphere = createShape(SPHERE, 400);
   }
 

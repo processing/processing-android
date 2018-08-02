@@ -82,16 +82,12 @@ public class PSurfaceAR extends PSurfaceGLES {
         this.component = appComponent;
         this.pgl = (PGLES)((PGraphicsOpenGL)graphics).pgl;
 
-        // I think this should go here but not 100% sure
-        if (!sketch.hasPermission("android.permission.CAMERA")) {
-          sketch.requestPermission("android.permission.CAMERA");
-        }
-
         par = (PGraphicsAR)graphics;
 
         displayRotationHelper = new RotationHandler(activity);
         surfaceView = new SurfaceViewAR(activity);
         PGraphics.showWarning("Reached - 2");
+
         progressdialog.setMessage("Searching for Surfaces");
         progressdialog.show();
     }
@@ -278,6 +274,7 @@ public class PSurfaceAR extends PSurfaceGLES {
                 return;
             }
             performRendering();
+
             if (progressdialog != null) {
                 for (Plane plane : session.getAllTrackables(Plane.class)) {
                     if (plane.getType() == com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING
@@ -287,6 +284,7 @@ public class PSurfaceAR extends PSurfaceGLES {
                     }
                 }
             }
+
             sketch.calculate();
             sketch.handleDraw();
         }
@@ -390,10 +388,10 @@ public class PSurfaceAR extends PSurfaceGLES {
                         break;
                 }
 
-                // if (!hasCameraPermission(sketch.getActivity())) {
-                //     requestCameraPermission(sketch.getActivity());
-                //     return;
-                // }
+//                if (!sketch.hasPermission("android.permission.CAMERA")) {
+//                  sketch.requestPermission("android.permission.CAMERA");
+//                  return;
+//                }
 
                 session = new Session(activity);
             } catch (UnavailableArcoreNotInstalledException
@@ -407,6 +405,8 @@ public class PSurfaceAR extends PSurfaceGLES {
                 message = C_EXCEPT_UPDATE_APP;
                 exception = e.toString();
             } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("That's that");
             }
 
             if(message != null){

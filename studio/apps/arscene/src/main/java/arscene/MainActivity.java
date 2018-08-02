@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
 
     sketch = new Sketch();
-    sketch.setExternal(true);
     PFragment fragment = new PFragment(sketch);
     fragment.setView(frame, this);
   }
