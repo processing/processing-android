@@ -18,6 +18,7 @@ import com.google.ar.core.*;
 import com.google.ar.core.exceptions.*;
 import processing.android.AppComponent;
 import processing.ar.render.*;
+import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphicsOpenGL;
@@ -320,6 +321,7 @@ public class PSurfaceAR extends PSurfaceGLES {
             if (camera.getTrackingState() == TrackingState.PAUSED) {
                 return;
             }
+
             projmtx = new float[16];
             camera.getProjectionMatrix(projmtx, 0, 0.1f, 100.0f);
             viewmtx = new float[16];
