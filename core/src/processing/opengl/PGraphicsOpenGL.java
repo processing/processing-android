@@ -26,12 +26,19 @@ package processing.opengl;
 
 import processing.android.AppComponent;
 import processing.core.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.*;
 import java.util.*;
 
+import android.content.Context;
 import android.view.SurfaceHolder;
 
 /**
@@ -509,8 +516,8 @@ public class PGraphicsOpenGL extends PGraphics {
   static protected FloatBuffer floatBuffer;
 
   /** To save the surface contents before the activity is taken to the background. */
+  private String restorePixelFile;
   private int restoreCount;
-  private int[] restorePixels;
 
   // ........................................................
 
@@ -5709,26 +5716,35 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void saveState() {
-/*
     // Queue the pixel read operation so it is performed when the surface is ready
     pgl.queueEvent(new Runnable() {
       @Override
       public void run() {
-        restorePixels = new int[pixelWidth * pixelHeight];
-        int[] pix = new int[pixelWidth * pixelHeight];
-        IntBuffer buf = IntBuffer.wrap(pix);
-        buf.position(0);
-        beginPixelsOp(OP_READ);
-        pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
-        endPixelsOp();
+        Context context = parent.getContext();
+        if (context == null) return;
         try {
-          // Convert pixels to ARGB
-          PGL.getIntArray(buf, restorePixels);
-          PGL.nativeToJavaARGB(restorePixels, pixelWidth, pixelHeight);
-        } catch (ArrayIndexOutOfBoundsException e) {}
+          int[] restorePixels = new int[pixelWidth * pixelHeight];
+          IntBuffer buf = IntBuffer.wrap(restorePixels);
+          buf.position(0);
+          beginPixelsOp(OP_READ);
+          pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
+          endPixelsOp();
+
+          File cacheDir = context.getCacheDir();
+          File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
+          restorePixelFile = cacheFile.getAbsolutePath();
+          FileOutputStream stream = new FileOutputStream(cacheFile);
+          ObjectOutputStream dout = new ObjectOutputStream(stream);
+          dout.writeObject(restorePixels);
+          dout.flush();
+          stream.getFD().sync();
+          stream.close();
+        } catch (Exception ex) {
+          PGraphics.showWarning("Could not save screen contents to cache");
+          ex.printStackTrace();
+        }
       }
     });
-    */
   }
 
 
@@ -5739,10 +5755,9 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void restoreSurface() {
-    /*
     if (changed) {
       changed = false;
-      if (restorePixels != null) {
+      if (restorePixelFile != null) {
         // Set restore count to 2 so it draws the bitmap two frames after surface change, otherwise
         // the restoration does not work because the OpenGL renderer sometimes resizes the surface
         // twice after restoring the app to the foreground... this may be due to broken graphics
@@ -5758,12 +5773,26 @@ public class PGraphicsOpenGL extends PGraphics {
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
-        // Draw and dispose pixels
-        drawPixels(restorePixels, 0, 0, pixelWidth, pixelHeight);
-        restorePixels = null;
+        Context context = parent.getContext();
+        if (context == null) return;
+        try {
+          // Load cached pixels and draw
+          File cacheFile = new File(restorePixelFile);
+          FileInputStream inStream = new FileInputStream(cacheFile);
+          ObjectInputStream din = new ObjectInputStream(inStream);
+          int[] restorePixels = (int[]) din.readObject();
+          if (restorePixels.length == pixelWidth * pixelHeight) {
+            PGL.nativeToJavaARGB(restorePixels, pixelWidth, pixelHeight);
+            drawPixels(restorePixels, 0, 0, pixelWidth, pixelHeight);
+          }
+          inStream.close();
+          cacheFile.delete();
+        } catch (Exception ex) {
+          PGraphics.showWarning("Could not restore screen contents from cache");
+          ex.printStackTrace();
+        }
       }
     }
-    */
   }
 
   //////////////////////////////////////////////////////////////
