@@ -308,6 +308,14 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   protected boolean looping;
 
+  // This auxiliary variable is used to implement a little hack that fixes
+  // https://github.com/processing/processing-android/issues/147
+  // on older devices where the last frame cannot be maintained after ending
+  // the rendering in GL. The trick consists in running one more frame after the
+  // noLoop() call, which ensures that the FBO layer is properly initialized
+  // and drawn with the contents of the previous frame.
+  protected boolean requestedNoLoop = false;
+
   /** flag set to true when a redraw is asked for by the user */
   protected boolean redraw;
 
@@ -1779,21 +1787,26 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
 
     insideDraw = true;
-    g.beginDraw();
+
 //    if (recorder != null) {
 //      recorder.beginDraw();
 //    }
 
     if (requestedNoLoop) {
-      // noLoop() was called in the previous frame, with a GL renderer, but now
+      // noLoop() was called sometime in the previous frame with a GL renderer, but only now
       // we are sure that the frame is properly displayed.
       looping = false;
-      requestedNoLoop = false;
-      // We are done, we only need to finish the frame and exit.
+      // Perform a full frame draw, to ensure that the previous frame is properly displayed (see
+      // comment in the declaration of requestedNoLoop).
+      g.beginDraw();
       g.endDraw();
+      requestedNoLoop = false;
       insideDraw = false;
       return;
     }
+
+    g.beginDraw();
+
 
     long now = System.nanoTime();
 
@@ -1877,14 +1890,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-
-  // This auxiliary variable is used to implement a little hack that fixes
-  // https://github.com/processing/processing-android/issues/147
-  // on older devices where the last frame cannot be maintained after ending
-  // the rendering in GL. The trick consists in running one more frame after the
-  // noLoop() call, which ensures that the FBO layer is properly initialized
-  // and drawn with the contents of the previous frame.
-  private boolean requestedNoLoop = false;
 
   synchronized public void noLoop() {
     if (looping) {

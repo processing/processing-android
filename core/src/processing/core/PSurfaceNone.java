@@ -434,7 +434,10 @@ public class PSurfaceNone implements PSurface, PConstants {
     if (thread == null) {
       return false;
     }
+
     thread.interrupt();
+    thread = null;
+
     return true;
   }
 
@@ -452,9 +455,8 @@ public class PSurfaceNone implements PSurface, PConstants {
 
 
   protected void checkPause() throws InterruptedException {
-//    if (paused) {
-      synchronized (pauseObject) {
-        while (paused) {
+    synchronized (pauseObject) {
+      while (paused) {
         pauseObject.wait();
       }
     }

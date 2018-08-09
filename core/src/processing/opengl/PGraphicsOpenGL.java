@@ -5709,6 +5709,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void saveState() {
+/*
     // Queue the pixel read operation so it is performed when the surface is ready
     pgl.queueEvent(new Runnable() {
       @Override
@@ -5727,6 +5728,7 @@ public class PGraphicsOpenGL extends PGraphics {
         } catch (ArrayIndexOutOfBoundsException e) {}
       }
     });
+    */
   }
 
 
@@ -5734,14 +5736,23 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void restoreState() {
   }
 
+
   @Override
   protected void restoreSurface() {
+    /*
     if (changed) {
       changed = false;
       if (restorePixels != null) {
         // Set restore count to 2 so it draws the bitmap two frames after surface change, otherwise
         // the restoration does not work because the OpenGL renderer sometimes resizes the surface
-        // twice after restoring the app to the foreground (?)
+        // twice after restoring the app to the foreground... this may be due to broken graphics
+        // drivers, hacks in the GLSurfaceView class from the Replica Island game point to that,
+        // although those seem to be quite old:
+        // https://gamedev.stackexchange.com/questions/12629/workaround-to-losing-the-opengl-context-when-android-pauses
+        // "It fails in a very specific case: when the EGL context is lost due to resource constraints,
+        //  and then recreated, if GL commands are sent within two frames of the surface being created
+        //	then eglSwapBuffers() will hang."
+        // However, the same number showing up makes me thing this issue continue to exist to this day.
         restoreCount = 2;
       }
     } else if (restoreCount > 0) {
@@ -5752,6 +5763,7 @@ public class PGraphicsOpenGL extends PGraphics {
         restorePixels = null;
       }
     }
+    */
   }
 
   //////////////////////////////////////////////////////////////
