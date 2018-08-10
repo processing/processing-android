@@ -23,6 +23,11 @@
 
 package processing.a2d;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
@@ -39,11 +44,13 @@ import processing.core.PShape;
 import processing.core.PShapeSVG;
 import processing.core.PSurface;
 import processing.data.XML;
+import processing.opengl.PGL;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
+import android.content.Context;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
@@ -123,7 +130,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   /** To save the surface contents before the activity is taken to the background. */
   private int restoreCount;
-  private ByteBuffer restoreBitmap;
+  private String restoreBitmapFile;
 
   //////////////////////////////////////////////////////////////
 
@@ -163,7 +170,14 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void setSize(int iwidth, int iheight) {
+//    boolean wbool = iwidth != width;
+//    boolean hbool = iheight != height;
     sized = iwidth != width || iheight != height;
+//    sized = wbool || hbool;
+//    if (iwidth != width) sized = true;
+//    else if (iheight != height) sized = true;
+//    else sized = false;
+//    System.out.println("---------------> " + sized + "  " + width + " " + iwidth + "  "+ height + " " +iheight);
     super.setSize(iwidth, iheight);
   }
 
@@ -253,6 +267,7 @@ public class PGraphicsAndroid2D extends PGraphics {
             try {
               holder.unlockCanvasAndPost(screen);
             } catch (IllegalStateException ex) {
+            } catch (IllegalArgumentException ex) {
             }
           }
         }
@@ -2073,10 +2088,28 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void saveState() {
-    if (bitmap != null) {
+    Context context = parent.getContext();
+    if (context == null || bitmap == null) return;
+    try {
       int size = bitmap.getHeight() * bitmap.getRowBytes();
-      restoreBitmap = ByteBuffer.allocate(size);
+      ByteBuffer restoreBitmap = ByteBuffer.allocate(size);
       bitmap.copyPixelsToBuffer(restoreBitmap);
+
+      File cacheDir = context.getCacheDir();
+      File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
+      restoreBitmapFile = cacheFile.getAbsolutePath();
+      FileOutputStream stream = new FileOutputStream(cacheFile);
+      ObjectOutputStream dout = new ObjectOutputStream(stream);
+      byte[] array = new byte[size];
+      restoreBitmap.rewind();
+      restoreBitmap.get(array);
+      dout.writeObject(array);
+      dout.flush();
+      stream.getFD().sync();
+      stream.close();
+    } catch (Exception ex) {
+      PGraphics.showWarning("Could not save screen contents to cache");
+      ex.printStackTrace();
     }
   }
 
@@ -2090,17 +2123,32 @@ public class PGraphicsAndroid2D extends PGraphics {
   protected void restoreSurface() {
     if (changed) {
       changed = false;
-      if (restoreBitmap != null) {
+      if (restoreBitmapFile != null) {
         // Set the counter to 1 so the restore bitmap is drawn in the next frame.
         restoreCount = 1;
       }
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
-        // Draw and dispose bitmap
-        restoreBitmap.rewind();
-        bitmap.copyPixelsFromBuffer(restoreBitmap);
-        restoreBitmap = null;
+        Context context = parent.getContext();
+        if (context == null) return;
+        try {
+          // Load cached bitmap and draw
+          File cacheFile = new File(restoreBitmapFile);
+          FileInputStream inStream = new FileInputStream(cacheFile);
+          ObjectInputStream din = new ObjectInputStream(inStream);
+          byte[] array = (byte[]) din.readObject();
+          ByteBuffer restoreBitmap  = ByteBuffer.wrap(array);
+          if (restoreBitmap.capacity() == bitmap.getHeight() * bitmap.getRowBytes()) {
+            restoreBitmap.rewind();
+            bitmap.copyPixelsFromBuffer(restoreBitmap);
+          }
+          inStream.close();
+          cacheFile.delete();
+        } catch (Exception ex) {
+          PGraphics.showWarning("Could not restore screen contents from cache");
+          ex.printStackTrace();
+        }
       }
     }
   }
