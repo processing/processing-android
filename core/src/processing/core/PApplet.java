@@ -529,11 +529,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
             // 4.4 and higher. Integer instead of constants defined in View so it can
             // build with SDK < 4.4
             visibility = 256 |   // View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    512 |   // View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    1024 |  // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                    4 |     // View.SYSTEM_UI_FLAG_FULLSCREEN
-                    4096;   // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                         512 |   // View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                         1024 |  // View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                         View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                         4 |     // View.SYSTEM_UI_FLAG_FULLSCREEN
+                         4096;   // View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             // However, this visibility does not fix a bug where the navigation area
             // turns black after resuming the app:
             // https://code.google.com/p/android/issues/detail?id=170752
@@ -820,6 +820,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void surfaceChanged() {
     surfaceChanged = true;
+    g.surfaceChanged();
   }
 
 
@@ -1333,6 +1334,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     this.height = height;
     pixelWidth = width * pixelDensity;
     pixelHeight = height * pixelDensity;
+    g.setSize(sketchWidth(), sketchHeight());
   }
 
 

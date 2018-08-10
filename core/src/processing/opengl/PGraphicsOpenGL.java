@@ -516,7 +516,8 @@ public class PGraphicsOpenGL extends PGraphics {
   static protected FloatBuffer floatBuffer;
 
   /** To save the surface contents before the activity is taken to the background. */
-  private String restorePixelFile;
+  private String restoreFilename;
+  private int restoreWidth, restoreHeight;
   private int restoreCount;
 
   // ........................................................
@@ -661,8 +662,17 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
+  public void reset() {
+    pgl.resetFBOLayer();
+    restartPGL();
+  }
+
+
+  @Override
   public void setSize(int iwidth, int iheight) {
-    sized = iwidth != width || iheight != height;
+    // OR with prev value in case setSize() gets called twice before the renderer has the chance to resize
+    sized |= iwidth != width || iheight != height;
+    System.out.println("======================> RESIZING AT FRAME " + parent.frameCount + " FROM " + width + "x" + height + " to " + iwidth + "x" + iheight);
     super.setSize(iwidth, iheight);
 
     updatePixelSize();
@@ -756,27 +766,6 @@ public class PGraphicsOpenGL extends PGraphics {
   public void setFrameRate(float frameRate) {
     pgl.setFrameRate(frameRate);
   }
-
-
-//  @Override
-  // Android only
-//  public boolean canDraw() {
-//    return pgl.canDraw();
-//  }
-
-
-//  @Override
-  // Android only
-//  public void requestDraw() {
-//    if (primaryGraphics) {
-//      if (initialized) {
-//        if (sized) pgl.reinitSurface();
-//        if (parent.canDraw()) pgl.requestDraw();
-//      } else {
-//        initPrimary();
-//      }
-//    }
-//  }
 
 
   public boolean saveImpl(String filename) {
@@ -1447,9 +1436,7 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public void beginDraw() {
     if (primaryGraphics) {
-      if (!initialized) {
-        initPrimary();
-      }
+      initPrimary();
       setCurrentPG(this);
     } else {
       pgl.getGL(getPrimaryPGL());
@@ -5716,6 +5703,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void saveState() {
+    // Saving current width and height to avoid restoring the screen after a screen rotation
+    restoreWidth = pixelWidth;
+    restoreHeight = pixelHeight;
+    if (restoreWidth == 0 || restoreHeight == 0) return; // maybe still initializing...
+
     // Queue the pixel read operation so it is performed when the surface is ready
     pgl.queueEvent(new Runnable() {
       @Override
@@ -5723,7 +5715,17 @@ public class PGraphicsOpenGL extends PGraphics {
         Context context = parent.getContext();
         if (context == null) return;
         try {
-          int[] restorePixels = new int[pixelWidth * pixelHeight];
+          if (restoreWidth != pixelWidth && restoreHeight != pixelHeight) {
+            // The screen size changed between calling saveState() and the pixel read operation,
+            // so it does no longer makes sense to try saving the screen's contents.
+            restoreWidth = -1;
+            restoreHeight = -1;
+            return;
+          }
+
+          System.out.println("============================> SAVING SCREEN FROM " + restoreWidth + " " + pixelHeight);
+
+          int[] restorePixels = new int[restoreWidth * restoreHeight];
           IntBuffer buf = IntBuffer.wrap(restorePixels);
           buf.position(0);
           beginPixelsOp(OP_READ);
@@ -5732,7 +5734,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
           File cacheDir = context.getCacheDir();
           File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
-          restorePixelFile = cacheFile.getAbsolutePath();
+          restoreFilename = cacheFile.getAbsolutePath();
           FileOutputStream stream = new FileOutputStream(cacheFile);
           ObjectOutputStream dout = new ObjectOutputStream(stream);
           dout.writeObject(restorePixels);
@@ -5757,7 +5759,7 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void restoreSurface() {
     if (changed) {
       changed = false;
-      if (restorePixelFile != null) {
+      if (restoreFilename != null && restoreWidth == pixelWidth && restoreHeight == pixelHeight) {
         // Set restore count to 2 so it draws the bitmap two frames after surface change, otherwise
         // the restoration does not work because the OpenGL renderer sometimes resizes the surface
         // twice after restoring the app to the foreground... this may be due to broken graphics
@@ -5773,11 +5775,13 @@ public class PGraphicsOpenGL extends PGraphics {
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
+        System.out.println("============================> RESTORING SCREEN TO " + restoreWidth + " " + pixelHeight);
+
         Context context = parent.getContext();
         if (context == null) return;
         try {
           // Load cached pixels and draw
-          File cacheFile = new File(restorePixelFile);
+          File cacheFile = new File(restoreFilename);
           FileInputStream inStream = new FileInputStream(cacheFile);
           ObjectInputStream din = new ObjectInputStream(inStream);
           int[] restorePixels = (int[]) din.readObject();
@@ -5787,6 +5791,9 @@ public class PGraphicsOpenGL extends PGraphics {
           }
           inStream.close();
           cacheFile.delete();
+          restoreFilename = null;
+          restoreWidth = -1;
+          restoreHeight = -1;
         } catch (Exception ex) {
           PGraphics.showWarning("Could not restore screen contents from cache");
           ex.printStackTrace();
@@ -6832,6 +6839,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected void initPrimary() {
+    if (initialized) return;
+    System.out.println("===================> INTITALIZING PRIMARY SURFACE AT " + width + "x" + height);
     pgl.initSurface(smooth);
     if (texture != null) {
       removeCache(this);

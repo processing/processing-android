@@ -154,9 +154,18 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onSurfaceChanged(final SurfaceHolder holder, final int format,
                                  final int width, final int height) {
-      if (sketch != null) {
-        sketch.g.setSize(width, height);
-      }
+//      if (sketch != null) {
+////        sketch.g.setSize(width, height);
+//        sketch.surfaceChanged();
+//        sketch.setSize(width, height);
+//      }
+
+      // When the surface of a live wallpaper changes (eg: after a screen rotation) the same sketch
+      // continues to run (unlike the case of regular apps, where its re-created) so we need to
+      // force a reset of the renderer so the backing FBOs (in the case of the OpenGL renderers)
+      // get reinitalized with the correct size.
+      sketch.g.reset();
+      System.out.println("===================> ON SURFACE CHANGED!!!!!!!!!!!!!!!");
       super.onSurfaceChanged(holder, format, width, height);
     }
 

@@ -44,7 +44,6 @@ import processing.core.PShape;
 import processing.core.PShapeSVG;
 import processing.core.PSurface;
 import processing.data.XML;
-import processing.opengl.PGL;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -129,8 +128,9 @@ public class PGraphicsAndroid2D extends PGraphics {
   //////////////////////////////////////////////////////////////
 
   /** To save the surface contents before the activity is taken to the background. */
+  private String restoreFilename;
+  private int restoreWidth, restoreHeight;
   private int restoreCount;
-  private String restoreBitmapFile;
 
   //////////////////////////////////////////////////////////////
 
@@ -170,14 +170,9 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void setSize(int iwidth, int iheight) {
-//    boolean wbool = iwidth != width;
-//    boolean hbool = iheight != height;
-    sized = iwidth != width || iheight != height;
-//    sized = wbool || hbool;
-//    if (iwidth != width) sized = true;
-//    else if (iheight != height) sized = true;
-//    else sized = false;
-//    System.out.println("---------------> " + sized + "  " + width + " " + iwidth + "  "+ height + " " +iheight);
+    // OR with prev value in case setSize() gets called twice before the renderer has the chance to resize
+    sized |= iwidth != width || iheight != height;
+    System.out.println("======================> RESIZING AT FRAME " + parent.frameCount + " FROM " + width + "x" + height + " to " + iwidth + "x" + iheight);
     super.setSize(iwidth, iheight);
   }
 
@@ -197,22 +192,6 @@ public class PGraphicsAndroid2D extends PGraphics {
   //////////////////////////////////////////////////////////////
 
   // FRAME
-
-  /*
-  public void requestDraw() {
-	  parent.surfaceView.requestRender();
-  }
-  */
-
-//  public boolean canDraw() {
-//    return true;
-//  }
-
-
-//  @Override
-//  public void requestDraw() {
-//parent.handleDraw();
-//  }
 
   @SuppressLint("NewApi")
   protected Canvas checkCanvas() {
@@ -2088,16 +2067,23 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void saveState() {
+    restoreWidth = pixelWidth;
+    restoreHeight = pixelHeight;
+    if (restoreWidth == 0 || restoreHeight == 0) return; // maybe still initializing...
+
     Context context = parent.getContext();
     if (context == null || bitmap == null) return;
     try {
+      // Saving current width and height to avoid restoring the screen after a screen rotation
+      System.out.println("============================> SAVING SCREEN FROM " + restoreWidth + " " + pixelHeight);
+
       int size = bitmap.getHeight() * bitmap.getRowBytes();
       ByteBuffer restoreBitmap = ByteBuffer.allocate(size);
       bitmap.copyPixelsToBuffer(restoreBitmap);
 
       File cacheDir = context.getCacheDir();
       File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
-      restoreBitmapFile = cacheFile.getAbsolutePath();
+      restoreFilename = cacheFile.getAbsolutePath();
       FileOutputStream stream = new FileOutputStream(cacheFile);
       ObjectOutputStream dout = new ObjectOutputStream(stream);
       byte[] array = new byte[size];
@@ -2123,18 +2109,20 @@ public class PGraphicsAndroid2D extends PGraphics {
   protected void restoreSurface() {
     if (changed) {
       changed = false;
-      if (restoreBitmapFile != null) {
+      if (restoreFilename != null && restoreWidth == pixelWidth && restoreHeight == pixelHeight) {
         // Set the counter to 1 so the restore bitmap is drawn in the next frame.
         restoreCount = 1;
       }
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
+        System.out.println("============================> RESTORING SCREEN TO " + restoreWidth + " " + pixelHeight);
+
         Context context = parent.getContext();
         if (context == null) return;
         try {
           // Load cached bitmap and draw
-          File cacheFile = new File(restoreBitmapFile);
+          File cacheFile = new File(restoreFilename);
           FileInputStream inStream = new FileInputStream(cacheFile);
           ObjectInputStream din = new ObjectInputStream(inStream);
           byte[] array = (byte[]) din.readObject();
@@ -2145,6 +2133,9 @@ public class PGraphicsAndroid2D extends PGraphics {
           }
           inStream.close();
           cacheFile.delete();
+          restoreFilename = null;
+          restoreWidth = -1;
+          restoreHeight = -1;
         } catch (Exception ex) {
           PGraphics.showWarning("Could not restore screen contents from cache");
           ex.printStackTrace();
