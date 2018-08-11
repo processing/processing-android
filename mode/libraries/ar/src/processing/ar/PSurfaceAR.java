@@ -415,11 +415,13 @@ public class PSurfaceAR extends PSurfaceGLES {
                 message(T_ALERT_MESSAGE,message+" -- "+exception);
             }
 
+
             Config config = new Config(session);
             if (!session.isSupported(config)) {
-                message(T_PROMPT_MESSAGE,C_DEVICE);
+                message(T_PROMPT_MESSAGE, C_DEVICE);
             }
             session.configure(config);
+
 
         }
         try {

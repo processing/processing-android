@@ -62,6 +62,7 @@ public class PGraphicsAR extends PGraphics3D {
             // ARCore are column-major, so the following indexing is correct:
 
             // Fist, set all matrices to identity
+            resetProjection();
             resetMatrix();
 
             // Apply the projection matrix

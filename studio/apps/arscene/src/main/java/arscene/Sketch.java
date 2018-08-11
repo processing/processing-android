@@ -38,8 +38,8 @@ public class Sketch extends PApplet {
 
     fill(2555, 0, 0);
     // Pulsating box to test scale...
-    //box(map(sin(frameCount/100.0f), -1, 1, 0, 500));
-    box(0.5f);
+//    box(map(sin(frameCount/100.0f), -1, 1, 0, 500));
+    box(0.25f);
 
 //    arObj.place();
   }
