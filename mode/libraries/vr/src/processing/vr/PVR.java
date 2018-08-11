@@ -195,8 +195,6 @@ public class PVR extends GvrActivity implements AppComponent {
   public void onBackPressed() {
     if (sketch != null) {
       sketch.onBackPressed();
-      if (sketch.handledBackPressed) return;
     }
-    super.onBackPressed();
   }
 }

@@ -434,7 +434,10 @@ public class PSurfaceNone implements PSurface, PConstants {
     if (thread == null) {
       return false;
     }
+
+    thread.interrupt();
     thread = null;
+
     return true;
   }
 
@@ -451,15 +454,10 @@ public class PSurfaceNone implements PSurface, PConstants {
   }
 
 
-  protected void checkPause() {
-//    if (paused) {
-      synchronized (pauseObject) {
-        while (paused) {
-        try {
-          pauseObject.wait();
-        } catch (InterruptedException e) {
-          // waiting for this interrupt on a start() (resume) call
-        }
+  protected void checkPause() throws InterruptedException {
+    synchronized (pauseObject) {
+      while (paused) {
+        pauseObject.wait();
       }
     }
   }
@@ -499,7 +497,17 @@ public class PSurfaceNone implements PSurface, PConstants {
 
       while ((Thread.currentThread() == thread) &&
              (sketch != null && !sketch.finished)) {
-        checkPause();
+        if (Thread.currentThread().isInterrupted()) {
+          finish();
+          return;
+        }
+        try {
+          checkPause();
+        } catch (InterruptedException e) {
+          finish();
+          return;
+        }
+
         callDraw();
 
         // wait for update & paint to happen before drawing next frame

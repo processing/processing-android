@@ -191,10 +191,8 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public void onGlSurfaceCreated(int width, int height) {
       super.onGlSurfaceCreated(width, height);
       if (sketch != null) {
-        sketch.displayWidth = width;
-        sketch.displayHeight = height;
-        sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
         sketch.surfaceChanged();
+        sketch.setSize(width, height);
       }
     }
 

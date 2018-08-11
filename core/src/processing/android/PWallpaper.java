@@ -32,6 +32,7 @@ import android.view.Display;
 import android.graphics.Point;
 import android.graphics.Rect;
 
+
 public class PWallpaper extends WallpaperService implements AppComponent {
   private Point size;
   private DisplayMetrics metrics;
@@ -119,12 +120,16 @@ public class PWallpaper extends WallpaperService implements AppComponent {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    if (engine != null) engine.onDestroy();
+
+    if (engine != null){
+      //engine.sketch = null;
+      engine.onDestroy();
+    }
   }
 
 
   public class WallpaperEngine extends Engine implements ServiceEngine {
-    private PApplet sketch;
+    PApplet sketch;
     private float xOffset, xOffsetStep;
     private float yOffset, yOffsetStep;
     private int xPixelOffset, yPixelOffset;
@@ -149,9 +154,11 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onSurfaceChanged(final SurfaceHolder holder, final int format,
                                  final int width, final int height) {
-      if (sketch != null) {
-        sketch.g.setSize(width, height);
-      }
+      // When the surface of a live wallpaper changes (eg: after a screen rotation) the same sketch
+      // continues to run (unlike the case of regular apps, where its re-created) so we need to
+      // force a reset of the renderer so the backing FBOs (in the case of the OpenGL renderers)
+      // get reinitalized with the correct size.
+      sketch.g.reset();
       super.onSurfaceChanged(holder, format, width, height);
     }
 
@@ -205,7 +212,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
       // surface. If you have a rendering thread that directly accesses the
       // surface, you must ensure that thread is no longer touching the Surface
       // before returning from this function.
-      super.onSurfaceDestroyed(holder);
+        super.onSurfaceDestroyed(holder);
     }
 
 
