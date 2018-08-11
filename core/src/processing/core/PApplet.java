@@ -261,6 +261,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   boolean keyboardIsOpen = false;
 
   /**
+   * Flag to determine if the back key was pressed.
+   */
+  private boolean requestedBackPress = false;
+
+  /**
    * Flag to determine if the user handled the back press.
    */
   public boolean handledBackPressed = true;
@@ -648,8 +653,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
-  public void onBackPressed() {
-    handledBackPressed = false;
+  synchronized public void onBackPressed() {
+    requestedBackPress = true;
   }
 
   public void startActivity(Intent intent) {
@@ -729,6 +734,19 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
+  synchronized private void handleBackPressed() {
+    if (requestedBackPress) {
+      requestedBackPress = false;
+      backPressed();
+      if (!handledBackPressed) {
+        if (getActivity() != null) {
+          // Services don't have an activity associated to them, but back press could not be triggered for those anyways
+          getActivity().finish();
+        }
+        handledBackPressed = false;
+      }
+    }
+  }
 
   /**
    * @param method "size" or "fullScreen"
@@ -903,6 +921,10 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void resume() {
   }
 
+
+  public void backPressed() {
+    handledBackPressed = false;
+  }
 
   //////////////////////////////////////////////////////////////
 
@@ -1844,6 +1866,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
       handleMethods("draw");
       handlePermissions();
+      handleBackPressed();
 
       redraw = false;  // unset 'redraw' flag in case it was set
       // (only do this once draw() has run, not just setup())

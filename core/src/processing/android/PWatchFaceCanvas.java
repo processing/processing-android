@@ -230,10 +230,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
       super.onSurfaceChanged(holder, format, width, height);
       if (sketch != null) {
-//        sketch.displayWidth = width;
-//        sketch.displayHeight = height;
-//        sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
-//        sketch.surfaceChanged();
         sketch.surfaceChanged();
         sketch.setSize(width, height);
       }
