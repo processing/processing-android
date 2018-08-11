@@ -47,7 +47,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   private DisplayMetrics metrics;
   private CanvasEngine engine;
 
-
   public void initDimensions() {
     metrics = new DisplayMetrics();
     size = new Point();

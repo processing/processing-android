@@ -671,7 +671,7 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public void setSize(int iwidth, int iheight) {
     // OR with prev value in case setSize() gets called twice before the renderer has the chance to resize
-    sized |= iwidth != width || iheight != height;
+    sized = iwidth != width || iheight != height;
     System.out.println("======================> RESIZING AT FRAME " + parent.frameCount + " FROM " + width + "x" + height + " to " + iwidth + "x" + iheight);
     super.setSize(iwidth, iheight);
 
@@ -5703,27 +5703,25 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void saveState() {
-    // Saving current width and height to avoid restoring the screen after a screen rotation
-    restoreWidth = pixelWidth;
-    restoreHeight = pixelHeight;
-    if (restoreWidth == 0 || restoreHeight == 0) return; // maybe still initializing...
-
     // Queue the pixel read operation so it is performed when the surface is ready
     pgl.queueEvent(new Runnable() {
       @Override
       public void run() {
         Context context = parent.getContext();
-        if (context == null) return;
+        if (context == null || parent.getSurface().getComponent().isService()) return;
         try {
-          if (restoreWidth != pixelWidth && restoreHeight != pixelHeight) {
-            // The screen size changed between calling saveState() and the pixel read operation,
-            // so it does no longer makes sense to try saving the screen's contents.
-            restoreWidth = -1;
-            restoreHeight = -1;
-            return;
-          }
+//          if (restoreWidth != pixelWidth && restoreHeight != pixelHeight) {
+//            // The screen size changed between calling saveState() and the pixel read operation,
+//            // so it does no longer makes sense to try saving the screen's contents.
+//            restoreWidth = -1;
+//            restoreHeight = -1;
+//            return;
+//          }
 
+          restoreWidth = pixelWidth;
+          restoreHeight = pixelHeight;
           System.out.println("============================> SAVING SCREEN FROM " + restoreWidth + " " + pixelHeight);
+
 
           int[] restorePixels = new int[restoreWidth * restoreHeight];
           IntBuffer buf = IntBuffer.wrap(restorePixels);

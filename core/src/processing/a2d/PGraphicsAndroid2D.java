@@ -171,7 +171,7 @@ public class PGraphicsAndroid2D extends PGraphics {
   @Override
   public void setSize(int iwidth, int iheight) {
     // OR with prev value in case setSize() gets called twice before the renderer has the chance to resize
-    sized |= iwidth != width || iheight != height;
+    sized = iwidth != width || iheight != height;
     System.out.println("======================> RESIZING AT FRAME " + parent.frameCount + " FROM " + width + "x" + height + " to " + iwidth + "x" + iheight);
     super.setSize(iwidth, iheight);
   }
@@ -2067,14 +2067,13 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void saveState() {
-    restoreWidth = pixelWidth;
-    restoreHeight = pixelHeight;
-    if (restoreWidth == 0 || restoreHeight == 0) return; // maybe still initializing...
-
     Context context = parent.getContext();
-    if (context == null || bitmap == null) return;
+    if (context == null || bitmap == null || parent.getSurface().getComponent().isService()) return;
     try {
       // Saving current width and height to avoid restoring the screen after a screen rotation
+      restoreWidth = pixelWidth;
+      restoreHeight = pixelHeight;
+
       System.out.println("============================> SAVING SCREEN FROM " + restoreWidth + " " + pixelHeight);
 
       int size = bitmap.getHeight() * bitmap.getRowBytes();

@@ -173,6 +173,7 @@ public class PWallpaper extends WallpaperService implements AppComponent {
     @Override
     public void onVisibilityChanged(boolean visible) {
       if (sketch != null) {
+        System.out.println("============> CHANGING WALLPAPER VISIBILITY TO " + visible);
         if (visible) {
           sketch.onResume();
         } else {
