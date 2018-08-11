@@ -2840,44 +2840,21 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   }
 
-  /*
-   // No need for these two, as explicit app exit is not required on Android, read
-   // this discussion:
-   // http://stackoverflow.com/questions/2033914/quitting-an-application-is-that-frowned-upon/2034238
-
-   // Call to safely exit the sketch when finished. For instance,
-   // to render a single frame, save it, and quit.
   public void exit() {
-    if (surface.isStopped()) {
-      // exit immediately, stop() has already been called,
-      // meaning that the main thread has long since exited
-      exitActual();
-
-    } else if (looping) {
-      // stop() will be called as the thread exits
-      finished = true;
-      // tell the code to call exitActual() to do a System.exit()
-      // once the next draw() has completed
-      exitCalled = true;
-
-    } else if (!looping) {
-      // if not looping, shut down things explicitly,
-      // because the main thread will be sleeping
-      dispose();
-
-      // now get out
-      exitActual();
+    if (getSurface().getComponent().isService()) {
+      PGraphics.showWarning("This sketch is running as a live wallpaper or a watch face, and cannot be stopped with exit().\n" +
+                                  "Use the corresponding selector on the device to change the current wallpaper or watch face.");
+    } else {
+      // This is the correct way to stop the sketch programmatically, according to the developer's docs:
+      // https://developer.android.com/reference/android/app/Activity.html#onDestroy()
+      // https://developer.android.com/reference/android/app/Activity.html#finish()
+      // and online discussions:
+      // http://stackoverflow.com/questions/2033914/quitting-an-application-is-that-frowned-upon/2034238
+      // finish() it will trigger an onDestroy() event, which will translate down through the
+      // activity hierarchy and trigger stopping Processing's animation thread, etc.
+      getActivity().finish();
     }
   }
-
-  public void exitActual() {
-    try {
-      System.exit(0);
-    } catch (SecurityException e) {
-      // don't care about applet security exceptions
-    }
-  }
-  */
 
   /**
    * Called to dispose of resources and shut down the sketch.
