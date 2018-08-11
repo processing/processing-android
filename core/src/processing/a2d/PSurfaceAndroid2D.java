@@ -123,11 +123,6 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
         System.out.println("SketchSurfaceView.surfaceChanged() " + iwidth + " " + iheight);
       }
 
-//      sketch.surfaceChanged();
-//      graphics.surfaceChanged();
-//
-//      sketch.setSize(iwidth, iheight);
-//      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
       sketch.setSize(iwidth, iheight);
     }

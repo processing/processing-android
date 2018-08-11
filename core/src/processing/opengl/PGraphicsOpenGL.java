@@ -670,9 +670,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public void setSize(int iwidth, int iheight) {
-    // OR with prev value in case setSize() gets called twice before the renderer has the chance to resize
     sized = iwidth != width || iheight != height;
-    System.out.println("======================> RESIZING AT FRAME " + parent.frameCount + " FROM " + width + "x" + height + " to " + iwidth + "x" + iheight);
     super.setSize(iwidth, iheight);
 
     updatePixelSize();
@@ -5710,18 +5708,8 @@ public class PGraphicsOpenGL extends PGraphics {
         Context context = parent.getContext();
         if (context == null || parent.getSurface().getComponent().isService()) return;
         try {
-//          if (restoreWidth != pixelWidth && restoreHeight != pixelHeight) {
-//            // The screen size changed between calling saveState() and the pixel read operation,
-//            // so it does no longer makes sense to try saving the screen's contents.
-//            restoreWidth = -1;
-//            restoreHeight = -1;
-//            return;
-//          }
-
           restoreWidth = pixelWidth;
           restoreHeight = pixelHeight;
-          System.out.println("============================> SAVING SCREEN FROM " + restoreWidth + " " + pixelHeight);
-
 
           int[] restorePixels = new int[restoreWidth * restoreHeight];
           IntBuffer buf = IntBuffer.wrap(restorePixels);
@@ -5773,8 +5761,6 @@ public class PGraphicsOpenGL extends PGraphics {
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
-        System.out.println("============================> RESTORING SCREEN TO " + restoreWidth + " " + pixelHeight);
-
         Context context = parent.getContext();
         if (context == null) return;
         try {
@@ -6838,7 +6824,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
   protected void initPrimary() {
     if (initialized) return;
-    System.out.println("===================> INTITALIZING PRIMARY SURFACE AT " + width + "x" + height);
     pgl.initSurface(smooth);
     if (texture != null) {
       removeCache(this);

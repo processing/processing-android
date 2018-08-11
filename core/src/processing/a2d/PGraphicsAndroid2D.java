@@ -170,9 +170,7 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void setSize(int iwidth, int iheight) {
-    // OR with prev value in case setSize() gets called twice before the renderer has the chance to resize
     sized = iwidth != width || iheight != height;
-    System.out.println("======================> RESIZING AT FRAME " + parent.frameCount + " FROM " + width + "x" + height + " to " + iwidth + "x" + iheight);
     super.setSize(iwidth, iheight);
   }
 
@@ -214,7 +212,6 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   public void beginDraw() {
-
     canvas = checkCanvas();
 
     checkSettings();
@@ -2074,8 +2071,6 @@ public class PGraphicsAndroid2D extends PGraphics {
       restoreWidth = pixelWidth;
       restoreHeight = pixelHeight;
 
-      System.out.println("============================> SAVING SCREEN FROM " + restoreWidth + " " + pixelHeight);
-
       int size = bitmap.getHeight() * bitmap.getRowBytes();
       ByteBuffer restoreBitmap = ByteBuffer.allocate(size);
       bitmap.copyPixelsToBuffer(restoreBitmap);
@@ -2115,8 +2110,6 @@ public class PGraphicsAndroid2D extends PGraphics {
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
-        System.out.println("============================> RESTORING SCREEN TO " + restoreWidth + " " + pixelHeight);
-
         Context context = parent.getContext();
         if (context == null) return;
         try {
