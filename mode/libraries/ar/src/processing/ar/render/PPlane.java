@@ -314,10 +314,7 @@ public class PPlane {
                 planeIndexMap.put(plane, planeIndex);
             }
 
-//            setPlaneColor(0xFFFFFFFF);
-
             colorRgbaToFloat(planeColor, colorValue);
-            PGraphics.showWarning("Value assigned Max effort");
             GLES20.glUniform4fv(lineColorUniform, 1, planeColor, 0);
             GLES20.glUniform4fv(dotColorUniform, 1, planeColor, 0);
 
@@ -350,12 +347,10 @@ public class PPlane {
 
     public static void setPlaneColor(int color){
         colorValue = color;
-        PGraphics.showWarning("Value assigned");
     }
 
     public static void setPlaneTexture(String planeTexture){
         PLANE_TEXTURE = planeTexture;
-        PGraphics.showWarning("Texture assigned ======= "+PLANE_TEXTURE);
     }
 
 }

@@ -253,12 +253,10 @@ public class PObject {
     public void load(String obj_name,String obj_texture){
         OBJ_NAME = obj_name;
         OBJ_TEX = obj_texture;
-        PGraphics.showWarning("Object LOAD reached ========= "+OBJ_NAME+" ======== "+OBJ_TEX);
     }
 
     public void place(){
         PLACED = true;
-        PGraphics.showWarning("Object place() command received");
     }
 
 }

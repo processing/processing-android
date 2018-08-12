@@ -9,7 +9,6 @@ public class PGraphicsARView extends PGraphicsAR {
     @Override
     public PSurface createSurface(AppComponent appComponent, SurfaceHolder surfaceHolder, boolean b) {
         if (b) pgl.resetFBOLayer();
-        PGraphics.showWarning("Reached - 1");
         return new PSurfaceAR(this, appComponent, surfaceHolder);
     }
 }

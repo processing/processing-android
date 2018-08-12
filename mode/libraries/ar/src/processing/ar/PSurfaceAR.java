@@ -87,7 +87,6 @@ public class PSurfaceAR extends PSurfaceGLES {
 
         displayRotationHelper = new RotationHandler(activity);
         surfaceView = new SurfaceViewAR(activity);
-        PGraphics.showWarning("Reached - 2");
 
         progressdialog.setMessage("Searching for Surfaces");
         progressdialog.show();
@@ -95,25 +94,21 @@ public class PSurfaceAR extends PSurfaceGLES {
 
     @Override
     public Context getContext() {
-        PGraphics.showWarning("Reached - 5");
         return activity;
     }
 
     @Override
     public void finish() {
-        PGraphics.showWarning("Reached - 6");
         sketch.getActivity().finish();
     }
 
     @Override
     public AssetManager getAssets() {
-        PGraphics.showWarning("Reached - 7");
         return sketch.getContext().getAssets();
     }
 
     @Override
     public void startActivity(Intent intent) {
-        PGraphics.showWarning("Reached - 8");
         sketch.getContext().startActivity(intent);
     }
 
@@ -132,41 +127,34 @@ public class PSurfaceAR extends PSurfaceGLES {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         window.setContentView(surfaceView);
-        PGraphics.showWarning("Reached - 9");
     }
 
     @Override
     public String getName() {
-        PGraphics.showWarning("Reached - 10");
         return sketch.getActivity().getComponentName().getPackageName();
     }
 
     @Override
     public void setOrientation(int which) {
-        PGraphics.showWarning("Reached - 11");
     }
 
     @Override
     public File getFilesDir() {
-        PGraphics.showWarning("Reached - 12");
         return sketch.getActivity().getFilesDir();
     }
 
     @Override
     public InputStream openFileInput(String filename) {
-        PGraphics.showWarning("Reached - 13");
         return null;
     }
 
     @Override
     public File getFileStreamPath(String path) {
-        PGraphics.showWarning("Reached - 14");
         return sketch.getActivity().getFileStreamPath(path);
     }
 
     @Override
     public void dispose() {
-        PGraphics.showWarning("Reached - 15");
     }
 
 
@@ -175,7 +163,6 @@ public class PSurfaceAR extends PSurfaceGLES {
             super(context);
             sketch.setup();
             sketch.draw();
-            PGraphics.showWarning("Reached - 4");
 
             final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
             final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
@@ -200,7 +187,6 @@ public class PSurfaceAR extends PSurfaceGLES {
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             queuedTaps.offer(event);
-            PGraphics.showWarning("Reached - onTouchEvent()");
             return sketch.surfaceTouchEvent(event);
         }
 
@@ -226,13 +212,11 @@ public class PSurfaceAR extends PSurfaceGLES {
 
     protected class AndroidARRenderer implements GLSurfaceView.Renderer {
         public AndroidARRenderer() {
-            PGraphics.showWarning("Reached - 3");
         }
 
         @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             pgl.getGL(null);
-            PGraphics.showWarning("Reached - 16");
             GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             backgroundRenderer.createOnGlThread(activity);
             if(OBJ_NAME != null && OBJ_TEX != null) {
@@ -245,17 +229,14 @@ public class PSurfaceAR extends PSurfaceGLES {
             }
             try {
                 planeRenderer.createOnGlThread(activity, PLANE_TEXTURE);
-                PGraphics.showWarning("Reached - 22"+" ===== "+PLANE_TEXTURE);
             } catch (IOException e) {
                 PGraphics.showWarning("Failed to read plane texture");
-                PGraphics.showWarning("Reached - 23");
             }
             pointCloud.createOnGlThread(activity);
         }
 
         @Override
         public void onSurfaceChanged(GL10 gl, int width, int height) {
-            PGraphics.showWarning("Reached - 20");
             displayRotationHelper.onSurfaceChanged(width, height);
             GLES20.glViewport(0, 0, width, height);
 
@@ -268,7 +249,6 @@ public class PSurfaceAR extends PSurfaceGLES {
 
         @Override
         public void onDrawFrame(GL10 gl) {
-            PGraphics.showWarning("Reached - 21");
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
             if (session == null) {
@@ -327,9 +307,6 @@ public class PSurfaceAR extends PSurfaceGLES {
             viewmtx = new float[16];
             camera.getViewMatrix(viewmtx, 0);
             lightIntensity = frame.getLightEstimate().getPixelIntensity();
-//                for(int i=0;i<16;i++){
-//                    PGraphics.showWarning(i+") Proj value: "+projmtx[i]+"\n"+i+") View mat: "+viewmtx[i]+"\n");
-//                }
             PointCloud foundPointCloud = frame.acquirePointCloud();
             pointCloud.update(foundPointCloud);
             pointCloud.draw(viewmtx, projmtx);
@@ -352,22 +329,17 @@ public class PSurfaceAR extends PSurfaceGLES {
                     virtualObject.draw(viewmtx, projmtx, lightIntensity);
                 }
             }
-
-            PGraphics.showWarning("Reached - 24");
         } catch (Throwable t) {
             PGraphics.showWarning("Exception on the OpenGL thread");
-            PGraphics.showWarning("Reached - 25");
         }
     }
 
     @Override
     public void startThread() {
-        PGraphics.showWarning("Reached - 17");
     }
 
     @Override
     public void pauseThread() {
-        PGraphics.showWarning("Reached - 18");
         if (session != null) {
             displayRotationHelper.onPause();
             surfaceView.onPause();
@@ -377,7 +349,6 @@ public class PSurfaceAR extends PSurfaceGLES {
 
     @Override
     public void resumeThread() {
-        PGraphics.showWarning("Reached - 19");
         if (session == null) {
             String message = null;
             String exception = null;
