@@ -47,7 +47,6 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
   private DisplayMetrics metrics;
   private CanvasEngine engine;
 
-
   public void initDimensions() {
     metrics = new DisplayMetrics();
     size = new Point();
@@ -231,10 +230,8 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
       super.onSurfaceChanged(holder, format, width, height);
       if (sketch != null) {
-        sketch.displayWidth = width;
-        sketch.displayHeight = height;
-        sketch.g.setSize(sketch.sketchWidth(), sketch.sketchHeight());
         sketch.surfaceChanged();
+        sketch.setSize(width, height);
       }
     }
 

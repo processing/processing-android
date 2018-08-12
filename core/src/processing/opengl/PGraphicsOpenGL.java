@@ -26,12 +26,19 @@ package processing.opengl;
 
 import processing.android.AppComponent;
 import processing.core.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.*;
 import java.util.*;
 
+import android.content.Context;
 import android.view.SurfaceHolder;
 
 /**
@@ -509,8 +516,9 @@ public class PGraphicsOpenGL extends PGraphics {
   static protected FloatBuffer floatBuffer;
 
   /** To save the surface contents before the activity is taken to the background. */
+  private String restoreFilename;
+  private int restoreWidth, restoreHeight;
   private int restoreCount;
-  private int[] restorePixels;
 
   // ........................................................
 
@@ -654,6 +662,13 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
+  public void reset() {
+    pgl.resetFBOLayer();
+    restartPGL();
+  }
+
+
+  @Override
   public void setSize(int iwidth, int iheight) {
     sized = iwidth != width || iheight != height;
     super.setSize(iwidth, iheight);
@@ -749,27 +764,6 @@ public class PGraphicsOpenGL extends PGraphics {
   public void setFrameRate(float frameRate) {
     pgl.setFrameRate(frameRate);
   }
-
-
-//  @Override
-  // Android only
-//  public boolean canDraw() {
-//    return pgl.canDraw();
-//  }
-
-
-//  @Override
-  // Android only
-//  public void requestDraw() {
-//    if (primaryGraphics) {
-//      if (initialized) {
-//        if (sized) pgl.reinitSurface();
-//        if (parent.canDraw()) pgl.requestDraw();
-//      } else {
-//        initPrimary();
-//      }
-//    }
-//  }
 
 
   public boolean saveImpl(String filename) {
@@ -1440,9 +1434,7 @@ public class PGraphicsOpenGL extends PGraphics {
   @Override
   public void beginDraw() {
     if (primaryGraphics) {
-      if (!initialized) {
-        initPrimary();
-      }
+      initPrimary();
       setCurrentPG(this);
     } else {
       pgl.getGL(getPrimaryPGL());
@@ -5713,18 +5705,32 @@ public class PGraphicsOpenGL extends PGraphics {
     pgl.queueEvent(new Runnable() {
       @Override
       public void run() {
-        restorePixels = new int[pixelWidth * pixelHeight];
-        int[] pix = new int[pixelWidth * pixelHeight];
-        IntBuffer buf = IntBuffer.wrap(pix);
-        buf.position(0);
-        beginPixelsOp(OP_READ);
-        pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
-        endPixelsOp();
+        Context context = parent.getContext();
+        if (context == null || parent.getSurface().getComponent().isService()) return;
         try {
-          // Convert pixels to ARGB
-          PGL.getIntArray(buf, restorePixels);
-          PGL.nativeToJavaARGB(restorePixels, pixelWidth, pixelHeight);
-        } catch (ArrayIndexOutOfBoundsException e) {}
+          restoreWidth = pixelWidth;
+          restoreHeight = pixelHeight;
+
+          int[] restorePixels = new int[restoreWidth * restoreHeight];
+          IntBuffer buf = IntBuffer.wrap(restorePixels);
+          buf.position(0);
+          beginPixelsOp(OP_READ);
+          pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
+          endPixelsOp();
+
+          File cacheDir = context.getCacheDir();
+          File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
+          restoreFilename = cacheFile.getAbsolutePath();
+          FileOutputStream stream = new FileOutputStream(cacheFile);
+          ObjectOutputStream dout = new ObjectOutputStream(stream);
+          dout.writeObject(restorePixels);
+          dout.flush();
+          stream.getFD().sync();
+          stream.close();
+        } catch (Exception ex) {
+          PGraphics.showWarning("Could not save screen contents to cache");
+          ex.printStackTrace();
+        }
       }
     });
   }
@@ -5734,22 +5740,48 @@ public class PGraphicsOpenGL extends PGraphics {
   protected void restoreState() {
   }
 
+
   @Override
   protected void restoreSurface() {
     if (changed) {
       changed = false;
-      if (restorePixels != null) {
+      if (restoreFilename != null && restoreWidth == pixelWidth && restoreHeight == pixelHeight) {
         // Set restore count to 2 so it draws the bitmap two frames after surface change, otherwise
         // the restoration does not work because the OpenGL renderer sometimes resizes the surface
-        // twice after restoring the app to the foreground (?)
+        // twice after restoring the app to the foreground... this may be due to broken graphics
+        // drivers, hacks in the GLSurfaceView class from the Replica Island game point to that,
+        // although those seem to be quite old:
+        // https://gamedev.stackexchange.com/questions/12629/workaround-to-losing-the-opengl-context-when-android-pauses
+        // "It fails in a very specific case: when the EGL context is lost due to resource constraints,
+        //  and then recreated, if GL commands are sent within two frames of the surface being created
+        //	then eglSwapBuffers() will hang."
+        // However, the same number showing up makes me thing this issue continue to exist to this day.
         restoreCount = 2;
       }
     } else if (restoreCount > 0) {
       restoreCount--;
       if (restoreCount == 0) {
-        // Draw and dispose pixels
-        drawPixels(restorePixels, 0, 0, pixelWidth, pixelHeight);
-        restorePixels = null;
+        Context context = parent.getContext();
+        if (context == null) return;
+        try {
+          // Load cached pixels and draw
+          File cacheFile = new File(restoreFilename);
+          FileInputStream inStream = new FileInputStream(cacheFile);
+          ObjectInputStream din = new ObjectInputStream(inStream);
+          int[] restorePixels = (int[]) din.readObject();
+          if (restorePixels.length == pixelWidth * pixelHeight) {
+            PGL.nativeToJavaARGB(restorePixels, pixelWidth, pixelHeight);
+            drawPixels(restorePixels, 0, 0, pixelWidth, pixelHeight);
+          }
+          inStream.close();
+          cacheFile.delete();
+          restoreFilename = null;
+          restoreWidth = -1;
+          restoreHeight = -1;
+        } catch (Exception ex) {
+          PGraphics.showWarning("Could not restore screen contents from cache");
+          ex.printStackTrace();
+        }
       }
     }
   }
@@ -6634,9 +6666,16 @@ public class PGraphicsOpenGL extends PGraphics {
     if (tex == null || tex.contextIsOutdated()) {
       tex = addTexture(img);
       if (tex != null) {
+        boolean dispose = !img.loaded;
         img.loadPixels();
         tex.set(img.pixels, img.format);
         img.setModified();
+        if (dispose) {
+          // We only used the pixels to load the image into the texture and the user did not request
+          // to load the pixels, so we should dispose the pixels array to avoid wasting memory
+          img.pixels = null;
+          img.loaded = false;
+        }
       }
     }
     return tex;
@@ -6784,6 +6823,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected void initPrimary() {
+    if (initialized) return;
     pgl.initSurface(smooth);
     if (texture != null) {
       removeCache(this);

@@ -275,11 +275,13 @@ public class PSurfaceGLES extends PSurfaceNone {
       // Here is where we should initialize native libs...
       // lib.init(iwidth, iheight);
 
+//      sketch.surfaceChanged();
+//      graphics.surfaceChanged();
+//
+//      sketch.setSize(iwidth, iheight);
+//      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
       sketch.surfaceChanged();
-      graphics.surfaceChanged();
-
       sketch.setSize(iwidth, iheight);
-      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
     }
 
     @Override
