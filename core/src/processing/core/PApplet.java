@@ -661,16 +661,18 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   public FragmentManager getFragmentManager() {
-    return null; //surface.getFragmentManager();
+    if (getActivity() != null) {
+      getActivity().getFragmentManager();
+    }
+    return null;
   }
 
 
   public Window getWindow(){
-    if (getActivity() == null) {
-      return null;
-    } else {
+    if (getActivity() != null) {
       return getActivity().getWindow();
     }
+    return null;
   }
 
 
