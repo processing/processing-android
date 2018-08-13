@@ -30,6 +30,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.app.FragmentManager;
+
 
 // Methods that should be implemented in PApplet to maintain backward
 // compatibility with (some) functionality available from Activity/Fragment
@@ -55,4 +58,8 @@ public interface ActivityAPI {
 
   // IO events
   public void onBackPressed();
+
+  // Activity management
+  public FragmentManager getFragmentManager();
+  public Window getWindow();
 }

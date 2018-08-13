@@ -32,6 +32,8 @@ import java.util.*;
 import java.util.regex.*;
 import java.util.zip.*;
 
+import android.app.FragmentManager;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
 import android.content.*;
@@ -656,6 +658,21 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   synchronized public void onBackPressed() {
     requestedBackPress = true;
   }
+
+
+  public FragmentManager getFragmentManager() {
+    return null; //surface.getFragmentManager();
+  }
+
+
+  public Window getWindow(){
+    if (getActivity() == null) {
+      return null;
+    } else {
+      return getActivity().getWindow();
+    }
+  }
+
 
   public void startActivity(Intent intent) {
     surface.startActivity(intent);
