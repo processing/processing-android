@@ -616,6 +616,9 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void onDestroy() {
     handleMethods("onDestroy");
+
+    surface.stopThread();
+
     dispose();
   }
 
@@ -2859,21 +2862,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   }
 
+  /**
+   * Should trigger a graceful activity/service shutdown (calling onPause/onStop, etc).
+   */
   public void exit() {
-    if (getSurface().getComponent().isService()) {
-      PGraphics.showWarning("This sketch is running as a live wallpaper or a watch face, and cannot be stopped with exit().\n" +
-                                  "Use the corresponding selector on the device to change the current wallpaper or watch face.");
-    } else {
-      // This is the correct way to stop the sketch programmatically, according to the developer's docs:
-      // https://developer.android.com/reference/android/app/Activity.html#onDestroy()
-      // https://developer.android.com/reference/android/app/Activity.html#finish()
-      // and online discussions:
-      // http://stackoverflow.com/questions/2033914/quitting-an-application-is-that-frowned-upon/2034238
-      // finish() it will trigger an onDestroy() event, which will translate down through the
-      // activity hierarchy and trigger stopping Processing's animation thread, etc.
-      getActivity().finish();
-    }
+    surface.finish();
   }
+
 
   /**
    * Called to dispose of resources and shut down the sketch.

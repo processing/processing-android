@@ -99,8 +99,7 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
     public void surfaceCreated(SurfaceHolder holder) {
       surfaceReady = true;
       if (requestedThreadStart) {
-        // Only start the thread once the surface has been created, otherwise
-        // it will not be able draw
+        // Only start the thread once the surface has been created, otherwise it will not be able to draw
         startThread();
       }
       if (PApplet.DEBUG) {

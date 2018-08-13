@@ -362,17 +362,24 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public void finish() {
-    // No need to do anything here, as the Android system will take care of
-    // releasing activity resources if needed, etc.
-//    if (component == null) return;
-//
-//    if (component.getKind() == AppComponent.FRAGMENT) {
-//      activity.finish();
-//    } else if (component.getKind() == AppComponent.WALLPAPER) {
-//      wallpaper.stopSelf();
-//    } else if (component.getKind() == AppComponent.WATCHFACE) {
-//      watchface.stopSelf();
-//    }
+    if (component == null) return;
+
+    if (component.getKind() == AppComponent.FRAGMENT) {
+      // This is the correct way to stop the sketch programmatically, according to the developer's docs:
+      // https://developer.android.com/reference/android/app/Activity.html#onDestroy()
+      // https://developer.android.com/reference/android/app/Activity.html#finish()
+      // and online discussions:
+      // http://stackoverflow.com/questions/2033914/quitting-an-application-is-that-frowned-upon/2034238
+      // finish() it will trigger an onDestroy() event, which will translate down through the
+      // activity hierarchy and eventually pausing and stopping Processing's animation thread, etc.
+      activity.finish();
+    } else if (component.getKind() == AppComponent.WALLPAPER) {
+      // stopSelf() stops a service from within:
+      // https://developer.android.com/reference/android/app/Service.html#stopSelf()
+      wallpaper.stopSelf();
+    } else if (component.getKind() == AppComponent.WATCHFACE) {
+      watchface.stopSelf();
+    }
   }
 
   ///////////////////////////////////////////////////////////
@@ -498,13 +505,11 @@ public class PSurfaceNone implements PSurface, PConstants {
       while ((Thread.currentThread() == thread) &&
              (sketch != null && !sketch.finished)) {
         if (Thread.currentThread().isInterrupted()) {
-          finish();
           return;
         }
         try {
           checkPause();
         } catch (InterruptedException e) {
-          finish();
           return;
         }
 
@@ -540,8 +545,6 @@ public class PSurfaceNone implements PSurface, PConstants {
 
         beforeTime = System.nanoTime();
       }
-
-      finish();
     }
   }
 
