@@ -33,7 +33,6 @@ import processing.app.ui.Editor;
 import processing.app.ui.EditorButton;
 import processing.app.ui.EditorToolbar;
 import processing.app.Language;
-import processing.mode.java.JavaEditor;
 
 import javax.swing.*;
 

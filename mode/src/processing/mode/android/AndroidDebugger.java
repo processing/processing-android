@@ -4,15 +4,14 @@ import com.sun.jdi.*;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
-import com.sun.jdi.request.ModificationWatchpointRequest;
 import com.sun.jdi.request.StepRequest;
+import processing.app.Messages;
 import processing.mode.java.Debugger;
 import processing.mode.java.debug.ClassLoadListener;
 import processing.mode.java.debug.LineBreakpoint;
 import processing.mode.java.debug.LineID;
 
 import java.io.IOException;
-import java.util.List;
 
 public class AndroidDebugger extends Debugger {
   /// editor window, acting as main view
@@ -24,8 +23,6 @@ public class AndroidDebugger extends Debugger {
 
   private String pkgName = "";
   private String sketchClassName = "";
-
-  public static final String FIELD_NAME = "mouseX";
 
   public AndroidDebugger(AndroidEditor editor, AndroidMode androidMode) {
     super(editor);
@@ -65,7 +62,7 @@ public class AndroidDebugger extends Debugger {
       // connect
       System.out.println("\n:debugger:Attaching Debugger");
       VirtualMachine vm = runner.connectVirtualMachine(port);
-      System.out.println("ATTACHED");
+      System.out.println("DEBUGGER ATTACHED");
 
       // start receiving vm events
       VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
@@ -73,32 +70,12 @@ public class AndroidDebugger extends Debugger {
 
       // watch for loaded classes
       addClassWatch(vm);
-//      // set watch field on already loaded classes
-//      List<ReferenceType> referenceTypes = vm.classesByName(pkgName + "." + sketchClassName);
-//
-//      System.out.println("referenceTypes size " + referenceTypes.size());
-//      for (ReferenceType refType : referenceTypes) {
-//        addFieldWatch(vm, refType);
-//        // Adding breakpoint at line 27
-//      try {
-//        List<Location> locations = refType.locationsOfLine(28);
-//        if (locations.isEmpty()){
-//          System.out.println("no location found for line 27");
-//        } else {
-//          BreakpointRequest bpr = vm.eventRequestManager().createBreakpointRequest(locations.get(0));
-//          bpr.enable();
-//        }
-//      } catch (AbsentInformationException e) {
-//        e.printStackTrace();
-//      }
-//      }
-
 
       // resume the vm
       vm.resume();
 
     } catch (IOException e) {
-      System.out.println("ERROR : " + e.getMessage());
+      Messages.log("ERROR : " + e.getMessage());
       // Retry
       startDebug(runner, device);
     } catch (InterruptedException e) {
@@ -114,7 +91,7 @@ public class AndroidDebugger extends Debugger {
       return;
     }
     for (Event e : es) {
-      System.out.println("VM Event: " + e);
+      // System.out.println("VM Event: " + e);
       if (e instanceof VMStartEvent) {
         System.out.println("start");
 
@@ -288,17 +265,6 @@ public class AndroidDebugger extends Debugger {
     ClassPrepareRequest classPrepareRequest = erm.createClassPrepareRequest();
     classPrepareRequest.addClassFilter(mainClassName);
     classPrepareRequest.setEnabled(true);
-  }
-
-  /**
-   * Watch field ({@value FIELD_NAME})
-   */
-  private void addFieldWatch(VirtualMachine vm,
-                             ReferenceType refType) {
-    EventRequestManager erm = vm.eventRequestManager();
-    Field field = refType.fieldByName(FIELD_NAME);
-    ModificationWatchpointRequest modificationWatchpointRequest = erm.createModificationWatchpointRequest(field);
-    modificationWatchpointRequest.setEnabled(true);
   }
 
   @Override

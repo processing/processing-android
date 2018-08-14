@@ -50,7 +50,6 @@ class Device {
 //  public static final String APP_ENDED = "android.device.app.ended";
 
   private String packageName = "";
-  private String sketchClassName = "";
 
   // mutable state
   private Process logcat;
@@ -115,14 +114,14 @@ class Device {
 
   // adb -s emulator-5556 install helloWorld.apk
 
-  // : adb -s HT91MLC00031 install bin/Brightness-debugEnabled.apk
+  // : adb -s HT91MLC00031 install bin/Brightness-debug.apk
   // 532 KB/s (190588 bytes in 0.349s)
-  // pkg: /data/local/tmp/Brightness-debugEnabled.apk
+  // pkg: /data/local/tmp/Brightness-debug.apk
   // Failure [INSTALL_FAILED_ALREADY_EXISTS]
 
-  // : adb -s HT91MLC00031 install -r bin/Brightness-debugEnabled.apk
+  // : adb -s HT91MLC00031 install -r bin/Brightness-debug.apk
   // 1151 KB/s (190588 bytes in 0.161s)
-  // pkg: /data/local/tmp/Brightness-debugEnabled.apk
+  // pkg: /data/local/tmp/Brightness-debug.apk
   // Success
 
   // safe to just always include the -r (reinstall) flag
@@ -193,7 +192,7 @@ class Device {
     if (isDebuggerEnabled){
       String[] cmd = {
         "shell", "am", "start",
-        "-e", "debugEnabled", "true",
+        "-e", "debug", "true",
         "-a", "android.intent.action.MAIN",
         "-c", "android.intent.category.LAUNCHER", "-D",
         "-n", packageName + "/.MainActivity"
@@ -202,7 +201,7 @@ class Device {
     }else {
       String[] cmd = {
         "shell", "am", "start",
-        "-e", "debugEnabled", "true",
+        "-e", "debug", "true",
         "-a", "android.intent.action.MAIN",
         "-c", "android.intent.category.LAUNCHER",
         "-n", packageName + "/.MainActivity"
@@ -224,13 +223,12 @@ class Device {
     return pr.succeeded();
   }
 
-  // XXXXXXXXXXXX-----prototype-start-XXXXXXXXXXXXXXXXXX
-
   public void forwardPort(int tcpPort) throws IOException, InterruptedException {
     // Start ADB Server
     adb("start-server");
     final String[] jdwpcmd = generateAdbCommand("jdwp");
     Process deviceId = Runtime.getRuntime().exec(jdwpcmd);
+    // Get Process ID from ADB command `adb jdwp`
     JDWPProcessor pIDProcessor = new JDWPProcessor();
     new StreamPump(deviceId.getInputStream(), "jdwp: ").addTarget(
         pIDProcessor).start();
@@ -251,7 +249,6 @@ class Device {
       return pId;
     }
   }
-  // XXXXXXXXXXXX-----prototype-end-XXXXXXXXXXXXXXXXXX
 
   public boolean isEmulator() {
     return id.startsWith("emulator");

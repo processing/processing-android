@@ -137,6 +137,7 @@ public class AndroidRunner implements DeviceListener {
       }
     }
 
+    // Start Debug if Debugger is enabled
     if (isDebugEnabled){
       ((AndroidEditor) listener).getDebugger()
         .startDebug(this, device);
