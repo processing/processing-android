@@ -72,6 +72,8 @@ wrapper.doLast {
 clean.doFirst {
     delete fileTree("mode") {
         include "**/*.jar"
+		exclude "jdi.jar"
+		exclude "jdimodel.jar"
     }
 }
 
