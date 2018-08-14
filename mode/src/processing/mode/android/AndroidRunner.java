@@ -55,9 +55,15 @@ public class AndroidRunner implements DeviceListener {
 
   private VirtualMachine vm;
 
+  private boolean isDebugEnabled;
+
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
     this.listener = listener;
+
+    if (listener instanceof AndroidEditor){
+      isDebugEnabled = ((AndroidEditor) listener).isDebuggerEnabled();
+    }
 
     if (listener instanceof Editor) {
       Editor editor = (Editor) listener;
@@ -131,11 +137,9 @@ public class AndroidRunner implements DeviceListener {
       }
     }
 
-    if (listener instanceof AndroidEditor){
-      AndroidDebugger debugger = ((AndroidEditor) listener).getDebugger();
-      if (debugger.isEnabled()) {
-        debugger.startDebug(this, device);
-      }
+    if (isDebugEnabled){
+      ((AndroidEditor) listener).getDebugger()
+        .startDebug(this, device);
     }
 
     listener.stopIndeterminate();
@@ -190,7 +194,7 @@ public class AndroidRunner implements DeviceListener {
   private boolean startSketch(AndroidBuild build, final Device device) {
     final String packageName = build.getPackageName();
     try {
-      if (device.launchApp(packageName)) {
+      if (device.launchApp(packageName, isDebugEnabled)) {
         return true;
       }
     } catch (final Exception e) {

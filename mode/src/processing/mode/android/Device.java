@@ -184,21 +184,32 @@ class Device {
 
   // different version that actually runs through JDI:
   // http://asantoso.wordpress.com/2009/09/26/using-jdb-with-adb-to-debugging-of-android-app-on-a-real-device/
-  public boolean launchApp(final String packageName)
+  public boolean launchApp(final String packageName, boolean isDebuggerEnabled)
       throws IOException, InterruptedException {
     if (!isAlive()) {
       return false;
     }
-
-    String[] cmd = {
-            "shell", "am", "start",
-            "-e", "debugEnabled", "true",
-            "-a", "android.intent.action.MAIN",
-            "-c", "android.intent.category.LAUNCHER", "-D",
-            "-n", packageName + "/.MainActivity"
-    };
+    ProcessResult pr;
+    if (isDebuggerEnabled){
+      String[] cmd = {
+        "shell", "am", "start",
+        "-e", "debugEnabled", "true",
+        "-a", "android.intent.action.MAIN",
+        "-c", "android.intent.category.LAUNCHER", "-D",
+        "-n", packageName + "/.MainActivity"
+      };
+      pr = adb(cmd);
+    }else {
+      String[] cmd = {
+        "shell", "am", "start",
+        "-e", "debugEnabled", "true",
+        "-a", "android.intent.action.MAIN",
+        "-c", "android.intent.category.LAUNCHER",
+        "-n", packageName + "/.MainActivity"
+      };
+      pr = adb(cmd);
+    }
 //    PApplet.println(cmd);
-    ProcessResult pr = adb(cmd);
 
     if (Base.DEBUG) {
       System.out.println(pr.toString());
