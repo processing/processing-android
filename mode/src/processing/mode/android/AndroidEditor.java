@@ -82,6 +82,11 @@ public class AndroidEditor extends JavaEditor {
     androidMode.checkSDK(this);
 
     debugger = new AndroidDebugger(this, androidMode);
+    // Set saved breakpoints when sketch is opened for the first time
+    for (LineID lineID : stripBreakpointComments()) {
+      debugger.setBreakpoint(lineID);
+    }
+
     super.debugger = debugger;
 
     androidTools = loadAndroidTools();
