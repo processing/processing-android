@@ -33,6 +33,7 @@ import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.debug.LineID;
 import processing.mode.java.preproc.PdePreprocessor;
 
 import javax.swing.*;
@@ -59,6 +60,8 @@ public class AndroidEditor extends JavaEditor {
   private JMenu androidMenu;
   
   private int appComponent;
+
+  private AndroidDebugger debugger;
   
   private Settings settings;
   private AndroidMode androidMode;
@@ -77,12 +80,20 @@ public class AndroidEditor extends JavaEditor {
     androidMode = (AndroidMode) mode;
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
-    
+
+    debugger = new AndroidDebugger(this, androidMode);
+    // Set saved breakpoints when sketch is opened for the first time
+    for (LineID lineID : stripBreakpointComments()) {
+      debugger.setBreakpoint(lineID);
+    }
+
+    super.debugger = debugger;
+
     androidTools = loadAndroidTools();
     addToolsToMenu();
     
     loadModeSettings();    
-  }  
+  }
 
   @Override
   public PdePreprocessor createPreprocessor(final String sketchName) {
@@ -155,7 +166,7 @@ public class AndroidEditor extends JavaEditor {
           handleStop();
         }
       });
-    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
+    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
   }
 
 
@@ -383,11 +394,60 @@ public class AndroidEditor extends JavaEditor {
 
 
   public void handleStop() {
-    toolbar.deactivateRun();
-    stopIndeterminate();
-    androidMode.handleStop(this);
+    if (debugger.isStarted()) {
+      debugger.stopDebug();
+
+    } else {
+      toolbar.activateStop();
+      androidMode.handleStop(this);
+      toolbar.deactivateStop();
+      toolbar.deactivateRun();
+
+      // focus the PDE again after quitting presentation mode [toxi 030903]
+      toFront();
+    }
   }
 
+  @Override
+  public AndroidDebugger getDebugger() {
+    return debugger;
+  }
+
+  @Override protected void deactivateDebug() {
+    super.deactivateDebug();
+  }
+
+  @Override protected void activateContinue() {
+    ((AndroidToolbar) toolbar).activateContinue();
+  }
+
+  @Override protected void deactivateContinue() {
+    ((AndroidToolbar) toolbar).deactivateContinue();
+  }
+
+  @Override protected void activateStep() {
+    ((AndroidToolbar) toolbar).activateStep();
+  }
+
+  @Override protected void deactivateStep() {
+    ((AndroidToolbar) toolbar).deactivateStep();
+  }
+
+  @Override
+  public void toggleDebug() {
+    super.toggleDebug();
+    debugger.toggleDebug();
+  }
+
+  @Override
+  public void toggleBreakpoint(int lineIndex) {
+    debugger.toggleBreakpoint(lineIndex);
+  }
+
+  @Override
+  protected LineID getCurrentLineID() {
+    return super.getCurrentLineID();
+  }
 
   /**
    * Create a release build of the sketch and have its apk files ready.

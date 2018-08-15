@@ -41,30 +41,30 @@ import java.util.regex.Pattern;
 class Device {
   private final Devices env;
   private final String id;
-  private final String features;  
+  private final String features;
   private final Set<Integer> activeProcesses = new HashSet<Integer>();
-  private final Set<DeviceListener> listeners = 
+  private final Set<DeviceListener> listeners =
     Collections.synchronizedSet(new HashSet<DeviceListener>());
-  
+
 //  public static final String APP_STARTED = "android.device.app.started";
 //  public static final String APP_ENDED = "android.device.app.ended";
 
   private String packageName = "";
-  
+
   // mutable state
   private Process logcat;
 
   public Device(final Devices env, final String id) {
     this.env = env;
     this.id = id;
-    
+
     // http://android.stackexchange.com/questions/82169/howto-get-devices-features-with-adb
-    String concat = ""; 
+    String concat = "";
     try {
       final ProcessResult res = adb("shell", "getprop", "ro.build.characteristics");
       for (String line : res) {
-        concat += "," + line.toLowerCase();     
-      }      
+        concat += "," + line.toLowerCase();
+      }
     } catch (final Exception e) {
     }
     this.features = concat;
@@ -72,8 +72,8 @@ class Device {
 
   public void bringLauncherToFront() {
     try {
-      adb("shell", "am", "start", 
-          "-a", "android.intent.action.MAIN", 
+      adb("shell", "am", "start",
+          "-a", "android.intent.action.MAIN",
           "-c", "android.intent.category.HOME");
     } catch (final Exception e) {
       e.printStackTrace(System.err);
@@ -83,7 +83,7 @@ class Device {
   public boolean hasFeature(String feature) {
     return -1 < features.indexOf(feature);
   }
-  
+
   public String getName() {
     String name = "";
 
@@ -102,11 +102,11 @@ class Device {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    
+
     name += " [" + id + "]";
-    
+
 //    if (hasFeature("watch")) {
-//      name += " (watch)";      
+//      name += " (watch)";
 //    }
 
     return name;
@@ -130,14 +130,14 @@ class Device {
       return false;
     }
     bringLauncherToFront();
-    
+
     String apkPath = build.getPathForAPK();
     if (apkPath == null) {
       status.statusError("Could not install the sketch.");
-      System.err.println("The APK file is missing");      
+      System.err.println("The APK file is missing");
       return false;
     }
-    
+
     try {
       final ProcessResult installResult = adb("install", "-r", apkPath);
       if (!installResult.succeeded()) {
@@ -180,23 +180,36 @@ class Device {
     return true;
   }
 
-  
+
   // different version that actually runs through JDI:
   // http://asantoso.wordpress.com/2009/09/26/using-jdb-with-adb-to-debugging-of-android-app-on-a-real-device/
-  public boolean launchApp(final String packageName)
+  public boolean launchApp(final String packageName, boolean isDebuggerEnabled)
       throws IOException, InterruptedException {
     if (!isAlive()) {
       return false;
     }
-    String[] cmd = {
-      "shell", "am", "start",
-      "-e", "debug", "true",
-      "-a", "android.intent.action.MAIN",
-      "-c", "android.intent.category.LAUNCHER",
-      "-n", packageName + "/.MainActivity"
-    };
+    ProcessResult pr;
+    if (isDebuggerEnabled){
+      String[] cmd = {
+        "shell", "am", "start",
+        "-e", "debug", "true",
+        "-a", "android.intent.action.MAIN",
+        "-c", "android.intent.category.LAUNCHER", "-D",
+        "-n", packageName + "/.MainActivity"
+      };
+      pr = adb(cmd);
+    }else {
+      String[] cmd = {
+        "shell", "am", "start",
+        "-e", "debug", "true",
+        "-a", "android.intent.action.MAIN",
+        "-c", "android.intent.category.LAUNCHER",
+        "-n", packageName + "/.MainActivity"
+      };
+      pr = adb(cmd);
+    }
 //    PApplet.println(cmd);
-    ProcessResult pr = adb(cmd);
+
     if (Base.DEBUG) {
       System.out.println(pr.toString());
     }
@@ -210,6 +223,33 @@ class Device {
     return pr.succeeded();
   }
 
+  public void forwardPort(int tcpPort) throws IOException, InterruptedException {
+    // Start ADB Server
+    adb("start-server");
+    final String[] jdwpcmd = generateAdbCommand("jdwp");
+    Process deviceId = Runtime.getRuntime().exec(jdwpcmd);
+    // Get Process ID from ADB command `adb jdwp`
+    JDWPProcessor pIDProcessor = new JDWPProcessor();
+    new StreamPump(deviceId.getInputStream(), "jdwp: ").addTarget(
+        pIDProcessor).start();
+    new StreamPump(deviceId.getErrorStream(), "jdwperr: ").addTarget(
+        System.err).start();
+
+    Thread.sleep(1000);
+    // forward to tcp port
+    adb("forward", "tcp:" + tcpPort, "jdwp:" + pIDProcessor.getId());
+  }
+
+  private class JDWPProcessor implements LineProcessor {
+    private int pId;
+    public void processLine(final String line) {
+      pId = Integer.parseInt(line);
+    }
+    public int getId(){
+      return pId;
+    }
+  }
+
   public boolean isEmulator() {
     return id.startsWith("emulator");
   }
@@ -217,7 +257,7 @@ class Device {
   public void setPackageName(String pkgName) {
     packageName = pkgName;
   }
-  
+
   // I/Process ( 9213): Sending signal. PID: 9213 SIG: 9
   private static final Pattern SIG = Pattern
       .compile("PID:\\s+(\\d+)\\s+SIG:\\s+(\\d+)");
@@ -231,9 +271,11 @@ class Device {
 //      System.out.println(line);
 //      System.err.println(activeProcesses);
 //      System.err.println(entry.message);
-      
+
+        System.out.println(line);
+
       if (entry.message.startsWith("PROCESSING")) {
-        // Old start/stop process detection, does not seem to work anymore. 
+        // Old start/stop process detection, does not seem to work anymore.
         // Should be ok to remove at some point.
         if (entry.message.contains("onStart")) {
           startProc(entry.source, entry.pid);
@@ -241,12 +283,12 @@ class Device {
           endProc(entry.pid);
         }
       } else if (packageName != null && !packageName.equals("") &&
-                 entry.message.contains("Start proc") &&                  
+                 entry.message.contains("Start proc") &&
                  entry.message.contains(packageName)) {
         // Sample message string from logcat when starting process:
-        // "Start proc 29318:processing.test.sketch001/u0a403 for activity processing.test.sketch001/.MainActivity"        
+        // "Start proc 29318:processing.test.sketch001/u0a403 for activity processing.test.sketch001/.MainActivity"
         boolean pidFound = false;
-        
+
         try {
           int idx0 = entry.message.indexOf("Start proc") + 11;
           int idx1 = entry.message.indexOf(packageName) - 1;
@@ -255,29 +297,29 @@ class Device {
           startProc(entry.source, pid);
           pidFound = true;
         } catch (Exception ex) { }
-        
+
         if (!pidFound) {
           // In some cases (old adb maybe?):
           // https://github.com/processing/processing-android/issues/331
           // the process start line is slightly different:
-          // I/ActivityManager(  648): Start proc processing.test.sketch_170818a for activity processing.test.sketch_170818a/.MainActivity: pid=4256 uid=10175 gids={50175}          
+          // I/ActivityManager(  648): Start proc processing.test.sketch_170818a for activity processing.test.sketch_170818a/.MainActivity: pid=4256 uid=10175 gids={50175}
           try {
             int idx0 = entry.message.indexOf("pid=") + 4;
             int idx1 = entry.message.indexOf("uid") - 1;
             String pidStr = entry.message.substring(idx0, idx1);
             int pid = Integer.parseInt(pidStr);
             startProc(entry.source, pid);
-            pidFound = true;            
+            pidFound = true;
           } catch (Exception ex) { }
-          
+
           if (!pidFound) {
             System.err.println("AndroidDevice: cannot find process id, console output will be disabled.");
           }
         }
       } else if (packageName != null && !packageName.equals("") &&
-                 entry.message.contains("Killing") &&                
-                 entry.message.contains(packageName)) { 
-        // Sample message string from logcat when stopping process:      
+                 entry.message.contains("Killing") &&
+                 entry.message.contains(packageName)) {
+        // Sample message string from logcat when stopping process:
         // "Killing 31360:processing.test.test1/u0a403 (adj 900): remove task"
         try {
           int idx0 = entry.message.indexOf("Killing") + 8;
@@ -287,7 +329,7 @@ class Device {
           endProc(pid);
         } catch (Exception ex) {
           System.err.println("AndroidDevice: cannot find process id, console output will continue. " + packageName);
-        }        
+        }
       } else if (entry.source.equals("Process")) {
         handleCrash(entry);
       } else if (activeProcesses.contains(entry.pid)) {
@@ -349,7 +391,7 @@ class Device {
 
   void initialize() throws IOException, InterruptedException {
     adb("logcat", "-c");
-    final String[] cmd = generateAdbCommand("logcat", "-v", "brief");
+    final String[] cmd = generateAdbCommand("logcat");
     final String title = PApplet.join(cmd, ' ');
     logcat = Runtime.getRuntime().exec(cmd);
     ProcessRegistry.watch(logcat);
@@ -435,7 +477,7 @@ class Device {
   private String[] generateAdbCommand(final String... cmd) throws IOException {
     File toolsPath = env.getSDK().getPlatformToolsFolder();
     File abdPath = Platform.isWindows() ? new File(toolsPath, "adb.exe") :
-                                          new File(toolsPath, "adb");    
+                                          new File(toolsPath, "adb");
     return PApplet.concat(new String[] { abdPath.getCanonicalPath(), "-s", getId() }, cmd);
   }
 
