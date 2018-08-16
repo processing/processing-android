@@ -515,11 +515,6 @@ public class PGraphicsOpenGL extends PGraphics {
   static protected IntBuffer intBuffer;
   static protected FloatBuffer floatBuffer;
 
-  /** To save the surface contents before the activity is taken to the background. */
-  private String restoreFilename;
-  private int restoreWidth, restoreHeight;
-  private int restoreCount;
-
   // ........................................................
 
   // Error strings:
@@ -5701,6 +5696,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   protected void saveState() {
+    super.saveState();
+
     // Queue the pixel read operation so it is performed when the surface is ready
     pgl.queueEvent(new Runnable() {
       @Override
@@ -5733,11 +5730,6 @@ public class PGraphicsOpenGL extends PGraphics {
         }
       }
     });
-  }
-
-
-  @Override
-  protected void restoreState() {
   }
 
 
@@ -5775,15 +5767,18 @@ public class PGraphicsOpenGL extends PGraphics {
           }
           inStream.close();
           cacheFile.delete();
-          restoreFilename = null;
-          restoreWidth = -1;
-          restoreHeight = -1;
         } catch (Exception ex) {
           PGraphics.showWarning("Could not restore screen contents from cache");
           ex.printStackTrace();
+        } finally {
+          restoreFilename = null;
+          restoreWidth = -1;
+          restoreHeight = -1;
+          restoredSurface = true;
         }
       }
     }
+    super.restoreSurface();
   }
 
   //////////////////////////////////////////////////////////////

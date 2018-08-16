@@ -640,6 +640,14 @@ public class PGraphics extends PImage implements PConstants {
   /// Number of V steps (aka "phi") along latitudinally top-to-bottom spanning pi
   public int sphereDetailV = 0;
 
+  // ........................................................
+
+  // Variables used to save the surface contents before the activity is taken to the background.
+  protected String restoreFilename;
+  protected int restoreWidth, restoreHeight;
+  protected int restoreCount;
+  protected boolean restartedLoopingAfterResume = false;
+  protected boolean restoredSurface = false;
 
   //////////////////////////////////////////////////////////////
 
@@ -969,17 +977,44 @@ public class PGraphics extends PImage implements PConstants {
     reapplySettings = false;
   }
 
+  //////////////////////////////////////////////////////////////
+
+  // RENDERER STATE
+
 
   protected void saveState() {  // ignore
-
+    // Nothing to do here, it depends on the renderer's implementation.
   }
 
   protected void restoreState() {  // ignore
-
+    // This method probably does not need to be re-implemented in the subclasses. All we need to
+    // do is to check for the resume in no-loop state situation:
+    restoredSurface = false;
+    if (!parent.isLooping()) {
+      // The sketch needs to draw a few frames after resuming so it has the chance to restore the
+      // screen contents:
+      // https://github.com/processing/processing-android/issues/492
+      // so we restart looping:
+      parent.loop();
+      // and flag this situation when the surface has been restored:
+      restartedLoopingAfterResume = true;
+    }
   }
 
-  protected void restoreSurface() { // ignore
 
+  protected boolean restoringState() { // ignore
+    return !restoredSurface && restartedLoopingAfterResume;
+  }
+
+
+  protected void restoreSurface() { // ignore
+    // When implementing this method in a subclass of PGraphics, it should add a call to the super
+    // implementation, to make sure that the looping is stopped in the case where the sketch was
+    // resumed in no-loop state (see comment in restoreState() method above).
+    if (restoredSurface && restartedLoopingAfterResume) {
+      restartedLoopingAfterResume = false;
+      parent.noLoop();
+    }
   }
 
   //////////////////////////////////////////////////////////////

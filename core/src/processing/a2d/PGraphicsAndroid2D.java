@@ -127,13 +127,6 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   //////////////////////////////////////////////////////////////
 
-  /** To save the surface contents before the activity is taken to the background. */
-  private String restoreFilename;
-  private int restoreWidth, restoreHeight;
-  private int restoreCount;
-
-  //////////////////////////////////////////////////////////////
-
   // INTERNAL
 
 
@@ -2064,6 +2057,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 
   @Override
   protected void saveState() {
+    super.saveState();
+
     Context context = parent.getContext();
     if (context == null || bitmap == null || parent.getSurface().getComponent().isService()) return;
     try {
@@ -2095,11 +2090,6 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   @Override
-  protected void restoreState() {
-  }
-
-
-  @Override
   protected void restoreSurface() {
     if (changed) {
       changed = false;
@@ -2125,15 +2115,18 @@ public class PGraphicsAndroid2D extends PGraphics {
           }
           inStream.close();
           cacheFile.delete();
-          restoreFilename = null;
-          restoreWidth = -1;
-          restoreHeight = -1;
         } catch (Exception ex) {
           PGraphics.showWarning("Could not restore screen contents from cache");
           ex.printStackTrace();
+        } finally {
+          restoreFilename = null;
+          restoreWidth = -1;
+          restoreHeight = -1;
+          restoredSurface = true;
         }
       }
     }
+    super.restoreSurface();
   }
 
 

@@ -558,26 +558,24 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       setFullScreenVisibility();
     }
 
-    if (g != null) {
-      g.restoreState();
-    }
-
     handleMethods("resume");
 
+    // Don't call resume() when the app is starting and setup() has not been called yet:
+    // https://github.com/processing/processing-android/issues/274
+    // Also, there is no need to call resume() from anywhere else (for example, from
+    // onStart) since onResume() is always called in the activity lifecyle:
+    // https://developer.android.com/guide/components/activities/activity-lifecycle.html
     if (0 < frameCount) {
-      // Don't call resume() when the app is starting and setup() has not been
-      // called yet
-      // https://github.com/processing/processing-android/issues/274
-
-      // Also, no need to call resume() from anywhere else (for example, from
-      // onStart) since onResume() is always called in the activity lifecyle:
-      // https://developer.android.com/guide/components/activities/activity-lifecycle.html
       resume();
     }
 
-    // Set the default to true to handle the situation where a fragment is popping back
-    // after pressing back (app does not exit)
+    // Set the handledBackPressed to true to handle the situation where a fragment is popping
+    // right back after pressing the back button (the sketch does not exit).
     handledBackPressed = true;
+
+    if (g != null) {
+      g.restoreState();
+    }
 
     surface.resumeThread();
   }
@@ -1838,21 +1836,9 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 //      recorder.beginDraw();
 //    }
 
-    if (requestedNoLoop) {
-      // noLoop() was called sometime in the previous frame with a GL renderer, but only now
-      // we are sure that the frame is properly displayed.
-      looping = false;
-      // Perform a full frame draw, to ensure that the previous frame is properly displayed (see
-      // comment in the declaration of requestedNoLoop).
-      g.beginDraw();
-      g.endDraw();
-      requestedNoLoop = false;
-      insideDraw = false;
-      return;
-    }
+    if (handleSpecialDraw()) return;
 
     g.beginDraw();
-
 
     long now = System.nanoTime();
 
@@ -1908,6 +1894,41 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     frameCount++;
   }
 
+
+  // This method handles some special situations on Android where beginDraw/endDraw are needed,
+  // but not to render the actualy contents of draw(). In general, this situations arise from
+  // having to refresh/restore the screen after requesting no loop, or resuming the sketch in
+  // no-loop state.
+  protected boolean handleSpecialDraw() {
+    boolean handled = false;
+
+    if (g.restoringState()) {
+      // The sketch is restoring, so begin/end the frame properly and quit drawing.
+      g.beginDraw();
+      g.endDraw();
+
+      handled = true;
+    } else if (requestedNoLoop) {
+      // noLoop() was called sometime in the previous frame with a GL renderer, but only now
+      // we are sure that the frame is properly displayed.
+      looping = false;
+
+      // Perform a full frame draw, to ensure that the previous frame is properly displayed (see
+      // comment in the declaration of requestedNoLoop).
+      g.beginDraw();
+      g.endDraw();
+
+      requestedNoLoop = false;
+      handled = true;
+    }
+
+    if (handled) {
+      insideDraw = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   //////////////////////////////////////////////////////////////
 
