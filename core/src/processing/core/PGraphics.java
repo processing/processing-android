@@ -647,7 +647,7 @@ public class PGraphics extends PImage implements PConstants {
   protected int restoreWidth, restoreHeight;
   protected int restoreCount;
   protected boolean restartedLoopingAfterResume = false;
-  protected boolean restoredSurface = false;
+  protected boolean restoredSurface = true;
 
   //////////////////////////////////////////////////////////////
 
