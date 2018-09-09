@@ -13,7 +13,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
-                <category android:name="com.google.intent.category.CARDBOARD"/>
+                <category android:name="@@vr_type@@"/>
             </intent-filter>
         </activity>
     </application>
