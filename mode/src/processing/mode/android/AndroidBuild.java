@@ -62,8 +62,8 @@ class AndroidBuild extends JavaBuild {
   static public String TARGET_PLATFORM;
   static {
     TARGET_SDK = Preferences.get("android.sdk.target");
-    if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) < 26) { 
-      TARGET_SDK = "26"; 
+    if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) < 27) { 
+      TARGET_SDK = "27"; 
       Preferences.set("android.sdk.target", TARGET_SDK);
     }
     TARGET_PLATFORM = "android-" + TARGET_SDK;
@@ -75,8 +75,8 @@ class AndroidBuild extends JavaBuild {
   static public String SUPPORT_VER;
   static {
     SUPPORT_VER = Preferences.get("android.sdk.support");
-    if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, "26.0.2")) {
-      SUPPORT_VER = "26.0.2"; 
+    if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, "27.1.1")) {
+      SUPPORT_VER = "27.1.1"; 
       Preferences.set("android.sdk.support", SUPPORT_VER);
     }
   }
@@ -84,8 +84,8 @@ class AndroidBuild extends JavaBuild {
   static public String PLAY_SERVICES_VER;
   static {
     PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
-    if (PLAY_SERVICES_VER == null || !versionCheck(PLAY_SERVICES_VER, "11.0.4")) {
-      PLAY_SERVICES_VER = "11.0.4"; 
+    if (PLAY_SERVICES_VER == null || !versionCheck(PLAY_SERVICES_VER, "15.0.1")) {
+      PLAY_SERVICES_VER = "15.0.1"; 
       Preferences.set("android.sdk.play_services", PLAY_SERVICES_VER);
     }
   }  
@@ -93,8 +93,8 @@ class AndroidBuild extends JavaBuild {
   static public String WEAR_VER;
   static {
     WEAR_VER = Preferences.get("android.sdk.wear");
-    if (WEAR_VER == null || !versionCheck(WEAR_VER, "2.1.0")) {
-      WEAR_VER = "2.1.0"; 
+    if (WEAR_VER == null || !versionCheck(WEAR_VER, "2.3.0")) {
+      WEAR_VER = "2.3.0"; 
       Preferences.set("android.sdk.wear", WEAR_VER);
     }
   }  
@@ -102,8 +102,8 @@ class AndroidBuild extends JavaBuild {
   static public String GVR_VER;
   static {
     GVR_VER = Preferences.get("android.sdk.gvr");
-    if (GVR_VER == null || !versionCheck(GVR_VER, "1.150.0")) {
-      GVR_VER = "1.150.0";
+    if (GVR_VER == null || !versionCheck(GVR_VER, "1.170.0")) {
+      GVR_VER = "1.170.0";
       Preferences.set("android.sdk.gvr", GVR_VER);
     }
   }  
