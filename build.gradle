@@ -23,10 +23,10 @@ allprojects {
     apply plugin: 'java-library'
 
     // Versions of all dependencies
-    ext.targetSdkVersion = '27'
-    ext.supportLibsVersion = '27.1.1'
-    ext.wearVersion = '2.3.0'
-    ext.gvrVersion = '1.170.0'
+    ext.targetSdkVersion = '26'
+    ext.supportLibsVersion = '26.0.2'
+    ext.wearVersion = '2.1.0'
+    ext.gvrVersion = '1.150.0'
     ext.processingVersion = '3.3.7'
     ext.toolingVersion = '4.3'
     ext.slf4jVersion = '1.7.10'
