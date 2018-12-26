@@ -54,7 +54,10 @@ import android.graphics.*;
 import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Style;
 import android.os.Build;
+import android.os.Environment;
 import android.view.SurfaceHolder;
+
+import static android.os.Environment.isExternalStorageRemovable;
 
 
 /**
@@ -2056,6 +2059,16 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   @Override
+  protected void clearState() {
+    super.clearState();
+    if (restoreFilename != null) {
+      File cacheFile = new File(restoreFilename);
+      cacheFile.delete();
+    }
+  }
+
+
+  @Override
   protected void saveState() {
     super.saveState();
 
@@ -2070,9 +2083,13 @@ public class PGraphicsAndroid2D extends PGraphics {
       ByteBuffer restoreBitmap = ByteBuffer.allocate(size);
       bitmap.copyPixelsToBuffer(restoreBitmap);
 
-      File cacheDir = context.getCacheDir();
-      File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
+      // Tries to use external but if not mounted, falls back on internal storage, as shown in
+      // https://developer.android.com/topic/performance/graphics/cache-bitmap#java
+      File cacheDir = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState() || !isExternalStorageRemovable() ?
+          context.getExternalCacheDir() : context.getCacheDir();
+      File cacheFile = new File(cacheDir + File.separator + "restore_pixels");
       restoreFilename = cacheFile.getAbsolutePath();
+
       FileOutputStream stream = new FileOutputStream(cacheFile);
       ObjectOutputStream dout = new ObjectOutputStream(stream);
       byte[] array = new byte[size];

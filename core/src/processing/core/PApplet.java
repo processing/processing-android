@@ -1896,7 +1896,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   // This method handles some special situations on Android where beginDraw/endDraw are needed,
-  // but not to render the actualy contents of draw(). In general, this situations arise from
+  // but not to render the actual contents of draw(). In general, these situations arise from
   // having to refresh/restore the screen after requesting no loop, or resuming the sketch in
   // no-loop state.
   protected boolean handleSpecialDraw() {
@@ -2908,6 +2908,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       surface.dispose();
     }
     if (g != null) {
+      g.clearState(); // This should probably go in dispose, but for the time being...
       g.dispose();
     }
 

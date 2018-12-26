@@ -982,9 +982,15 @@ public class PGraphics extends PImage implements PConstants {
   // RENDERER STATE
 
 
+  protected void clearState() {  // ignore
+    // Nothing to do here, it depends on the renderer's implementation.
+  }
+
+
   protected void saveState() {  // ignore
     // Nothing to do here, it depends on the renderer's implementation.
   }
+
 
   protected void restoreState() {  // ignore
     // This method probably does not need to be re-implemented in the subclasses. All we need to

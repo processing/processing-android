@@ -39,7 +39,10 @@ import java.nio.*;
 import java.util.*;
 
 import android.content.Context;
+import android.os.Environment;
 import android.view.SurfaceHolder;
+
+import static android.os.Environment.isExternalStorageRemovable;
 
 /**
  * OpenGL renderer.
@@ -5695,6 +5698,16 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
+  protected void clearState() {
+    super.clearState();
+    if (restoreFilename != null) {
+      File cacheFile = new File(restoreFilename);
+      cacheFile.delete();
+    }
+  }
+
+
+  @Override
   protected void saveState() {
     super.saveState();
 
@@ -5715,9 +5728,13 @@ public class PGraphicsOpenGL extends PGraphics {
           pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
           endPixelsOp();
 
-          File cacheDir = context.getCacheDir();
-          File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
+          // Tries to use external but if not mounted, falls back on internal storage, as shown in
+          // https://developer.android.com/topic/performance/graphics/cache-bitmap#java
+          File cacheDir = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState() || !isExternalStorageRemovable() ?
+                          context.getExternalCacheDir() : context.getCacheDir();
+          File cacheFile = new File(cacheDir + File.separator + "restore_pixels");
           restoreFilename = cacheFile.getAbsolutePath();
+
           FileOutputStream stream = new FileOutputStream(cacheFile);
           ObjectOutputStream dout = new ObjectOutputStream(stream);
           dout.writeObject(restorePixels);
