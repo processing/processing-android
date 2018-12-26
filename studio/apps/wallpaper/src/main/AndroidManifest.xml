@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="wallpaper">
-    <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="26"/>
     <uses-feature android:name="android.software.live_wallpaper"/>
     <application android:icon="@mipmap/ic_launcher" android:label="wallpaper">
         <service android:label="wallpaper" android:name=".MainService" android:permission="android.permission.BIND_WALLPAPER">
