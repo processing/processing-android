@@ -1,8 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 26
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 26
@@ -23,6 +22,6 @@ android {
 
 dependencies {
     implementation project(':libs:processing-core')
-    implementation 'com.google.vr:sdk-audio:1.170.0'
-    implementation 'com.google.vr:sdk-base:1.170.0'
+    implementation 'com.google.vr:sdk-audio:1.150.0'
+    implementation 'com.google.vr:sdk-base:1.150.0'
 }
