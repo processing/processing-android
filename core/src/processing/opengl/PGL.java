@@ -760,9 +760,9 @@ public abstract class PGL {
         float bb = ((argb) & 0xff) / 255.0f;
         clearColor(br, bg, bb, ba);
         clear(COLOR_BUFFER_BIT);
-      } else if (!pclearColor || !sketch.isLooping()) {
-        // Render previous back texture (now is the front) as background,
-        // because no background() is being used ("incremental drawing")
+      } else if (!pclearColor || !graphics.isLooping()) {
+        // Render previous back texture (now is the front) as background, because no background()
+        // is being used ("incremental drawing")
         int x = 0;
         int y = 0;
         if (presentMode) {
@@ -869,7 +869,7 @@ public abstract class PGL {
         saveFirstFrame();
       }
 
-      if (!clearColor && 0 < sketch.frameCount || !sketch.isLooping()) {
+      if (!clearColor && 0 < sketch.frameCount || !graphics.isLooping()) {
         enableFBOLayer();
         if (SINGLE_BUFFERED) {
           createFBOLayer();

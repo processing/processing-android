@@ -649,6 +649,14 @@ public class PGraphics extends PImage implements PConstants {
   protected boolean restartedLoopingAfterResume = false;
   protected boolean restoredSurface = true;
 
+  // This auxiliary variable is used to implement a little hack that fixes
+  // https://github.com/processing/processing-android/issues/147
+  // on older devices where the last frame cannot be maintained after ending
+  // the rendering in GL. The trick consists in running one more frame after the
+  // noLoop() call, which ensures that the FBO layer is properly initialized
+  // and drawn with the contents of the previous frame.
+  protected boolean requestedNoLoop = false;
+
   //////////////////////////////////////////////////////////////
 
   // INTERNAL
@@ -996,7 +1004,7 @@ public class PGraphics extends PImage implements PConstants {
     // This method probably does not need to be re-implemented in the subclasses. All we need to
     // do is to check for the resume in no-loop state situation:
     restoredSurface = false;
-    if (!parent.isLooping()) {
+    if (!parent.looping) {
       // The sketch needs to draw a few frames after resuming so it has the chance to restore the
       // screen contents:
       // https://github.com/processing/processing-android/issues/492
@@ -1022,6 +1030,19 @@ public class PGraphics extends PImage implements PConstants {
       parent.noLoop();
     }
   }
+
+
+  protected boolean requestNoLoop() { // ignore
+    // Some renderers (OpenGL) cannot be set to no-loop right away, it has to be requested so
+    // any pending frames are properly rendered. Override as needed.
+    return false;
+  }
+
+
+  protected boolean isLooping() { // ignore
+    return parent.isLooping() && (!requestNoLoop() || !requestedNoLoop);
+  }
+
 
   //////////////////////////////////////////////////////////////
 

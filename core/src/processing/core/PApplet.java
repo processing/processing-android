@@ -315,14 +315,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   protected boolean looping;
 
-  // This auxiliary variable is used to implement a little hack that fixes
-  // https://github.com/processing/processing-android/issues/147
-  // on older devices where the last frame cannot be maintained after ending
-  // the rendering in GL. The trick consists in running one more frame after the
-  // noLoop() call, which ensures that the FBO layer is properly initialized
-  // and drawn with the contents of the previous frame.
-  protected boolean requestedNoLoop = false;
-
   /** flag set to true when a redraw is asked for by the user */
   protected boolean redraw;
 
@@ -1908,7 +1900,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       g.endDraw();
 
       handled = true;
-    } else if (requestedNoLoop) {
+    } else if (g.requestedNoLoop) {
       // noLoop() was called sometime in the previous frame with a GL renderer, but only now
       // we are sure that the frame is properly displayed.
       looping = false;
@@ -1918,7 +1910,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       g.beginDraw();
       g.endDraw();
 
-      requestedNoLoop = false;
+      g.requestedNoLoop = false;
       handled = true;
     }
 
@@ -1930,8 +1922,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-  //////////////////////////////////////////////////////////////
 
+  //////////////////////////////////////////////////////////////
 
 
   synchronized public void redraw() {
@@ -1961,8 +1953,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   synchronized public void noLoop() {
     if (looping) {
-      if (g instanceof PGraphicsOpenGL) {
-        requestedNoLoop = true;
+      if (g.requestNoLoop()) {
+        g.requestedNoLoop = true;
       } else {
         looping = false;
       }

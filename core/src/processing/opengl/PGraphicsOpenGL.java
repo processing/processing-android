@@ -735,7 +735,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   // Factory method
-  protected PGL createPGL(PGraphicsOpenGL pg) {
+  protected PGL createPGL(PGraphicsOpenGL pg) { // ignore
 //    return new PJOGL(pg);
     return new PGLES(pg);
   }
@@ -761,6 +761,12 @@ public class PGraphicsOpenGL extends PGraphics {
   // Android only
   public void setFrameRate(float frameRate) {
     pgl.setFrameRate(frameRate);
+  }
+
+
+  @Override
+  protected boolean isLooping() { // ignore
+    return super.isLooping();
   }
 
 
@@ -5796,6 +5802,12 @@ public class PGraphicsOpenGL extends PGraphics {
       }
     }
     super.restoreSurface();
+  }
+
+
+  @Override
+  protected boolean requestNoLoop() {
+    return true;
   }
 
   //////////////////////////////////////////////////////////////
