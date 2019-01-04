@@ -88,8 +88,8 @@ public class PSurfaceAR extends PSurfaceGLES {
         displayRotationHelper = new RotationHandler(activity);
         surfaceView = new SurfaceViewAR(activity);
 
-        progressdialog.setMessage("Searching for Surfaces");
-        progressdialog.show();
+//        progressdialog.setMessage("Searching for Surfaces");
+//        progressdialog.show();
     }
 
     @Override
@@ -161,8 +161,8 @@ public class PSurfaceAR extends PSurfaceGLES {
     public class SurfaceViewAR extends GLSurfaceView {
         public SurfaceViewAR(Context context) {
             super(context);
-            sketch.setup();
-            sketch.draw();
+//            sketch.setup();
+//            sketch.draw();
 
             final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
             final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
@@ -256,15 +256,15 @@ public class PSurfaceAR extends PSurfaceGLES {
             }
             performRendering();
 
-            if (progressdialog != null) {
-                for (Plane plane : session.getAllTrackables(Plane.class)) {
-                    if (plane.getType() == com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING
-                            && plane.getTrackingState() == TrackingState.TRACKING) {
-                        progressdialog.dismiss();
-                        break;
-                    }
-                }
-            }
+//            if (progressdialog != null) {
+//                for (Plane plane : session.getAllTrackables(Plane.class)) {
+//                    if (plane.getType() == com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING
+//                            && plane.getTrackingState() == TrackingState.TRACKING) {
+//                        progressdialog.dismiss();
+//                        break;
+//                    }
+//                }
+//            }
 
             sketch.calculate();
             sketch.handleDraw();
@@ -349,6 +349,11 @@ public class PSurfaceAR extends PSurfaceGLES {
 
     @Override
     public void resumeThread() {
+      if (!sketch.hasPermission("android.permission.CAMERA")) {
+//        sketch.requestPermission("android.permission.CAMERA");
+        return;
+      }
+
         if (session == null) {
             String message = null;
             String exception = null;
@@ -360,6 +365,8 @@ public class PSurfaceAR extends PSurfaceGLES {
                     case INSTALLED:
                         break;
                 }
+
+
 
 //                if (!sketch.hasPermission("android.permission.CAMERA")) {
 //                  sketch.requestPermission("android.permission.CAMERA");

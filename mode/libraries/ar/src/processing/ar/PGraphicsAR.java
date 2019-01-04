@@ -1,5 +1,8 @@
 package processing.ar;
 
+import android.view.SurfaceHolder;
+
+import processing.android.AppComponent;
 import processing.core.PApplet;
 import processing.core.PMatrix3D;
 import processing.core.PSurface;
@@ -14,6 +17,12 @@ import static processing.ar.PSurfaceAR.session;
 public class PGraphicsAR extends PGraphics3D {
 
     public PGraphicsAR() {
+    }
+
+    @Override
+    public PSurface createSurface(AppComponent appComponent, SurfaceHolder surfaceHolder, boolean b) {
+        if (b) pgl.resetFBOLayer();
+        return new PSurfaceAR(this, appComponent, surfaceHolder);
     }
 
     @Override
