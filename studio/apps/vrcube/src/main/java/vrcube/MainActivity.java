@@ -10,7 +10,6 @@ public class MainActivity extends PVR {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     PApplet sketch = new Sketch();
-    sketch.setExternal(true);
     setSketch(sketch);
   }
 }

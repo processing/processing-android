@@ -69,6 +69,7 @@ public class AndroidEditor extends JavaEditor {
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
   private JCheckBoxMenuItem vrItem;
+  private JCheckBoxMenuItem arItem;
   
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
@@ -177,6 +178,7 @@ public class AndroidEditor extends JavaEditor {
     wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
     watchfaceItem = new JCheckBoxMenuItem("Watch Face");
     vrItem = new JCheckBoxMenuItem("VR");
+    arItem = new JCheckBoxMenuItem("AR");
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -185,6 +187,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.APP);
       }
     });
@@ -195,6 +198,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.WALLPAPER);        
       }
     });
@@ -205,6 +209,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
         vrItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.WATCHFACE);        
       }
     });
@@ -215,19 +220,33 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(true);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.VR);
       }
-    });    
+    });
+    arItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+        vrItem.setSelected(false);
+        arItem.setSelected(true);
+        setAppComponent(AndroidBuild.AR);
+      }
+    });
        
     fragmentItem.setState(false);
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
     vrItem.setSelected(false);
+    arItem.setSelected(false);
 
     androidMenu.add(fragmentItem);
     androidMenu.add(wallpaperItem);
     androidMenu.add(watchfaceItem);
     androidMenu.add(vrItem);
+    androidMenu.add(arItem);
     
     androidMenu.addSeparator();
 
@@ -279,6 +298,8 @@ public class AndroidEditor extends JavaEditor {
         settings.set("component", "watchface");
       } else if (appComponent == AndroidBuild.VR) {
         settings.set("component", "vr");
+      } else if (appComponent == AndroidBuild.AR) {
+        settings.set("component", "ar");
       }
       settings.save();            
       androidMode.resetManifest(sketch, appComponent);
@@ -498,7 +519,10 @@ public class AndroidEditor extends JavaEditor {
       } else if (component.equals("vr")) {
         appComponent = AndroidBuild.VR;
         vrItem.setState(true);
-      }  
+      }  else if (component.equals("ar")) {
+        appComponent = AndroidBuild.AR;
+        arItem.setState(true);
+      }
       
       if (save) androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
