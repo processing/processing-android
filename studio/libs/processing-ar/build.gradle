@@ -24,5 +24,4 @@ dependencies {
     implementation project(':libs:processing-core')
     implementation 'com.google.ar:core:1.2.0'
     implementation "de.javagl:obj:0.2.1"
-    implementation 'com.android.support:appcompat-v7:26.0.2'
 }
