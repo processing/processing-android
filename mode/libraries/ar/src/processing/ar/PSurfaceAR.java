@@ -64,6 +64,11 @@ public class PSurfaceAR extends PSurfaceGLES {
   private static String C_EXCEPT_UPDATE_APP = "Please update this app";
   private static String C_DEVICE = "This device does not support AR";
 
+  // Made these public so they can be accessed from the sketch
+  protected Session session;
+  public Frame frame;
+  public Camera camera;
+
   protected GLSurfaceView surfaceView;
   protected AndroidARRenderer renderer;
   protected PGraphicsAR par;
@@ -72,13 +77,8 @@ public class PSurfaceAR extends PSurfaceGLES {
   protected static ArrayBlockingQueue<MotionEvent> queuedTaps = new ArrayBlockingQueue<>(16);
   protected static ArrayList<Anchor> anchors = new ArrayList<>();
 
-  protected float[] projmtx;
-  protected float[] viewmtx;
-
-  protected float lightIntensity;
-
-  protected Session session;
-  protected Pose mainPose;
+  protected float[] projmtx = new float[16];
+  protected float[] viewmtx = new float[16];
   protected RotationHandler displayRotationHelper;
 
   protected PBackground backgroundRenderer = new PBackground();
@@ -262,70 +262,75 @@ public class PSurfaceAR extends PSurfaceGLES {
         }
       }
 
-      sketch.calculate();
-      sketch.handleDraw();
+      displayRotationHelper.updateSessionIfNeeded(session);
+      try {
+        session.setCameraTextureName(backgroundRenderer.getTextureId());
+        frame = session.update();
+        camera = frame.getCamera();
+
+        if (camera.getTrackingState() == TrackingState.PAUSED) {
+          // Just draw the camera image and do nothing else
+          renderBackground();
+          return;
+        }
+
+        updateAnchors();
+        updateMatrices();
+
+        sketch.calculate();
+        sketch.handleDraw();
+
+      } catch (CameraNotAvailableException ex) {
+        PGraphics.showWarning("Camera is not available");
+      }
     }
   }
 
-  public void performRendering() {
-    if (session == null) return;
+  public void renderBackground() {
+    backgroundRenderer.draw(frame);
+  }
 
-    displayRotationHelper.updateSessionIfNeeded(session);
-
-    try {
-      session.setCameraTextureName(backgroundRenderer.getTextureId());
-      Frame frame = session.update();
-      Camera camera = frame.getCamera();
-
-      MotionEvent tap = queuedTaps.poll();
-      if (tap != null && camera.getTrackingState() == TrackingState.TRACKING) {
-        for (HitResult hit : frame.hitTest(tap)) {
-          Trackable trackable = hit.getTrackable();
-          if ((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
-              || (trackable instanceof Point
-              && ((Point) trackable).getOrientationMode()
-              == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)) {
-            if (anchors.size() >= 20) {
-              anchors.get(0).detach();
-              anchors.remove(0);
-            }
-            anchors.add(hit.createAnchor());
-            break;
+  protected void updateAnchors() {
+    MotionEvent tap = queuedTaps.poll();
+    if (tap != null && camera.getTrackingState() == TrackingState.TRACKING) {
+      for (HitResult hit : frame.hitTest(tap)) {
+        Trackable trackable = hit.getTrackable();
+        if ((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
+            || (trackable instanceof Point
+            && ((Point) trackable).getOrientationMode()
+            == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)) {
+          if (anchors.size() >= 20) {
+            anchors.get(0).detach();
+            anchors.remove(0);
           }
+          anchors.add(hit.createAnchor());
+          break;
         }
       }
-
-      backgroundRenderer.draw(frame);
-      if (camera.getTrackingState() == TrackingState.PAUSED) {
-        return;
-      }
-
-      projmtx = new float[16];
-      camera.getProjectionMatrix(projmtx, 0, 0.1f, 100.0f);
-      viewmtx = new float[16];
-      camera.getViewMatrix(viewmtx, 0);
-      lightIntensity = frame.getLightEstimate().getPixelIntensity();
-      PointCloud foundPointCloud = frame.acquirePointCloud();
-      pointCloud.update(foundPointCloud);
-      pointCloud.draw(viewmtx, projmtx);
-      foundPointCloud.release();
-
-      planeRenderer.drawPlanes(
-          session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
-
-      mainPose = camera.getDisplayOrientedPose();
-
-      float scaleFactor = 1.0f;
-      for (Anchor anchor : anchors) {
-        if (anchor.getTrackingState() != TrackingState.TRACKING) {
-          continue;
-        }
-        anchor.getPose().toMatrix(anchorMatrix, 0);
-      }
-    } catch (Throwable t) {
-      PGraphics.showWarning("Exception on the OpenGL thread");
     }
   }
+
+  protected void updateMatrices() {
+    camera.getProjectionMatrix(projmtx, 0, 0.1f, 100.0f);
+    camera.getViewMatrix(viewmtx, 0);
+  }
+
+  protected void renderHelpers() {
+    PointCloud foundPointCloud = frame.acquirePointCloud();
+    pointCloud.update(foundPointCloud);
+    pointCloud.draw(viewmtx, projmtx);
+    foundPointCloud.release();
+
+    planeRenderer.drawPlanes(
+        session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
+    for (Anchor anchor : anchors) {
+      if (anchor.getTrackingState() != TrackingState.TRACKING) {
+        continue;
+      }
+      anchor.getPose().toMatrix(anchorMatrix, 0);
+    }
+  }
+
 
   @Override
   public void startThread() {
@@ -378,14 +383,11 @@ public class PSurfaceAR extends PSurfaceGLES {
         message(T_ALERT_MESSAGE, message + " -- " + exception);
       }
 
-
       Config config = new Config(session);
       if (!session.isSupported(config)) {
         message(T_PROMPT_MESSAGE, C_DEVICE);
       }
       session.configure(config);
-
-
     }
     try {
       session.resume();

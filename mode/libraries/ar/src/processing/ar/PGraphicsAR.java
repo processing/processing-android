@@ -64,7 +64,11 @@ public class PGraphicsAR extends PGraphics3D {
 
   @Override
   protected void backgroundImpl() {
-    surfar.performRendering();
+    surfar.renderBackground();
+
+    // The helpers (planes, point clouds, should be drawn using Processing primitives, so this could
+    // go after updateView() in beginDraw().
+    surfar.renderHelpers();
   }
 
 
@@ -136,7 +140,6 @@ public class PGraphicsAR extends PGraphics3D {
           anchor[1], anchor[5], anchor[9], anchor[13],
           anchor[2], anchor[6], anchor[10], anchor[14],
           anchor[3], anchor[7], anchor[11], anchor[15]);
-
     }
   }
 }
