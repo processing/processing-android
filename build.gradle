@@ -33,6 +33,7 @@ allprojects {
     ext.slf4jVersion = '1.7.10'
     ext.gradlewVersion = '4.4.1'
     ext.toolsLibVersion = '26.0.0-dev'
+    ext.jdtVersion = '3.11.100'
 
     Properties modeProperties = new Properties()
     modeProperties.load(project.rootProject.file("mode/mode.properties").newDataInputStream())
@@ -98,9 +99,11 @@ task dist {
         // Copy assets to build dir
         FileUtils.copyDirectory(file("mode/templates"), file("${root}/templates"))
         FileUtils.copyDirectory(file("mode/examples"), file("${root}/examples"))
-        FileUtils.copyDirectory(file("mode/icons"), file("${root}/icons"))
-        FileUtils.copyDirectory(file("mode/mode"), file("${root}/mode"))
+        FileUtils.copyDirectory(file("mode/icons"), file("${root}/icons"))        
         FileUtils.copyDirectory(file("mode/theme"), file("${root}/theme"))
+        FileUtils.copyDirectory(file("mode/mode"), file("${root}/mode"))
+        delete "${root}/mode/jdi.jar"
+        delete "${root}/mode/jdimodel.jar"
                    
         Files.copy(file("mode/processing-core.zip").toPath(),
                    file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING);

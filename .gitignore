@@ -1,5 +1,7 @@
 mode/processing-core.zip
-mode/mode/*.jar
+mode/mode/AndroidMode.jar
+mode/mode/gradle-tooling-api*
+mode/mode/slf4j*
 
 mode/libraries/vr/library
 mode/libraries/ar/library
