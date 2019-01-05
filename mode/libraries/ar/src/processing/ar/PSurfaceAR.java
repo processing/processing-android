@@ -380,6 +380,8 @@ public class PSurfaceAR extends PSurfaceGLES {
       String message = null;
       String exception = null;
       try {
+        // Perhaps this should be done in the MainActivity?
+        // https://github.com/google-ar/arcore-android-sdk/blob/master/samples/hello_ar_java/app/src/main/java/com/google/ar/core/examples/java/helloar/HelloArActivity.java
         switch (ArCoreApk.getInstance().requestInstall(sketch.getActivity(), true)) {
           case INSTALL_REQUESTED:
             message(T_ALERT_MESSAGE, C_NOT_SUPPORTED);
