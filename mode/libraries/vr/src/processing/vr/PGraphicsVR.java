@@ -144,13 +144,13 @@ public class PGraphicsVR extends PGraphics3D {
   public void camera(float eyeX, float eyeY, float eyeZ,
                      float centerX, float centerY, float centerZ,
                      float upX, float upY, float upZ) {
-    PGraphics.showWarning("The camera cannnot be modified in VR mode");
+    PGraphics.showWarning("The camera cannot be set in VR");
   }
 
 
   @Override
   public void perspective(float fov, float aspect, float zNear, float zFar) {
-    PGraphics.showWarning("Perspective cannnot be modified in VR mode");
+    PGraphics.showWarning("Perspective cannot be set in VR");
   }
 
 

@@ -22,7 +22,6 @@
 
 package processing.ar;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -31,7 +30,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ConfigurationInfo;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -42,7 +40,6 @@ import com.google.ar.core.exceptions.*;
 
 import processing.android.AppComponent;
 import processing.ar.render.*;
-import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphicsOpenGL;
@@ -58,35 +55,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class PSurfaceAR extends PSurfaceGLES {
-
-  private GLSurfaceView surfaceView;
-  protected AndroidARRenderer renderer;
-  protected PGraphicsAR par;
-
-  public static float[] anchorMatrix = new float[16];
-  public static float[] quaternionMatrix = new float[16];
-  public static ArrayBlockingQueue<MotionEvent> queuedTaps = new ArrayBlockingQueue<>(16);
-  public static ArrayList<Anchor> anchors = new ArrayList<>();
-
-  public static float[] projmtx;
-  public static float[] viewmtx;
-
-  public static float lightIntensity;
-
-  public static Session session;
-  public static Pose mainPose;
-  public static RotationHandler displayRotationHelper;
-
-  public static String PLANE_TEXTURE = "grid.png";
-  public static String OBJ_NAME = null;
-  public static String OBJ_TEX = null;
-  public static boolean PLACED = false;
-
-  public static PBackground backgroundRenderer = new PBackground();
-  public static PPlane planeRenderer = new PPlane();
-  public static PPointCloud pointCloud = new PPointCloud();
-  public static PObject virtualObject = new PObject();
-
   private static String T_ALERT_MESSAGE = "ALERT";
   private static String C_NOT_SUPPORTED = "ARCore SDK required to run this app type";
   private static String T_PROMPT_MESSAGE = "PROMPT";
@@ -95,11 +63,29 @@ public class PSurfaceAR extends PSurfaceGLES {
   private static String C_EXCEPT_UPDATE_SDK = "Please update ARCore";
   private static String C_EXCEPT_UPDATE_APP = "Please update this app";
   private static String C_DEVICE = "This device does not support AR";
-  private static final int CAMERA_PERMISSION_CODE = 0;
-  private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-  ProgressDialog progressdialog = new ProgressDialog(activity);
+  protected GLSurfaceView surfaceView;
+  protected AndroidARRenderer renderer;
+  protected PGraphicsAR par;
 
+  protected static float[] anchorMatrix = new float[16];
+  protected static ArrayBlockingQueue<MotionEvent> queuedTaps = new ArrayBlockingQueue<>(16);
+  protected static ArrayList<Anchor> anchors = new ArrayList<>();
+
+  protected float[] projmtx;
+  protected float[] viewmtx;
+
+  protected float lightIntensity;
+
+  protected Session session;
+  protected Pose mainPose;
+  protected RotationHandler displayRotationHelper;
+
+  protected PBackground backgroundRenderer = new PBackground();
+  protected PPlane planeRenderer = new PPlane();
+  protected PPointCloud pointCloud = new PPointCloud();
+
+  protected ProgressDialog progressdialog = new ProgressDialog(activity);
 
   public PSurfaceAR(PGraphics graphics, AppComponent appComponent, SurfaceHolder surfaceHolder) {
     super(graphics, appComponent, surfaceHolder);
@@ -186,8 +172,6 @@ public class PSurfaceAR extends PSurfaceGLES {
   public class SurfaceViewAR extends GLSurfaceView {
     public SurfaceViewAR(Context context) {
       super(context);
-//            sketch.setup();
-//            sketch.draw();
 
       final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
       final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
@@ -244,16 +228,8 @@ public class PSurfaceAR extends PSurfaceGLES {
       pgl.getGL(null);
       GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
       backgroundRenderer.createOnGlThread(activity);
-      if (OBJ_NAME != null && OBJ_TEX != null) {
-        try {
-          virtualObject.createOnGlThread(activity, OBJ_NAME, OBJ_TEX);
-          virtualObject.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
-        } catch (IOException e) {
-          PGraphics.showWarning("Failed to read obj file");
-        }
-      }
       try {
-        planeRenderer.createOnGlThread(activity, PLANE_TEXTURE);
+        planeRenderer.createOnGlThread(activity);
       } catch (IOException e) {
         PGraphics.showWarning("Failed to read plane texture");
       }
@@ -274,12 +250,7 @@ public class PSurfaceAR extends PSurfaceGLES {
 
     @Override
     public void onDrawFrame(GL10 gl) {
-      GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-      if (session == null) {
-        return;
-      }
-      performRendering();
+      if (session == null) return;
 
       if (progressdialog != null) {
         for (Plane plane : session.getAllTrackables(Plane.class)) {
@@ -296,7 +267,9 @@ public class PSurfaceAR extends PSurfaceGLES {
     }
   }
 
-  public static void performRendering() {
+  public void performRendering() {
+    if (session == null) return;
+
     displayRotationHelper.updateSessionIfNeeded(session);
 
     try {
@@ -348,11 +321,6 @@ public class PSurfaceAR extends PSurfaceGLES {
           continue;
         }
         anchor.getPose().toMatrix(anchorMatrix, 0);
-
-        if ((OBJ_NAME != null && OBJ_TEX != null) && PLACED) {
-          virtualObject.updateModelMatrix(anchorMatrix, scaleFactor);
-          virtualObject.draw(viewmtx, projmtx, lightIntensity);
-        }
       }
     } catch (Throwable t) {
       PGraphics.showWarning("Exception on the OpenGL thread");

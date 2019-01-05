@@ -25,59 +25,95 @@ package processing.ar;
 import android.view.SurfaceHolder;
 
 import processing.android.AppComponent;
-import processing.core.PApplet;
-import processing.core.PMatrix3D;
+import processing.core.PGraphics;
 import processing.core.PSurface;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
 import processing.opengl.PGraphicsOpenGL;
 
-import static processing.ar.PSurfaceAR.mainPose;
-import static processing.ar.PSurfaceAR.session;
-
 public class PGraphicsAR extends PGraphics3D {
+  // Convenience reference to the AR surface. It is the same object one gets from PApplet.getSurface().
+  protected PSurfaceAR surfar;
+
 
   public PGraphicsAR() {
   }
 
+
   @Override
-  public PSurface createSurface(AppComponent appComponent, SurfaceHolder surfaceHolder, boolean b) {
-    if (b) pgl.resetFBOLayer();
-    return new PSurfaceAR(this, appComponent, surfaceHolder);
+  public PSurface createSurface(AppComponent appComponent, SurfaceHolder surfaceHolder, boolean reset) {
+    if (reset) pgl.resetFBOLayer();
+    surfar = new PSurfaceAR(this, appComponent, surfaceHolder);
+    return surfar;
   }
+
 
   @Override
   protected PGL createPGL(PGraphicsOpenGL pGraphicsOpenGL) {
     return new PGLES(pGraphicsOpenGL);
   }
 
+
   @Override
   public void beginDraw() {
     super.beginDraw();
-    updateInferences();
+    updateView();
   }
+
 
   @Override
   protected void backgroundImpl() {
-    if (session != null) {
-      PSurfaceAR.performRendering();
-    }
+    surfar.performRendering();
   }
+
 
   @Override
-  public void surfaceChanged() {
+  public void camera(float eyeX, float eyeY, float eyeZ,
+                     float centerX, float centerY, float centerZ,
+                     float upX, float upY, float upZ) {
+    PGraphics.showWarning("The camera cannot be set in AR");
   }
 
-  public void updateInferences() {
-    setAR();
+
+  @Override
+  public void perspective(float fov, float aspect, float zNear, float zFar) {
+    PGraphics.showWarning("Perspective cannot be set in AR");
   }
 
-  protected void setAR() {
-    if (PSurfaceAR.projmtx != null && PSurfaceAR.viewmtx != null && PSurfaceAR.anchorMatrix != null) {
-      float[] prj = PSurfaceAR.projmtx;
-      float[] view = PSurfaceAR.viewmtx;
-      float[] anchor = PSurfaceAR.anchorMatrix;
+
+  @Override
+  protected void defaultCamera() {
+    // do nothing
+  }
+
+
+  @Override
+  protected void defaultPerspective() {
+    // do nothing
+  }
+
+
+  @Override
+  protected void saveState() {
+  }
+
+
+  @Override
+  protected void restoreState() {
+  }
+
+
+  @Override
+  protected void restoreSurface() {
+  }
+
+
+  protected void updateView() {
+    if (surfar.projmtx != null && surfar.viewmtx != null && surfar.anchorMatrix != null) {
+      float[] prj = surfar.projmtx;
+      float[] view = surfar.viewmtx;
+      float[] anchor = surfar.anchorMatrix;
 
       // Fist, set all matrices to identity
       resetProjection();
@@ -85,15 +121,15 @@ public class PGraphicsAR extends PGraphics3D {
 
       // Apply the projection matrix
       applyProjection(prj[0], prj[4], prj[8], prj[12],
-          prj[1], prj[5], prj[9], prj[13],
-          prj[2], prj[6], prj[10], prj[14],
-          prj[3], prj[7], prj[11], prj[15]);
+                      prj[1], prj[5], prj[9], prj[13],
+                      prj[2], prj[6], prj[10], prj[14],
+                      prj[3], prj[7], prj[11], prj[15]);
 
       // make modelview = view
       applyMatrix(view[0], view[4], view[8], view[12],
-          view[1], view[5], view[9], view[13],
-          view[2], view[6], view[10], view[14],
-          view[3], view[7], view[11], view[15]);
+                  view[1], view[5], view[9], view[13],
+                  view[2], view[6], view[10], view[14],
+                  view[3], view[7], view[11], view[15]);
 
       // now, modelview = view * anchor
       applyMatrix(anchor[0], anchor[4], anchor[8], anchor[12],
