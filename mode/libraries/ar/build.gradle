@@ -60,7 +60,6 @@ dependencies {
     compileOnly "org.p5android:processing-core:${modeVersion}"
 
     aar "com.google.ar:core:${garVersion}"
-    aar "de.javagl:obj:0.2.1"
 }
 
 /**

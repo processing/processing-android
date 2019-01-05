@@ -39,7 +39,6 @@ import com.google.ar.core.*;
 import com.google.ar.core.exceptions.*;
 
 import processing.android.AppComponent;
-import processing.ar.render.*;
 import processing.core.PGraphics;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphicsOpenGL;
@@ -81,9 +80,9 @@ public class PSurfaceAR extends PSurfaceGLES {
   protected float[] viewmtx = new float[16];
   protected RotationHandler displayRotationHelper;
 
-  protected PBackground backgroundRenderer = new PBackground();
-  protected PPlane planeRenderer = new PPlane();
-  protected PPointCloud pointCloud = new PPointCloud();
+  protected ARBackground backgroundRenderer = new ARBackground();
+  protected ARPlane planeRenderer = new ARPlane();
+//  protected ARPointCloud pointCloud = new ARPointCloud();
 
   protected ProgressDialog progressdialog = new ProgressDialog(activity);
 
@@ -99,8 +98,8 @@ public class PSurfaceAR extends PSurfaceGLES {
     displayRotationHelper = new RotationHandler(activity);
     surfaceView = new SurfaceViewAR(activity);
 
-    progressdialog.setMessage("Searching for Surfaces");
-    progressdialog.show();
+//    progressdialog.setMessage("Searching for Surfaces");
+//    progressdialog.show();
   }
 
   @Override
@@ -233,7 +232,7 @@ public class PSurfaceAR extends PSurfaceGLES {
       } catch (IOException e) {
         PGraphics.showWarning("Failed to read plane texture");
       }
-      pointCloud.createOnGlThread(activity);
+//      pointCloud.createOnGlThread(activity);
     }
 
     @Override
@@ -252,15 +251,15 @@ public class PSurfaceAR extends PSurfaceGLES {
     public void onDrawFrame(GL10 gl) {
       if (session == null) return;
 
-      if (progressdialog != null) {
-        for (Plane plane : session.getAllTrackables(Plane.class)) {
-          if (plane.getType() == com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING
-              && plane.getTrackingState() == TrackingState.TRACKING) {
-            progressdialog.dismiss();
-            break;
-          }
-        }
-      }
+//      if (progressdialog != null) {
+//        for (Plane plane : session.getAllTrackables(Plane.class)) {
+//          if (plane.getType() == com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING
+//              && plane.getTrackingState() == TrackingState.TRACKING) {
+//            progressdialog.dismiss();
+//            break;
+//          }
+//        }
+//      }
 
       displayRotationHelper.updateSessionIfNeeded(session);
       try {
@@ -280,8 +279,8 @@ public class PSurfaceAR extends PSurfaceGLES {
         sketch.calculate();
         sketch.handleDraw();
 
-      } catch (CameraNotAvailableException ex) {
-        PGraphics.showWarning("Camera is not available");
+      } catch (Throwable tr) {
+        PGraphics.showWarning("An error occurred in ARCORE: " + tr.getMessage());
       }
     }
   }
@@ -316,11 +315,13 @@ public class PSurfaceAR extends PSurfaceGLES {
   }
 
   protected void renderHelpers() {
-    PointCloud foundPointCloud = frame.acquirePointCloud();
-    pointCloud.update(foundPointCloud);
-    pointCloud.draw(viewmtx, projmtx);
-    foundPointCloud.release();
+    // This should be enabled/disabled with a parameter...
+//    PointCloud foundPointCloud = frame.acquirePointCloud();
+//    pointCloud.update(foundPointCloud);
+//    pointCloud.draw(viewmtx, projmtx);
+//    foundPointCloud.release();
 
+    // Same with the planes...
     planeRenderer.drawPlanes(
         session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
     for (Anchor anchor : anchors) {

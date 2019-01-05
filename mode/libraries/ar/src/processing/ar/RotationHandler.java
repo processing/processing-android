@@ -1,4 +1,4 @@
-package processing.ar.render;
+package processing.ar;
 
 
 import android.content.Context;

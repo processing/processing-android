@@ -1,26 +1,34 @@
 package arscene;
 
-import processing.core.PApplet;
 import processing.ar.*;
-import processing.ar.render.*;
+import processing.core.PApplet;
 
 public class Sketch extends PApplet {
+  float angle = 0;
+
   public void settings() {
     fullScreen(ARCORE);
   }
 
   public void setup() {
-    PPlane.setPlaneColor(0x00BCD4FF);
-    PPlane.setPlaneTexture("triangle.png");
+    ARPlane.setPlaneColor(0xB4E7FF);
   }
 
   public void draw() {
-    lights();
+    // At this point, there is no much AR-specific API, but you can get the AR Core session, frame,
+    // and camera to extract more information about the AR scene.
+//    PSurfaceAR surface = (PSurfaceAR) getSurface();
+//    surface.camera.getPose();
+//    surface.frame.getLightEstimate();
+
     background(0);
-    fill(0x769FE0);
+    lights();
+    fill(0xFCB736);
+    noStroke();
     sphere(0.10f);
-    rotateZ(frameCount * 0.1f);
+    rotateZ(angle);
     translate(0, 0.3f,0);
     sphere(0.05f);
+    angle += 0.1;
   }
 }

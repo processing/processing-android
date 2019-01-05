@@ -44,7 +44,7 @@ allprojects {
 
     Properties arProperties = new Properties()
     arProperties.load(project.rootProject.file("mode/libraries/ar/library.properties").newDataInputStream())
-    ext.arLibVersion = vrProperties.getProperty("prettyVersion")
+    ext.arLibVersion = arProperties.getProperty("prettyVersion")
 
 
     def fn = project.rootProject.file("local.properties")

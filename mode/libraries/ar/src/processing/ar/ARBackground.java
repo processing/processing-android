@@ -1,4 +1,4 @@
-package processing.ar.render;
+package processing.ar;
 
 import android.content.Context;
 import android.opengl.GLES11Ext;
@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class PBackground {
+public class ARBackground {
 
     private static final int COORDS_PER_VERTEX = 3;
     private static final int TEXCOORDS_PER_VERTEX = 2;
@@ -27,9 +27,9 @@ public class PBackground {
     private int textureId = -1;
 
     static private URL screenquad_vertex =
-            PBackground.class.getResource("/assets/shaders/screenquad_vertex.glsl");
+            ARBackground.class.getResource("/assets/shaders/screenquad_vertex.glsl");
     static private URL screenquad_fragment =
-            PBackground.class.getResource("/assets/shaders/screenquad_fragment.glsl");
+            ARBackground.class.getResource("/assets/shaders/screenquad_fragment.glsl");
 
     private String VERTICES_ERROR = "Unexpected number of vertices in BackgroundRenderer";
     private String ERROR_TAG = "Error";
@@ -37,7 +37,7 @@ public class PBackground {
     private String PARAMETERS_ERROR = "Program parameters";
     private String DRAW_ERROR = "Draw";
 
-    public PBackground() {}
+    public ARBackground() {}
 
     public int getTextureId() {
         return textureId;

@@ -1,4 +1,4 @@
-package processing.ar.render;
+package processing.ar;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -19,13 +19,13 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.*;
 
-public class PPlane {
+public class ARPlane {
   private static String PLANE_TEXTURE = "grid.png";
 
   static private URL plane_vertex =
-      PPlane.class.getResource("/assets/shaders/plane_vertex.glsl");
+      ARPlane.class.getResource("/assets/shaders/plane_vertex.glsl");
   static private URL plane_fragment =
-      PPlane.class.getResource("/assets/shaders/plane_fragment.glsl");
+      ARPlane.class.getResource("/assets/shaders/plane_fragment.glsl");
 
   private String ERROR_TAG = "Error";
   private String CREATION_ERROR = "Program creation";
@@ -90,7 +90,7 @@ public class PPlane {
 
   private final Map<Plane, Integer> planeIndexMap = new HashMap<>();
 
-  public PPlane() {
+  public ARPlane() {
   }
 
   public void createOnGlThread(Context context) throws IOException {

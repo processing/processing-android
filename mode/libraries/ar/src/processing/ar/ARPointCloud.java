@@ -1,4 +1,4 @@
-package processing.ar.render;
+package processing.ar;
 
 import android.content.Context;
 import android.opengl.GLES20;
@@ -7,12 +7,12 @@ import com.google.ar.core.PointCloud;
 
 import java.net.URL;
 
-public class PPointCloud {
+public class ARPointCloud {
 
     static private URL pointcloud_vertex =
-            PPointCloud.class.getResource("/assets/shaders/pointcloud_vertex.glsl");
+            ARPointCloud.class.getResource("/assets/shaders/pointcloud_vertex.glsl");
     static private URL pointcloud_fragment =
-            PPointCloud.class.getResource("/assets/shaders/pointcloud_fragment.glsl");
+            ARPointCloud.class.getResource("/assets/shaders/pointcloud_fragment.glsl");
 
     private String ERROR_TAG = "Error";
     private String BEF_CREATE = "before create";
@@ -43,7 +43,7 @@ public class PPointCloud {
 
     private PointCloud lastPointCloud = null;
 
-    public PPointCloud() {}
+    public ARPointCloud() {}
 
     public void createOnGlThread(Context context) {
         Utils.checkGLError(ERROR_TAG, BEF_CREATE);
