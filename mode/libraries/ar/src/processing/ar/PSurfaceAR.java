@@ -366,13 +366,6 @@ public class PSurfaceAR extends PSurfaceGLES {
                         break;
                 }
 
-
-
-//                if (!sketch.hasPermission("android.permission.CAMERA")) {
-//                  sketch.requestPermission("android.permission.CAMERA");
-//                  return;
-//                }
-
                 session = new Session(activity);
             } catch (UnavailableArcoreNotInstalledException
                     | UnavailableUserDeclinedInstallationException e) {

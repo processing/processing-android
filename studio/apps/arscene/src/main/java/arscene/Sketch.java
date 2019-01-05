@@ -15,9 +15,9 @@ public class Sketch extends PApplet {
 
   public void setup() {
     // I think this should go here but not 100% sure
-    if (!hasPermission("android.permission.CAMERA")) {
-      requestPermission("android.permission.CAMERA");
-    }
+//    if (!hasPermission("android.permission.CAMERA")) {
+//      requestPermission("android.permission.CAMERA");
+//    }
 //    sphere = createShape(SPHERE, 400);
 
     //Initialisation of AR Object
