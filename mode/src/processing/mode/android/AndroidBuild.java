@@ -925,7 +925,7 @@ class AndroidBuild extends JavaBuild {
         // Skip the GVR jars, because the gradle will resolve the dependencies
         if (appComponent == VR && exportName.toLowerCase().startsWith("sdk-")) continue;
 
-        if (appComponent == AR && exportName.toLowerCase().startsWith("sdk-")) continue;
+        if (appComponent == AR && exportName.toLowerCase().startsWith("core-")) continue;
 
         if (!exportFile.exists()) {
           System.err.println(exportFile.getName() +
