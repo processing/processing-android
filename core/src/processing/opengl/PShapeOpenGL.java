@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012-15 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -1761,10 +1761,11 @@ public class PShapeOpenGL extends PShape {
       return;
     }
 
-    VertexAttribute attrib = polyAttribs.get(name);
+    VertexAttribute attrib = attribImpl(name, VertexAttribute.OTHER, PGL.FLOAT,
+        values.length);
     float[] array = inGeo.fattribs.get(name);
     for (int i = 0; i < values.length; i++) {
-      array[attrib.size * index + 0] = values[i];
+      array[attrib.size * index + i] = values[i];
     }
     markForTessellation();
   }
@@ -1777,10 +1778,11 @@ public class PShapeOpenGL extends PShape {
       return;
     }
 
-    VertexAttribute attrib = polyAttribs.get(name);
+    VertexAttribute attrib = attribImpl(name, VertexAttribute.OTHER, PGL.INT,
+        values.length);
     int[] array = inGeo.iattribs.get(name);
     for (int i = 0; i < values.length; i++) {
-      array[attrib.size * index + 0] = values[i];
+      array[attrib.size * index + i] = values[i];
     }
     markForTessellation();
   }
@@ -1793,10 +1795,11 @@ public class PShapeOpenGL extends PShape {
       return;
     }
 
-    VertexAttribute attrib = polyAttribs.get(name);
+    VertexAttribute attrib = attribImpl(name, VertexAttribute.OTHER, PGL.BOOL,
+        values.length);
     byte[] array = inGeo.battribs.get(name);
     for (int i = 0; i < values.length; i++) {
-      array[attrib.size * index + 0] = (byte)(values[i]?1:0);
+      array[attrib.size * index + i] = (byte)(values[i]?1:0);
     }
     markForTessellation();
   }
@@ -2828,15 +2831,21 @@ public class PShapeOpenGL extends PShape {
 
   protected void tessellate() {
     if (root == this && parent == null) { // Root shape
+      boolean initAttr = false;
       if (polyAttribs == null) {
         polyAttribs = PGraphicsOpenGL.newAttributeMap();
-        collectPolyAttribs();
+        initAttr = true;
       }
 
       if (tessGeo == null) {
         tessGeo = PGraphicsOpenGL.newTessGeometry(pg, polyAttribs, PGraphicsOpenGL.RETAINED);
       }
       tessGeo.clear();
+
+      if (initAttr) {
+        collectPolyAttribs();
+      }
+
       for (int i = 0; i < polyAttribs.size(); i++) {
         VertexAttribute attrib = polyAttribs.get(i);
         tessGeo.initAttrib(attrib);
@@ -2854,6 +2863,7 @@ public class PShapeOpenGL extends PShape {
 
   protected void collectPolyAttribs() {
     AttributeMap rootAttribs = root.polyAttribs;
+    tessGeo = root.tessGeo;
 
     if (family == GROUP) {
       for (int i = 0; i < childCount; i++) {
