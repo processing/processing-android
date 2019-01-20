@@ -5862,17 +5862,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return temp;
   }
 
-
-  static public PImage[] expand(PImage list[]) {
-    return expand(list, list.length << 1);
+  static public long[] expand(long list[]) {
+    return expand(list, list.length > 0 ? list.length << 1 : 1);
   }
 
-  static public PImage[] expand(PImage list[], int newSize) {
-    PImage temp[] = new PImage[newSize];
+  static public long[] expand(long list[], int newSize) {
+    long temp[] = new long[newSize];
     System.arraycopy(list, 0, temp, 0, Math.min(newSize, list.length));
     return temp;
   }
-
 
   static public float[] expand(float list[]) {
     return expand(list, list.length << 1);
@@ -5884,6 +5882,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return temp;
   }
 
+  static public double[] expand(double list[]) {
+    return expand(list, list.length > 0 ? list.length << 1 : 1);
+  }
+
+  static public double[] expand(double list[], int newSize) {
+    double temp[] = new double[newSize];
+    System.arraycopy(list, 0, temp, 0, Math.min(newSize, list.length));
+    return temp;
+  }
 
   static public String[] expand(String list[]) {
     return expand(list, list.length << 1);
@@ -6178,6 +6185,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return output;
   }
 
+  static public long[] subset(long[] list, int start) {
+    return subset(list, start, list.length - start);
+  }
+
+  static public long[] subset(long[] list, int start, int count) {
+    long[] output = new long[count];
+    System.arraycopy(list, start, output, 0, count);
+    return output;
+  }
 
   static public float[] subset(float list[], int start) {
     return subset(list, start, list.length - start);
@@ -6189,6 +6205,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return output;
   }
 
+  static public double[] subset(double[] list, int start) {
+    return subset(list, start, list.length - start);
+  }
+
+  static public double[] subset(double[] list, int start, int count) {
+    double[] output = new double[count];
+    System.arraycopy(list, start, output, 0, count);
+    return output;
+  }
 
   static public String[] subset(String list[], int start) {
     return subset(list, start, list.length - start);

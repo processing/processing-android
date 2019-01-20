@@ -3,6 +3,7 @@ package processing.data;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import processing.core.PApplet;
 
@@ -433,12 +434,14 @@ public class StringDict {
    * @webref stringdict:method
    * @brief Remove a key/value pair
    */
-  public int remove(String key) {
+  public String remove(String key) {
     int index = index(key);
-    if (index != -1) {
-      removeIndex(index);
+    if (index == -1) {
+      throw new NoSuchElementException("'" + key + "' not found");
     }
-    return index;
+    String value = values[index];
+    removeIndex(index);
+    return value;
   }
 
 
@@ -446,9 +449,8 @@ public class StringDict {
     if (index < 0 || index >= count) {
       throw new ArrayIndexOutOfBoundsException(index);
     }
-    //System.out.println("index is " + which + " and " + keys[which]);
-    String key = keys[index];
-    indices.remove(key);
+    String value = values[index];
+    indices.remove(keys[index]);
     for (int i = index; i < count-1; i++) {
       keys[i] = keys[i+1];
       values[i] = values[i+1];
@@ -457,8 +459,9 @@ public class StringDict {
     count--;
     keys[count] = null;
     values[count] = null;
-    return key;
+    return value;
   }
+
 
 
   public void swap(int a, int b) {
@@ -522,7 +525,7 @@ public class StringDict {
       }
 
       @Override
-      public float compare(int a, int b) {
+      public int compare(int a, int b) {
         int diff = 0;
         if (useKeys) {
           diff = keys[a].compareToIgnoreCase(keys[b]);
@@ -571,8 +574,17 @@ public class StringDict {
 
 
   /**
-   * Write tab-delimited entries out to
-   * @param writer
+   * Save tab-delimited entries to a file (TSV format, UTF-8 encoding)
+   */
+  public void save(File file) {
+    PrintWriter writer = PApplet.createWriter(file);
+    write(writer);
+    writer.close();
+  }
+
+
+  /**
+   * Write tab-delimited entries to a PrintWriter
    */
   public void write(PrintWriter writer) {
     for (int i = 0; i < count; i++) {
