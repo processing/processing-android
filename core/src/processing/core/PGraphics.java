@@ -2206,6 +2206,10 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
+  public void square(float x, float y, float extent) {
+    rect(x, y, extent, extent);
+  }
+
 
   //////////////////////////////////////////////////////////////
 
@@ -2324,6 +2328,10 @@ public class PGraphics extends PImage implements PConstants {
     showMissingWarning("arc");
   }
 
+
+  public void circle(float x, float y, float extent) {
+    ellipse(x, y, extent, extent);
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -3860,6 +3868,22 @@ public class PGraphics extends PImage implements PConstants {
     }
   }
 
+
+  //////////////////////////////////////////////////////////////
+
+  // PARITY WITH P5.JS
+
+
+  public void push() {
+    pushStyle();
+    pushMatrix();
+  }
+
+
+  public void pop() {
+    popStyle();
+    popMatrix();
+  }
 
 
   //////////////////////////////////////////////////////////////

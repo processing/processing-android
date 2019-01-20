@@ -8497,6 +8497,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  public void square(float x, float y, float extent) {
+    g.square(x, y, extent);
+  }
+
+
   public void ellipseMode(int mode) {
     g.ellipseMode(mode);
   }
@@ -8525,6 +8530,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void arc(float a, float b, float c, float d,
                   float start, float stop, int mode) {
     g.arc(a, b, c, d, start, stop, mode);
+  }
+
+
+  public void circle(float x, float y, float extent) {
+    g.circle(x, y, extent);
   }
 
 
@@ -8967,6 +8977,16 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void text(float num, float x, float y, float z) {
     g.text(num, x, y, z);
+  }
+
+
+  public void push() {
+    g.push();
+  }
+
+
+  public void pop() {
+    g.pop();
   }
 
 
