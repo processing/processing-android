@@ -26,7 +26,11 @@ android {
     }
     lintOptions {
         abortOnError false
-    }    
+    }  
+    aaptOptions {
+        noCompress "tflite"
+        noCompress "lite"
+    }  
     
     // We create a variant of the compile task, where we use the Eclipse Compiler for Java
     // (ECJ) instead of the JDK (which would require the user to download and install
