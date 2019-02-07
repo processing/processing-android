@@ -381,7 +381,7 @@ class AndroidBuild extends JavaBuild {
 
     // Copy any imported libraries (their libs and assets),
     // and anything in the code folder contents to the project.
-    copyImportedLibs(libsFolder, assetsFolder);
+    copyImportedLibs(libsFolder, mainFolder, assetsFolder);
     copyCodeFolder(libsFolder);
 
     // Copy any system libraries needed by the project
@@ -867,7 +867,8 @@ class AndroidBuild extends JavaBuild {
    * For each library, copy .jar and .zip files to the 'libs' folder,
    * and copy anything else to the 'assets' folder.
    */
-  private void copyImportedLibs(final File libsFolder,
+  private void copyImportedLibs(final File libsFolder, 
+                                final File mainFolder,
                                 final File assetsFolder) throws IOException {
     for (Library library : getImportedLibraries()) {
       // add each item from the library folder / export list to the output
@@ -887,7 +888,12 @@ class AndroidBuild extends JavaBuild {
               exportName.equals("armeabi-v7a") ||
               exportName.equals("x86")) {
             Util.copyDir(exportFile, new File(libsFolder, exportName));
-          } else {
+          }
+          // Copy jni libraries (.so files) to the correct location
+          else if (exportName.equals("jniLibs")) {
+            Util.copyDir(exportFile, new File(mainFolder, exportName));
+          }
+          else {
             // Copy any other directory to the assets folder
             Util.copyDir(exportFile, new File(assetsFolder, exportName));
           }
