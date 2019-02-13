@@ -53,11 +53,11 @@ class AndroidBuild extends JavaBuild {
   static public final int VR_CARDBOARD = 4;
   static public final int VR_DAYDREAM  = 5;
 
-
   // Minimum SDK's API levels required for each component:
   static public final String MIN_SDK_APP       = "17"; // Android 4.2
   static public final String MIN_SDK_WALLPAPER = "17"; // Android 4.2
   static public final String MIN_SDK_VR        = "19"; // Android 4.4
+  static public final String MIN_SDK_AR        = "24"; // Android 7.0.0
   static public final String MIN_SDK_WATCHFACE = "25"; // Android 7.1.1
   
   // Target SDK is stored in the preferences file.
@@ -109,18 +109,29 @@ class AndroidBuild extends JavaBuild {
       GVR_VER = "1.150.0";
       Preferences.set("android.sdk.gvr", GVR_VER);
     }
-  }  
+  }
+
+  static public String GAR_VER;
+  static {
+    GAR_VER = Preferences.get("android.sdk.ar");
+    if (GAR_VER == null) {
+      GAR_VER = "1.2.0";
+      Preferences.set("android.sdk.ar", GAR_VER);
+    }
+  }
   
   // Main activity or service 
   static private final String APP_ACTIVITY_TEMPLATE = "AppActivity.java.tmpl";
   static private final String WALLPAPER_SERVICE_TEMPLATE = "WallpaperService.java.tmpl";
   static private final String WATCHFACE_SERVICE_TEMPLATE = "WatchFaceService.java.tmpl";
   static private final String VR_ACTIVITY_TEMPLATE = "VRActivity.java.tmpl";
+  static private final String AR_ACTIVITY_TEMPLATE = "ARActivity.java.tmpl";
   
   // Additional resources
   static private final String LAYOUT_ACTIVITY_TEMPLATE = "LayoutActivity.xml.tmpl";
   static private final String STYLES_FRAGMENT_TEMPLATE = "StylesFragment.xml.tmpl";
   static private final String STYLES_VR_TEMPLATE = "StylesVR.xml.tmpl";
+  static private final String STYLES_AR_TEMPLATE = "StylesAR.xml.tmpl";
   static private final String XML_WALLPAPER_TEMPLATE = "XMLWallpaper.xml.tmpl";
   static private final String STRINGS_WALLPAPER_TEMPLATE = "StringsWallpaper.xml.tmpl";
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
@@ -131,7 +142,9 @@ class AndroidBuild extends JavaBuild {
   static private final String APP_GRADLE_BUILD_ECJ_TEMPLATE = "AppBuildECJ.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_TEMPLATE = "AppBuild.gradle.tmpl";
   static private final String VR_GRADLE_BUILD_ECJ_TEMPLATE = "VRBuildECJ.gradle.tmpl";
-  static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";  
+  static private final String VR_GRADLE_BUILD_TEMPLATE = "VRBuild.gradle.tmpl";
+  static private final String AR_GRADLE_BUILD_ECJ_TEMPLATE = "ARBuildECJ.gradle.tmpl";
+  static private final String AR_GRADLE_BUILD_TEMPLATE = "ARBuild.gradle.tmpl";
   static private final String WEAR_GRADLE_BUILD_ECJ_TEMPLATE = "WearBuildECJ.gradle.tmpl";
   static private final String WEAR_GRADLE_BUILD_TEMPLATE = "WearBuild.gradle.tmpl";
   
@@ -172,7 +185,7 @@ class AndroidBuild extends JavaBuild {
    * Constructor.
    * @param sketch the sketch to be built
    * @param mode reference to the mode
-   * @param appComp component (regular handheld app, wallpaper, watch face, VR)
+   * @param appComp component (regular handheld app, wallpaper, watch face, VR, AR)
    * @param emu build to run in emulator or on device if false 
    */  
   public AndroidBuild(Sketch sketch, AndroidMode mode, int comp) {
@@ -236,8 +249,8 @@ class AndroidBuild extends JavaBuild {
 
 
   /**
-   * Create an Gradle Android project folder, and run the preprocessor on the 
-   * sketch. Creates the top and app modules in the case of regular, VR, and 
+   * Create an Gradle Android project folder, and run the preprocessor on the
+   * sketch. Creates the top and app modules in the case of regular, VR, AR and
    * wallpapers, and top, mobile and wear modules in the case of watch faces.
    */
   protected File createProject(boolean external) 
@@ -340,7 +353,10 @@ class AndroidBuild extends JavaBuild {
     
     String minSdk;
     String tmplFile;
-    if (appComponent == VR_CARDBOARD || appComponent == VR_DAYDREAM) {
+    if (appComponent == AR) {
+      minSdk = MIN_SDK_AR;
+      tmplFile = exportProject ? AR_GRADLE_BUILD_TEMPLATE : AR_GRADLE_BUILD_ECJ_TEMPLATE;
+    } else if (appComponent == VR_CARDBOARD || appComponent == VR_DAYDREAM) {
       minSdk = MIN_SDK_VR;
       tmplFile = exportProject ? VR_GRADLE_BUILD_TEMPLATE : VR_GRADLE_BUILD_ECJ_TEMPLATE;
     } else if (appComponent == WATCHFACE) {
@@ -363,6 +379,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@play_services_version@@", PLAY_SERVICES_VER);
     replaceMap.put("@@wear_version@@", WEAR_VER);        
     replaceMap.put("@@gvr_version@@", GVR_VER);
+    replaceMap.put("@@gar_version@@", GAR_VER);
     replaceMap.put("@@version_code@@", manifest.getVersionCode());
     replaceMap.put("@@version_name@@", manifest.getVersionName());
     AndroidUtil.createFileFromTemplate(appBuildTemplate, appBuildFile, replaceMap);
@@ -384,7 +401,7 @@ class AndroidBuild extends JavaBuild {
 
     // Copy any imported libraries (their libs and assets),
     // and anything in the code folder contents to the project.
-    copyImportedLibs(libsFolder, assetsFolder);
+    copyImportedLibs(libsFolder, mainFolder, assetsFolder);
     copyCodeFolder(libsFolder);
 
     // Copy any system libraries needed by the project
@@ -432,6 +449,8 @@ class AndroidBuild extends JavaBuild {
       }      
     } else if (comp == VR_CARDBOARD || comp == VR_DAYDREAM) {
       writeVRActivity(srcDirectory, permissions, external);
+    } else if (comp == AR) {
+      writeARActivity(srcDirectory, permissions, external);
     }
   }
 
@@ -507,6 +526,19 @@ class AndroidBuild extends JavaBuild {
     AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap); 
   }
 
+  private void writeARActivity(final File srcDirectory, String[] permissions,
+                               final boolean external) {
+    File javaTemplate = mode.getContentFile("templates/" + AR_ACTIVITY_TEMPLATE);
+    File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
+
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@package_name@@", getPackageName());
+    replaceMap.put("@@sketch_class_name@@", sketchClassName);
+    replaceMap.put("@@external@@", external ? "sketch.setExternal(true);" : "");
+
+    AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap);
+  }
+
   
   private void writeResLayoutMainActivity(final File layoutFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + LAYOUT_ACTIVITY_TEMPLATE);
@@ -528,6 +560,13 @@ class AndroidBuild extends JavaBuild {
   
   private void writeResStylesVR(final File valuesFolder) {
     File xmlTemplate = mode.getContentFile("templates/" + STYLES_VR_TEMPLATE);
+    File xmlFile = new File(valuesFolder, "styles.xml");
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
+  }
+
+
+  private void writeResStylesAR(final File valuesFolder) {
+    File xmlTemplate = mode.getContentFile("templates/" + STYLES_AR_TEMPLATE);
     File xmlFile = new File(valuesFolder, "styles.xml");
     AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
   }
@@ -593,7 +632,10 @@ class AndroidBuild extends JavaBuild {
     } else if (comp == VR_CARDBOARD || comp == VR_DAYDREAM) {
       File valuesFolder = AndroidUtil.createPath(resFolder, "values");      
       writeResStylesVR(valuesFolder);  
-    }    
+    } else if (comp == AR) {
+      File valuesFolder = AndroidUtil.createPath(resFolder, "values");
+      writeResStylesAR(valuesFolder);
+    }
     
     File sketchFolder = sketch.getFolder();
     writeAppIconFiles(sketchFolder, resFolder);
@@ -721,6 +763,10 @@ class AndroidBuild extends JavaBuild {
 //    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-base-$VER.aar", GVR_VER, libsFolder);
 //    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-common-$VER.aar", GVR_VER, libsFolder);
 //    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-audio-$VER.aar", GVR_VER, libsFolder);
+//  }
+
+//  private void copyGARLibs(File libsFolder) throws IOException {
+//    copyAARFileFromMode("/libraries/ar/garsdk/$VER", "sdk-common-$VER.aar", GAR_VER, libsFolder);
 //  }
   
   /*
@@ -870,15 +916,17 @@ class AndroidBuild extends JavaBuild {
    * For each library, copy .jar and .zip files to the 'libs' folder,
    * and copy anything else to the 'assets' folder.
    */
-  private void copyImportedLibs(final File libsFolder,
+  private void copyImportedLibs(final File libsFolder, 
+                                final File mainFolder,
                                 final File assetsFolder) throws IOException {
     for (Library library : getImportedLibraries()) {
       // add each item from the library folder / export list to the output
       for (File exportFile : library.getAndroidExports()) {
         String exportName = exportFile.getName();
         
-        // Skip the GVR jars, because the gradle will resolve the dependencies
+        // Skip the GVR and ARCore jars, because the gradle will resolve the dependencies
         if ((appComponent == VR_CARDBOARD || appComponent == VR_DAYDREAM) && exportName.toLowerCase().startsWith("sdk-")) continue;
+        if (appComponent == AR && exportName.toLowerCase().startsWith("core-")) continue;
 
         if (!exportFile.exists()) {
           System.err.println(exportFile.getName() +
@@ -890,7 +938,12 @@ class AndroidBuild extends JavaBuild {
               exportName.equals("armeabi-v7a") ||
               exportName.equals("x86")) {
             Util.copyDir(exportFile, new File(libsFolder, exportName));
-          } else {
+          }
+          // Copy jni libraries (.so files) to the correct location
+          else if (exportName.equals("jniLibs")) {
+            Util.copyDir(exportFile, new File(mainFolder, exportName));
+          }
+          else {
             // Copy any other directory to the assets folder
             Util.copyDir(exportFile, new File(assetsFolder, exportName));
           }
@@ -971,7 +1024,7 @@ class AndroidBuild extends JavaBuild {
   
   private void installGradlew(File exportFolder) throws IOException {
     File gradlewFile = mode.getContentFile("mode/gradlew.zip");
-    AndroidUtil.extractFolder(gradlewFile, exportFolder, false);
+    AndroidUtil.extractFolder(gradlewFile, exportFolder, false, true);
     if (Platform.isMacOS() || Platform.isLinux()) {
       File execFile = new File(exportFolder, "gradlew");    
       execFile.setExecutable(true);      

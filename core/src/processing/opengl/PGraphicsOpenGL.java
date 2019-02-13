@@ -39,7 +39,10 @@ import java.nio.*;
 import java.util.*;
 
 import android.content.Context;
+import android.os.Environment;
 import android.view.SurfaceHolder;
+
+import static android.os.Environment.isExternalStorageRemovable;
 
 /**
  * OpenGL renderer.
@@ -732,7 +735,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   // Factory method
-  protected PGL createPGL(PGraphicsOpenGL pg) {
+  protected PGL createPGL(PGraphicsOpenGL pg) { // ignore
 //    return new PJOGL(pg);
     return new PGLES(pg);
   }
@@ -758,6 +761,12 @@ public class PGraphicsOpenGL extends PGraphics {
   // Android only
   public void setFrameRate(float frameRate) {
     pgl.setFrameRate(frameRate);
+  }
+
+
+  @Override
+  protected boolean isLooping() { // ignore
+    return super.isLooping();
   }
 
 
@@ -3949,9 +3958,16 @@ public class PGraphicsOpenGL extends PGraphics {
   static protected void invTranslate(PMatrix3D matrix,
                                      float tx, float ty, float tz) {
     matrix.preApply(1, 0, 0, -tx,
-                    0, 1, 0, -ty,
-                    0, 0, 1, -tz,
-                    0, 0, 0, 1);
+        0, 1, 0, -ty,
+        0, 0, 1, -tz,
+        0, 0, 0, 1);
+  }
+
+
+  static protected void invTranslate(PMatrix2D matrix,
+                                     float tx, float ty) {
+    matrix.preApply(1, 0, -tx,
+        0, 1, -ty);
   }
 
 
@@ -4040,16 +4056,21 @@ public class PGraphicsOpenGL extends PGraphics {
   }
 
 
-  static private void invRotate(PMatrix3D matrix, float angle,
-                                float v0, float v1, float v2) {
+  static protected void invRotate(PMatrix3D matrix, float angle,
+                                  float v0, float v1, float v2) {
     float c = PApplet.cos(-angle);
     float s = PApplet.sin(-angle);
     float t = 1.0f - c;
 
     matrix.preApply((t*v0*v0) + c, (t*v0*v1) - (s*v2), (t*v0*v2) + (s*v1), 0,
-                    (t*v0*v1) + (s*v2), (t*v1*v1) + c, (t*v1*v2) - (s*v0), 0,
-                    (t*v0*v2) - (s*v1), (t*v1*v2) + (s*v0), (t*v2*v2) + c, 0,
-                    0, 0, 0, 1);
+        (t*v0*v1) + (s*v2), (t*v1*v1) + c, (t*v1*v2) - (s*v0), 0,
+        (t*v0*v2) - (s*v1), (t*v1*v2) + (s*v0), (t*v2*v2) + c, 0,
+        0, 0, 0, 1);
+  }
+
+
+  static protected void invRotate(PMatrix2D matrix, float angle) {
+    matrix.rotate(-angle);
   }
 
 
@@ -4091,6 +4112,11 @@ public class PGraphicsOpenGL extends PGraphics {
 
   static protected void invScale(PMatrix3D matrix, float x, float y, float z) {
     matrix.preApply(1/x, 0, 0, 0,  0, 1/y, 0, 0,  0, 0, 1/z, 0,  0, 0, 0, 1);
+  }
+
+
+  static protected void invScale(PMatrix2D matrix, float x, float y) {
+    matrix.preApply(1/x, 0, 0, 1/y, 0, 0);
   }
 
 
@@ -5695,6 +5721,16 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
+  protected void clearState() {
+    super.clearState();
+    if (restoreFilename != null) {
+      File cacheFile = new File(restoreFilename);
+      cacheFile.delete();
+    }
+  }
+
+
+  @Override
   protected void saveState() {
     super.saveState();
 
@@ -5715,9 +5751,13 @@ public class PGraphicsOpenGL extends PGraphics {
           pgl.readPixelsImpl(0, 0, pixelWidth, pixelHeight, PGL.RGBA, PGL.UNSIGNED_BYTE, buf);
           endPixelsOp();
 
-          File cacheDir = context.getCacheDir();
-          File cacheFile = File.createTempFile("processing", "pixels", cacheDir);
+          // Tries to use external but if not mounted, falls back on internal storage, as shown in
+          // https://developer.android.com/topic/performance/graphics/cache-bitmap#java
+          File cacheDir = Environment.MEDIA_MOUNTED == Environment.getExternalStorageState() || !isExternalStorageRemovable() ?
+                          context.getExternalCacheDir() : context.getCacheDir();
+          File cacheFile = new File(cacheDir + File.separator + "restore_pixels");
           restoreFilename = cacheFile.getAbsolutePath();
+
           FileOutputStream stream = new FileOutputStream(cacheFile);
           ObjectOutputStream dout = new ObjectOutputStream(stream);
           dout.writeObject(restorePixels);
@@ -5779,6 +5819,12 @@ public class PGraphicsOpenGL extends PGraphics {
       }
     }
     super.restoreSurface();
+  }
+
+
+  @Override
+  protected boolean requestNoLoop() {
+    return true;
   }
 
   //////////////////////////////////////////////////////////////
@@ -6661,7 +6707,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (tex == null || tex.contextIsOutdated()) {
       tex = addTexture(img);
       if (tex != null) {
-        boolean dispose = !img.loaded;
+        boolean dispose = img.pixels == null;
         img.loadPixels();
         tex.set(img.pixels, img.format);
         img.setModified();

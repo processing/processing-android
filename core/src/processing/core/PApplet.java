@@ -315,14 +315,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   protected boolean looping;
 
-  // This auxiliary variable is used to implement a little hack that fixes
-  // https://github.com/processing/processing-android/issues/147
-  // on older devices where the last frame cannot be maintained after ending
-  // the rendering in GL. The trick consists in running one more frame after the
-  // noLoop() call, which ensures that the FBO layer is properly initialized
-  // and drawn with the contents of the previous frame.
-  protected boolean requestedNoLoop = false;
-
   /** flag set to true when a redraw is asked for by the user */
   protected boolean redraw;
 
@@ -663,7 +655,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public FragmentManager getFragmentManager() {
     if (getActivity() != null) {
-      getActivity().getFragmentManager();
+      return getActivity().getFragmentManager();
     }
     return null;
   }
@@ -1896,7 +1888,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   // This method handles some special situations on Android where beginDraw/endDraw are needed,
-  // but not to render the actualy contents of draw(). In general, this situations arise from
+  // but not to render the actual contents of draw(). In general, these situations arise from
   // having to refresh/restore the screen after requesting no loop, or resuming the sketch in
   // no-loop state.
   protected boolean handleSpecialDraw() {
@@ -1908,7 +1900,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       g.endDraw();
 
       handled = true;
-    } else if (requestedNoLoop) {
+    } else if (g.requestedNoLoop) {
       // noLoop() was called sometime in the previous frame with a GL renderer, but only now
       // we are sure that the frame is properly displayed.
       looping = false;
@@ -1918,7 +1910,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       g.beginDraw();
       g.endDraw();
 
-      requestedNoLoop = false;
+      g.requestedNoLoop = false;
       handled = true;
     }
 
@@ -1930,8 +1922,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-  //////////////////////////////////////////////////////////////
 
+  //////////////////////////////////////////////////////////////
 
 
   synchronized public void redraw() {
@@ -1961,8 +1953,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   synchronized public void noLoop() {
     if (looping) {
-      if (g instanceof PGraphicsOpenGL) {
-        requestedNoLoop = true;
+      if (g.requestNoLoop()) {
+        g.requestedNoLoop = true;
       } else {
         looping = false;
       }
@@ -2908,6 +2900,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       surface.dispose();
     }
     if (g != null) {
+      g.clearState(); // This should probably go in dispose, but for the time being...
       g.dispose();
     }
 
@@ -5869,17 +5862,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return temp;
   }
 
-
-  static public PImage[] expand(PImage list[]) {
-    return expand(list, list.length << 1);
+  static public long[] expand(long list[]) {
+    return expand(list, list.length > 0 ? list.length << 1 : 1);
   }
 
-  static public PImage[] expand(PImage list[], int newSize) {
-    PImage temp[] = new PImage[newSize];
+  static public long[] expand(long list[], int newSize) {
+    long temp[] = new long[newSize];
     System.arraycopy(list, 0, temp, 0, Math.min(newSize, list.length));
     return temp;
   }
-
 
   static public float[] expand(float list[]) {
     return expand(list, list.length << 1);
@@ -5891,6 +5882,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return temp;
   }
 
+  static public double[] expand(double list[]) {
+    return expand(list, list.length > 0 ? list.length << 1 : 1);
+  }
+
+  static public double[] expand(double list[], int newSize) {
+    double temp[] = new double[newSize];
+    System.arraycopy(list, 0, temp, 0, Math.min(newSize, list.length));
+    return temp;
+  }
 
   static public String[] expand(String list[]) {
     return expand(list, list.length << 1);
@@ -6185,6 +6185,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return output;
   }
 
+  static public long[] subset(long[] list, int start) {
+    return subset(list, start, list.length - start);
+  }
+
+  static public long[] subset(long[] list, int start, int count) {
+    long[] output = new long[count];
+    System.arraycopy(list, start, output, 0, count);
+    return output;
+  }
 
   static public float[] subset(float list[], int start) {
     return subset(list, start, list.length - start);
@@ -6196,6 +6205,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return output;
   }
 
+  static public double[] subset(double[] list, int start) {
+    return subset(list, start, list.length - start);
+  }
+
+  static public double[] subset(double[] list, int start, int count) {
+    double[] output = new double[count];
+    System.arraycopy(list, start, output, 0, count);
+    return output;
+  }
 
   static public String[] subset(String list[], int start) {
     return subset(list, start, list.length - start);
@@ -8504,6 +8522,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  public void square(float x, float y, float extent) {
+    g.square(x, y, extent);
+  }
+
+
   public void ellipseMode(int mode) {
     g.ellipseMode(mode);
   }
@@ -8532,6 +8555,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void arc(float a, float b, float c, float d,
                   float start, float stop, int mode) {
     g.arc(a, b, c, d, start, stop, mode);
+  }
+
+
+  public void circle(float x, float y, float extent) {
+    g.circle(x, y, extent);
   }
 
 
@@ -8974,6 +9002,16 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void text(float num, float x, float y, float z) {
     g.text(num, x, y, z);
+  }
+
+
+  public void push() {
+    g.push();
+  }
+
+
+  public void pop() {
+    g.pop();
   }
 
 

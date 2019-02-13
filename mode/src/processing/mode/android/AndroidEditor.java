@@ -33,6 +33,7 @@ import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.debug.LineID;
 import processing.mode.java.preproc.PdePreprocessor;
 
 import javax.swing.*;
@@ -59,6 +60,8 @@ public class AndroidEditor extends JavaEditor {
   private JMenu androidMenu;
   
   private int appComponent;
+
+  private AndroidDebugger debugger;
   
   private Settings settings;
   private AndroidMode androidMode;
@@ -72,7 +75,7 @@ public class AndroidEditor extends JavaEditor {
   private JMenu vrMenu;
   private JCheckBoxMenuItem cardBoardItem;
   private JCheckBoxMenuItem dayDreamItem;
-
+  private JCheckBoxMenuItem arItem;
   
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
@@ -81,12 +84,20 @@ public class AndroidEditor extends JavaEditor {
     androidMode = (AndroidMode) mode;
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
-    
+
+    debugger = new AndroidDebugger(this, androidMode);
+    // Set saved breakpoints when sketch is opened for the first time
+    for (LineID lineID : stripBreakpointComments()) {
+      debugger.setBreakpoint(lineID);
+    }
+
+    super.debugger = debugger;
+
     androidTools = loadAndroidTools();
     addToolsToMenu();
     
     loadModeSettings();    
-  }  
+  }
 
   @Override
   public PdePreprocessor createPreprocessor(final String sketchName) {
@@ -159,7 +170,7 @@ public class AndroidEditor extends JavaEditor {
           handleStop();
         }
       });
-    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
+    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
   }
 
 
@@ -185,6 +196,7 @@ public class AndroidEditor extends JavaEditor {
     dayDreamItem = new JCheckBoxMenuItem("DAYDREAM");
     vrMenu.add(cardBoardItem);
     vrMenu.add(dayDreamItem);
+    arItem = new JCheckBoxMenuItem("AR");    
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -194,6 +206,7 @@ public class AndroidEditor extends JavaEditor {
         watchfaceItem.setSelected(false);
         cardBoardItem.setSelected(false);
         dayDreamItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.APP);
       }
     });
@@ -205,6 +218,7 @@ public class AndroidEditor extends JavaEditor {
         watchfaceItem.setSelected(false);
         cardBoardItem.setSelected(false);
         dayDreamItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.WALLPAPER);        
       }
     });
@@ -216,6 +230,7 @@ public class AndroidEditor extends JavaEditor {
         watchfaceItem.setSelected(true);
         cardBoardItem.setSelected(false);
         dayDreamItem.setSelected(false);
+        arItem.setSelected(false);        
         setAppComponent(AndroidBuild.WATCHFACE);        
       }
     });
@@ -227,6 +242,7 @@ public class AndroidEditor extends JavaEditor {
         watchfaceItem.setSelected(false);
         cardBoardItem.setSelected(true);
         dayDreamItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.VR_CARDBOARD);
       }
     });
@@ -238,20 +254,23 @@ public class AndroidEditor extends JavaEditor {
         watchfaceItem.setSelected(false);
         cardBoardItem.setSelected(false);
         dayDreamItem.setSelected(true);
-        setAppComponent(AndroidBuild.VR_DAYDREAM);
+        arItem.setSelected(true);
+        setAppComponent(AndroidBuild.AR);
       }
     });
-
+       
     fragmentItem.setState(false);
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
     cardBoardItem.setSelected(false);
     dayDreamItem.setSelected(false);
+    arItem.setSelected(false);
 
     androidMenu.add(fragmentItem);
     androidMenu.add(wallpaperItem);
     androidMenu.add(watchfaceItem);
     androidMenu.add(vrMenu);
+    androidMenu.add(arItem);
     
     androidMenu.addSeparator();
 
@@ -305,6 +324,8 @@ public class AndroidEditor extends JavaEditor {
         settings.set("component", "vr_c");
       } else if (appComponent == AndroidBuild.VR_DAYDREAM) {
         settings.set("component", "vr_d");
+      } else if (appComponent == AndroidBuild.AR) {
+        settings.set("component", "ar");
       }
       settings.save();            
       androidMode.resetManifest(sketch, appComponent);
@@ -409,11 +430,60 @@ public class AndroidEditor extends JavaEditor {
 
 
   public void handleStop() {
-    toolbar.deactivateRun();
-    stopIndeterminate();
-    androidMode.handleStop(this);
+    if (debugger.isStarted()) {
+      debugger.stopDebug();
+
+    } else {
+      toolbar.activateStop();
+      androidMode.handleStop(this);
+      toolbar.deactivateStop();
+      toolbar.deactivateRun();
+
+      // focus the PDE again after quitting presentation mode [toxi 030903]
+      toFront();
+    }
   }
 
+  @Override
+  public AndroidDebugger getDebugger() {
+    return debugger;
+  }
+
+  @Override protected void deactivateDebug() {
+    super.deactivateDebug();
+  }
+
+  @Override protected void activateContinue() {
+    ((AndroidToolbar) toolbar).activateContinue();
+  }
+
+  @Override protected void deactivateContinue() {
+    ((AndroidToolbar) toolbar).deactivateContinue();
+  }
+
+  @Override protected void activateStep() {
+    ((AndroidToolbar) toolbar).activateStep();
+  }
+
+  @Override protected void deactivateStep() {
+    ((AndroidToolbar) toolbar).deactivateStep();
+  }
+
+  @Override
+  public void toggleDebug() {
+    super.toggleDebug();
+    debugger.toggleDebug();
+  }
+
+  @Override
+  public void toggleBreakpoint(int lineIndex) {
+    debugger.toggleBreakpoint(lineIndex);
+  }
+
+  @Override
+  protected LineID getCurrentLineID() {
+    return super.getCurrentLineID();
+  }
 
   /**
    * Create a release build of the sketch and have its apk files ready.
@@ -527,6 +597,9 @@ public class AndroidEditor extends JavaEditor {
       } else if (component.equals("vr_d")) {
         appComponent = AndroidBuild.VR_DAYDREAM;
         dayDreamItem.setState(true);
+      } else if (component.equals("ar")) {
+        appComponent = AndroidBuild.AR;
+        arItem.setState(true);
       }
 
       if (save) androidMode.initManifest(sketch, appComponent);

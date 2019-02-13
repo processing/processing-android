@@ -35,12 +35,12 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import sun.misc.BASE64Encoder;
-import sun.security.pkcs.ContentInfo;
-import sun.security.pkcs.PKCS7;
+import java.util.Base64;
 import sun.security.pkcs.SignerInfo;
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.X500Name;
+import sun.security.pkcs.PKCS7;
+import sun.security.pkcs.ContentInfo;
 
 /**
  * Created by ibziy_000 on 17.08.2014.
@@ -90,7 +90,7 @@ public class JarSigner {
   
   private static void writeZip(InputStream input, JarOutputStream output, Manifest manifest)
       throws IOException, NoSuchAlgorithmException {    
-    BASE64Encoder base64Encoder = new BASE64Encoder();
+    Base64.Encoder base64Encoder = Base64.getEncoder();
     MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
     buffer = new byte[4096];
     
@@ -127,7 +127,7 @@ public class JarSigner {
   }
 
   private static void writeEntry(JarOutputStream output, InputStream input, JarEntry entry, 
-      MessageDigest digest, Manifest manifest, BASE64Encoder encoder) throws IOException {
+      MessageDigest digest, Manifest manifest, Base64.Encoder encoder) throws IOException {
     output.putNextEntry(entry);
 
     // Write input stream to the jar output.
@@ -146,7 +146,7 @@ public class JarSigner {
         attr = new Attributes();
         manifest.getEntries().put(entry.getName(), attr);
       }
-      attr.putValue(DIGEST_ATTR, encoder.encode(digest.digest()));
+      attr.putValue(DIGEST_ATTR, encoder.encodeToString(digest.digest()));
     }
   }
   
@@ -182,7 +182,7 @@ public class JarSigner {
     main.putValue("Signature-Version", "1.0");
     main.putValue("Created-By", "1.0 (Android)");
 
-    BASE64Encoder base64 = new BASE64Encoder();
+    Base64.Encoder base64 = Base64.getEncoder();
     MessageDigest md = MessageDigest.getInstance(DIGEST_ALGORITHM);
     PrintStream print = new PrintStream(
         new DigestOutputStream(new ByteArrayOutputStream(), md),
@@ -191,7 +191,7 @@ public class JarSigner {
     // Digest of the entire manifest
     manifest.write(print);
     print.flush();
-    main.putValue(DIGEST_MANIFEST_ATTR, base64.encode(md.digest()));
+    main.putValue(DIGEST_MANIFEST_ATTR, base64.encodeToString(md.digest()));
 
     Map<String, Attributes> entries = manifest.getEntries();
     for (Map.Entry<String, Attributes> entry : entries.entrySet()) {
@@ -204,7 +204,7 @@ public class JarSigner {
       print.flush();
 
       Attributes sfAttr = new Attributes();
-      sfAttr.putValue(DIGEST_ATTR, base64.encode(md.digest()));
+      sfAttr.putValue(DIGEST_ATTR, base64.encodeToString(md.digest()));
       sf.getEntries().put(entry.getKey(), sfAttr);
     }
 
@@ -230,6 +230,7 @@ public class JarSigner {
   private static void writeSignatureBlock(JarOutputStream outputJar, 
       Signature signature, X509Certificate publicKey, PrivateKey privateKey)
       throws IOException, GeneralSecurityException {
+    
     SignerInfo signerInfo = new SignerInfo(
         new X500Name(publicKey.getIssuerX500Principal().getName()),
         publicKey.getSerialNumber(),

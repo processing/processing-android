@@ -22,13 +22,21 @@
 
 package processing.mode.android;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.Connector;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 import processing.app.ui.Editor;
 import processing.app.Messages;
 import processing.app.RunnerListener;
@@ -45,9 +53,17 @@ public class AndroidRunner implements DeviceListener {
   protected PrintStream sketchErr;
   protected PrintStream sketchOut;
 
+  private VirtualMachine vm;
+
+  private boolean isDebugEnabled;
+
   public AndroidRunner(AndroidBuild build, RunnerListener listener) {
     this.build = build;
     this.listener = listener;
+
+    if (listener instanceof AndroidEditor){
+      isDebugEnabled = ((AndroidEditor) listener).isDebuggerEnabled();
+    }
 
     if (listener instanceof Editor) {
       Editor editor = (Editor) listener;
@@ -92,7 +108,6 @@ public class AndroidRunner implements DeviceListener {
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
-
     listener.statusNotice("Installing sketch on " + device.getId());
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
@@ -121,12 +136,55 @@ public class AndroidRunner implements DeviceListener {
         listener.statusError("Could not start the sketch.");
       }
     }
-    
+
+    // Start Debug if Debugger is enabled
+    if (isDebugEnabled){
+      ((AndroidEditor) listener).getDebugger()
+        .startDebug(this, device);
+    }
+
     listener.stopIndeterminate();
     lastRunDevice = device;
     return status;
   }
 
+  public VirtualMachine connectVirtualMachine(int port) throws IOException {
+    String strPort = Integer.toString(port);
+    AttachingConnector connector = getConnector();
+    try {
+      vm = connect(connector, strPort);
+      return vm;
+    } catch (IllegalConnectorArgumentsException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private AttachingConnector getConnector() {
+    VirtualMachineManager vmManager = org.eclipse.jdi.Bootstrap.virtualMachineManager();
+    for (Connector connector : vmManager.attachingConnectors()) {
+      if ("com.sun.jdi.SocketAttach".equals(connector.name())) {
+        return (AttachingConnector) connector;
+      }
+    }
+    throw new IllegalStateException();
+  }
+
+  private VirtualMachine connect(
+      AttachingConnector connector, String port) throws IllegalConnectorArgumentsException, IOException {
+    Map<String, Connector.Argument> args = connector
+        .defaultArguments();
+    Connector.Argument pidArgument = args.get("port");
+    if (pidArgument == null) {
+      throw new IllegalStateException();
+    }
+    pidArgument.setValue(port);
+
+    return connector.attach(args);
+  }
+
+  public VirtualMachine vm(){
+    return vm;
+  }
 
   private volatile Device lastRunDevice = null;
 
@@ -137,7 +195,7 @@ public class AndroidRunner implements DeviceListener {
   private boolean startSketch(AndroidBuild build, final Device device) {
     final String packageName = build.getPackageName();
     try {
-      if (device.launchApp(packageName)) {
+      if (device.launchApp(packageName, isDebugEnabled)) {
         return true;
       }
     } catch (final Exception e) {
@@ -217,6 +275,17 @@ public class AndroidRunner implements DeviceListener {
   public void close() {
     if (lastRunDevice != null) {
       lastRunDevice.bringLauncherToFront();
+    }
+
+    if (vm != null) {
+      try {
+        vm.exit(0);
+
+      } catch (com.sun.jdi.VMDisconnectedException vmde) {
+        // if the vm has disconnected on its own, ignore message
+        //System.out.println("harmless disconnect " + vmde.getMessage());
+        // TODO shouldn't need to do this, need to do more cleanup
+      }
     }
   }
 

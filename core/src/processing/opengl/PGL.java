@@ -728,10 +728,6 @@ public abstract class PGL {
     pclearStencil = clearStencil;
     clearStencil = false;
 
-    if (SINGLE_BUFFERED && sketch.frameCount == 1) {
-      restoreFirstFrame();
-    }
-
     if (fboLayerEnabledReq) {
       fboLayerEnabled = true;
       fboLayerEnabledReq = false;
@@ -764,9 +760,9 @@ public abstract class PGL {
         float bb = ((argb) & 0xff) / 255.0f;
         clearColor(br, bg, bb, ba);
         clear(COLOR_BUFFER_BIT);
-      } else if (!pclearColor || !sketch.isLooping()) {
-        // Render previous back texture (now is the front) as background,
-        // because no background() is being used ("incremental drawing")
+      } else if (!pclearColor || !graphics.isLooping()) {
+        // Render previous back texture (now is the front) as background, because no background()
+        // is being used ("incremental drawing")
         int x = 0;
         int y = 0;
         if (presentMode) {
@@ -779,6 +775,8 @@ public abstract class PGL {
                     0, 0, (int)(scale * graphics.width), (int)(scale * graphics.height),
                     0, 0, graphics.width, graphics.height);
       }
+    } else if (SINGLE_BUFFERED && sketch.frameCount == 1) {
+      restoreFirstFrame();
     }
   }
 
@@ -871,7 +869,7 @@ public abstract class PGL {
         saveFirstFrame();
       }
 
-      if (!clearColor && 0 < sketch.frameCount || !sketch.isLooping()) {
+      if (!clearColor && 0 < sketch.frameCount || !graphics.isLooping()) {
         enableFBOLayer();
         if (SINGLE_BUFFERED) {
           createFBOLayer();
@@ -935,6 +933,10 @@ public abstract class PGL {
     int depthBits = PApplet.min(REQUESTED_DEPTH_BITS, getDepthBits());
     int stencilBits = PApplet.min(REQUESTED_STENCIL_BITS, getStencilBits());
 
+    backTex = 0;
+    frontTex = 1;
+    boolean savedFirstFrame = SINGLE_BUFFERED && sketch.frameCount == 0 && firstFrame != null;
+
     genTextures(2, glColorTex);
     for (int i = 0; i < 2; i++) {
       bindTexture(TEXTURE_2D, glColorTex.get(i));
@@ -944,12 +946,16 @@ public abstract class PGL {
       texParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
       texImage2D(TEXTURE_2D, 0, RGBA, fboWidth, fboHeight, 0,
                  RGBA, UNSIGNED_BYTE, null);
-      initTexture(TEXTURE_2D, RGBA, fboWidth, fboHeight, graphics.backgroundColor);
+      if (i == frontTex && savedFirstFrame) {
+        // Copy first frame to front texture (will be drawn as background in next frame)
+        texSubImage2D(TEXTURE_2D, 0, 0, 0, graphics.width, graphics.height,
+                      RGBA, UNSIGNED_BYTE, firstFrame);
+      } else {
+        // Intitialize texture with background color
+        initTexture(TEXTURE_2D, RGBA, fboWidth, fboHeight, graphics.backgroundColor);
+      }
     }
     bindTexture(TEXTURE_2D, 0);
-
-    backTex = 0;
-    frontTex = 1;
 
     genFramebuffers(1, glColorFbo);
     bindFramebufferImpl(FRAMEBUFFER, glColorFbo.get(0));

@@ -254,12 +254,6 @@ public class PFragment extends Fragment implements AppComponent {
 
 
   public boolean canDraw() {
-    if (sketch == null) return false;
-    return sketch.isLooping();
+    return sketch != null && sketch.isLooping();
   }
-
-
-//public void onBackPressed() {
-//  sketch.exit();
-//}
 }
