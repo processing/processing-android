@@ -49,9 +49,9 @@ class AndroidBuild extends JavaBuild {
   static public final int APP          = 0;
   static public final int WALLPAPER    = 1;
   static public final int WATCHFACE    = 2;
-  static public final int VR           = 3;
-  static public final int VR_CARDBOARD = 4;
-  static public final int VR_DAYDREAM  = 5;
+  static public final int VR_CARDBOARD = 3;
+  static public final int VR_DAYDREAM  = 4;
+  static public final int AR           = 5;
 
   // Minimum SDK's API levels required for each component:
   static public final String MIN_SDK_APP       = "17"; // Android 4.2

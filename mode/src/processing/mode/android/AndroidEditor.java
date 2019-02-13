@@ -321,9 +321,9 @@ public class AndroidEditor extends JavaEditor {
       } else if (appComponent == AndroidBuild.WATCHFACE) {
         settings.set("component", "watchface");
       } else if (appComponent == AndroidBuild.VR_CARDBOARD) {
-        settings.set("component", "vr_c");
+        settings.set("component", "cardboard");
       } else if (appComponent == AndroidBuild.VR_DAYDREAM) {
-        settings.set("component", "vr_d");
+        settings.set("component", "daydream");
       } else if (appComponent == AndroidBuild.AR) {
         settings.set("component", "ar");
       }
@@ -591,10 +591,10 @@ public class AndroidEditor extends JavaEditor {
       } else if (component.equals("watchface")) {
         appComponent = AndroidBuild.WATCHFACE;
         watchfaceItem.setState(true);
-      } else if (component.equals("vr_c")) {
+      } else if (component.equals("cardboard") || component.equals("vr")) {
         appComponent = AndroidBuild.VR_CARDBOARD;
         cardBoardItem.setState(true);
-      } else if (component.equals("vr_d")) {
+      } else if (component.equals("daydream")) {
         appComponent = AndroidBuild.VR_DAYDREAM;
         dayDreamItem.setState(true);
       } else if (component.equals("ar")) {

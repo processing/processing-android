@@ -56,7 +56,6 @@ public class Manifest {
     "WatchFaceManifest.xml.tmpl",
     "VRManifest.xml.tmpl",
     "VRManifest.xml.tmpl",
-    "VRManifest.xml.tmpl",
     "ARManifest.xml.tmpl"
   };
   

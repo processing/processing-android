@@ -56,6 +56,8 @@ public class Commander implements RunnerListener {
   static final String targetArg_WALLPAPER = "wallpaper";
   static final String targetArg_WATCHFACE = "watchface";
   static final String targetArg_VR = "vr";
+  static final String targetArg_CARDBOARD = "cardboard";
+  static final String targetArg_DAYDREAM = "daydream";  
   static final String targetArg_AR = "ar";
   static final String sketchArg = "--sketch=";
   static final String forceArg = "--force";
@@ -134,8 +136,10 @@ public class Commander implements RunnerListener {
           appComponent = AndroidBuild.WALLPAPER;
         } else if (compStr.equals(targetArg_WATCHFACE)) {
           appComponent = AndroidBuild.WATCHFACE;
-        } else if (compStr.equals(targetArg_VR)) {
-          appComponent = AndroidBuild.VR;
+        } else if (compStr.equals(targetArg_VR) || compStr.equals(targetArg_CARDBOARD)) {
+          appComponent = AndroidBuild.VR_CARDBOARD;
+        } else if (compStr.equals(targetArg_DAYDREAM)) {
+          appComponent = AndroidBuild.VR_DAYDREAM;
         } else if (compStr.equals(targetArg_AR)) {
           appComponent = AndroidBuild.AR;
         }
