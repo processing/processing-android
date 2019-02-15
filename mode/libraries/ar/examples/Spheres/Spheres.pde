@@ -3,8 +3,8 @@ import processing.ar.*;
 float angle = 0;
 
 void setup() {
-  fullScreen(ARCORE);
-  ARPlane.setPlaneColor(0xB4E7FF);
+  fullScreen(AUGMENT);
+  PAR.planeColor(0xB4E7FF);
 }
 
 void draw() {

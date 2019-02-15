@@ -3,10 +3,10 @@ import processing.ar.*;
 PShape arObj;
 
 void setup() {
-  fullScreen(ARCORE);
+  fullScreen(AUGMENT);
 
   // Setting Color of the detected plane - BLUE in this case
-  ARPlane.setPlaneColor(#BCD4FF);
+  PAR.planeColor(#BCD4FF);
 
   arObj = loadShape("model.obj");
 }

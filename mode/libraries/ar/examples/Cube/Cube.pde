@@ -3,9 +3,9 @@ import processing.ar.*;
 PShape cube;
 
 void setup() {
-  fullScreen(ARCORE);
+  fullScreen(AUGMENT);
   cube = createShape(BOX, 0.25);
-  ARPlane.setPlaneColor(#BCD4FF);
+  PAR.planeColor(#BCD4FF);
 }
 
 void draw() {
