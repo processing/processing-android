@@ -108,7 +108,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   
   @Override
   public String getMenuTitle() {   
-    return "SDK Updater";
+    return "menu.android.sdk_updater";
   }
   
   

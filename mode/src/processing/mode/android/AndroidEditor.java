@@ -23,6 +23,7 @@
 package processing.mode.android;
 
 import processing.app.Base;
+import processing.app.Language;
 import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.Settings;
@@ -175,10 +176,10 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildModeMenu() {
-    androidMenu = new JMenu("Android");
+    androidMenu = new JMenu(Language.text("menu.android"));
     JMenuItem item;
 
-    item = new JMenuItem("Sketch Permissions");
+    item = new JMenuItem(Language.text("menu.android.sketch_permissions"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Permissions(sketch, appComponent, androidMode.getFolder());
@@ -188,15 +189,15 @@ public class AndroidEditor extends JavaEditor {
 
     androidMenu.addSeparator();
      
-    fragmentItem = new JCheckBoxMenuItem("App");
-    wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
-    watchfaceItem = new JCheckBoxMenuItem("Watch Face");
-    vrMenu = new JMenu("VR");
-    cardBoardItem = new JCheckBoxMenuItem("Cardboard");
-    dayDreamItem = new JCheckBoxMenuItem("Daydream");
+    fragmentItem = new JCheckBoxMenuItem(Language.text("menu.android.app"));
+    wallpaperItem = new JCheckBoxMenuItem(Language.text("menu.android.wallpaper"));
+    watchfaceItem = new JCheckBoxMenuItem(Language.text("menu.android.watch_face"));
+    vrMenu = new JMenu(Language.text("menu.android.vr"));
+    cardBoardItem = new JCheckBoxMenuItem(Language.text("menu.android.vr.cardboard"));
+    dayDreamItem = new JCheckBoxMenuItem(Language.text("menu.android.vr.daydream"));
     vrMenu.add(cardBoardItem);
     vrMenu.add(dayDreamItem);
-    arItem = new JCheckBoxMenuItem("AR");    
+    arItem = new JCheckBoxMenuItem(Language.text("menu.android.ar"));    
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -286,9 +287,9 @@ public class AndroidEditor extends JavaEditor {
     
     androidMenu.addSeparator();
 
-    final JMenu devicesMenu = new JMenu("Devices");
+    final JMenu devicesMenu = new JMenu(Language.text("menu.android.devices"));
 
-    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+    JMenuItem noDevicesItem = new JMenuItem(Language.text("menu.android.devices.no_connected_devices"));
     noDevicesItem.setEnabled(false);
     devicesMenu.add(noDevicesItem);
     androidMenu.add(devicesMenu);
@@ -640,7 +641,7 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem item;
     
     for (final Tool tool : androidTools) {
-      item = new JMenuItem(tool.getMenuTitle());
+      item = new JMenuItem(Language.text(tool.getMenuTitle()));
       item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           tool.run();
@@ -658,7 +659,7 @@ public class AndroidEditor extends JavaEditor {
 //    });
 //    menu.add(item);
 
-    item = new JMenuItem("Reset ADB");
+    item = new JMenuItem(Language.text("menu.android.reset_adb"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
@@ -700,7 +701,7 @@ public class AndroidEditor extends JavaEditor {
       if (deviceList.size() == 0) {
         if (0 < deviceMenu.getItemCount()) {
           deviceMenu.removeAll();
-          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+          JMenuItem noDevicesItem = new JMenuItem(Language.text("menu.android.devices.no_connected_devices"));
           noDevicesItem.setEnabled(false);
           deviceMenu.add(noDevicesItem);
         }
