@@ -7,11 +7,11 @@ public class Sketch extends PApplet {
   float angle = 0;
 
   public void settings() {
-    fullScreen(ARCORE);
+    fullScreen(AUGMENT);
   }
 
   public void setup() {
-    ARPlane.setPlaneColor(0xB4E7FF);
+    PAR.planeColor(0xB4E7FF);
   }
 
   public void draw() {

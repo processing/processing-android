@@ -48,12 +48,10 @@ public interface PConstants {
   static final String P2D = "processing.opengl.PGraphics2D";
   static final String P3D = "processing.opengl.PGraphics3D";
   static final String OPENGL = P3D;
-  static final String PVR = "processing.vr.PGraphicsVRStereo";
-  static final String STEREO = PVR;
+  static final String STEREO = "processing.vr.PGraphicsVRStereo";
   static final String MONO = "processing.vr.PGraphicsVRMono";
-  static final String PAR = "processing.ar.PGraphicsAR";
-  static final String AUGMENT = PAR;
-  static final String ARCORE = PAR;
+  static final String AUGMENT = "processing.ar.PGraphicsAR";
+  static final String ARCORE = AUGMENT;
 
   // The PDF and DXF renderers are not available for Android.
 

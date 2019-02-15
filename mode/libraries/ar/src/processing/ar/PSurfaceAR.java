@@ -314,6 +314,15 @@ public class PSurfaceAR extends PSurfaceGLES {
     camera.getViewMatrix(viewmtx, 0);
   }
 
+  protected void getAnchors() {
+    for (Anchor anchor : anchors) {
+      if (anchor.getTrackingState() != TrackingState.TRACKING) {
+        continue;
+      }
+      anchor.getPose().toMatrix(anchorMatrix, 0);
+    }
+  }
+
   protected void renderHelpers() {
     // This should be enabled/disabled with a parameter...
 //    PointCloud foundPointCloud = frame.acquirePointCloud();
@@ -324,12 +333,6 @@ public class PSurfaceAR extends PSurfaceGLES {
     // Same with the planes...
     planeRenderer.drawPlanes(
         session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
-    for (Anchor anchor : anchors) {
-      if (anchor.getTrackingState() != TrackingState.TRACKING) {
-        continue;
-      }
-      anchor.getPose().toMatrix(anchorMatrix, 0);
-    }
   }
 
 
