@@ -532,7 +532,7 @@ class AndroidBuild extends JavaBuild {
   }
 
   private void writeARActivity(final File srcDirectory, String[] permissions,
-                               final boolean external) {
+      final boolean external) {
     File javaTemplate = mode.getContentFile("templates/" + AR_ACTIVITY_TEMPLATE);
     File javaFile = new File(new File(srcDirectory, getPackageName().replace(".", "/")), "MainActivity.java");
 

@@ -254,10 +254,22 @@ public class AndroidEditor extends JavaEditor {
         watchfaceItem.setSelected(false);
         cardBoardItem.setSelected(false);
         dayDreamItem.setSelected(true);
+        arItem.setSelected(false);
+        setAppComponent(AndroidBuild.VR_DAYDREAM);
+      }
+    });
+    arItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+        cardBoardItem.setSelected(false);
+        dayDreamItem.setSelected(false);
         arItem.setSelected(true);
         setAppComponent(AndroidBuild.AR);
       }
-    });
+    });    
        
     fragmentItem.setState(false);
     wallpaperItem.setState(false);
