@@ -192,8 +192,8 @@ public class AndroidEditor extends JavaEditor {
     wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
     watchfaceItem = new JCheckBoxMenuItem("Watch Face");
     vrMenu = new JMenu("VR");
-    cardBoardItem = new JCheckBoxMenuItem("CARDBOARD");
-    dayDreamItem = new JCheckBoxMenuItem("DAYDREAM");
+    cardBoardItem = new JCheckBoxMenuItem("Cardboard");
+    dayDreamItem = new JCheckBoxMenuItem("Daydream");
     vrMenu.add(cardBoardItem);
     vrMenu.add(dayDreamItem);
     arItem = new JCheckBoxMenuItem("AR");    

@@ -377,27 +377,18 @@ public class AndroidMode extends JavaMode {
   
   public boolean checkAppIcons(Sketch sketch, int comp) {
     File sketchFolder = sketch.getFolder();
-    
-    boolean allExist = false;
-  
-    File localIcon36 = new File(sketchFolder, AndroidBuild.ICON_36);
-    File localIcon48 = new File(sketchFolder, AndroidBuild.ICON_48);
-    File localIcon72 = new File(sketchFolder, AndroidBuild.ICON_72);
-    File localIcon96 = new File(sketchFolder, AndroidBuild.ICON_96);
-    File localIcon144 = new File(sketchFolder, AndroidBuild.ICON_144);
-    File localIcon192 = new File(sketchFolder, AndroidBuild.ICON_192);    
-    allExist = localIcon36.exists() && localIcon48.exists() &&
-               localIcon72.exists() && localIcon96.exists() &&
-               localIcon144.exists() && localIcon192.exists();
+
+    File[] launcherIcons = AndroidUtil.getFileList(sketchFolder, AndroidBuild.SKETCH_LAUNCHER_ICONS, 
+                                                                 AndroidBuild.SKETCH_OLD_LAUNCHER_ICONS);
+    boolean allFilesExist = AndroidUtil.allFilesExists(launcherIcons);
     
     if (comp == AndroidBuild.WATCHFACE) {
       // Additional preview icons are needed for watch faces
-      File localIconSquare = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_RECTANGULAR);
-      File localIconCircle = new File(sketchFolder, AndroidBuild.WATCHFACE_ICON_CIRCULAR);
-      allExist &= localIconSquare.exists() && localIconCircle.exists();      
+      File[] watchFaceIcons = AndroidUtil.getFileList(sketchFolder, AndroidBuild.SKETCH_WATCHFACE_ICONS);      
+      allFilesExist &= AndroidUtil.allFilesExists(watchFaceIcons);      
     }
     
-    if (!allExist) {
+    if (!allFilesExist) {
       // The user did not set custom icons, show error and stop
       AndroidUtil.showMessage(EXPORT_DEFAULT_ICONS_TITLE, 
                               EXPORT_DEFAULT_ICONS_MESSAGE);

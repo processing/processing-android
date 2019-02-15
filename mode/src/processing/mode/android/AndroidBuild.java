@@ -148,15 +148,20 @@ class AndroidBuild extends JavaBuild {
   static private final String WEAR_GRADLE_BUILD_ECJ_TEMPLATE = "WearBuildECJ.gradle.tmpl";
   static private final String WEAR_GRADLE_BUILD_TEMPLATE = "WearBuild.gradle.tmpl";
   
-  // Icon files
-  static final String ICON_36 = "icon-36.png";
-  static final String ICON_48 = "icon-48.png";
-  static final String ICON_72 = "icon-72.png";
-  static final String ICON_96 = "icon-96.png";
-  static final String ICON_144 = "icon-144.png";
-  static final String ICON_192 = "icon-192.png"; 
-  static final String WATCHFACE_ICON_CIRCULAR = "preview_circular.png";
-  static final String WATCHFACE_ICON_RECTANGULAR = "preview_rectangular.png";
+  // Launcher and watch face icon files
+  static final String[] SKETCH_LAUNCHER_ICONS = {"launcher_36.png", "launcher_48.png", 
+                                                 "launcher_72.png", "launcher_96.png", 
+                                                 "launcher_144.png", "launcher_192.png"};
+  static final String[] SKETCH_OLD_LAUNCHER_ICONS = {"icon-36.png", "icon-48.png", 
+                                                     "icon-72.png", "icon-96.png", 
+                                                     "icon-144.png", "icon-192.png"}; 
+  static final String[] BUILD_LAUNCHER_ICONS = {"mipmap-ldpi/ic_launcher.png", "mipmap-mdpi/ic_launcher.png", 
+                                                "mipmap-hdpi/ic_launcher.png", "mipmap-xhdpi/ic_launcher.png", 
+                                                "mipmap-xxhdpi/ic_launcher.png", "mipmap-xxxhdpi/ic_launcher.png"};
+  static final String[] SKETCH_WATCHFACE_ICONS = {"preview_circular.png", 
+                                                  "preview_rectangular.png"};
+  static final String[] BUILD_WATCHFACE_ICONS = {"drawable-nodpi/preview_circular.png", 
+                                                 "drawable-nodpi/preview_rectangular.png"};
   
   private int appComponent = APP;
   
@@ -638,10 +643,10 @@ class AndroidBuild extends JavaBuild {
     }
     
     File sketchFolder = sketch.getFolder();
-    writeAppIconFiles(sketchFolder, resFolder);
+    writeLauncherIconFiles(sketchFolder, resFolder);
     if (comp == WATCHFACE) {
       // Need the preview icons for watch faces.
-      writeWatchIconFiles(sketchFolder, resFolder);
+      writeWatchFaceIconFiles(sketchFolder, resFolder);
     }
   }
 
@@ -650,74 +655,38 @@ class AndroidBuild extends JavaBuild {
   // Icons  
   
   
-  private void writeAppIconFiles(File sketchFolder, File resFolder) {
-    File localIcon36 = new File(sketchFolder, ICON_36);
-    File localIcon48 = new File(sketchFolder, ICON_48);
-    File localIcon72 = new File(sketchFolder, ICON_72);
-    File localIcon96 = new File(sketchFolder, ICON_96);
-    File localIcon144 = new File(sketchFolder, ICON_144);
-    File localIcon192 = new File(sketchFolder, ICON_192);    
-
-    File buildIcon48 = new File(resFolder, "drawable/icon.png");
-    File buildIcon36 = new File(resFolder, "drawable-ldpi/icon.png");
-    File buildIcon72 = new File(resFolder, "drawable-hdpi/icon.png");
-    File buildIcon96 = new File(resFolder, "drawable-xhdpi/icon.png");
-    File buildIcon144 = new File(resFolder, "drawable-xxhdpi/icon.png");
-    File buildIcon192 = new File(resFolder, "drawable-xxxhdpi/icon.png");    
-
-    if (!localIcon36.exists() && !localIcon48.exists() &&
-        !localIcon72.exists() && !localIcon96.exists() &&
-        !localIcon144.exists() && !localIcon192.exists()) {
+  private void writeLauncherIconFiles(File sketchFolder, File resFolder) {
+    writeIconFiles(sketchFolder, resFolder, SKETCH_LAUNCHER_ICONS, SKETCH_OLD_LAUNCHER_ICONS, BUILD_LAUNCHER_ICONS);
+  }
+  
+  
+  private void writeWatchFaceIconFiles(File sketchFolder, File resFolder) {
+    writeIconFiles(sketchFolder, resFolder, SKETCH_WATCHFACE_ICONS, null, BUILD_WATCHFACE_ICONS);
+  }
+  
+  
+  private void writeIconFiles(File sketchFolder, File resFolder, 
+                              String[] sketchIconNames, String[] oldIconNames, String[] buildIconNames) {
+    File[] localIcons = AndroidUtil.getFileList(sketchFolder, sketchIconNames, oldIconNames);
+    File[] buildIcons = AndroidUtil.getFileList(resFolder, buildIconNames);
+    if (AndroidUtil.noFileExists(localIcons)) {
+      // If no icons are in the sketch folder, then copy all the defaults      
+      File[] defaultIcons = AndroidUtil.getFileList(mode, "icons/", sketchIconNames);      
       try {
-        // if no icons are in the sketch folder, then copy all the defaults
-        copyIcon(mode.getContentFile("icons/" + ICON_36), buildIcon36);
-        copyIcon(mode.getContentFile("icons/" + ICON_48), buildIcon48);
-        copyIcon(mode.getContentFile("icons/" + ICON_72), buildIcon72);
-        copyIcon(mode.getContentFile("icons/" + ICON_96), buildIcon96);
-        copyIcon(mode.getContentFile("icons/" + ICON_144), buildIcon144);
-        copyIcon(mode.getContentFile("icons/" + ICON_192), buildIcon192);
+        for (int i = 0; i < localIcons.length; i++) {
+          copyIcon(defaultIcons[i], buildIcons[i]);  
+        }
       } catch (IOException e) {
         e.printStackTrace();
       }
     } else {
-      // if at least one of the icons already exists, then use that across the board
+      // If at least one of the icons already exists, then use that across the board
       try {
-        if (localIcon36.exists()) copyIcon(localIcon36, buildIcon36); 
-        if (localIcon48.exists()) copyIcon(localIcon48, buildIcon48);
-        if (localIcon72.exists()) copyIcon(localIcon72, buildIcon72);
-        if (localIcon96.exists()) copyIcon(localIcon96, buildIcon96);        
-        if (localIcon144.exists()) copyIcon(localIcon144, buildIcon144);
-        if (localIcon192.exists()) copyIcon(localIcon192, buildIcon192);
+        for (int i = 0; i < localIcons.length; i++) {
+          if (localIcons[i].exists()) copyIcon(localIcons[i], buildIcons[i]);
+        }
       } catch (IOException e) {
-        System.err.println("Problem while copying app icons.");
-        e.printStackTrace();
-      }
-    }
-  }
-  
-  
-  private void writeWatchIconFiles(File sketchFolder, File resFolder) {
-    copyWatchIcon(new File(sketchFolder, WATCHFACE_ICON_CIRCULAR), 
-                  new File(resFolder, "drawable/preview_circular.png"), 
-                  mode.getContentFile("icons/" + WATCHFACE_ICON_CIRCULAR));
-    copyWatchIcon(new File(sketchFolder, WATCHFACE_ICON_RECTANGULAR), 
-        new File(resFolder, "drawable/preview_rectangular.png"), 
-        mode.getContentFile("icons/" + WATCHFACE_ICON_RECTANGULAR));
-  }
-  
-  
-  private void copyWatchIcon(File srcFile, File destFile, File defFile) {
-    if (!srcFile.exists()) {
-      try {
-        copyIcon(defFile, destFile);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }      
-    } else {
-      try {
-        copyIcon(srcFile, destFile);        
-      } catch (IOException e) {
-        System.err.println("Problem while copying watch face icon.");
+        System.err.println("Problem while copying icons.");
         e.printStackTrace();
       }
     }
@@ -732,73 +701,7 @@ class AndroidBuild extends JavaBuild {
       System.err.println("Could not create \"" + destFile.getParentFile() + "\" folder.");
     }    
   }  
-  
-  
-  // ---------------------------------------------------------------------------
-  // Dependencies
-  
-  
-//  private void copyWearLib(File libsFolder) throws IOException {
-    // The wear aar is needed even when the app is not a watch face, because on
-    // devices with android < 5 the dependencies of the PWatchFace* classes
-    // cannot be resolved.
-//    copyAARFileFromSDK(sdk.getWearableFolder() + "/$VER", "wearable-$VER.aar", WEAR_VER, libsFolder);    
-//  }
-  
-  
-//  private void copySupportLibs(File libsFolder) throws IOException {
-//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-core-utils/$VER", "support-core-utils-$VER.aar", SUPPORT_VER, libsFolder);
-//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-compat/$VER", "support-compat-$VER.aar", SUPPORT_VER, libsFolder);
-//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-fragment/$VER", "support-fragment-$VER.aar", SUPPORT_VER, libsFolder);
-//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/support-vector-drawable/$VER", "support-vector-drawable-$VER.aar", SUPPORT_VER, libsFolder);
-//  }
-  
-  
-//  private void copyAppCompatLib(File libsFolder) throws IOException {
-//    copyAARFileFromSDK(sdk.getSupportLibrary() + "/appcompat-v7/$VER", "appcompat-v7-$VER.aar", SUPPORT_VER, libsFolder);
-//  }
-  
-  
-//  private void copyGVRLibs(File libsFolder) throws IOException {
-//    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-base-$VER.aar", GVR_VER, libsFolder);
-//    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-common-$VER.aar", GVR_VER, libsFolder);
-//    copyAARFileFromMode("/libraries/vr/gvrsdk/$VER", "sdk-audio-$VER.aar", GVR_VER, libsFolder);
-//  }
 
-//  private void copyGARLibs(File libsFolder) throws IOException {
-//    copyAARFileFromMode("/libraries/ar/garsdk/$VER", "sdk-common-$VER.aar", GAR_VER, libsFolder);
-//  }
-  
-  /*
-  private void copyAARFileFromSDK(String srcFolder, String filename, String version, File destFolder) 
-      throws IOException {
-    String fn = filename.replace("$VER", version);
-    File srcFile = new File(srcFolder.replace("$VER", version), fn);
-    File destFile = new File(destFolder, fn);
-    if (srcFile.exists()) {
-      Util.copyFile(srcFile, destFile);
-    } else {
-      // If the AAR file does not exist in the installed SDK, gradle should be able to download it, and so
-      // we don't to anything besides printing a warning.      
-      System.out.println("Warning: cannot find AAR package " + fn + " in installed SDK, gradle will try to download.");
-    }
-  }
-
-  
-  private void copyAARFileFromMode(String srcFolder, String filename, String version, File destFolder) 
-      throws IOException {
-    String fn = filename.replace("$VER", version);
-    File srcFile = mode.getContentFile(srcFolder.replace("$VER", version) + "/" + fn);
-    File destFile = new File(destFolder, fn);
-    if (srcFile.exists()) {
-      Util.copyFile(srcFile, destFile);
-    } else {
-      // If the AAR file does not exist in the mode, gradle should be able to download it, and so
-      // we don't to anything besides printing a warning.      
-      System.out.println("Warning: cannot find AAR package " + fn + " in Android mode, gradle will try to download");
-    }
-  }  
-  */
   
   // ---------------------------------------------------------------------------
   // Export project
