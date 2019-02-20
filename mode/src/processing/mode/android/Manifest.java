@@ -44,7 +44,8 @@ import java.util.HashMap;
 public class Manifest {
   static final String MANIFEST_XML = "AndroidManifest.xml";
 
-  static final String MANIFEST_ERROR =
+  static final String MANIFEST_ERROR_TITLE ="Error handling " + MANIFEST_XML;
+  static final String MANIFEST_ERROR_MESSAGE =
     "Errors occurred while reading or writing " + MANIFEST_XML + ",\n" +
     "which means lots of things are likely to stop working properly.\n" +
     "To prevent losing any data, it's recommended that you use “Save As”\n" +
@@ -406,7 +407,7 @@ public class Manifest {
       }
     }
     if (xml == null) {
-      Messages.showWarning("Error handling " + MANIFEST_XML, MANIFEST_ERROR);
+      Messages.showWarning(MANIFEST_ERROR_TITLE, MANIFEST_ERROR_MESSAGE);
     }
   }
 

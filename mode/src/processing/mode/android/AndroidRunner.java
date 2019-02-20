@@ -47,6 +47,12 @@ import processing.mode.java.runner.Runner;
  * Launches an app on the device or in the emulator.
  */
 public class AndroidRunner implements DeviceListener {
+  private static final String DEFAULT_PACKAGE_NAME = "processing.android";
+  
+  private static final String CANCEL_WAITING_FOR_DEVICE = "No, on second thought, I'm giving up on waiting for that device to show up.";  
+  private static final String CANNOT_PARSE_LINE = "Can't parse this exception line:";
+  private static final String UNKNOWN_EXCEPTION = "Unknown exception";
+  
   AndroidBuild build;
   RunnerListener listener;
 
@@ -78,11 +84,11 @@ public class AndroidRunner implements DeviceListener {
 
   public boolean launch(Future<Device> deviceFuture, int comp, boolean emu) {
     String devStr = emu ? "emulator" : "device";
-    listener.statusNotice("Waiting for " + devStr + " to become available...");
+    listener.statusNotice(AndroidMode.getTextString("android_runner.status.waiting_for_device", devStr));
     
     final Device device = waitForDevice(deviceFuture, listener);
     if (device == null || !device.isAlive()) {
-      listener.statusError("Lost connection with " + devStr + " while launching. Try again.");
+      listener.statusError(AndroidMode.getTextString("android_runner.status.lost_connection_with_device", devStr));
       // Reset the server, in case that's the problem. Sometimes when
       // launching the emulator times out, the device list refuses to update.
       final Devices devices = Devices.getInstance();
@@ -91,27 +97,25 @@ public class AndroidRunner implements DeviceListener {
     }
     
     if (comp == AndroidBuild.WATCHFACE && !device.hasFeature("watch")) {
-      listener.statusError("Could not install the sketch.");
-      Messages.showWarning("Selected device is not a watch...",
-          "You are trying to install a watch face on a non-watch device.\n" +
-          "Select the correct device, or use the emulator.");      
+      listener.statusError(AndroidMode.getTextString("android_runner.status.cannot_install_sketch"));
+      Messages.showWarning(AndroidMode.getTextString("android_runner.warn.non_watch_device_title"), 
+                           AndroidMode.getTextString("android_runner.warn.non_watch_device_body"));      
       return false;
     }
     
     if (comp != AndroidBuild.WATCHFACE && device.hasFeature("watch")) {
-      listener.statusError("Could not install the sketch.");
-      Messages.showWarning("Selected device is a watch...",
-          "You are trying to install a non-watch app on a watch.\n" +
-          "Select the correct device, or use the emulator.");      
+      listener.statusError(AndroidMode.getTextString("android_runner.status.cannot_install_sketch"));
+      Messages.showWarning(AndroidMode.getTextString("android_runner.warn.watch_device_title"), 
+                           AndroidMode.getTextString("android_runner.warn.watch_device_body"));      
       return false;
     }
 
     device.addListener(this);
     device.setPackageName(build.getPackageName());
-    listener.statusNotice("Installing sketch on " + device.getId());
+    listener.statusNotice(AndroidMode.getTextString("android_runner.status.installing_sketch", device.getId()));
     // this stopped working with Android SDK tools revision 17
     if (!device.installApp(build, listener)) {
-      listener.statusError("Lost connection with " + devStr + " while installing. Try again.");
+      listener.statusError(AndroidMode.getTextString("android_runner.status.lost_connection", devStr));
       final Devices devices = Devices.getInstance();
       devices.killAdbServer();  // see above
       return false;
@@ -120,20 +124,22 @@ public class AndroidRunner implements DeviceListener {
     boolean status = false;
     if (comp == AndroidBuild.WATCHFACE || comp == AndroidBuild.WALLPAPER) {
       if (startSketch(build, device)) {
-        listener.statusNotice("Sketch installed "
-                              + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+        listener.statusNotice(AndroidMode.getTextString("android_runner.status.sketch_installed")
+                              + (device.isEmulator() ? " " + AndroidMode.getTextString("android_runner.status.in_emulator") : " " + 
+                                                             AndroidMode.getTextString("android_runner.status.on_device")) + ".");
         status = true;
       } else {
-        listener.statusError("Could not install the sketch.");
+        listener.statusError(AndroidMode.getTextString("android_runner.status.cannot_install_sketch"));
       }
     } else {
-      listener.statusNotice("Starting sketch on " + device.getId());
+      listener.statusNotice(AndroidMode.getTextString("android_runner.status.launching_sketch", device.getId()));
       if (startSketch(build, device)) {
-        listener.statusNotice("Sketch launched "
-                              + (device.isEmulator() ? "in the emulator" : "on the device") + ".");
+        listener.statusNotice(AndroidMode.getTextString("android_runner.status.sketch_launched")
+                              + (device.isEmulator() ? " " + AndroidMode.getTextString("android_runner.status.in_emulator") : " " + 
+                                                             AndroidMode.getTextString("android_runner.status.on_device")) + ".");
         status = true;
       } else {
-        listener.statusError("Could not start the sketch.");
+        listener.statusError(AndroidMode.getTextString("android_runner.status.cannot_launch_sketch"));
       }
     }
 
@@ -160,6 +166,8 @@ public class AndroidRunner implements DeviceListener {
   }
 
   private AttachingConnector getConnector() {
+    // Eclipse gives an error in the following line (org.eclipse cannot be resolved), but just ignore it.
+    // The mode runs and compiles fine.
     VirtualMachineManager vmManager = org.eclipse.jdi.Bootstrap.virtualMachineManager();
     for (Connector connector : vmManager.attachingConnectors()) {
       if ("com.sun.jdi.SocketAttach".equals(connector.name())) {
@@ -222,8 +230,7 @@ public class AndroidRunner implements DeviceListener {
       } catch (final TimeoutException expected) {
       }
     }
-    listener.statusError("No, on second thought, I'm giving up " +
-                         "on waiting for that device to show up.");
+    listener.statusError(AndroidMode.getTextString("android_runner.status.cancel_waiting_for_device"));
     return null;
   }
 
@@ -246,9 +253,9 @@ public class AndroidRunner implements DeviceListener {
 
     final Matcher m = EXCEPTION_PARSER.matcher(exceptionLine);
     if (!m.matches()) {
-      System.err.println("Can't parse this exception line:");
+      System.err.println(AndroidMode.getTextString("android_runner.error.cannot_parse_stacktrace"));
       System.err.println(exceptionLine);
-      listener.statusError("Unknown exception");
+      listener.statusError(AndroidMode.getTextString("android_runner.status.unknwon_exception"));
       return;
     }
     final String exceptionClass = m.group(1);
@@ -256,7 +263,7 @@ public class AndroidRunner implements DeviceListener {
 
     while (frames.hasNext()) {
       final String line = frames.next();
-      if (line.contains("processing.android")) {
+      if (line.contains(DEFAULT_PACKAGE_NAME)) {
         final Matcher lm = LOCATION.matcher(line);
         if (lm.find()) {
           final String filename = lm.group(1);

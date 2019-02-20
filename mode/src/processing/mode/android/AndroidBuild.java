@@ -52,7 +52,7 @@ class AndroidBuild extends JavaBuild {
   static public final int VR_CARDBOARD = 3;
   static public final int VR_DAYDREAM  = 4;
   static public final int AR           = 5;
-
+  
   // Minimum SDK's API levels required for each component:
   static public final String MIN_SDK_APP       = "17"; // Android 4.2
   static public final String MIN_SDK_WALLPAPER = "17"; // Android 4.2
@@ -261,7 +261,7 @@ class AndroidBuild extends JavaBuild {
   protected File createProject(boolean external) 
       throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
-    System.out.println("Build folder: " + tmpFolder.getAbsolutePath());
+    System.out.println(AndroidMode.getTextString("android_build.error.build_folder", tmpFolder.getAbsolutePath()));
 
     // Create the 'src' folder with the preprocessed code.
     srcFolder = new File(tmpFolder, module + "/src/main/java");
@@ -686,7 +686,7 @@ class AndroidBuild extends JavaBuild {
           if (localIcons[i].exists()) copyIcon(localIcons[i], buildIcons[i]);
         }
       } catch (IOException e) {
-        System.err.println("Problem while copying icons.");
+        System.err.println(AndroidMode.getTextString("android_build.error.cannot_copy_icons"));
         e.printStackTrace();
       }
     }
@@ -698,7 +698,7 @@ class AndroidBuild extends JavaBuild {
     if (parent.exists() || parent.mkdirs()) {
       Util.copyFile(srcFile, destFile);
     } else {
-      System.err.println("Could not create \"" + destFile.getParentFile() + "\" folder.");
+      System.err.println(AndroidMode.getTextString("android_build.error.cannot_create_icon_folder", destFile.getParentFile()));
     }    
   }  
 
@@ -762,9 +762,8 @@ class AndroidBuild extends JavaBuild {
       throws IOException, InterruptedException {
     File zipAlign = sdk.getZipAlignTool();
     if (zipAlign == null || !zipAlign.exists()) {
-      Messages.showWarning("Cannot find zipaling...",
-          "The zipalign build tool needed to prepare the export package is missing.\n" +
-          "Make sure that your Android SDK was downloaded correctly.");
+      Messages.showWarning(AndroidMode.getTextString("android_build.warn.cannot_find_zipalign.title"),
+                           AndroidMode.getTextString("android_build.warn.cannot_find_zipalign.body"));
       return null;
     }
     
@@ -832,9 +831,7 @@ class AndroidBuild extends JavaBuild {
         if (appComponent == AR && exportName.toLowerCase().startsWith("core-")) continue;
 
         if (!exportFile.exists()) {
-          System.err.println(exportFile.getName() +
-                             " is mentioned in export.txt, but it's " +
-                             "a big fat lie and does not exist.");
+          System.err.println(AndroidMode.getTextString("android_build.error.export_file_does_not_exist", exportFile.getName()));
         } else if (exportFile.isDirectory()) {
           // Copy native library folders to the correct location
           if (exportName.equals("armeabi") ||
@@ -853,8 +850,7 @@ class AndroidBuild extends JavaBuild {
         } else if (exportName.toLowerCase().endsWith(".zip")) {
           // As of r4 of the Android SDK, it looks like .zip files
           // are ignored in the libs folder, so rename to .jar
-          System.err.println(".zip files are not allowed in Android libraries.");
-          System.err.println("Please rename " + exportFile.getName() + " to be a .jar file.");
+          System.err.println(AndroidMode.getTextString("android_build.error.zip_files_not_allowed", exportFile.getName()));
           String jarName = exportName.substring(0, exportName.length() - 4) + ".jar";
           Util.copyFile(exportFile, new File(libsFolder, jarName));
 
@@ -919,7 +915,7 @@ class AndroidBuild extends JavaBuild {
   private File createTempBuildFolder(final Sketch sketch) throws IOException {
     final File tmp = File.createTempFile("android", "sketch");
     if (!(tmp.delete() && tmp.mkdir())) {
-      throw new IOException("Cannot create temp dir " + tmp + " to build android sketch");
+      throw new IOException(AndroidMode.getTextString("android_build.error.cannot_create_build_folder", tmp));
     }
     return tmp;
   }

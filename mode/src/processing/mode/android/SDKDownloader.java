@@ -541,8 +541,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (actualPath.exists()) {
         actualPath.renameTo(expectedPath);
       } else {
-        throw new IOException("Error unpacking platform to " + 
-            actualPath.getAbsolutePath());
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error.cannot_unpack_platform", actualPath.getAbsolutePath()));
       }
     }        
   }

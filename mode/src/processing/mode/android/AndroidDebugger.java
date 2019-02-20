@@ -60,9 +60,9 @@ public class AndroidDebugger extends Debugger {
       device.forwardPort(port);
 
       // connect
-      System.out.println("\n:debugger:Attaching Debugger");
+      System.out.println(AndroidMode.getTextString("android_debugger.info.attaching_debugger"));
       VirtualMachine vm = runner.connectVirtualMachine(port);
-      System.out.println("DEBUGGER ATTACHED");
+      System.out.println(AndroidMode.getTextString("android_debugger.info.debugger_attached"));
 
       // start receiving vm events
       VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
@@ -75,7 +75,7 @@ public class AndroidDebugger extends Debugger {
       vm.resume();
 
     } catch (IOException e) {
-      Messages.log("ERROR : " + e.getMessage());
+      Messages.log(AndroidMode.getTextString("android_debugger.error.debugger_exception", e.getMessage()));
       // Retry
       startDebug(runner, device);
     } catch (InterruptedException e) {
@@ -93,7 +93,7 @@ public class AndroidDebugger extends Debugger {
     for (Event e : es) {
       // System.out.println("VM Event: " + e);
       if (e instanceof VMStartEvent) {
-        System.out.println("start");
+//        System.out.println("start");
 
       } else if (e instanceof ClassPrepareEvent) {
         vmClassPrepareEvent((ClassPrepareEvent) e);

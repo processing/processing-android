@@ -43,6 +43,14 @@ import processing.app.ui.Toolkit;
 public class Permissions extends JFrame {
   static final String GUIDE_URL =
     "https://developer.android.com/training/articles/security-tips.html#Permissions";
+  
+  private static final String PERMISSIONS_LABEL_TEXT ="<html>" +
+      "Android applications must specifically ask for permission\n" +
+      "to do things like connect to the internet, write a file,\n" +
+      "or make phone calls. When installing your application,\n" +
+      "users will be asked whether they want to allow such access.</html>";  
+  private static final String PERMISSIONS_URL_TEXT = "<html>More about permissions can be found " +
+      "<a href=\"" + GUIDE_URL + "\">here</a>.</html>";  
 
   static final int BORDER_HORIZ = Toolkit.zoom(5);
   static final int BORDER_VERT = Toolkit.zoom(3);
@@ -117,14 +125,8 @@ public class Permissions extends JFrame {
     vbox.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
     outer.add(vbox);
 
-    String labelText =
-      "<html>" +
-      "Android applications must specifically ask for permission\n" +
-      "to do things like connect to the internet, write a file,\n" +
-      "or make phone calls. When installing your application,\n" +
-      "users will be asked whether they want to allow such access.</html>";
-    String urlText = "<html>More about permissions can be found " +
-        "<a href=\"" + GUIDE_URL + "\">here</a>.</html>";     
+    String labelText = PERMISSIONS_LABEL_TEXT;
+    String urlText = PERMISSIONS_URL_TEXT;     
     JLabel textarea = new JLabel(labelText);
     JLabel urlarea = new JLabel(urlText);
     textarea.setPreferredSize(new Dimension(TEXT_WIDTH, TEXT_HEIGHT));

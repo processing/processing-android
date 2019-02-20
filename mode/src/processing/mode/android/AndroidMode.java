@@ -32,6 +32,7 @@ import processing.app.SketchException;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
+import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
@@ -39,6 +40,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 /** 
@@ -55,67 +58,19 @@ public class AndroidMode extends JavaMode {
   
   private boolean checkingSDK = false;
   private boolean userCancelledSDKSearch = false;
+  
+  // Using this temporarily until support for mode translations is finalized in the Processing app
+  private static Map<String, String> textStrings = null;
 
   private static final String BLUETOOTH_DEBUG_URL = 
       "https://developer.android.com/training/wearables/apps/debugging.html";
-  
-  private static final String WATCHFACE_DEBUG_TITLE =
-      "Is the watch connected to the computer?";
-  
-  private static final String WATCHFACE_DEBUG_MESSAGE =
-      "Processing will install watch faces on a smartwatch either over Wi-Fi " +
-      "or via Bluetooth, in which case the watch needs to be paired with a phone.<br><br>" +
-      "Read this guide on <a href=\"" + BLUETOOTH_DEBUG_URL + "\">debugging an Android Wear App</a> " +
-      "for more details.";
-  
-  private static final String WALLPAPER_INSTALL_TITLE =
-      "Wallpaper installed!";
-  
-  private static final String WALLPAPER_INSTALL_MESSAGE = 
-      "Processing just built and installed your sketch as a " +
-      "live wallpaper on the selected device.<br><br>" +
-      "You need to open the wallpaper picker in the device in order "+ 
-      "to select it as the new background.";
-  
-  private static final String WATCHFACE_INSTALL_TITLE =
-      "Watch face installed!";
-  
-  private static final String WATCHFACE_INSTALL_MESSAGE = 
-      "Processing just built and installed your sketch as a " +
-      "watch face on the selected device.<br><br>" +
-      "You need to add it as a favourite watch face on the device "+ 
-      "and then select it from the watch face picker in order to run it.";
     
   private static final String DISTRIBUTING_APPS_TUT_URL = 
       "http://android.processing.org/tutorials/distributing/index.html";  
   
-  private static final String EXPORT_DEFAULT_PACKAGE_TITLE =
-      "Cannot export package...";
-
-  private static final String EXPORT_DEFAULT_PACKAGE_MESSAGE =
-      "The sketch still has the default package name. " +
-      "Not good, since this name will uniquely identify your app on the Play store... for ever!<br>" +
-      "Come up with a different package name and write in the AndroidManifest.xml file in the sketch folder, " +
-      "after the \"package=\" attribute inside the manifest tag, which also contains version code and name. " +
-      "Once you have done that, try exporting the sketch again.<br><br>" +
-      "For more info on distributing apps from Processing,<br>" +
-      "check <a href=\"" + DISTRIBUTING_APPS_TUT_URL + "\">this online tutorial</a>.";
-  
-  private static final String EXPORT_DEFAULT_ICONS_TITLE =
-      "Cannot export package...";
-
-  private static final String EXPORT_DEFAULT_ICONS_MESSAGE =
-      "The sketch does not include all required app icons. " +
-      "Processing could use its default set of Android icons, which are okay " +
-      "to test the app on your device, but a bad idea to distribute it on the Play store. " +
-      "Create a full set of unique icons for your app, and copy them into the sketch folder. " +
-      "Once you have done that, try exporting the sketch again.<br><br>" +
-      "For more info on distributing apps from Processing,<br>" +
-      "check <a href=\"" + DISTRIBUTING_APPS_TUT_URL + "\">this online tutorial</a>.";  
-    
-  
   public AndroidMode(Base base, File folder) {
     super(base, folder);
+    loadTextStrings();
   }
 
 
@@ -216,9 +171,8 @@ public class AndroidMode extends JavaMode {
       }
     }
     if (sdk == null) {
-      Messages.showWarning("Bad news...",
-                           "The Android SDK could not be loaded.\n" +
-                           "The Android Mode will be disabled.", tr);
+      Messages.showWarning(AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_title"), 
+                           AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_body"), tr);
     } else {
       Devices devices = Devices.getInstance();
       devices.setSDK(sdk);
@@ -239,7 +193,7 @@ public class AndroidMode extends JavaMode {
     }
 
     if (sdk == null) {
-      Messages.log("Android SDK path couldn't be loaded.");
+      Messages.log(AndroidMode.getTextString("android_mode.info.cannot_open_sdk_path"));
       return "";
     }
     
@@ -270,16 +224,16 @@ public class AndroidMode extends JavaMode {
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
       RunnerListener listener) throws SketchException, IOException {
     listener.startIndeterminate();
-    listener.statusNotice("Starting build...");
+    listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
-    listener.statusNotice("Building Android project...");
+    listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
     build.build("debug");
         
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
       SketchException se =
-        new SketchException("Could not create a virtual device for the emulator.");
+        new SketchException(AndroidMode.getTextString("android_mode.error.cannot_create_avd"));
       se.hideStackTrace();
       throw se;
     }
@@ -298,23 +252,20 @@ public class AndroidMode extends JavaMode {
     final Devices devices = Devices.getInstance();
     java.util.List<Device> deviceList = devices.findMultiple(false);
     if (deviceList.size() == 0) {
-      Messages.showWarning("No devices found!", 
-                           "Processing did not find any device where to run\n" +
-                           "your sketch on. Make sure that your handheld or\n" +
-                           "wearable is properly connected to the computer\n" +
-                           "and that USB or Bluetooth debugging is enabled.");
-      listener.statusError("No devices found.");
+      Messages.showWarning(AndroidMode.getTextString("android_mode.dialog.no_devices_found_title"), 
+                           AndroidMode.getTextString("android_mode.dialog.no_devices_found_body"));
+      listener.statusError(AndroidMode.getTextString("android_mode.status.no_devices_found"));
       return;
     }
     
     listener.startIndeterminate();
-    listener.statusNotice("Starting build...");
+    listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
-    listener.statusNotice("Building Android project...");
+    listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
     File projectFolder = build.build("debug");
     if (projectFolder == null) {
-      listener.statusError("Build failed.");      
+      listener.statusError(AndroidMode.getTextString("android_mode.status.project_build_failed"));
       return;
     }
     
@@ -329,7 +280,8 @@ public class AndroidMode extends JavaMode {
   
   public void showSelectComponentMessage(int appComp) {
     if (showWatchFaceDebugMessage && appComp == AndroidBuild.WATCHFACE) {
-      AndroidUtil.showMessage(WATCHFACE_DEBUG_TITLE, WATCHFACE_DEBUG_MESSAGE);
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.watchface_debug_title"),
+                              AndroidMode.getTextString("android_mode.dialog.watchface_debug_body", BLUETOOTH_DEBUG_URL));
       showWatchFaceDebugMessage = false;
     } 
   }
@@ -337,11 +289,13 @@ public class AndroidMode extends JavaMode {
   
   public void showPostBuildMessage(int appComp) {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
-      AndroidUtil.showMessage(WALLPAPER_INSTALL_TITLE, WALLPAPER_INSTALL_MESSAGE);  
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.wallpaper_installed_title"),
+                              AndroidMode.getTextString("android_mode.dialog.wallpaper_installed_body"));
       showWallpaperSelectMessage = false;
     }
     if (showWatchFaceSelectMessage && appComp == AndroidBuild.WATCHFACE) {
-      AndroidUtil.showMessage(WATCHFACE_INSTALL_TITLE, WATCHFACE_INSTALL_MESSAGE);  
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.watchface_installed_title"),
+                              AndroidMode.getTextString("android_mode.dialog.watchface_installed_body"));  
       showWatchFaceSelectMessage = false;
     } 
   }
@@ -368,7 +322,8 @@ public class AndroidMode extends JavaMode {
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
-      AndroidUtil.showMessage(EXPORT_DEFAULT_PACKAGE_TITLE, EXPORT_DEFAULT_PACKAGE_MESSAGE);
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_package_title"),
+                              AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
       return false;
     }
     return true;
@@ -390,8 +345,8 @@ public class AndroidMode extends JavaMode {
     
     if (!allFilesExist) {
       // The user did not set custom icons, show error and stop
-      AndroidUtil.showMessage(EXPORT_DEFAULT_ICONS_TITLE, 
-                              EXPORT_DEFAULT_ICONS_MESSAGE);
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title"),
+                              AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
       return false;      
     }
     return true;
@@ -406,4 +361,47 @@ public class AndroidMode extends JavaMode {
   public void resetManifest(Sketch sketch, int comp) {
     new Manifest(sketch, comp, getFolder(), true);
   }
+  
+  private void loadTextStrings() {
+    String baseFilename = "languages/mode.properties";
+    File modeBaseFile = new File(getFolder(), baseFilename);
+    if (textStrings == null) {
+      textStrings = new HashMap<String, String>();
+      String[] lines = PApplet.loadStrings(modeBaseFile);
+      if (lines == null) {
+        throw new NullPointerException("File not found:\n" + modeBaseFile.getAbsolutePath());
+      }
+      //for (String line : lines) {
+      for (int i = 0; i < lines.length; i++) {
+        String line = lines[i];
+        if ((line.length() == 0) ||
+            (line.charAt(0) == '#')) continue;
+
+        // this won't properly handle = signs inside in the text
+        int equals = line.indexOf('=');
+        if (equals != -1) {
+          String key = line.substring(0, equals).trim();
+          String value = line.substring(equals + 1).trim();
+
+          value = value.replaceAll("\\\\n", "\n");
+          value = value.replaceAll("\\\\'", "'");
+
+          textStrings.put(key, value);
+        }
+      }      
+    }
+  }
+  
+  static public String getTextString(String key) {
+    return textStrings.get(key);
+//    return Language.text(key);
+  }
+  
+  static public String getTextString(String key, Object... arguments) {
+    String value = textStrings.get(key);
+    if (value == null) {
+      return key;
+    }
+    return String.format(value, arguments);
+  }  
 }

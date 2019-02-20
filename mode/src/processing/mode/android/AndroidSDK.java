@@ -71,20 +71,7 @@ class AndroidSDK {
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
-  
-  private static final String USE_ENV_SDK_TITLE = "Found an Android SDK!";
-  private static final String USE_ENV_SDK_MESSAGE = 
-      "Processing found a valid Android SDK that seems to be in use already. " +
-      "Processing could use this SDK too, or download a new one.<br><br>" +
-      "Sharing the same SDK across different development tools, like Processing " +
-      "and Android Studio, will save space (the SDK may use up to several GBs), " +
-      "but when one tool updates the SDK, it can create problems in the other. " + 
-      "If Processing downloads a new SDK, it will keep it separate from the one " +
-      "it just found.<br><br>" +
-      "What do you want to do?";
 
-  private static final String MISSING_SDK_TITLE =
-      "Cannot find an Android SDK...";    
   private static final String MISSING_SDK_MESSAGE =
       "Processing did not find an Android SDK on this computer. " +
       "If there is one, and you know where it is, click \"Locate SDK path\" " +
@@ -92,9 +79,7 @@ class AndroidSDK {
       "If you want to download the SDK manually, you can get "+
       "the command line tools from <a href=\"" + SDK_DOWNLOAD_URL + "\">here</a>. " +
       "Make sure to install the SDK platform for API " + AndroidBuild.TARGET_SDK + ".";
-    
-  private static final String INVALID_SDK_TITLE =
-      "Android SDK is not valid...";  
+
   private static final String INVALID_SDK_MESSAGE =
       "Processing found an Android SDK, but is not valid. It could be missing " +
       "some files, or might not be including the required platform for " + 
@@ -193,6 +178,38 @@ class AndroidSDK {
       "The Android SDK no longer includes 32 bit platform tools (adb, etc.), and so they will not work.<br><br>" +
       "<a href=\"" + SYSTEM_32BIT_URL + "\">This thread</a> provides some possible workarounds.";    
   
+  
+  private static final String ADB_TROUBLE_TITLE = "Trouble with adb!";
+  
+  private static final String ADB_TROUBLE_MESSAGE = "Could not run the adb tool from the Android SDK.\n" +
+  "One possibility is that its executable permission\n" +
+  "is not properly set. You can try setting this\n" +
+  "permission manually, or re-installing the SDK.\n\n" +
+  "The mode will be disabled until this problem is fixed.\n";  
+  
+  
+  private static final String YES_PROMPT = "Yes";
+  private static final String NO_PROMPT = "No";
+  
+  private static final String DOWNLOAD_SDK_AUTOMATICALLY = "Download SDK automatically"; 
+  private static final String LOCATE_SDK_MANUALLY = "Locate SDK path manually";
+  
+  
+  private static final String MISSING_SDK_FOLDER = " does not exist";
+  private static final String MISSING_TOOLS_FOLDER = "There is no tools folder in ";
+  private static final String MISSING_PLATFORM_TOOLS_FOLDER = "There is no platform-tools folder in ";
+  private static final String MISSING_BUILD_TOOLS_FOLDER = "There is no build-tools folder in ";
+  private static final String MISSING_PLATFORMS_FOLDER = "There is no platforms folder in ";
+  
+  private static final String MISSING_TARGET_PLATFORM = "There is no Android ";
+  private static final String MISSING_ANDROID_JAR = "android.jar for plaform ";
+  
+  private static final String REMOVING_KEYSTORE_FILE = "Removing expired debug.keystore file.";
+  private static final String CANNOT_REMOVE_KEYSTORE_FILE = "Could not remove the expired debug.keystore file.";
+  private static final String REMOVE_FILE_PROMPT = "Please remove the file ";
+  private static final String INVALID_DATE = "The date '";
+  private static final String REPORT_BUG_PROMPT = "Please report this as a bug so we can fix it.";
+  
   private static final int NO_ERROR     = 0;
   private static final int SKIP_ENV_SDK = 1;
   private static final int MISSING_SDK  = 2;
@@ -202,50 +219,40 @@ class AndroidSDK {
   public AndroidSDK(File folder) throws BadSDKException, IOException {
     this.folder = folder;
     if (!folder.exists()) {
-      throw new BadSDKException(folder + " does not exist");
+      throw new BadSDKException(folder + MISSING_SDK_FOLDER);
     }
     
     tools = new File(folder, "tools");
     if (!tools.exists()) {
-      throw new BadSDKException("There is no tools folder in " + folder);
+      throw new BadSDKException(MISSING_TOOLS_FOLDER + folder);
     }
 
     platformTools = new File(folder, "platform-tools");
     if (!platformTools.exists()) {
-      throw new BadSDKException("There is no platform-tools folder in " + folder);
+      throw new BadSDKException(MISSING_PLATFORM_TOOLS_FOLDER + folder);
     }
 
     buildTools = new File(folder, "build-tools");
     if (!buildTools.exists()) {
-      throw new BadSDKException("There is no build-tools folder in " + folder);
+      throw new BadSDKException(MISSING_BUILD_TOOLS_FOLDER + folder);
     }
     
     platforms = new File(folder, "platforms");
     if (!platforms.exists()) {
-      throw new BadSDKException("There is no platforms folder in " + folder);
+      throw new BadSDKException(MISSING_PLATFORMS_FOLDER + folder);
     }
     
     targetPlatform = new File(platforms, AndroidBuild.TARGET_PLATFORM);
     if (!targetPlatform.exists()) {
-      throw new BadSDKException("There is no Android " + 
+      throw new BadSDKException(MISSING_TARGET_PLATFORM + 
                                 AndroidBuild.TARGET_SDK + " in " + platforms.getAbsolutePath());
     }
 
     androidJar = new File(targetPlatform, "android.jar");
     if (!androidJar.exists()) {
-      throw new BadSDKException("android.jar for plaform " + 
+      throw new BadSDKException(MISSING_ANDROID_JAR + 
                                 AndroidBuild.TARGET_SDK + " is missing from " + targetPlatform.getAbsolutePath());
     }
-    
-//    wearablePath = new File(folder, "extras/google/m2repository/com/google/android/support/wearable");
-//    if (!wearablePath.exists()) {
-//      throw new BadSDKException("There is no wearable folder in " + folder);
-//    }
-//    
-//    supportLibPath = new File(folder, "extras/android/m2repository/com/android/support");
-//    if (!supportLibPath.exists()) {
-//      throw new BadSDKException("There is no support library folder in " + folder);
-//    }
         
     avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
@@ -298,19 +305,19 @@ class AndroidSDK {
                 Date date = df.parse(timestamp);
                 long expireMillis = date.getTime();
                 if (expireMillis < System.currentTimeMillis()) {
-                  System.out.println("Removing expired debug.keystore file.");
+                  System.out.println(REMOVING_KEYSTORE_FILE);
                   String hidingName = "debug.keystore." + AndroidMode.getDateStamp(expireMillis);
                   File hidingFile = new File(keystoreFile.getParent(), hidingName);
                   if (!keystoreFile.renameTo(hidingFile)) {
-                    System.err.println("Could not remove the expired debug.keystore file.");
-                    System.err.println("Please remove the file " + keystoreFile.getAbsolutePath());
+                    System.err.println(CANNOT_REMOVE_KEYSTORE_FILE);
+                    System.err.println(REMOVE_FILE_PROMPT + keystoreFile.getAbsolutePath());
                   }
 //                } else {
 //                  System.out.println("Nah, that won't expire until " + date); //timestamp);
                 }
               } catch (ParseException pe) {
-                System.err.println("The date â€œ" + timestamp + "â€� could not be parsed.");
-                System.err.println("Please report this as a bug so we can fix it.");
+                System.err.println(INVALID_DATE + timestamp + "' could not be parsed.");
+                System.err.println(REPORT_BUG_PROMPT);
               }
             }
           }
@@ -613,14 +620,14 @@ class AndroidSDK {
   
 
   static public int showEnvSDKDialog(Frame editor) {
-    String title = USE_ENV_SDK_TITLE;
+    String title = AndroidMode.getTextString("android_sdk.dialog.found_installed_sdk_title");
     String htmlString = "<html> " +
         "<head> <style type=\"text/css\">" +
         "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
             "margin: " + TEXT_MARGIN + "px; " + 
             "width: " + TEXT_WIDTH + "px }" +
         "</style> </head>" +
-        "<body> <p>" + USE_ENV_SDK_MESSAGE + "</p> </body> </html>";    
+        "<body> <p>" + AndroidMode.getTextString("android_sdk.dialog.found_installed_sdk_body") + "</p> </body> </html>";    
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
       @Override
@@ -634,7 +641,8 @@ class AndroidSDK {
     JLabel label = new JLabel();
     pane.setBackground(label.getBackground());
     
-    String[] options = new String[] { "Use existing SDK", "Download new SDK" };
+    String[] options = new String[] { AndroidMode.getTextString("android_sdk.option.use_existing_sdk"), 
+                                      AndroidMode.getTextString("android_sdk.option.download_new_sdk") };
     int result = JOptionPane.showOptionDialog(null, pane, title, 
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
         null, options, options[0]);
@@ -659,11 +667,11 @@ class AndroidSDK {
         "</style> </head>";
     String title = "";
     if (loadError == MISSING_SDK) {
-      htmlString += "<body> <p>" + MISSING_SDK_MESSAGE + "</p> </body> </html>";
-      title = MISSING_SDK_TITLE;
+      htmlString += "<body> <p>" + AndroidMode.getTextString("android_sdk.dialog.cannot_find_sdk_body", SDK_DOWNLOAD_URL, AndroidBuild.TARGET_SDK) + "</p> </body> </html>";
+      title = AndroidMode.getTextString("android_sdk.dialog.cannot_find_sdk_title");
     } else if (loadError == INVALID_SDK) {
       htmlString += "<body> <p>" + INVALID_SDK_MESSAGE + "</p> </body> </html>";
-      title = INVALID_SDK_TITLE;
+      title = AndroidMode.getTextString("android_sdk.dialog.invalid_sdk_title");
     }    
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
@@ -678,9 +686,7 @@ class AndroidSDK {
     JLabel label = new JLabel();
     pane.setBackground(label.getBackground());
     
-    String[] options = new String[] {
-      "Download SDK automatically", "Locate SDK path manually"
-    };    
+    String[] options = new String[] { DOWNLOAD_SDK_AUTOMATICALLY, LOCATE_SDK_MANUALLY };
     int result = JOptionPane.showOptionDialog(null, pane, title, 
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
         null, options, options[0]);
@@ -716,7 +722,7 @@ class AndroidSDK {
     JLabel label = new JLabel();
     pane.setBackground(label.getBackground());
     
-    String[] options = new String[] { "Yes", "No" };
+    String[] options = new String[] { YES_PROMPT, NO_PROMPT };
     
     int result = JOptionPane.showOptionDialog(null, pane, title, 
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
@@ -753,7 +759,7 @@ class AndroidSDK {
     JLabel label = new JLabel();
     pane.setBackground(label.getBackground());
     
-    String[] options = new String[] { "Yes", "No" };
+    String[] options = new String[] { YES_PROMPT, NO_PROMPT };
     
     int result = JOptionPane.showOptionDialog(null, pane, title, 
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
@@ -847,12 +853,7 @@ class AndroidSDK {
       return adbResult;
     } catch (IOException ioe) {
       if (-1 < ioe.getMessage().indexOf("Permission denied")) {
-        Messages.showWarning("Trouble with adb!",
-            "Could not run the adb tool from the Android SDK.\n" +
-            "One possibility is that its executable permission\n" +
-            "is not properly set. You can try setting this\n" +
-            "permission manually, or re-installing the SDK.\n\n" +
-            "The mode will be disabled until this problem is fixed.\n");
+        Messages.showWarning(ADB_TROUBLE_TITLE, ADB_TROUBLE_MESSAGE);
         adbDisabled = true;
       }
       throw ioe;
