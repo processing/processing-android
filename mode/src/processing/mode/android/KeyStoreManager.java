@@ -21,6 +21,7 @@
 
 package processing.mode.android;
 
+import processing.app.Language;
 import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.ui.Toolkit;
@@ -49,43 +50,6 @@ public class KeyStoreManager extends JFrame {
   
   static final String GUIDE_URL =
       "https://developer.android.com/studio/publish/app-signing.html";
-
-  static final String KEYSTORE_LABEL_TEXT = "<html>" +
-      "Please enter the information below so we can generate a private key for you.<br/>" +
-      "Fields marked <b>bold</b> are required, " +
-      "though you may consider to fill some of optional fields below those to avoid potential problems.<br/>" +
-      "More about private keys can be found " +
-      "<a href=\"" + GUIDE_URL + "\">here</a>.</body></html>";
-  
-  static final String OK_BUTTON = "OK";
-  static final String CANCEL_BUTTON = "Cancel";
-  static final String RESET_BUTTON = "Reset password";
-  
-  static final String RESET_KEYSTORE_TITLE = "Android keystore";
-  static final String RESET_KEYSTORE_MESSAGE1 = "Are you sure you want to reset the password?"; 
-  static final String RESET_KEYSTORE_MESSAGE2 = "We will have to reset the keystore to do this, which means \n" + 
-                                                "you won't be able to upload an update for your app signed with\n" + 
-                                                "the new keystore to Google Play.\n\n" +
-                                                "We will make a backup for the old keystore.";
-  
-  static final String FAILED_TO_REMOVE_TITLE = "Android keystore"; 
-  static final String FAILED_TO_REMOVE_BODY = "Failed to remove keystore";
-  
-  static final String PASSWORD_MISSMATCH_TITLE = "Passwords"; 
-  static final String PASSWORD_MISSMATCH_BODY = "Keystore passwords do not match";
-
-  static final String PASSWORD_TOO_SHORT_TITLE = "Passwords"; 
-  static final String PASSWORD_TOO_SHORT_BODY = "Keystore password should be at least 6 characters long";
-  
-  static final String PASSWORD_LABEL = "Keystore password:";
-  static final String REPEAT_PASSWROD_LABEL = "Repeat keystore password:";
-  static final String ISSUER_CREDENTIALS = "Keystore issuer credentials";
-  static final String COMMON_NAME_LABEL = "First and last name: ";
-  static final String ORGANIZATIONAL_UNIT_LABEL = "Organizational unit: ";
-  static final String ORGANIZATION_NAME_LABEL = "Organization name: ";
-  static final String LOCALITY_NAME_LABEL = "City or locality: ";
-  static final String STATE_NAME_LABEL = "State name: ";
-  static final String COUNTRY_LABEL = "Country code (XX): ";  
   
   File keyStore;
   AndroidEditor editor;
@@ -127,7 +91,7 @@ public class KeyStoreManager extends JFrame {
     // buttons
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
-    JButton okButton = new JButton(OK_BUTTON);
+    JButton okButton = new JButton(Language.text("prompt.ok"));
     Dimension dim = new Dimension(Toolkit.getButtonWidth(),
                                   okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
@@ -154,7 +118,7 @@ public class KeyStoreManager extends JFrame {
     });
     okButton.setEnabled(true);
 
-    JButton cancelButton = new JButton(CANCEL_BUTTON);
+    JButton cancelButton = new JButton(Language.text("prompt.cancel"));
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -163,21 +127,23 @@ public class KeyStoreManager extends JFrame {
     });
     cancelButton.setEnabled(true);
 
-    JButton resetKeystoreButton = new JButton(RESET_BUTTON);
+    JButton resetKeystoreButton = new JButton(AndroidMode.getTextString("keystore_manager.reset_password"));
     dim = new Dimension(Toolkit.getButtonWidth()*2,
                         resetKeystoreButton.getPreferredSize().height);
     resetKeystoreButton.setPreferredSize(dim);
     resetKeystoreButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         setVisible(false);
-        int result = Messages.showYesNoQuestion(editor, RESET_KEYSTORE_TITLE,
-                                                        RESET_KEYSTORE_MESSAGE1, RESET_KEYSTORE_MESSAGE2);
+        int result = Messages.showYesNoQuestion(editor, AndroidMode.getTextString("keystore_manager.dialog.reset_keyboard_title"),
+                                                        AndroidMode.getTextString("keystore_manager.dialog.reset_keyboard_body_part1"), 
+                                                        AndroidMode.getTextString("keystore_manager.dialog.reset_keyboard_body_part2"));
 
         if (result == JOptionPane.NO_OPTION) {
           setVisible(true);
         } else {
           if (!AndroidKeyStore.resetKeyStore()) {
-            Messages.showWarning(FAILED_TO_REMOVE_TITLE, FAILED_TO_REMOVE_BODY);
+            Messages.showWarning(AndroidMode.getTextString("keystore_manager.warn.cannot_remove_keystore_title"), 
+                                 AndroidMode.getTextString("keystore_manager.warn.cannot_remove_keystore_body"));
             setVisible(true);
           } else {
             keyStore = null;
@@ -228,7 +194,7 @@ public class KeyStoreManager extends JFrame {
 
   private void showKeystorePasswordLayout(Box pain) {
     passwordField = new JPasswordField(15);
-    JLabel passwordLabel = new JLabel("<html><body><b>" + PASSWORD_LABEL + " </b></body></html>");
+    JLabel passwordLabel = new JLabel("<html><body><b>" + AndroidMode.getTextString("keystore_manager.password_label") + " </b></body></html>");
     passwordLabel.setLabelFor(passwordField);
 
     JPanel textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -245,17 +211,19 @@ public class KeyStoreManager extends JFrame {
       if (Arrays.equals(passwordField.getPassword(), repeatPasswordField.getPassword())) {
         return true;
       } else {
-        Messages.showWarning(PASSWORD_MISSMATCH_TITLE, PASSWORD_MISSMATCH_BODY);
+        Messages.showWarning(AndroidMode.getTextString("keystore_manager.warn.password_missmatch_title"), 
+                             AndroidMode.getTextString("keystore_manager.warn.password_missmatch_body"));
         return false;
       }
     } else {
-      Messages.showWarning(PASSWORD_TOO_SHORT_TITLE, PASSWORD_TOO_SHORT_BODY);
+      Messages.showWarning(AndroidMode.getTextString("keystore_manager.warn.short_password_title"), 
+                           AndroidMode.getTextString("keystore_manager.warn.short_password_body"));
       return false;
     }
   }
 
   private void showKeystoreCredentialsLayout(Box box) {
-    String labelText = KEYSTORE_LABEL_TEXT;
+    String labelText = AndroidMode.getTextString("keystore_manager.top_label");
     JLabel textarea = new JLabel(labelText);
     textarea.setPreferredSize(new Dimension(LABEL_WIDTH, LABEL_HEIGHT));
     textarea.addMouseListener(new MouseAdapter() {
@@ -268,7 +236,7 @@ public class KeyStoreManager extends JFrame {
 
     // password field
     passwordField = new JPasswordField(15);
-    JLabel passwordLabel = new JLabel("<html><body><b>" + PASSWORD_LABEL + " </b></body></html>");
+    JLabel passwordLabel = new JLabel("<html><body><b>" + AndroidMode.getTextString("keystore_manager.password_label") + " </b></body></html>");
     passwordLabel.setLabelFor(passwordField);
 
     JPanel textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -279,7 +247,7 @@ public class KeyStoreManager extends JFrame {
 
     // repeat password field
     repeatPasswordField = new JPasswordField(15);
-    JLabel repeatPasswordLabel = new JLabel("<html><body><b>" + REPEAT_PASSWROD_LABEL + " </b></body></html>");
+    JLabel repeatPasswordLabel = new JLabel("<html><body><b>" + AndroidMode.getTextString("keystore_manager.repeat_password_label") + " </b></body></html>");
     repeatPasswordLabel.setLabelFor(passwordField);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -290,14 +258,14 @@ public class KeyStoreManager extends JFrame {
     box.add(textPane);
 
     MatteBorder mb = new MatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY);
-    TitledBorder tb = new TitledBorder(mb, ISSUER_CREDENTIALS, TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION);
+    TitledBorder tb = new TitledBorder(mb, AndroidMode.getTextString("keystore_manager.issuer_credentials_header"), TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION);
     JPanel separatorPanel = new JPanel();
     separatorPanel.setBorder(tb);
     box.add(separatorPanel);
 
     // common name (CN)
     commonName = new JTextField(15);
-    JLabel commonNameLabel = new JLabel(COMMON_NAME_LABEL);
+    JLabel commonNameLabel = new JLabel(AndroidMode.getTextString("keystore_manager.common_name_label"));
     commonNameLabel.setLabelFor(commonName);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -308,7 +276,7 @@ public class KeyStoreManager extends JFrame {
 
     // organizational unit (OU)
     organizationalUnit = new JTextField(15);
-    JLabel organizationalUnitLabel = new JLabel(ORGANIZATIONAL_UNIT_LABEL);
+    JLabel organizationalUnitLabel = new JLabel(AndroidMode.getTextString("keystore_manager.organizational_unitl_label"));
     organizationalUnitLabel.setLabelFor(organizationalUnit);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -319,7 +287,7 @@ public class KeyStoreManager extends JFrame {
 
     // organization name (O)
     organizationName = new JTextField(15);
-    JLabel organizationNameLabel = new JLabel(ORGANIZATION_NAME_LABEL);
+    JLabel organizationNameLabel = new JLabel(AndroidMode.getTextString("keystore_manager.organization_name_label"));
     organizationNameLabel.setLabelFor(organizationName);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -330,7 +298,7 @@ public class KeyStoreManager extends JFrame {
 
     // locality name (L)
     localityName = new JTextField(15);
-    JLabel localityNameLabel = new JLabel(LOCALITY_NAME_LABEL);
+    JLabel localityNameLabel = new JLabel(AndroidMode.getTextString("keystore_manager.city_name_label"));
     localityNameLabel.setLabelFor(localityName);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -341,7 +309,7 @@ public class KeyStoreManager extends JFrame {
 
     // state name (S)
     stateName = new JTextField(15);
-    JLabel stateNameLabel = new JLabel(STATE_NAME_LABEL);
+    JLabel stateNameLabel = new JLabel(AndroidMode.getTextString("keystore_manager.state_name_label"));
     stateNameLabel.setLabelFor(stateName);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
@@ -352,7 +320,7 @@ public class KeyStoreManager extends JFrame {
 
     // country (C)
     country = new JTextField(15);
-    JLabel countryLabel = new JLabel(COUNTRY_LABEL);
+    JLabel countryLabel = new JLabel(AndroidMode.getTextString("keystore_manager.country_code_label"));
     countryLabel.setLabelFor(country);
 
     textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
