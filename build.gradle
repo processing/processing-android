@@ -111,6 +111,9 @@ task dist {
         Files.copy(file("mode/mode.properties").toPath(),
                    file("${root}/mode.properties").toPath(), REPLACE_EXISTING);
 
+        FileUtils.copyDirectory(file("mode/languages"), 
+                                file("${root}/languages"))
+
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"), 
                                 file("${root}/tools/SDKUpdater/tool"))
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"), 
