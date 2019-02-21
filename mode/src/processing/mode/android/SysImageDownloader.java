@@ -58,41 +58,6 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   final static private int TEXT_MARGIN = Toolkit.zoom(8);
   final static private int TEXT_WIDTH = Toolkit.zoom(300);
   
-  private static final String EMULATOR_GUIDE_URL =
-      "https://developer.android.com/studio/run/emulator-acceleration.html";
-
-  private static final String SYS_IMAGE_SELECTION_MESSAGE =
-      "The Android emulator requires a system image to run. " +
-      "There are two types of system images available:<br><br>" +
-      "<b>1) ARM image -</b> slow but compatible with all computers, no extra configuration needed.<br><br>" +
-      "<b>2) x86 image -</b> fast but compatible only with Intel CPUs, extra configuration may be needed, see " + 
-      "<a href=\"" + EMULATOR_GUIDE_URL + "\">this guide</a> for more details.";
-
-  private static final String HAXM_INSTALL_TITLE = "Some words of caution...";
-  
-  private static final String HAXM_INSTALL_MESSAGE =
-      "Processing will install x86 images in the emulator. These images are fast, but " + 
-      "also need the Intel Hardware Accelerated Execution Manager (Intel HAXM).<br><br>" + 
-      "Processing will try to run the HAXM installer now, which may ask for your " + 
-      "administrator password or additional permissions.";
-  
-  private static final String KVM_LINUX_GUIDE_URL =
-      "https://developer.android.com/studio/run/emulator-acceleration.html#vm-linux";
-  
-  private static final String KVM_INSTALL_MESSAGE =
-      "You chose to run x86 images in the emulator. This is great but you need " + 
-      "to configure VM acceleration on Linux using the KVM package.<br><br>" + 
-      "Follow <a href=\"" + KVM_LINUX_GUIDE_URL + "\">these instructions</a> " + 
-      "to configure KVM.";      
-  
-  private static final String IA32LIBS_TITLE = "Additional setup may be required...";
-  private static final String IA32LIBS_MESSAGE = 
-      "Looks like you are running a 64-bit version of Linux. In order<br>" +
-      "to create the SD card in the emulator, Processing needs the<br>" +
-      "ia32-libs compatibility package. On Ubuntu Linux, you can<br>" +
-      "install it by runing the following command: <br><br>" +
-      "sudo apt-get install lib32stdc++6";  
-  
   private static final String SYS_IMAGES_ARM_URL = "https://dl.google.com/android/repository/sys-img/android/";
   
   private static final String SYS_IMAGES_PHONE_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
@@ -100,9 +65,12 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   
   private static final String SYS_IMAGES_WEAR_URL = "https://dl.google.com/android/repository/sys-img/android-wear/";
   private static final String SYS_IMAGES_WEAR_LIST = "sys-img2-1.xml";
+  
+  private static final String EMULATOR_GUIDE_URL =
+      "https://developer.android.com/studio/run/emulator-acceleration.html";
 
-  private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
-  private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
+  private static final String KVM_LINUX_GUIDE_URL =
+      "https://developer.android.com/studio/run/emulator-acceleration.html#vm-linux";
 
   private JProgressBar progressBar;
   private JLabel downloadedTextArea;
@@ -168,7 +136,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         
         UrlHolder downloadUrls = new UrlHolder();
         getDownloadUrls(downloadUrls, repo, Platform.getName());
-        firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
+        firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
         if (wear) {
@@ -202,7 +170,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         tempFolder.delete();
 
         if (Platform.isLinux() && Platform.getVariant().equals("64")) {          
-          AndroidUtil.showMessage(IA32LIBS_TITLE, IA32LIBS_MESSAGE);          
+          AndroidUtil.showMessage(AndroidMode.getTextString("sys_image_downloader.dialog.ia32libs_title"), AndroidMode.getTextString("sys_image_downloader.dialog.ia32libs_body"));
         }
         
         result = true;
@@ -244,8 +212,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       while ((count = inputStream.read(b)) >= 0) {
         outputStream.write(b, 0, count);
         downloadedSize += count;
-
-        firePropertyChange(PROPERTY_CHANGE_EVENT_DOWNLOADED, 0, downloadedSize);
+        firePropertyChange(AndroidMode.getTextString("download_property.change_event_downloaded"), 0, downloadedSize);
       }
       outputStream.flush(); outputStream.close(); inputStream.close();
 
@@ -344,11 +311,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    if (evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_TOTAL)) {
+    if (evt.getPropertyName().equals(AndroidMode.getTextString("download_property.change_event_total"))) {
       progressBar.setIndeterminate(false);
       totalSize = (Integer) evt.getNewValue();
       progressBar.setMaximum(totalSize);
-    } else if (evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_DOWNLOADED)) {
+    } else if (evt.getPropertyName().equals(AndroidMode.getTextString("download_property.change_event_downloaded"))) {
       downloadedTextArea.setText(humanReadableByteCount((Integer) evt.getNewValue(), true)
           + " / " + humanReadableByteCount(totalSize, true));
       progressBar.setValue((Integer) evt.getNewValue());
@@ -371,8 +338,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
             "margin: " + TEXT_MARGIN + "px; " +
             "width: " + TEXT_WIDTH + "px }" +
             "</style> </head>";
-    htmlString += "<body> <p> " + SYS_IMAGE_SELECTION_MESSAGE + " </p> </body> </html>";
-    String title = "Choose system image type to download...";
+    htmlString += "<body> <p> " + AndroidMode.getTextString("sys_image_downloader.dialog.select_image_body", EMULATOR_GUIDE_URL) + " </p> </body> </html>";
+    String title = AndroidMode.getTextString("sys_image_downloader.dialog.select_image_title");
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
       @Override
@@ -387,7 +354,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pane.setBackground(label.getBackground());
 
     String[] options = new String[] {
-            "Use x86 image", "Use ARM image"
+            AndroidMode.getTextString("sys_image_downloader.option.x86_image"), 
+            AndroidMode.getTextString("sys_image_downloader.option.arm_image")
     };
     int result = JOptionPane.showOptionDialog(null, pane, title,
             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -402,7 +370,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   }
 
   public SysImageDownloader(Frame editor, boolean wear, boolean ask) {
-    super(editor, "System image download", true);
+    super(editor, AndroidMode.getTextString("sys_image_downloader.download_title"), true);
     this.editor = editor;
     this.wear = wear;
     this.askABI = ask;
@@ -463,9 +431,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   static public void installHAXM() {
     File haxmFolder = AndroidSDK.getHAXMInstallerFolder();
     if (Platform.isLinux()) {
-      AndroidUtil.showMessage(HAXM_INSTALL_TITLE, KVM_INSTALL_MESSAGE);      
+      AndroidUtil.showMessage(AndroidMode.getTextString("sys_image_downloader.dialog.accel_images_title"), 
+                              AndroidMode.getTextString("sys_image_downloader.dialog.kvm_config_body", KVM_LINUX_GUIDE_URL));      
     } else if (haxmFolder.exists()) {
-      AndroidUtil.showMessage(HAXM_INSTALL_TITLE, HAXM_INSTALL_MESSAGE);        
+      AndroidUtil.showMessage(AndroidMode.getTextString("sys_image_downloader.dialog.accel_images_title"), 
+                              AndroidMode.getTextString("sys_image_downloader.dialog.haxm_install_body"));        
       
       ProcessBuilder pb;
       if (Platform.isWindows()) {
@@ -513,8 +483,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
-    String labelText = wear ? "Downloading watch system image..." :
-                              "Downloading phone system image...";
+    String labelText = wear ? AndroidMode.getTextString("sys_image_downloader.download_watch_label") :
+                              AndroidMode.getTextString("sys_image_downloader.download_phone_label");
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textarea);
@@ -547,7 +517,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
 
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
-    JButton cancelButton = new JButton("Cancel download");
+    JButton cancelButton = new JButton(AndroidMode.getTextString("download_prompt.cancel"));
     Dimension dim = new Dimension(Toolkit.getButtonWidth()*2,
                                   cancelButton.getPreferredSize().height);
 

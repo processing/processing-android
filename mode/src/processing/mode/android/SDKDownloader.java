@@ -65,9 +65,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String HAXM_URL = "https://dl.google.com/android/repository/extras/intel/";
   private static final String REPOSITORY_LIST = "repository2-1.xml";
   private static final String ADDON_LIST = "addon2-1.xml";
-  
-  private static final String PROPERTY_CHANGE_EVENT_TOTAL = "total";
-  private static final String PROPERTY_CHANGE_EVENT_DOWNLOADED = "downloaded";
 
   private JProgressBar progressBar;
   private JLabel downloadedTextArea;
@@ -133,7 +130,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
         getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());        
         getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
-        firePropertyChange(PROPERTY_CHANGE_EVENT_TOTAL, 0, downloadUrls.totalSize);
+        firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
 
         // tools
         File downloadedTools = new File(tempFolder, downloadUrls.toolsFilename);
@@ -237,7 +234,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         outputStream.write(b, 0, count);
         downloadedSize += count;
 
-        firePropertyChange(PROPERTY_CHANGE_EVENT_DOWNLOADED, 0, downloadedSize);
+        firePropertyChange(AndroidMode.getTextString("download_property.change_event_downloaded"), 0, downloadedSize);
       }
       outputStream.flush(); outputStream.close(); inputStream.close();
 
@@ -283,7 +280,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         urlHolder.platformUrl = REPOSITORY_URL + urlHolder.platformFilename;
         urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
       } else {
-        throw new IOException("Cannot find the platform files");
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_platform_files"));
       }
 
       // Difference between platform tools, build tools, and SDK tools: 
@@ -297,7 +294,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (remotePackages != null) {
         parseAndSet(urlHolder, remotePackages, requiredHostOs, PLATFORM_TOOLS);
       } else {
-        throw new IOException("Cannot find the platform-tools");
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_platform_tools"));
       }
 
       // -----------------------------------------------------------------------
@@ -343,7 +340,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
       } 
       if (!found) {
-        throw new IOException("Cannot find the build-tools");
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_build_tools"));
       }
       
       // -----------------------------------------------------------------------
@@ -373,7 +370,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
       } 
       if (!found) {
-        throw new IOException("Cannot find the tools");
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_tools"));
       }
 
       // -----------------------------------------------------------------------
@@ -411,7 +408,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
       } 
       if (!found) {
-        throw new IOException("Cannot find the emulator");
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
       }
     }
   }
@@ -548,11 +545,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    if (evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_TOTAL)) {
+    if (evt.getPropertyName().equals(AndroidMode.getTextString("download_property.change_event_total"))) {
       progressBar.setIndeterminate(false);
       totalSize = (Integer) evt.getNewValue();
       progressBar.setMaximum(totalSize);
-    } else if (evt.getPropertyName().equals(PROPERTY_CHANGE_EVENT_DOWNLOADED)) {
+    } else if (evt.getPropertyName().equals(AndroidMode.getTextString("download_property.change_event_downloaded"))) {
       downloadedTextArea.setText(humanReadableByteCount((Integer) evt.getNewValue(), true)
           + " / " + humanReadableByteCount(totalSize, true));
       progressBar.setValue((Integer) evt.getNewValue());
@@ -569,7 +566,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   }
 
   public SDKDownloader(Frame editor) {
-    super(editor, "SDK download", true);
+    super(editor, AndroidMode.getTextString("sdk_downloader.download_title"), true);
     this.editor = editor;
     this.sdk = null;    
     createLayout();
@@ -600,7 +597,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     vbox.setBorder(new EmptyBorder(BOX_BORDER, BOX_BORDER, BOX_BORDER, BOX_BORDER));
     outer.add(vbox);
 
-    String labelText = "Downloading Android SDK...";
+    String labelText = AndroidMode.getTextString("sdk_downloader.download_sdk_label");
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     vbox.add(textarea);
@@ -641,7 +638,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
-    JButton cancelButton = new JButton("Cancel download");
+    JButton cancelButton = new JButton(AndroidMode.getTextString("download_prompt.cancel"));
     Dimension dim = new Dimension(Toolkit.getButtonWidth()*2,
                                   Toolkit.zoom(cancelButton.getPreferredSize().height));
 
