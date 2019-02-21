@@ -34,6 +34,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
+import processing.app.Language;
 import processing.app.Platform;
 import processing.app.Sketch;
 import processing.app.ui.Toolkit;
@@ -43,15 +44,7 @@ import processing.app.ui.Toolkit;
 public class Permissions extends JFrame {
   static final String GUIDE_URL =
     "https://developer.android.com/training/articles/security-tips.html#Permissions";
-  
-  private static final String PERMISSIONS_LABEL_TEXT ="<html>" +
-      "Android applications must specifically ask for permission\n" +
-      "to do things like connect to the internet, write a file,\n" +
-      "or make phone calls. When installing your application,\n" +
-      "users will be asked whether they want to allow such access.</html>";  
-  private static final String PERMISSIONS_URL_TEXT = "<html>More about permissions can be found " +
-      "<a href=\"" + GUIDE_URL + "\">here</a>.</html>";  
-
+ 
   static final int BORDER_HORIZ = Toolkit.zoom(5);
   static final int BORDER_VERT = Toolkit.zoom(3);
   static final int CELL_HEIGHT = Toolkit.zoom(20);
@@ -125,8 +118,8 @@ public class Permissions extends JFrame {
     vbox.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
     outer.add(vbox);
 
-    String labelText = PERMISSIONS_LABEL_TEXT;
-    String urlText = PERMISSIONS_URL_TEXT;     
+    String labelText = AndroidMode.getTextString("permissions.dialog.label");
+    String urlText = AndroidMode.getTextString("permissions.dialog.url", GUIDE_URL);
     JLabel textarea = new JLabel(labelText);
     JLabel urlarea = new JLabel(urlText);
     textarea.setPreferredSize(new Dimension(TEXT_WIDTH, TEXT_HEIGHT));
@@ -155,7 +148,7 @@ public class Permissions extends JFrame {
 
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
-    JButton okButton = new JButton("OK");
+    JButton okButton = new JButton(Language.text("prompt.ok"));
     Dimension dim = new Dimension(Toolkit.getButtonWidth(),
                                   okButton.getPreferredSize().height);
     okButton.setPreferredSize(dim);
@@ -167,7 +160,7 @@ public class Permissions extends JFrame {
     });
     okButton.setEnabled(true);
 
-    JButton cancelButton = new JButton("Cancel");
+    JButton cancelButton = new JButton(Language.text("prompt.cancel"));
     cancelButton.setPreferredSize(dim);
     cancelButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
