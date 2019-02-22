@@ -49,9 +49,8 @@ class AndroidBuild extends JavaBuild {
   static public final int APP          = 0;
   static public final int WALLPAPER    = 1;
   static public final int WATCHFACE    = 2;
-  static public final int VR_CARDBOARD = 3;
-  static public final int VR_DAYDREAM  = 4;
-  static public final int AR           = 5;
+  static public final int VR           = 3;
+  static public final int AR           = 4;
   
   // Minimum SDK's API levels required for each component:
   static public final String MIN_SDK_APP       = "17"; // Android 4.2
@@ -361,7 +360,7 @@ class AndroidBuild extends JavaBuild {
     if (appComponent == AR) {
       minSdk = MIN_SDK_AR;
       tmplFile = exportProject ? AR_GRADLE_BUILD_TEMPLATE : AR_GRADLE_BUILD_ECJ_TEMPLATE;
-    } else if (appComponent == VR_CARDBOARD || appComponent == VR_DAYDREAM) {
+    } else if (appComponent == VR) {
       minSdk = MIN_SDK_VR;
       tmplFile = exportProject ? VR_GRADLE_BUILD_TEMPLATE : VR_GRADLE_BUILD_ECJ_TEMPLATE;
     } else if (appComponent == WATCHFACE) {
@@ -452,7 +451,7 @@ class AndroidBuild extends JavaBuild {
       } else {
         writeWatchFaceCanvasService(srcDirectory, permissions, external);  
       }      
-    } else if (comp == VR_CARDBOARD || comp == VR_DAYDREAM) {
+    } else if (comp == VR) {
       writeVRActivity(srcDirectory, permissions, external);
     } else if (comp == AR) {
       writeARActivity(srcDirectory, permissions, external);
@@ -634,7 +633,7 @@ class AndroidBuild extends JavaBuild {
     } else if (comp == WATCHFACE) { 
       File xmlFolder = AndroidUtil.createPath(resFolder, "xml");      
       writeResXMLWatchFace(xmlFolder); 
-    } else if (comp == VR_CARDBOARD || comp == VR_DAYDREAM) {
+    } else if (comp == VR) {
       File valuesFolder = AndroidUtil.createPath(resFolder, "values");      
       writeResStylesVR(valuesFolder);  
     } else if (comp == AR) {
@@ -827,7 +826,7 @@ class AndroidBuild extends JavaBuild {
         String exportName = exportFile.getName();
         
         // Skip the GVR and ARCore jars, because the gradle will resolve the dependencies
-        if ((appComponent == VR_CARDBOARD || appComponent == VR_DAYDREAM) && exportName.toLowerCase().startsWith("sdk-")) continue;
+        if (appComponent == VR && exportName.toLowerCase().startsWith("sdk-")) continue;
         if (appComponent == AR && exportName.toLowerCase().startsWith("core-")) continue;
 
         if (!exportFile.exists()) {

@@ -72,10 +72,7 @@ public class AndroidEditor extends JavaEditor {
   private JCheckBoxMenuItem fragmentItem;
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
-
-  private JMenu vrMenu;
-  private JCheckBoxMenuItem cardBoardItem;
-  private JCheckBoxMenuItem dayDreamItem;
+  private JCheckBoxMenuItem vrItem;
   private JCheckBoxMenuItem arItem;
   
   protected AndroidEditor(Base base, String path, EditorState state, 
@@ -192,11 +189,7 @@ public class AndroidEditor extends JavaEditor {
     fragmentItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.app"));
     wallpaperItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.wallpaper"));
     watchfaceItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.watch_face"));
-    vrMenu = new JMenu(AndroidMode.getTextString("menu.android.vr"));
-    cardBoardItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.vr.cardboard"));
-    dayDreamItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.vr.daydream"));
-    vrMenu.add(cardBoardItem);
-    vrMenu.add(dayDreamItem);
+    vrItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.vr"));
     arItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.ar"));    
 
     fragmentItem.addActionListener(new ActionListener() {
@@ -205,8 +198,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(true);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
-        cardBoardItem.setSelected(false);
-        dayDreamItem.setSelected(false);
+        vrItem.setSelected(false);
         arItem.setSelected(false);
         setAppComponent(AndroidBuild.APP);
       }
@@ -217,8 +209,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
-        cardBoardItem.setSelected(false);
-        dayDreamItem.setSelected(false);
+        vrItem.setSelected(false);
         arItem.setSelected(false);
         setAppComponent(AndroidBuild.WALLPAPER);        
       }
@@ -229,34 +220,20 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
-        cardBoardItem.setSelected(false);
-        dayDreamItem.setSelected(false);
+        vrItem.setSelected(false);
         arItem.setSelected(false);        
         setAppComponent(AndroidBuild.WATCHFACE);        
       }
     });
-    cardBoardItem.addActionListener(new ActionListener() {
+    vrItem.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
-        cardBoardItem.setSelected(true);
-        dayDreamItem.setSelected(false);
+        vrItem.setSelected(true);
         arItem.setSelected(false);
-        setAppComponent(AndroidBuild.VR_CARDBOARD);
-      }
-    });
-    dayDreamItem.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        fragmentItem.setState(false);
-        wallpaperItem.setState(false);
-        watchfaceItem.setSelected(false);
-        cardBoardItem.setSelected(false);
-        dayDreamItem.setSelected(true);
-        arItem.setSelected(false);
-        setAppComponent(AndroidBuild.VR_DAYDREAM);
+        setAppComponent(AndroidBuild.VR);
       }
     });
     arItem.addActionListener(new ActionListener() {
@@ -265,8 +242,7 @@ public class AndroidEditor extends JavaEditor {
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
-        cardBoardItem.setSelected(false);
-        dayDreamItem.setSelected(false);
+        vrItem.setSelected(false);
         arItem.setSelected(true);
         setAppComponent(AndroidBuild.AR);
       }
@@ -275,14 +251,13 @@ public class AndroidEditor extends JavaEditor {
     fragmentItem.setState(false);
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
-    cardBoardItem.setSelected(false);
-    dayDreamItem.setSelected(false);
+    vrItem.setSelected(false);
     arItem.setSelected(false);
 
     androidMenu.add(fragmentItem);
     androidMenu.add(wallpaperItem);
     androidMenu.add(watchfaceItem);
-    androidMenu.add(vrMenu);
+    androidMenu.add(vrItem);
     androidMenu.add(arItem);
     
     androidMenu.addSeparator();
@@ -333,10 +308,8 @@ public class AndroidEditor extends JavaEditor {
         settings.set("component", "wallpaper");
       } else if (appComponent == AndroidBuild.WATCHFACE) {
         settings.set("component", "watchface");
-      } else if (appComponent == AndroidBuild.VR_CARDBOARD) {
-        settings.set("component", "cardboard");
-      } else if (appComponent == AndroidBuild.VR_DAYDREAM) {
-        settings.set("component", "daydream");
+      } else if (appComponent == AndroidBuild.VR) {
+        settings.set("component", "vr");
       } else if (appComponent == AndroidBuild.AR) {
         settings.set("component", "ar");
       }
@@ -606,12 +579,9 @@ public class AndroidEditor extends JavaEditor {
       } else if (component.equals("watchface")) {
         appComponent = AndroidBuild.WATCHFACE;
         watchfaceItem.setState(true);
-      } else if (component.equals("cardboard") || component.equals("vr")) {
-        appComponent = AndroidBuild.VR_CARDBOARD;
-        cardBoardItem.setState(true);
-      } else if (component.equals("daydream")) {
-        appComponent = AndroidBuild.VR_DAYDREAM;
-        dayDreamItem.setState(true);
+      } else if (component.equals("vr")) {
+        appComponent = AndroidBuild.VR;
+        vrItem.setState(true);
       } else if (component.equals("ar")) {
         appComponent = AndroidBuild.AR;
         arItem.setState(true);

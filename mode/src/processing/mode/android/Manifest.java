@@ -56,7 +56,6 @@ public class Manifest {
     "WallpaperManifest.xml.tmpl",
     "WatchFaceManifest.xml.tmpl",
     "VRManifest.xml.tmpl",
-    "VRManifest.xml.tmpl",
     "ARManifest.xml.tmpl"
   };
   
@@ -166,11 +165,11 @@ public class Manifest {
         hasWakeLock = true;
         continue;
       }
-      if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && name.equals(PERMISSION_PREFIX + "VIBRATE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "VIBRATE")) {
         hasVibrate = true;
         continue;
       }
-      if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
         hasReadExtStorage = true;
         continue;
       }
@@ -191,8 +190,8 @@ public class Manifest {
       
       // Don't add required permissions for watch faces and VR again...
       if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) continue;
-      if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && name.equals("VIBRATE")) continue;
-      if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && name.equals("READ_EXTERNAL_STORAGE")) continue;
+      if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) continue;
+      if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) continue;
       if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")) continue;
          
       XML newbie = xml.addChild("uses-permission");
@@ -209,11 +208,11 @@ public class Manifest {
       xml.addChild("uses-permission").
           setString("android:name", PERMISSION_PREFIX + "WAKE_LOCK");
     }
-    if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && !hasVibrate) {
+    if (appComp == AndroidBuild.VR && !hasVibrate) {
       xml.addChild("uses-permission").
           setString("android:name", PERMISSION_PREFIX + "VIBRATE");      
     }
-    if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && !hasReadExtStorage) {
+    if (appComp == AndroidBuild.VR && !hasReadExtStorage) {
       xml.addChild("uses-permission").
           setString("android:name", PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE");       
     }
@@ -237,11 +236,11 @@ public class Manifest {
         hasWakeLock = true;
         continue;
       }
-      if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && name.equals(PERMISSION_PREFIX + "VIBRATE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "VIBRATE")) {
         hasVibrate = true;
         continue;
       }
-      if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
+      if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
         hasReadExtStorage = true;
         continue;
       }
@@ -259,11 +258,11 @@ public class Manifest {
       mf.addChild("uses-permission").
          setString("android:name", PERMISSION_PREFIX + "WAKE_LOCK");
     }
-    if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && !hasVibrate) {
+    if (appComp == AndroidBuild.VR && !hasVibrate) {
       mf.addChild("uses-permission").
          setString("android:name", PERMISSION_PREFIX + "VIBRATE");      
     }
-    if ((appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD) && !hasReadExtStorage) {
+    if (appComp == AndroidBuild.VR && !hasReadExtStorage) {
       mf.addChild("uses-permission").
          setString("android:name", PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE");       
     }    
@@ -280,12 +279,8 @@ public class Manifest {
       replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WALLPAPER);
     } else if (appComp == AndroidBuild.WATCHFACE) {
       replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WATCHFACE);
-    } else if (appComp == AndroidBuild.VR_CARDBOARD) {
+    } else if (appComp == AndroidBuild.VR) {
       replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_VR);
-      replaceMap.put("@@vr_type@@", "com.google.intent.category.CARDBOARD");
-    } else if (appComp == AndroidBuild.VR_DAYDREAM) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_VR);
-      replaceMap.put("@@vr_type@@", "com.google.intent.category.DAYDREAM");
     } else if (appComp == AndroidBuild.AR) {
       replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_AR);
     }
@@ -331,7 +326,7 @@ public class Manifest {
       
       // Make sure that the required permissions for watch faces, AR and VR apps are
       // included. 
-      if (appComp == AndroidBuild.WATCHFACE || appComp == AndroidBuild.VR_DAYDREAM || appComp == AndroidBuild.VR_CARDBOARD || appComp == AndroidBuild.AR) {
+      if (appComp == AndroidBuild.WATCHFACE || appComp == AndroidBuild.VR|| appComp == AndroidBuild.AR) {
         fixPermissions(mf);
       }
 
