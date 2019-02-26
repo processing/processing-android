@@ -145,6 +145,15 @@ public class PVector implements Serializable {
     this.y = y;
     this.z = 0;
   }
+  
+  /**
+   * Constructor for a 2D or 3D vector based on existing vector
+   */
+  public PVector(PVector v) {
+    this.x = v.x;
+    this.y = v.y;
+    this.z = v.z;
+  }
 
 
   /**
@@ -398,6 +407,21 @@ public class PVector implements Serializable {
 
 
   /**
+   * Calculates the magnitude (length) of the vector and returns the result
+   * as a float (this is simply the equation <em>sqrt(x*x + y*y + z*z)</em>.)
+   *
+   * @webref pvector:method
+   * @usage web_application
+   * @brief Calculate the magnitude of the vector
+   * @return magnitude (length) of the vector
+   * @see PVector#magSq()
+   */
+  public float mag(PVector v) {
+    return (float) Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+  }
+
+
+  /**
    * ( begin auto-generated from PVector_mag.xml )
    *
    * Calculates the magnitude (length) of the vector and returns the result
@@ -412,10 +436,9 @@ public class PVector implements Serializable {
    * @see PVector#magSq()
    */
   public float mag() {
-    return (float) Math.sqrt(x*x + y*y + z*z);
+    return (float) Math.sqrt(magSq());
   }
-
-
+  
   /**
    * ( begin auto-generated from PVector_mag.xml )
    *
@@ -992,11 +1015,8 @@ public class PVector implements Serializable {
     if (v1.x == 0 && v1.y == 0 && v1.z == 0 ) return 0.0f;
     if (v2.x == 0 && v2.y == 0 && v2.z == 0 ) return 0.0f;
 
-    double dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-    double v1mag = Math.sqrt(v1.x * v1.x + v1.y * v1.y + v1.z * v1.z);
-    double v2mag = Math.sqrt(v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
     // This should be a number between -1 and 1, since it's "normalized"
-    double amt = dot / (v1mag * v2mag);
+    double amt = dot(v1, v2) / (mag(v1) * mag(v2));
     // But if it's not due to rounding error, then we need to fix it
     // http://code.google.com/p/processing/issues/detail?id=340
     // Otherwise if outside the range, acos() will return NaN
@@ -1010,7 +1030,41 @@ public class PVector implements Serializable {
     return (float) Math.acos(amt);
   }
 
+/**
+   * Calculates and returns the angle (in radians) between two vectors based on a third vector.
+   *
+   * @webref pvector:method
+   * @usage web_application
+   * @param v1 the x, y, and z components of a PVector
+   * @param v2 the x, y, and z components of a PVector
+   * @param v3 the x, y, and z components of a PVector
+   * @brief Calculate and return the angle between two vectors based on a third vector
+   */
+  static public float angleBetween(PVector v1, PVector v2, PVector v3) {
 
+    // if v3 mag is 0
+    if(PVector.mag(v3) == 0) {
+      return angleBetween(v1, v2);
+    }
+    
+    PVector v1new = new PVector(sub(v3, v1));
+    PVector v2new = new PVector(sub(v3, v2));
+    
+    // This should be a number between -1 and 1, since it's "normalized"
+    double amt = dot(v1new, v2new) / (mag(v1new) * mag(v2new));
+    // But if it's not due to rounding error, then we need to fix it
+    // http://code.google.com/p/processing/issues/detail?id=340
+    // Otherwise if outside the range, acos() will return NaN
+    // http://www.cppreference.com/wiki/c/math/acos
+    if (amt <= -1) {
+      return PConstants.PI;
+    } else if (amt >= 1) {
+      // http://code.google.com/p/processing/issues/detail?id=435
+      return 0;
+    }
+    return (float) Math.acos(amt);
+  }
+  
   @Override
   public String toString() {
     return "[ " + x + ", " + y + ", " + z + " ]";
