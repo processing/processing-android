@@ -24,7 +24,6 @@ package processing.mode.android;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,10 +47,6 @@ import processing.mode.java.runner.Runner;
  */
 public class AndroidRunner implements DeviceListener {
   private static final String DEFAULT_PACKAGE_NAME = "processing.android";
-  
-  private static final String CANCEL_WAITING_FOR_DEVICE = "No, on second thought, I'm giving up on waiting for that device to show up.";  
-  private static final String CANNOT_PARSE_LINE = "Can't parse this exception line:";
-  private static final String UNKNOWN_EXCEPTION = "Unknown exception";
   
   AndroidBuild build;
   RunnerListener listener;
@@ -168,7 +163,8 @@ public class AndroidRunner implements DeviceListener {
   private AttachingConnector getConnector() {
     // Eclipse gives an error in the following line (org.eclipse cannot be resolved), but just ignore it.
     // The mode runs and compiles fine.
-    VirtualMachineManager vmManager = org.eclipse.jdi.Bootstrap.virtualMachineManager();
+//    VirtualMachineManager vmManager = org.eclipse.jdi.Bootstrap.virtualMachineManager();
+    VirtualMachineManager vmManager = com.sun.jdi.Bootstrap.virtualMachineManager();
     for (Connector connector : vmManager.attachingConnectors()) {
       if ("com.sun.jdi.SocketAttach".equals(connector.name())) {
         return (AttachingConnector) connector;

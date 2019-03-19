@@ -86,12 +86,6 @@ class AndroidSDK {
   private static final String SDK_LICENSE_URL = 
       "https://developer.android.com/studio/terms.html";
 
-  private static final String REMOVING_KEYSTORE_FILE = "Removing expired debug.keystore file.";
-  private static final String CANNOT_REMOVE_KEYSTORE_FILE = "Could not remove the expired debug.keystore file.";
-  private static final String REMOVE_FILE_PROMPT = "Please remove the file ";
-  private static final String INVALID_DATE = "The date '";
-  private static final String REPORT_BUG_PROMPT = "Please report this as a bug so we can fix it.";
-  
   private static final int NO_ERROR     = 0;
   private static final int SKIP_ENV_SDK = 1;
   private static final int MISSING_SDK  = 2;
