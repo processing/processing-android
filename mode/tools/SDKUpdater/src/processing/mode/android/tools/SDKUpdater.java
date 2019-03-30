@@ -2,18 +2,15 @@
 
 /*
  Part of the Processing project - http://processing.org
-
  Copyright (c) 2017 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
  as published by the Free Software Foundation.
-
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -49,6 +46,8 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -117,17 +116,22 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     switch (evt.getPropertyName()) {
     case PROPERTY_CHANGE_QUERY:
       progressBar.setIndeterminate(false);
-      if (numUpdates == 0) {
-        actionButton.setEnabled(false);
-        status.setText("No updates available");
+      if(!this.checkInternet()) {
+    	  actionButton.setEnabled(false);
+    	  status.setText("No internet Connection");
       } else {
-        actionButton.setEnabled(true);
-        if (numUpdates == 1) {
-          status.setText("1 update found!");
-        } else { 
-          status.setText(numUpdates + " updates found!");                    
-        }                    
-      }
+    	  if (numUpdates == 0) {
+    		  actionButton.setEnabled(false);
+    		  status.setText("No updates available");
+    	  } else {
+    		  actionButton.setEnabled(true);
+    		  if (numUpdates == 1) {
+    			  status.setText("1 update found!");
+    		  } else { 
+    			  status.setText(numUpdates + " updates found!");                    
+    			  }                    
+    		  }
+    	  }
       break;
     }
   }
@@ -341,6 +345,19 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         return updates;
       }
     }
+  }
+  
+  private boolean checkInternet() {
+	  String repoUrl = "https://dl.google.com/android/repository/repository2-1.xml";
+	  Socket socket = new Socket();
+	  InetSocketAddress address = new InetSocketAddress(repoUrl,80);
+	  try {
+		  socket.connect(address,80);
+	  }
+	  catch(Exception e){
+		  return false;
+	  }
+	  return true;
   }
 
   private void createLayout(final boolean standalone) {
