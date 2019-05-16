@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:versionCode="1" android:versionName="1.0" package="">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="26"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
+    <uses-feature android:glEsVersion="0x00020000" android:required="true"/>
+    <application android:allowBackup="false" android:icon="@mipmap/ic_launcher" android:label="" android:theme="@style/ArActivityTheme" android:usesCleartextTraffic="false" tools:ignore="GoogleAppIndexingWarning">
+        <activity android:configChanges="orientation|screenSize" android:exported="true" android:name=".MainActivity" android:screenOrientation="locked" android:theme="@style/Theme.AppCompat.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <meta-data android:name="com.google.ar.core" android:value="required"/>
+    </application>
+</manifest>

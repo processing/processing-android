@@ -3,7 +3,7 @@ import processing.ar.*;
 PShape arObj;
 
 void setup() {
-  fullScreen(AUGMENT);
+  fullScreen(AR);
 
   // Setting Color of the detected plane - BLUE in this case
   PAR.planeColor(#BCD4FF);
