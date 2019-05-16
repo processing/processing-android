@@ -26,6 +26,7 @@ import android.view.SurfaceHolder;
 
 import processing.android.AppComponent;
 import processing.core.PGraphics;
+import processing.core.PMatrix3D;
 import processing.core.PSurface;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
@@ -117,10 +118,10 @@ public class PGraphicsAR extends PGraphics3D {
 
 
   protected void updateView() {
-    if (surfar.projmtx != null && surfar.viewmtx != null && surfar.anchorMatrix != null) {
+    if (surfar.projmtx != null && surfar.viewmtx != null /*&& surfar.anchorMatrix != null*/) {
       float[] prj = surfar.projmtx;
       float[] view = surfar.viewmtx;
-      float[] anchor = surfar.anchorMatrix;
+//      float[] anchor = surfar.anchorMatrix;
 
       // Fist, set all matrices to identity
       resetProjection();
@@ -138,11 +139,46 @@ public class PGraphicsAR extends PGraphics3D {
                   view[2], view[6], view[10], view[14],
                   view[3], view[7], view[11], view[15]);
 
+//      // now, modelview = view * anchor
+//      applyMatrix(anchor[0], anchor[4], anchor[8], anchor[12],
+//                  anchor[1], anchor[5], anchor[9], anchor[13],
+//                  anchor[2], anchor[6], anchor[10], anchor[14],
+//                  anchor[3], anchor[7], anchor[11], anchor[15]);
+    }
+  }
+
+  @Override
+  public PMatrix3D getAnchorMatrix() {
+    return getAnchorMatrix(null);
+  }
+
+
+  @Override
+  public PMatrix3D getAnchorMatrix(PMatrix3D target) {
+    if (target == null) {
+      target = new PMatrix3D();
+    }
+    float[] anchor = surfar.anchorMatrix;
+    target.set(anchor[0], anchor[4], anchor[8], anchor[12],
+               anchor[1], anchor[5], anchor[9], anchor[13],
+               anchor[2], anchor[6], anchor[10], anchor[14],
+               anchor[3], anchor[7], anchor[11], anchor[15]);
+    return target;
+  }
+
+  @Override
+  public void anchor() {
+      float[] anchor = surfar.anchorMatrix;
+
       // now, modelview = view * anchor
       applyMatrix(anchor[0], anchor[4], anchor[8], anchor[12],
-          anchor[1], anchor[5], anchor[9], anchor[13],
-          anchor[2], anchor[6], anchor[10], anchor[14],
-          anchor[3], anchor[7], anchor[11], anchor[15]);
-    }
+                  anchor[1], anchor[5], anchor[9], anchor[13],
+                  anchor[2], anchor[6], anchor[10], anchor[14],
+                  anchor[3], anchor[7], anchor[11], anchor[15]);
+  }
+
+  @Override
+  public void lights() {
+    super.lights();
   }
 }

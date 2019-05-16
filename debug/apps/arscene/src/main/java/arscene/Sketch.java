@@ -21,8 +21,12 @@ public class Sketch extends PApplet {
 //    surface.camera.getPose();
 //    surface.frame.getLightEstimate();
 
+    anchor();
+
     background(0);
     lights();
+
+
     fill(0xFCB736);
     noStroke();
     sphere(0.10f);

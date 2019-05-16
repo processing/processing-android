@@ -4152,6 +4152,26 @@ public class PGraphics extends PImage implements PConstants {
 
 
   /**
+   * Returns a copy of the current eye matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getAnchorMatrix() {
+    showMissingWarning("getAnchorMatrix");
+    return null;
+  }
+
+
+  /**
+   * Copy the current eye matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getAnchorMatrix(PMatrix3D target) {
+    showMissingWarning("getAnchorMatrix");
+    return null;
+  }
+
+
+  /**
    * Set the current transformation matrix to the contents of another.
    */
   public void setMatrix(PMatrix source) {
@@ -4226,6 +4246,11 @@ public class PGraphics extends PImage implements PConstants {
 
   public void eye() {
     showMethodWarning("eye");
+  }
+
+
+  public void anchor() {
+    showMethodWarning("anchor");
   }
 
 

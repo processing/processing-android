@@ -64,7 +64,7 @@ public class PSurfaceAR extends PSurfaceGLES {
   private static String C_DEVICE = "This device does not support AR";
 
   // Made these public so they can be accessed from the sketch
-  protected Session session;
+  public Session session;
   public Frame frame;
   public Camera camera;
 
@@ -273,6 +273,7 @@ public class PSurfaceAR extends PSurfaceGLES {
           return;
         }
 
+        updateTrackables();
         updateAnchors();
         updateMatrices();
 
@@ -289,14 +290,18 @@ public class PSurfaceAR extends PSurfaceGLES {
     backgroundRenderer.draw(frame);
   }
 
+  protected void updateTrackables() {
+
+  }
+
   protected void updateAnchors() {
+
     MotionEvent tap = queuedTaps.poll();
     if (tap != null && camera.getTrackingState() == TrackingState.TRACKING) {
       for (HitResult hit : frame.hitTest(tap)) {
         Trackable trackable = hit.getTrackable();
         if ((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
-            || (trackable instanceof Point
-            && ((Point) trackable).getOrientationMode()
+            || (trackable instanceof Point && ((Point) trackable).getOrientationMode()
             == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)) {
           if (anchors.size() >= 20) {
             anchors.get(0).detach();
@@ -307,6 +312,7 @@ public class PSurfaceAR extends PSurfaceGLES {
         }
       }
     }
+
   }
 
   protected void updateMatrices() {

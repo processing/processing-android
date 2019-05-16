@@ -9233,7 +9233,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.getEyeMatrix();
   }
 
-
   /**
    * Copy the current eye matrix into the specified target.
    * Pass in null to create a new matrix.
@@ -9242,6 +9241,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.getEyeMatrix(target);
   }
 
+
+  public PMatrix3D getAnchorMatrix() { return g.getAnchorMatrix(); }
+
+
+  public PMatrix3D getAnchorMatrix(PMatrix3D target) { return g.getAnchorMatrix(target); }
 
   /**
    * Set the current transformation matrix to the contents of another.
@@ -9309,6 +9313,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void eye() {
     g.eye();
+  }
+
+
+  public void anchor() {
+    g.anchor();
   }
 
 
