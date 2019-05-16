@@ -7,7 +7,7 @@ public class Sketch extends PApplet {
   float angle = 0;
 
   public void settings() {
-    fullScreen(AUGMENT);
+    fullScreen(AR);
   }
 
   public void setup() {
