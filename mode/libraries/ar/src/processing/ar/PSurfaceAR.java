@@ -82,7 +82,7 @@ public class PSurfaceAR extends PSurfaceGLES {
   protected RotationHandler displayRotationHelper;
 
   protected ARBackground backgroundRenderer = new ARBackground();
-  protected ARPlane planeRenderer = new ARPlane();
+//  protected ARPlane planeRenderer = new ARPlane();
 
 //  protected ProgressDialog progressdialog = new ProgressDialog(activity);
 
@@ -227,11 +227,11 @@ public class PSurfaceAR extends PSurfaceGLES {
       pgl.getGL(null);
       GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
       backgroundRenderer.createOnGlThread(activity);
-      try {
-        planeRenderer.createOnGlThread(activity);
-      } catch (IOException e) {
-        PGraphics.showWarning("Failed to read plane texture");
-      }
+//      try {
+//        planeRenderer.createOnGlThread(activity);
+//      } catch (IOException e) {
+//        PGraphics.showWarning("Failed to read plane texture");
+//      }
 //      pointCloud.createOnGlThread(activity);
     }
 
@@ -378,8 +378,8 @@ public class PSurfaceAR extends PSurfaceGLES {
 //    foundPointCloud.release();
 
     // Same with the planes...
-    planeRenderer.drawPlanes(
-        session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
+//    planeRenderer.drawPlanes(
+//        session.getAllTrackables(Plane.class), camera.getDisplayOrientedPose(), projmtx);
   }
 
 
