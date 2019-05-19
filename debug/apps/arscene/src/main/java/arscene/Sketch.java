@@ -32,10 +32,11 @@ public class Sketch extends PApplet {
     for (int i = 0; i < trackableCount(); i++) {
       int status = trackableStatus(i);
       if (status ==  PAR.PAUSED || status ==  PAR.STOPPED) continue;
-      if (!trackableSelected(i)) continue;
+//      if (!trackableSelected(i)) continue;
 
       if (status == PAR.CREATED) {
         anchorId = createAnchor(trackableId(i), 0, 0.3f, 0);
+        System.out.println("*********************> CREATED ANCHOR " + anchorId);
       }
 
       float lenx = trackableExtentX(i);
@@ -64,12 +65,15 @@ public class Sketch extends PApplet {
 
     if (0 < anchorCount()) {
       anchor(anchorId);
-      fill(0xFCB736);
-      noStroke();
-      sphere(0.10f);
-      rotateZ(angle);
-      translate(0, 0.3f, 0);
-      sphere(0.05f);
+      fill(255);
+
+      rotateY(angle);
+      box(0.2f);
+//      noStroke();
+//      sphere(0.10f);
+//      rotateZ(angle);
+//      translate(0, 0.3f, 0);
+//      sphere(0.05f);
       angle += 0.1;
     }
   }
