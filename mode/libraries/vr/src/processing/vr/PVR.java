@@ -36,7 +36,7 @@ public class PVR extends GvrActivity implements AppComponent {
   public static final int RIGHT     = Eye.Type.RIGHT;
   public static final int MONOCULAR = Eye.Type.MONOCULAR;
 
-  static public final int VR = 3;
+  static public final int GVR = 3;
 
   private DisplayMetrics metrics;
   private PApplet sketch;
@@ -78,7 +78,7 @@ public class PVR extends GvrActivity implements AppComponent {
 
 
   public int getKind() {
-      return VR;
+      return GVR;
   }
 
 
