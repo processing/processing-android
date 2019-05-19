@@ -4152,26 +4152,6 @@ public class PGraphics extends PImage implements PConstants {
 
 
   /**
-   * Returns a copy of the current eye matrix.
-   * Pass in null to create a new matrix.
-   */
-  public PMatrix3D getAnchorMatrix() {
-    showMissingWarning("getAnchorMatrix");
-    return null;
-  }
-
-
-  /**
-   * Copy the current eye matrix into the specified target.
-   * Pass in null to create a new matrix.
-   */
-  public PMatrix3D getAnchorMatrix(PMatrix3D target) {
-    showMissingWarning("getAnchorMatrix");
-    return null;
-  }
-
-
-  /**
    * Set the current transformation matrix to the contents of another.
    */
   public void setMatrix(PMatrix source) {
@@ -4249,7 +4229,113 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public void anchor() {
+  //////////////////////////////////////////////////////////////
+
+  // TENTATIVE AR API
+
+  public int trackableCount() {
+    showMissingWarning("trackableCount");
+    return 0;
+  }
+
+  public int trackableId(int i) {
+    showMissingWarning("trackableId");
+    return 0;
+  }
+
+  public int trackableType(int i) {
+    showMissingWarning("trackableType");
+    return 0;
+  }
+
+  public int trackableStatus(int i) {
+    showMissingWarning("trackableStatus");
+    return 0;
+  }
+
+  public boolean trackableSelected(int i) {
+    showMissingWarning("trackableSelected");
+    return false;
+  }
+
+  public float trackableExtentX(int i) {
+    showMissingWarning("trackableExtentX");
+    return 0;
+  }
+
+  public float trackableExtentZ(int i) {
+    showMissingWarning("trackableExtentZ");
+    return 0;
+  }
+
+
+  public float[] getTrackablePolygon(int i) {
+    showMissingWarning("getTrackablePolygon");
+    return null;
+  }
+
+
+  public float[] getTrackablePolygon(int i, float[] points) {
+    showMissingWarning("getTrackablePolygon");
+    return null;
+  }
+
+  public PMatrix3D getTrackableMatrix(int i) {
+    showMissingWarning("getTrackableMatrix");
+    return null;
+  }
+
+
+  public PMatrix3D getTrackableMatrix(int i, PMatrix3D target) {
+    showMissingWarning("getTrackableMatrix");
+    return null;
+  }
+
+
+  public int anchorCount() {
+    showMissingWarning("anchorCount");
+    return 0;
+  }
+
+  public int anchorId(int i) {
+    showMissingWarning("anchorId");
+    return 0;
+  }
+
+  public int anchorStatus(int id) {
+    showMissingWarning("anchorStatus");
+    return 0;
+  }
+
+  public int createAnchor() {
+    showMissingWarning("createAnchor");
+    return 0;
+  }
+
+  public int createAnchor(int trackId, float x, float y, float z) {
+    showMissingWarning("createAnchor");
+    return 0;
+  }
+
+
+  public void deleteAnchor(int id) {
+    showMissingWarning("deleteAnchor");
+  }
+
+
+  public PMatrix3D getAnchorMatrix(int id) {
+    showMissingWarning("getAnchorMatrix");
+    return null;
+  }
+
+
+  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
+    showMissingWarning("getAnchorMatrix");
+    return null;
+  }
+
+
+  public void anchor(int id) {
     showMethodWarning("anchor");
   }
 

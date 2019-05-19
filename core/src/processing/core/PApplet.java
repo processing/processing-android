@@ -9233,6 +9233,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.getEyeMatrix();
   }
 
+
   /**
    * Copy the current eye matrix into the specified target.
    * Pass in null to create a new matrix.
@@ -9241,11 +9242,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.getEyeMatrix(target);
   }
 
-
-  public PMatrix3D getAnchorMatrix() { return g.getAnchorMatrix(); }
-
-
-  public PMatrix3D getAnchorMatrix(PMatrix3D target) { return g.getAnchorMatrix(target); }
 
   /**
    * Set the current transformation matrix to the contents of another.
@@ -9316,11 +9312,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
-  public void anchor() {
-    g.anchor();
-  }
-
-
   public void ortho() {
     g.ortho();
   }
@@ -9359,6 +9350,94 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void printProjection() {
     g.printProjection();
   }
+
+
+  //////////////////////////////////////////////////////////////
+
+  // TENTATIVE AR API
+
+
+  public int trackableCount() {
+    return g.trackableCount();
+  }
+
+  public int trackableId(int i) {
+    return g.trackableId(i);
+  }
+
+  public int trackableType(int i) {
+    return g.trackableType(i);
+  }
+
+  public int trackableStatus(int i) {
+    return g.trackableStatus(i);
+  }
+
+  public boolean trackableSelected(int i) {
+    return g.trackableSelected(i);
+  }
+
+  public float trackableExtentX(int i) {
+    return g.trackableExtentX(i);
+  }
+
+  public float trackableExtentZ(int i) {
+    return g.trackableExtentZ(i);
+  }
+
+  public float[] getTrackablePolygon(int i) {
+    return g.getTrackablePolygon(i);
+  }
+
+  public float[] getTrackablePolygon(int i, float[] points) {
+    return g.getTrackablePolygon(i, points);
+  }
+
+  public PMatrix3D getTrackableMatrix(int i) {
+    return g.getTrackableMatrix(i);
+  }
+
+  public PMatrix3D getTrackableMatrix(int i, PMatrix3D target) {
+    return g.getTrackableMatrix(i, target);
+  }
+
+  public int anchorCount() {
+    return g.anchorCount();
+  }
+
+  public int anchorId(int i) {
+    return g.anchorId(i);
+  }
+
+  public int anchorStatus(int id) {
+    return g.anchorStatus(id);
+  }
+
+  public int createAnchor() {
+    return g.createAnchor();
+  }
+
+  public int createAnchor(int trackId, float x, float y, float z) {
+    return g.createAnchor(trackId, x, y, z);
+  }
+
+  public void deleteAnchor(int id) {
+    g.deleteAnchor(id);
+  }
+
+  public PMatrix3D getAnchorMatrix(int id) {
+    return g.getAnchorMatrix(id);
+  }
+
+  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
+    return g.getAnchorMatrix(id, target);
+  }
+
+  public void anchor(int id) {
+    g.anchor(id);
+  }
+
+  // ***********************************************************************************************
 
 
   /**

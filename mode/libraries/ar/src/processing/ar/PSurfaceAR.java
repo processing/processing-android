@@ -40,6 +40,7 @@ import com.google.ar.core.exceptions.*;
 
 import processing.android.AppComponent;
 import processing.core.PGraphics;
+import processing.core.PShape;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PSurfaceGLES;
@@ -51,6 +52,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class PSurfaceAR extends PSurfaceGLES {
@@ -72,9 +75,7 @@ public class PSurfaceAR extends PSurfaceGLES {
   protected AndroidARRenderer renderer;
   protected PGraphicsAR par;
 
-  protected static float[] anchorMatrix = new float[16];
-  protected static ArrayBlockingQueue<MotionEvent> queuedTaps = new ArrayBlockingQueue<>(16);
-  protected static ArrayList<Anchor> anchors = new ArrayList<>();
+  protected ArrayBlockingQueue<MotionEvent> queuedTaps = new ArrayBlockingQueue<>(16);
 
   protected float[] projmtx = new float[16];
   protected float[] viewmtx = new float[16];
@@ -82,9 +83,8 @@ public class PSurfaceAR extends PSurfaceGLES {
 
   protected ARBackground backgroundRenderer = new ARBackground();
   protected ARPlane planeRenderer = new ARPlane();
-//  protected ARPointCloud pointCloud = new ARPointCloud();
 
-  protected ProgressDialog progressdialog = new ProgressDialog(activity);
+//  protected ProgressDialog progressdialog = new ProgressDialog(activity);
 
   public PSurfaceAR(PGraphics graphics, AppComponent appComponent, SurfaceHolder surfaceHolder) {
     super(graphics, appComponent, surfaceHolder);
@@ -274,11 +274,12 @@ public class PSurfaceAR extends PSurfaceGLES {
         }
 
         updateTrackables();
-        updateAnchors();
         updateMatrices();
 
         sketch.calculate();
         sketch.handleDraw();
+
+        cleanup();
 
       } catch (Throwable tr) {
         PGraphics.showWarning("An error occurred in ARCORE: " + tr.getMessage());
@@ -290,44 +291,84 @@ public class PSurfaceAR extends PSurfaceGLES {
     backgroundRenderer.draw(frame);
   }
 
+  protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
+  protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
+  protected HashMap<Integer, Plane> trackMap = new HashMap<Integer, Plane>();
+  protected Plane selPlane;
+
+  protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
+  protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
+
+  protected ArrayList<Anchor> anchors = new ArrayList<Anchor>();
+  protected int selAnchor;
+
   protected void updateTrackables() {
+    if (camera.getTrackingState() == TrackingState.TRACKING) {
+      Collection<Plane> planes = frame.getUpdatedTrackables(Plane.class);
 
-  }
+      for (Plane plane: planes) {
+        if (plane.getSubsumedBy() != null) continue;
+        float[] mat;
+        if (trackMatrices.containsKey(plane)) {
+          mat = trackMatrices.get(plane);
+        } else {
+          mat = new float[16];
+          trackMatrices.put(plane, mat);
+          trackPlanes.add(plane);
+          trackMap.put(plane.hashCode(), plane);
+          newPlanes.add(plane);
+          System.out.println("-------------> ADDED TRACKING PLANE " + plane.hashCode());
+        }
+        Pose pose = plane.getCenterPose();
+        pose.toMatrix(mat, 0);
+        updatedPlanes.add(plane);
+      }
 
-  protected void updateAnchors() {
+      // Remove stopped and subsummed trackables
+      for (int i = trackPlanes.size() - 1; i >= 0; i--) {
+        Plane plane = trackPlanes.get(i);
+        if (plane.getTrackingState() == TrackingState.STOPPED || plane.getSubsumedBy() != null) {
+          trackPlanes.remove(i);
+          trackMatrices.remove(plane);
+          trackMap.remove(plane.hashCode());
+          System.out.println("-------------> REMOVED TRACKING PLANE " + plane.hashCode());
+        }
+      }
 
-    MotionEvent tap = queuedTaps.poll();
-    if (tap != null && camera.getTrackingState() == TrackingState.TRACKING) {
-      for (HitResult hit : frame.hitTest(tap)) {
-        Trackable trackable = hit.getTrackable();
-        if ((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose()))
-            || (trackable instanceof Point && ((Point) trackable).getOrientationMode()
-            == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)) {
-          if (anchors.size() >= 20) {
-            anchors.get(0).detach();
-            anchors.remove(0);
+      // Determine selected plane
+      MotionEvent tap = queuedTaps.poll();
+      if (tap != null) {
+        for (HitResult hit : frame.hitTest(tap)) {
+          Trackable trackable = hit.getTrackable();
+          if (trackable instanceof Plane) {
+            Plane plane = (Plane)trackable;
+            if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+              selPlane = plane;
+              if (-1 < selAnchor) {
+                anchors.get(selAnchor).detach();
+                anchors.set(selAnchor, hit.createAnchor());
+              }
+              System.out.println("-------------> SELECTED TRACKING PLANE " + trackPlanes.indexOf(selPlane) );
+              break;
+            }
           }
-          anchors.add(hit.createAnchor());
-          break;
         }
       }
     }
 
   }
 
+  protected void cleanup() {
+    updatedPlanes.clear();
+    newPlanes.clear();
+  }
+
+
   protected void updateMatrices() {
     camera.getProjectionMatrix(projmtx, 0, 0.1f, 100.0f);
     camera.getViewMatrix(viewmtx, 0);
   }
 
-  protected void getAnchors() {
-    for (Anchor anchor : anchors) {
-      if (anchor.getTrackingState() != TrackingState.TRACKING) {
-        continue;
-      }
-      anchor.getPose().toMatrix(anchorMatrix, 0);
-    }
-  }
 
   protected void renderHelpers() {
     // This should be enabled/disabled with a parameter...
