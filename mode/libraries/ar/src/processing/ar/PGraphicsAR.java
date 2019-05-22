@@ -22,6 +22,7 @@
 
 package processing.ar;
 
+import android.opengl.GLES11Ext;
 import android.view.SurfaceHolder;
 
 import com.google.ar.core.Anchor;
@@ -68,20 +69,25 @@ public class PGraphicsAR extends PGraphics3D {
   public void beginDraw() {
     super.beginDraw();
     updateView();
-  }
 
-
-  @Override
-  protected void backgroundImpl() {
+    background(0);
     surfar.renderBackground();
 
-//    surfar.getAnchors();
-
-
-    // The helpers (planes, point clouds, should be drawn using Processing primitives, so this could
-    // go after updateView() in beginDraw().
-//    surfar.renderHelpers();
+//    flush();
+//    pgl.clearBackground(backgroundR, backgroundG, backgroundB, backgroundA,
+//        !hints[DISABLE_DEPTH_MASK], true);
   }
+
+
+//  @Override
+//  protected void backgroundImpl() {
+//    surfar.renderBackground();
+//  }
+
+//  protected void renderBackground() {
+//    backgroundImpl();
+//    surfar.renderBackground();
+//  }
 
 
   @Override

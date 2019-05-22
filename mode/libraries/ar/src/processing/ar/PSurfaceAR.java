@@ -31,6 +31,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.AssetManager;
+import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.view.*;
@@ -41,6 +42,7 @@ import com.google.ar.core.exceptions.*;
 import processing.android.AppComponent;
 import processing.core.PGraphics;
 import processing.core.PShape;
+import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PSurfaceGLES;
@@ -51,6 +53,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -225,14 +228,9 @@ public class PSurfaceAR extends PSurfaceGLES {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
       pgl.getGL(null);
-      GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+//      GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
       backgroundRenderer.createOnGlThread(activity);
-//      try {
-//        planeRenderer.createOnGlThread(activity);
-//      } catch (IOException e) {
-//        PGraphics.showWarning("Failed to read plane texture");
-//      }
-//      pointCloud.createOnGlThread(activity);
     }
 
     @Override
@@ -263,15 +261,17 @@ public class PSurfaceAR extends PSurfaceGLES {
 
       displayRotationHelper.updateSessionIfNeeded(session);
       try {
+
         session.setCameraTextureName(backgroundRenderer.getTextureId());
+
         frame = session.update();
         camera = frame.getCamera();
 
-        if (camera.getTrackingState() == TrackingState.PAUSED) {
+//        if (camera.getTrackingState() == TrackingState.PAUSED) {
           // Just draw the camera image and do nothing else
-          renderBackground();
-          return;
-        }
+//          renderBackground();
+//          return;
+//        }
 
         updateTrackables();
         updateMatrices();
