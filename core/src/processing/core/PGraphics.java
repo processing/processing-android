@@ -4258,17 +4258,6 @@ public class PGraphics extends PImage implements PConstants {
     return false;
   }
 
-  public float trackableExtentX(int i) {
-    showMissingWarning("trackableExtentX");
-    return 0;
-  }
-
-  public float trackableExtentZ(int i) {
-    showMissingWarning("trackableExtentZ");
-    return 0;
-  }
-
-
   public float[] getTrackablePolygon(int i) {
     showMissingWarning("getTrackablePolygon");
     return null;
@@ -4307,12 +4296,12 @@ public class PGraphics extends PImage implements PConstants {
     return 0;
   }
 
-  public int createAnchor() {
-    showMissingWarning("createAnchor");
+  public int createTouchAnchor() {
+    showMissingWarning("createTouchAnchor");
     return 0;
   }
 
-  public int createAnchor(int trackId, float x, float y, float z) {
+  public int createAnchor(int i, float x, float y, float z) {
     showMissingWarning("createAnchor");
     return 0;
   }

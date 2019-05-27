@@ -9377,14 +9377,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.trackableSelected(i);
   }
 
-  public float trackableExtentX(int i) {
-    return g.trackableExtentX(i);
-  }
-
-  public float trackableExtentZ(int i) {
-    return g.trackableExtentZ(i);
-  }
-
   public float[] getTrackablePolygon(int i) {
     return g.getTrackablePolygon(i);
   }
@@ -9413,12 +9405,12 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.anchorStatus(id);
   }
 
-  public int createAnchor() {
-    return g.createAnchor();
+  public int createTouchAnchor() {
+    return g.createTouchAnchor();
   }
 
-  public int createAnchor(int trackId, float x, float y, float z) {
-    return g.createAnchor(trackId, x, y, z);
+  public int createAnchor(int i, float x, float y, float z) {
+    return g.createAnchor(i, x, y, z);
   }
 
   public void deleteAnchor(int id) {
