@@ -4253,7 +4253,7 @@ public class PGraphics extends PImage implements PConstants {
     return 0;
   }
 
-  public boolean trackableSelected(int i) {
+  public boolean trackableSelected(int i, int mx, int my) {
     showMissingWarning("trackableSelected");
     return false;
   }

@@ -9373,8 +9373,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.trackableStatus(i);
   }
 
-  public boolean trackableSelected(int i) {
-    return g.trackableSelected(i);
+  public boolean trackableSelected(int i, int mx, int my) {
+    return g.trackableSelected(i, mx, my);
   }
 
   public float[] getTrackablePolygon(int i) {

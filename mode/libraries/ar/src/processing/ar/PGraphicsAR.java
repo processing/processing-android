@@ -39,7 +39,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import processing.android.AppComponent;
 import processing.core.PGraphics;
@@ -62,7 +61,6 @@ public class PGraphicsAR extends PGraphics3D {
   protected float[] anchorMatrix = new float[16];
 
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
-  protected ArrayList<Plane> selectedPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
@@ -217,8 +215,18 @@ public class PGraphicsAR extends PGraphics3D {
 
 
   @Override
-  public boolean trackableSelected(int i) {
-    return selectedPlanes.contains(trackPlanes.get(i));
+  public boolean trackableSelected(int i, int mx, int my) {
+    Plane planei = trackPlanes.get(i);
+    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+      Trackable trackable = hit.getTrackable();
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (planei == plane && plane.isPoseInPolygon(hit.getHitPose())) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 
@@ -372,20 +380,18 @@ public class PGraphicsAR extends PGraphics3D {
     backgroundRenderer = new BackgroundRenderer(surfar.getActivity());
   }
 
-  protected void setCameraTexture(Session session) {
-    session.setCameraTextureName(backgroundRenderer.getTextureId());
+  protected void setCameraTexture() {
+    surfar.session.setCameraTextureName(backgroundRenderer.getTextureId());
   }
 
-  protected void updateMatrices(Camera camera) {
-    camera.getProjectionMatrix(projMatrix, 0, 0.1f, 100.0f);
-    camera.getViewMatrix(viewMatrix, 0);
+  protected void updateMatrices() {
+    surfar.camera.getProjectionMatrix(projMatrix, 0, 0.1f, 100.0f);
+    surfar.camera.getViewMatrix(viewMatrix, 0);
   }
 
 
-  protected void updateTrackables(Frame frame, ArrayBlockingQueue<MotionEvent> taps) {
-
-    Collection<Plane> planes = frame.getUpdatedTrackables(Plane.class);
-
+  protected void updateTrackables() {
+    Collection<Plane> planes = surfar.frame.getUpdatedTrackables(Plane.class);
     for (Plane plane: planes) {
       if (plane.getSubsumedBy() != null) continue;
       float[] mat;
@@ -412,27 +418,12 @@ public class PGraphicsAR extends PGraphics3D {
         System.out.println("-------------> REMOVED TRACKING PLANE " + plane.hashCode());
       }
     }
-
-    // Determine selected planes using the touches array
-    TouchEvent.Pointer[] touches = parent.touches;
-    for (int i = 0; i < touches.length; i++) {
-      for (HitResult hit : frame.hitTest(touches[i].x, touches[i].y)) {
-        Trackable trackable = hit.getTrackable();
-        if (trackable instanceof Plane) {
-          Plane plane = (Plane)trackable;
-          if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
-            selectedPlanes.add(plane);
-          }
-        }
-      }
-    }
   }
 
 
   protected void cleanup() {
     updatedPlanes.clear();
     newPlanes.clear();
-    selectedPlanes.clear();
 
     for (Anchor anchor: delAnchors) {
       anchor.detach();

@@ -46,7 +46,7 @@ public class Sketch extends PApplet {
       getTrackableMatrix(i, mat);
       pushMatrix();
       applyMatrix(mat);
-      if (trackableSelected(i)) {
+      if (trackableSelected(i, mouseX, mouseY)) {
         fill(255, 0, 0, 100);
       } else {
         fill(255, 100);
@@ -74,6 +74,7 @@ public class Sketch extends PApplet {
         deleteAnchor(i);
         continue;
       }
+
       int status = anchorStatus(i);
       if (status ==  PAR.PAUSED || status == PAR.STOPPED) {
         if (status == PAR.PAUSED) System.out.println("-------------> PAUSED ANCHOR " + i);

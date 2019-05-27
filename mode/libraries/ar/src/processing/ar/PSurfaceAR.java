@@ -48,10 +48,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class PSurfaceAR extends PSurfaceGLES {
   private static String T_ALERT_MESSAGE = "ALERT";
@@ -72,7 +68,6 @@ public class PSurfaceAR extends PSurfaceGLES {
   protected AndroidARRenderer renderer;
   protected PGraphicsAR par;
 
-  protected ArrayBlockingQueue<MotionEvent> queuedTaps = new ArrayBlockingQueue<>(16);
   protected RotationHandler displayRotationHelper;
 
   public PSurfaceAR(PGraphics graphics, AppComponent appComponent, SurfaceHolder surfaceHolder) {
@@ -232,12 +227,12 @@ public class PSurfaceAR extends PSurfaceGLES {
       displayRotationHelper.updateSessionIfNeeded(session);
       try {
 
-        par.setCameraTexture(session);
+        par.setCameraTexture();
         frame = session.update();
         camera = frame.getCamera();
 
-        if (camera.getTrackingState() == TrackingState.TRACKING) par.updateTrackables(frame, queuedTaps);
-        par.updateMatrices(camera);
+        if (camera.getTrackingState() == TrackingState.TRACKING) par.updateTrackables();
+        par.updateMatrices();
 
         sketch.calculate();
         sketch.handleDraw();
