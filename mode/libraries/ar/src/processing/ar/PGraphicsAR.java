@@ -45,6 +45,7 @@ import processing.android.AppComponent;
 import processing.core.PGraphics;
 import processing.core.PMatrix3D;
 import processing.core.PSurface;
+import processing.event.TouchEvent;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
@@ -61,15 +62,14 @@ public class PGraphicsAR extends PGraphics3D {
   protected float[] anchorMatrix = new float[16];
 
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
+  protected ArrayList<Plane> selectedPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
-  protected Plane selPlane;
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
   protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
   protected ArrayList<Anchor> delAnchors = new ArrayList<Anchor>();
 
   protected ArrayList<Anchor> anchors = new ArrayList<Anchor>();
-  protected int selAnchor;
 
   protected float[] pointIn = new float[3];
   protected float[] pointOut = new float[3];
@@ -197,10 +197,10 @@ public class PGraphicsAR extends PGraphics3D {
     return PAR.UNKNOWN;
   }
 
+
   @Override
   public int trackableStatus(int i) {
     Plane plane = trackPlanes.get(i);
-
     if (newPlanes.contains(plane)) {
       return PAR.CREATED;
     } else if (updatedPlanes.contains(plane)) {
@@ -212,14 +212,13 @@ public class PGraphicsAR extends PGraphics3D {
     } else if (plane.getTrackingState() == TrackingState.STOPPED) {
       return PAR.STOPPED;
     }
-
-    return 0;
+    return PAR.UNKNOWN;
   }
 
 
   @Override
   public boolean trackableSelected(int i) {
-    return trackPlanes.indexOf(selPlane) == i;
+    return selectedPlanes.contains(trackPlanes.get(i));
   }
 
 
@@ -280,7 +279,6 @@ public class PGraphicsAR extends PGraphics3D {
   @Override
   public int anchorStatus(int i) {
     Anchor anchor = anchors.get(i);
-
     if (anchor.getTrackingState() == TrackingState.PAUSED) {
       return PAR.PAUSED;
     } else if (anchor.getTrackingState() == TrackingState.TRACKING) {
@@ -288,20 +286,7 @@ public class PGraphicsAR extends PGraphics3D {
     } else if (anchor.getTrackingState() == TrackingState.STOPPED) {
       return PAR.STOPPED;
     }
-
-    return 0;
-  }
-
-
-  @Override
-  public int createTouchAnchor() {
-    if (selAnchor == -1) {
-      selAnchor = anchors.size();
-      anchors.add(null);
-    } else {
-      PGraphics.showWarning("Selection anchor already created");
-    }
-    return selAnchor;
+    return PAR.UNKNOWN;
   }
 
 
@@ -317,6 +302,23 @@ public class PGraphicsAR extends PGraphics3D {
     Anchor anchor = plane.createAnchor(anchorPose);
     anchors.add(anchor);
     return anchors.size() - 1;
+  }
+
+
+  @Override
+  public int createAnchor(int mx, int my) {
+    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+      Trackable trackable = hit.getTrackable();
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          Anchor anchor = hit.createAnchor();
+          anchors.add(anchor);
+          return anchors.size() - 1;
+        }
+      }
+    }
+    return -1;
   }
 
 
@@ -411,26 +413,15 @@ public class PGraphicsAR extends PGraphics3D {
       }
     }
 
-    // Determine selected plane
-    MotionEvent tap = taps.poll();
-    if (tap != null) {
-      for (HitResult hit : frame.hitTest(tap)) {
+    // Determine selected planes using the touches array
+    TouchEvent.Pointer[] touches = parent.touches;
+    for (int i = 0; i < touches.length; i++) {
+      for (HitResult hit : frame.hitTest(touches[i].x, touches[i].y)) {
         Trackable trackable = hit.getTrackable();
         if (trackable instanceof Plane) {
           Plane plane = (Plane)trackable;
           if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
-            selPlane = plane;
-
-            /*
-            if (-1 < selAnchor) {
-              anchors.get(selAnchor).detach();
-              anchors.set(selAnchor, hit.createAnchor());
-            }
-            */
-
-
-            System.out.println("-------------> SELECTED TRACKING PLANE " + trackPlanes.indexOf(selPlane));
-            break;
+            selectedPlanes.add(plane);
           }
         }
       }
@@ -441,6 +432,7 @@ public class PGraphicsAR extends PGraphics3D {
   protected void cleanup() {
     updatedPlanes.clear();
     newPlanes.clear();
+    selectedPlanes.clear();
 
     for (Anchor anchor: delAnchors) {
       anchor.detach();

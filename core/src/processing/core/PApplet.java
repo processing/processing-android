@@ -9401,32 +9401,32 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.anchorId(i);
   }
 
-  public int anchorStatus(int id) {
-    return g.anchorStatus(id);
-  }
-
-  public int createTouchAnchor() {
-    return g.createTouchAnchor();
+  public int anchorStatus(int i) {
+    return g.anchorStatus(i);
   }
 
   public int createAnchor(int i, float x, float y, float z) {
     return g.createAnchor(i, x, y, z);
   }
 
-  public void deleteAnchor(int id) {
-    g.deleteAnchor(id);
+  public int createAnchor(int mx, int my) {
+    return g.createAnchor(mx, my);
   }
 
-  public PMatrix3D getAnchorMatrix(int id) {
-    return g.getAnchorMatrix(id);
+  public void deleteAnchor(int i) {
+    g.deleteAnchor(i);
   }
 
-  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
-    return g.getAnchorMatrix(id, target);
+  public PMatrix3D getAnchorMatrix(int i) {
+    return g.getAnchorMatrix(i);
   }
 
-  public void anchor(int id) {
-    g.anchor(id);
+  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
+    return g.getAnchorMatrix(i, target);
+  }
+
+  public void anchor(int i) {
+    g.anchor(i);
   }
 
   // ***********************************************************************************************

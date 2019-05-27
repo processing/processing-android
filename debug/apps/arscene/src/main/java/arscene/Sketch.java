@@ -8,6 +8,8 @@ public class Sketch extends PApplet {
   float angle = 0;
   float[] points;
   PMatrix3D mat = new PMatrix3D();
+  int oldSelAnchor;
+  int selAnchor;
 
   public void settings() {
     fullScreen(AR);
@@ -60,8 +62,18 @@ public class Sketch extends PApplet {
       popMatrix();
     }
 
+    if (mousePressed) {
+      int n = createAnchor(mouseX, mouseY);
+      oldSelAnchor = selAnchor;
+      selAnchor = anchorId(n);
+    }
 
     for (int i = 0; i < anchorCount(); i++) {
+      int id = anchorId(i);
+      if (oldSelAnchor == id) {
+        deleteAnchor(i);
+        continue;
+      }
       int status = anchorStatus(i);
       if (status ==  PAR.PAUSED || status == PAR.STOPPED) {
         if (status == PAR.PAUSED) System.out.println("-------------> PAUSED ANCHOR " + i);
@@ -71,7 +83,12 @@ public class Sketch extends PApplet {
 
       pushMatrix();
       anchor(i);
-      fill(255);
+
+      if (id == selAnchor) {
+        fill(255, 0, 0);
+      } else {
+        fill(255);
+      }
 
       rotateY(angle);
       box(0.15f);

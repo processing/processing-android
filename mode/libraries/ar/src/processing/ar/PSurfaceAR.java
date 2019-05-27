@@ -180,7 +180,6 @@ public class PSurfaceAR extends PSurfaceGLES {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-      queuedTaps.offer(event);
       return sketch.surfaceTouchEvent(event);
     }
 
@@ -212,7 +211,6 @@ public class PSurfaceAR extends PSurfaceGLES {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
       pgl.getGL(null);
       par.createBackgroundRenderer();
-//      GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     }
 
     @Override
