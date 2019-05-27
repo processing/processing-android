@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class ARBackground {
+public class BackgroundRenderer {
 
   private static final int COORDS_PER_VERTEX = 3;
   private static final int TEXCOORDS_PER_VERTEX = 2;
@@ -28,9 +28,9 @@ public class ARBackground {
   private int textureId = -1;
 
   static private URL screenquad_vertex =
-      ARBackground.class.getResource("/assets/shaders/screenquad_vertex.glsl");
+      BackgroundRenderer.class.getResource("/assets/shaders/screenquad_vertex.glsl");
   static private URL screenquad_fragment =
-      ARBackground.class.getResource("/assets/shaders/screenquad_fragment.glsl");
+      BackgroundRenderer.class.getResource("/assets/shaders/screenquad_fragment.glsl");
 
   private String VERTICES_ERROR = "Unexpected number of vertices in BackgroundRenderer";
   private String ERROR_TAG = "Error";
@@ -38,14 +38,7 @@ public class ARBackground {
   private String PARAMETERS_ERROR = "Program parameters";
   private String DRAW_ERROR = "Draw";
 
-  public ARBackground() {
-  }
-
-  public int getTextureId() {
-    return textureId;
-  }
-
-  public void createOnGlThread(Context context) {
+  public BackgroundRenderer(Context context) {
     int[] textures = new int[1];
     GLES20.glGenTextures(1, textures, 0);
     textureId = textures[0];
@@ -68,22 +61,22 @@ public class ARBackground {
     quadVertices.position(0);
 
     ByteBuffer bbTexCoords =
-        ByteBuffer.allocateDirect(numVertices * TEXCOORDS_PER_VERTEX * FLOAT_SIZE);
+            ByteBuffer.allocateDirect(numVertices * TEXCOORDS_PER_VERTEX * FLOAT_SIZE);
     bbTexCoords.order(ByteOrder.nativeOrder());
     quadTexCoord = bbTexCoords.asFloatBuffer();
     quadTexCoord.put(QUAD_TEXCOORDS);
     quadTexCoord.position(0);
 
     ByteBuffer bbTexCoordsTransformed =
-        ByteBuffer.allocateDirect(numVertices * TEXCOORDS_PER_VERTEX * FLOAT_SIZE);
+            ByteBuffer.allocateDirect(numVertices * TEXCOORDS_PER_VERTEX * FLOAT_SIZE);
     bbTexCoordsTransformed.order(ByteOrder.nativeOrder());
     quadTexCoordTransformed = bbTexCoordsTransformed.asFloatBuffer();
 
     int vertexShader =
-        Utils.loadGLShader(ERROR_TAG, context, GLES20.GL_VERTEX_SHADER, screenquad_vertex);
+            Utils.loadGLShader(ERROR_TAG, context, GLES20.GL_VERTEX_SHADER, screenquad_vertex);
     int fragmentShader =
-        Utils.loadGLShader(
-            ERROR_TAG, context, GLES20.GL_FRAGMENT_SHADER, screenquad_fragment);
+            Utils.loadGLShader(
+                    ERROR_TAG, context, GLES20.GL_FRAGMENT_SHADER, screenquad_fragment);
 
     quadProgram = GLES20.glCreateProgram();
     GLES20.glAttachShader(quadProgram, vertexShader);
@@ -97,6 +90,10 @@ public class ARBackground {
     quadTexCoordParam = GLES20.glGetAttribLocation(quadProgram, "a_TexCoord");
 
     Utils.checkGLError(ERROR_TAG, PARAMETERS_ERROR);
+  }
+
+  public int getTextureId() {
+    return textureId;
   }
 
   public void draw(Frame frame) {
