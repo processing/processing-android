@@ -33,6 +33,7 @@ import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.debug.LineID;
 import processing.mode.java.preproc.PdePreprocessor;
 
 import javax.swing.*;
@@ -59,6 +60,8 @@ public class AndroidEditor extends JavaEditor {
   private JMenu androidMenu;
   
   private int appComponent;
+
+  private AndroidDebugger debugger;
   
   private Settings settings;
   private AndroidMode androidMode;
@@ -69,6 +72,7 @@ public class AndroidEditor extends JavaEditor {
   private JCheckBoxMenuItem wallpaperItem;
   private JCheckBoxMenuItem watchfaceItem;
   private JCheckBoxMenuItem vrItem;
+  private JCheckBoxMenuItem arItem;
   
   protected AndroidEditor(Base base, String path, EditorState state, 
                           Mode mode) throws EditorException {
@@ -77,12 +81,20 @@ public class AndroidEditor extends JavaEditor {
     androidMode = (AndroidMode) mode;
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
-    
+
+    debugger = new AndroidDebugger(this, androidMode);
+    // Set saved breakpoints when sketch is opened for the first time
+    for (LineID lineID : stripBreakpointComments()) {
+      debugger.setBreakpoint(lineID);
+    }
+
+    super.debugger = debugger;
+
     androidTools = loadAndroidTools();
     addToolsToMenu();
     
     loadModeSettings();    
-  }  
+  }
 
   @Override
   public PdePreprocessor createPreprocessor(final String sketchName) {
@@ -155,15 +167,15 @@ public class AndroidEditor extends JavaEditor {
           handleStop();
         }
       });
-    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
+    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
   }
 
 
   public JMenu buildModeMenu() {
-    androidMenu = new JMenu("Android");
+    androidMenu = new JMenu(AndroidMode.getTextString("menu.android"));
     JMenuItem item;
 
-    item = new JMenuItem("Sketch Permissions");
+    item = new JMenuItem(AndroidMode.getTextString("menu.android.sketch_permissions"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Permissions(sketch, appComponent, androidMode.getFolder());
@@ -173,10 +185,11 @@ public class AndroidEditor extends JavaEditor {
 
     androidMenu.addSeparator();
      
-    fragmentItem = new JCheckBoxMenuItem("App");
-    wallpaperItem = new JCheckBoxMenuItem("Wallpaper");
-    watchfaceItem = new JCheckBoxMenuItem("Watch Face");
-    vrItem = new JCheckBoxMenuItem("VR");
+    fragmentItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.app"));
+    wallpaperItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.wallpaper"));
+    watchfaceItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.watch_face"));
+    vrItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.vr"));
+    arItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.ar"));    
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -185,6 +198,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.APP);
       }
     });
@@ -195,6 +209,7 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(true);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(false);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.WALLPAPER);        
       }
     });
@@ -205,17 +220,30 @@ public class AndroidEditor extends JavaEditor {
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(true);
         vrItem.setSelected(false);
+        arItem.setSelected(false);        
         setAppComponent(AndroidBuild.WATCHFACE);        
       }
     });
     vrItem.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {        
+      public void actionPerformed(ActionEvent e) {
         fragmentItem.setState(false);
         wallpaperItem.setState(false);
         watchfaceItem.setSelected(false);
         vrItem.setSelected(true);
+        arItem.setSelected(false);
         setAppComponent(AndroidBuild.VR);
+      }
+    });
+    arItem.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        fragmentItem.setState(false);
+        wallpaperItem.setState(false);
+        watchfaceItem.setSelected(false);
+        vrItem.setSelected(false);
+        arItem.setSelected(true);
+        setAppComponent(AndroidBuild.AR);
       }
     });    
        
@@ -223,17 +251,19 @@ public class AndroidEditor extends JavaEditor {
     wallpaperItem.setState(false);
     watchfaceItem.setSelected(false);
     vrItem.setSelected(false);
+    arItem.setSelected(false);
 
     androidMenu.add(fragmentItem);
     androidMenu.add(wallpaperItem);
     androidMenu.add(watchfaceItem);
     androidMenu.add(vrItem);
+    androidMenu.add(arItem);
     
     androidMenu.addSeparator();
 
-    final JMenu devicesMenu = new JMenu("Devices");
+    final JMenu devicesMenu = new JMenu(AndroidMode.getTextString("menu.android.devices"));
 
-    JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+    JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
     noDevicesItem.setEnabled(false);
     devicesMenu.add(noDevicesItem);
     androidMenu.add(devicesMenu);
@@ -279,6 +309,8 @@ public class AndroidEditor extends JavaEditor {
         settings.set("component", "watchface");
       } else if (appComponent == AndroidBuild.VR) {
         settings.set("component", "vr");
+      } else if (appComponent == AndroidBuild.AR) {
+        settings.set("component", "ar");
       }
       settings.save();            
       androidMode.resetManifest(sketch, appComponent);
@@ -297,7 +329,7 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    item = new JMenuItem("Processing for Android Site");
+    item = new JMenuItem(AndroidMode.getTextString("menu.help.processing_for_android_site"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         Platform.openURL("http://android.processing.org/");
@@ -306,7 +338,7 @@ public class AndroidEditor extends JavaEditor {
     menu.add(item);
 
 
-    item = new JMenuItem("Android Developer Site");
+    item = new JMenuItem(AndroidMode.getTextString("menu.help.android_developer_site"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         Platform.openURL("http://developer.android.com/");
@@ -383,11 +415,60 @@ public class AndroidEditor extends JavaEditor {
 
 
   public void handleStop() {
-    toolbar.deactivateRun();
-    stopIndeterminate();
-    androidMode.handleStop(this);
+    if (debugger.isStarted()) {
+      debugger.stopDebug();
+
+    } else {
+      toolbar.activateStop();
+      androidMode.handleStop(this);
+      toolbar.deactivateStop();
+      toolbar.deactivateRun();
+
+      // focus the PDE again after quitting presentation mode [toxi 030903]
+      toFront();
+    }
   }
 
+  @Override
+  public AndroidDebugger getDebugger() {
+    return debugger;
+  }
+
+  @Override protected void deactivateDebug() {
+    super.deactivateDebug();
+  }
+
+  @Override protected void activateContinue() {
+    ((AndroidToolbar) toolbar).activateContinue();
+  }
+
+  @Override protected void deactivateContinue() {
+    ((AndroidToolbar) toolbar).deactivateContinue();
+  }
+
+  @Override protected void activateStep() {
+    ((AndroidToolbar) toolbar).activateStep();
+  }
+
+  @Override protected void deactivateStep() {
+    ((AndroidToolbar) toolbar).deactivateStep();
+  }
+
+  @Override
+  public void toggleDebug() {
+    super.toggleDebug();
+    debugger.toggleDebug();
+  }
+
+  @Override
+  public void toggleBreakpoint(int lineIndex) {
+    debugger.toggleBreakpoint(lineIndex);
+  }
+
+  @Override
+  protected LineID getCurrentLineID() {
+    return super.getCurrentLineID();
+  }
 
   /**
    * Create a release build of the sketch and have its apk files ready.
@@ -399,13 +480,15 @@ public class AndroidEditor extends JavaEditor {
         public void run() {
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
-          statusNotice("Exporting a debug version of the sketch...");
+          statusNotice(AndroidMode.getTextString("android_editor.status.exporting_project"));
           AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
               Platform.openFolder(exportFolder);
-              statusNotice("Done with export.");
+              statusNotice(AndroidMode.getTextString("android_editor.status.project_export_completed"));
+            } else {
+              statusError(AndroidMode.getTextString("android_editor.status.project_export_failed"));
             }
           } catch (IOException e) {
             statusError(e);
@@ -436,15 +519,15 @@ public class AndroidEditor extends JavaEditor {
     new Thread() {
       public void run() {
         startIndeterminate();
-        statusNotice("Exporting signed package...");
+        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_package"));
         AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
-            statusNotice("Done with export.");
+            statusNotice(AndroidMode.getTextString("android_editor.status.package_export_completed"));
             Platform.openFolder(projectFolder);
           } else {
-            statusError("Error with export");
+            statusError(AndroidMode.getTextString("android_editor.status.package_export_failed"));
           }
         } catch (IOException e) {
           statusError(e);
@@ -498,11 +581,14 @@ public class AndroidEditor extends JavaEditor {
       } else if (component.equals("vr")) {
         appComponent = AndroidBuild.VR;
         vrItem.setState(true);
-      }  
-      
+      } else if (component.equals("ar")) {
+        appComponent = AndroidBuild.AR;
+        arItem.setState(true);
+      }
+
       if (save) androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
-      System.err.println("While creating " + sketchProps + ": " + e.getMessage());
+      System.err.println(AndroidMode.getTextString("android_editor.error.cannot_create_sketch_properties", sketchProps, e.getMessage()));
     }
   }
   
@@ -526,7 +612,7 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem item;
     
     for (final Tool tool : androidTools) {
-      item = new JMenuItem(tool.getMenuTitle());
+      item = new JMenuItem(AndroidMode.getTextString(tool.getMenuTitle()));
       item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           tool.run();
@@ -544,7 +630,7 @@ public class AndroidEditor extends JavaEditor {
 //    });
 //    menu.add(item);
 
-    item = new JMenuItem("Reset ADB");
+    item = new JMenuItem(AndroidMode.getTextString("menu.android.reset_adb"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
@@ -586,7 +672,7 @@ public class AndroidEditor extends JavaEditor {
       if (deviceList.size() == 0) {
         if (0 < deviceMenu.getItemCount()) {
           deviceMenu.removeAll();
-          JMenuItem noDevicesItem = new JMenuItem("No connected devices");
+          JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
           noDevicesItem.setEnabled(false);
           deviceMenu.add(noDevicesItem);
         }

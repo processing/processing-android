@@ -44,7 +44,8 @@ import java.util.HashMap;
 public class Manifest {
   static final String MANIFEST_XML = "AndroidManifest.xml";
 
-  static final String MANIFEST_ERROR =
+  static final String MANIFEST_ERROR_TITLE = "Error handling " + MANIFEST_XML;
+  static final String MANIFEST_ERROR_MESSAGE =
     "Errors occurred while reading or writing " + MANIFEST_XML + ",\n" +
     "which means lots of things are likely to stop working properly.\n" +
     "To prevent losing any data, it's recommended that you use “Save As”\n" +
@@ -55,6 +56,7 @@ public class Manifest {
     "WallpaperManifest.xml.tmpl",
     "WatchFaceManifest.xml.tmpl",
     "VRManifest.xml.tmpl",
+    "ARManifest.xml.tmpl"
   };
   
   // Default base package name, user need to change when exporting package. 
@@ -152,6 +154,7 @@ public class Manifest {
     boolean hasWakeLock = false;
     boolean hasVibrate = false;
     boolean hasReadExtStorage = false;
+    boolean hasCameraAccess = false;
     
     // Remove all the old permissions...
     for (XML kid : xml.getChildren("uses-permission")) {
@@ -170,6 +173,10 @@ public class Manifest {
         hasReadExtStorage = true;
         continue;
       }
+      if(appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")){
+        hasCameraAccess = true;
+        continue;
+      }
       
       // Don't remove non-standard permissions, such as
       // com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA
@@ -185,6 +192,7 @@ public class Manifest {
       if (appComp == AndroidBuild.WATCHFACE && name.equals("WAKE_LOCK")) continue;
       if (appComp == AndroidBuild.VR && name.equals("VIBRATE")) continue;
       if (appComp == AndroidBuild.VR && name.equals("READ_EXTERNAL_STORAGE")) continue;
+      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")) continue;
          
       XML newbie = xml.addChild("uses-permission");
       if (-1 < name.indexOf(".")) {
@@ -208,6 +216,10 @@ public class Manifest {
       xml.addChild("uses-permission").
           setString("android:name", PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE");       
     }
+    if (appComp == AndroidBuild.AR && !hasCameraAccess) {
+      xml.addChild("uses-permission").
+              setString("android:name", PERMISSION_PREFIX + "CAMERA");
+    }
     
     save();
   }
@@ -216,7 +228,8 @@ public class Manifest {
   private void fixPermissions(XML mf) {
     boolean hasWakeLock = false;
     boolean hasVibrate = false;
-    boolean hasReadExtStorage = false;      
+    boolean hasReadExtStorage = false;
+    boolean hasCameraAccess = false;
     for (XML kid : mf.getChildren("uses-permission")) {
       String name = kid.getString("android:name");
       if (appComp == AndroidBuild.WATCHFACE && name.equals(PERMISSION_PREFIX + "WAKE_LOCK")) {
@@ -230,6 +243,15 @@ public class Manifest {
       if (appComp == AndroidBuild.VR && name.equals(PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")) {
         hasReadExtStorage = true;
         continue;
+      }
+      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")){
+        hasCameraAccess = true;
+        continue;
+      }
+
+      if (appComp == AndroidBuild.AR && !hasCameraAccess) {
+        mf.addChild("uses-permission").
+                setString("android:name", PERMISSION_PREFIX + "CAMERA");
       }
     }
     if (appComp == AndroidBuild.WATCHFACE && !hasWakeLock) {
@@ -259,6 +281,8 @@ public class Manifest {
       replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WATCHFACE);
     } else if (appComp == AndroidBuild.VR) {
       replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_VR);
+    } else if (appComp == AndroidBuild.AR) {
+      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_AR);
     }
         
     AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
@@ -300,9 +324,9 @@ public class Manifest {
         }       
       }
       
-      // Make sure that the required permissions for watch faces and VR apps are
+      // Make sure that the required permissions for watch faces, AR and VR apps are
       // included. 
-      if (appComp == AndroidBuild.WATCHFACE || appComp == AndroidBuild.VR) {
+      if (appComp == AndroidBuild.WATCHFACE || appComp == AndroidBuild.VR|| appComp == AndroidBuild.AR) {
         fixPermissions(mf);
       }
 
@@ -378,7 +402,8 @@ public class Manifest {
       }
     }
     if (xml == null) {
-      Messages.showWarning("Error handling " + MANIFEST_XML, MANIFEST_ERROR);
+      Messages.showWarning(AndroidMode.getTextString("manifest.warn.cannot_handle_file_title", MANIFEST_XML), 
+                           AndroidMode.getTextString("manifest.warn.cannot_handle_file_body", MANIFEST_XML));
     }
   }
 

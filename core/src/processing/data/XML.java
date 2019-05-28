@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012 The Processing Foundation
   Copyright (c) 2009-12 Ben Fry and Casey Reas
 
   This library is free software; you can redistribute it and/or
@@ -594,7 +594,14 @@ public class XML implements Serializable {
     children = null;  // TODO not efficient
   }
 
-
+  /**
+   * Removes whitespace nodes.
+   * Those whitespace nodes are required to reconstruct the original XML's spacing and indentation.
+   * If you call this and use saveXML() your original spacing will be gone.
+   * 
+   * @nowebref
+   * @brief Removes whitespace nodes
+   */
   public void trim() {
     try {
       XPathFactory xpathFactory = XPathFactory.newInstance();

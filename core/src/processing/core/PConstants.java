@@ -50,6 +50,9 @@ public interface PConstants {
   static final String OPENGL = P3D;
   static final String STEREO = "processing.vr.PGraphicsVRStereo";
   static final String MONO = "processing.vr.PGraphicsVRMono";
+  static final String VR = STEREO;
+  static final String AR = "processing.ar.PGraphicsAR";
+  static final String ARCORE = AR;
 
   // The PDF and DXF renderers are not available for Android.
 

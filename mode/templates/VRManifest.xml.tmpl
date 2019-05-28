@@ -12,7 +12,7 @@
     <uses-feature android:name="android.hardware.vr.high_performance" android:required="false"/>
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />      
     <application android:label=""
-                 android:icon="@drawable/icon"
+                 android:icon="@mipmap/ic_launcher"
                  android:theme="@style/VrActivityTheme">        
         <activity android:name=".MainActivity" 
                   android:screenOrientation="landscape" 
@@ -21,7 +21,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" /> 
                 <category android:name="android.intent.category.LAUNCHER" /> 
-                <category android:name="com.google.intent.category.CARDBOARD" /> 
+                <category android:name="com.google.intent.category.CARDBOARD" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
             </intent-filter>
         </activity> 
     </application>

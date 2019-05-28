@@ -3,6 +3,7 @@ package processing.data;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import processing.core.PApplet;
 
@@ -471,7 +472,7 @@ public class IntDict {
   private void checkMinMax(String functionName) {
     if (count == 0) {
       String msg =
-              String.format("Cannot use %s() on an empty %s.",
+        String.format("Cannot use %s() on an empty %s.",
                       functionName, getClass().getSimpleName());
       throw new RuntimeException(msg);
     }
@@ -593,19 +594,20 @@ public class IntDict {
    */
   public int remove(String key) {
     int index = index(key);
-    if (index != -1) {
-      removeIndex(index);
+    if (index == -1) {
+      throw new NoSuchElementException("'" + key + "' not found");
     }
-    return index;
+    int value = values[index];
+    removeIndex(index);
+    return value;
   }
 
 
-  public String removeIndex(int index) {
+  public int removeIndex(int index) {
     if (index < 0 || index >= count) {
       throw new ArrayIndexOutOfBoundsException(index);
     }
-    //System.out.println("index is " + which + " and " + keys[which]);
-    String key = keys[index];
+    int value = values[index];
     indices.remove(keys[index]);
     for (int i = index; i < count-1; i++) {
       keys[i] = keys[i+1];
@@ -615,7 +617,7 @@ public class IntDict {
     count--;
     keys[count] = null;
     values[count] = 0;
-    return key;
+    return value;
   }
 
 
@@ -701,7 +703,7 @@ public class IntDict {
       }
 
       @Override
-      public float compare(int a, int b) {
+      public int compare(int a, int b) {
         int diff = 0;
         if (useKeys) {
           diff = keys[a].compareToIgnoreCase(keys[b]);
@@ -766,8 +768,17 @@ public class IntDict {
 
 
   /**
-   * Write tab-delimited entries out to
-   * @param writer
+   * Save tab-delimited entries to a file (TSV format, UTF-8 encoding)
+   */
+  public void save(File file) {
+    PrintWriter writer = PApplet.createWriter(file);
+    write(writer);
+    writer.close();
+  }
+
+
+  /**
+   * Write tab-delimited entries to a PrintWriter
    */
   public void write(PrintWriter writer) {
     for (int i = 0; i < count; i++) {

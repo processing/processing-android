@@ -40,6 +40,7 @@ import javax.swing.event.HyperlinkListener;
 
 import processing.app.Base;
 import processing.app.Messages;
+import processing.app.Mode;
 import processing.app.Platform;
 import processing.app.SketchException;
 import processing.app.Util;
@@ -253,5 +254,46 @@ public class AndroidUtil {
     File classFile = new File(explodeDir, "classes.jar");
     Util.copyFile(classFile, jarFile);
     Util.removeDir(explodeDir);
-  }  
+  }
+  
+  
+  static public File[] getFileList(File folder, String[] names) {
+    return getFileList(folder, names, null);
+  }
+  
+  static public File[] getFileList(File folder, String[] names, String[] altNames) {
+    File[] icons = new File[names.length];
+    for (int i = 0; i < names.length; i++) {
+      File f = new File(folder, names[i]);
+      if (!f.exists() && altNames != null) {
+        f = new File(folder, altNames[i]);        
+      }
+      icons[i] = f;
+    }
+    return icons;
+  }
+  
+  
+  static public File[] getFileList(Mode mode, String prefix, String[] names) {
+    File[] icons = new File[names.length];
+    for (int i = 0; i < names.length; i++) {
+      icons[i] = mode.getContentFile(prefix + names[i]);
+    }        
+    return icons;
+  }
+  
+  static public boolean allFilesExists(File[] files) {
+    for (File f: files) {
+      if (!f.exists()) return false;  
+    }
+    return true;
+  }
+  
+  
+  static public boolean noFileExists(File[] files) {
+    for (File f: files) {
+      if (f.exists()) return false;  
+    }
+    return true;
+  } 
 }

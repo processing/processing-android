@@ -5862,17 +5862,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return temp;
   }
 
-
-  static public PImage[] expand(PImage list[]) {
-    return expand(list, list.length << 1);
+  static public long[] expand(long list[]) {
+    return expand(list, list.length > 0 ? list.length << 1 : 1);
   }
 
-  static public PImage[] expand(PImage list[], int newSize) {
-    PImage temp[] = new PImage[newSize];
+  static public long[] expand(long list[], int newSize) {
+    long temp[] = new long[newSize];
     System.arraycopy(list, 0, temp, 0, Math.min(newSize, list.length));
     return temp;
   }
-
 
   static public float[] expand(float list[]) {
     return expand(list, list.length << 1);
@@ -5884,6 +5882,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return temp;
   }
 
+  static public double[] expand(double list[]) {
+    return expand(list, list.length > 0 ? list.length << 1 : 1);
+  }
+
+  static public double[] expand(double list[], int newSize) {
+    double temp[] = new double[newSize];
+    System.arraycopy(list, 0, temp, 0, Math.min(newSize, list.length));
+    return temp;
+  }
 
   static public String[] expand(String list[]) {
     return expand(list, list.length << 1);
@@ -6178,6 +6185,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return output;
   }
 
+  static public long[] subset(long[] list, int start) {
+    return subset(list, start, list.length - start);
+  }
+
+  static public long[] subset(long[] list, int start, int count) {
+    long[] output = new long[count];
+    System.arraycopy(list, start, output, 0, count);
+    return output;
+  }
 
   static public float[] subset(float list[], int start) {
     return subset(list, start, list.length - start);
@@ -6189,6 +6205,15 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return output;
   }
 
+  static public double[] subset(double[] list, int start) {
+    return subset(list, start, list.length - start);
+  }
+
+  static public double[] subset(double[] list, int start, int count) {
+    double[] output = new double[count];
+    System.arraycopy(list, start, output, 0, count);
+    return output;
+  }
 
   static public String[] subset(String list[], int start) {
     return subset(list, start, list.length - start);
@@ -8497,6 +8522,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  public void square(float x, float y, float extent) {
+    g.square(x, y, extent);
+  }
+
+
   public void ellipseMode(int mode) {
     g.ellipseMode(mode);
   }
@@ -8525,6 +8555,11 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void arc(float a, float b, float c, float d,
                   float start, float stop, int mode) {
     g.arc(a, b, c, d, start, stop, mode);
+  }
+
+
+  public void circle(float x, float y, float extent) {
+    g.circle(x, y, extent);
   }
 
 
@@ -8970,6 +9005,16 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  public void push() {
+    g.push();
+  }
+
+
+  public void pop() {
+    g.pop();
+  }
+
+
   /**
    * Push a copy of the current transformation matrix onto the stack.
    */
@@ -9305,6 +9350,86 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public void printProjection() {
     g.printProjection();
   }
+
+
+  //////////////////////////////////////////////////////////////
+
+  // TENTATIVE AR API
+
+
+  public int trackableCount() {
+    return g.trackableCount();
+  }
+
+  public int trackableId(int i) {
+    return g.trackableId(i);
+  }
+
+  public int trackableType(int i) {
+    return g.trackableType(i);
+  }
+
+  public int trackableStatus(int i) {
+    return g.trackableStatus(i);
+  }
+
+  public boolean trackableSelected(int i, int mx, int my) {
+    return g.trackableSelected(i, mx, my);
+  }
+
+  public float[] getTrackablePolygon(int i) {
+    return g.getTrackablePolygon(i);
+  }
+
+  public float[] getTrackablePolygon(int i, float[] points) {
+    return g.getTrackablePolygon(i, points);
+  }
+
+  public PMatrix3D getTrackableMatrix(int i) {
+    return g.getTrackableMatrix(i);
+  }
+
+  public PMatrix3D getTrackableMatrix(int i, PMatrix3D target) {
+    return g.getTrackableMatrix(i, target);
+  }
+
+  public int anchorCount() {
+    return g.anchorCount();
+  }
+
+  public int anchorId(int i) {
+    return g.anchorId(i);
+  }
+
+  public int anchorStatus(int i) {
+    return g.anchorStatus(i);
+  }
+
+  public int createAnchor(int i, float x, float y, float z) {
+    return g.createAnchor(i, x, y, z);
+  }
+
+  public int createAnchor(int mx, int my) {
+    return g.createAnchor(mx, my);
+  }
+
+  public void deleteAnchor(int i) {
+    g.deleteAnchor(i);
+  }
+
+  public PMatrix3D getAnchorMatrix(int i) {
+    return g.getAnchorMatrix(i);
+  }
+
+  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
+    return g.getAnchorMatrix(i, target);
+  }
+
+  public void anchor(int i) {
+    g.anchor(i);
+  }
+
+  // ***********************************************************************************************
 
 
   /**

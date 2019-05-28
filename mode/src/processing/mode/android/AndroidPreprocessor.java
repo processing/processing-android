@@ -43,9 +43,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
   protected String sketchQuality;
 
   protected String kindStatement;
-  protected String sketchKind;  
+  protected String sketchKind;
   
-
   public static final String SMOOTH_REGEX =
       "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
@@ -64,9 +63,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
   public SurfaceInfo initSketchSize(String code) throws SketchException {
     SurfaceInfo surfaceInfo = parseSketchSize(code, true);
     if (surfaceInfo == null) {
-      System.err.println("More about the size() command on Android can be");
-      System.err.println("found here: http://wiki.processing.org/w/Android");
-      throw new SketchException("Could not parse the size() command.");
+      System.err.println(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_size"));
+      throw new SketchException(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_size_exception"));
     }
     return surfaceInfo;
   }
@@ -75,9 +73,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
   public String[] initSketchSmooth(String code) throws SketchException {
     String[] info = parseSketchSmooth(code, true);
     if (info == null) {
-      System.err.println("More about the smooth() command on Android can be");
-      System.err.println("found here: http://wiki.processing.org/w/Android");
-      throw new SketchException("Could not parse the smooth() command.");
+      System.err.println(AndroidMode.getTextString("android_preprocessor.error.cannot_smooth_size"));
+      throw new SketchException(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_smooth_exception"));
     }
     smoothStatement = info[0];
     sketchQuality = info[1];
@@ -97,12 +94,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
 
       if (badSmooth && fussy) {
         // found a reference to smooth, but it didn't seem to contain numbers
-        final String message =
-          "The smooth level of this applet could not automatically\n" +
-          "be determined from your code. Use only a numeric\n" +
-          "value (not variables) for the smooth() command.\n" +
-          "See the smooth() reference for an explanation.";
-        Messages.showWarning("Could not find smooth level", message, null);
+        Messages.showWarning(AndroidMode.getTextString("android_preprocessor.warn.cannot_find_smooth_level_title"), 
+                             AndroidMode.getTextString("android_preprocessor.warn.cannot_find_smooth_level_body"), null);
         return null;
       }
 

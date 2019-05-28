@@ -124,7 +124,7 @@ public class Table {
     // uses createInput() to handle .gz (and eventually .bz2) files
     init();
     parse(PApplet.createInput(file),
-            extensionOptions(true, file.getName(), options));
+          extensionOptions(true, file.getName(), options));
   }
 
   /**
@@ -210,22 +210,22 @@ public class Table {
 
         int type = rsmd.getColumnType(col + 1);
         switch (type) {  // TODO these aren't tested. nor are they complete.
-          case Types.INTEGER:
-          case Types.TINYINT:
-          case Types.SMALLINT:
-            setColumnType(col, INT);
-            break;
-          case Types.BIGINT:
-            setColumnType(col, LONG);
-            break;
-          case Types.FLOAT:
-            setColumnType(col, FLOAT);
-            break;
-          case Types.DECIMAL:
-          case Types.DOUBLE:
-          case Types.REAL:
-            setColumnType(col, DOUBLE);
-            break;
+        case Types.INTEGER:
+        case Types.TINYINT:
+        case Types.SMALLINT:
+          setColumnType(col, INT);
+          break;
+        case Types.BIGINT:
+          setColumnType(col, LONG);
+          break;
+        case Types.FLOAT:
+          setColumnType(col, FLOAT);
+          break;
+        case Types.DECIMAL:
+        case Types.DOUBLE:
+        case Types.REAL:
+          setColumnType(col, DOUBLE);
+          break;
         }
       }
 
@@ -233,12 +233,12 @@ public class Table {
       while (rs.next()) {
         for (int col = 0; col < columnCount; col++) {
           switch (columnTypes[col]) {
-            case STRING: setString(row, col, rs.getString(col+1)); break;
-            case INT: setInt(row, col, rs.getInt(col+1)); break;
-            case LONG: setLong(row, col, rs.getLong(col+1)); break;
-            case FLOAT: setFloat(row, col, rs.getFloat(col+1)); break;
-            case DOUBLE: setDouble(row, col, rs.getDouble(col+1)); break;
-            default: throw new IllegalArgumentException("column type " + columnTypes[col] + " not supported.");
+          case STRING: setString(row, col, rs.getString(col+1)); break;
+          case INT: setInt(row, col, rs.getInt(col+1)); break;
+          case LONG: setLong(row, col, rs.getLong(col+1)); break;
+          case FLOAT: setFloat(row, col, rs.getFloat(col+1)); break;
+          case DOUBLE: setDouble(row, col, rs.getDouble(col+1)); break;
+          default: throw new IllegalArgumentException("column type " + columnTypes[col] + " not supported.");
           }
         }
         row++;
@@ -562,7 +562,7 @@ public class Table {
     String[] pieces;
     int pieceCount;
 
-    //    int offset;
+//    int offset;
     int start; //, stop;
 
     String[] handle(String line, BufferedReader reader) throws IOException {
@@ -851,7 +851,7 @@ public class Table {
       // <table:table table:name="Sheet2" table:style-name="ta1" table:print="false">
       // <table:table table:name="Sheet3" table:style-name="ta1" table:print="false">
       XML[] sheets =
-              xml.getChildren("office:body/office:spreadsheet/table:table");
+        xml.getChildren("office:body/office:spreadsheet/table:table");
 
       boolean found = false;
       for (XML sheet : sheets) {
@@ -869,7 +869,7 @@ public class Table {
           throw new RuntimeException("No worksheets found in the ODS file.");
         } else {
           throw new RuntimeException("No worksheet named " + worksheet +
-                  " found in the ODS file.");
+                                     " found in the ODS file.");
         }
       }
     } catch (UnsupportedEncodingException e) {
@@ -1127,7 +1127,7 @@ public class Table {
               // Only bother setting if it's true,
               // otherwise false by default anyway.
               if (content.toLowerCase().equals("true") ||
-                      content.equals("1")) {
+                  content.equals("1")) {
                 field.setBoolean(item, true);
               }
             }
@@ -1173,7 +1173,7 @@ public class Table {
 
   public boolean save(File file, String options) throws IOException {
     return save(PApplet.createOutput(file),
-            Table.extensionOptions(false, file.getName(), options));
+                Table.extensionOptions(false, file.getName(), options));
   }
 
 
@@ -1309,8 +1309,8 @@ public class Table {
 
         // add quotes if commas or CR/LF are in the entry
       } else if (entry.indexOf(',') != -1  ||
-              entry.indexOf('\n') != -1 ||
-              entry.indexOf('\r') != -1) {
+                 entry.indexOf('\n') != -1 ||
+                 entry.indexOf('\r') != -1) {
         writer.print('\"');
         writer.print(entry);
         writer.print('\"');
@@ -1318,8 +1318,8 @@ public class Table {
 
         // add quotes if leading or trailing space
       } else if ((entry.length() > 0) &&
-              (entry.charAt(0) == ' ' ||
-                      entry.charAt(entry.length() - 1) == ' ')) {
+                 (entry.charAt(0) == ' ' ||
+                  entry.charAt(entry.length() - 1) == ' ')) {
         writer.print('\"');
         writer.print(entry);
         writer.print('\"');
@@ -1414,14 +1414,14 @@ public class Table {
 
     ZipEntry entry = new ZipEntry("META-INF/manifest.xml");
     String[] lines = new String[] {
-            xmlHeader,
-            "<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">",
-            "  <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.spreadsheet\" manifest:version=\"1.2\" manifest:full-path=\"/\"/>",
-            "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>",
-            "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>",
-            "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"meta.xml\"/>",
-            "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"settings.xml\"/>",
-            "</manifest:manifest>"
+      xmlHeader,
+      "<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">",
+      "  <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.spreadsheet\" manifest:version=\"1.2\" manifest:full-path=\"/\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"meta.xml\"/>",
+      "  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"settings.xml\"/>",
+      "</manifest:manifest>"
     };
     zos.putNextEntry(entry);
     zos.write(PApplet.join(lines, "\n").getBytes());
@@ -1476,12 +1476,12 @@ public class Table {
     */
 
     final String[] dummyFiles = new String[] {
-            "meta.xml", "settings.xml", "styles.xml"
+      "meta.xml", "settings.xml", "styles.xml"
     };
     lines = new String[] {
-            xmlHeader,
-            "<office:document-meta office:version=\"1.0\"" +
-                    " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" />"
+      xmlHeader,
+      "<office:document-meta office:version=\"1.0\"" +
+      " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" />"
     };
     byte[] dummyBytes = PApplet.join(lines, "\n").getBytes();
     for (String filename : dummyFiles) {
@@ -1504,15 +1504,15 @@ public class Table {
     zos.putNextEntry(entry);
     //lines = new String[] {
     writeUTF(zos, new String[] {
-            xmlHeader,
-            "<office:document-content" +
-                    " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\"" +
-                    " xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\"" +
-                    " xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\"" +
-                    " office:version=\"1.2\">",
-            "  <office:body>",
-            "    <office:spreadsheet>",
-            "      <table:table table:name=\"Sheet1\" table:print=\"false\">"
+      xmlHeader,
+      "<office:document-content" +
+        " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\"" +
+        " xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\"" +
+        " xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\"" +
+        " office:version=\"1.2\">",
+     "  <office:body>",
+     "    <office:spreadsheet>",
+     "      <table:table table:name=\"Sheet1\" table:print=\"false\">"
     });
     //zos.write(PApplet.join(lines, "\n").getBytes());
 
@@ -1541,10 +1541,10 @@ public class Table {
 
     //lines = new String[] {
     writeUTF(zos, new String[] {
-            "      </table:table>",
-            "    </office:spreadsheet>",
-            "  </office:body>",
-            "</office:document-content>"
+      "      </table:table>",
+      "    </office:spreadsheet>",
+      "  </office:body>",
+      "</office:document-content>"
     });
     //zos.write(PApplet.join(lines, "\n").getBytes());
     zos.closeEntry();
@@ -1581,17 +1581,17 @@ public class Table {
     }
 
     writeUTF(output,
-            "          <table:table-cell office:value-type=\"string\">",
-            "            <text:p>" + sanitized + "</text:p>",
-            "          </table:table-cell>");
+             "          <table:table-cell office:value-type=\"string\">",
+             "            <text:p>" + sanitized + "</text:p>",
+             "          </table:table-cell>");
   }
 
 
   void saveNumberODS(OutputStream output, String text) throws IOException {
     writeUTF(output,
-            "          <table:table-cell office:value-type=\"float\" office:value=\"" + text + "\">",
-            "            <text:p>" + text + "</text:p>",
-            "          </table:table-cell>");
+             "          <table:table-cell office:value-type=\"float\" office:value=\"" + text + "\">",
+             "            <text:p>" + text + "</text:p>",
+             "          </table:table-cell>");
   }
 
 
@@ -1646,35 +1646,35 @@ public class Table {
     for (TableRow row : rows()) {
       for (int col = 0; col < getColumnCount(); col++) {
         switch (columnTypes[col]) {
-          case STRING:
-            String str = row.getString(col);
-            if (str == null) {
-              output.writeBoolean(false);
-            } else {
-              output.writeBoolean(true);
-              output.writeUTF(str);
-            }
-            break;
-          case INT:
-            output.writeInt(row.getInt(col));
-            break;
-          case LONG:
-            output.writeLong(row.getLong(col));
-            break;
-          case FLOAT:
-            output.writeFloat(row.getFloat(col));
-            break;
-          case DOUBLE:
-            output.writeDouble(row.getDouble(col));
-            break;
-          case CATEGORY:
-            String peace = row.getString(col);
-            if (peace.equals(missingString)) {
-              output.writeInt(missingCategory);
-            } else {
-              output.writeInt(columnCategories[col].index(peace));
-            }
-            break;
+        case STRING:
+          String str = row.getString(col);
+          if (str == null) {
+            output.writeBoolean(false);
+          } else {
+            output.writeBoolean(true);
+            output.writeUTF(str);
+          }
+          break;
+        case INT:
+          output.writeInt(row.getInt(col));
+          break;
+        case LONG:
+          output.writeLong(row.getLong(col));
+          break;
+        case FLOAT:
+          output.writeFloat(row.getFloat(col));
+          break;
+        case DOUBLE:
+          output.writeDouble(row.getDouble(col));
+          break;
+        case CATEGORY:
+          String peace = row.getString(col);
+          if (peace.equals(missingString)) {
+            output.writeInt(missingCategory);
+          } else {
+            output.writeInt(columnCategories[col].index(peace));
+          }
+          break;
         }
       }
     }
@@ -1708,26 +1708,26 @@ public class Table {
       int newType = input.readInt();
       columnTypes[column] = newType;
       switch (newType) {
-        case INT:
-          columns[column] = new int[rowCount];
-          break;
-        case LONG:
-          columns[column] = new long[rowCount];;
-          break;
-        case FLOAT:
-          columns[column] = new float[rowCount];;
-          break;
-        case DOUBLE:
-          columns[column] = new double[rowCount];;
-          break;
-        case STRING:
-          columns[column] = new String[rowCount];;
-          break;
-        case CATEGORY:
-          columns[column] = new int[rowCount];;
-          break;
-        default:
-          throw new IllegalArgumentException(newType + " is not a valid column type.");
+      case INT:
+        columns[column] = new int[rowCount];
+        break;
+      case LONG:
+        columns[column] = new long[rowCount];;
+        break;
+      case FLOAT:
+        columns[column] = new float[rowCount];;
+        break;
+      case DOUBLE:
+        columns[column] = new double[rowCount];;
+        break;
+      case STRING:
+        columns[column] = new String[rowCount];;
+        break;
+      case CATEGORY:
+        columns[column] = new int[rowCount];;
+        break;
+      default:
+        throw new IllegalArgumentException(newType + " is not a valid column type.");
       }
     }
 
@@ -1751,30 +1751,30 @@ public class Table {
     for (int row = 0; row < rowCount; row++) {
       for (int col = 0; col < columnCount; col++) {
         switch (columnTypes[col]) {
-          case STRING:
-            String str = null;
-            if (input.readBoolean()) {
-              str = input.readUTF();
-            }
-            setString(row, col, str);
-            break;
-          case INT:
-            setInt(row, col, input.readInt());
-            break;
-          case LONG:
-            setLong(row, col, input.readLong());
-            break;
-          case FLOAT:
-            setFloat(row, col, input.readFloat());
-            break;
-          case DOUBLE:
-            setDouble(row, col, input.readDouble());
-            break;
-          case CATEGORY:
-            int index = input.readInt();
-            //String name = columnCategories[col].key(index);
-            setInt(row, col, index);
-            break;
+        case STRING:
+          String str = null;
+          if (input.readBoolean()) {
+            str = input.readUTF();
+          }
+          setString(row, col, str);
+          break;
+        case INT:
+          setInt(row, col, input.readInt());
+          break;
+        case LONG:
+          setLong(row, col, input.readLong());
+          break;
+        case FLOAT:
+          setFloat(row, col, input.readFloat());
+          break;
+        case DOUBLE:
+          setDouble(row, col, input.readDouble());
+          break;
+        case CATEGORY:
+          int index = input.readInt();
+          //String name = columnCategories[col].key(index);
+          setInt(row, col, index);
+          break;
         }
       }
     }
@@ -1860,7 +1860,7 @@ public class Table {
     }
   }
 
-  /**
+ /**
    * @webref table:method
    * @brief Removes a column from a table
    * @param columnName the title of the column to be removed
@@ -1870,7 +1870,7 @@ public class Table {
     removeColumn(getColumnIndex(columnName));
   }
 
-  /**
+ /**
    * @param column the index number of the column to be removed
    */
   public void removeColumn(int column) {
@@ -1935,7 +1935,7 @@ public class Table {
       }
       columnTypes = PApplet.expand(columnTypes, newCount);
       columnCategories = (HashMapBlows[])
-              PApplet.expand(columnCategories, newCount);
+        PApplet.expand(columnCategories, newCount);
     }
   }
 
@@ -2311,7 +2311,7 @@ public class Table {
   }
 
 
-  /**
+ /**
    * @webref table:method
    * @brief Adds a row to a table
    * @see Table#removeRow(int)
@@ -2324,7 +2324,7 @@ public class Table {
   }
 
 
-  /**
+ /**
    * @param source a reference to the original row to be duplicated
    */
   public TableRow addRow(TableRow source) {
@@ -2338,38 +2338,38 @@ public class Table {
 
     for (int col = 0; col < Math.min(source.getColumnCount(), columns.length); col++) {
       switch (columnTypes[col]) {
-        case INT:
-          setInt(row, col, source.getInt(col));
-          break;
-        case LONG:
-          setLong(row, col, source.getLong(col));
-          break;
-        case FLOAT:
-          setFloat(row, col, source.getFloat(col));
-          break;
-        case DOUBLE:
-          setDouble(row, col, source.getDouble(col));
-          break;
-        case STRING:
-          setString(row, col, source.getString(col));
-          break;
-        case CATEGORY:
-          int index = source.getInt(col);
-          setInt(row, col, index);
-          if (!columnCategories[col].hasCategory(index)) {
-            columnCategories[col].setCategory(index, source.getString(col));
-          }
-          break;
+      case INT:
+        setInt(row, col, source.getInt(col));
+        break;
+      case LONG:
+        setLong(row, col, source.getLong(col));
+        break;
+      case FLOAT:
+        setFloat(row, col, source.getFloat(col));
+        break;
+      case DOUBLE:
+        setDouble(row, col, source.getDouble(col));
+        break;
+      case STRING:
+        setString(row, col, source.getString(col));
+        break;
+      case CATEGORY:
+        int index = source.getInt(col);
+        setInt(row, col, index);
+        if (!columnCategories[col].hasCategory(index)) {
+          columnCategories[col].setCategory(index, source.getString(col));
+        }
+        break;
 
-        default:
-          throw new RuntimeException("no types");
+      default:
+        throw new RuntimeException("no types");
       }
     }
     return new RowPointer(this, row);
   }
 
 
-  /**
+ /**
    * @nowebref
    */
   public TableRow addRow(Object[] columnData) {
@@ -2428,9 +2428,12 @@ public class Table {
         }
       }
     }
+    // Need to increment before setRow(), because it calls ensureBounds()
+    // https://github.com/processing/processing/issues/5406
+    ++rowCount;
     setRow(insert, columnData);
-    rowCount++;
   }
+
 
   /**
    * @webref table:method
@@ -3060,13 +3063,13 @@ public class Table {
   public int getInt(int row, int column) {
     checkBounds(row, column);
     if (columnTypes[column] == INT ||
-            columnTypes[column] == CATEGORY) {
+        columnTypes[column] == CATEGORY) {
       int[] intData = (int[]) columns[column];
       return intData[row];
     }
     String str = getString(row, column);
     return (str == null || str.equals(missingString)) ?
-            missingInt : PApplet.parseInt(str, missingInt);
+      missingInt : PApplet.parseInt(str, missingInt);
   }
 
   /**
@@ -3102,7 +3105,7 @@ public class Table {
     } else {
       ensureBounds(row, column);
       if (columnTypes[column] != INT &&
-              columnTypes[column] != CATEGORY) {
+          columnTypes[column] != CATEGORY) {
         throw new IllegalArgumentException("Column " + column + " is not an int column.");
       }
       int[] intData = (int[]) columns[column];
@@ -3767,7 +3770,7 @@ public class Table {
       String[] stringData = (String[]) columns[column];
       for (int row = 0; row < rowCount; row++) {
         if (stringData[row] != null &&
-                PApplet.match(stringData[row], regexp) != null) {
+            PApplet.match(stringData[row], regexp) != null) {
           return row;
         }
       }
@@ -3775,7 +3778,7 @@ public class Table {
       for (int row = 0; row < rowCount; row++) {
         String str = getString(row, column);
         if (str != null &&
-                PApplet.match(str, regexp) != null) {
+            PApplet.match(str, regexp) != null) {
           return row;
         }
       }
@@ -3809,7 +3812,7 @@ public class Table {
       String[] stringData = (String[]) columns[column];
       for (int row = 0; row < rowCount; row++) {
         if (stringData[row] != null &&
-                PApplet.match(stringData[row], regexp) != null) {
+            PApplet.match(stringData[row], regexp) != null) {
           outgoing[count++] = row;
         }
       }
@@ -3817,7 +3820,7 @@ public class Table {
       for (int row = 0; row < rowCount; row++) {
         String str = getString(row, column);
         if (str != null &&
-                PApplet.match(str, regexp) != null) {
+            PApplet.match(str, regexp) != null) {
           outgoing[count++] = row;
         }
       }
@@ -4330,25 +4333,36 @@ public class Table {
       }
 
       @Override
-      public float compare(int index1, int index2) {
+      public int compare(int index1, int index2) {
         int a = reverse ? order[index2] : order[index1];
         int b = reverse ? order[index1] : order[index2];
 
         switch (getColumnType(column)) {
-          case INT:
-            return getInt(a, column) - getInt(b, column);
-          case LONG:
-            return getLong(a, column) - getLong(b, column);
-          case FLOAT:
-            return getFloat(a, column) - getFloat(b, column);
-          case DOUBLE:
-            return (float) (getDouble(a, column) - getDouble(b, column));
-          case STRING:
-            return getString(a, column).compareToIgnoreCase(getString(b, column));
-          case CATEGORY:
-            return getInt(a, column) - getInt(b, column);
-          default:
-            throw new IllegalArgumentException("Invalid column type: " + getColumnType(column));
+        case INT:
+          return getInt(a, column) - getInt(b, column);
+        case LONG:
+          long diffl = getLong(a, column) - getLong(b, column);
+          return diffl == 0 ? 0 : (diffl < 0 ? -1 : 1);
+        case FLOAT:
+          float difff = getFloat(a, column) - getFloat(b, column);
+          return difff == 0 ? 0 : (difff < 0 ? -1 : 1);
+        case DOUBLE:
+          double diffd = getDouble(a, column) - getDouble(b, column);
+          return diffd == 0 ? 0 : (diffd < 0 ? -1 : 1);
+        case STRING:
+          String string1 = getString(a, column);
+          if (string1 == null) {
+            string1 = "";  // avoid NPE when cells are left empty
+          }
+          String string2 = getString(b, column);
+          if (string2 == null) {
+            string2 = "";
+          }
+          return string1.compareToIgnoreCase(string2);
+        case CATEGORY:
+          return getInt(a, column) - getInt(b, column);
+        default:
+          throw new IllegalArgumentException("Invalid column type: " + getColumnType(column));
         }
       }
 
@@ -4365,47 +4379,47 @@ public class Table {
     //Object[] newColumns = new Object[getColumnCount()];
     for (int col = 0; col < getColumnCount(); col++) {
       switch (getColumnType(col)) {
-        case INT:
-        case CATEGORY:
-          int[] oldInt = (int[]) columns[col];
-          int[] newInt = new int[rowCount];
-          for (int row = 0; row < getRowCount(); row++) {
-            newInt[row] = oldInt[order[row]];
-          }
-          columns[col] = newInt;
-          break;
-        case LONG:
-          long[] oldLong = (long[]) columns[col];
-          long[] newLong = new long[rowCount];
-          for (int row = 0; row < getRowCount(); row++) {
-            newLong[row] = oldLong[order[row]];
-          }
-          columns[col] = newLong;
-          break;
-        case FLOAT:
-          float[] oldFloat = (float[]) columns[col];
-          float[] newFloat = new float[rowCount];
-          for (int row = 0; row < getRowCount(); row++) {
-            newFloat[row] = oldFloat[order[row]];
-          }
-          columns[col] = newFloat;
-          break;
-        case DOUBLE:
-          double[] oldDouble = (double[]) columns[col];
-          double[] newDouble = new double[rowCount];
-          for (int row = 0; row < getRowCount(); row++) {
-            newDouble[row] = oldDouble[order[row]];
-          }
-          columns[col] = newDouble;
-          break;
-        case STRING:
-          String[] oldString = (String[]) columns[col];
-          String[] newString = new String[rowCount];
-          for (int row = 0; row < getRowCount(); row++) {
-            newString[row] = oldString[order[row]];
-          }
-          columns[col] = newString;
-          break;
+      case INT:
+      case CATEGORY:
+        int[] oldInt = (int[]) columns[col];
+        int[] newInt = new int[rowCount];
+        for (int row = 0; row < getRowCount(); row++) {
+          newInt[row] = oldInt[order[row]];
+        }
+        columns[col] = newInt;
+        break;
+      case LONG:
+        long[] oldLong = (long[]) columns[col];
+        long[] newLong = new long[rowCount];
+        for (int row = 0; row < getRowCount(); row++) {
+          newLong[row] = oldLong[order[row]];
+        }
+        columns[col] = newLong;
+        break;
+      case FLOAT:
+        float[] oldFloat = (float[]) columns[col];
+        float[] newFloat = new float[rowCount];
+        for (int row = 0; row < getRowCount(); row++) {
+          newFloat[row] = oldFloat[order[row]];
+        }
+        columns[col] = newFloat;
+        break;
+      case DOUBLE:
+        double[] oldDouble = (double[]) columns[col];
+        double[] newDouble = new double[rowCount];
+        for (int row = 0; row < getRowCount(); row++) {
+          newDouble[row] = oldDouble[order[row]];
+        }
+        columns[col] = newDouble;
+        break;
+      case STRING:
+        String[] oldString = (String[]) columns[col];
+        String[] newString = new String[rowCount];
+        for (int row = 0; row < getRowCount(); row++) {
+          newString[row] = oldString[order[row]];
+        }
+        columns[col] = newString;
+        break;
       }
     }
   }
@@ -4485,37 +4499,37 @@ public class Table {
 
   public IntDict getIntDict(String keyColumnName, String valueColumnName) {
     return new IntDict(getStringColumn(keyColumnName),
-            getIntColumn(valueColumnName));
+                       getIntColumn(valueColumnName));
   }
 
 
   public IntDict getIntDict(int keyColumn, int valueColumn) {
     return new IntDict(getStringColumn(keyColumn),
-            getIntColumn(valueColumn));
+                       getIntColumn(valueColumn));
   }
 
 
   public FloatDict getFloatDict(String keyColumnName, String valueColumnName) {
     return new FloatDict(getStringColumn(keyColumnName),
-            getFloatColumn(valueColumnName));
+                         getFloatColumn(valueColumnName));
   }
 
 
   public FloatDict getFloatDict(int keyColumn, int valueColumn) {
     return new FloatDict(getStringColumn(keyColumn),
-            getFloatColumn(valueColumn));
+                         getFloatColumn(valueColumn));
   }
 
 
   public StringDict getStringDict(String keyColumnName, String valueColumnName) {
     return new StringDict(getStringColumn(keyColumnName),
-            getStringColumn(valueColumnName));
+                          getStringColumn(valueColumnName));
   }
 
 
   public StringDict getStringDict(int keyColumn, int valueColumn) {
     return new StringDict(getStringColumn(keyColumn),
-            getStringColumn(valueColumn));
+                          getStringColumn(valueColumn));
   }
 
 
@@ -4614,7 +4628,7 @@ public class Table {
 //  }
 
 
-  //  public StringIntPairs getColumnRowLookup(int col) {
+ //  public StringIntPairs getColumnRowLookup(int col) {
 //    StringIntPairs sc = new StringIntPairs();
 //    String[] column = getStringColumn(col);
 //    for (int i = 0; i < column.length; i++) {
@@ -4801,64 +4815,64 @@ public class Table {
   protected void convertRow(DataOutputStream output, String[] pieces) throws IOException {
     if (pieces.length > getColumnCount()) {
       throw new IllegalArgumentException("Row with too many columns: " +
-              PApplet.join(pieces, ","));
+                                         PApplet.join(pieces, ","));
     }
     // pieces.length may be less than columns.length, so loop over pieces
     for (int col = 0; col < pieces.length; col++) {
       switch (columnTypes[col]) {
-        case STRING:
-          output.writeUTF(pieces[col]);
-          break;
-        case INT:
-          output.writeInt(PApplet.parseInt(pieces[col], missingInt));
-          break;
-        case LONG:
-          try {
-            output.writeLong(Long.parseLong(pieces[col]));
-          } catch (NumberFormatException nfe) {
-            output.writeLong(missingLong);
-          }
-          break;
-        case FLOAT:
-          output.writeFloat(PApplet.parseFloat(pieces[col], missingFloat));
-          break;
-        case DOUBLE:
-          try {
-            output.writeDouble(Double.parseDouble(pieces[col]));
-          } catch (NumberFormatException nfe) {
-            output.writeDouble(missingDouble);
-          }
-          break;
-        case CATEGORY:
-          String peace = pieces[col];
-          if (peace.equals(missingString)) {
-            output.writeInt(missingCategory);
-          } else {
-            output.writeInt(columnCategories[col].index(peace));
-          }
-          break;
+      case STRING:
+        output.writeUTF(pieces[col]);
+        break;
+      case INT:
+        output.writeInt(PApplet.parseInt(pieces[col], missingInt));
+        break;
+      case LONG:
+        try {
+          output.writeLong(Long.parseLong(pieces[col]));
+        } catch (NumberFormatException nfe) {
+          output.writeLong(missingLong);
+        }
+        break;
+      case FLOAT:
+        output.writeFloat(PApplet.parseFloat(pieces[col], missingFloat));
+        break;
+      case DOUBLE:
+        try {
+          output.writeDouble(Double.parseDouble(pieces[col]));
+        } catch (NumberFormatException nfe) {
+          output.writeDouble(missingDouble);
+        }
+        break;
+      case CATEGORY:
+        String peace = pieces[col];
+        if (peace.equals(missingString)) {
+          output.writeInt(missingCategory);
+        } else {
+          output.writeInt(columnCategories[col].index(peace));
+        }
+        break;
       }
     }
     for (int col = pieces.length; col < getColumnCount(); col++) {
       switch (columnTypes[col]) {
-        case STRING:
-          output.writeUTF("");
-          break;
-        case INT:
-          output.writeInt(missingInt);
-          break;
-        case LONG:
-          output.writeLong(missingLong);
-          break;
-        case FLOAT:
-          output.writeFloat(missingFloat);
-          break;
-        case DOUBLE:
-          output.writeDouble(missingDouble);
-          break;
-        case CATEGORY:
-          output.writeInt(missingCategory);
-          break;
+      case STRING:
+        output.writeUTF("");
+        break;
+      case INT:
+        output.writeInt(missingInt);
+        break;
+      case LONG:
+        output.writeLong(missingLong);
+        break;
+      case FLOAT:
+        output.writeFloat(missingFloat);
+        break;
+      case DOUBLE:
+        output.writeDouble(missingDouble);
+        break;
+      case CATEGORY:
+        output.writeInt(missingCategory);
+        break;
 
       }
     }

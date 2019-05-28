@@ -41,23 +41,9 @@ import java.util.concurrent.*;
  *
  */
 class Devices {
-  private static final String ADB_DEVICES_ERROR =
-    "Received unfamiliar output from “adb devices”.\n" +
-    "The device list may have errors.";
-  
   private static final String DEVICE_PERMISSIONS_URL = 
 	"https://developer.android.com/studio/run/device.html";
 	  
-  private static final String DEVICE_PERMISSIONS_TITLE =
-	"Found devices with no permissions!";
-	  
-  private static final String DEVICE_PERMISSIONS_MESSAGE =
-    "Make sure that the device has USB debugging enabled, and that the required " + 
-    "USB drivers are installed on Windows, and that permissions are properly configured on Linux. " + 
-    "Also, on Linux, don't set the USB configuration to \"charging\" while debugging.<br><br>" +
-	  "Read this guide on <a href=\"" + DEVICE_PERMISSIONS_URL + "\">runnings apps on hardware device</a> " +
-	  "for more details.";
-
   private static final Devices INSTANCE = new Devices();
 
   private static final String BT_DEBUG_PORT = "4444";
@@ -389,8 +375,8 @@ class Devices {
     // might read "List of devices attached"
     final String stdout = result.getStdout();
     if (!(stdout.contains("List of devices") || stdout.trim().length() == 0)) {
-      System.err.println(ADB_DEVICES_ERROR);
-      System.err.println("Output was “" + stdout + "”");
+      System.err.println(AndroidMode.getTextString("android_devices.error.cannot_get_device_list"));
+      System.err.println(stdout);
       return Collections.emptyList();
     }
 
@@ -402,7 +388,8 @@ class Devices {
         if (fields[1].equals("device")) {
           devices.add(fields[0]);
         } else if (fields[1].contains("no permissions") && showPermissionsErrorMessage) {
-          AndroidUtil.showMessage(DEVICE_PERMISSIONS_TITLE, DEVICE_PERMISSIONS_MESSAGE);     	
+          AndroidUtil.showMessage(AndroidMode.getTextString("android_devices.error.no_permissions_title"),
+                                  AndroidMode.getTextString("android_devices.error.no_permissions_body", DEVICE_PERMISSIONS_URL));
           showPermissionsErrorMessage = false;
         }
       }

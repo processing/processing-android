@@ -2206,6 +2206,10 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
+  public void square(float x, float y, float extent) {
+    rect(x, y, extent, extent);
+  }
+
 
   //////////////////////////////////////////////////////////////
 
@@ -2324,6 +2328,10 @@ public class PGraphics extends PImage implements PConstants {
     showMissingWarning("arc");
   }
 
+
+  public void circle(float x, float y, float extent) {
+    ellipse(x, y, extent, extent);
+  }
 
 
   //////////////////////////////////////////////////////////////
@@ -3861,6 +3869,22 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
+  //////////////////////////////////////////////////////////////
+
+  // PARITY WITH P5.JS
+
+
+  public void push() {
+    pushStyle();
+    pushMatrix();
+  }
+
+
+  public void pop() {
+    popStyle();
+    popMatrix();
+  }
+
 
   //////////////////////////////////////////////////////////////
 
@@ -4202,6 +4226,105 @@ public class PGraphics extends PImage implements PConstants {
 
   public void eye() {
     showMethodWarning("eye");
+  }
+
+
+  //////////////////////////////////////////////////////////////
+
+  // TENTATIVE AR API
+
+  public int trackableCount() {
+    showMissingWarning("trackableCount");
+    return 0;
+  }
+
+  public int trackableId(int i) {
+    showMissingWarning("trackableId");
+    return 0;
+  }
+
+  public int trackableType(int i) {
+    showMissingWarning("trackableType");
+    return 0;
+  }
+
+  public int trackableStatus(int i) {
+    showMissingWarning("trackableStatus");
+    return 0;
+  }
+
+  public boolean trackableSelected(int i, int mx, int my) {
+    showMissingWarning("trackableSelected");
+    return false;
+  }
+
+  public float[] getTrackablePolygon(int i) {
+    showMissingWarning("getTrackablePolygon");
+    return null;
+  }
+
+
+  public float[] getTrackablePolygon(int i, float[] points) {
+    showMissingWarning("getTrackablePolygon");
+    return null;
+  }
+
+  public PMatrix3D getTrackableMatrix(int i) {
+    showMissingWarning("getTrackableMatrix");
+    return null;
+  }
+
+
+  public PMatrix3D getTrackableMatrix(int i, PMatrix3D target) {
+    showMissingWarning("getTrackableMatrix");
+    return null;
+  }
+
+
+  public int anchorCount() {
+    showMissingWarning("anchorCount");
+    return 0;
+  }
+
+  public int anchorId(int i) {
+    showMissingWarning("anchorId");
+    return 0;
+  }
+
+  public int anchorStatus(int i) {
+    showMissingWarning("anchorStatus");
+    return 0;
+  }
+
+  public int createAnchor(int i, float x, float y, float z) {
+    showMissingWarning("createAnchor");
+    return 0;
+  }
+
+  public int createAnchor(int mx, int my) {
+    showMissingWarning("createAnchor");
+    return 0;
+  }
+
+  public void deleteAnchor(int i) {
+    showMissingWarning("deleteAnchor");
+  }
+
+
+  public PMatrix3D getAnchorMatrix(int i) {
+    showMissingWarning("getAnchorMatrix");
+    return null;
+  }
+
+
+  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
+    showMissingWarning("getAnchorMatrix");
+    return null;
+  }
+
+
+  public void anchor(int i) {
+    showMethodWarning("anchor");
   }
 
 

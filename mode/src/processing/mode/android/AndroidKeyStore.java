@@ -53,9 +53,8 @@ public class AndroidKeyStore {
       boolean result = keyStoreFolder.mkdirs();
 
       if (!result) {
-        Messages.showWarning("Folders, folders, folders",
-                             "Could not create the necessary folders to build.\n" +
-                             "Perhaps you have some file permissions to sort out?");
+        Messages.showWarning(AndroidMode.getTextString("android_keystore.warn.cannot_create_folders.title"),
+                             AndroidMode.getTextString("android_keystore.warn.cannot_create_folders.body"));
         return null;
       }
     }
@@ -89,13 +88,12 @@ public class AndroidKeyStore {
       ProcessResult result = ph.execute();
       if (result.succeeded()) {
         if (getKeyStore() == null) {
-          Messages.showWarning("Well, this is unexpected...",
-              "The keystore was succesfully cretated but cannot be found.\n" +
-              "Perhaps was it deleted accidentally?");
+          Messages.showWarning(AndroidMode.getTextString("android_keystore.warn.cannot_find_keystore.title"),
+                               AndroidMode.getTextString("android_keystore.warn.cannot_find_keystore.body"));
         }
       } else {
         String[] lines = PApplet.split(result.getStderr(), '\n');
-        System.err.println("The keystore could not be created, due to the following error:");
+        System.err.println(AndroidMode.getTextString("android_keystore.error.cannot_create_keystore"));
         for (String line: lines) {
           System.err.println(line);
         }
