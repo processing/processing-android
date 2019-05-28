@@ -59,6 +59,7 @@ public class PGraphicsAR extends PGraphics3D {
   protected float[] projMatrix = new float[16];
   protected float[] viewMatrix = new float[16];
   protected float[] anchorMatrix = new float[16];
+  protected float[] colorCorrectionRgba = new float[4];
 
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();

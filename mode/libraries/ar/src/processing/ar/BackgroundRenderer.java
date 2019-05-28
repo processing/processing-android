@@ -28,9 +28,9 @@ public class BackgroundRenderer {
   private int textureId = -1;
 
   static private URL screenquad_vertex =
-      BackgroundRenderer.class.getResource("/assets/shaders/screenquad_vertex.glsl");
+      BackgroundRenderer.class.getResource("/assets/shaders/BackgroundVert.glsl");
   static private URL screenquad_fragment =
-      BackgroundRenderer.class.getResource("/assets/shaders/screenquad_fragment.glsl");
+      BackgroundRenderer.class.getResource("/assets/shaders/BackgroundFrag.glsl");
 
   private String VERTICES_ERROR = "Unexpected number of vertices in BackgroundRenderer";
   private String ERROR_TAG = "Error";
