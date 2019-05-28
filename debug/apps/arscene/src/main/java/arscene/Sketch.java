@@ -63,9 +63,9 @@ public class Sketch extends PApplet {
     }
 
     if (mousePressed) {
-      int n = createAnchor(mouseX, mouseY);
       oldSelAnchor = selAnchor;
-      selAnchor = anchorId(n);
+      selAnchor = createAnchor(mouseX, mouseY);
+      System.out.println("-------------> CREATED TOUCH ANCHOR " + selAnchor);
     }
 
     for (int i = 0; i < anchorCount(); i++) {
@@ -85,7 +85,7 @@ public class Sketch extends PApplet {
       pushMatrix();
       anchor(i);
 
-      if (id == selAnchor) {
+      if (selAnchor == id) {
         fill(255, 0, 0);
       } else {
         fill(255);

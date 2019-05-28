@@ -62,15 +62,20 @@ public class PGraphicsAR extends PGraphics3D {
 
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
+  protected HashMap<Plane, Integer> trackIds = new HashMap<Plane, Integer>();
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
   protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
   protected ArrayList<Anchor> delAnchors = new ArrayList<Anchor>();
 
   protected ArrayList<Anchor> anchors = new ArrayList<Anchor>();
+  protected HashMap<Anchor, Integer> anchorIds = new HashMap<Anchor, Integer>();
 
   protected float[] pointIn = new float[3];
   protected float[] pointOut = new float[3];
+
+  protected int lastTrackableId = 0;
+  protected int lastAnchorId = 0;
 
 
   public PGraphicsAR() {
@@ -178,7 +183,7 @@ public class PGraphicsAR extends PGraphics3D {
 
   @Override
   public int trackableId(int i) {
-    return trackPlanes.get(i).hashCode();
+    return trackIds.get(trackPlanes.get(i));
   }
 
 
@@ -280,7 +285,7 @@ public class PGraphicsAR extends PGraphics3D {
 
   @Override
   public int anchorId(int i) {
-    return anchors.get(i).hashCode();
+    return anchorIds.get(anchors.get(i));
   }
 
 
@@ -309,7 +314,8 @@ public class PGraphicsAR extends PGraphics3D {
     Pose anchorPose = Pose.makeTranslation(pointOut);
     Anchor anchor = plane.createAnchor(anchorPose);
     anchors.add(anchor);
-    return anchors.size() - 1;
+    anchorIds.put(anchor, ++lastAnchorId);
+    return lastAnchorId;
   }
 
 
@@ -322,11 +328,12 @@ public class PGraphicsAR extends PGraphics3D {
         if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
           Anchor anchor = hit.createAnchor();
           anchors.add(anchor);
-          return anchors.size() - 1;
+          anchorIds.put(anchor, ++lastAnchorId);
+          return lastAnchorId;
         }
       }
     }
-    return -1;
+    return 0;
   }
 
 
@@ -401,6 +408,7 @@ public class PGraphicsAR extends PGraphics3D {
         mat = new float[16];
         trackMatrices.put(plane, mat);
         trackPlanes.add(plane);
+        trackIds.put(plane, ++lastTrackableId);
         newPlanes.add(plane);
         System.out.println("-------------> ADDED TRACKING PLANE " + plane.hashCode());
       }
@@ -415,6 +423,7 @@ public class PGraphicsAR extends PGraphics3D {
       if (plane.getTrackingState() == TrackingState.STOPPED || plane.getSubsumedBy() != null) {
         trackPlanes.remove(i);
         trackMatrices.remove(plane);
+        trackIds.remove(plane);
         System.out.println("-------------> REMOVED TRACKING PLANE " + plane.hashCode());
       }
     }
@@ -427,6 +436,7 @@ public class PGraphicsAR extends PGraphics3D {
 
     for (Anchor anchor: delAnchors) {
       anchor.detach();
+      anchorIds.remove(anchor);
       anchors.remove(anchor);
       System.out.println("-------------> REMOVED ANCHOR PLANE " + anchor.hashCode());
     }
