@@ -4,18 +4,22 @@ PShape arObj;
 
 void setup() {
   fullScreen(AR);
-
-  // Setting Color of the detected plane - BLUE in this case
-  PAR.planeColor(#BCD4FF);
-
   arObj = loadShape("model.obj");
 }
 
 void draw() {
   lights();
-  background(0);
+  
   if (mousePressed) {
-    // Placing the AR object on encountering touch events
+    // Delete the old touch anchor, if any.
+    if (0 < anchorCount()) deleteAnchor(0);
+
+    // Create a new anchor at the current touch position.
+    createAnchor(mouseX, mouseY);
+  }
+
+  if (0 < anchorCount()) {
+    anchor(0);
     shape(arObj);
   }
 }

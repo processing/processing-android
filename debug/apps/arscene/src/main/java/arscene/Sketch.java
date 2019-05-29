@@ -65,7 +65,6 @@ public class Sketch extends PApplet {
     if (mousePressed) {
       oldSelAnchor = selAnchor;
       selAnchor = createAnchor(mouseX, mouseY);
-      System.out.println("-------------> CREATED TOUCH ANCHOR " + selAnchor);
     }
 
     for (int i = 0; i < anchorCount(); i++) {
@@ -77,7 +76,6 @@ public class Sketch extends PApplet {
 
       int status = anchorStatus(i);
       if (status ==  PAR.PAUSED || status == PAR.STOPPED) {
-        if (status == PAR.PAUSED) System.out.println("-------------> PAUSED ANCHOR " + i);
         if (status == PAR.STOPPED) deleteAnchor(i);
         continue;
       }
@@ -93,11 +91,6 @@ public class Sketch extends PApplet {
 
       rotateY(angle);
       box(0.15f);
-//      noStroke();
-//      sphere(0.10f);
-//      rotateZ(angle);
-//      translate(0, 0.3f, 0);
-//      sphere(0.05f);
       popMatrix();
     }
 
