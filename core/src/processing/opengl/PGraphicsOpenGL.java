@@ -7316,29 +7316,27 @@ public class PGraphicsOpenGL extends PGraphics {
     PShader shader;
     PGraphicsOpenGL ppg = getPrimaryPG();
     boolean useDefault = polyShader == null;
-    if (polyShader != null) {
-      polyShader.setRenderer(this);
-      polyShader.loadAttributes();
-      polyShader.loadUniforms();
-    }
+//    if (polyShader != null) {
+//      polyShader.setRenderer(this);
+//      polyShader.loadAttributes();
+//      polyShader.loadUniforms();
+//    }
     if (lit) {
       if (tex) {
-        if (useDefault || !polyShader.checkPolyType(PShader.TEXLIGHT)) {
+        if (useDefault || !isPolyShaderTexLight(polyShader)) {
           if (ppg.defTexlightShader == null) {
-            String[] vertSource = pgl.loadVertexShader(defTexlightShaderVertURL);
-            String[] fragSource = pgl.loadFragmentShader(defTexlightShaderFragURL);
-            ppg.defTexlightShader = new PShader(parent, vertSource, fragSource);
+            ppg.defTexlightShader = loadShaderFromURL(defTexlightShaderFragURL,
+                                                      defTexlightShaderVertURL);
           }
           shader = ppg.defTexlightShader;
         } else {
           shader = polyShader;
         }
       } else {
-        if (useDefault || !polyShader.checkPolyType(PShader.LIGHT)) {
+        if (useDefault || !isPolyShaderLight(polyShader)) {
           if (ppg.defLightShader == null) {
-            String[] vertSource = pgl.loadVertexShader(defLightShaderVertURL);
-            String[] fragSource = pgl.loadFragmentShader(defLightShaderFragURL);
-            ppg.defLightShader = new PShader(parent, vertSource, fragSource);
+            ppg.defLightShader = loadShaderFromURL(defLightShaderFragURL,
+                                                   defLightShaderVertURL);
           }
           shader = ppg.defLightShader;
         } else {
@@ -7346,28 +7344,26 @@ public class PGraphicsOpenGL extends PGraphics {
         }
       }
     } else {
-      if (polyShader != null && polyShader.accessLightAttribs()) {
+      if (isPolyShaderUsingLights(polyShader)) {
         PGraphics.showWarning(SHADER_NEED_LIGHT_ATTRIBS);
         useDefault = true;
       }
 
       if (tex) {
-        if (useDefault || !polyShader.checkPolyType(PShader.TEXTURE)) {
+        if (useDefault || !isPolyShaderTex(polyShader)) {
           if (ppg.defTextureShader == null) {
-            String[] vertSource = pgl.loadVertexShader(defTextureShaderVertURL);
-            String[] fragSource = pgl.loadFragmentShader(defTextureShaderFragURL);
-            ppg.defTextureShader = new PShader(parent, vertSource, fragSource);
+            ppg.defTextureShader = loadShaderFromURL(defTextureShaderFragURL,
+                                                     defTextureShaderVertURL);
           }
           shader = ppg.defTextureShader;
         } else {
           shader = polyShader;
         }
       } else {
-        if (useDefault || !polyShader.checkPolyType(PShader.COLOR)) {
+        if (useDefault || !isPolyShaderColor(polyShader)) {
           if (ppg.defColorShader == null) {
-            String[] vertSource = pgl.loadVertexShader(defColorShaderVertURL);
-            String[] fragSource = pgl.loadFragmentShader(defColorShaderFragURL);
-            ppg.defColorShader = new PShader(parent, vertSource, fragSource);
+            ppg.defColorShader = loadShaderFromURL(defColorShaderFragURL,
+                                                   defColorShaderVertURL);
           }
           shader = ppg.defColorShader;
         } else {
@@ -7375,12 +7371,52 @@ public class PGraphicsOpenGL extends PGraphics {
         }
       }
     }
-    if (shader != polyShader) {
-      shader.setRenderer(this);
-      shader.loadAttributes();
-      shader.loadUniforms();
-    }
+//    if (shader != polyShader) {
+//      shader.setRenderer(this);
+//      shader.loadAttributes();
+//      shader.loadUniforms();
+//    }
+    updateShader(shader);
     return shader;
+  }
+
+
+  protected void updateShader(PShader shader) {
+    shader.setRenderer(this);
+    shader.loadAttributes();
+    shader.loadUniforms();
+  }
+
+
+  protected PShader loadShaderFromURL(URL fragURL, URL vertURL) {
+    String[] vertSource = pgl.loadVertexShader(vertURL);
+    String[] fragSource = pgl.loadFragmentShader(fragURL);
+    return new PShader(parent, vertSource, fragSource);
+  }
+
+
+  protected boolean isPolyShaderTexLight(PShader shader) {
+    return shader.checkPolyType(PShader.TEXLIGHT);
+  }
+
+
+  protected boolean isPolyShaderLight(PShader shader) {
+    return shader.checkPolyType(PShader.LIGHT);
+  }
+
+
+  protected boolean isPolyShaderTex(PShader shader) {
+    return shader.checkPolyType(PShader.TEXTURE);
+  }
+
+
+  protected boolean isPolyShaderColor(PShader shader) {
+    return shader.checkPolyType(PShader.COLOR);
+  }
+
+
+  protected boolean isPolyShaderUsingLights(PShader shader) {
+    return shader != null && shader.accessLightAttribs();
   }
 
 
