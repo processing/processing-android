@@ -15,6 +15,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets {
+        main.assets.srcDirs += '../../../mode/libraries/ar/src/assets'
+    }
     productFlavors {
     }
     compileOptions {
