@@ -35,6 +35,7 @@ import com.google.ar.core.Session;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 
+import java.net.URL;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,6 +50,7 @@ import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
 import processing.opengl.PGraphicsOpenGL;
+import processing.opengl.PShader;
 
 public class PGraphicsAR extends PGraphics3D {
   // Convenience reference to the AR surface. It is the same object one gets from PApplet.getSurface().
@@ -59,7 +61,7 @@ public class PGraphicsAR extends PGraphics3D {
   protected float[] projMatrix = new float[16];
   protected float[] viewMatrix = new float[16];
   protected float[] anchorMatrix = new float[16];
-  protected float[] colorCorrectionRgba = new float[4];
+  protected float[] colorCorrection = new float[4];
 
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
@@ -78,6 +80,17 @@ public class PGraphicsAR extends PGraphics3D {
   protected int lastTrackableId = 0;
   protected int lastAnchorId = 0;
 
+  static protected URL arLightShaderVertURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARLightVert.glsl");
+  static protected URL arTexlightShaderVertURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARTexLightVert.glsl");
+  static protected URL arLightShaderFragURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARLightFrag.glsl");
+  static protected URL arTexlightShaderFragURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARTexLightFrag.glsl");
+
+  protected PShader arLightShader;
+  protected PShader arTexlightShader;
 
   public PGraphicsAR() {
   }
@@ -377,12 +390,6 @@ public class PGraphicsAR extends PGraphics3D {
                   anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
   }
 
-  @Override
-  public void lights() {
-    // TODO <---------------------------------------------------------------------------------------
-    super.lights();
-  }
-
 
   protected void createBackgroundRenderer() {
     backgroundRenderer = new BackgroundRenderer(surfar.getActivity());
@@ -395,6 +402,7 @@ public class PGraphicsAR extends PGraphics3D {
   protected void updateMatrices() {
     surfar.camera.getProjectionMatrix(projMatrix, 0, 0.1f, 100.0f);
     surfar.camera.getViewMatrix(viewMatrix, 0);
+    surfar.frame.getLightEstimate().getColorCorrection(colorCorrection, 0);
   }
 
 
@@ -411,7 +419,6 @@ public class PGraphicsAR extends PGraphics3D {
         trackPlanes.add(plane);
         trackIds.put(plane, ++lastTrackableId);
         newPlanes.add(plane);
-        System.out.println("-------------> ADDED TRACKING PLANE " + plane.hashCode());
       }
       Pose pose = plane.getCenterPose();
       pose.toMatrix(mat, 0);
@@ -425,7 +432,6 @@ public class PGraphicsAR extends PGraphics3D {
         trackPlanes.remove(i);
         trackMatrices.remove(plane);
         trackIds.remove(plane);
-        System.out.println("-------------> REMOVED TRACKING PLANE " + plane.hashCode());
       }
     }
   }
@@ -439,8 +445,52 @@ public class PGraphicsAR extends PGraphics3D {
       anchor.detach();
       anchorIds.remove(anchor);
       anchors.remove(anchor);
-      System.out.println("-------------> REMOVED ANCHOR PLANE " + anchor.hashCode());
     }
     delAnchors.clear();
+  }
+
+
+  @Override
+  protected PShader getPolyShader(boolean lit, boolean tex) {
+    if (getPrimaryPG() != this) {
+      // An offscreen surface will use the default shaders from the parent OpenGL renderer
+      return super.getPolyShader(lit, tex);
+    }
+
+    PShader shader;
+    boolean useDefault = polyShader == null;
+    if (lit) {
+      if (tex) {
+        if (useDefault || !isPolyShaderTexLight(polyShader)) {
+          if (arTexlightShader == null) {
+            arTexlightShader = loadShaderFromURL(arTexlightShaderFragURL, arTexlightShaderVertURL);
+          }
+          shader = arTexlightShader;
+        } else {
+          shader = polyShader;
+        }
+      } else {
+        if (useDefault || !isPolyShaderLight(polyShader)) {
+          if (arLightShader == null) {
+            arLightShader = loadShaderFromURL(arLightShaderFragURL, arLightShaderVertURL);
+          }
+          shader = arLightShader;
+        } else {
+          shader = polyShader;
+        }
+      }
+      updateShader(shader);
+      return shader;
+    } else {
+      // Non-lit shaders use the default shaders from the parent OpenGL renderer
+      return super.getPolyShader(lit, tex);
+    }
+  }
+
+
+  @Override
+  protected void updateShader(PShader shader) {
+    super.updateShader(shader);
+    shader.set("colorCorrection", colorCorrection, 4);
   }
 }
