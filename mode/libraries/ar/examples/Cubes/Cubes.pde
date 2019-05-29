@@ -23,44 +23,13 @@ void draw() {
   lights();
 
 
-  for (int i = 0; i < trackableCount(); i++) {
-    int status = trackableStatus(i);
-    if (status ==  PAR.PAUSED || status == PAR.STOPPED) continue;
-
-    if (status == PAR.CREATED && trackableCount() < 10) {
-      if (trackableType(i) == PAR.PLANE_WALL) {
-        createAnchor(i, 0.3, 0, 0);
-      } else {
-        createAnchor(i, 0, 0.3, 0);
-      }
-    }
-
-    points = getTrackablePolygon(i, points);
-
-    getTrackableMatrix(i, mat);
-    pushMatrix();
-    applyMatrix(mat);
-    if (trackableSelected(i, mouseX, mouseY)) {
-      fill(255, 0, 0, 100);
-    } else {
-      fill(255, 100);
-    }
-
-    beginShape();
-    for (int n = 0; n < points.length/2; n++) {
-      float x = points[2 * n];
-      float z = points[2 * n + 1];
-      vertex(x, 0, z);
-    }
-    endShape();
-    popMatrix();
-  }
-
   if (mousePressed) {
+    // Create new anchor at the current touch point
     oldSelAnchor = selAnchor;
     selAnchor = createAnchor(mouseX, mouseY);
   }
 
+  // Draw objects attached to each anchor
   for (int i = 0; i < anchorCount(); i++) {
     int id = anchorId(i);
     if (oldSelAnchor == id) {
@@ -85,6 +54,41 @@ void draw() {
 
     rotateY(angle);
     box(0.15);
+    popMatrix();
+  }
+
+  // Draw trackable planes
+  for (int i = 0; i < trackableCount(); i++) {
+    int status = trackableStatus(i);
+    if (status ==  PAR.PAUSED || status == PAR.STOPPED) continue;
+
+    if (status == PAR.CREATED && trackableCount() < 10) {
+      // Add new anchor associated to this trackable, 0.3 meters above it
+      if (trackableType(i) == PAR.PLANE_WALL) {
+        createAnchor(i, 0.3, 0, 0);
+      } else {
+        createAnchor(i, 0, 0.3, 0);
+      }
+    }
+
+    points = getTrackablePolygon(i, points);
+
+    getTrackableMatrix(i, mat);
+    pushMatrix();
+    applyMatrix(mat);
+    if (mousePressed && trackableSelected(i, mouseX, mouseY)) {
+      fill(255, 0, 0, 100);
+    } else {
+      fill(255, 100);
+    }
+
+    beginShape();
+    for (int n = 0; n < points.length/2; n++) {
+      float x = points[2 * n];
+      float z = points[2 * n + 1];
+      vertex(x, 0, z);
+    }
+    endShape();
     popMatrix();
   }
 

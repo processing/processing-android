@@ -240,7 +240,7 @@ public class PGraphicsAR extends PGraphics3D {
       Trackable trackable = hit.getTrackable();
       if (trackable instanceof Plane) {
         Plane plane = (Plane)trackable;
-        if (planei == plane && plane.isPoseInPolygon(hit.getHitPose())) {
+        if (planei.equals(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
           return true;
         }
       }
