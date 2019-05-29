@@ -25,16 +25,16 @@ precision mediump float;
 precision mediump int;
 #endif
 
+uniform vec4 colorCorrection;
+
 varying vec4 vertColor;
 varying vec4 backVertColor;
-varying vec4 colorCorrection;
+
+// Approximate sRGB gamma parameters
+const float kGamma = 0.4545454;
+const float kMiddleGrayGamma = 0.466;
 
 void main() {
-  // Approximate sRGB gamma.
-  const float kGamma = 0.4545454;
-  const float kInverseGamma = 2.2;
-  const float kMiddleGrayGamma = 0.466;
-
   vec3 colorShift = colorCorrection.rgb;
   float averagePixelIntensity = colorCorrection.a;
 
@@ -45,6 +45,5 @@ void main() {
 
   // Apply average pixel intensity and color shift
   color.rgb *= colorShift * (averagePixelIntensity / kMiddleGrayGamma);
-  gl_FragColor.rgb = color;
-  gl_FragColor.a = objectColor.a;
+  gl_FragColor = color;
 }

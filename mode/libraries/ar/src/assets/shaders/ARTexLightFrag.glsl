@@ -32,6 +32,24 @@ varying vec4 vertColor;
 varying vec4 backVertColor;
 varying vec4 vertTexCoord;
 
+// Approximate sRGB gamma parameters
+const float kGamma = 0.4545454;
+const float kInverseGamma = 2.2;
+const float kMiddleGrayGamma = 0.466;
+
 void main() {
-  gl_FragColor = texture2D(texture, vertTexCoord.st) * (gl_FrontFacing ? vertColor : backVertColor);
+  vec3 colorShift = colorCorrection.rgb;
+  float averagePixelIntensity = colorCorrection.a;
+
+  vec4 tex = texture2D(texture, vertTexCoord.st);
+  vec4 gtex = vec4(pow(tex.rgb, vec3(kInverseGamma)), tex.a);
+
+  vec4 color = gtex * (gl_FrontFacing ? vertColor : backVertColor);
+
+  // Apply SRGB gamma before writing the fragment color.
+  color.rgb = pow(color.rgb, vec3(kGamma));
+
+  // Apply average pixel intensity and color shift
+  color.rgb *= colorShift * (averagePixelIntensity / kMiddleGrayGamma);
+  gl_FragColor = color;
 }
