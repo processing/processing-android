@@ -13,11 +13,6 @@ import processing.opengl.PGraphics2DX;
 
 public class Sketch extends PApplet {
   boolean keyboard = false;
-
-    static final String P2DX = "processing.opengl.PGraphics2DX";
-//  static final String P2DX = P2D;
-
-
   boolean wireframe = false;
 
   int join = MITER, cap = SQUARE, mode = OPEN;

@@ -11,6 +11,9 @@ import processing.android.CompatUtils;
 import processing.core.PApplet;
 
 public class MainActivity extends AppCompatActivity {
+  private int TEST = 0; // Basic self-intersecting polygon
+//  private int TEST = 1; // SVG loading
+
   private PApplet sketch;
 
   @Override
@@ -21,7 +24,15 @@ public class MainActivity extends AppCompatActivity {
     setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
 
-    sketch = new Sketch();
+
+    if (TEST == 0) {
+      sketch = new SketchBasicPoly();
+    } if (TEST == 1) {
+      sketch = new SketchSVG();
+    }
+
+
+
     PFragment fragment = new PFragment(sketch);
     fragment.setView(frame, this);
   }
