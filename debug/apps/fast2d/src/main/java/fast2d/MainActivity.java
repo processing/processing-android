@@ -11,8 +11,9 @@ import processing.android.CompatUtils;
 import processing.core.PApplet;
 
 public class MainActivity extends AppCompatActivity {
-  private int TEST = 0; // Basic self-intersecting polygon
-//  private int TEST = 1; // SVG loading
+//  private int TEST = 0; // Basic self-intersecting polygon
+  private int TEST = 1; // Mouse controlled polygon
+//  private int TEST = 2; // Load and display SVG
 
   private PApplet sketch;
 
@@ -27,8 +28,10 @@ public class MainActivity extends AppCompatActivity {
 
     if (TEST == 0) {
       sketch = new SketchBasicPoly();
-    } if (TEST == 1) {
-      sketch = new SketchSVG();
+    } else if (TEST == 1) {
+      sketch = new SketchMousePoly();
+    } else if (TEST == 2) {
+      sketch = new SketchLoadDisplaySVG();
     }
 
 

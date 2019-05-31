@@ -3,7 +3,7 @@ package fast2d;
 import processing.core.PApplet;
 import processing.core.PShape;
 
-public class SketchSVG extends PApplet {
+public class SketchLoadDisplaySVG extends PApplet {
   PShape bot;
 
   public void settings() {

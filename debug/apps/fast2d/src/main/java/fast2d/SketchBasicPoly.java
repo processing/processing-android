@@ -23,10 +23,6 @@ public class SketchBasicPoly extends PApplet {
     background(255);
 
     fill(255, 0, 63, 127);
-    stroke(255, 0, 255, 127);
-    strokeWeight(12 * displayDensity);
-    strokeJoin(ROUND);
-    noStroke();
 
     strokeWeight(6 * weight * displayDensity);
     stroke(0, 127, 95, 191);
