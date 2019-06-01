@@ -76,7 +76,7 @@ public class Sketch extends PApplet {
 //    println("FRAME #" + frameCount);
 //    println();
 
-    if (frameCount % 10 == 0) println((int)frameRate + " fps");
+    if (frameCount % 10 == 0) println((int) frameRate + " fps");
 
     strokeCap(cap);
     strokeJoin(join);

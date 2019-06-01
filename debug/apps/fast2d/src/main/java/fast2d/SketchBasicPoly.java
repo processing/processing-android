@@ -1,7 +1,6 @@
 package fast2d;
 
 import processing.core.PApplet;
-import processing.core.PShape;
 
 public class SketchBasicPoly extends PApplet {
   float weight = 1;
@@ -23,6 +22,7 @@ public class SketchBasicPoly extends PApplet {
     background(255);
 
     fill(255, 0, 63, 127);
+    translate(100, 200);
 
     strokeWeight(6 * weight * displayDensity);
     stroke(0, 127, 95, 191);

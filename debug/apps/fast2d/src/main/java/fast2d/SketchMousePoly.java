@@ -26,7 +26,6 @@ public class SketchMousePoly extends PApplet {
   public void draw() {
     background(255);
 
-    fill(255, 0, 63, 127);
     noStroke();
 
     //NOTE: we draw each vertex with a random fill color to test how it behaves.
