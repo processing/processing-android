@@ -1,3 +1,25 @@
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
+  Part of the Processing project - http://processing.org
+
+  Copyright (c) 2019 The Processing Foundation
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation, version 2.1.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General
+  Public License along with this library; if not, write to the
+  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+  Boston, MA  02111-1307  USA
+*/
+
 package processing.opengl;
 
 import static processing.core.PApplet.println;
@@ -13,18 +35,29 @@ import processing.core.PMatrix3D;
 import processing.core.PShape;
 import processing.core.PShapeSVG;
 
-// Super fast OpenGL 2D renderer by Miles Fogle:
-// https://github.com/hazmatsuitor
+/**
+ * Super fast OpenGL 2D renderer originally contributed by Miles Fogle:
+ * https://github.com/hazmatsuitor
+ *
+ * It speeds-up rendering of 2D geometry by essentially two key optimizations: packing all the
+ * vertex data in a single VBO, and using a custom stroke tessellator (see StrokeRenderer class
+ * at the end). There are a number of other, less critical optimizations, for example using a single
+ * shader for textured and non-textured geometry and a depth algorithm that allows stacking a large
+ * number of 2D shapes without z-fighting (so occlusion is based on drawing order).
+ *
+ * Some notes from Miles:
+ *
+ * for testing purposes, I found it easier to create a separate class and avoid
+ * touching existing code for now, rather than directly editing PGraphics2D/PGraphicsOpenGL
+ * if this code becomes the new P2D implementation, then it will be properly migrated/integrated
 
-//for testing purposes, I found it easier to create a separate class and avoid
-//touching existing code for now, rather than directly editing PGraphics2D/PGraphicsOpenGL
-//if this code becomes the new P2D implementation, then it will be properly migrated/integrated
-
-//NOTE: this implementation doesn't use some of Processing's OpenGL wrappers
-//(e.g. PShader, Texture) because I found it more convenient to handle them manually
-//it could probably be made to use those classes with a bit of elbow grease and a spot of guidance
-//but it may not be worth it - I doubt it would reduce complexity much, if at all
-//(if there are reasons we need to use those classes, let me know)
+ * NOTE: this implementation doesn't use some of Processing's OpenGL wrappers
+ * (e.g. PShader, Texture) because I found it more convenient to handle them manually
+ * it could probably be made to use those classes with a bit of elbow grease and a spot of guidance
+ * but it may not be worth it - I doubt it would reduce complexity much, if at all
+ * (if there are reasons we need to use those classes, let me know)
+ *
+ */
 
 //TODO: track debug performance stats
 public final class PGraphics2DX extends PGraphicsOpenGL {
@@ -360,8 +393,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     if (image == null) {
       return;
     }
-
-    init();
 
     Texture t = currentPG.getTexture(image);
     texWidth = t.width;
@@ -1290,14 +1321,13 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   public void filter(PShader shader) {
     // The filter method needs to use the geometry-generation in the base class.
     // We could re-implement it here, but this is easier.
-//    if (!useParentImpl) {
-//      useOldP2D();
-//      super.filter(shader);
-//      useNewP2D();
-//    } else {
-//      super.filter(shader);
-//    }
-    super.filter(shader);
+    if (!useParentImpl) {
+      useOldP2D();
+      super.filter(shader);
+      useNewP2D();
+    } else {
+      super.filter(shader);
+    }
   }
 
 
@@ -1501,24 +1531,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   // PRIVATE IMPLEMENTATION
 
 
-  //superclass does lazy initialization, so we need to as well
-  private void init() {
-    if (initialized) return;
-    initialized = true;
-
-    String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
-    String[] fragSource = pgl.loadFragmentShader(defP2DShaderFragURL);
-    twoShader = new PShader(parent, vertSource, fragSource);
-    loadShaderLocs(twoShader);
-    defTwoShader = twoShader;
-
-    //generate vbo
-    IntBuffer vboBuff = IntBuffer.allocate(1);
-    pgl.genBuffers(1, vboBuff);
-    vbo = vboBuff.get(0);
-  }
-
-
   //maxVerts can be tweaked for memory/performance trade-off
   //in my testing, performance seems to plateau after around 6000 (= 2000*3)
   //memory usage should be around ~165kb for 6000 verts
@@ -1631,9 +1643,14 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       return;
     }
 
-    init();
+    if (vbo == 0) {
+      // Generate vbo
+      IntBuffer vboBuff = IntBuffer.allocate(1);
+      pgl.genBuffers(1, vboBuff);
+      vbo = vboBuff.get(0);
+    }
 
-    //upload vertex data
+    // Upload vertex data
     pgl.bindBuffer(PGL.ARRAY_BUFFER, vbo);
     pgl.bufferData(PGL.ARRAY_BUFFER, usedVerts * vertSize,
         FloatBuffer.wrap(vertexData), PGL.DYNAMIC_DRAW);
@@ -1666,6 +1683,9 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       transformLoc = shader.getUniformLoc("transformMatrix");
     }
     int texScaleLoc = shader.getUniformLoc("texScale");
+    if (texScaleLoc == -1) {
+      texScaleLoc = shader.getUniformLoc("texOffset");
+    }
     return positionLoc != -1 && colorLoc != -1 && texCoordLoc != -1 &&
            texFactorLoc != -1 && transformLoc != -1 && texScaleLoc != -1;
   }
@@ -1684,12 +1704,21 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       transformLoc = shader.getUniformLoc("transformMatrix");
     }
     texScaleLoc = shader.getUniformLoc("texScale");
+    if (texScaleLoc == -1) {
+      texScaleLoc = shader.getUniformLoc("texOffset");
+    }
   }
 
 
   private PShader getShader() {
     PShader shader;
     if (twoShader == null) {
+      if (defTwoShader == null) {
+        String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
+        String[] fragSource = pgl.loadFragmentShader(defP2DShaderFragURL);
+        defTwoShader = new PShader(parent, vertSource, fragSource);
+        loadShaderLocs(defTwoShader);
+      }
       shader = defTwoShader;
     } else {
       shader = twoShader;
