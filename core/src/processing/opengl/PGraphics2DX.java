@@ -1285,18 +1285,21 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   // SHADER FILTER
 
 
+
   @Override
   public void filter(PShader shader) {
     // The filter method needs to use the geometry-generation in the base class.
     // We could re-implement it here, but this is easier.
-    if (!useParentImpl) {
-      useOldP2D();
-      super.filter(shader);
-      useNewP2D();
-    } else {
-      super.filter(shader);
-    }
+//    if (!useParentImpl) {
+//      useOldP2D();
+//      super.filter(shader);
+//      useNewP2D();
+//    } else {
+//      super.filter(shader);
+//    }
+    super.filter(shader);
   }
+
 
 
   //////////////////////////////////////////////////////////////
@@ -1531,28 +1534,31 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   private int vbo;
   private int texWidth, texHeight;
 
+  // Determination of the smallest increments and largest-greater-than-minus-one
+  // https://en.wikipedia.org/wiki/Half-precision_floating-point_format
+
+  // Using the smallest positive normal number in half (16-bit) precision, which is how the depth
+  // buffer is initialized in mobile
+  private float smallestDepthIncrement = (float)Math.pow(2, -14);
+
+  // As the limit for the depth increase, we take the minus the largest number less than one in
+  // half (16-bit) precision
+  private float largestNumberLessThanOne = 1 - (float)Math.pow(2, -11);
 
   private void incrementDepth() {
-    //by resetting the depth buffer when needed, we are able to have arbitrarily many
-    //layers, unlimited by depth buffer precision. in practice, the precision of this
-    //algorithm seems to be very good (~1,000,000 layers), so it pretty much won't happen
-    //unless you're drawing enough geometry per frame to set your computer on fire
-    if (depth < -0.9999f) {
+    // By resetting the depth buffer when needed, we are able to have arbitrarily many
+    // layers, unlimited by depth buffer precision. In practice, the precision of this
+    // algorithm seems to be acceptable (exactly (1 + 1 - pow(2, -11))/pow(2, -14) = 32,760 layers)
+    // for mobile.
+    if (depth < -largestNumberLessThanOne) {
       flushBuffer();
       pgl.clear(PGL.DEPTH_BUFFER_BIT);
-      //depth test will fail at depth = 1.0 after clearing the depth buffer,
-      //but since we always increment before drawing anything, this should be okay
+      // Depth test will fail at depth = 1.0 after clearing the depth buffer,
+      // But since we always increment before drawing anything, this should be okay
       depth = 1.0f;
     }
 
-    //found to be a small but reliable increment value for a 24-bit depth buffer
-    //through trial and error. as numbers approach zero, absolute floating point
-    //precision increases, while absolute fixed point precision stays the same,
-    //so regardless of representation, this value should work for all depths in
-    //range (-1, 1), as long as it works for depths at either end of the range
-    depth -= 0.000001f;
-
-    //TODO: use an increment value based on good math instead of lazy trial-and-error
+    depth -= smallestDepthIncrement;
   }
 
 
@@ -1694,6 +1700,10 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     return shader;
   }
 
+  @Override
+  protected PShader getPolyShader(boolean lit, boolean tex) {
+    return super.getPolyShader(lit, tex);
+  }
 
   private void setAttribs() {
     pgl.vertexAttribPointer(positionLoc, 3, PGL.FLOAT, false, vertSize, 0);
