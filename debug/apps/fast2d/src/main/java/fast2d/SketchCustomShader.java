@@ -7,7 +7,7 @@ import processing.opengl.PShader;
 public class SketchCustomShader extends PApplet {
   PShader edges;
   PImage img;
-  boolean enabled = false;
+  boolean enabled = true;
 
   public void settings() {
 //    fullScreen(P2D);
@@ -21,15 +21,15 @@ public class SketchCustomShader extends PApplet {
   }
 
   public void draw() {
-//    if (enabled == true) {
-//      shader(edges);
-//    }
+    if (enabled == true) {
+      shader(edges);
+    }
     image(img, 0, 0, width, height);
   }
 
   public void mousePressed() {
     enabled = !enabled;
-    if (!enabled == true) {
+    if (!enabled) {
       resetShader();
     }
   }

@@ -1338,6 +1338,23 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
 
   @Override
+  public PShader loadShader(String fragFilename) {
+    if (fragFilename == null || fragFilename.equals("")) {
+      PGraphics.showWarning(MISSING_FRAGMENT_SHADER);
+      return null;
+    }
+
+    PShader shader = new PShader(parent);
+
+    shader.setFragmentShader(fragFilename);
+    String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
+    shader.setVertexShader(vertSource);
+
+    return shader;
+  }
+
+
+  @Override
   public void shader(PShader shader) {
     if (useParentImpl) {
       super.shader(shader);
@@ -1676,18 +1693,22 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       positionLoc = shader.getAttributeLoc("vertex");
     }
     int colorLoc = shader.getAttributeLoc("color");
-    int texCoordLoc = shader.getAttributeLoc("texCoord");
-    int texFactorLoc = shader.getAttributeLoc("texFactor");
     int transformLoc = shader.getUniformLoc("transform");
     if (transformLoc == -1) {
       transformLoc = shader.getUniformLoc("transformMatrix");
     }
+
+    /*
     int texScaleLoc = shader.getUniformLoc("texScale");
     if (texScaleLoc == -1) {
       texScaleLoc = shader.getUniformLoc("texOffset");
     }
-    return positionLoc != -1 && colorLoc != -1 && texCoordLoc != -1 &&
-           texFactorLoc != -1 && transformLoc != -1 && texScaleLoc != -1;
+    int texCoordLoc = shader.getAttributeLoc("texCoord");
+    int texFactorLoc = shader.getAttributeLoc("texFactor");
+    */
+
+    return positionLoc != -1 && colorLoc != -1 && transformLoc != -1;
+//           texCoordLoc != -1 && texFactorLoc != -1 && texScaleLoc != -1;
   }
 
 
@@ -1717,15 +1738,14 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
         String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
         String[] fragSource = pgl.loadFragmentShader(defP2DShaderFragURL);
         defTwoShader = new PShader(parent, vertSource, fragSource);
-        loadShaderLocs(defTwoShader);
       }
       shader = defTwoShader;
     } else {
       shader = twoShader;
     }
-    if (shader != defTwoShader) {
-      loadShaderLocs(shader);
-    }
+//    if (shader != defTwoShader) {
+    loadShaderLocs(shader);
+//    }
     return shader;
   }
 
@@ -1737,12 +1757,16 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   private void setAttribs() {
     pgl.vertexAttribPointer(positionLoc, 3, PGL.FLOAT, false, vertSize, 0);
     pgl.enableVertexAttribArray(positionLoc);
-    pgl.vertexAttribPointer(texCoordLoc, 2, PGL.FLOAT, false, vertSize, 3*Float.BYTES);
-    pgl.enableVertexAttribArray(texCoordLoc);
+    if (-1 < texCoordLoc) {
+      pgl.vertexAttribPointer(texCoordLoc, 2, PGL.FLOAT, false, vertSize, 3*Float.BYTES);
+      pgl.enableVertexAttribArray(texCoordLoc);
+    }
     pgl.vertexAttribPointer(colorLoc, 4, PGL.UNSIGNED_BYTE, true, vertSize, 5*Float.BYTES);
     pgl.enableVertexAttribArray(colorLoc);
-    pgl.vertexAttribPointer(texFactorLoc, 1, PGL.FLOAT, false, vertSize, 6*Float.BYTES);
-    pgl.enableVertexAttribArray(texFactorLoc);
+    if (-1 < texFactorLoc) {
+      pgl.vertexAttribPointer(texFactorLoc, 1, PGL.FLOAT, false, vertSize, 6*Float.BYTES);
+      pgl.enableVertexAttribArray(texFactorLoc);
+    }
   }
 
 
@@ -1757,11 +1781,13 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     //set texture info
     pgl.activeTexture(PGL.TEXTURE0);
     pgl.bindTexture(PGL.TEXTURE_2D, tex);
-    //enable uv scaling only for use-defined images, not for fonts
-    if (tex == imageTex) {
-      pgl.uniform2f(texScaleLoc, 1f/texWidth, 1f/texHeight);
-    } else {
-      pgl.uniform2f(texScaleLoc, 1, 1);
+    if (-1 < texScaleLoc) {
+      //enable uv scaling only for use-defined images, not for fonts
+      if (tex == imageTex) {
+        pgl.uniform2f(texScaleLoc, 1f/texWidth, 1f/texHeight);
+      } else {
+        pgl.uniform2f(texScaleLoc, 1, 1);
+      }
     }
   }
 
