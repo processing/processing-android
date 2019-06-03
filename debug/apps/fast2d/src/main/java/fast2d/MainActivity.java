@@ -13,7 +13,7 @@ import processing.core.PApplet;
 public class MainActivity extends AppCompatActivity {
 //  private int TEST = 1; // Basic self-intersecting polygon
 //  private int TEST = 2; // Mouse controlled polygon
-  private int TEST = 3; // Textured poly
+//  private int TEST = 3; // Textured poly
 //  private int TEST = 4; // Text rendering
 //  private int TEST = 5; // Shapes benchmark
 //  private int TEST = 6; // Duplicated vertex
@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
 //  private int TEST = 10; // Arc test
 //  private int TEST = 11; // Load and display SVG
 //  private int TEST = 12; // Filter test
-//  private int TEST = 13; // Custom shader test
+  private int TEST = 13; // Custom shader test
 
   private PApplet sketch;
 

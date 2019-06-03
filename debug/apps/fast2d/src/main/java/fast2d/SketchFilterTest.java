@@ -7,14 +7,16 @@ public class SketchFilterTest extends PApplet {
   PShader blur;
 
   public void settings() {
+//    fullScreen(P2D);
     fullScreen(P2DX);
   }
 
   public void setup() {
-    orientation(LANDSCAPE);
+//    orientation(LANDSCAPE);
     blur = loadShader("blur.glsl");
     stroke(255, 0, 0);
     rectMode(CENTER);
+    strokeWeight(5 * displayDensity);
   }
 
   public void draw() {
