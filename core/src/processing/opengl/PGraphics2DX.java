@@ -1319,6 +1319,7 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
   @Override
   public void filter(PShader shader) {
+    // TODO: not working... the loadShader() method uses the P2 vertex stage
     // The filter method needs to use the geometry-generation in the base class.
     // We could re-implement it here, but this is easier.
     if (!useParentImpl) {
@@ -1692,13 +1693,14 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     if (positionLoc == -1) {
       positionLoc = shader.getAttributeLoc("vertex");
     }
-    int colorLoc = shader.getAttributeLoc("color");
+//    int colorLoc = shader.getAttributeLoc("color");
     int transformLoc = shader.getUniformLoc("transform");
     if (transformLoc == -1) {
       transformLoc = shader.getUniformLoc("transformMatrix");
     }
 
     /*
+    // Became less demanding and 2D shaders do not need to have texture uniforms/attribs
     int texScaleLoc = shader.getUniformLoc("texScale");
     if (texScaleLoc == -1) {
       texScaleLoc = shader.getUniformLoc("texOffset");
@@ -1707,8 +1709,8 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     int texFactorLoc = shader.getAttributeLoc("texFactor");
     */
 
-    return positionLoc != -1 && colorLoc != -1 && transformLoc != -1;
-//           texCoordLoc != -1 && texFactorLoc != -1 && texScaleLoc != -1;
+    return positionLoc != -1 && transformLoc != -1;
+//         colorLoc != -1 && texCoordLoc != -1 && texFactorLoc != -1 && texScaleLoc != -1;
   }
 
 
@@ -1732,6 +1734,8 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
 
   private PShader getShader() {
+    // TODO: Perhaps a better way to handle the new 2D rendering would be to define a PShader2D
+    // subclass of PShader...
     PShader shader;
     if (twoShader == null) {
       if (defTwoShader == null) {

@@ -42,7 +42,7 @@ public class Sketch extends PApplet {
 //    orientation(LANDSCAPE);
 
     //pardon the silly image
-    img = loadImage("balmer_developers_poster.png");
+    img = loadImage("leaves.jpg");
     font = createFont("SansSerif", displayDensity * 72);
 
     //setup for demo 2

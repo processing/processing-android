@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
 //  private int TEST = 2; // Mouse controlled polygon
 //  private int TEST = 3; // Textured poly
 //  private int TEST = 4; // Text rendering
-//  private int TEST = 5; // Shapes benchmark
+  private int TEST = 5; // Shapes benchmark
 //  private int TEST = 6; // Duplicated vertex
 //  private int TEST = 7; // User-defined contours
 //  private int TEST = 8; // Primitive types
@@ -23,7 +23,8 @@ public class MainActivity extends AppCompatActivity {
 //  private int TEST = 10; // Arc test
 //  private int TEST = 11; // Load and display SVG
 //  private int TEST = 12; // Filter test
-  private int TEST = 13; // Custom shader test
+//  private int TEST = 13; // Custom shader test (texture)
+//  private int TEST = 14; // Custom shader test (no texture)
 
   private PApplet sketch;
 
@@ -34,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
     frame.setId(CompatUtils.getUniqueViewId());
     setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
-
 
     if (TEST == 1) {
       sketch = new SketchBasicPoly();
@@ -62,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
       sketch = new SketchFilterTest();
     } else if (TEST == 13) {
       sketch = new SketchCustomShader();
+    } else if (TEST == 14) {
+      sketch = new SketchShaderNoTex();
     }
 
     PFragment fragment = new PFragment(sketch);
