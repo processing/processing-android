@@ -7316,11 +7316,12 @@ public class PGraphicsOpenGL extends PGraphics {
     PShader shader;
     PGraphicsOpenGL ppg = getPrimaryPG();
     boolean useDefault = polyShader == null;
-//    if (polyShader != null) {
+    if (polyShader != null) {
+      updateShader(polyShader);
 //      polyShader.setRenderer(this);
 //      polyShader.loadAttributes();
 //      polyShader.loadUniforms();
-//    }
+    }
     if (lit) {
       if (tex) {
         if (useDefault || !isPolyShaderTexLight(polyShader)) {
@@ -7371,11 +7372,9 @@ public class PGraphicsOpenGL extends PGraphics {
         }
       }
     }
-//    if (shader != polyShader) {
-//      shader.setRenderer(this);
-//      shader.loadAttributes();
-//      shader.loadUniforms();
-//    }
+    if (shader != polyShader) {
+      updateShader(shader);
+    }
     updateShader(shader);
     return shader;
   }
