@@ -78,7 +78,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private JLabel downloadedTextArea;
 
   private SDKDownloadTask downloadTask;
-  
+
   private Frame editor;
   private AndroidSDK sdk;
   private boolean cancelled;
@@ -380,6 +380,43 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     }
   }
 
+  class QueryUrl extends SwingWorker<Object,Object>{
+    SDKUrlHolder downloadUrls;
+
+    QueryUrl(SDKUrlHolder downloadUrls){
+      this.downloadUrls = downloadUrls;
+    }
+
+
+    @Override
+    protected Object doInBackground() throws Exception {
+      downloadTask = new SDKDownloadTask();
+      String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
+      String addonUrl = REPOSITORY_URL + ADDON_LIST;
+      String haxmUrl = HAXM_URL + ADDON_LIST;
+      try {
+        downloadTask.getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
+        getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());
+        getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (XPathException e) {
+        e.printStackTrace();
+      } catch (ParserConfigurationException e) {
+        e.printStackTrace();
+      } catch (SAXException e) {
+        e.printStackTrace();
+      }
+      return null;
+    }
+
+    @Override
+    protected void done() {
+      super.done();
+      createInitLayout(downloadUrls);
+    }
+  }
+
   private void getExtrasDownloadUrls(SDKUrlHolder urlHolder, 
       String repositoryUrl, String requiredHostOs) 
       throws ParserConfigurationException, IOException, SAXException, XPathException {
@@ -600,25 +637,14 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     super(editor, AndroidMode.getTextString("sdk_downloader.download_title"), true);
     this.editor = editor;
     this.sdk = null;
-    downloadTask = new SDKDownloadTask();
     SDKUrlHolder downloadUrls = new SDKUrlHolder();
-    String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
-    String addonUrl = REPOSITORY_URL + ADDON_LIST;
-    String haxmUrl = HAXM_URL + ADDON_LIST;
-    try {
-      downloadTask.getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
-      getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());
-      getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (XPathException e) {
-      e.printStackTrace();
-    } catch (ParserConfigurationException e) {
-      e.printStackTrace();
-    } catch (SAXException e) {
-      e.printStackTrace();
-    }
-    createInitLayout(downloadUrls);
+    QueryUrl queryTask = new QueryUrl(downloadUrls);
+    queryTask.execute();
+
+    //Base UX----------------------------------
+    add(new JLabel("Querying...",SwingConstants.CENTER));
+    setSize(150,100);
+    setLocationRelativeTo(editor);
     setAlwaysOnTop(true);
     setVisible(true);
   }
