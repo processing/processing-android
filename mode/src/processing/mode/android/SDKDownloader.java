@@ -696,6 +696,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       @Override
       public void actionPerformed(ActionEvent e) {
         JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(processing.app.Base.getSketchbookFolder());
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fc.showOpenDialog(SDKDownloader.super.rootPane); //To put it on top of the modalDialog
         if(fc.getSelectedFile()!=null) locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
