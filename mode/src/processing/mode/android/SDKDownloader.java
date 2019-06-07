@@ -200,7 +200,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
         Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
         Preferences.set("android.sdk.target",downloadUrls.platformVersion);
-        sdk = AndroidSDK.load(false, null);        
+        sdk = AndroidSDK.load(false, null);
       } catch (IOException e) {
         // TODO Handle exceptions here somehow (ie show error message)
         // and handle at least mkdir() results (above)
@@ -352,32 +352,34 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
       // -----------------------------------------------------------------------
       // emulator
-      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
-      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-      found = false;
-      if (remotePackages != null) {
-        ArrayList<String> recentsArray = getRecentVersion(remotePackages,2);
-
-        urlHolder.emulatorVersion = recentsArray.get(1);
-
-        NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
-
-        urlHolder.buildToolsVersion = recentsArray.get(1);
-
-        try {
-          ArrayList<String> urlData = parseURL(childNodes, true, requiredHostOs);
-          urlHolder.emulatorFilename = urlData.get(0);
-          urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
-          urlHolder.totalSize += Integer.parseInt(urlData.get(1));
-          found = true;
-        }
-        catch (Error e){
-          e.printStackTrace();
-        }
-      }
-      if (!found) {
-        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
-      }
+      //NOTE: Emulator Download moved from SDK Download,
+      //Will be done along with Emulator Image installation
+//      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+//      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+//      found = false;
+//      if (remotePackages != null) {
+//        ArrayList<String> recentsArray = getRecentVersion(remotePackages,2);
+//
+//        urlHolder.emulatorVersion = recentsArray.get(1);
+//
+//        NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
+//
+//        urlHolder.buildToolsVersion = recentsArray.get(1);
+//
+//        try {
+//          ArrayList<String> urlData = parseURL(childNodes, true, requiredHostOs);
+//          urlHolder.emulatorFilename = urlData.get(0);
+//          urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+//          urlHolder.totalSize += Integer.parseInt(urlData.get(1));
+//          found = true;
+//        }
+//        catch (Error e){
+//          e.printStackTrace();
+//        }
+//      }
+//      if (!found) {
+//        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
+//      }
     }
   }
 
