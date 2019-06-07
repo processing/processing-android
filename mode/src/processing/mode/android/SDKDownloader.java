@@ -192,13 +192,14 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         
          // Normalize built-tools and platform folders to android-<API LEVEL>
         String actualName = platformsFolder.listFiles()[0].getName();
-        renameFolder(platformsFolder, "android-" + TARGET_SDK, actualName);
+        renameFolder(platformsFolder, "android-" + downloadUrls.platformVersion, actualName);
         actualName = buildToolsFolder.listFiles()[0].getName();
         renameFolder(buildToolsFolder, downloadUrls.buildToolsVersion, actualName);
         
         // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
-        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());        
+        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
+        Preferences.set("android.sdk.target",downloadUrls.platformVersion);
         sdk = AndroidSDK.load(false, null);        
       } catch (IOException e) {
         // TODO Handle exceptions here somehow (ie show error message)
