@@ -117,8 +117,14 @@ class AndroidSDK {
     if (!platforms.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_platforms_folder", folder));
     }
-    
-    targetPlatform = new File(platforms, AndroidBuild.TARGET_PLATFORM);
+
+    String[] availPlatforms = platforms.list();
+    int maxVersion = 26;
+    for (String availPlatform:availPlatforms){
+      int platformVersion = Integer.parseInt(availPlatform.substring(availPlatform.length()-2));
+      if (platformVersion > maxVersion) maxVersion = platformVersion;
+    }
+    targetPlatform = new File(platforms, "android-"+maxVersion);
     if (!targetPlatform.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_target_platform", 
                                                           AndroidBuild.TARGET_SDK, platforms.getAbsolutePath()));
@@ -132,6 +138,8 @@ class AndroidSDK {
 
     avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
+
+    Preferences.set("android.sdk.target",maxVersion+"");
 
     String path = Platform.getenv("PATH");
 
