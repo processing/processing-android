@@ -720,8 +720,13 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     downloadPathPanel.setLayout(new BorderLayout());
     JLabel pathLabel = new JLabel("Installation Path: ");
     downloadPathPanel.add(pathLabel,BorderLayout.NORTH);
+
     final JLabel locationLabel = new JLabel(processing.app.Base.getSketchbookFolder().getAbsolutePath());
+    locationLabel.setMaximumSize(Toolkit.zoom(100,locationLabel.getHeight()));
+    locationLabel.setPreferredSize(Toolkit.zoom(100,locationLabel.getHeight()));
+    locationLabel.setToolTipText(locationLabel.getText());
     downloadPathPanel.add(locationLabel,BorderLayout.WEST);
+
     JButton selectPathButton = new JButton("Change");
     Dimension dim = new Dimension(Toolkit.getButtonWidth(),
             Toolkit.zoom(selectPathButton.getPreferredSize().height));
@@ -735,13 +740,20 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           fd.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
           fd.setVisible(true);
           System.setProperty("apple.awt.fileDialogForDirectories", "false");
+          if(fd.getFile() != null){
+            locationLabel.setText(new File(fd.getDirectory(),fd.getFile()).getAbsolutePath());
+            locationLabel.setToolTipText(locationLabel.getText());
+          }
         } else {
           JFileChooser fc = new JFileChooser();
           fc.setDialogTitle("Select Download Location");
           fc.setCurrentDirectory(processing.app.Base.getSketchbookFolder());
           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
           fc.showOpenDialog(SDKDownloader.super.rootPane); //To put it on top of the modalDialog
-          if (fc.getSelectedFile() != null) locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
+          if (fc.getSelectedFile() != null) {
+            locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
+            locationLabel.setToolTipText(locationLabel.getText());
+          }
         }
       }
     });
