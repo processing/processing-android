@@ -26,6 +26,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 import org.xml.sax.SAXException;
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
@@ -205,6 +206,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       } catch (IOException e) {
         // TODO Handle exceptions here somehow (ie show error message)
         // and handle at least mkdir() results (above)
+        Messages.showWarning(AndroidMode.getTextString("sdk_downloader.download_error_title"),
+                AndroidMode.getTextString("sdk_downloader.download_error_message",e.getMessage()));
         e.printStackTrace();
       }
       return null;
