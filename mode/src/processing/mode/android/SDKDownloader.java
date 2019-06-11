@@ -82,6 +82,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private Frame editor;
   private AndroidSDK sdk;
   private boolean cancelled;
+  private boolean goBack;
   
   private int totalSize = 0;  
 
@@ -648,7 +649,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     add(new JLabel("Querying...",SwingConstants.CENTER));
     setSize(150,100);
     setLocationRelativeTo(editor);
-    setAlwaysOnTop(true);
+    setAlwaysOnTop(false);
     setVisible(true);
   }
   
@@ -662,6 +663,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   public boolean cancelled() {
     return cancelled;
   }
+
+  public boolean isGoBack() {return goBack;}
   
   public AndroidSDK getSDK() {
     return sdk;
@@ -680,6 +683,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   }
 
   private void createInitLayout(SDKUrlHolder downloadUrls) {
+    goBack = false;
     Container outer = getContentPane();
     outer.removeAll();
     final SDKUrlHolder urlHolder = downloadUrls;
@@ -687,12 +691,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     outer.setLayout(new BorderLayout());
 
     JPanel mainPanel = new JPanel();
-    mainPanel.setPreferredSize(Toolkit.zoom(250,225));
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
     outer.add(mainPanel,BorderLayout.EAST);
 
-    //List Packages to be downloaded here:
+    //List Packages to be downloaded here------------------------------------------
     JPanel packagesPanel = new JPanel();
-    packagesPanel.setPreferredSize(Toolkit.zoom(250,125));
+    packagesPanel.setPreferredSize(Toolkit.zoom(300,125));
     packagesPanel.setAlignmentX(RIGHT_ALIGNMENT);
     Border border = BorderFactory.createLineBorder(Color.black,1,true);
     packagesPanel.setBorder(BorderFactory.createTitledBorder(border,"Packages to download: "));
@@ -711,7 +715,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     //faddPackage(gc,4,packagesPanel,"Android Emulator: ",downloadUrls.emulatorVersion);
     if(Platform.getName()!="linux") addPackage(gc,5,packagesPanel,"Android Build Tools: ",downloadUrls.haxmVersion);
 
-    //SDK_Path selection Panel
+    //SDK_Path selection Panel---------------------------------------
     JPanel downloadPathPanel = new JPanel();
     downloadPathPanel.setLayout(new BorderLayout());
     JLabel pathLabel = new JLabel("Installation Path: ");
@@ -744,9 +748,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     downloadPathPanel.add(selectPathButton,BorderLayout.EAST);
     mainPanel.add(downloadPathPanel);
 
-    //Buttons Panel on the bottom
+    //Buttons Panel on the bottom-------------------------------------------
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
+
+    JButton backButton = new JButton("Back");
+    backButton.setPreferredSize(dim);
+    backButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        dispose();
+        goBack = true;
+      }
+    });
+    buttons.add(backButton);
+
     JButton continueButton = new JButton("Continue");
     continueButton.setPreferredSize(dim);
     continueButton.addActionListener(new ActionListener() {
@@ -766,11 +782,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       @Override
       public void actionPerformed(ActionEvent e) {
         dispose();
+        cancelled = true;
       }
     });
     mainPanel.add(buttons);
 
-    //The side panel with image Icon
+    //The side panel with image Icon-------------------------------------------
     JPanel sidePanel = new JPanel(new BorderLayout());
     sidePanel.setPreferredSize(Toolkit.zoom(100,0));
     sidePanel.setBackground(Color.white);
