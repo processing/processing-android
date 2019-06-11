@@ -708,7 +708,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     addPackage(gc,1,packagesPanel,"SDK PlatformTools: ",downloadUrls.platformToolsVersion);
     addPackage(gc,2,packagesPanel,"Android Build Tools: ",downloadUrls.buildToolsVersion);
     addPackage(gc,3,packagesPanel,"Android Tools: ",downloadUrls.toolsVersion);
-    addPackage(gc,4,packagesPanel,"Android Emulator: ",downloadUrls.emulatorVersion);
+    //faddPackage(gc,4,packagesPanel,"Android Emulator: ",downloadUrls.emulatorVersion);
     if(Platform.getName()!="linux") addPackage(gc,5,packagesPanel,"Android Build Tools: ",downloadUrls.haxmVersion);
 
     //SDK_Path selection Panel
@@ -724,11 +724,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     selectPathButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        JFileChooser fc = new JFileChooser();
-        fc.setCurrentDirectory(processing.app.Base.getSketchbookFolder());
-        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fc.showOpenDialog(SDKDownloader.super.rootPane); //To put it on top of the modalDialog
-        if(fc.getSelectedFile()!=null) locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
+        if (Platform.isMacOS()){
+          FileDialog fd = new FileDialog(editor,"Select Download Location", FileDialog.LOAD);
+          fd.setDirectory(processing.app.Base.getSketchbookFolder().getAbsolutePath());
+          System.setProperty("apple.awt.fileDialogForDirectories", "true");
+          fd.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+          fd.setVisible(true);
+          System.setProperty("apple.awt.fileDialogForDirectories", "false");
+        } else {
+          JFileChooser fc = new JFileChooser();
+          fc.setDialogTitle("Select Download Location");
+          fc.setCurrentDirectory(processing.app.Base.getSketchbookFolder());
+          fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+          fc.showOpenDialog(SDKDownloader.super.rootPane); //To put it on top of the modalDialog
+          if (fc.getSelectedFile() != null) locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
+        }
       }
     });
     downloadPathPanel.add(selectPathButton,BorderLayout.EAST);
