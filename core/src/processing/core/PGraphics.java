@@ -4253,21 +4253,10 @@ public class PGraphics extends PImage implements PConstants {
     return 0;
   }
 
-  public boolean trackableSelected(int i) {
+  public boolean trackableSelected(int i, int mx, int my) {
     showMissingWarning("trackableSelected");
     return false;
   }
-
-  public float trackableExtentX(int i) {
-    showMissingWarning("trackableExtentX");
-    return 0;
-  }
-
-  public float trackableExtentZ(int i) {
-    showMissingWarning("trackableExtentZ");
-    return 0;
-  }
-
 
   public float[] getTrackablePolygon(int i) {
     showMissingWarning("getTrackablePolygon");
@@ -4302,40 +4291,39 @@ public class PGraphics extends PImage implements PConstants {
     return 0;
   }
 
-  public int anchorStatus(int id) {
+  public int anchorStatus(int i) {
     showMissingWarning("anchorStatus");
     return 0;
   }
 
-  public int createAnchor() {
+  public int createAnchor(int i, float x, float y, float z) {
     showMissingWarning("createAnchor");
     return 0;
   }
 
-  public int createAnchor(int trackId, float x, float y, float z) {
+  public int createAnchor(int mx, int my) {
     showMissingWarning("createAnchor");
     return 0;
   }
 
-
-  public void deleteAnchor(int id) {
+  public void deleteAnchor(int i) {
     showMissingWarning("deleteAnchor");
   }
 
 
-  public PMatrix3D getAnchorMatrix(int id) {
+  public PMatrix3D getAnchorMatrix(int i) {
     showMissingWarning("getAnchorMatrix");
     return null;
   }
 
 
-  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
+  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
     showMissingWarning("getAnchorMatrix");
     return null;
   }
 
 
-  public void anchor(int id) {
+  public void anchor(int i) {
     showMethodWarning("anchor");
   }
 

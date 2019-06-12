@@ -11,6 +11,21 @@ import processing.android.CompatUtils;
 import processing.core.PApplet;
 
 public class MainActivity extends AppCompatActivity {
+//  private int TEST = 1; // Basic self-intersecting polygon
+//  private int TEST = 2; // Mouse controlled polygon
+//  private int TEST = 3; // Textured poly
+//  private int TEST = 4; // Text rendering
+  private int TEST = 5; // Shapes benchmark
+//  private int TEST = 6; // Duplicated vertex
+//  private int TEST = 7; // User-defined contours
+//  private int TEST = 8; // Primitive types
+//  private int TEST = 9; // Arc test
+//  private int TEST = 10; // Arc test
+//  private int TEST = 11; // Load and display SVG
+//  private int TEST = 12; // Filter test
+//  private int TEST = 13; // Custom shader test (texture)
+//  private int TEST = 14; // Custom shader test (no texture)
+
   private PApplet sketch;
 
   @Override
@@ -21,7 +36,36 @@ public class MainActivity extends AppCompatActivity {
     setContentView(frame, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                      ViewGroup.LayoutParams.MATCH_PARENT));
 
-    sketch = new Sketch();
+    if (TEST == 1) {
+      sketch = new SketchBasicPoly();
+    } else if (TEST == 2) {
+      sketch = new SketchMousePoly();
+    } else if (TEST == 3) {
+      sketch = new SketchTexturedPoly();
+    } else if (TEST == 4) {
+      sketch = new SketchDisplayText();
+    } else if (TEST == 5) {
+      sketch = new SketchShapeBenchmark();
+    } else if (TEST == 6) {
+      sketch = new SketchDuplicatedVert();
+    } else if (TEST == 7) {
+      sketch = new SketchUserDefinedContours();
+    } else if (TEST == 8) {
+      sketch = new SketchPrimitiveTypes();
+    } else if (TEST == 9) {
+      sketch = new SketchArcTest();
+    } else if (TEST == 10) {
+      sketch = new SketchCurveTest();
+    } else if (TEST == 11) {
+      sketch = new SketchLoadDisplaySVG();
+    } else if (TEST == 12) {
+      sketch = new SketchFilterTest();
+    } else if (TEST == 13) {
+      sketch = new SketchCustomShader();
+    } else if (TEST == 14) {
+      sketch = new SketchShaderNoTex();
+    }
+
     PFragment fragment = new PFragment(sketch);
     fragment.setView(frame, this);
   }

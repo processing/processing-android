@@ -53,7 +53,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
-
 import static java.awt.GridBagConstraints.NORTHWEST;
 import static processing.mode.android.AndroidBuild.TARGET_SDK;
 

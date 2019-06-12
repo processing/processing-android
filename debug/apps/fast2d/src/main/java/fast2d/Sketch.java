@@ -13,11 +13,6 @@ import processing.opengl.PGraphics2DX;
 
 public class Sketch extends PApplet {
   boolean keyboard = false;
-
-    static final String P2DX = "processing.opengl.PGraphics2DX";
-//  static final String P2DX = P2D;
-
-
   boolean wireframe = false;
 
   int join = MITER, cap = SQUARE, mode = OPEN;
@@ -47,7 +42,7 @@ public class Sketch extends PApplet {
 //    orientation(LANDSCAPE);
 
     //pardon the silly image
-    img = loadImage("balmer_developers_poster.png");
+    img = loadImage("leaves.jpg");
     font = createFont("SansSerif", displayDensity * 72);
 
     //setup for demo 2
@@ -81,7 +76,7 @@ public class Sketch extends PApplet {
 //    println("FRAME #" + frameCount);
 //    println();
 
-    if (frameCount % 10 == 0) println((int)frameRate + " fps");
+    if (frameCount % 10 == 0) println((int) frameRate + " fps");
 
     strokeCap(cap);
     strokeJoin(join);

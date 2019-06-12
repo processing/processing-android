@@ -1,3 +1,25 @@
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
+  Part of the Processing project - http://processing.org
+
+  Copyright (c) 2019 The Processing Foundation
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation, version 2.1.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General
+  Public License along with this library; if not, write to the
+  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+  Boston, MA  02111-1307  USA
+*/
+
 package processing.opengl;
 
 import static processing.core.PApplet.println;
@@ -13,18 +35,29 @@ import processing.core.PMatrix3D;
 import processing.core.PShape;
 import processing.core.PShapeSVG;
 
-// Super fast OpenGL 2D renderer by Miles Fogle:
-// https://github.com/hazmatsuitor
+/**
+ * Super fast OpenGL 2D renderer originally contributed by Miles Fogle:
+ * https://github.com/hazmatsuitor
+ *
+ * It speeds-up rendering of 2D geometry by essentially two key optimizations: packing all the
+ * vertex data in a single VBO, and using a custom stroke tessellator (see StrokeRenderer class
+ * at the end). There are a number of other, less critical optimizations, for example using a single
+ * shader for textured and non-textured geometry and a depth algorithm that allows stacking a large
+ * number of 2D shapes without z-fighting (so occlusion is based on drawing order).
+ *
+ * Some notes from Miles:
+ *
+ * for testing purposes, I found it easier to create a separate class and avoid
+ * touching existing code for now, rather than directly editing PGraphics2D/PGraphicsOpenGL
+ * if this code becomes the new P2D implementation, then it will be properly migrated/integrated
 
-//for testing purposes, I found it easier to create a separate class and avoid
-//touching existing code for now, rather than directly editing PGraphics2D/PGraphicsOpenGL
-//if this code becomes the new P2D implementation, then it will be properly migrated/integrated
-
-//NOTE: this implementation doesn't use some of Processing's OpenGL wrappers
-//(e.g. PShader, Texture) because I found it more convenient to handle them manually
-//it could probably be made to use those classes with a bit of elbow grease and a spot of guidance
-//but it may not be worth it - I doubt it would reduce complexity much, if at all
-//(if there are reasons we need to use those classes, let me know)
+ * NOTE: this implementation doesn't use some of Processing's OpenGL wrappers
+ * (e.g. PShader, Texture) because I found it more convenient to handle them manually
+ * it could probably be made to use those classes with a bit of elbow grease and a spot of guidance
+ * but it may not be worth it - I doubt it would reduce complexity much, if at all
+ * (if there are reasons we need to use those classes, let me know)
+ *
+ */
 
 //TODO: track debug performance stats
 public final class PGraphics2DX extends PGraphicsOpenGL {
@@ -360,8 +393,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     if (image == null) {
       return;
     }
-
-    init();
 
     Texture t = currentPG.getTexture(image);
     texWidth = t.width;
@@ -1285,8 +1316,10 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   // SHADER FILTER
 
 
+
   @Override
   public void filter(PShader shader) {
+    // TODO: not working... the loadShader() method uses the P2 vertex stage
     // The filter method needs to use the geometry-generation in the base class.
     // We could re-implement it here, but this is easier.
     if (!useParentImpl) {
@@ -1299,9 +1332,27 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   }
 
 
+
   //////////////////////////////////////////////////////////////
 
   // SHADER API
+
+
+  @Override
+  public PShader loadShader(String fragFilename) {
+    if (fragFilename == null || fragFilename.equals("")) {
+      PGraphics.showWarning(MISSING_FRAGMENT_SHADER);
+      return null;
+    }
+
+    PShader shader = new PShader(parent);
+
+    shader.setFragmentShader(fragFilename);
+    String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
+    shader.setVertexShader(vertSource);
+
+    return shader;
+  }
 
 
   @Override
@@ -1498,24 +1549,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   // PRIVATE IMPLEMENTATION
 
 
-  //superclass does lazy initialization, so we need to as well
-  private void init() {
-    if (initialized) return;
-    initialized = true;
-
-    String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
-    String[] fragSource = pgl.loadFragmentShader(defP2DShaderFragURL);
-    twoShader = new PShader(parent, vertSource, fragSource);
-    loadShaderLocs(twoShader);
-    defTwoShader = twoShader;
-
-    //generate vbo
-    IntBuffer vboBuff = IntBuffer.allocate(1);
-    pgl.genBuffers(1, vboBuff);
-    vbo = vboBuff.get(0);
-  }
-
-
   //maxVerts can be tweaked for memory/performance trade-off
   //in my testing, performance seems to plateau after around 6000 (= 2000*3)
   //memory usage should be around ~165kb for 6000 verts
@@ -1531,28 +1564,31 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
   private int vbo;
   private int texWidth, texHeight;
 
+  // Determination of the smallest increments and largest-greater-than-minus-one
+  // https://en.wikipedia.org/wiki/Half-precision_floating-point_format
+
+  // Using the smallest positive normal number in half (16-bit) precision, which is how the depth
+  // buffer is initialized in mobile
+  private float smallestDepthIncrement = (float)Math.pow(2, -14);
+
+  // As the limit for the depth increase, we take the minus the largest number less than one in
+  // half (16-bit) precision
+  private float largestNumberLessThanOne = 1 - (float)Math.pow(2, -11);
 
   private void incrementDepth() {
-    //by resetting the depth buffer when needed, we are able to have arbitrarily many
-    //layers, unlimited by depth buffer precision. in practice, the precision of this
-    //algorithm seems to be very good (~1,000,000 layers), so it pretty much won't happen
-    //unless you're drawing enough geometry per frame to set your computer on fire
-    if (depth < -0.9999f) {
+    // By resetting the depth buffer when needed, we are able to have arbitrarily many
+    // layers, unlimited by depth buffer precision. In practice, the precision of this
+    // algorithm seems to be acceptable (exactly (1 + 1 - pow(2, -11))/pow(2, -14) = 32,760 layers)
+    // for mobile.
+    if (depth < -largestNumberLessThanOne) {
       flushBuffer();
       pgl.clear(PGL.DEPTH_BUFFER_BIT);
-      //depth test will fail at depth = 1.0 after clearing the depth buffer,
-      //but since we always increment before drawing anything, this should be okay
+      // Depth test will fail at depth = 1.0 after clearing the depth buffer,
+      // But since we always increment before drawing anything, this should be okay
       depth = 1.0f;
     }
 
-    //found to be a small but reliable increment value for a 24-bit depth buffer
-    //through trial and error. as numbers approach zero, absolute floating point
-    //precision increases, while absolute fixed point precision stays the same,
-    //so regardless of representation, this value should work for all depths in
-    //range (-1, 1), as long as it works for depths at either end of the range
-    depth -= 0.000001f;
-
-    //TODO: use an increment value based on good math instead of lazy trial-and-error
+    depth -= smallestDepthIncrement;
   }
 
 
@@ -1625,9 +1661,14 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       return;
     }
 
-    init();
+    if (vbo == 0) {
+      // Generate vbo
+      IntBuffer vboBuff = IntBuffer.allocate(1);
+      pgl.genBuffers(1, vboBuff);
+      vbo = vboBuff.get(0);
+    }
 
-    //upload vertex data
+    // Upload vertex data
     pgl.bindBuffer(PGL.ARRAY_BUFFER, vbo);
     pgl.bufferData(PGL.ARRAY_BUFFER, usedVerts * vertSize,
         FloatBuffer.wrap(vertexData), PGL.DYNAMIC_DRAW);
@@ -1652,16 +1693,24 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     if (positionLoc == -1) {
       positionLoc = shader.getAttributeLoc("vertex");
     }
-    int colorLoc = shader.getAttributeLoc("color");
-    int texCoordLoc = shader.getAttributeLoc("texCoord");
-    int texFactorLoc = shader.getAttributeLoc("texFactor");
+//    int colorLoc = shader.getAttributeLoc("color");
     int transformLoc = shader.getUniformLoc("transform");
     if (transformLoc == -1) {
       transformLoc = shader.getUniformLoc("transformMatrix");
     }
+
+    /*
+    // Became less demanding and 2D shaders do not need to have texture uniforms/attribs
     int texScaleLoc = shader.getUniformLoc("texScale");
-    return positionLoc != -1 && colorLoc != -1 && texCoordLoc != -1 &&
-           texFactorLoc != -1 && transformLoc != -1 && texScaleLoc != -1;
+    if (texScaleLoc == -1) {
+      texScaleLoc = shader.getUniformLoc("texOffset");
+    }
+    int texCoordLoc = shader.getAttributeLoc("texCoord");
+    int texFactorLoc = shader.getAttributeLoc("texFactor");
+    */
+
+    return positionLoc != -1 && transformLoc != -1;
+//         colorLoc != -1 && texCoordLoc != -1 && texFactorLoc != -1 && texScaleLoc != -1;
   }
 
 
@@ -1678,32 +1727,50 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       transformLoc = shader.getUniformLoc("transformMatrix");
     }
     texScaleLoc = shader.getUniformLoc("texScale");
+    if (texScaleLoc == -1) {
+      texScaleLoc = shader.getUniformLoc("texOffset");
+    }
   }
 
 
   private PShader getShader() {
+    // TODO: Perhaps a better way to handle the new 2D rendering would be to define a PShader2D
+    // subclass of PShader...
     PShader shader;
     if (twoShader == null) {
+      if (defTwoShader == null) {
+        String[] vertSource = pgl.loadVertexShader(defP2DShaderVertURL);
+        String[] fragSource = pgl.loadFragmentShader(defP2DShaderFragURL);
+        defTwoShader = new PShader(parent, vertSource, fragSource);
+      }
       shader = defTwoShader;
     } else {
       shader = twoShader;
     }
-    if (shader != defTwoShader) {
-      loadShaderLocs(shader);
-    }
+//    if (shader != defTwoShader) {
+    loadShaderLocs(shader);
+//    }
     return shader;
   }
 
+  @Override
+  protected PShader getPolyShader(boolean lit, boolean tex) {
+    return super.getPolyShader(lit, tex);
+  }
 
   private void setAttribs() {
     pgl.vertexAttribPointer(positionLoc, 3, PGL.FLOAT, false, vertSize, 0);
     pgl.enableVertexAttribArray(positionLoc);
-    pgl.vertexAttribPointer(texCoordLoc, 2, PGL.FLOAT, false, vertSize, 3*Float.BYTES);
-    pgl.enableVertexAttribArray(texCoordLoc);
+    if (-1 < texCoordLoc) {
+      pgl.vertexAttribPointer(texCoordLoc, 2, PGL.FLOAT, false, vertSize, 3*Float.BYTES);
+      pgl.enableVertexAttribArray(texCoordLoc);
+    }
     pgl.vertexAttribPointer(colorLoc, 4, PGL.UNSIGNED_BYTE, true, vertSize, 5*Float.BYTES);
     pgl.enableVertexAttribArray(colorLoc);
-    pgl.vertexAttribPointer(texFactorLoc, 1, PGL.FLOAT, false, vertSize, 6*Float.BYTES);
-    pgl.enableVertexAttribArray(texFactorLoc);
+    if (-1 < texFactorLoc) {
+      pgl.vertexAttribPointer(texFactorLoc, 1, PGL.FLOAT, false, vertSize, 6*Float.BYTES);
+      pgl.enableVertexAttribArray(texFactorLoc);
+    }
   }
 
 
@@ -1718,11 +1785,13 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     //set texture info
     pgl.activeTexture(PGL.TEXTURE0);
     pgl.bindTexture(PGL.TEXTURE_2D, tex);
-    //enable uv scaling only for use-defined images, not for fonts
-    if (tex == imageTex) {
-      pgl.uniform2f(texScaleLoc, 1f/texWidth, 1f/texHeight);
-    } else {
-      pgl.uniform2f(texScaleLoc, 1, 1);
+    if (-1 < texScaleLoc) {
+      //enable uv scaling only for use-defined images, not for fonts
+      if (tex == imageTex) {
+        pgl.uniform2f(texScaleLoc, 1f/texWidth, 1f/texHeight);
+      } else {
+        pgl.uniform2f(texScaleLoc, 1, 1);
+      }
     }
   }
 

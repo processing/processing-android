@@ -22,30 +22,75 @@
 
 package processing.ar;
 
-import android.opengl.GLES11Ext;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 import com.google.ar.core.Anchor;
+import com.google.ar.core.Camera;
+import com.google.ar.core.Frame;
+import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
+import com.google.ar.core.Session;
+import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 
+import java.net.URL;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 import processing.android.AppComponent;
 import processing.core.PGraphics;
 import processing.core.PMatrix3D;
 import processing.core.PSurface;
+import processing.event.TouchEvent;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
 import processing.opengl.PGraphicsOpenGL;
+import processing.opengl.PShader;
 
 public class PGraphicsAR extends PGraphics3D {
   // Convenience reference to the AR surface. It is the same object one gets from PApplet.getSurface().
   protected PSurfaceAR surfar;
 
+  protected BackgroundRenderer backgroundRenderer;
+
+  protected float[] projMatrix = new float[16];
+  protected float[] viewMatrix = new float[16];
+  protected float[] anchorMatrix = new float[16];
+  protected float[] colorCorrection = new float[4];
+
+  protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
+  protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
+  protected HashMap<Plane, Integer> trackIds = new HashMap<Plane, Integer>();
+
+  protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
+  protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
+  protected ArrayList<Anchor> delAnchors = new ArrayList<Anchor>();
+
+  protected ArrayList<Anchor> anchors = new ArrayList<Anchor>();
+  protected HashMap<Anchor, Integer> anchorIds = new HashMap<Anchor, Integer>();
+
+  protected float[] pointIn = new float[3];
+  protected float[] pointOut = new float[3];
+
+  protected int lastTrackableId = 0;
+  protected int lastAnchorId = 0;
+
+  static protected URL arLightShaderVertURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARLightVert.glsl");
+  static protected URL arTexlightShaderVertURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARTexLightVert.glsl");
+  static protected URL arLightShaderFragURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARLightFrag.glsl");
+  static protected URL arTexlightShaderFragURL =
+          PGraphicsOpenGL.class.getResource("/assets/shaders/ARTexLightFrag.glsl");
+
+  protected PShader arLightShader;
+  protected PShader arTexlightShader;
 
   public PGraphicsAR() {
   }
@@ -70,24 +115,15 @@ public class PGraphicsAR extends PGraphics3D {
     super.beginDraw();
     updateView();
 
+    // Always clear the screen and draw the background
     background(0);
-    surfar.renderBackground();
-
-//    flush();
-//    pgl.clearBackground(backgroundR, backgroundG, backgroundB, backgroundA,
-//        !hints[DISABLE_DEPTH_MASK], true);
+    backgroundRenderer.draw(surfar.frame);
   }
 
-
-//  @Override
-//  protected void backgroundImpl() {
-//    surfar.renderBackground();
-//  }
-
-//  protected void renderBackground() {
-//    backgroundImpl();
-//    surfar.renderBackground();
-//  }
+  public void endDraw() {
+    cleanup();
+    super.endDraw();
+  }
 
 
   @Override
@@ -132,51 +168,42 @@ public class PGraphicsAR extends PGraphics3D {
 
 
   protected void updateView() {
-    if (surfar.projmtx != null && surfar.viewmtx != null /*&& surfar.anchorMatrix != null*/) {
-      float[] prj = surfar.projmtx;
-      float[] view = surfar.viewmtx;
-//      float[] anchor = surfar.anchorMatrix;
+    if (projMatrix != null && viewMatrix != null) {
 
       // Fist, set all matrices to identity
       resetProjection();
       resetMatrix();
 
       // Apply the projection matrix
-      applyProjection(prj[0], prj[4], prj[8], prj[12],
-                      prj[1], prj[5], prj[9], prj[13],
-                      prj[2], prj[6], prj[10], prj[14],
-                      prj[3], prj[7], prj[11], prj[15]);
+      applyProjection(projMatrix[0], projMatrix[4], projMatrix[8], projMatrix[12],
+                      projMatrix[1], projMatrix[5], projMatrix[9], projMatrix[13],
+                      projMatrix[2], projMatrix[6], projMatrix[10], projMatrix[14],
+                      projMatrix[3], projMatrix[7], projMatrix[11], projMatrix[15]);
 
       // make modelview = view
-      applyMatrix(view[0], view[4], view[8], view[12],
-                  view[1], view[5], view[9], view[13],
-                  view[2], view[6], view[10], view[14],
-                  view[3], view[7], view[11], view[15]);
-
-//      // now, modelview = view * anchor
-//      applyMatrix(anchor[0], anchor[4], anchor[8], anchor[12],
-//                  anchor[1], anchor[5], anchor[9], anchor[13],
-//                  anchor[2], anchor[6], anchor[10], anchor[14],
-//                  anchor[3], anchor[7], anchor[11], anchor[15]);
+      applyMatrix(viewMatrix[0], viewMatrix[4], viewMatrix[8], viewMatrix[12],
+                  viewMatrix[1], viewMatrix[5], viewMatrix[9], viewMatrix[13],
+                  viewMatrix[2], viewMatrix[6], viewMatrix[10], viewMatrix[14],
+                  viewMatrix[3], viewMatrix[7], viewMatrix[11], viewMatrix[15]);
     }
   }
 
 
   @Override
   public int trackableCount() {
-    return surfar.trackPlanes.size();
+    return trackPlanes.size();
   }
 
 
   @Override
   public int trackableId(int i) {
-    return surfar.trackPlanes.get(i).hashCode();
+    return trackIds.get(trackPlanes.get(i));
   }
 
 
   @Override
   public int trackableType(int i) {
-    Plane plane = surfar.trackPlanes.get(i);
+    Plane plane = trackPlanes.get(i);
     if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
       return PAR.PLANE_FLOOR;
     } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
@@ -187,13 +214,13 @@ public class PGraphicsAR extends PGraphics3D {
     return PAR.UNKNOWN;
   }
 
+
   @Override
   public int trackableStatus(int i) {
-    Plane plane = surfar.trackPlanes.get(i);
-
-    if (surfar.newPlanes.contains(plane)) {
+    Plane plane = trackPlanes.get(i);
+    if (newPlanes.contains(plane)) {
       return PAR.CREATED;
-    } else if (surfar.updatedPlanes.contains(plane)) {
+    } else if (updatedPlanes.contains(plane)) {
       return PAR.UPDATED;
     } else if (plane.getTrackingState() == TrackingState.TRACKING) {
       return PAR.TRACKING;
@@ -202,34 +229,35 @@ public class PGraphicsAR extends PGraphics3D {
     } else if (plane.getTrackingState() == TrackingState.STOPPED) {
       return PAR.STOPPED;
     }
-
-    return 0;
-  }
-
-  @Override
-  public boolean trackableSelected(int i) {
-    return surfar.trackPlanes.indexOf(surfar.selPlane) == i;
-  }
-
-  @Override
-  public float trackableExtentX(int i) {
-    return surfar.trackPlanes.get(i).getExtentX();
+    return PAR.UNKNOWN;
   }
 
 
   @Override
-  public float trackableExtentZ(int i) {
-    return surfar.trackPlanes.get(i).getExtentZ();
+  public boolean trackableSelected(int i, int mx, int my) {
+    Plane planei = trackPlanes.get(i);
+    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+      Trackable trackable = hit.getTrackable();
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (planei.equals(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
+
 
   @Override
   public float[] getTrackablePolygon(int i) {
     return getTrackablePolygon(i, null);
   }
 
+
   @Override
   public float[] getTrackablePolygon(int i, float[] points) {
-    Plane plane = surfar.trackPlanes.get(i);
+    Plane plane = trackPlanes.get(i);
     FloatBuffer buffer = plane.getPolygon();
     buffer.rewind();
     if (points == null || points.length < buffer.capacity()) {
@@ -238,6 +266,7 @@ public class PGraphicsAR extends PGraphics3D {
     buffer.get(points, 0, buffer.capacity());
     return points;
   }
+
 
   @Override
   public PMatrix3D getTrackableMatrix(int i) {
@@ -251,8 +280,8 @@ public class PGraphicsAR extends PGraphics3D {
       target = new PMatrix3D();
     }
 
-    Plane plane = surfar.trackPlanes.get(i);
-    float[] mat = surfar.trackMatrices.get(plane);
+    Plane plane = trackPlanes.get(i);
+    float[] mat = trackMatrices.get(plane);
     target.set(mat[0], mat[4], mat[8], mat[12],
                mat[1], mat[5], mat[9], mat[13],
                mat[2], mat[6], mat[10], mat[14],
@@ -264,28 +293,19 @@ public class PGraphicsAR extends PGraphics3D {
 
   @Override
   public int anchorCount() {
-    return surfar.anchors.size();
+    return anchors.size();
   }
 
 
-//  @Override
-//  public boolean anchorPaused(int id) {
-//    return surfar.anchors.get(id).getTrackingState() == TrackingState.PAUSED;
-//  }
-//
-//  @Override
-//  public boolean anchorStopped(int id) {
-//    return surfar.anchors.get(id).getTrackingState() == TrackingState.TRACKING;
-//  }
-
-
+  @Override
   public int anchorId(int i) {
-    return i;
+    return anchorIds.get(anchors.get(i));
   }
 
-  public int anchorStatus(int id) {
-    Anchor anchor = surfar.anchors.get(id);
 
+  @Override
+  public int anchorStatus(int i) {
+    Anchor anchor = anchors.get(i);
     if (anchor.getTrackingState() == TrackingState.PAUSED) {
       return PAR.PAUSED;
     } else if (anchor.getTrackingState() == TrackingState.TRACKING) {
@@ -293,28 +313,13 @@ public class PGraphicsAR extends PGraphics3D {
     } else if (anchor.getTrackingState() == TrackingState.STOPPED) {
       return PAR.STOPPED;
     }
-
-    return 0;
+    return PAR.UNKNOWN;
   }
 
 
   @Override
-  public int createAnchor() {
-    if (surfar.selAnchor == -1) {
-      surfar.selAnchor = surfar.anchors.size();
-      surfar.anchors.add(null);
-    } else {
-      PGraphics.showWarning("Selection anchor already created");
-    }
-    return surfar.selAnchor;
-  }
-
-  protected float[] pointIn = new float[3];
-  protected float[] pointOut = new float[3];
-
-  @Override
-  public int createAnchor(int trackId, float x, float y, float z) {
-    Plane plane = surfar.trackMap.get(trackId);
+  public int createAnchor(int i, float x, float y, float z) {
+    Plane plane = trackPlanes.get(i);
     Pose planePose = plane.getCenterPose();
     pointIn[0] = x;
     pointIn[1] = y;
@@ -322,31 +327,48 @@ public class PGraphicsAR extends PGraphics3D {
     planePose.transformPoint(pointIn, 0, pointOut, 0);
     Pose anchorPose = Pose.makeTranslation(pointOut);
     Anchor anchor = plane.createAnchor(anchorPose);
-    surfar.anchors.add(anchor);
-    return surfar.anchors.size() - 1;
+    anchors.add(anchor);
+    anchorIds.put(anchor, ++lastAnchorId);
+    return lastAnchorId;
   }
 
 
   @Override
-  public void deleteAnchor(int id) {
-
+  public int createAnchor(int mx, int my) {
+    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+      Trackable trackable = hit.getTrackable();
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          Anchor anchor = hit.createAnchor();
+          anchors.add(anchor);
+          anchorIds.put(anchor, ++lastAnchorId);
+          return lastAnchorId;
+        }
+      }
+    }
+    return 0;
   }
 
 
   @Override
-  public PMatrix3D getAnchorMatrix(int id) {
-    return getAnchorMatrix(id, null);
+  public void deleteAnchor(int i) {
+    delAnchors.add(anchors.get(i));
   }
 
 
-  protected float[] anchorMatrix = new float[16];
+  @Override
+  public PMatrix3D getAnchorMatrix(int i) {
+    return getAnchorMatrix(i, null);
+  }
+
 
   @Override
-  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
+  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
     }
-    Anchor anchor = surfar.anchors.get(id);
+    Anchor anchor = anchors.get(i);
     anchor.getPose().toMatrix(anchorMatrix, 0);
     target.set(anchorMatrix[0], anchorMatrix[4], anchorMatrix[8], anchorMatrix[12],
                anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
@@ -357,8 +379,8 @@ public class PGraphicsAR extends PGraphics3D {
 
 
   @Override
-  public void anchor(int id) {
-    Anchor anchor = surfar.anchors.get(id);
+  public void anchor(int i) {
+    Anchor anchor = anchors.get(i);
     anchor.getPose().toMatrix(anchorMatrix, 0);
 
       // now, modelview = view * anchor
@@ -368,9 +390,107 @@ public class PGraphicsAR extends PGraphics3D {
                   anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
   }
 
+
+  protected void createBackgroundRenderer() {
+    backgroundRenderer = new BackgroundRenderer(surfar.getActivity());
+  }
+
+  protected void setCameraTexture() {
+    surfar.session.setCameraTextureName(backgroundRenderer.getTextureId());
+  }
+
+  protected void updateMatrices() {
+    surfar.camera.getProjectionMatrix(projMatrix, 0, 0.1f, 100.0f);
+    surfar.camera.getViewMatrix(viewMatrix, 0);
+    surfar.frame.getLightEstimate().getColorCorrection(colorCorrection, 0);
+  }
+
+
+  protected void updateTrackables() {
+    Collection<Plane> planes = surfar.frame.getUpdatedTrackables(Plane.class);
+    for (Plane plane: planes) {
+      if (plane.getSubsumedBy() != null) continue;
+      float[] mat;
+      if (trackMatrices.containsKey(plane)) {
+        mat = trackMatrices.get(plane);
+      } else {
+        mat = new float[16];
+        trackMatrices.put(plane, mat);
+        trackPlanes.add(plane);
+        trackIds.put(plane, ++lastTrackableId);
+        newPlanes.add(plane);
+      }
+      Pose pose = plane.getCenterPose();
+      pose.toMatrix(mat, 0);
+      updatedPlanes.add(plane);
+    }
+
+    // Remove stopped and subsummed trackables
+    for (int i = trackPlanes.size() - 1; i >= 0; i--) {
+      Plane plane = trackPlanes.get(i);
+      if (plane.getTrackingState() == TrackingState.STOPPED || plane.getSubsumedBy() != null) {
+        trackPlanes.remove(i);
+        trackMatrices.remove(plane);
+        trackIds.remove(plane);
+      }
+    }
+  }
+
+
+  protected void cleanup() {
+    updatedPlanes.clear();
+    newPlanes.clear();
+
+    for (Anchor anchor: delAnchors) {
+      anchor.detach();
+      anchorIds.remove(anchor);
+      anchors.remove(anchor);
+    }
+    delAnchors.clear();
+  }
+
+
   @Override
-  public void lights() {
-    // TODO <---------------------------------------------------------------------------------------
-    super.lights();
+  protected PShader getPolyShader(boolean lit, boolean tex) {
+    if (getPrimaryPG() != this) {
+      // An offscreen surface will use the default shaders from the parent OpenGL renderer
+      return super.getPolyShader(lit, tex);
+    }
+
+    PShader shader;
+    boolean useDefault = polyShader == null;
+    if (lit) {
+      if (tex) {
+        if (useDefault || !isPolyShaderTexLight(polyShader)) {
+          if (arTexlightShader == null) {
+            arTexlightShader = loadShaderFromURL(arTexlightShaderFragURL, arTexlightShaderVertURL);
+          }
+          shader = arTexlightShader;
+        } else {
+          shader = polyShader;
+        }
+      } else {
+        if (useDefault || !isPolyShaderLight(polyShader)) {
+          if (arLightShader == null) {
+            arLightShader = loadShaderFromURL(arLightShaderFragURL, arLightShaderVertURL);
+          }
+          shader = arLightShader;
+        } else {
+          shader = polyShader;
+        }
+      }
+      updateShader(shader);
+      return shader;
+    } else {
+      // Non-lit shaders use the default shaders from the parent OpenGL renderer
+      return super.getPolyShader(lit, tex);
+    }
+  }
+
+
+  @Override
+  protected void updateShader(PShader shader) {
+    super.updateShader(shader);
+    shader.set("colorCorrection", colorCorrection, 4);
   }
 }

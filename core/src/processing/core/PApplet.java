@@ -9373,16 +9373,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.trackableStatus(i);
   }
 
-  public boolean trackableSelected(int i) {
-    return g.trackableSelected(i);
-  }
-
-  public float trackableExtentX(int i) {
-    return g.trackableExtentX(i);
-  }
-
-  public float trackableExtentZ(int i) {
-    return g.trackableExtentZ(i);
+  public boolean trackableSelected(int i, int mx, int my) {
+    return g.trackableSelected(i, mx, my);
   }
 
   public float[] getTrackablePolygon(int i) {
@@ -9409,32 +9401,32 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return g.anchorId(i);
   }
 
-  public int anchorStatus(int id) {
-    return g.anchorStatus(id);
+  public int anchorStatus(int i) {
+    return g.anchorStatus(i);
   }
 
-  public int createAnchor() {
-    return g.createAnchor();
+  public int createAnchor(int i, float x, float y, float z) {
+    return g.createAnchor(i, x, y, z);
   }
 
-  public int createAnchor(int trackId, float x, float y, float z) {
-    return g.createAnchor(trackId, x, y, z);
+  public int createAnchor(int mx, int my) {
+    return g.createAnchor(mx, my);
   }
 
-  public void deleteAnchor(int id) {
-    g.deleteAnchor(id);
+  public void deleteAnchor(int i) {
+    g.deleteAnchor(i);
   }
 
-  public PMatrix3D getAnchorMatrix(int id) {
-    return g.getAnchorMatrix(id);
+  public PMatrix3D getAnchorMatrix(int i) {
+    return g.getAnchorMatrix(i);
   }
 
-  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
-    return g.getAnchorMatrix(id, target);
+  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
+    return g.getAnchorMatrix(i, target);
   }
 
-  public void anchor(int id) {
-    g.anchor(id);
+  public void anchor(int i) {
+    g.anchor(i);
   }
 
   // ***********************************************************************************************

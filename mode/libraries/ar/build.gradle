@@ -120,6 +120,9 @@ sourceSets {
         java {
             srcDirs = ["src/"]
         }
+        resources {
+            srcDirs = ["src/"]
+        }        
     }
 }
 
@@ -149,7 +152,7 @@ clean.doFirst {
 }
 
 build.doLast {
-    // // Copying ar jar to library folder
+    // Copying ar jar to library folder
     File arJar = file("library/ar.jar")
     arJar.mkdirs();
     Files.copy(file("$buildDir/libs/ar.jar").toPath(),

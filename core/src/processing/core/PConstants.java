@@ -46,6 +46,7 @@ public interface PConstants {
   // built-in rendering options
   static final String JAVA2D = "processing.core.PGraphicsAndroid2D";
   static final String P2D = "processing.opengl.PGraphics2D";
+  static final String P2DX = "processing.opengl.PGraphics2DX";
   static final String P3D = "processing.opengl.PGraphics3D";
   static final String OPENGL = P3D;
   static final String STEREO = "processing.vr.PGraphicsVRStereo";
