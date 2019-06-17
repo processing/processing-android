@@ -67,7 +67,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   
   private final Vector<String> columns_tools = new Vector<>(Arrays.asList("Select",
       "Package name", "Installed version", "Available update"));
-  private final Vector<String> columns_platforms = new Vector<>(Arrays.asList("Platform",
+  private final Vector<String> columns_platforms = new Vector<>(Arrays.asList("Select","Platform",
           "Revision","Status"));
   private static final String PROPERTY_CHANGE_QUERY = "query";
 
