@@ -724,8 +724,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     downloadPathPanel.add(pathLabel,BorderLayout.NORTH);
 
     final JLabel locationLabel = new JLabel(processing.app.Base.getSketchbookFolder().getAbsolutePath());
-    locationLabel.setMaximumSize(Toolkit.zoom(100,locationLabel.getHeight()));
-    locationLabel.setPreferredSize(Toolkit.zoom(100,locationLabel.getHeight()));
+    locationLabel.setMaximumSize(Toolkit.zoom(200,locationLabel.getHeight()));
+    locationLabel.setPreferredSize(Toolkit.zoom(200,locationLabel.getHeight()));
     locationLabel.setToolTipText(locationLabel.getText());
     downloadPathPanel.add(locationLabel,BorderLayout.WEST);
 
@@ -766,18 +766,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     JPanel buttons = new JPanel();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
 
-    JButton backButton = new JButton("Back");
-    backButton.setPreferredSize(dim);
-    backButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        dispose();
-        goBack = true;
-      }
-    });
-    buttons.add(backButton);
-
-    JButton continueButton = new JButton("Continue");
+    JButton continueButton = new JButton("Install");
     continueButton.setPreferredSize(dim);
     continueButton.addActionListener(new ActionListener() {
       @Override
@@ -789,16 +778,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     });
     buttons.add(continueButton);
 
-    JButton cancelButton = new JButton("Cancel");
-    cancelButton.setPreferredSize(dim);
-    buttons.add(cancelButton);
-    cancelButton.addActionListener(new ActionListener() {
+    JButton backButton = new JButton("Back");
+    backButton.setPreferredSize(dim);
+    backButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         dispose();
-        cancelled = true;
+        goBack = true;
       }
     });
+    buttons.add(backButton);
+
     mainPanel.add(buttons);
 
     //The side panel with image Icon-------------------------------------------
