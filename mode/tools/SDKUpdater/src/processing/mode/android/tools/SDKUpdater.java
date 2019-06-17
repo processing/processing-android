@@ -32,6 +32,7 @@ import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.sdklib.tool.sdkmanager.SdkManagerCli;
 
 import processing.app.Base;
+import processing.app.Messages;
 import processing.app.Preferences;
 import processing.app.tools.Tool;
 import processing.app.ui.Toolkit;
@@ -325,6 +326,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           throw new SdkManagerCli.CommandFailedException();
         }
         remotes.add(p);
+      }
+
+      if (remotes.size() == 0) {
+        actionButtonPlatform.setText("Install");
+        Messages.showWarning("SDK Updater","No platform was selected");
+        return null;
       }
 
       remotes = InstallerUtil.computeRequiredPackages(
