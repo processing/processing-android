@@ -92,6 +92,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   private JButton actionButtonPlatform;
   private JTable table;
   private JTable tablePlatforms;
+  private JTabbedPane tabs;
 
   private ArrayList<String> packagePathsList;
   private ArrayList<String> platformPathsList;
@@ -245,18 +246,20 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       for (String path: installed.keySet()) {
         Vector info = new Vector();
         List locInfo = installed.get(path);
-        packagePathsList.add(path);
-        info.add(false);
-        info.add(locInfo.get(0));
-        info.add(locInfo.get(1));
-        if (updated.containsKey(path)) {
-          String upVer = updated.get(path).get(1);
-          info.add(upVer);
-          numUpdates++;
-        } else {
-          info.add("");
+        if (!isPlatform(path)) {
+          packagePathsList.add(path);
+          info.add(false);
+          info.add(locInfo.get(0));
+          info.add(locInfo.get(1));
+          if (updated.containsKey(path)) {
+            String upVer = updated.get(path).get(1);
+            info.add(upVer);
+            numUpdates++;
+          } else {
+            info.add("");
+          }
+          packageList.add(info);
         }
-        packageList.add(info);
       }
 
       return null;
@@ -287,6 +290,15 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
             e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
       }
+    }
+
+    private Boolean isPlatform(String path){
+      int end_pos = path.indexOf(";");
+      String pathType = end_pos != -1 ? path.substring(0,end_pos) : "" ;
+      if (pathType.equals("platforms")) {
+        return true;
+      }
+      return false;
     }
   }
 
@@ -330,6 +342,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 
       if (remotes.size() == 0) {
         actionButtonPlatform.setText("Install");
+        actionButton.setText("Update");
         Messages.showWarning("SDK Updater","No platform was selected");
         return null;
       }
@@ -360,6 +373,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       try {
         get();
         actionButton.setEnabled(false);
+        tabs.setEnabled(true);
         status.setText("Refreshing packages...");
         statusPlatform.setText("Refreshing packages...");
         queryTask = new QueryTask();
@@ -432,7 +446,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     Box verticalBox1 = Box.createVerticalBox();
     verticalBox1.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
 
-    JTabbedPane tabs = new JTabbedPane();
+    tabs = new JTabbedPane();
     tabs.add("SDK Tools",verticalBox);
     tabs.add("Platforms",verticalBox1);
     outer.add(tabs);
@@ -523,6 +537,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 
           status.setText("Downloading available updates...");
           actionButton.setText("Cancel");
+          tabs.setEnabled(false);
         }
       }
     });
@@ -628,6 +643,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           progressBarPlatform.setIndeterminate(true);
           downloadTask.execute();
           actionButtonPlatform.setText("Cancel");
+          tabs.setEnabled(false);
         }
       }
     });
