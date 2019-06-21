@@ -262,6 +262,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         }
       }
 
+      Collections.sort(platformList,comparator);
       return null;
     }
 
@@ -300,6 +301,17 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       }
       return false;
     }
+
+    Comparator<Vector> comparator = new Comparator<Vector>() {
+      @Override
+      public int compare(Vector o1, Vector o2) {
+        String name1 = (String) o1.get(1);
+        String name2 = (String) o2.get(1);
+        int version1 = Integer.parseInt(name1.substring(name1.indexOf(" ")+1));
+        int version2 = Integer.parseInt(name2.substring(name2.indexOf(" ")+1));
+        return version2 - version1;
+      }
+    };
   }
 
   class DownloadTask extends SwingWorker<Object, Object> {
