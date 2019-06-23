@@ -160,9 +160,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
 
-        // emulator, unpacks directly to sdk folder 
-        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
-        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
+        // emulator, unpacks directly to sdk folder
+//        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
+//        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
         
         // google repository
 //        File downloadedGoogleRepo = new File(tempFolder, downloadUrls.googleRepoFilename);
@@ -336,12 +336,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         urlHolder.toolsVersion = recentsArray.get(1);
 
         NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes(); //Second item is the latest tools for now
-        urlHolder.buildToolsVersion = recentsArray.get(1);
+        urlHolder.toolsVersion = recentsArray.get(1);
 
         try {
           ArrayList<String> urlData = parseURL(childNodes, true, requiredHostOs);
           urlHolder.toolsFilename = urlData.get(0);
-          urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+          urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
           urlHolder.totalSize += Integer.parseInt(urlData.get(1));
           found = true;
         }
@@ -541,7 +541,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
 
   //check stability of all listed versions and return the most recent one
-  private ArrayList<String> getRecentVersion(NodeList remotePackages,int packageType){
+  //packageType : 1 -> Platforms ; packagetType : 2 -> others
+  private ArrayList<String> getRecentVersion(NodeList remotePackages,int packageType){ //returns [recentNode's Index , version No.]
     ArrayList versionList = new ArrayList();
     ArrayList<String> recentsArray = new ArrayList<String>();
 
@@ -578,27 +579,35 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     return recentsArray;
   }
 
-  private ArrayList<String> parseURL(NodeList childNodes,boolean checkPlatform,String requiredHostOs){
+  private ArrayList<String> parseURL(NodeList childNodes,boolean checkPlatform,String requiredHostOs) {
+    //returns [FileName, FileSize]
 
     ArrayList<String> parseURLArray = new ArrayList<String>();
     NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
 
     for (int j = 0; j < archives.getLength(); ++j) {
       NodeList archive = archives.item(j).getChildNodes();
-      NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-      NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-      NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-      parseURLArray.add(url.item(0).getTextContent());
-      parseURLArray.add(size.item(0).getTextContent());
 
       if (checkPlatform) {
         NodeList os = ((Element) archive).getElementsByTagName("host-os");
         if (os.item(0).getTextContent().equals(requiredHostOs)) {
-          parseURLArray.add(os.item(0).getTextContent());
+          NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+          parseURLArray.add(url.item(0).getTextContent());
+          parseURLArray.add(size.item(0).getTextContent());
           break;
         }
+      } else {
+        NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+        parseURLArray.add(url.item(0).getTextContent());
+        parseURLArray.add(size.item(0).getTextContent());
       }
     }
     return parseURLArray;
