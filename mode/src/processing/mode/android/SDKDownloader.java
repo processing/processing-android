@@ -588,26 +588,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     for (int j = 0; j < archives.getLength(); ++j) {
       NodeList archive = archives.item(j).getChildNodes();
 
+      NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+      NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+      NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+
+      parseURLArray.add(url.item(0).getTextContent());
+      parseURLArray.add(size.item(0).getTextContent());
+
       if (checkPlatform) {
         NodeList os = ((Element) archive).getElementsByTagName("host-os");
         if (os.item(0).getTextContent().equals(requiredHostOs)) {
-          NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-          parseURLArray.add(url.item(0).getTextContent());
-          parseURLArray.add(size.item(0).getTextContent());
           break;
+        } else {
+          parseURLArray.clear();
         }
-      } else {
-        NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-        parseURLArray.add(url.item(0).getTextContent());
-        parseURLArray.add(size.item(0).getTextContent());
       }
     }
     return parseURLArray;
