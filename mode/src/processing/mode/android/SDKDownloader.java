@@ -806,6 +806,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
     pack();
     setLocationRelativeTo(editor);
+    setResizable(false);
   }
   
   private void createLayout() {
