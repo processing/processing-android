@@ -734,12 +734,13 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     if(Platform.getName()!="linux") addPackage(gc,5,packagesPanel,"Android Build Tools: ",downloadUrls.haxmVersion);
 
     //SDK_Path selection Panel---------------------------------------
+    final String endPoint = File.separator+"android"+File.separator+"sdk";
     JPanel downloadPathPanel = new JPanel();
     downloadPathPanel.setLayout(new BorderLayout());
     JLabel pathLabel = new JLabel("Installation Path: ");
     downloadPathPanel.add(pathLabel,BorderLayout.NORTH);
 
-    final JLabel locationLabel = new JLabel(processing.app.Base.getSketchbookFolder().getAbsolutePath());
+    final JLabel locationLabel = new JLabel(processing.app.Base.getSketchbookFolder().getAbsolutePath()+endPoint);
     locationLabel.setMaximumSize(Toolkit.zoom(200,locationLabel.getHeight()));
     locationLabel.setPreferredSize(Toolkit.zoom(200,locationLabel.getHeight()));
     locationLabel.setToolTipText(locationLabel.getText());
@@ -759,7 +760,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           fd.setVisible(true);
           System.setProperty("apple.awt.fileDialogForDirectories", "false");
           if(fd.getFile() != null){
-            locationLabel.setText(new File(fd.getDirectory(),fd.getFile()).getAbsolutePath());
+            locationLabel.setText(new File(fd.getDirectory(),fd.getFile()).getAbsolutePath()+endPoint);
             locationLabel.setToolTipText(locationLabel.getText());
           }
         } else {
@@ -769,7 +770,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
           fc.showOpenDialog(SDKDownloader.super.rootPane); //To put it on top of the modalDialog
           if (fc.getSelectedFile() != null) {
-            locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
+            locationLabel.setText(fc.getSelectedFile().getAbsolutePath()+endPoint);
             locationLabel.setToolTipText(locationLabel.getText());
           }
         }
@@ -787,7 +788,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     continueButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        File sdkFolder = new File(locationLabel.getText());
+        String path = locationLabel.getText();
+        File sdkFolder = new File(path.substring(0,path.indexOf(endPoint)));
         run(urlHolder,sdkFolder);
         createLayout();
       }
