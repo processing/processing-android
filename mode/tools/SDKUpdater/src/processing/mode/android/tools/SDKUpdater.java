@@ -483,7 +483,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     packageTable = new DefaultTableModel(NUM_ROWS, columns_tools.size()) {
       @Override
       public boolean isCellEditable(int row, int column) {
-        if (column == 0) return true;
+        String version = (String) packageTable.getValueAt(row,3);
+        if (!version.equals("")) return true; //only if update exists
         return false;
       }
 
@@ -606,7 +607,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     platformTable = new DefaultTableModel(NUM_ROWS, columns_platforms.size()) {
       @Override
       public boolean isCellEditable(int row, int column) {
-        if (column == 0) return true;
+        String status = (String) platformTable.getValueAt(row,3);
+        if(status.equals("Not Installed")) return true;
         return false;
       }
 
