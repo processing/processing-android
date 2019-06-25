@@ -84,7 +84,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private boolean cancelled;
   private boolean goBack;
   
-  private int totalSize = 0;  
+  private int totalSize = 0;
+  private File sdkFolder;
 
   class SDKUrlHolder {
     public String platformToolsVersion, buildToolsVersion,platformVersion,toolsVersion,emulatorVersion ;
@@ -118,7 +119,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       File androidFolder = new File(sketchbookFolder, "android");
       if (!androidFolder.exists()) androidFolder.mkdir();
       
-      File sdkFolder = AndroidUtil.createSubFolder(androidFolder, "sdk");
+      sdkFolder = AndroidUtil.createSubFolder(androidFolder, "sdk");
             
       // creating sdk folders
       File platformsFolder = new File(sdkFolder, "platforms");
@@ -688,6 +689,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     packagesPanel.add(versionLabel,gc);
   }
 
+  private void deleteFolder(File folder) { //recursively delete a complete directory with files and folders.
+    for (File f : folder.listFiles()) {
+      if (f.isDirectory()) {
+        deleteFolder(f);
+        f.delete();
+      }
+      else f.delete();
+    }
+    folder.delete();
+  }
+
   private void createInitLayout(SDKUrlHolder downloadUrls) {
     goBack = false;
     Container outer = getContentPane();
@@ -867,6 +879,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       public void actionPerformed(ActionEvent e) {
         if (downloadTask != null) {
           downloadTask.cancel(true);
+          deleteFolder(sdkFolder);
         }
         setVisible(false);
         cancelled = true;
