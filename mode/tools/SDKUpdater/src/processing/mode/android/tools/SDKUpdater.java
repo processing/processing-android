@@ -328,12 +328,14 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     ProgressIndicator progress;
     JProgressBar progressBar;
     Boolean isPlatform;
+    JLabel status;
 
-    DownloadTask(JProgressBar progressBar, Boolean isPlatform) {
+    DownloadTask(JProgressBar progressBar, Boolean isPlatform,JLabel status) {
       super();   
       progress = new ConsoleProgressIndicator();
       this.progressBar = progressBar;
       this.isPlatform = isPlatform;
+      this.status = status;
     }
     
     @Override
@@ -350,6 +352,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       Downloader downloader = new LegacyDownloader(fop, settings);
 
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
+      status.setText("Loading repository");
       mRepoManager.loadSynchronously(0, progress, downloader, settings);
       
       List<RemotePackage> remotes = new ArrayList<>();
@@ -375,6 +378,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         for (RemotePackage p : remotes) {
           Installer installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
               .createInstaller(p, mRepoManager, downloader, mHandler.getFileOp());
+          status.setText("Downloading...");
           if (!(installer.prepare(progress) && installer.complete(progress))) {
             // there was an error, abort.
             throw new SdkManagerCli.CommandFailedException();
@@ -398,6 +402,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         tabs.setEnabled(true);
         status.setText("Refreshing packages...");
         statusPlatform.setText("Refreshing packages...");
+
+        //reset the progress bar to indeterminate for querying
+        progressBar.setIndeterminate(false);
+        progressBarPlatform.setIndeterminate(false);
+
+        //start querying again
         queryTask = new QueryTask();
         queryTask.addPropertyChangeListener(SDKUpdater.this);
         queryTask.execute();
@@ -454,6 +464,21 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         return updates;
       }
     }
+  }
+
+  private void startProgressThread(final JProgressBar bar){
+    Thread update = new Thread() {
+      @Override
+      public void run() {
+        while (downloadTaskRunning) {
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException e) { }
+          bar.setValue((int) (downloadTask.progress.getFraction() * 100));
+        }
+      }
+    };
+    update.start();
   }
 
   private void createLayout(final boolean standalone) {
@@ -538,27 +563,16 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     actionButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if (downloadTaskRunning) { // i.e button state is Cancel
+          status.setText("Update canceled");
+          actionButton.setText("Update");
           cancelTasks();
         } else { // i.e button state is Update
-          downloadTask = new DownloadTask(progressBar,false);
-          progressBar.setIndeterminate(true);
+          downloadTask = new DownloadTask(progressBar,false,status);
+          progressBar.setIndeterminate(false);
+          progressBar.setMaximum(100);
           downloadTask.execute();
-
-          // getFraction() always returns 0.0, needs to be set somewhere (??)
-//          Thread update = new Thread() {
-//            @Override
-//            public void run() {
-//              while (downloadTaskRunning) {
-//                try {
-//                  Thread.sleep(100);
-//                } catch (InterruptedException e) { }
-//                System.out.println("Updating: " + downloadTask.progress.getFraction());
-//              }
-//            }
-//          };
-//          update.start();
-
-          status.setText("Downloading available updates...");
+          startProgressThread(progressBar);
+          status.setText("Downloading selected updates...");
           actionButton.setText("Cancel");
           tabs.setEnabled(false);
         }
@@ -661,11 +675,16 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       @Override
       public void actionPerformed(ActionEvent e) {
         if (downloadTaskRunning) { // i.e button state is Cancel
+          statusPlatform.setText("Download canceled");
+          actionButtonPlatform.setText("Install");
           cancelTasks();
         } else { // i.e button state is Update
-          downloadTask = new DownloadTask(progressBarPlatform,true);
-          progressBarPlatform.setIndeterminate(true);
+          downloadTask = new DownloadTask(progressBarPlatform,true,statusPlatform);
+          progressBarPlatform.setIndeterminate(false);
+          progressBarPlatform.setMaximum(100);
           downloadTask.execute();
+          startProgressThread(progressBarPlatform);
+          statusPlatform.setText("Downloading selected platforms..");
           actionButtonPlatform.setText("Cancel");
           tabs.setEnabled(false);
         }
@@ -719,11 +738,15 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     queryTask.cancel(true);
     if (downloadTaskRunning) {
       downloadTask.cancel(true);
-      status.setText("Download canceled");
+
+      //reset UI
+      tabs.setEnabled(true);
       JOptionPane.showMessageDialog(null,
           "Download canceled", "Warning", JOptionPane.WARNING_MESSAGE);
-      actionButton.setText("Update");
-      actionButtonPlatform.setText("Install");
+
+      //reset progress bar
+      progressBar.setValue(0);
+      progressBarPlatform.setValue(0);
     }
   }
   
