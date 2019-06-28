@@ -50,6 +50,8 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -71,6 +73,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   private final Vector<String> columns_platforms = new Vector<>(Arrays.asList("Select","Platform",
           "Revision","Status"));
   private static final String PROPERTY_CHANGE_QUERY = "query";
+  private final String errorTitle = "Internet connection not available";
+  private final String errorMessage = "SDK Updater needs internet connection." +
+          " Check your internet connection and restart the SDK Updater.";
 
   private File sdkFolder;
 
@@ -103,17 +108,22 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     createLayout(base.getActiveEditor() == null);
   }
 
+
   
   @Override
   public void run() {
     setVisible(true);
     String path = Preferences.get("android.sdk.path");
-    sdkFolder = new File(path);    
-    queryTask = new QueryTask();
-    queryTask.addPropertyChangeListener(this);
-    queryTask.execute();
-    status.setText("Querying packages...");
-    statusPlatform.setText("Querying packages... ");
+    sdkFolder = new File(path);
+
+    //start by checking internet connection:
+    if(checkConnectivity()) {
+      queryTask = new QueryTask();
+      queryTask.addPropertyChangeListener(this);
+      queryTask.execute();
+      status.setText("Querying packages...");
+      statusPlatform.setText("Querying packages... ");
+    }
   }
 
   
@@ -166,7 +176,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
                with some changes
        */
       AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(sdkFolder);
-      
+
       FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
       mRepoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, new SettingsController() {
@@ -224,7 +234,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       for (UpdatablePackage update : packages.getUpdatedPkgs()) {              
         String path = update.getPath();
         String loc = update.getLocal().getVersion().toString();
-        String rem = update.getRemote().getVersion().toString();              
+        String rem = update.getRemote().getVersion().toString();
         updated.put(path, Arrays.asList(loc, rem));
       }
 
@@ -464,6 +474,21 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         return updates;
       }
     }
+  }
+
+  private Boolean checkConnectivity() {
+    URL url = null;
+    try {
+      url = new URL("https://dl.google.com");
+      URLConnection connection = url.openConnection();
+      connection.connect();
+    } catch (Exception e) {
+      Messages.showWarning(errorTitle,errorMessage);
+      this.setVisible(false);
+      this.dispose();
+      return false;
+    }
+    return true;
   }
 
   private void startProgressThread(final JProgressBar bar){
