@@ -42,19 +42,11 @@ void draw() {
       continue;
     }
 
-    anchor.attach();
-    fill(255);
-    rotateY(angle);
-    box(0.15);
-    anchor.detach();
+    drawBox(anchor, 255, 255, 255);
   }
 
   if (selAnchor != null) {
-    selAnchor.attach();
-    fill(255, 0, 0);
-    rotateY(angle);
-    box(0.15);
-    selAnchor.detach();
+    drawBox(selAnchor, 255, 0, 0);
   }
   
 
@@ -96,5 +88,13 @@ void draw() {
     popMatrix();
   }
 
-  angle += 0.1;    
+  angle += 0.1;
+}
+
+void drawBox(Anchor anchor, int r, int g, int b) {
+  anchor.attach();
+  fill(r, g, b);
+  rotateY(angle);
+  box(0.15);
+  anchor.detach();  
 }
