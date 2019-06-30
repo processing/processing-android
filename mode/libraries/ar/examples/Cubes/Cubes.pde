@@ -1,14 +1,18 @@
 import processing.ar.*;
 
-float[] points;
-PMatrix3D mat;
 float angle;
-int oldSelAnchor;
-int selAnchor;
+Anchor selAnchor;
+ArrayList<Anchor> regAnchors;
+
+Tracker tracker;
 
 void setup() {
   fullScreen(AR);
   mat = new PMatrix3D();
+
+  tracker = new Tracker(this);
+  tracker.start();
+  regAnchors = new ArrayList<Anchor>();
 }
 
 void draw() {
@@ -25,58 +29,58 @@ void draw() {
 
   if (mousePressed) {
     // Create new anchor at the current touch point
-    oldSelAnchor = selAnchor;
-    selAnchor = createAnchor(mouseX, mouseY);
+    if (selAnchor != null) selAnchor.dispose();
+    selAnchor = new Anchor(tracker, mouseX, mouseY);
   }
 
   // Draw objects attached to each anchor
-  for (int i = 0; i < anchorCount(); i++) {
-    int id = anchorId(i);
-    if (oldSelAnchor == id) {
-      deleteAnchor(i);
-      continue;
-    }
+  for (Anchor anchor: regAnchors) {
 
-    int status = anchorStatus(i);
+    int status = anchor.status(i);
     if (status ==  PAR.PAUSED || status == PAR.STOPPED) {
-      if (status == PAR.STOPPED) deleteAnchor(i);
+      if (status == PAR.STOPPED) anchor.dispose();
       continue;
     }
 
-    pushMatrix();
-    anchor(i);
-
-    if (selAnchor == id) {
-      fill(255, 0, 0);
-    } else {
-      fill(255);
-    }
-
+    anchor.attach();
+    fill(255);
     rotateY(angle);
     box(0.15);
-    popMatrix();
+    anchor.detach();
   }
 
+  if (selAnchor != null) {
+    selAnchor.attach();
+    fill(255, 0, 0);
+    rotateY(angle);
+    box(0.15);
+    selAnchor.detach();
+  }
+  
+
   // Draw trackable planes
-  for (int i = 0; i < trackableCount(); i++) {
-    int status = trackableStatus(i);
+  for (int i = 0; i < tracker.count(); i++) {
+    Trackable trackable = tracker.get(i);
+
+    int status = trackable.status();
     if (status ==  PAR.PAUSED || status == PAR.STOPPED) continue;
 
-    if (status == PAR.CREATED && trackableCount() < 10) {
+    if (status == PAR.CREATED && regAnchor.size() < 10) {
       // Add new anchor associated to this trackable, 0.3 meters above it
-      if (trackableType(i) == PAR.PLANE_WALL) {
-        createAnchor(i, 0.3, 0, 0);
+      Anchor anchor;
+      if (trackable.type() == PAR.PLANE_WALL) {
+        anchor = new Anchor(trackable, 0.3, 0, 0);
       } else {
-        createAnchor(i, 0, 0.3, 0);
+        anchor = new Anchor(trackable, 0, 0.3, 0);
       }
+      regAnchors.add(anchor);
     }
 
-    points = getTrackablePolygon(i, points);
-
-    getTrackableMatrix(i, mat);
+    float[] points = trackable.getPolygon();
+    
     pushMatrix();
-    applyMatrix(mat);
-    if (mousePressed && trackableSelected(i, mouseX, mouseY)) {
+    trackable.transform();
+    if (mousePressed && trackable.selected(mouseX, mouseY)) {
       fill(255, 0, 0, 100);
     } else {
       fill(255, 100);

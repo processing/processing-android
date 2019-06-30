@@ -66,10 +66,9 @@ public class PGraphicsAR extends PGraphics3D {
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
   protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
-  protected ArrayList<Anchor> delAnchors = new ArrayList<Anchor>();
+  protected ArrayList<Integer> delAnchors = new ArrayList<Integer>();
 
-  protected ArrayList<Anchor> anchors = new ArrayList<Anchor>();
-  protected HashMap<Anchor, Integer> anchorIds = new HashMap<Anchor, Integer>();
+  protected HashMap<Integer, Anchor> anchors = new HashMap<Integer, Anchor>();
 
   protected float[] pointIn = new float[3];
   protected float[] pointOut = new float[3];
@@ -199,13 +198,13 @@ public class PGraphicsAR extends PGraphics3D {
     trackers.remove(tracker);
   }
 
-  @Override
+
   public int trackableCount() {
     return trackPlanes.size();
   }
 
 
-  @Override
+
   public int trackableId(int i) {
     return trackIds.get(trackPlanes.get(i));
   }
@@ -216,7 +215,6 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
   public int trackableType(int i) {
     Plane plane = trackPlanes.get(i);
     if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
@@ -230,7 +228,6 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
   public int trackableStatus(int i) {
     Plane plane = trackPlanes.get(i);
     if (newPlanes.contains(plane)) {
@@ -248,7 +245,6 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
   public boolean trackableSelected(int i, int mx, int my) {
     Plane planei = trackPlanes.get(i);
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
@@ -264,13 +260,11 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
   public float[] getTrackablePolygon(int i) {
     return getTrackablePolygon(i, null);
   }
 
 
-  @Override
   public float[] getTrackablePolygon(int i, float[] points) {
     Plane plane = trackPlanes.get(i);
     FloatBuffer buffer = plane.getPolygon();
@@ -283,13 +277,11 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
   public PMatrix3D getTrackableMatrix(int i) {
     return getTrackableMatrix(i, null);
   }
 
 
-  @Override
   public PMatrix3D getTrackableMatrix(int i, PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
@@ -306,21 +298,48 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
+  public int createAnchor(int i, float x, float y, float z) {
+    Plane plane = trackPlanes.get(i);
+    Pose planePose = plane.getCenterPose();
+    pointIn[0] = x;
+    pointIn[1] = y;
+    pointIn[2] = z;
+    planePose.transformPoint(pointIn, 0, pointOut, 0);
+    Pose anchorPose = Pose.makeTranslation(pointOut);
+    Anchor anchor = plane.createAnchor(anchorPose);
+    anchors.put(++lastAnchorId, anchor);
+    return lastAnchorId;
+  }
+
+
+  public int createAnchor(int mx, int my) {
+    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+      Trackable trackable = hit.getTrackable();
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          Anchor anchor = hit.createAnchor();
+          anchors.put(++lastAnchorId, anchor);
+          return lastAnchorId;
+        }
+      }
+    }
+    return 0;
+  }
+
+
+  public void deleteAnchor(int id) {
+    delAnchors.add(id);
+  }
+
+
   public int anchorCount() {
     return anchors.size();
   }
 
 
-  @Override
-  public int anchorId(int i) {
-    return anchorIds.get(anchors.get(i));
-  }
-
-
-  @Override
-  public int anchorStatus(int i) {
-    Anchor anchor = anchors.get(i);
+  public int anchorStatus(int id) {
+    Anchor anchor = anchors.get(id);
     if (anchor.getTrackingState() == TrackingState.PAUSED) {
       return PAR.PAUSED;
     } else if (anchor.getTrackingState() == TrackingState.TRACKING) {
@@ -332,58 +351,16 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
-  public int createAnchor(int i, float x, float y, float z) {
-    Plane plane = trackPlanes.get(i);
-    Pose planePose = plane.getCenterPose();
-    pointIn[0] = x;
-    pointIn[1] = y;
-    pointIn[2] = z;
-    planePose.transformPoint(pointIn, 0, pointOut, 0);
-    Pose anchorPose = Pose.makeTranslation(pointOut);
-    Anchor anchor = plane.createAnchor(anchorPose);
-    anchors.add(anchor);
-    anchorIds.put(anchor, ++lastAnchorId);
-    return lastAnchorId;
+  public PMatrix3D getAnchorMatrix(int id) {
+    return getAnchorMatrix(id, null);
   }
 
 
-  @Override
-  public int createAnchor(int mx, int my) {
-    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
-      Trackable trackable = hit.getTrackable();
-      if (trackable instanceof Plane) {
-        Plane plane = (Plane)trackable;
-        if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
-          Anchor anchor = hit.createAnchor();
-          anchors.add(anchor);
-          anchorIds.put(anchor, ++lastAnchorId);
-          return lastAnchorId;
-        }
-      }
-    }
-    return 0;
-  }
-
-
-  @Override
-  public void deleteAnchor(int i) {
-    delAnchors.add(anchors.get(i));
-  }
-
-
-  @Override
-  public PMatrix3D getAnchorMatrix(int i) {
-    return getAnchorMatrix(i, null);
-  }
-
-
-  @Override
-  public PMatrix3D getAnchorMatrix(int i, PMatrix3D target) {
+  public PMatrix3D getAnchorMatrix(int id, PMatrix3D target) {
     if (target == null) {
       target = new PMatrix3D();
     }
-    Anchor anchor = anchors.get(i);
+    Anchor anchor = anchors.get(id);
     anchor.getPose().toMatrix(anchorMatrix, 0);
     target.set(anchorMatrix[0], anchorMatrix[4], anchorMatrix[8], anchorMatrix[12],
                anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
@@ -393,16 +370,15 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  @Override
-  public void anchor(int i) {
-    Anchor anchor = anchors.get(i);
+  public void anchor(int id) {
+    Anchor anchor = anchors.get(id);
     anchor.getPose().toMatrix(anchorMatrix, 0);
 
-      // now, modelview = view * anchor
-      applyMatrix(anchorMatrix[0], anchorMatrix[4], anchorMatrix[8], anchorMatrix[12],
-                  anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
-                  anchorMatrix[2], anchorMatrix[6], anchorMatrix[10], anchorMatrix[14],
-                  anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
+    // now, modelview = view * anchor
+    applyMatrix(anchorMatrix[0], anchorMatrix[4], anchorMatrix[8], anchorMatrix[12],
+                anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
+                anchorMatrix[2], anchorMatrix[6], anchorMatrix[10], anchorMatrix[14],
+                anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
   }
 
 
@@ -461,10 +437,9 @@ public class PGraphicsAR extends PGraphics3D {
     updatedPlanes.clear();
     newPlanes.clear();
 
-    for (Anchor anchor: delAnchors) {
+    for (int id: delAnchors) {
+      Anchor anchor = anchors.remove(id);
       anchor.detach();
-      anchorIds.remove(anchor);
-      anchors.remove(anchor);
     }
     delAnchors.clear();
   }

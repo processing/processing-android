@@ -6,8 +6,8 @@ import java.util.Set;
 import processing.core.PApplet;
 
 public class Tracker implements PAR {
-  private PApplet p;
-  private PGraphicsAR g;
+  protected PApplet p;
+  protected PGraphicsAR g;
 
   private HashMap<String, Trackable> trackables = new HashMap<String, Trackable>();
 

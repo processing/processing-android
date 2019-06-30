@@ -3,9 +3,11 @@ package processing.ar;
 import processing.core.PMatrix3D;
 
 public class Trackable {
-  private PGraphicsAR g;
+  protected PGraphicsAR g;
+
   private int id;
   private PMatrix3D m;
+  private float[] points;
 
   public Trackable(PGraphicsAR g, int id) {
     this.g = g;
@@ -32,17 +34,14 @@ public class Trackable {
     return m;
   }
 
-  public void pushTransform() {
-    g.push();
-    transform();
-  }
-
   public void transform() {
     g.applyMatrix(matrix());
   }
 
-  public void popTransform() {
-    g.pop();
+  public float[] getPolygon() {
+    int idx = g.trackableIndex(id);
+    points = g.getTrackablePolygon(idx, points);
+    return points;
   }
 
   boolean selected(int mx, int my) {
