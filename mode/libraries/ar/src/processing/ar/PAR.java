@@ -1,7 +1,5 @@
 package processing.ar;
 
-import com.google.ar.core.Plane;
-
 public interface PAR {
   static final int UNKNOWN       = -1;
 
@@ -15,6 +13,4 @@ public interface PAR {
   static final int TRACKING  = 2;
   static final int PAUSED    = 3;
   static final int STOPPED   = 4;
-
-
 }

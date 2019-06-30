@@ -22,16 +22,12 @@
 
 package processing.ar;
 
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 import com.google.ar.core.Anchor;
-import com.google.ar.core.Camera;
-import com.google.ar.core.Frame;
 import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
-import com.google.ar.core.Session;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
 
@@ -45,7 +41,6 @@ import processing.android.AppComponent;
 import processing.core.PGraphics;
 import processing.core.PMatrix3D;
 import processing.core.PSurface;
-import processing.event.TouchEvent;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
@@ -63,9 +58,11 @@ public class PGraphicsAR extends PGraphics3D {
   protected float[] anchorMatrix = new float[16];
   protected float[] colorCorrection = new float[4];
 
+  protected ArrayList<Tracker> trackers = new ArrayList<Tracker>();
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
   protected HashMap<Plane, Integer> trackIds = new HashMap<Plane, Integer>();
+  protected HashMap<Integer, Integer> trackIdx = new HashMap<Integer, Integer>();
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
   protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
@@ -95,6 +92,10 @@ public class PGraphicsAR extends PGraphics3D {
   public PGraphicsAR() {
   }
 
+
+  static processing.ar.Trackable[] getTrackables() {
+    return null;
+  }
 
   @Override
   public PSurface createSurface(AppComponent appComponent, SurfaceHolder surfaceHolder, boolean reset) {
@@ -189,6 +190,15 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
+  public void addTracker(Tracker tracker) {
+    trackers.add(tracker);
+  }
+
+
+  public void removeTracker(Tracker tracker) {
+    trackers.remove(tracker);
+  }
+
   @Override
   public int trackableCount() {
     return trackPlanes.size();
@@ -198,6 +208,11 @@ public class PGraphicsAR extends PGraphics3D {
   @Override
   public int trackableId(int i) {
     return trackIds.get(trackPlanes.get(i));
+  }
+
+
+  public int trackableIndex(int id) {
+    return trackIdx.get(id);
   }
 
 
@@ -425,13 +440,18 @@ public class PGraphicsAR extends PGraphics3D {
       updatedPlanes.add(plane);
     }
 
-    // Remove stopped and subsummed trackables
+    // Remove stopped and subsummed trackables, and update indices.
     for (int i = trackPlanes.size() - 1; i >= 0; i--) {
       Plane plane = trackPlanes.get(i);
       if (plane.getTrackingState() == TrackingState.STOPPED || plane.getSubsumedBy() != null) {
         trackPlanes.remove(i);
         trackMatrices.remove(plane);
-        trackIds.remove(plane);
+        int pid = trackIds.remove(plane);
+        trackIdx.remove(pid);
+        for (Tracker t: trackers) t.remove(pid);
+      } else {
+        int pid = trackIds.get(plane);
+        trackIdx.put(pid, i);
       }
     }
   }
