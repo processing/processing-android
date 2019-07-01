@@ -1,7 +1,6 @@
 package arscene;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import processing.ar.*;
 import processing.core.PApplet;
@@ -42,9 +41,8 @@ public class Sketch extends PApplet {
 
     // Draw objects attached to each anchor
     for (Anchor anchor : regAnchors) {
-      if (anchor.isTracking()) {
-        drawBox(anchor, 255, 255, 255);
-      }
+      if (anchor.isTracking()) drawBox(anchor, 255, 255, 255);
+      if (anchor.isStopped()) anchor.dispose();
     }
 
 //    for (int i =  : regAnchors){
@@ -56,39 +54,20 @@ public class Sketch extends PApplet {
       drawBox(selAnchor, 255, 0, 0);
     }
 
-
     // Draw trackable planes
     for (int i = 0; i < tracker.count(); i++) {
       Trackable trackable = tracker.get(i);
-
-      if (trackable.isNew()) {
-        println("IS NEW");
-      }
-
       if (!trackable.isTracking()) continue;
-
-      if (trackable.isNew() && regAnchors.size() < 10) {
-        // Add new anchor associated to this trackable, 0.3 meters above it
-        Anchor anchor;
-        if (trackable.isWallPlane()) {
-          anchor = new Anchor(trackable, 0.3f, 0, 0);
-        } else {
-          anchor = new Anchor(trackable, 0, 0.3f, 0);
-        }
-        regAnchors.add(anchor);
-      }
-
-      float[] points = trackable.getPolygon();
 
       pushMatrix();
       trackable.transform();
-      if (mousePressed && trackable.selected(mouseX, mouseY)) {
+      if (mousePressed && trackable.isSelected(mouseX, mouseY)) {
         fill(255, 0, 0, 100);
       } else {
         fill(255, 100);
       }
-
       beginShape();
+      float[] points = trackable.getPolygon();
       for (int n = 0; n < points.length / 2; n++) {
         float x = points[2 * n];
         float z = points[2 * n + 1];
@@ -107,5 +86,22 @@ public class Sketch extends PApplet {
     rotateY(angle);
     box(0.15f);
     anchor.detach();
+  }
+
+  public void trackableEvent(Trackable t) {
+    if (regAnchors.size() < 10) {
+      float x0 = 0, y0 = 0;
+      if (t.isWallPlane()) {
+        // The new trackable is a wall, so adding the anchor 0.3 meters to its side
+        x0 = 0.3f;
+      } else if (t.isFloorPlane()) {
+        // The new trackable is a floor plane, so adding the anchor 0.3 meters above it
+        y0 = 0.3f;
+      } else {
+        // The new trackable is a floor plane, so adding the anchor 0.3 meters below it
+        y0 = -0.3f;
+      }
+      regAnchors.add(new Anchor(t, x0, y0, 0));
+    }
   }
 }

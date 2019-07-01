@@ -34,7 +34,7 @@ public class Trackable implements PAR {
     return points;
   }
 
-  public boolean selected(int mx, int my) {
+  public boolean isSelected(int mx, int my) {
     int idx = g.trackableIndex(id);
     return g.trackableSelected(idx, mx, my);
   }

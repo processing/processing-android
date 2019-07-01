@@ -429,6 +429,9 @@ public class PGraphicsAR extends PGraphics3D {
       Plane plane = trackPlanes.get(i);
       int pid = trackIds.get(plane);
       trackIdx.put(pid, i);
+      if (newPlanes.contains(plane)) {
+        for (Tracker t: trackers) t.create(i);
+      }
     }
   }
 
