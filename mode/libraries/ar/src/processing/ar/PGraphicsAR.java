@@ -48,6 +48,17 @@ import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PShader;
 
 public class PGraphicsAR extends PGraphics3D {
+  static protected final int UNKNOWN       = -1;
+
+  static protected final int PLANE_FLOOR   = 0;
+  static protected final int PLANE_CEILING = 1;
+  static protected final int PLANE_WALL    = 2;
+  static protected final int POINT         = 3;
+
+  static protected final int TRACKING  = 0;
+  static protected final int PAUSED    = 1;
+  static protected final int STOPPED   = 2;
+
   // Convenience reference to the AR surface. It is the same object one gets from PApplet.getSurface().
   protected PSurfaceAR surfar;
 
@@ -216,25 +227,25 @@ public class PGraphicsAR extends PGraphics3D {
   public int trackableType(int i) {
     Plane plane = trackPlanes.get(i);
     if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
-      return PAR.PLANE_FLOOR;
+      return PLANE_FLOOR;
     } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
-      return PAR.PLANE_CEILING;
+      return PLANE_CEILING;
     } else if (plane.getType() == Plane.Type.VERTICAL) {
-      return PAR.PLANE_WALL;
+      return PLANE_WALL;
     }
-    return PAR.UNKNOWN;
+    return UNKNOWN;
   }
 
   public int trackableStatus(int i) {
     Plane plane = trackPlanes.get(i);
      if (plane.getTrackingState() == TrackingState.PAUSED) {
-      return PAR.PAUSED;
+      return PAUSED;
     } else if (plane.getTrackingState() == TrackingState.TRACKING) {
-      return PAR.TRACKING;
+      return TRACKING;
     } else if (plane.getTrackingState() == TrackingState.STOPPED) {
-      return PAR.STOPPED;
+      return STOPPED;
     }
-    return PAR.UNKNOWN;
+    return UNKNOWN;
   }
 
   public boolean trackableNew(int i) {
@@ -361,13 +372,13 @@ public class PGraphicsAR extends PGraphics3D {
   public int anchorStatus(int id) {
     Anchor anchor = anchors.get(id);
     if (anchor.getTrackingState() == TrackingState.PAUSED) {
-      return PAR.PAUSED;
+      return PAUSED;
     } else if (anchor.getTrackingState() == TrackingState.TRACKING) {
-      return PAR.TRACKING;
+      return TRACKING;
     } else if (anchor.getTrackingState() == TrackingState.STOPPED) {
-      return PAR.STOPPED;
+      return STOPPED;
     }
-    return PAR.UNKNOWN;
+    return UNKNOWN;
   }
 
 
