@@ -49,7 +49,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.io.File;
 import java.io.InputStream;
 
-public class PSurfaceAR extends PSurfaceGLES {
+public class ARSurface extends PSurfaceGLES {
   private static String T_ALERT_MESSAGE = "ALERT";
   private static String C_NOT_SUPPORTED = "ARCore SDK required to run this app type";
   private static String T_PROMPT_MESSAGE = "PROMPT";
@@ -66,18 +66,18 @@ public class PSurfaceAR extends PSurfaceGLES {
 
   protected GLSurfaceView surfaceView;
   protected AndroidARRenderer renderer;
-  protected PGraphicsAR par;
+  protected ARGraphics par;
 
   protected RotationHandler displayRotationHelper;
 
-  public PSurfaceAR(PGraphics graphics, AppComponent appComponent, SurfaceHolder surfaceHolder) {
+  public ARSurface(PGraphics graphics, AppComponent appComponent, SurfaceHolder surfaceHolder) {
     super(graphics, appComponent, surfaceHolder);
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.component = appComponent;
     this.pgl = (PGLES) ((PGraphicsOpenGL) graphics).pgl;
 
-    par = (PGraphicsAR) graphics;
+    par = (ARGraphics) graphics;
 
     displayRotationHelper = new RotationHandler(activity);
     surfaceView = new SurfaceViewAR(activity);

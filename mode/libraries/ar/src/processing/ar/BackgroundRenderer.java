@@ -6,9 +6,6 @@ import android.opengl.GLES20;
 
 import com.google.ar.core.Frame;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -76,9 +73,9 @@ public class BackgroundRenderer {
     quadTexCoordTransformed = bbTexCoordsTransformed.asFloatBuffer();
 
     int vertexShader =
-            Utils.loadGLShader(ERROR_TAG, context, GLES20.GL_VERTEX_SHADER, screenquad_vertex);
+            ShaderUtils.loadGLShader(ERROR_TAG, context, GLES20.GL_VERTEX_SHADER, screenquad_vertex);
     int fragmentShader =
-            Utils.loadGLShader(
+            ShaderUtils.loadGLShader(
                     ERROR_TAG, context, GLES20.GL_FRAGMENT_SHADER, screenquad_fragment);
 
     quadProgram = GLES20.glCreateProgram();
@@ -87,12 +84,12 @@ public class BackgroundRenderer {
     GLES20.glLinkProgram(quadProgram);
     GLES20.glUseProgram(quadProgram);
 
-    Utils.checkGLError(ERROR_TAG, CREATION_ERROR);
+    ShaderUtils.checkGLError(ERROR_TAG, CREATION_ERROR);
 
     quadPositionParam = GLES20.glGetAttribLocation(quadProgram, "a_Position");
     quadTexCoordParam = GLES20.glGetAttribLocation(quadProgram, "a_TexCoord");
 
-    Utils.checkGLError(ERROR_TAG, PARAMETERS_ERROR);
+    ShaderUtils.checkGLError(ERROR_TAG, PARAMETERS_ERROR);
   }
 
   public int getTextureId() {
@@ -134,7 +131,7 @@ public class BackgroundRenderer {
     GLES20.glDepthMask(true);
     GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
-    Utils.checkGLError(ERROR_TAG, DRAW_ERROR);
+    ShaderUtils.checkGLError(ERROR_TAG, DRAW_ERROR);
   }
 
   private static final float[] QUAD_COORDS =

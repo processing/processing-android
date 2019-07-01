@@ -24,21 +24,21 @@ package processing.ar;
 
 import processing.core.PMatrix3D;
 
-public class Anchor {
-  protected PGraphicsAR g;
+public class ARAnchor {
+  protected ARGraphics g;
   private boolean disposed = false;
 
   private int id;
   private PMatrix3D m;
 
-  public Anchor(Trackable trackable, float x, float y, float z) {
+  public ARAnchor(ARTrackable trackable, float x, float y, float z) {
     this.g = trackable.g;
 
     int idx = g.trackableIndex(Integer.parseInt(trackable.id()));
     id = g.createAnchor(idx, x, y, z);
   }
 
-  public Anchor(Trackable trackable) {
+  public ARAnchor(ARTrackable trackable) {
     this.g = trackable.g;
     id = g.createAnchor(trackable.hit);
     trackable.hit = null;
@@ -70,15 +70,15 @@ public class Anchor {
   }
 
   public boolean isTracking() {
-    return g.anchorStatus(id) == PGraphicsAR.TRACKING;
+    return g.anchorStatus(id) == ARGraphics.TRACKING;
   }
 
   public boolean isPaused() {
-    return g.anchorStatus(id) == PGraphicsAR.PAUSED;
+    return g.anchorStatus(id) == ARGraphics.PAUSED;
   }
 
   public boolean isStopped() {
-    return g.anchorStatus(id) == PGraphicsAR.STOPPED;
+    return g.anchorStatus(id) == ARGraphics.STOPPED;
   }
 
   public boolean isDisposed() {

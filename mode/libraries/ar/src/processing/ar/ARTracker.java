@@ -32,17 +32,17 @@ import java.util.Set;
 
 import processing.core.PApplet;
 
-public class Tracker {
+public class ARTracker {
   protected PApplet p;
-  protected PGraphicsAR g;
+  protected ARGraphics g;
 
-  private HashMap<String, Trackable> trackables = new HashMap<String, Trackable>();
-  private ArrayList<Anchor> toRemove = new ArrayList<Anchor>();
+  private HashMap<String, ARTrackable> trackables = new HashMap<String, ARTrackable>();
+  private ArrayList<ARAnchor> toRemove = new ArrayList<ARAnchor>();
   private Method trackableEventMethod;
 
-  public Tracker(PApplet parent) {
+  public ARTracker(PApplet parent) {
     this.p = parent;
-    this.g = (PGraphicsAR) p.g;
+    this.g = (ARGraphics) p.g;
     setEventHandler();
   }
 
@@ -59,25 +59,25 @@ public class Tracker {
     return g.trackableCount();
   }
 
-  public Trackable get(int idx) {
+  public ARTrackable get(int idx) {
     int id = g.trackableId(idx);
     String sid = String.valueOf(id);
     if (!trackables.containsKey(sid)) {
-      Trackable t = new Trackable(g, id);
+      ARTrackable t = new ARTrackable(g, id);
       trackables.put(sid, t);
     }
     return get(sid);
   }
 
-  public Trackable get(String id) {
+  public ARTrackable get(String id) {
     return trackables.get(id);
   }
 
-  public Trackable get(int mx, int my) {
+  public ARTrackable get(int mx, int my) {
     HitResult hit = g.getHitResult(mx, my);
     if (hit != null) {
       int idx = g.getTrackable(hit);
-      Trackable t = get(idx);
+      ARTrackable t = get(idx);
       t.hit = hit;
       return t;
     } else {
@@ -88,7 +88,7 @@ public class Tracker {
   protected void create(int idx) {
     if (trackableEventMethod != null) {
       try {
-        Trackable t = get(idx);
+        ARTrackable t = get(idx);
         trackableEventMethod.invoke(p, t);
       } catch (Exception e) {
         System.err.println("error, disabling trackableEventMethod() for AR tracker");
@@ -98,8 +98,8 @@ public class Tracker {
     }
   }
 
-  public void clearAnchors(Collection<Anchor> anchors) {
-    for (Anchor anchor : anchors) {
+  public void clearAnchors(Collection<ARAnchor> anchors) {
+    for (ARAnchor anchor : anchors) {
       if (anchor.isStopped() || anchor.isDisposed()) {
         anchor.dispose();
         toRemove.add(anchor);
@@ -113,7 +113,7 @@ public class Tracker {
     // Remove any inactive trackables left over in the tracker.
     Set<String> ids = trackables.keySet();
     for (String id: ids) {
-      Trackable t = trackables.get(id);
+      ARTrackable t = trackables.get(id);
       if (t.isStopped()) trackables.remove(id);
     }
   }
@@ -131,7 +131,7 @@ public class Tracker {
 
   protected void setEventHandler() {
     try {
-      trackableEventMethod = p.getClass().getMethod("trackableEvent", Trackable.class);
+      trackableEventMethod = p.getClass().getMethod("trackableEvent", ARTrackable.class);
       return;
     } catch (Exception e) {
       // no such method, or an error... which is fine, just ignore

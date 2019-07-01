@@ -26,15 +26,15 @@ import processing.core.PMatrix3D;
 
 import com.google.ar.core.HitResult;
 
-public class Trackable {
-  protected PGraphicsAR g;
+public class ARTrackable {
+  protected ARGraphics g;
   protected HitResult hit;
 
   private int id;
   private PMatrix3D m;
   private float[] points;
 
-  public Trackable(PGraphicsAR g, int id) {
+  public ARTrackable(ARGraphics g, int id) {
     this.g = g;
     this.id = id;
   }
@@ -59,6 +59,24 @@ public class Trackable {
     return points;
   }
 
+
+  public float lengthX() {
+    int idx = g.trackableIndex(id);
+    return g.getTrackableExtentX(idx);
+  }
+
+
+  public float lengthY() {
+    return 0;
+  }
+
+
+  public float lengthZ() {
+    int idx = g.trackableIndex(id);
+    return g.getTrackableExtentZ(idx);
+  }
+
+
   public boolean isSelected(int mx, int my) {
     int idx = g.trackableIndex(id);
     return g.trackableSelected(idx, mx, my);
@@ -71,17 +89,17 @@ public class Trackable {
 
   public boolean isTracking() {
     int idx = g.trackableIndex(id);
-    return g.trackableStatus(idx) == PGraphicsAR.TRACKING;
+    return g.trackableStatus(idx) == ARGraphics.TRACKING;
   }
 
   public boolean isPaused() {
     int idx = g.trackableIndex(id);
-    return g.trackableStatus(idx) == PGraphicsAR.PAUSED;
+    return g.trackableStatus(idx) == ARGraphics.PAUSED;
   }
 
   public boolean isStopped() {
     int idx = g.trackableIndex(id);
-    return g.trackableStatus(idx) == PGraphicsAR.STOPPED;
+    return g.trackableStatus(idx) == ARGraphics.STOPPED;
   }
 
   public boolean isPlane() {
@@ -94,16 +112,16 @@ public class Trackable {
 
   public boolean isFloorPlane() {
     int idx = g.trackableIndex(id);
-    return g.trackableType(idx) == PGraphicsAR.PLANE_FLOOR;
+    return g.trackableType(idx) == ARGraphics.PLANE_FLOOR;
   }
 
   public boolean isCeilingPlane() {
     int idx = g.trackableIndex(id);
-    return g.trackableType(idx) == PGraphicsAR.PLANE_CEILING;
+    return g.trackableType(idx) == ARGraphics.PLANE_CEILING;
   }
 
   public boolean isWallPlane() {
     int idx = g.trackableIndex(id);
-    return g.trackableType(idx) == PGraphicsAR.PLANE_WALL;
+    return g.trackableType(idx) == ARGraphics.PLANE_WALL;
   }
 }

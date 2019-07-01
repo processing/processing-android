@@ -9,7 +9,7 @@ import processing.core.PGraphics;
 import java.io.IOException;
 import java.net.URL;
 
-public class Utils {
+public class ShaderUtils {
   public static int loadGLShader(String tag, Context context, int type, URL resUrl) {
     String code = readRawTextFile(resUrl);
     int shader = GLES20.glCreateShader(type);

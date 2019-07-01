@@ -47,7 +47,7 @@ import processing.opengl.PGraphics3D;
 import processing.opengl.PGraphicsOpenGL;
 import processing.opengl.PShader;
 
-public class PGraphicsAR extends PGraphics3D {
+public class ARGraphics extends PGraphics3D {
   static protected final int UNKNOWN       = -1;
 
   static protected final int PLANE_FLOOR   = 0;
@@ -60,7 +60,7 @@ public class PGraphicsAR extends PGraphics3D {
   static protected final int STOPPED   = 2;
 
   // Convenience reference to the AR surface. It is the same object one gets from PApplet.getSurface().
-  protected PSurfaceAR surfar;
+  protected ARSurface surfar;
 
   protected BackgroundRenderer backgroundRenderer;
 
@@ -69,7 +69,7 @@ public class PGraphicsAR extends PGraphics3D {
   protected float[] anchorMatrix = new float[16];
   protected float[] colorCorrection = new float[4];
 
-  protected ArrayList<Tracker> trackers = new ArrayList<Tracker>();
+  protected ArrayList<ARTracker> trackers = new ArrayList<ARTracker>();
   protected ArrayList<Plane> trackPlanes = new ArrayList<Plane>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
   protected HashMap<Plane, Integer> trackIds = new HashMap<Plane, Integer>();
@@ -98,18 +98,18 @@ public class PGraphicsAR extends PGraphics3D {
   protected PShader arLightShader;
   protected PShader arTexlightShader;
 
-  public PGraphicsAR() {
+  public ARGraphics() {
   }
 
 
-  static processing.ar.Trackable[] getTrackables() {
+  static ARTrackable[] getTrackables() {
     return null;
   }
 
   @Override
   public PSurface createSurface(AppComponent appComponent, SurfaceHolder surfaceHolder, boolean reset) {
     if (reset) pgl.resetFBOLayer();
-    surfar = new PSurfaceAR(this, appComponent, surfaceHolder);
+    surfar = new ARSurface(this, appComponent, surfaceHolder);
     return surfar;
   }
 
@@ -199,12 +199,12 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
-  public void addTracker(Tracker tracker) {
+  public void addTracker(ARTracker tracker) {
     trackers.add(tracker);
   }
 
 
-  public void removeTracker(Tracker tracker) {
+  public void removeTracker(ARTracker tracker) {
     trackers.remove(tracker);
   }
 
@@ -302,6 +302,17 @@ public class PGraphicsAR extends PGraphics3D {
     return points;
   }
 
+
+  public float getTrackableExtentX(int i) {
+    Plane plane = trackPlanes.get(i);
+    return plane.getExtentX();
+  }
+
+
+  public float getTrackableExtentZ(int i) {
+    Plane plane = trackPlanes.get(i);
+    return plane.getExtentZ();
+  }
 
   public PMatrix3D getTrackableMatrix(int i) {
     return getTrackableMatrix(i, null);
@@ -454,7 +465,7 @@ public class PGraphicsAR extends PGraphics3D {
         trackMatrices.remove(plane);
         int pid = trackIds.remove(plane);
         trackIdx.remove(pid);
-        for (Tracker t: trackers) t.remove(pid);
+        for (ARTracker t: trackers) t.remove(pid);
       }
     }
 
@@ -464,7 +475,7 @@ public class PGraphicsAR extends PGraphics3D {
       int pid = trackIds.get(plane);
       trackIdx.put(pid, i);
       if (newPlanes.contains(plane)) {
-        for (Tracker t: trackers) t.create(i);
+        for (ARTracker t: trackers) t.create(i);
       }
     }
   }

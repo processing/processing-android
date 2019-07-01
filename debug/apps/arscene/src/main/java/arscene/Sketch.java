@@ -7,27 +7,25 @@ import processing.core.PApplet;
 
 public class Sketch extends PApplet {
   float angle;
-  Anchor selAnchor;
-  ArrayList<Anchor> regAnchors;
-  ArrayList<Anchor> delAnchors;
+  ARAnchor touchAnchor;
+  ArrayList<ARAnchor> trackAnchors;
 
-  Tracker tracker;
+  ARTracker tracker;
 
   public void settings() {
     fullScreen(AR);
   }
 
   public void setup() {
-    tracker = new Tracker(this);
+    tracker = new ARTracker(this);
     tracker.start();
-    regAnchors = new ArrayList<Anchor>();
-    delAnchors = new ArrayList<Anchor>();
+    trackAnchors = new ArrayList<ARAnchor>();
   }
 
   public void draw() {
     // The AR Core session, frame and camera can be accessed through Processing's surface object
     // to obtain the full information about the AR scene:
-//    PSurfaceAR surface = (PSurfaceAR) getSurface();
+//    ARSurface surface = (ARSurface) getSurface();
 //    surface.camera.getPose();
 //    surface.frame.getLightEstimate();
 
@@ -35,27 +33,27 @@ public class Sketch extends PApplet {
 
     if (mousePressed) {
       // Create new anchor at the current touch point
-      if (selAnchor != null) selAnchor.dispose();
-      Trackable hit = tracker.get(mouseX, mouseY);
-      if (hit != null) selAnchor = new Anchor(hit);
-      else selAnchor = null;
+      if (touchAnchor != null) touchAnchor.dispose();
+      ARTrackable hit = tracker.get(mouseX, mouseY);
+      if (hit != null) touchAnchor = new ARAnchor(hit);
+      else touchAnchor = null;
     }
 
     // Draw objects attached to each anchor
-    for (Anchor anchor : regAnchors) {
+    for (ARAnchor anchor : trackAnchors) {
       if (anchor.isTracking()) drawBox(anchor, 255, 255, 255);
 
       // It is very important to dispose anchors once they are no longer tracked.
       if (anchor.isStopped()) anchor.dispose();
     }
-    if (selAnchor != null) drawBox(selAnchor, 255, 0, 0);
+    if (touchAnchor != null) drawBox(touchAnchor, 255, 0, 0);
 
     // Conveniency function in the tracker object to remove disposed anchors from a list
-    tracker.clearAnchors(regAnchors);
+    tracker.clearAnchors(trackAnchors);
 
     // Draw trackable planes
     for (int i = 0; i < tracker.count(); i++) {
-      Trackable trackable = tracker.get(i);
+      ARTrackable trackable = tracker.get(i);
       if (!trackable.isTracking()) continue;
 
       pushMatrix();
@@ -79,7 +77,7 @@ public class Sketch extends PApplet {
     angle += 0.1;
   }
 
-  public void drawBox(Anchor anchor, int r, int g, int b) {
+  public void drawBox(ARAnchor anchor, int r, int g, int b) {
     anchor.attach();
     fill(r, g, b);
     rotateY(angle);
@@ -87,8 +85,8 @@ public class Sketch extends PApplet {
     anchor.detach();
   }
 
-  public void trackableEvent(Trackable t) {
-    if (regAnchors.size() < 10) {
+  public void trackableEvent(ARTrackable t) {
+    if (trackAnchors.size() < 10) {
       float x0 = 0, y0 = 0;
       if (t.isWallPlane()) {
         // The new trackable is a wall, so adding the anchor 0.3 meters to its side
@@ -100,7 +98,7 @@ public class Sketch extends PApplet {
         // The new trackable is a floor plane, so adding the anchor 0.3 meters below it
         y0 = -0.3f;
       }
-      regAnchors.add(new Anchor(t, x0, y0, 0));
+      trackAnchors.add(new ARAnchor(t, x0, y0, 0));
     }
   }
 }
