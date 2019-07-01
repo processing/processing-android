@@ -65,7 +65,6 @@ public class PGraphicsAR extends PGraphics3D {
   protected HashMap<Integer, Integer> trackIdx = new HashMap<Integer, Integer>();
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
-  protected ArrayList<Plane> updatedPlanes = new ArrayList<Plane>();
   protected ArrayList<Integer> delAnchors = new ArrayList<Integer>();
 
   protected HashMap<Integer, Anchor> anchors = new HashMap<Integer, Anchor>();
@@ -214,7 +213,6 @@ public class PGraphicsAR extends PGraphics3D {
     return trackIdx.get(id);
   }
 
-
   public int trackableType(int i) {
     Plane plane = trackPlanes.get(i);
     if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
@@ -227,23 +225,22 @@ public class PGraphicsAR extends PGraphics3D {
     return PAR.UNKNOWN;
   }
 
-
   public int trackableStatus(int i) {
     Plane plane = trackPlanes.get(i);
-    if (newPlanes.contains(plane)) {
-      return PAR.CREATED;
-    } else if (updatedPlanes.contains(plane)) {
-      return PAR.UPDATED;
+     if (plane.getTrackingState() == TrackingState.PAUSED) {
+      return PAR.PAUSED;
     } else if (plane.getTrackingState() == TrackingState.TRACKING) {
       return PAR.TRACKING;
-    } else if (plane.getTrackingState() == TrackingState.PAUSED) {
-      return PAR.PAUSED;
     } else if (plane.getTrackingState() == TrackingState.STOPPED) {
       return PAR.STOPPED;
     }
     return PAR.UNKNOWN;
   }
 
+  public boolean trackableNew(int i) {
+    Plane plane = trackPlanes.get(i);
+    return newPlanes.contains(plane);
+  }
 
   public boolean trackableSelected(int i, int mx, int my) {
     Plane planei = trackPlanes.get(i);
@@ -413,10 +410,9 @@ public class PGraphicsAR extends PGraphics3D {
       }
       Pose pose = plane.getCenterPose();
       pose.toMatrix(mat, 0);
-      updatedPlanes.add(plane);
     }
 
-    // Remove stopped and subsummed trackables, and update indices.
+    // Remove stopped and subsummed trackables
     for (int i = trackPlanes.size() - 1; i >= 0; i--) {
       Plane plane = trackPlanes.get(i);
       if (plane.getTrackingState() == TrackingState.STOPPED || plane.getSubsumedBy() != null) {
@@ -425,16 +421,19 @@ public class PGraphicsAR extends PGraphics3D {
         int pid = trackIds.remove(plane);
         trackIdx.remove(pid);
         for (Tracker t: trackers) t.remove(pid);
-      } else {
-        int pid = trackIds.get(plane);
-        trackIdx.put(pid, i);
       }
+    }
+
+    // Update indices
+    for (int i = 0; i < trackPlanes.size(); i++) {
+      Plane plane = trackPlanes.get(i);
+      int pid = trackIds.get(plane);
+      trackIdx.put(pid, i);
     }
   }
 
 
   protected void cleanup() {
-    updatedPlanes.clear();
     newPlanes.clear();
 
     for (int id: delAnchors) {

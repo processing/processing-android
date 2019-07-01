@@ -1,22 +1,26 @@
 package arscene;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import processing.ar.*;
 import processing.core.PApplet;
-import processing.core.PMatrix3D;
 
 public class Sketch extends PApplet {
-  float angle = 0;
-  float[] points;
-  PMatrix3D mat = new PMatrix3D();
-  int oldSelAnchor;
-  int selAnchor;
+  float angle;
+  Anchor selAnchor;
+  ArrayList<Anchor> regAnchors;
+
+  Tracker tracker;
 
   public void settings() {
     fullScreen(AR);
   }
 
   public void setup() {
-    noStroke();
+    tracker = new Tracker(this);
+    tracker.start();
+    regAnchors = new ArrayList<Anchor>();
   }
 
   public void draw() {
@@ -28,32 +32,64 @@ public class Sketch extends PApplet {
 
     lights();
 
+/*
+    if (mousePressed) {
+      // Create new anchor at the current touch point
+      if (selAnchor != null) selAnchor.dispose();
+      selAnchor = new Anchor(tracker, mouseX, mouseY);
+    }
+*/
 
-    for (int i = 0; i < trackableCount(); i++) {
-      int status = trackableStatus(i);
-      if (status ==  PAR.PAUSED || status == PAR.STOPPED) continue;
+    // Draw objects attached to each anchor
+    for (Anchor anchor : regAnchors) {
+      if (anchor.isTracking()) {
+        drawBox(anchor, 255, 255, 255);
+      }
+    }
 
-      if (status == PAR.CREATED && trackableCount() < 10) {
-        if (trackableType(i) == PAR.PLANE_WALL) {
-          createAnchor(i, 0.3f, 0, 0);
-        } else {
-          createAnchor(i, 0, 0.3f, 0);
-        }
+//    for (int i =  : regAnchors){
+//      if (status == PAR.STOPPED) anchor.dispose();
+//    }
+
+
+    if (selAnchor != null) {
+      drawBox(selAnchor, 255, 0, 0);
+    }
+
+
+    // Draw trackable planes
+    for (int i = 0; i < tracker.count(); i++) {
+      Trackable trackable = tracker.get(i);
+
+      if (trackable.isNew()) {
+        println("IS NEW");
       }
 
-      points = getTrackablePolygon(i, points);
+      if (!trackable.isTracking()) continue;
 
-      getTrackableMatrix(i, mat);
+      if (trackable.isNew() && regAnchors.size() < 10) {
+        // Add new anchor associated to this trackable, 0.3 meters above it
+        Anchor anchor;
+        if (trackable.isWallPlane()) {
+          anchor = new Anchor(trackable, 0.3f, 0, 0);
+        } else {
+          anchor = new Anchor(trackable, 0, 0.3f, 0);
+        }
+        regAnchors.add(anchor);
+      }
+
+      float[] points = trackable.getPolygon();
+
       pushMatrix();
-      applyMatrix(mat);
-      if (trackableSelected(i, mouseX, mouseY)) {
+      trackable.transform();
+      if (mousePressed && trackable.selected(mouseX, mouseY)) {
         fill(255, 0, 0, 100);
       } else {
         fill(255, 100);
       }
 
       beginShape();
-      for (int n = 0; n < points.length/2; n++) {
+      for (int n = 0; n < points.length / 2; n++) {
         float x = points[2 * n];
         float z = points[2 * n + 1];
         vertex(x, 0, z);
@@ -62,38 +98,14 @@ public class Sketch extends PApplet {
       popMatrix();
     }
 
-    if (mousePressed) {
-      oldSelAnchor = selAnchor;
-      selAnchor = createAnchor(mouseX, mouseY);
-    }
-
-    for (int i = 0; i < anchorCount(); i++) {
-      int id = anchorId(i);
-      if (oldSelAnchor == id) {
-        deleteAnchor(i);
-        continue;
-      }
-
-      int status = anchorStatus(i);
-      if (status ==  PAR.PAUSED || status == PAR.STOPPED) {
-        if (status == PAR.STOPPED) deleteAnchor(i);
-        continue;
-      }
-
-      pushMatrix();
-      anchor(i);
-
-      if (selAnchor == id) {
-        fill(255, 0, 0);
-      } else {
-        fill(255);
-      }
-
-      rotateY(angle);
-      box(0.15f);
-      popMatrix();
-    }
-
     angle += 0.1;
+  }
+
+  public void drawBox(Anchor anchor, int r, int g, int b) {
+    anchor.attach();
+    fill(r, g, b);
+    rotateY(angle);
+    box(0.15f);
+    anchor.detach();
   }
 }

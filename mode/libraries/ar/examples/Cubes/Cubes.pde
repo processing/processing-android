@@ -57,7 +57,7 @@ void draw() {
     int status = trackable.status();
     if (status ==  PAR.PAUSED || status == PAR.STOPPED) continue;
 
-    if (status == PAR.CREATED && regAnchor.size() < 10) {
+    if (status == PAR.CREATED && regAnchors.size() < 10) {
       // Add new anchor associated to this trackable, 0.3 meters above it
       Anchor anchor;
       if (trackable.type() == PAR.PLANE_WALL) {

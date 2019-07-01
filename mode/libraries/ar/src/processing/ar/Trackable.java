@@ -2,7 +2,7 @@ package processing.ar;
 
 import processing.core.PMatrix3D;
 
-public class Trackable {
+public class Trackable implements PAR {
   protected PGraphicsAR g;
 
   private int id;
@@ -16,16 +16,6 @@ public class Trackable {
 
   public String id() {
     return String.valueOf(id);
-  }
-
-  public int status() {
-    int idx = g.trackableIndex(id);
-    return g.trackableStatus(idx);
-  }
-
-  public int type() {
-    int idx = g.trackableIndex(id);
-    return g.trackableType(idx);
   }
 
   public PMatrix3D matrix() {
@@ -44,8 +34,61 @@ public class Trackable {
     return points;
   }
 
-  boolean selected(int mx, int my) {
+  public boolean selected(int mx, int my) {
     int idx = g.trackableIndex(id);
     return g.trackableSelected(idx, mx, my);
+  }
+
+//  public int status() {
+//    int idx = g.trackableIndex(id);
+//    return g.trackableStatus(idx);
+//  }
+
+  public boolean isNew() {
+    int idx = g.trackableIndex(id);
+    return g.trackableNew(idx);
+  }
+
+  public boolean isTracking() {
+    int idx = g.trackableIndex(id);
+    return g.trackableStatus(idx) == TRACKING;
+  }
+
+  public boolean isPaused() {
+    int idx = g.trackableIndex(id);
+    return g.trackableStatus(idx) == PAUSED;
+  }
+
+  public boolean isStopped() {
+    int idx = g.trackableIndex(id);
+    return g.trackableStatus(idx) == STOPPED;
+  }
+
+//  public int type() {
+//    int idx = g.trackableIndex(id);
+//    return g.trackableType(idx);
+//  }
+
+  public boolean isPlane() {
+    return true;
+  }
+
+  public boolean isPointCloud() {
+    return false;
+  }
+
+  public boolean isFloorPlane() {
+    int idx = g.trackableIndex(id);
+    return g.trackableType(idx) == PLANE_FLOOR;
+  }
+
+  public boolean isCeilingPlane() {
+    int idx = g.trackableIndex(id);
+    return g.trackableType(idx) == PLANE_CEILING;
+  }
+
+  public boolean isWallPlane() {
+    int idx = g.trackableIndex(id);
+    return g.trackableType(idx) == PLANE_WALL;
   }
 }

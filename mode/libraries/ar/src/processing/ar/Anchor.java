@@ -4,6 +4,7 @@ import processing.core.PMatrix3D;
 
 public class Anchor implements PAR {
   protected PGraphicsAR g;
+  private boolean disposed = false;
 
   private int id;
   private PMatrix3D m;
@@ -22,26 +23,40 @@ public class Anchor implements PAR {
 
   public void dispose() {
     g.deleteAnchor(id);
+    disposed = true;
   }
 
   public String id() {
     return String.valueOf(id);
   }
 
-  public int status() {
-    return g.anchorStatus(id);
-  }
-
   public PMatrix3D matrix() {
+    m = g.getTrackableMatrix(id, m);
     return m;
   }
 
   public void attach() {
     g.pushMatrix();
-    g.applyMatrix(matrix());
+    g.anchor(id);
   }
 
   public void detach() {
     g.popMatrix();
+  }
+
+  public boolean isTracking() {
+    return g.anchorStatus(id) == TRACKING;
+  }
+
+  public boolean isPaused() {
+    return g.anchorStatus(id) == PAUSED;
+  }
+
+  public boolean isStopped() {
+    return g.anchorStatus(id) == STOPPED;
+  }
+
+  public boolean isDisposed() {
+    return disposed;
   }
 }

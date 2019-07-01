@@ -48,7 +48,7 @@ public class Tracker implements PAR {
     Set<String> ids = trackables.keySet();
     for (String id: ids) {
       Trackable t = trackables.get(id);
-      if (t.status() == STOPPED || t.status() == UNKNOWN) trackables.remove(id);
+      if (t.isStopped()) trackables.remove(id);
     }
   }
 
