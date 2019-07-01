@@ -22,8 +22,10 @@ public class Anchor implements PAR {
   }
 
   public void dispose() {
-    g.deleteAnchor(id);
-    disposed = true;
+    if (!disposed) {
+      g.deleteAnchor(id);
+      disposed = true;
+    }
   }
 
   public String id() {

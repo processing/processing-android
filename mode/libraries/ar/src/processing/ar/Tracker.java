@@ -1,6 +1,8 @@
 package processing.ar;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -10,9 +12,9 @@ public class Tracker implements PAR {
   protected PApplet p;
   protected PGraphicsAR g;
 
-  private Method trackableEventMethod;
-
   private HashMap<String, Trackable> trackables = new HashMap<String, Trackable>();
+  private ArrayList<Anchor> toRemove = new ArrayList<Anchor>();
+  private Method trackableEventMethod;
 
   public Tracker(PApplet parent) {
     this.p = parent;
@@ -58,6 +60,17 @@ public class Tracker implements PAR {
         trackableEventMethod = null;
       }
     }
+  }
+
+  public void clearAnchors(Collection<Anchor> anchors) {
+    for (Anchor anchor : anchors) {
+      if (anchor.isStopped() || anchor.isDisposed()) {
+        anchor.dispose();
+        toRemove.add(anchor);
+      }
+    }
+    anchors.removeAll(toRemove);
+    toRemove.clear();
   }
 
   protected void cleanup() {

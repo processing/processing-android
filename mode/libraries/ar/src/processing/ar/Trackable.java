@@ -39,11 +39,6 @@ public class Trackable implements PAR {
     return g.trackableSelected(idx, mx, my);
   }
 
-//  public int status() {
-//    int idx = g.trackableIndex(id);
-//    return g.trackableStatus(idx);
-//  }
-
   public boolean isNew() {
     int idx = g.trackableIndex(id);
     return g.trackableNew(idx);
@@ -63,11 +58,6 @@ public class Trackable implements PAR {
     int idx = g.trackableIndex(id);
     return g.trackableStatus(idx) == STOPPED;
   }
-
-//  public int type() {
-//    int idx = g.trackableIndex(id);
-//    return g.trackableType(idx);
-//  }
 
   public boolean isPlane() {
     return true;

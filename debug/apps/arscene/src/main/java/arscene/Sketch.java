@@ -9,6 +9,7 @@ public class Sketch extends PApplet {
   float angle;
   Anchor selAnchor;
   ArrayList<Anchor> regAnchors;
+  ArrayList<Anchor> delAnchors;
 
   Tracker tracker;
 
@@ -20,6 +21,7 @@ public class Sketch extends PApplet {
     tracker = new Tracker(this);
     tracker.start();
     regAnchors = new ArrayList<Anchor>();
+    delAnchors = new ArrayList<Anchor>();
   }
 
   public void draw() {
@@ -44,11 +46,7 @@ public class Sketch extends PApplet {
       if (anchor.isTracking()) drawBox(anchor, 255, 255, 255);
       if (anchor.isStopped()) anchor.dispose();
     }
-
-//    for (int i =  : regAnchors){
-//      if (status == PAR.STOPPED) anchor.dispose();
-//    }
-
+    tracker.clearAnchors(regAnchors);
 
     if (selAnchor != null) {
       drawBox(selAnchor, 255, 0, 0);
