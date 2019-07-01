@@ -6,11 +6,10 @@ import processing.ar.*;
 import processing.core.PApplet;
 
 public class Sketch extends PApplet {
-  float angle;
+  ARTracker tracker;
   ARAnchor touchAnchor;
   ArrayList<ARAnchor> trackAnchors;
-
-  ARTracker tracker;
+  float angle;
 
   public void settings() {
     fullScreen(AR);

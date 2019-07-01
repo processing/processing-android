@@ -1,14 +1,14 @@
 import processing.ar.*;
 
-Tracker tracker;
-Anchor anchor;
+ARTracker tracker;
+ARAnchor anchor;
 PShape arObj;
 
 void setup() {
   fullScreen(AR);
   arObj = loadShape("model.obj");
 
-  tracker = new Tracker(this);
+  tracker = new ARTracker(this);
   tracker.start();  
 }
 
@@ -16,11 +16,11 @@ void draw() {
   lights();
   
   if (mousePressed) {
-    // Delete the old touch anchor, if any.
+    // Create new anchor at the current touch point
     if (anchor != null) anchor.dispose();
-
-    // Create a new anchor at the current touch position.
-    anchor = new Anchor(tracker, mouseX, mouseY);
+    ARTrackable hit = tracker.get(mouseX, mouseY);
+    if (hit != null) anchor = new ARAnchor(hit);
+    else anchor = null;
   }
 
   if (anchor != null) {
