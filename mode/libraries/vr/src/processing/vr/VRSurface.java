@@ -50,16 +50,16 @@ import processing.opengl.PSurfaceGLES;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class PSurfaceVR extends PSurfaceGLES {
+public class VRSurface extends PSurfaceGLES {
   protected SurfaceViewVR vrView;
-  protected PGraphicsVR pvr;
+  protected VRGraphics pvr;
 
   protected GvrActivity vrActivity;
   protected AndroidVRStereoRenderer renderer;
 
   private boolean needCalculate;
 
-  public PSurfaceVR(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
+  public VRSurface(PGraphics graphics, AppComponent component, SurfaceHolder holder, boolean vr) {
     this.sketch = graphics.parent;
     this.graphics = graphics;
     this.component = component;
@@ -67,7 +67,7 @@ public class PSurfaceVR extends PSurfaceGLES {
 
     vrActivity = (GvrActivity)component;
     this.activity = vrActivity;
-    pvr = (PGraphicsVR)graphics;
+    pvr = (VRGraphics)graphics;
 
     vrView = new SurfaceViewVR(vrActivity);
 

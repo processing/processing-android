@@ -35,7 +35,11 @@ import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
 import processing.opengl.PGraphicsOpenGL;
 
-public class PGraphicsVR extends PGraphics3D {
+public class VRGraphics extends PGraphics3D {
+  static public final int LEFT      = Eye.Type.LEFT;
+  static public final int RIGHT     = Eye.Type.RIGHT;
+  static public final int MONOCULAR = Eye.Type.MONOCULAR;
+
   private boolean initialized = false;
 
   public HeadTransform headTransform;

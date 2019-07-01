@@ -26,10 +26,10 @@ import android.view.SurfaceHolder;
 import processing.android.AppComponent;
 import processing.core.PSurface;
 
-public class PGraphicsVRStereo extends PGraphicsVR {
+public class VRGraphicsMono extends VRGraphics {
   @Override
   public PSurface createSurface(AppComponent component, SurfaceHolder holder, boolean reset) {  // ignore
     if (reset) pgl.resetFBOLayer();
-    return new PSurfaceVR(this, component, holder, true);
+    return new VRSurface(this, component, holder, false);
   }
 }

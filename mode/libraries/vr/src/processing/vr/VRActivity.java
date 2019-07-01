@@ -23,7 +23,6 @@
 package processing.vr;
 
 import com.google.vr.sdk.base.GvrActivity;
-import com.google.vr.sdk.base.Eye;
 
 import android.content.Intent;
 import android.util.DisplayMetrics;
@@ -31,28 +30,24 @@ import processing.android.AppComponent;
 import processing.android.ServiceEngine;
 import processing.core.PApplet;
 
-public class PVR extends GvrActivity implements AppComponent {
-  public static final int LEFT      = Eye.Type.LEFT;
-  public static final int RIGHT     = Eye.Type.RIGHT;
-  public static final int MONOCULAR = Eye.Type.MONOCULAR;
-
+public class VRActivity extends GvrActivity implements AppComponent {
   static public final int GVR = 3;
 
   private DisplayMetrics metrics;
   private PApplet sketch;
 
 
-  public PVR() {
+  public VRActivity() {
 
   }
 
 
-  static public PGraphicsVR getRenderer(PApplet p) {
-    return (PGraphicsVR) p.g;
+  static public VRGraphics getRenderer(PApplet p) {
+    return (VRGraphics) p.g;
   }
 
 
-  public PVR(PApplet sketch) {
+  public VRActivity(PApplet sketch) {
     this.sketch = sketch;
   }
 
@@ -89,7 +84,7 @@ public class PVR extends GvrActivity implements AppComponent {
   public void setSketch(PApplet sketch) {
     this.sketch = sketch;
     if (sketch != null) {
-      sketch.initSurface(PVR.this, null);
+      sketch.initSurface(VRActivity.this, null);
       // Required to read the paired viewer's distortion parameters.
       sketch.requestPermission("android.permission.READ_EXTERNAL_STORAGE");
     }
