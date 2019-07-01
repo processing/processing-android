@@ -2,8 +2,11 @@ package processing.ar;
 
 import processing.core.PMatrix3D;
 
+import com.google.ar.core.HitResult;
+
 public class Trackable implements PAR {
   protected PGraphicsAR g;
+  protected HitResult hit;
 
   private int id;
   private PMatrix3D m;

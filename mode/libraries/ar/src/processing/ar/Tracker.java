@@ -1,5 +1,7 @@
 package processing.ar;
 
+import com.google.ar.core.HitResult;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +49,18 @@ public class Tracker implements PAR {
 
   public Trackable get(String id) {
     return trackables.get(id);
+  }
+
+  public Trackable get(int mx, int my) {
+    HitResult hit = g.getHitResult(mx, my);
+    if (hit != null) {
+      int idx = g.getTrackable(hit);
+      Trackable t = get(idx);
+      t.hit = hit;
+      return t;
+    } else {
+      return null;
+    }
   }
 
   protected void create(int idx) {

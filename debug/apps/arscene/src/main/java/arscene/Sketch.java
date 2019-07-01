@@ -33,24 +33,25 @@ public class Sketch extends PApplet {
 
     lights();
 
-/*
     if (mousePressed) {
       // Create new anchor at the current touch point
       if (selAnchor != null) selAnchor.dispose();
-      selAnchor = new Anchor(tracker, mouseX, mouseY);
+      Trackable hit = tracker.get(mouseX, mouseY);
+      if (hit != null) selAnchor = new Anchor(hit);
+      else selAnchor = null;
     }
-*/
 
     // Draw objects attached to each anchor
     for (Anchor anchor : regAnchors) {
       if (anchor.isTracking()) drawBox(anchor, 255, 255, 255);
+
+      // It is very important to dispose anchors once they are no longer tracked.
       if (anchor.isStopped()) anchor.dispose();
     }
-    tracker.clearAnchors(regAnchors);
+    if (selAnchor != null) drawBox(selAnchor, 255, 0, 0);
 
-    if (selAnchor != null) {
-      drawBox(selAnchor, 255, 0, 0);
-    }
+    // Conveniency function in the tracker object to remove disposed anchors from a list
+    tracker.clearAnchors(regAnchors);
 
     // Draw trackable planes
     for (int i = 0; i < tracker.count(); i++) {

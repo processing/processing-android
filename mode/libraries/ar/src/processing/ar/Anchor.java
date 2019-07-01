@@ -16,9 +16,10 @@ public class Anchor implements PAR {
     id = g.createAnchor(idx, x, y, z);
   }
 
-  public Anchor(Tracker tracker, int mx, int my) {
-    this.g = tracker.g;
-    id = g.createAnchor(mx, my);
+  public Anchor(Trackable trackable) {
+    this.g = trackable.g;
+    id = g.createAnchor(trackable.hit);
+    trackable.hit = null;
   }
 
   public void dispose() {

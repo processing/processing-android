@@ -257,6 +257,24 @@ public class PGraphicsAR extends PGraphics3D {
   }
 
 
+  protected HitResult getHitResult(int mx, int my) {
+    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+      Trackable trackable = hit.getTrackable();
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          return hit;
+        }
+      }
+    }
+    return null;
+  }
+
+  protected int getTrackable(HitResult hit) {
+    Plane plane = (Plane) hit.getTrackable();
+    return trackPlanes.indexOf(plane);
+  }
+
   public float[] getTrackablePolygon(int i) {
     return getTrackablePolygon(i, null);
   }
@@ -315,13 +333,18 @@ public class PGraphicsAR extends PGraphics3D {
       if (trackable instanceof Plane) {
         Plane plane = (Plane)trackable;
         if (trackPlanes.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
-          Anchor anchor = hit.createAnchor();
-          anchors.put(++lastAnchorId, anchor);
-          return lastAnchorId;
+          return createAnchor(hit);
         }
       }
     }
     return 0;
+  }
+
+
+  protected int createAnchor(HitResult hit) {
+    Anchor anchor = hit.createAnchor();
+    anchors.put(++lastAnchorId, anchor);
+    return lastAnchorId;
   }
 
 
