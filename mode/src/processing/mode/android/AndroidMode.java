@@ -22,13 +22,7 @@
 
 package processing.mode.android;
 
-import processing.app.Base;
-import processing.app.Library;
-import processing.app.Messages;
-import processing.app.Platform;
-import processing.app.RunnerListener;
-import processing.app.Sketch;
-import processing.app.SketchException;
+import processing.app.*;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -36,6 +30,7 @@ import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -232,14 +227,29 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener) throws SketchException, IOException {
+      RunnerListener listener) throws SketchException, IOException, CancelException {
     listener.startIndeterminate();
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
     build.build("debug");
-        
+
+    boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
+    if (!checkEmulator) {
+      String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
+      String message = AndroidMode.getTextString("android_sdk.dialog.install_emu_body");
+      String title = AndroidMode.getTextString("android_sdk.dialog.install_emu_title");
+      int result = JOptionPane.showOptionDialog(null, message, title,
+              JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+              null, options, options[0]);
+      if (result == JOptionPane.YES_OPTION) {
+        SDKDownloader downloader = new SDKDownloader(editor, SDKDownloader.DOWNLOAD_EMU);
+        if (downloader.cancelled()) {
+          throw new CancelException(AndroidMode.getTextString("android_sdk.error.sdk_download_canceled"));
+        }
+      }
+    }
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
       SketchException se =

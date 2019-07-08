@@ -52,7 +52,13 @@ class EmulatorController {
     }
     this.state = state;
   }
-  
+
+  public boolean emulatorExists(AndroidSDK sdk) {
+    File emulatorFolder = new File(sdk.getToolsFolder(), "emulator");
+    File emulatorPath = Platform.isWindows() ? new File(emulatorFolder, "emulator.exe") :
+            new File(emulatorFolder, "emulator");
+    return emulatorPath.exists();
+  }
 
   /**
    * Blocks until emulator is running, or some catastrophe happens.
@@ -74,9 +80,12 @@ class EmulatorController {
     // We let the emulator decide what's better for hardware acceleration:
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
     String gpuFlag = "auto";
-    
-    File emulatorPath = Platform.isWindows() ? new File(sdk.getToolsFolder(), "emulator.exe") :
-                                               new File(sdk.getToolsFolder(), "emulator");
+
+    //Use emulator from emulator/emulator.exe not tools/emulator.exe
+    File emulatorFolder = new File(sdk.getToolsFolder(), "emulator");
+    File emulatorPath = Platform.isWindows() ? new File(emulatorFolder, "emulator.exe") :
+            new File(emulatorFolder, "emulator");
+
     final String[] cmd = new String[] {
       emulatorPath.getCanonicalPath(),
       "-avd", avdName,

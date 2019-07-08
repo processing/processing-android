@@ -467,7 +467,7 @@ class AndroidSDK {
 
   static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
       throws BadSDKException, CancelException {
-    final SDKDownloader downloader = new SDKDownloader(editor);    
+    final SDKDownloader downloader = new SDKDownloader(editor,SDKDownloader.DOWNLOAD_SDK);
     //downloader.run(); // This call blocks until the SDK download complete, or user cancels.
 
     if (downloader.isGoBack()){

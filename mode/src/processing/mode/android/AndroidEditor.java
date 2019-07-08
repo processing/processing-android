@@ -385,6 +385,8 @@ public class AndroidEditor extends JavaEditor {
           statusError(e);
         } catch (IOException e) {
           statusError(e);
+        } catch (AndroidSDK.CancelException e) {
+          statusError(e);
         }
         stopIndeterminate();
       }
