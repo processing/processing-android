@@ -246,7 +246,7 @@ public class AndroidMode extends JavaMode {
       if (result == JOptionPane.YES_OPTION) {
         SDKDownloader downloader = new SDKDownloader(editor, SDKDownloader.DOWNLOAD_EMU);
         if (downloader.cancelled()) {
-          throw new CancelException(AndroidMode.getTextString("android_sdk.error.sdk_download_canceled"));
+          throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
         }
       }
     }

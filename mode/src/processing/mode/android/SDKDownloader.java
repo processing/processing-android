@@ -121,10 +121,15 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     protected Object doInBackground() throws Exception {
       File sketchbookFolder = downloadFolder;
       File androidFolder = new File(sketchbookFolder, "android");
-      if (!androidFolder.exists()) androidFolder.mkdir();
-      
-      sdkFolder = AndroidUtil.createSubFolder(androidFolder, "sdk");
-            
+
+      if (downloadMode == DOWNLOAD_SDK) {
+        if (!androidFolder.exists()) androidFolder.mkdir();
+        sdkFolder = AndroidUtil.createSubFolder(androidFolder,
+                "sdk");
+      }
+      else if (downloadMode == DOWNLOAD_EMU) sdkFolder = downloadFolder;
+
+
       // creating sdk folders
       File platformsFolder = new File(sdkFolder, "platforms");
       if (!platformsFolder.exists()) platformsFolder.mkdir();
@@ -142,8 +147,14 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!haxmFolder.exists()) haxmFolder.mkdirs();      
       
       // creating temp folder for downloaded zip packages
-      File tempFolder = new File(androidFolder, "temp");
-      if (!tempFolder.exists()) tempFolder.mkdir();
+      File tempFolder = null;
+      if (downloadMode == DOWNLOAD_SDK) {
+        tempFolder = new File(androidFolder, "temp");
+        if (!tempFolder.exists()) tempFolder.mkdir();
+      } else if (downloadMode == DOWNLOAD_EMU) { //if emulator then create within emulator directory
+        tempFolder = new File(emulatorFolder, "temp");
+        if (!tempFolder.exists()) tempFolder.mkdir();
+      }
 
       try {
         SDKUrlHolder downloadUrls = this.urlHolder;
@@ -415,7 +426,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     XPathExpression expr;
     NodeList remotePackages;
     boolean found;
-    expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+    expr = xpath.compile("//remotePackage[@path=\"emulator\"]");
     remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     found = false;
     if (remotePackages != null) {
@@ -425,12 +436,10 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
       NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
 
-      urlHolder.buildToolsVersion = recentsArray.get(1);
-
       try {
         ArrayList<String> urlData = parseURL(childNodes, true, requiredHostOs);
         urlHolder.emulatorFilename = urlData.get(0);
-        urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+        urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
         urlHolder.totalSize += Integer.parseInt(urlData.get(1));
         found = true;
       }
@@ -765,7 +774,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     downloadPathPanel.add(pathLabel,BorderLayout.NORTH);
 
     final JLabel locationLabel = downloadMode == DOWNLOAD_SDK ? new JLabel(processing.app.Base.getSketchbookFolder().getAbsolutePath()+endPoint)
-            : new JLabel(sdk.getSdkFolder().getAbsolutePath());
+            : new JLabel(Preferences.get("android.sdk.path"));
     locationLabel.setMaximumSize(Toolkit.zoom(200,locationLabel.getHeight()));
     locationLabel.setPreferredSize(Toolkit.zoom(200,locationLabel.getHeight()));
     locationLabel.setToolTipText(locationLabel.getText());
@@ -802,7 +811,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       }
     });
     downloadPathPanel.add(selectPathButton,BorderLayout.EAST);
-    if (downloadMode == DOWNLOAD_EMU) selectPathButton.setVisible(false);
+    if (downloadMode == DOWNLOAD_EMU) selectPathButton.setEnabled(false);
     mainPanel.add(downloadPathPanel);
 
     //Buttons Panel on the bottom-------------------------------------------
@@ -815,7 +824,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       @Override
       public void actionPerformed(ActionEvent e) {
         String path = locationLabel.getText();
-        File sdkFolder = new File(path.substring(0,path.indexOf(endPoint)));
+        File sdkFolder = null;
+        //in case of sdk, the path points to base where /android/sdk will be created
+        if (downloadMode == DOWNLOAD_SDK) sdkFolder = new File(path.substring(
+                0,path.indexOf(endPoint)));
+        //in case of emulator, the path points to /android/sdk
+        else if (downloadMode == DOWNLOAD_EMU) sdkFolder = new File(path);
         run(urlHolder,sdkFolder);
         createLayout();
       }
@@ -830,7 +844,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         if (downloadMode == DOWNLOAD_SDK) {
           dispose();
           goBack = true;
-        } else if (downloadMode == DOWNLOAD_EMU) {
+        } else if (downloadMode == DOWNLOAD_EMU) { //incase of emulator back is cancel
           dispose();
           cancelled = true;
         }
@@ -912,7 +926,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       public void actionPerformed(ActionEvent e) {
         if (downloadTask != null) {
           downloadTask.cancel(true);
-          deleteFolder(sdkFolder);
+          if (downloadMode == DOWNLOAD_SDK) deleteFolder(sdkFolder);
         }
         setVisible(false);
         cancelled = true;
