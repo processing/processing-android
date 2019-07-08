@@ -54,7 +54,7 @@ class EmulatorController {
   }
 
   public boolean emulatorExists(AndroidSDK sdk) {
-    File emulatorFolder = new File(sdk.getToolsFolder(), "emulator");
+    File emulatorFolder = new File(sdk.getSdkFolder(), "emulator");
     File emulatorPath = Platform.isWindows() ? new File(emulatorFolder, "emulator.exe") :
             new File(emulatorFolder, "emulator");
     return emulatorPath.exists();
@@ -82,7 +82,7 @@ class EmulatorController {
     String gpuFlag = "auto";
 
     //Use emulator from emulator/emulator.exe not tools/emulator.exe
-    File emulatorFolder = new File(sdk.getToolsFolder(), "emulator");
+    File emulatorFolder = new File(sdk.getSdkFolder(), "emulator");
     File emulatorPath = Platform.isWindows() ? new File(emulatorFolder, "emulator.exe") :
             new File(emulatorFolder, "emulator");
 
