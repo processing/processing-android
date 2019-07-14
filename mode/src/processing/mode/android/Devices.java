@@ -147,10 +147,10 @@ class Devices {
   }
 
 
-  public Future<Device> getEmulator(final boolean wear) {
+  public Future<Device> getEmulator(final boolean wear, final String avdName) {
     final Callable<Device> androidFinder = new Callable<Device>() {
       public Device call() throws Exception {
-        return blockingGetEmulator( wear);
+        return blockingGetEmulator( wear, avdName);
       }
     };
     final FutureTask<Device> task = new FutureTask<Device>(androidFinder);
@@ -159,7 +159,7 @@ class Devices {
   }
 
 
-  private final Device blockingGetEmulator(final boolean wear) {
+  private final Device blockingGetEmulator(final boolean wear, String avdName) {
     String port = AVD.getPreferredPort(wear);
     Device emu = find(true, port);
     if (emu != null) {
@@ -175,7 +175,7 @@ class Devices {
     
     if (emuController.getState() == State.NOT_RUNNING) {
       try {
-        emuController.launch(sdk, wear); // this blocks until emulator boots
+        emuController.launch(sdk, wear, avdName); // this blocks until emulator boots
       } catch (final IOException e) {
         System.err.println("Problem while launching emulator.");
         e.printStackTrace(System.err);

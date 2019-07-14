@@ -227,14 +227,9 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener) throws SketchException, IOException, CancelException {
-    listener.startIndeterminate();
-    listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
-    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
+      RunnerListener listener, String avdName) throws SketchException, IOException, CancelException {
 
-    listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
-    build.build("debug");
-
+    //check for emulator
     boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
     if (!checkEmulator) {
       String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
@@ -250,16 +245,40 @@ public class AndroidMode extends JavaMode {
         }
       }
     }
-    boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
-    if (!avd) {
-      SketchException se =
-        new SketchException(AndroidMode.getTextString("android_mode.error.cannot_create_avd"));
-      se.hideStackTrace();
-      throw se;
+
+    //Check if atleast one AVD already exists :
+    boolean firstAVD;
+    if(avdName !=null)
+      firstAVD = avdName.isEmpty();
+    else firstAVD = true;
+
+    //if first, then create a new AVD
+    if (firstAVD) {
+      CreateAVD createAVD = new CreateAVD(sdk, editor, this);
+      if (createAVD.isCancelled()) throw new CancelException(AndroidMode.getTextString("android_avd.error.create_avd_cancel"));
+      avdName = createAVD.getNewAvd().getName();
     }
 
+    Preferences.set("android.emulator.avd.name",avdName);
+
+    listener.startIndeterminate();
+    listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
+    AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
+
+    listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
+    build.build("debug");
+
+    //TODO DJ:: Replace with new create AVD-----------------
+//    boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
+//    if (!avd) {
+//      SketchException se =
+//        new SketchException(AndroidMode.getTextString("android_mode.error.cannot_create_avd"));
+//      se.hideStackTrace();
+//      throw se;
+//    }
+    //----------------------------------
     int comp = build.getAppComponent();
-    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear());
+    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear(),avdName);
     runner = new AndroidRunner(build, listener);
     runner.launch(emu, comp, true);
   }

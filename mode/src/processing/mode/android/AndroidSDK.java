@@ -46,6 +46,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Vector;
 
 /** 
  * Class holding all needed references (path, tools, etc) to the SDK used by 
@@ -212,6 +213,17 @@ class AndroidSDK {
     }
   }
 
+  public Vector<String> getAvailPlatforms() {
+    Vector<String> platforms = new Vector<String>();
+    File platformFolder = new File(getSdkFolder(),"platforms");
+    File[] subfolders = platformFolder.listFiles();
+    for (File folder : subfolders) {
+      if (folder.isDirectory()) {
+        platforms.add(folder.getName());
+      }
+    }
+    return platforms;
+  }
 
   public File getToolsFolder() {
     return tools;
@@ -220,6 +232,10 @@ class AndroidSDK {
 
   public String getAvdManagerPath() {
     return avdManager.getAbsolutePath();
+  }
+
+  public String getSDKManagerPath() {
+    return sdkManager.getAbsolutePath();
   }
 
 
@@ -452,18 +468,19 @@ class AndroidSDK {
     }
   }
   
-  static public boolean locateSysImage(final Frame window, 
-      final AndroidMode androidMode, final boolean wear, final boolean ask)
-      throws BadSDKException, CancelException, IOException {
-    final int result = showDownloadSysImageDialog(window, wear);
-    if (result == JOptionPane.YES_OPTION) {
-      return downloadSysImage(window, androidMode, wear, ask);
-    } else if (result == JOptionPane.NO_OPTION) {
-      return false;
-    } else {
-      return false; 
-    }
-  }
+//  TODO DJ::Unwanted piece of code
+//  static public boolean locateSysImage(final Frame window,
+//      final AndroidMode androidMode, final boolean wear, final boolean ask)
+//      throws BadSDKException, CancelException, IOException {
+//    final int result = showDownloadSysImageDialog(window, wear);
+//    if (result == JOptionPane.YES_OPTION) {
+//      return downloadSysImage(window, androidMode, wear, ask);
+//    } else if (result == JOptionPane.NO_OPTION) {
+//      return false;
+//    } else {
+//      return false;
+//    }
+//  }
 
   static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
       throws BadSDKException, CancelException {
@@ -505,9 +522,10 @@ class AndroidSDK {
   }
   
   static public boolean downloadSysImage(final Frame editor, 
-      final AndroidMode androidMode, final boolean wear, final boolean ask) 
+      final AndroidMode androidMode, final boolean wear,
+                                         final String ABI, final String API, final String TAG)
       throws BadSDKException, CancelException {
-    final SysImageDownloader downloader = new SysImageDownloader(editor, wear, ask);    
+    final SysImageDownloader downloader = new SysImageDownloader(editor, wear, ABI, API, TAG);
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
     
     if (downloader.cancelled()) {

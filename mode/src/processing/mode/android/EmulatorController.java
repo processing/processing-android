@@ -64,7 +64,7 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(final AndroidSDK sdk, final boolean wear) 
+  synchronized public void launch(final AndroidSDK sdk, final boolean wear, final String avd)
       throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
@@ -73,7 +73,7 @@ class EmulatorController {
 
     // Emulator options:
     // https://developer.android.com/studio/run/emulator-commandline.html
-    String avdName = AVD.getName(wear);
+    String avdName = avd;
     
     final String portString = AVD.getPreferredPort(wear);
         

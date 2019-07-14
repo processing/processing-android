@@ -22,11 +22,7 @@
 
 package processing.mode.android;
 
-import processing.app.Base;
-import processing.app.Mode;
-import processing.app.Platform;
-import processing.app.Settings;
-import processing.app.SketchException;
+import processing.app.*;
 import processing.app.tools.Tool;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -157,7 +153,8 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN, true), 'R');
     presentItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          handleRunEmulator();
+          String emulator = Preferences.get("android.emulator.avd.name");
+          handleRunEmulator(emulator);
         }
       });
 
@@ -179,6 +176,16 @@ public class AndroidEditor extends JavaEditor {
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Permissions(sketch, appComponent, androidMode.getFolder());
+      }
+    });
+    androidMenu.add(item);
+
+    //run config window item
+    item = new JMenuItem("Run Configuration");
+    final AndroidEditor editor = this;
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new RunConfiguration(androidMode.getSDK(),editor,mode);
       }
     });
     androidMenu.add(item);
@@ -373,14 +380,14 @@ public class AndroidEditor extends JavaEditor {
   /**
    * Build the sketch and run it inside an emulator with the debugger.
    */
-  public void handleRunEmulator() {
+  public void handleRunEmulator(final String avdName) {
     new Thread() {
       public void run() {
         toolbar.activateRun();
         startIndeterminate();
         prepareRun();
         try {
-          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this);
+          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this, avdName);
         } catch (SketchException e) {
           statusError(e);
         } catch (IOException e) {

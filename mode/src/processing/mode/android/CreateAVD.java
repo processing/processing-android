@@ -1,0 +1,399 @@
+package processing.mode.android;
+
+import processing.app.Messages;
+import processing.app.ui.Editor;
+import processing.app.ui.Toolkit;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Vector;
+
+public class CreateAVD extends JDialog {
+  private AndroidSDK sdk;
+  private Frame editor;
+  private AndroidMode mode;
+
+  private Boolean cancelled = false;
+  final private int NUM_ROWS = 5;
+  final private int COL_WIDTH = Toolkit.zoom(75);
+  final static private int INSET = Toolkit.zoom(1);
+  final private Vector<String> columns_image =
+          new Vector<String>(Arrays.asList("API Level", "Tag", "ABI", "Status"));
+
+  private static String deviceName;
+  private static String avdName;
+  private static String imageName;
+  private static String imageAPI;
+  private static boolean wear = false;
+
+  private AVD newAvd;
+  private JPanel mainPanel;
+
+  public CreateAVD(AndroidSDK sdk, Frame editor, AndroidMode mode) {
+    super(editor,"Create AVD",true);
+    this.sdk = sdk;
+    this.editor = editor;
+    this.mode = mode;
+    createBaseLayout();
+    showDeviceSelector();
+  }
+
+  public boolean isCancelled() {
+    return cancelled;
+  }
+
+  private void createBaseLayout() {
+    getContentPane().removeAll();
+
+    setLayout(new BorderLayout());
+    mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    add(mainPanel,BorderLayout.EAST);
+
+    JPanel sidePanel = new JPanel(new BorderLayout());
+    sidePanel.setPreferredSize(Toolkit.zoom(100,0));
+    sidePanel.setBackground(Color.white);
+    add(sidePanel,BorderLayout.WEST);
+    sidePanel.setAlignmentY(CENTER_ALIGNMENT);
+    JLabel logo = new JLabel(Toolkit.getLibIcon("/icons/pde-64.png"));
+    sidePanel.add(logo,BorderLayout.CENTER);
+
+    JRootPane root = getRootPane();
+    ActionListener disposer = new ActionListener() {
+      public void actionPerformed(ActionEvent actionEvent) {
+        cancelled = true;
+        setVisible(false);
+        dispose();
+      }
+    };
+    Toolkit.registerWindowCloseKeys(root, disposer);
+    Toolkit.setIcon(this);
+  }
+
+  private void showDeviceSelector() {
+    mainPanel.removeAll();
+    mainPanel.repaint();
+
+    JPanel infoPanel = new JPanel();
+    String infoString = AndroidMode.getTextString("android_avd.create.info_message");
+    JLabel info = new JLabel(infoString);
+    info.setPreferredSize(Toolkit.zoom(300,50));
+    info.setBorder(new EmptyBorder(0,10,0,0));
+    infoPanel.add(info);
+    mainPanel.add(infoPanel);
+
+    JPanel selector = new JPanel(new GridBagLayout());
+    selector.setAlignmentX(RIGHT_ALIGNMENT);
+
+    GridBagConstraints gc = new GridBagConstraints();
+    gc.anchor = GridBagConstraints.NORTHWEST;
+    gc.insets = new Insets(INSET, INSET, INSET, INSET);
+    gc.weighty = 0.5;
+
+    gc.gridx = 0; gc.gridy = 0; gc.weightx = 0.5;
+    JLabel nameLabel = new JLabel("Enter AVD Name: ");
+    selector.add(nameLabel,gc);
+
+    gc.gridx = 1; gc.gridy = 0; gc.weightx = 1;
+    final JTextField nameField = new JTextField(15);
+    selector.add(nameField,gc);
+
+    gc.gridx = 0; gc.gridy = 1; gc.weightx = 0.5;
+    JLabel typeLabel = new JLabel("Select type: ");
+    selector.add(typeLabel,gc);
+
+    gc.gridx = 1; gc.gridy = 1; gc.weightx = 1;
+    JRadioButton phoneRB = new JRadioButton("Phone");
+    selector.add(phoneRB,gc);
+
+    gc.gridx = 2; gc.gridy = 1; gc.weightx = 1;
+    final JRadioButton wearRB = new JRadioButton("Wear");
+    selector.add(wearRB,gc);
+
+    ButtonGroup typeGroup = new ButtonGroup();
+    typeGroup.add(phoneRB); typeGroup.add(wearRB);
+
+    gc.gridx = 0; gc.gridy = 2; gc.weightx = 0.5;
+    JLabel deviceLabel = new JLabel("Select Device");
+    selector.add(deviceLabel,gc);
+
+    gc.gridx = 1; gc.gridy = 2; gc.weightx = 1;
+    Vector<Vector<String>> devices = AVD.listDevices(sdk);
+    final Vector<String> phoneList = devices.get(0);
+    final Vector<String> idsList = devices.get(1);
+    final Vector<String> wearList = devices.get(2);
+    final Vector<String> wearIds = devices.get(3);
+
+    final DefaultComboBoxModel<String> cm = new DefaultComboBoxModel<String>();
+    final JComboBox<String> deviceSelector = new JComboBox<String>(cm);
+    selector.add(deviceSelector,gc);
+    mainPanel.add(selector);
+
+    phoneRB.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        cm.removeAllElements();
+        for(String phone : phoneList) cm.addElement(phone);
+      }
+    });
+
+    wearRB.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        cm.removeAllElements();
+        for(String phone : wearList) cm.addElement(phone);
+      }
+    });
+
+    JPanel buttons = new JPanel(new FlowLayout());
+
+    JButton cancelButton = new JButton("Cancel");
+    cancelButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        cancelled = true;
+        setVisible(false);
+        dispose();
+      }
+    });
+    buttons.add(cancelButton);
+
+    JButton nextButton = new JButton("Next");
+    nextButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        avdName = nameField.getText();
+        if (wearRB.isSelected()) wear = true;
+        if(avdName.isEmpty()) Messages.showMessage("Unnamed Avd","Please select a Name for your AVD");
+        else if(avdName.contains(" ")) Messages.showMessage("Invalid AVD Name","AVD name cannot have spaces");
+        else {
+          if (!wear) deviceName = idsList.get(deviceSelector.getSelectedIndex());
+          else deviceName = wearIds.get(deviceSelector.getSelectedIndex());
+          showImageSelector();
+        }
+      }
+    });
+    buttons.add(nextButton);
+
+    mainPanel.add(buttons);
+
+    pack();
+    setLocationRelativeTo(editor);
+    setAlwaysOnTop(false);
+    setVisible(true);
+  }
+
+  private void showImageSelector() {
+    mainPanel.removeAll();
+    mainPanel.repaint();
+    mainPanel.setPreferredSize(Toolkit.zoom(325,225));
+
+    JPanel tablePanel = new JPanel();
+
+    DefaultTableModel imageTable = new DefaultTableModel(NUM_ROWS,columns_image.size()) {
+      @Override
+      public boolean isCellEditable(int row, int column) {
+        return false;
+      }
+
+      @Override
+      public Class<?> getColumnClass(int columnIndex) {
+        return String.class;
+      }
+
+
+    };
+    final JTable table = new JTable(imageTable){
+      @Override
+      public String getColumnName(int column) {
+        return columns_image.get(column);
+      }
+    };
+    table.setFillsViewportHeight(true);
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    table.setRowHeight(Toolkit.zoom(table.getRowHeight()));
+    Dimension dim = new Dimension(table.getColumnCount() * COL_WIDTH,
+            table.getRowHeight() * NUM_ROWS);
+    table.setPreferredScrollableViewportSize(dim);
+    table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+    //transfer to swing worker  - right now this is blocking
+    Vector<Vector<String>> images = AVD.listImages(sdk,wear);
+    imageTable.setDataVector(images,columns_image);
+    imageTable.fireTableDataChanged();
+
+    tablePanel.add(new JScrollPane(table));
+
+    JPanel infoPanel = new JPanel();
+    String desc = "<html>"+ AndroidMode.getTextString("sys_image_downloader.dialog.select_image_body") + "<html>";
+    JLabel abiDescription = new JLabel(desc);
+    abiDescription.setBorder(new EmptyBorder(0,10,0,0));
+    abiDescription.setPreferredSize(Toolkit.zoom(325,70));
+    infoPanel.add(abiDescription);
+
+    mainPanel.add(infoPanel);
+    mainPanel.add(tablePanel);
+
+    JPanel buttonPanel = new JPanel(new FlowLayout());
+
+    final JButton backButton = new JButton("Back");
+    backButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        showDeviceSelector();
+      }
+    });
+    buttonPanel.add(backButton);
+
+    final JButton installButton = new JButton("Install");
+    installButton.setEnabled(false);//without selection both install and next will be disabled
+    installButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        int selectedRow = table.getSelectedRow();
+        String ABI = (String) table.getValueAt(selectedRow,2);
+        String API = (String) table.getValueAt(selectedRow,0);
+        String TAG = (String) table.getValueAt(selectedRow,1);
+        String status = (String) table.getValueAt(selectedRow,3);
+        try {
+          AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+        } catch (AndroidSDK.BadSDKException | AndroidSDK.CancelException ex) {
+          ex.printStackTrace();
+        }
+      }
+    });
+    buttonPanel.add(installButton);
+
+    final JButton nextButton = new JButton("Next");
+    nextButton.setEnabled(false);//without selection both install and next will be disabled
+    nextButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        int selectedRow = table.getSelectedRow();
+        String ABI = (String) table.getValueAt(selectedRow,2);
+        String API = (String) table.getValueAt(selectedRow,0);
+        String TAG = (String) table.getValueAt(selectedRow,1);
+        imageName = "system-images;"+ API+ ";"+ TAG+ ";"+ ABI;
+        imageAPI = API;
+        showConfirmWindow();
+      }
+    });
+    buttonPanel.add(nextButton);
+
+    //enable or disable next and install button based on selection.
+    table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+      @Override
+      public void valueChanged(ListSelectionEvent e) {
+        int row = table.getSelectedRow();
+        if (((String) table.getValueAt(row,3)).equals("Not Installed")) {
+          installButton.setEnabled(true);
+          nextButton.setEnabled(false);
+        } else {
+          installButton.setEnabled(false);
+          nextButton.setEnabled(true);
+        }
+      }
+    });
+
+    mainPanel.add(buttonPanel);
+
+    pack();
+    setLocationRelativeTo(editor);
+    setAlwaysOnTop(false);
+    setVisible(true);
+  }
+
+  private void showConfirmWindow() {
+    final AVD avd = new AVD(avdName, deviceName, AVD.DEVICE_SKIN, imageName);
+    newAvd = avd;
+    mainPanel.removeAll();
+    mainPanel.repaint();
+
+    mainPanel.setLayout(new BorderLayout());
+
+    JPanel configPanel = new JPanel(new GridBagLayout());
+    Border border = BorderFactory.createLineBorder(Color.black,1,true);
+    configPanel.setBorder(BorderFactory.createTitledBorder(border,"Confirm your AVD: "));
+
+    GridBagConstraints gc = new GridBagConstraints();
+    gc.anchor = GridBagConstraints.NORTH;
+    gc.weightx = 1; gc.weighty = 1;
+
+    gc.gridx = 0; gc.gridy = 0;
+    JLabel name = new JLabel("AVD Name: ");
+    configPanel.add(name,gc);
+
+    gc.gridx = 1; gc.gridy = 0;
+    JLabel nameValue = new JLabel(avdName);
+    configPanel.add(nameValue,gc);
+
+    gc.gridx = 0; gc.gridy = 1;
+    JLabel device = new JLabel("AVD Device: ");
+    configPanel.add(device,gc);
+
+    gc.gridx = 1; gc.gridy = 1;
+    JLabel deviceValue = new JLabel(deviceName);
+    configPanel.add(deviceValue,gc);
+
+    gc.gridx = 0; gc.gridy = 2;
+    JLabel image = new JLabel("Image: ");
+    configPanel.add(image,gc);
+
+    gc.gridx = 1; gc.gridy = 2;
+    JLabel imageValue = new JLabel(imageAPI);
+    configPanel.add(imageValue,gc);
+
+    mainPanel.add(configPanel, BorderLayout.NORTH);
+
+    JPanel buttonsPanel = new JPanel(new FlowLayout());
+
+    JButton backButton = new JButton("Back");
+    backButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        showImageSelector();
+      }
+    });
+    buttonsPanel.add(backButton);
+
+    JButton confirmButton = new JButton("Confirm");
+    confirmButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        try {
+          boolean result = newAvd.create(sdk);
+          setVisible(false);
+          dispose();
+          if(!result) {
+            Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
+                    AndroidMode.getTextString("android_avd.error.cannot_create_avd_body"));
+          }
+        } catch (IOException ex) {
+          ex.printStackTrace();
+        }
+      }
+    });
+    buttonsPanel.add(confirmButton);
+
+    mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
+
+    pack();
+    setLocationRelativeTo(editor);
+    setAlwaysOnTop(false);
+    setVisible(true);
+  }
+
+  public AVD getNewAvd () {
+    return newAvd;
+  }
+}
