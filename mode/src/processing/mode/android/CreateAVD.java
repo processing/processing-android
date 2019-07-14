@@ -314,7 +314,7 @@ public class CreateAVD extends JDialog {
   }
 
   private void showConfirmWindow() {
-    final AVD avd = new AVD(avdName, deviceName, AVD.DEVICE_SKIN, imageName);
+    final AVD avd = new AVD(avdName, deviceName, imageName);
     newAvd = avd;
     mainPanel.removeAll();
     mainPanel.repaint();

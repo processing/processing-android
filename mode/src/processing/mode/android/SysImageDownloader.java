@@ -131,7 +131,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         } else if (abi.equals("arm")) {
           // The ARM images using Google APIs are too slow, so use the 
           // older Android (AOSP) images.
-          repo = SYS_IMAGES_ARM_URL + SYS_IMAGES_PHONE_LIST;
+          repo = SYS_IMAGES_PHONE_URL + SYS_IMAGES_PHONE_LIST;
         } else {
           repo = SYS_IMAGES_PHONE_URL + SYS_IMAGES_PHONE_LIST;
         }
@@ -302,7 +302,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
 
         urlHolder.sysImgFilename  =  url.item(0).getTextContent();
-        String imgUrl = abi.equals("arm") ? SYS_IMAGES_ARM_URL : SYS_IMAGES_PHONE_URL;
+        String imgUrl = SYS_IMAGES_PHONE_URL;
         urlHolder.sysImgUrl = imgUrl + urlHolder.sysImgFilename;
         System.out.println(urlHolder.sysImgUrl);
         urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());

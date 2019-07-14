@@ -268,15 +268,6 @@ public class AndroidMode extends JavaMode {
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
     build.build("debug");
 
-    //TODO DJ:: Replace with new create AVD-----------------
-//    boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
-//    if (!avd) {
-//      SketchException se =
-//        new SketchException(AndroidMode.getTextString("android_mode.error.cannot_create_avd"));
-//      se.hideStackTrace();
-//      throw se;
-//    }
-    //----------------------------------
     int comp = build.getAppComponent();
     Future<Device> emu = Devices.getInstance().getEmulator(build.isWear(),avdName);
     runner = new AndroidRunner(build, listener);

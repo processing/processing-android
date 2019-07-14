@@ -467,20 +467,6 @@ class AndroidSDK {
       throw new CancelException(AndroidMode.getTextString("android_sdk.error.sdk_selection_canceled")); 
     }
   }
-  
-//  TODO DJ::Unwanted piece of code
-//  static public boolean locateSysImage(final Frame window,
-//      final AndroidMode androidMode, final boolean wear, final boolean ask)
-//      throws BadSDKException, CancelException, IOException {
-//    final int result = showDownloadSysImageDialog(window, wear);
-//    if (result == JOptionPane.YES_OPTION) {
-//      return downloadSysImage(window, androidMode, wear, ask);
-//    } else if (result == JOptionPane.NO_OPTION) {
-//      return false;
-//    } else {
-//      return false;
-//    }
-//  }
 
   static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
       throws BadSDKException, CancelException {
