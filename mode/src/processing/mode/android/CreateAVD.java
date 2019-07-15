@@ -13,20 +13,26 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 public class CreateAVD extends JDialog {
   private AndroidSDK sdk;
   private Frame editor;
   private AndroidMode mode;
 
-  private Boolean cancelled = false;
+  private boolean cancelled = false;
+  private boolean failed = false;
   final private int NUM_ROWS = 5;
   final private int COL_WIDTH = Toolkit.zoom(75);
   final static private int INSET = Toolkit.zoom(1);
+  final static private int BAR_WIDTH = Toolkit.zoom(300);
+  final static private int BAR_HEIGHT = Toolkit.zoom(30);
   final private Vector<String> columns_image =
           new Vector<String>(Arrays.asList("API Level", "Tag", "ABI", "Status"));
 
@@ -36,8 +42,12 @@ public class CreateAVD extends JDialog {
   private static String imageAPI;
   private static boolean wear = false;
 
+  private Vector<Vector<String>> devices;
+  private DefaultTableModel imageTable;
+
   private AVD newAvd;
   private JPanel mainPanel;
+  private JProgressBar createProgress;
 
   public CreateAVD(AndroidSDK sdk, Frame editor, AndroidMode mode) {
     super(editor,"Create AVD",true);
@@ -45,20 +55,116 @@ public class CreateAVD extends JDialog {
     this.editor = editor;
     this.mode = mode;
     createBaseLayout();
-    showDeviceSelector();
+    showLoadingScreen(0);
+  }
+
+  class ListDevicesTask extends SwingWorker<Object,Object> {
+    @Override
+    protected Object doInBackground() throws Exception {
+      devices = AVD.listDevices(sdk);
+      return null;
+    }
+
+    @Override
+    protected void done() {
+      super.done();
+      remove(mainPanel);
+      showDeviceSelector();
+    }
+  }
+
+  class ListImagesTask extends SwingWorker<Object,Object> {
+    @Override
+    protected Object doInBackground() throws Exception {
+      Vector<Vector<String>> images = AVD.listImages(sdk,wear);
+      return images;
+    }
+
+    @Override
+    protected void done() {
+      super.done();
+      remove(mainPanel);
+      showImageSelector();
+      try {
+        imageTable.setDataVector((Vector<Vector<String>>) get(),columns_image);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } catch (ExecutionException e) {
+        e.printStackTrace();
+      }
+      imageTable.fireTableDataChanged();
+    }
+  }
+
+  class CreateAvdTask extends SwingWorker<Object, Object> {
+    @Override
+    protected Object doInBackground() throws Exception {
+      boolean result = false;
+      try {
+        result = newAvd.create(sdk);
+      } catch (IOException ex) {
+        ex.printStackTrace();
+      }
+      return result;
+    }
+
+    @Override
+    protected void done() {
+      super.done();
+      boolean result = false;
+      try {
+        result = (boolean) get();
+      } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
+      }
+      createProgress.setIndeterminate(false);
+      setVisible(false);
+      dispose();
+      if(!result) {
+        failed = true;
+        Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
+                AndroidMode.getTextString("android_avd.error.cannot_create_avd_body"));
+      } else {
+        System.out.println(AndroidMode.getTextString("android_avd.status.create_avd_completed"));
+      }
+    }
   }
 
   public boolean isCancelled() {
     return cancelled;
   }
 
+  public boolean isFailed() {
+    return failed;
+  }
+
+  private void showLoadingScreen(int option) {
+    mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    add(mainPanel,BorderLayout.EAST);
+
+    JLabel loadingLabel = new JLabel("Loading . . . ");
+    loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
+    loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    mainPanel.add(loadingLabel);
+
+    if (option == 0) {
+      ListDevicesTask listDevicesTask = new ListDevicesTask();
+      listDevicesTask.execute();
+    } else if (option == 1) {
+      ListImagesTask listImagesTask = new ListImagesTask();
+      listImagesTask.execute();
+    }
+
+    pack();
+    setLocationRelativeTo(editor);
+    setVisible(true);
+  }
+
   private void createBaseLayout() {
     getContentPane().removeAll();
 
     setLayout(new BorderLayout());
-    mainPanel = new JPanel();
-    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
-    add(mainPanel,BorderLayout.EAST);
 
     JPanel sidePanel = new JPanel(new BorderLayout());
     sidePanel.setPreferredSize(Toolkit.zoom(100,0));
@@ -78,11 +184,20 @@ public class CreateAVD extends JDialog {
     };
     Toolkit.registerWindowCloseKeys(root, disposer);
     Toolkit.setIcon(this);
+
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+        super.windowClosing(e);
+        cancelled = true;
+      }
+    });
   }
 
   private void showDeviceSelector() {
-    mainPanel.removeAll();
-    mainPanel.repaint();
+    final JPanel mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    add(mainPanel,BorderLayout.EAST);
 
     JPanel infoPanel = new JPanel();
     String infoString = AndroidMode.getTextString("android_avd.create.info_message");
@@ -128,7 +243,6 @@ public class CreateAVD extends JDialog {
     selector.add(deviceLabel,gc);
 
     gc.gridx = 1; gc.gridy = 2; gc.weightx = 1;
-    Vector<Vector<String>> devices = AVD.listDevices(sdk);
     final Vector<String> phoneList = devices.get(0);
     final Vector<String> idsList = devices.get(1);
     final Vector<String> wearList = devices.get(2);
@@ -172,6 +286,7 @@ public class CreateAVD extends JDialog {
     nextButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        remove(mainPanel);
         avdName = nameField.getText();
         if (wearRB.isSelected()) wear = true;
         if(avdName.isEmpty()) Messages.showMessage("Unnamed Avd","Please select a Name for your AVD");
@@ -179,7 +294,7 @@ public class CreateAVD extends JDialog {
         else {
           if (!wear) deviceName = idsList.get(deviceSelector.getSelectedIndex());
           else deviceName = wearIds.get(deviceSelector.getSelectedIndex());
-          showImageSelector();
+          showLoadingScreen(1);
         }
       }
     });
@@ -194,13 +309,13 @@ public class CreateAVD extends JDialog {
   }
 
   private void showImageSelector() {
-    mainPanel.removeAll();
-    mainPanel.repaint();
-    mainPanel.setPreferredSize(Toolkit.zoom(325,225));
+    final JPanel mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(325,250));
+    add(mainPanel,BorderLayout.EAST);
 
     JPanel tablePanel = new JPanel();
 
-    DefaultTableModel imageTable = new DefaultTableModel(NUM_ROWS,columns_image.size()) {
+    imageTable = new DefaultTableModel(NUM_ROWS,columns_image.size()) {
       @Override
       public boolean isCellEditable(int row, int column) {
         return false;
@@ -227,11 +342,6 @@ public class CreateAVD extends JDialog {
     table.setPreferredScrollableViewportSize(dim);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-    //transfer to swing worker  - right now this is blocking
-    Vector<Vector<String>> images = AVD.listImages(sdk,wear);
-    imageTable.setDataVector(images,columns_image);
-    imageTable.fireTableDataChanged();
-
     tablePanel.add(new JScrollPane(table));
 
     JPanel infoPanel = new JPanel();
@@ -250,7 +360,8 @@ public class CreateAVD extends JDialog {
     backButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        showDeviceSelector();
+        remove(mainPanel);
+        showLoadingScreen(0);
       }
     });
     buttonPanel.add(backButton);
@@ -279,6 +390,7 @@ public class CreateAVD extends JDialog {
     nextButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        remove(mainPanel);
         int selectedRow = table.getSelectedRow();
         String ABI = (String) table.getValueAt(selectedRow,2);
         String API = (String) table.getValueAt(selectedRow,0);
@@ -316,12 +428,12 @@ public class CreateAVD extends JDialog {
   private void showConfirmWindow() {
     final AVD avd = new AVD(avdName, deviceName, imageName);
     newAvd = avd;
-    mainPanel.removeAll();
-    mainPanel.repaint();
-
-    mainPanel.setLayout(new BorderLayout());
+    final JPanel mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    add(mainPanel,BorderLayout.EAST);
 
     JPanel configPanel = new JPanel(new GridBagLayout());
+    configPanel.setPreferredSize(Toolkit.zoom(300,50));
     Border border = BorderFactory.createLineBorder(Color.black,1,true);
     configPanel.setBorder(BorderFactory.createTitledBorder(border,"Confirm your AVD: "));
 
@@ -353,7 +465,12 @@ public class CreateAVD extends JDialog {
     JLabel imageValue = new JLabel(imageAPI);
     configPanel.add(imageValue,gc);
 
-    mainPanel.add(configPanel, BorderLayout.NORTH);
+    mainPanel.add(configPanel);
+
+    createProgress = new JProgressBar();
+    createProgress.setPreferredSize(new Dimension(BAR_WIDTH,BAR_HEIGHT));
+    createProgress.setValue(0);
+    mainPanel.add(createProgress);
 
     JPanel buttonsPanel = new JPanel(new FlowLayout());
 
@@ -361,7 +478,8 @@ public class CreateAVD extends JDialog {
     backButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        showImageSelector();
+        remove(mainPanel);
+        showLoadingScreen(1);
       }
     });
     buttonsPanel.add(backButton);
@@ -370,22 +488,15 @@ public class CreateAVD extends JDialog {
     confirmButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        try {
-          boolean result = newAvd.create(sdk);
-          setVisible(false);
-          dispose();
-          if(!result) {
-            Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
-                    AndroidMode.getTextString("android_avd.error.cannot_create_avd_body"));
-          }
-        } catch (IOException ex) {
-          ex.printStackTrace();
-        }
+        System.out.println(AndroidMode.getTextString("android_avd.status.create_avd_started"));
+        createProgress.setIndeterminate(true);
+        CreateAvdTask createAvdTask = new CreateAvdTask();
+        createAvdTask.execute();
       }
     });
     buttonsPanel.add(confirmButton);
 
-    mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
+    mainPanel.add(buttonsPanel);
 
     pack();
     setLocationRelativeTo(editor);

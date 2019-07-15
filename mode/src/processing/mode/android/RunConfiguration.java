@@ -144,10 +144,9 @@ public class RunConfiguration extends JFrame {
       @Override
       public void actionPerformed(ActionEvent e) {
         CreateAVD createAVD = new CreateAVD(sdk,editor,mode);
-        boolean cancelled = createAVD.isCancelled();
-        if (cancelled) {
+        if (createAVD.isCancelled()) {
           Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
-                  AndroidMode.getTextString("android_avd.error.cannot_create_avd_body"));
+                  AndroidMode.getTextString("android_avd.error.create_avd_cancel"));
         }
       }
     });

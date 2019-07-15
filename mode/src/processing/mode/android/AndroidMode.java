@@ -256,6 +256,7 @@ public class AndroidMode extends JavaMode {
     if (firstAVD) {
       CreateAVD createAVD = new CreateAVD(sdk, editor, this);
       if (createAVD.isCancelled()) throw new CancelException(AndroidMode.getTextString("android_avd.error.create_avd_cancel"));
+      else if (createAVD.isFailed()) throw new CancelException(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"));
       avdName = createAVD.getNewAvd().getName();
     }
 
