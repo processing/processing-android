@@ -336,14 +336,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 
   class DownloadTask extends SwingWorker<Object, Object> {
     ProgressIndicator progress;
-    JProgressBar progressBar;
     Boolean isPlatform;
     JLabel status;
 
     DownloadTask(JProgressBar progressBar, Boolean isPlatform,JLabel status) {
       super();   
       progress = new ConsoleProgressIndicator();
-      this.progressBar = progressBar;
       this.isPlatform = isPlatform;
       this.status = status;
     }
@@ -388,11 +386,15 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         for (RemotePackage p : remotes) {
           Installer installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
               .createInstaller(p, mRepoManager, downloader, mHandler.getFileOp());
-          status.setText("Downloading...");
-          if (!(installer.prepare(progress) && installer.complete(progress))) {
-            // there was an error, abort.
-            throw new SdkManagerCli.CommandFailedException();
-          }
+          status.setText("Downloading. . .");
+          if ((installer.prepare(progress))) {
+            if(isPlatform) statusPlatform.setText("Unzipping. . .");
+            else status.setText("Unzipping");
+            if (!installer.complete(progress)) {
+              // there was an error, abort.
+              throw new SdkManagerCli.CommandFailedException();
+            }
+          } else throw new SdkManagerCli.CommandFailedException();
         }
       } else {
         progress.logWarning("Unable to compute a complete list of dependencies.");
@@ -405,7 +407,6 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     @Override
     protected void done() {
       super.done();
-
       try {
         get();
         actionButton.setEnabled(false);
@@ -413,9 +414,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         status.setText("Refreshing packages...");
         statusPlatform.setText("Refreshing packages...");
 
-        //reset the progress bar to indeterminate for querying
-        progressBar.setIndeterminate(false);
-        progressBarPlatform.setIndeterminate(false);
+        //reset Buttons
+        actionButton.setText("Update");
+        actionButtonPlatform.setText("Install");
 
         //start querying again
         queryTask = new QueryTask();
@@ -430,7 +431,6 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         e.printStackTrace();
       } finally {
         downloadTaskRunning = false;
-        this.progressBar.setIndeterminate(false);
       }
     }
 
@@ -501,6 +501,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           } catch (InterruptedException e) { }
           bar.setValue((int) (downloadTask.progress.getFraction() * 100));
         }
+        bar.setValue(0);
+        bar.setIndeterminate(true);
       }
     };
     update.start();
