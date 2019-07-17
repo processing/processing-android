@@ -771,9 +771,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       JOptionPane.showMessageDialog(null,
           "Download canceled", "Warning", JOptionPane.WARNING_MESSAGE);
 
-      //reset progress bar
-      progressBar.setValue(0);
-      progressBarPlatform.setValue(0);
+      //re-query:
+      actionButton.setText("Refreshing packages. . . ");
+      actionButtonPlatform.setText("Refreshing packages. . . ");
+      queryTask = new QueryTask();
+      queryTask.addPropertyChangeListener(SDKUpdater.this);
+      queryTask.execute();
     }
   }
   
