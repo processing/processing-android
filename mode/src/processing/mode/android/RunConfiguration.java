@@ -4,13 +4,19 @@ import processing.app.*;
 import processing.app.ui.Toolkit;
 
 import javax.swing.*;
-import javax.swing.border.Border;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 
@@ -18,8 +24,14 @@ public class RunConfiguration extends JFrame {
   private AndroidSDK sdk;
   private AndroidEditor editor;
   private AndroidMode mode;
-  private DefaultTableModel emuTable;
+  private DefaultTableModel emuTableModel;
+  private List<Device> deviceList;
+  private Vector<Vector<String>> emuTableData;
+  private Timer timer;
+  private JRadioButton emuRB;
 
+  static private Devices devices;
+  static private JTable table;
   static private String targetSDK ;
   static private String buildTools;
 
@@ -40,7 +52,6 @@ public class RunConfiguration extends JFrame {
   }
 
   class GetEmulatorsTask extends SwingWorker<Object,Object> {
-    private Vector<Vector<String>> emuTableData;
 
     @Override
     protected Object doInBackground() throws Exception {
@@ -66,8 +77,87 @@ public class RunConfiguration extends JFrame {
       super.done();
       remove(mainPanel);
       createLayout();
-      emuTable.setDataVector(emuTableData,columns);
-      emuTable.fireTableDataChanged();
+      emuTableModel.setDataVector(emuTableData,columns);
+      emuTableModel.fireTableDataChanged();
+    }
+  }
+
+  class GetDevicesTask extends TimerTask {
+
+    private Device selectFirstDevice(java.util.List<Device> deviceList) {
+      if (0 < deviceList.size()) return deviceList.get(0);
+      return null;
+    }
+
+    @Override
+    public void run() {
+      AndroidMode androidMode = (AndroidMode) mode;
+      if (androidMode == null || androidMode.getSDK() == null) return;
+
+      devices = Devices.getInstance();
+
+      if (editor.getAppComponent() == AndroidBuild.WATCHFACE) {
+        devices.enableBluetoothDebugging();
+      }
+
+      deviceList = devices.findMultiple(false);
+      Device selectedDevice = devices.getSelectedDevice();
+
+      if (deviceList.size() == 0) {
+        Messages.showWarning(AndroidMode.getTextString("android_mode.dialog.no_devices_found_title"),
+                AndroidMode.getTextString("android_mode.dialog.no_devices_found_body"));
+        emuRB.setSelected(true);
+        devices.setSelectedDevice(null);
+        timer.cancel();
+      } else {
+        if (selectedDevice == null) {
+          selectedDevice = selectFirstDevice(deviceList);
+          devices.setSelectedDevice(selectedDevice);
+        } else {
+          // check if selected device is still connected
+          boolean found = false;
+          for (Device device : deviceList) {
+            if (device.equals(selectedDevice)) {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            selectedDevice = selectFirstDevice(deviceList);
+            devices.setSelectedDevice(selectedDevice);
+          }
+
+          for (final Device device : deviceList) {
+            final Vector<Vector<String>> devicesVector = new Vector<>();
+            final Vector<String> deviceItem = new Vector<>();
+
+            DefaultTableModel devicesModel = new DefaultTableModel() {
+              @Override
+              public boolean isCellEditable(int row, int column) {
+                return false;
+              }
+
+              @Override
+              public Class<?> getColumnClass(int columnIndex) {
+                return String.class;
+              }
+
+            };
+
+            deviceItem.add(device.getName());
+            deviceItem.add("Device");
+
+            devicesVector.add(deviceItem);
+
+            table.setModel(devicesModel);
+            devicesModel.setDataVector(devicesVector,columns);
+            devicesModel.fireTableDataChanged();
+            int pos = deviceList.indexOf(device);
+            if (device.equals(selectedDevice)) table.addRowSelectionInterval(pos,pos);
+          }
+        }
+      }
     }
   }
 
@@ -100,6 +190,14 @@ public class RunConfiguration extends JFrame {
     sidePanel.setAlignmentY(CENTER_ALIGNMENT);
     JLabel logo = new JLabel(Toolkit.getLibIcon("/icons/pde-64.png"));
     sidePanel.add(logo,BorderLayout.CENTER);
+
+    addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+        super.windowClosing(e);
+        timer.cancel();
+      }
+    });
 
     pack();
     setLocationRelativeTo(editor);
@@ -136,10 +234,43 @@ public class RunConfiguration extends JFrame {
     final JLabel bToolValue = new JLabel("26.0.2");
     sdkPanel.add(bToolValue,gc);
 
+    gc.gridx = 0; gc.gridy = 2; gc.weightx = 0.5;
+    JLabel typeLabel = new JLabel("Emulator / Device : ");
+    sdkPanel.add(typeLabel,gc);
+
+    gc.gridx = 1; gc.gridy = 2; gc.weightx = 1;
+    emuRB = new JRadioButton("Emulator");
+    sdkPanel.add(emuRB,gc);
+
+    gc.gridx = 2; gc.gridy = 2; gc.weightx = 1;
+    final JRadioButton devRB = new JRadioButton("Device");
+    sdkPanel.add(devRB,gc);
+
+    ButtonGroup typeGroup = new ButtonGroup();
+    typeGroup.add(devRB); typeGroup.add(emuRB);
+
+    devRB.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        GetDevicesTask getDevicesTask = new GetDevicesTask();
+        timer = new Timer();
+        timer.schedule(getDevicesTask, 400, 3000);
+      }
+    });
+
+    emuRB.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        timer.cancel();
+        table.setModel(emuTableModel);
+      }
+    });
+
+    emuRB.setSelected(true);
+
     mainPanel.add(sdkPanel);
 
-
-    emuTable = new DefaultTableModel(NUM_ROWS,columns.size()) {
+    emuTableModel = new DefaultTableModel(NUM_ROWS,columns.size()) {
       @Override
       public boolean isCellEditable(int row, int column) {
         return false;
@@ -150,9 +281,8 @@ public class RunConfiguration extends JFrame {
         return String.class;
       }
 
-
     };
-    final JTable table = new JTable(emuTable){
+    table = new JTable(emuTableModel){
       @Override
       public String getColumnName(int column) {
         return "Emulator/Image Name";
@@ -183,7 +313,7 @@ public class RunConfiguration extends JFrame {
     });
     buttonPanel.add(createButton);
 
-    JButton deleteButton = new JButton("Delete");
+    final JButton deleteButton = new JButton("Delete");
     deleteButton.setEnabled(false);
     deleteButton.addActionListener(new ActionListener() {
       @Override
@@ -203,19 +333,36 @@ public class RunConfiguration extends JFrame {
     runButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        setVisible(false);
-        dispose();
-        targetSDK = (String) platformSelector.getSelectedItem();
-        buildTools = (String) bToolValue.getText();
-        //save these changes to use for further run
-        setConfiguration();
-        editor.handleRunEmulator((String) table.getValueAt(table.getSelectedRow(),0));
+        if (table.getSelectedRow() == -1)
+          Messages.showMessage("Could not run","Select a Device or an AVD");
+        else {
+          setVisible(false);
+          dispose();
+          if (devRB.isSelected()) {
+            int deviceIndex = table.getSelectedRow();
+            devices.setSelectedDevice(deviceList.get(deviceIndex));
+            editor.handleRunDevice();
+          } else {
+            targetSDK = (String) platformSelector.getSelectedItem();
+            buildTools = (String) bToolValue.getText();
+            //save these changes to use for further run
+            setConfiguration();
+            editor.handleRunEmulator((String) table.getValueAt(table.getSelectedRow(), 0));
+          }
+        }
       }
     });
     buttonPanel.add(runButton);
 
     mainPanel.add(buttonPanel,BorderLayout.SOUTH);
 
+    //Listener for delete button enable
+    table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+      @Override
+      public void valueChanged(ListSelectionEvent e) {
+        deleteButton.setEnabled(true);
+      }
+    });
 
     pack();
     setLocationRelativeTo(editor);
