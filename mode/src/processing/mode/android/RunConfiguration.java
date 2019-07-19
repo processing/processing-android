@@ -40,9 +40,10 @@ public class RunConfiguration extends JFrame {
   }
 
   private void setConfiguration() {
-    AndroidBuild.TARGET_SDK = targetSDK.substring(targetSDK.length()-2);
+    String api_level = targetSDK.substring(targetSDK.indexOf("-")+1);
+    AndroidBuild.TARGET_SDK = api_level;
     AndroidBuild.SUPPORT_VER = buildTools;
-    Preferences.set("android.sdk.target",targetSDK.substring(targetSDK.length()-2));
+    Preferences.set("android.sdk.target",api_level);
     Preferences.set("android.sdk.support",buildTools);
   }
 
