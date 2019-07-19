@@ -139,7 +139,7 @@ public class CreateAVD extends JDialog {
   }
 
   private void showLoadingScreen(int option) {
-    mainPanel = new JPanel();
+    mainPanel = new JPanel(new GridBagLayout());
     mainPanel.setPreferredSize(Toolkit.zoom(300,225));
     add(mainPanel,BorderLayout.EAST);
 
