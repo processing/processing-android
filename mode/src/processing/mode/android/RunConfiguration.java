@@ -18,6 +18,7 @@ public class RunConfiguration extends JFrame {
   private AndroidSDK sdk;
   private AndroidEditor editor;
   private AndroidMode mode;
+  private DefaultTableModel emuTable;
 
   static private String targetSDK ;
   static private String buildTools;
@@ -36,7 +37,38 @@ public class RunConfiguration extends JFrame {
     this.editor = editor;
     this.mode = (AndroidMode) mode;
     createBaseLayout();
-    createLayout();
+  }
+
+  class GetEmulatorsTask extends SwingWorker<Object,Object> {
+    private Vector<Vector<String>> emuTableData;
+
+    @Override
+    protected Object doInBackground() throws Exception {
+      try {
+        AVD.list(sdk);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      emuTableData = new Vector<Vector<String>>();
+      for(int i=0; i<AVD.avdList.size(); i++) {
+        String avdName = AVD.avdList.get(i);
+        String deviceName= AVD.avdTypeList.get(i);
+        Vector<String> row = new Vector<String>();
+        row.add(avdName);
+        row.add(deviceName);
+        emuTableData.add(row);
+      }
+      return emuTableData;
+    }
+
+    @Override
+    protected void done() {
+      super.done();
+      remove(mainPanel);
+      createLayout();
+      emuTable.setDataVector(emuTableData,columns);
+      emuTable.fireTableDataChanged();
+    }
   }
 
   private void setConfiguration() {
@@ -48,12 +80,18 @@ public class RunConfiguration extends JFrame {
   }
 
   private void createBaseLayout() {
-    getContentPane().removeAll();
-
     setLayout(new BorderLayout());
-    mainPanel = new JPanel();
+
+    mainPanel = new JPanel(new GridBagLayout());
     mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+
+    JLabel loading = new JLabel("Loading . . .");
+    mainPanel.add(loading);
+
     add(mainPanel,BorderLayout.EAST);
+
+    GetEmulatorsTask getEmulatorsTask = new GetEmulatorsTask();
+    getEmulatorsTask.execute();
 
     JPanel sidePanel = new JPanel(new BorderLayout());
     sidePanel.setPreferredSize(Toolkit.zoom(100,0));
@@ -62,9 +100,16 @@ public class RunConfiguration extends JFrame {
     sidePanel.setAlignmentY(CENTER_ALIGNMENT);
     JLabel logo = new JLabel(Toolkit.getLibIcon("/icons/pde-64.png"));
     sidePanel.add(logo,BorderLayout.CENTER);
+
+    pack();
+    setLocationRelativeTo(editor);
+    setVisible(true);
   }
 
   private void createLayout() {
+    JPanel mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    add(mainPanel,BorderLayout.EAST);
 
     JPanel sdkPanel = new JPanel(new GridBagLayout());
     sdkPanel.setPreferredSize(new Dimension(300,75));
@@ -93,12 +138,8 @@ public class RunConfiguration extends JFrame {
 
     mainPanel.add(sdkPanel);
 
-    try {
-      AVD.list(sdk);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    DefaultTableModel emuTable = new DefaultTableModel(NUM_ROWS,columns.size()) {
+
+    emuTable = new DefaultTableModel(NUM_ROWS,columns.size()) {
       @Override
       public boolean isCellEditable(int row, int column) {
         return false;
@@ -124,17 +165,6 @@ public class RunConfiguration extends JFrame {
             table.getRowHeight() * NUM_ROWS);
     table.setPreferredScrollableViewportSize(dim);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-    Vector<Vector<String>> emuTableData = new Vector<Vector<String>>();
-    for(int i=0; i<AVD.avdList.size(); i++) {
-      String avdName = AVD.avdList.get(i);
-      String deviceName= AVD.avdTypeList.get(i);
-      Vector<String> row = new Vector<String>();
-      row.add(avdName);
-      row.add(deviceName);
-      emuTableData.add(row);
-    }
-    emuTable.setDataVector(emuTableData,columns);
 
     mainPanel.add(new JScrollPane(table));
 
