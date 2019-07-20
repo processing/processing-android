@@ -205,7 +205,7 @@ public class RunConfiguration extends JFrame {
   }
 
   private void createLayout() {
-    JPanel mainPanel = new JPanel();
+    final JPanel mainPanel = new JPanel();
     mainPanel.setPreferredSize(Toolkit.zoom(300,225));
     add(mainPanel,BorderLayout.EAST);
 
@@ -249,23 +249,6 @@ public class RunConfiguration extends JFrame {
     ButtonGroup typeGroup = new ButtonGroup();
     typeGroup.add(devRB); typeGroup.add(emuRB);
 
-    devRB.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        GetDevicesTask getDevicesTask = new GetDevicesTask();
-        timer = new Timer();
-        timer.schedule(getDevicesTask, 400, 3000);
-      }
-    });
-
-    emuRB.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        timer.cancel();
-        table.setModel(emuTableModel);
-      }
-    });
-
     emuRB.setSelected(true);
 
     mainPanel.add(sdkPanel);
@@ -308,6 +291,9 @@ public class RunConfiguration extends JFrame {
         if (createAVD.isCancelled()) {
           Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
                   AndroidMode.getTextString("android_avd.error.create_avd_cancel"));
+        } else if (createAVD.getNewAvd() != null) {
+          remove(mainPanel);
+          createBaseLayout();
         }
       }
     });
@@ -318,9 +304,11 @@ public class RunConfiguration extends JFrame {
     deleteButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        System.out.println("Delete operation began");
         boolean res = AVD.deleteAVD(sdk,(String) table.getValueAt(table.getSelectedRow(),0));
         if (res) {
-          System.out.println("deleted"); //replace with reload Swing worker
+          remove(mainPanel);
+          createBaseLayout();
         } else {
           Messages.showMessage(AndroidMode.getTextString("android_avd.error.delete_failed_title"),
                   AndroidMode.getTextString("android_avd.error.delete_failed_body"));
@@ -356,11 +344,30 @@ public class RunConfiguration extends JFrame {
 
     mainPanel.add(buttonPanel,BorderLayout.SOUTH);
 
+    //Listener for radio buttons
+    devRB.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        deleteButton.setEnabled(false); //delete is possible only if its emulator
+        GetDevicesTask getDevicesTask = new GetDevicesTask();
+        timer = new Timer();
+        timer.schedule(getDevicesTask, 400, 3000);
+      }
+    });
+
+    emuRB.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        timer.cancel();
+        table.setModel(emuTableModel);
+      }
+    });
+
     //Listener for delete button enable
     table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
       @Override
       public void valueChanged(ListSelectionEvent e) {
-        deleteButton.setEnabled(true);
+        if(!devRB.isSelected()) deleteButton.setEnabled(true);
       }
     });
 
