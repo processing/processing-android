@@ -252,6 +252,13 @@ public class AndroidMode extends JavaMode {
       firstAVD = avdName.isEmpty();
     else firstAVD = true;
 
+    //Check if previously selected AVD exits :
+    if(!AVD.exists(sdk, avdName)) {
+      Messages.showMessage(AndroidMode.getTextString("android_avd.error.selected_emu_not_found_title"),
+              AndroidMode.getTextString("android_avd.error.selected_emu_not_found_dialog"));
+      throw new CancelException(AndroidMode.getTextString("android_avd.error.selected_emu_not_found_title"));
+    }
+
     //if first, then create a new AVD
     if (firstAVD) {
       CreateAVD createAVD = new CreateAVD(sdk, editor, this);

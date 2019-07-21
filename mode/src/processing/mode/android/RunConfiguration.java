@@ -195,7 +195,7 @@ public class RunConfiguration extends JFrame {
       @Override
       public void windowClosing(WindowEvent e) {
         super.windowClosing(e);
-        timer.cancel();
+        if(timer != null) timer.cancel();
       }
     });
 

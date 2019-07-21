@@ -330,7 +330,7 @@ public class AVD {
   }
 
 
-  protected boolean exists(final AndroidSDK sdk) throws IOException {
+  static protected boolean exists(final AndroidSDK sdk, String name) throws IOException {
     if (avdList == null) {
       list(sdk);
     }
