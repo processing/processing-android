@@ -377,7 +377,10 @@ public class CreateAVD extends JDialog {
         String TAG = (String) table.getValueAt(selectedRow,1);
         String status = (String) table.getValueAt(selectedRow,3);
         try {
-          AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+          boolean result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+          if (result) {
+            showLoadingScreen(1);
+          }
         } catch (AndroidSDK.BadSDKException | AndroidSDK.CancelException ex) {
           ex.printStackTrace();
         }

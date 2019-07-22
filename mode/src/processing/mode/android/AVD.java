@@ -261,6 +261,15 @@ public class AVD {
     return res;
   }
 
+  static protected boolean checkInstalled(Vector<String> image, Vector<Vector<String>> imageList) {
+    for(Vector<String> item : imageList) {
+      if(item.get(0).equals(image.get(0))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static protected Vector<Vector<String>> listImages(AndroidSDK sdk, boolean wear) {
     Vector<Vector<String>> imageList = new Vector<Vector<String>>();
     try {
@@ -293,8 +302,10 @@ public class AVD {
               image.add(imageProps[3].substring(0, 3)); //ABI
               if (available) image.add("Not Installed");
               else image.add("Installed"); //installed status
-              if (wear && imageProps[2].equals("android-wear")) imageList.add(image);
-              if (!wear && imageProps[2].equals("google_apis")) imageList.add(image);
+              if (wear && imageProps[2].equals("android-wear") &&
+                      !checkInstalled(image,imageList)) imageList.add(image);
+              if (!wear && imageProps[2].equals("google_apis") &&
+                      !checkInstalled(image,imageList)) imageList.add(image);
 
             }
           }
