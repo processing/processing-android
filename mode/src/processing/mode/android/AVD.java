@@ -295,7 +295,8 @@ public class AVD {
             //AMD will have arm
             String abi = getSupportedABI();
             //accept only x86 and not x86_64
-            if (imageProps[3].substring(0, 3).equals(abi) && !imageProps[3].contains("_64")) {
+            if (imageProps[3].substring(0, 3).equals(abi) && (!imageProps[3].contains("_64") ||
+                    imageProps[3].contains("armeabi-v7a")))  {
               Vector<String> image = new Vector<String>();
               image.add(imageProps[1]); //API Level
               image.add(imageProps[2]); //Tag

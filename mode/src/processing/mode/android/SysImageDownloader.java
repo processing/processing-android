@@ -383,38 +383,6 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   
   public void run() {
     cancelled = false;
-
-    abi = Preferences.get("android.emulator.image.abi");
-    if (abi == null || askABI) {
-      // Either there was no image architecture selected, or the default was set.
-      // In this case, we give the user the option to choose between ARM and x86
-      
-      final int result;
-      // PROCESSOR_IDENTIFIER is only defined on Windows. For cross-platform CPU
-      // info, in the future we could use OSHI: https://github.com/oshi/oshi
-      String procId = System.getenv("PROCESSOR_IDENTIFIER");
-      if (procId != null) {
-        if (-1 < procId.indexOf("Intel")) {
-          // Intel CPU: we go for the x86 abi
-          result = JOptionPane.YES_OPTION;
-        } else {
-          // Another CPU, can only be AMD, so we go for ARM abi          
-          result = JOptionPane.NO_OPTION;
-        }
-      } else if (Platform.isMacOS()) {
-        // Macs only have Intel CPUs, so we also go for the x86 abi
-        result = JOptionPane.YES_OPTION;
-      } else {
-        result = showSysImageMessage();  
-      }
-      if (result == JOptionPane.YES_OPTION || result == JOptionPane.CLOSED_OPTION) {
-        abi = "x86";
-        installHAXM();
-      } else {
-        abi = "arm";        
-      }
-      Preferences.set("android.emulator.image.abi", abi);
-    }
     
     downloadTask = new DownloadTask();
     downloadTask.addPropertyChangeListener(this);
