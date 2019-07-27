@@ -29,13 +29,13 @@ public class CreateAVD extends JDialog {
   private boolean cancelled = false;
   private boolean failed = false;
   final private int NUM_ROWS = 5;
-  final private int COL_WIDTH = Toolkit.zoom(75);
   final static private int INSET = Toolkit.zoom(1);
   final static private int BAR_WIDTH = Toolkit.zoom(300);
   final static private int BAR_HEIGHT = Toolkit.zoom(30);
   final private Vector<String> columns_image =
           new Vector<String>(Arrays.asList("API Level", "Tag", "ABI", "Status"));
 
+  private static Dimension currWindowSize;
   private static String deviceName;
   private static String avdName;
   private static String imageName;
@@ -120,12 +120,8 @@ public class CreateAVD extends JDialog {
       createProgress.setIndeterminate(false);
       setVisible(false);
       dispose();
-      if(!result) {
-        failed = true;
-        Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
-                AndroidMode.getTextString("android_avd.error.cannot_create_avd_body"));
-      } else {
-        System.out.println(AndroidMode.getTextString("android_avd.status.create_avd_completed"));
+      if (result) {
+       System.out.println(AndroidMode.getTextString("android_avd.status.create_avd_completed"));
       }
     }
   }
@@ -140,7 +136,8 @@ public class CreateAVD extends JDialog {
 
   private void showLoadingScreen(int option) {
     mainPanel = new JPanel(new GridBagLayout());
-    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    if(currWindowSize!=null) mainPanel.setPreferredSize(currWindowSize);
+    else mainPanel.setPreferredSize(new Dimension(300,225));
     add(mainPanel,BorderLayout.EAST);
 
     JLabel loadingLabel = new JLabel("Loading . . . ");
@@ -158,6 +155,7 @@ public class CreateAVD extends JDialog {
 
     pack();
     setLocationRelativeTo(editor);
+    setResizable(false);
     setVisible(true);
   }
 
@@ -196,16 +194,17 @@ public class CreateAVD extends JDialog {
 
   private void showDeviceSelector() {
     final JPanel mainPanel = new JPanel();
-    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+//    mainPanel.setPreferredSize(Toolkit.zoom(500,225));
+    mainPanel.setLayout(new BorderLayout());
+    mainPanel.setBorder(new EmptyBorder(0,10,0,0));
     add(mainPanel,BorderLayout.EAST);
 
     JPanel infoPanel = new JPanel();
     String infoString = AndroidMode.getTextString("android_avd.create.info_message");
     JLabel info = new JLabel(infoString);
-    info.setPreferredSize(Toolkit.zoom(300,50));
-    info.setBorder(new EmptyBorder(0,10,0,0));
+
     infoPanel.add(info);
-    mainPanel.add(infoPanel);
+    mainPanel.add(infoPanel,BorderLayout.NORTH);
 
     JPanel selector = new JPanel(new GridBagLayout());
     selector.setAlignmentX(RIGHT_ALIGNMENT);
@@ -215,34 +214,27 @@ public class CreateAVD extends JDialog {
     gc.insets = new Insets(INSET, INSET, INSET, INSET);
     gc.weighty = 0.5;
 
-    gc.gridx = 0; gc.gridy = 0; gc.weightx = 0.5;
-    JLabel nameLabel = new JLabel("Enter AVD Name: ");
-    selector.add(nameLabel,gc);
-
-    gc.gridx = 1; gc.gridy = 0; gc.weightx = 1;
-    final JTextField nameField = new JTextField(15);
-    selector.add(nameField,gc);
-
-    gc.gridx = 0; gc.gridy = 1; gc.weightx = 0.5;
+    gc.gridx = 0; gc.gridy = 0; gc.weightx = 0.25;
     JLabel typeLabel = new JLabel("Select type: ");
     selector.add(typeLabel,gc);
 
-    gc.gridx = 1; gc.gridy = 1; gc.weightx = 1;
+    gc.gridx = 1; gc.gridy = 0; gc.weightx = 1;
     JRadioButton phoneRB = new JRadioButton("Phone");
     selector.add(phoneRB,gc);
 
-    gc.gridx = 2; gc.gridy = 1; gc.weightx = 1;
+    gc.gridx = 2; gc.gridy = 0; gc.weightx = 0.5;
     final JRadioButton wearRB = new JRadioButton("Wear");
     selector.add(wearRB,gc);
 
     ButtonGroup typeGroup = new ButtonGroup();
+    phoneRB.setSelected(true);
     typeGroup.add(phoneRB); typeGroup.add(wearRB);
 
-    gc.gridx = 0; gc.gridy = 2; gc.weightx = 0.5;
+    gc.gridx = 0; gc.gridy = 1; gc.weightx = 0.5;
     JLabel deviceLabel = new JLabel("Select Device");
     selector.add(deviceLabel,gc);
 
-    gc.gridx = 1; gc.gridy = 2; gc.weightx = 1;
+    gc.gridx = 1; gc.gridy = 1; gc.weightx = 1;
     final Vector<String> phoneList = devices.get(0);
     final Vector<String> idsList = devices.get(1);
     final Vector<String> wearList = devices.get(2);
@@ -250,8 +242,14 @@ public class CreateAVD extends JDialog {
 
     final DefaultComboBoxModel<String> cm = new DefaultComboBoxModel<String>();
     final JComboBox<String> deviceSelector = new JComboBox<String>(cm);
+
+    //add phone elements by default
+    cm.removeAllElements();
+    for(String phone : phoneList) cm.addElement(phone);
+    deviceSelector.setSelectedIndex(0);
+
     selector.add(deviceSelector,gc);
-    mainPanel.add(selector);
+    mainPanel.add(selector,BorderLayout.CENTER);
 
     phoneRB.addActionListener(new ActionListener() {
       @Override
@@ -286,21 +284,29 @@ public class CreateAVD extends JDialog {
     nextButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        currWindowSize = mainPanel.getSize();
         remove(mainPanel);
-        avdName = nameField.getText();
         if (wearRB.isSelected()) wear = true;
-        if(avdName.isEmpty()) Messages.showMessage("Unnamed Avd","Please select a Name for your AVD");
-        else if(avdName.contains(" ")) Messages.showMessage("Invalid AVD Name","AVD name cannot have spaces");
         else {
-          if (!wear) deviceName = idsList.get(deviceSelector.getSelectedIndex());
-          else deviceName = wearIds.get(deviceSelector.getSelectedIndex());
+          if (!wear) {
+            deviceName = idsList.get(deviceSelector.getSelectedIndex());
+            //remove the begining and trailing " "
+            deviceName = deviceName.replaceAll("^\"|\"$", "");
+          }
+          else {
+            deviceName = wearIds.get(deviceSelector.getSelectedIndex());
+            deviceName = deviceName.replaceAll("^\"|\"$", "");
+          }
+          String baseName = deviceName.replaceAll("\\s+","");
+          if (!wear) avdName = baseName + "_" + "phone"; //construct name automatically
+          else avdName = baseName + "_" + "wear";
           showLoadingScreen(1);
         }
       }
     });
     buttons.add(nextButton);
 
-    mainPanel.add(buttons);
+    mainPanel.add(buttons,BorderLayout.SOUTH);
 
     pack();
     setLocationRelativeTo(editor);
@@ -310,7 +316,8 @@ public class CreateAVD extends JDialog {
 
   private void showImageSelector() {
     final JPanel mainPanel = new JPanel();
-    mainPanel.setPreferredSize(Toolkit.zoom(325,250));
+    mainPanel.setLayout(new BorderLayout());
+    mainPanel.setBorder(new EmptyBorder(0,10,0,0));
     add(mainPanel,BorderLayout.EAST);
 
     JPanel tablePanel = new JPanel();
@@ -328,6 +335,11 @@ public class CreateAVD extends JDialog {
 
 
     };
+    JPanel infoPanel = new JPanel();
+    String desc = "<html>"+ AndroidMode.getTextString("sys_image_downloader.dialog.select_image_body") + "<html>";
+    JLabel abiDescription = new JLabel(desc);
+    infoPanel.add(abiDescription);
+
     final JTable table = new JTable(imageTable){
       @Override
       public String getColumnName(int column) {
@@ -337,6 +349,7 @@ public class CreateAVD extends JDialog {
     table.setFillsViewportHeight(true);
     table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
     table.setRowHeight(Toolkit.zoom(table.getRowHeight()));
+    int COL_WIDTH = infoPanel.getPreferredSize().width / columns_image.size() - 5;
     Dimension dim = new Dimension(table.getColumnCount() * COL_WIDTH,
             table.getRowHeight() * NUM_ROWS);
     table.setPreferredScrollableViewportSize(dim);
@@ -344,15 +357,8 @@ public class CreateAVD extends JDialog {
 
     tablePanel.add(new JScrollPane(table));
 
-    JPanel infoPanel = new JPanel();
-    String desc = "<html>"+ AndroidMode.getTextString("sys_image_downloader.dialog.select_image_body") + "<html>";
-    JLabel abiDescription = new JLabel(desc);
-    abiDescription.setBorder(new EmptyBorder(0,10,0,0));
-    abiDescription.setPreferredSize(Toolkit.zoom(325,70));
-    infoPanel.add(abiDescription);
-
-    mainPanel.add(infoPanel);
-    mainPanel.add(tablePanel);
+    mainPanel.add(infoPanel,BorderLayout.NORTH);
+    mainPanel.add(tablePanel,BorderLayout.CENTER);
 
     JPanel buttonPanel = new JPanel(new FlowLayout());
 
@@ -360,6 +366,7 @@ public class CreateAVD extends JDialog {
     backButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        currWindowSize = getSize();
         remove(mainPanel);
         showLoadingScreen(0);
       }
@@ -420,7 +427,7 @@ public class CreateAVD extends JDialog {
       }
     });
 
-    mainPanel.add(buttonPanel);
+    mainPanel.add(buttonPanel,BorderLayout.SOUTH);
 
     pack();
     setLocationRelativeTo(editor);
@@ -432,11 +439,10 @@ public class CreateAVD extends JDialog {
     final AVD avd = new AVD(avdName, deviceName, imageName);
     newAvd = avd;
     final JPanel mainPanel = new JPanel();
-    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    mainPanel.setLayout(new BorderLayout());
     add(mainPanel,BorderLayout.EAST);
 
     JPanel configPanel = new JPanel(new GridBagLayout());
-    configPanel.setPreferredSize(Toolkit.zoom(300,50));
     Border border = BorderFactory.createLineBorder(Color.black,1,true);
     configPanel.setBorder(BorderFactory.createTitledBorder(border,"Confirm your AVD: "));
 
@@ -468,12 +474,12 @@ public class CreateAVD extends JDialog {
     JLabel imageValue = new JLabel(imageAPI);
     configPanel.add(imageValue,gc);
 
-    mainPanel.add(configPanel);
+    mainPanel.add(configPanel,BorderLayout.NORTH);
 
     createProgress = new JProgressBar();
     createProgress.setPreferredSize(new Dimension(BAR_WIDTH,BAR_HEIGHT));
     createProgress.setValue(0);
-    mainPanel.add(createProgress);
+    mainPanel.add(createProgress, BorderLayout.CENTER);
 
     JPanel buttonsPanel = new JPanel(new FlowLayout());
 
@@ -481,6 +487,7 @@ public class CreateAVD extends JDialog {
     backButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        currWindowSize = mainPanel.getSize();
         remove(mainPanel);
         showLoadingScreen(1);
       }
@@ -499,7 +506,7 @@ public class CreateAVD extends JDialog {
     });
     buttonsPanel.add(confirmButton);
 
-    mainPanel.add(buttonsPanel);
+    mainPanel.add(buttonsPanel,BorderLayout.SOUTH);
 
     pack();
     setLocationRelativeTo(editor);

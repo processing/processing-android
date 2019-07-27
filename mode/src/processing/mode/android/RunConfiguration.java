@@ -4,6 +4,8 @@ import processing.app.*;
 import processing.app.ui.Toolkit;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -30,13 +32,14 @@ public class RunConfiguration extends JFrame {
   private Timer timer;
   private JRadioButton emuRB;
 
+  static private JButton deleteButton;
   static private Devices devices;
   static private JTable table;
   static private String targetSDK ;
   static private String buildTools;
 
   final private int NUM_ROWS = 5;
-  final private int COL_WIDTH = Toolkit.zoom(125);
+  final private int COL_WIDTH = Toolkit.zoom(75);
   final static private int INSET = Toolkit.zoom(1);
   final private Vector<String> columns =
           new Vector<String>(Arrays.asList("AVD Name","Device Name"));
@@ -108,6 +111,7 @@ public class RunConfiguration extends JFrame {
                 AndroidMode.getTextString("android_mode.dialog.no_devices_found_body"));
         emuRB.setSelected(true);
         devices.setSelectedDevice(null);
+        deleteButton.setEnabled(true);
         timer.cancel();
       } else {
         if (selectedDevice == null) {
@@ -201,16 +205,17 @@ public class RunConfiguration extends JFrame {
 
     pack();
     setLocationRelativeTo(editor);
+    setResizable(false);
     setVisible(true);
   }
 
   private void createLayout() {
     final JPanel mainPanel = new JPanel();
-    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    mainPanel.setLayout(new BorderLayout());
+    mainPanel.setBorder(new EmptyBorder(10,10,0,10));
     add(mainPanel,BorderLayout.EAST);
 
     JPanel sdkPanel = new JPanel(new GridBagLayout());
-    sdkPanel.setPreferredSize(new Dimension(300,75));
 
     GridBagConstraints gc = new GridBagConstraints();
     gc.anchor = GridBagConstraints.NORTHWEST;
@@ -251,7 +256,7 @@ public class RunConfiguration extends JFrame {
 
     emuRB.setSelected(true);
 
-    mainPanel.add(sdkPanel);
+    mainPanel.add(sdkPanel, BorderLayout.NORTH);
 
     emuTableModel = new DefaultTableModel(NUM_ROWS,columns.size()) {
       @Override
@@ -279,7 +284,7 @@ public class RunConfiguration extends JFrame {
     table.setPreferredScrollableViewportSize(dim);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-    mainPanel.add(new JScrollPane(table));
+    mainPanel.add(new JScrollPane(table), BorderLayout.CENTER);
 
     JPanel buttonPanel = new JPanel(new FlowLayout());
 
@@ -299,7 +304,7 @@ public class RunConfiguration extends JFrame {
     });
     buttonPanel.add(createButton);
 
-    final JButton deleteButton = new JButton("Delete");
+    deleteButton = new JButton("Delete");
     deleteButton.setEnabled(false);
     deleteButton.addActionListener(new ActionListener() {
       @Override
@@ -317,7 +322,8 @@ public class RunConfiguration extends JFrame {
     });
     buttonPanel.add(deleteButton);
 
-    JButton runButton = new JButton("Run");
+    final JButton runButton = new JButton("Run");
+    runButton.setEnabled(false);
     runButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -368,6 +374,7 @@ public class RunConfiguration extends JFrame {
       @Override
       public void valueChanged(ListSelectionEvent e) {
         if(!devRB.isSelected()) deleteButton.setEnabled(true);
+        runButton.setEnabled(true);
       }
     });
 

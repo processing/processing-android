@@ -26,8 +26,10 @@ import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.StreamPump;
+import processing.app.ui.Toolkit;
 import processing.core.PApplet;
 
+import javax.swing.*;
 import java.awt.Frame;
 import java.io.*;
 import java.util.ArrayList;
@@ -36,6 +38,9 @@ import java.util.Vector;
 
 
 public class AVD {
+  final static private int FONT_SIZE = Toolkit.zoom(11);
+  final static private int TEXT_MARGIN = Toolkit.zoom(8);
+  final static private int TEXT_WIDTH = Toolkit.zoom(300);
   final static public String DEFAULT_ABI = "x86";
 
   public final static String DEFAULT_PHONE_PORT = "5566";
@@ -230,7 +235,7 @@ public class AVD {
         for (int i = 0; i < lines.length; i++) {
           String line = lines[i];
           if (line.contains("id:")) {
-            String id = line.substring(line.indexOf('"'), line.length() - 1);
+            String id = line.substring(line.indexOf('"'));
             line = lines[++i];
             String name = line.substring(line.indexOf(": ") + 1);
             line = lines[++i];
@@ -370,6 +375,30 @@ public class AVD {
       }
     }
     return false;
+  }
+
+  static public int showEmulatorNotFoundDialog() {
+    String htmlString = "<html> " +
+            "<head> <style type=\"text/css\">" +
+            "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " +
+            "margin: " + TEXT_MARGIN + "px; " +
+            "width: " + TEXT_WIDTH + "px }" +
+            "</style> </head>";
+    String message = htmlString + "<body><p>"
+            +AndroidMode.getTextString("android_avd.error.selected_emu_not_found_body")
+            +"</p></body></html>";
+    String title = AndroidMode.getTextString("android_avd.error.selected_emu_not_found_title");
+    String options[] = new String[] {"Continue", "Cancel"};
+    int result = JOptionPane.showOptionDialog(null, message, title,
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+            null, options, options[0]);
+    if (result == JOptionPane.YES_OPTION) {
+      return JOptionPane.YES_OPTION;
+    } else if (result == JOptionPane.NO_OPTION) {
+      return JOptionPane.NO_OPTION;
+    } else {
+      return JOptionPane.CLOSED_OPTION;
+    }
   }
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
