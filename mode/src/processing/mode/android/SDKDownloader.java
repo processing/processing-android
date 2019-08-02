@@ -24,12 +24,15 @@ package processing.mode.android;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 import org.xml.sax.SAXException;
+import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.ui.Toolkit;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -44,9 +47,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
+import static java.awt.GridBagConstraints.NORTHWEST;
+import static processing.mode.android.AndroidBuild.TARGET_SDK;
 
 @SuppressWarnings("serial")
 public class SDKDownloader extends JDialog implements PropertyChangeListener {
@@ -70,33 +78,43 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private JLabel downloadedTextArea;
 
   private SDKDownloadTask downloadTask;
-  
+
   private Frame editor;
   private AndroidSDK sdk;
   private boolean cancelled;
+  private boolean goBack;
   
   private int totalSize = 0;  
 
   class SDKUrlHolder {
-    public String platformVersion, buildToolsVersion;
+    public String platformToolsVersion, buildToolsVersion,platformVersion,toolsVersion,emulatorVersion ;
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl, emulatorUrl;
     public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename, emulatorFilename;
 //    public String supportRepoUrl, googleRepoUrl;
 //    public String supportRepoFilename, googleRepoFilename;
     public String usbDriverUrl;
     public String usbDriverFilename;
-    public String haxmFilename, haxmUrl;
+    public String haxmFilename, haxmUrl, haxmVersion;
     public int totalSize = 0;
   }
   
   class SDKDownloadTask extends SwingWorker<Object, Object> {
 
+    SDKUrlHolder urlHolder;
+    File downloadFolder;
     private int downloadedSize = 0;
     private int BUFFER_SIZE = 4096;
 
+    public SDKDownloadTask(){}
+
+    public SDKDownloadTask(SDKUrlHolder urlHolder,File sdkFolder){
+      this.urlHolder = urlHolder;
+      this.downloadFolder = sdkFolder;
+    }
+
     @Override
     protected Object doInBackground() throws Exception {
-      File sketchbookFolder = processing.app.Base.getSketchbookFolder();
+      File sketchbookFolder = downloadFolder;
       File androidFolder = new File(sketchbookFolder, "android");
       if (!androidFolder.exists()) androidFolder.mkdir();
       
@@ -123,13 +141,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!tempFolder.exists()) tempFolder.mkdir();
 
       try {
-        SDKUrlHolder downloadUrls = new SDKUrlHolder();
-        String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
-        String addonUrl = REPOSITORY_URL + ADDON_LIST;
-        String haxmUrl = HAXM_URL + ADDON_LIST;
-        getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
-        getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());        
-        getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
+        SDKUrlHolder downloadUrls = this.urlHolder;
         firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
 
         // tools
@@ -181,21 +193,20 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         
          // Normalize built-tools and platform folders to android-<API LEVEL>
         String actualName = platformsFolder.listFiles()[0].getName();
-        renameFolder(platformsFolder, "android-" + AndroidBuild.TARGET_SDK, actualName);
+        renameFolder(platformsFolder, "android-" + downloadUrls.platformVersion, actualName);
         actualName = buildToolsFolder.listFiles()[0].getName();
         renameFolder(buildToolsFolder, downloadUrls.buildToolsVersion, actualName);
         
         // Done, let's set the environment and load the new SDK!
         Platform.setenv("ANDROID_SDK", sdkFolder.getAbsolutePath());
-        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());        
-        sdk = AndroidSDK.load(false, null);        
-      } catch (ParserConfigurationException e) {
+        Preferences.set("android.sdk.path", sdkFolder.getAbsolutePath());
+        Preferences.set("android.sdk.target",downloadUrls.platformVersion);
+        sdk = AndroidSDK.load(false, null);
+      } catch (IOException e) {
         // TODO Handle exceptions here somehow (ie show error message)
         // and handle at least mkdir() results (above)
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (SAXException e) {
+        Messages.showWarning(AndroidMode.getTextString("sdk_downloader.download_error_title"),
+                AndroidMode.getTextString("sdk_downloader.download_error_message",e.getMessage()));
         e.printStackTrace();
       }
       return null;
@@ -259,26 +270,18 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // platform
-      expr = xpath.compile("//remotePackage[starts-with(@path, \"platforms;\")" +
-              "and contains(@path, '" + AndroidBuild.TARGET_SDK + "')]"); // Skip latest platform; download only the targeted
+      expr = xpath.compile("//remotePackage[starts-with(@path, \"platforms;\")]"); //Search for all Platforms
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       if (remotePackages != null) {
-        NodeList childNodes = remotePackages.item(0).getChildNodes();
+        ArrayList<String> recentsArray = getRecentVersion(remotePackages,1);
+        NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
 
-        NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
-        NodeList apiLevel = ((Element) typeDetails.item(0)).getElementsByTagName("api-level");
-        urlHolder.platformVersion = apiLevel.item(0).getTextContent();
+        ArrayList<String> urlData = parseURL(childNodes,false,requiredHostOs);
 
-        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
-        NodeList archive = archives.item(0).getChildNodes();
-        NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-        NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-        NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-        urlHolder.platformFilename = url.item(0).getTextContent();
+        urlHolder.platformVersion = recentsArray.get(1);
+        urlHolder.platformFilename = urlData.get(0);
         urlHolder.platformUrl = REPOSITORY_URL + urlHolder.platformFilename;
-        urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+        urlHolder.totalSize += Integer.parseInt(urlData.get(1));
       } else {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_platform_files"));
       }
@@ -303,42 +306,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        for(int buildTool=0; buildTool < remotePackages.getLength(); buildTool++) {
-          NodeList childNodes = remotePackages.item(buildTool).getChildNodes();
+        ArrayList<String> recentsArray = getRecentVersion(remotePackages,2);
+        NodeList childNode = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
+        urlHolder.buildToolsVersion = recentsArray.get(1);
 
-          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
-          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; //Stable channel only, skip others
-
-          NodeList revision = ((Element) childNodes).getElementsByTagName("revision");
-          String major = (((Element) revision.item(0)).getElementsByTagName("major")).item(0).getTextContent();
-          String minor = (((Element) revision.item(0)).getElementsByTagName("minor")).item(0).getTextContent();
-          String micro = (((Element) revision.item(0)).getElementsByTagName("micro")).item(0).getTextContent();
-          if(!major.equals(AndroidBuild.TARGET_SDK)) // Allows only the latest build tools for the target platform
-            continue;
-          urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
-
-          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
-
-          for (int j = 0; j < archives.getLength(); ++j) {
-            NodeList archive = archives.item(j).getChildNodes();
-            NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-            NodeList os = ((Element) archive).getElementsByTagName("host-os");
-            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-            if (os.item(0).getTextContent().equals(requiredHostOs)) {
-              urlHolder.buildToolsFilename = url.item(0).getTextContent();
-              urlHolder.buildToolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
-              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-              found = true;
-              break;
-            }
-          }
-          if (found) break;
+        try {
+          ArrayList<String> urlData = parseURL(childNode, true, requiredHostOs);
+          urlHolder.buildToolsFilename = urlData.get(0);
+          urlHolder.buildToolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+          urlHolder.totalSize += Integer.parseInt(urlData.get(1));
+          found = true;
         }
-      } 
+        catch (Error e){
+          e.printStackTrace();
+        }
+      }
       if (!found) {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_build_tools"));
       }
@@ -349,24 +331,22 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        NodeList childNodes = remotePackages.item(1).getChildNodes(); //Second item is the latest tools for now
-        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+        ArrayList<String> recentsArray = getRecentVersion(remotePackages,2);
 
-        for (int i = 0; i < archives.getLength(); ++i) {
-          NodeList archive = archives.item(i).getChildNodes();
-          NodeList complete = ((Element) archive).getElementsByTagName("complete");
+        urlHolder.toolsVersion = recentsArray.get(1);
 
-          NodeList os = ((Element) archive).getElementsByTagName("host-os");
-          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+        NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes(); //Second item is the latest tools for now
+        urlHolder.buildToolsVersion = recentsArray.get(1);
 
-          if (os.item(0).getTextContent().equals(requiredHostOs)) {
-            urlHolder.toolsFilename =  url.item(0).getTextContent();
-            urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
-            urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-            found = true;
-            break;
-          }
+        try {
+          ArrayList<String> urlData = parseURL(childNodes, true, requiredHostOs);
+          urlHolder.toolsFilename = urlData.get(0);
+          urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+          urlHolder.totalSize += Integer.parseInt(urlData.get(1));
+          found = true;
+        }
+        catch (Error e){
+          e.printStackTrace();
         }
       } 
       if (!found) {
@@ -375,41 +355,71 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
       // -----------------------------------------------------------------------
       // emulator
-      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
-      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-      found = false;
-      if (remotePackages != null) {
-        for(int i = 0; i < remotePackages.getLength(); ++i) {
-          NodeList childNodes = remotePackages.item(i).getChildNodes();
-          
-          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
-          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; //Stable channel only, skip others
+      //NOTE: Emulator Download moved from SDK Download,
+      //Will be done along with Emulator Image installation
+//      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+//      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+//      found = false;
+//      if (remotePackages != null) {
+//        ArrayList<String> recentsArray = getRecentVersion(remotePackages,2);
+//
+//        urlHolder.emulatorVersion = recentsArray.get(1);
+//
+//        NodeList childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
+//
+//        urlHolder.buildToolsVersion = recentsArray.get(1);
+//
+//        try {
+//          ArrayList<String> urlData = parseURL(childNodes, true, requiredHostOs);
+//          urlHolder.emulatorFilename = urlData.get(0);
+//          urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.buildToolsFilename;
+//          urlHolder.totalSize += Integer.parseInt(urlData.get(1));
+//          found = true;
+//        }
+//        catch (Error e){
+//          e.printStackTrace();
+//        }
+//      }
+//      if (!found) {
+//        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
+//      }
+    }
+  }
 
-          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+  class QueryUrl extends SwingWorker<Object,Object>{
+    SDKUrlHolder downloadUrls;
 
-          for (int j = 0; j < archives.getLength(); ++j) {
-            NodeList archive = archives.item(j).getChildNodes();
-            NodeList complete = ((Element) archive).getElementsByTagName("complete");
+    QueryUrl(SDKUrlHolder downloadUrls){
+      this.downloadUrls = downloadUrls;
+    }
 
-            NodeList os = ((Element) archive).getElementsByTagName("host-os");
-            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-            
-            if (os.item(0).getTextContent().equals(requiredHostOs)) {
-              urlHolder.emulatorFilename = url.item(0).getTextContent();
-              urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
-              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-              found = true;
-              break;
-            }
-          }
-          if (found) break;
-        }
-      } 
-      if (!found) {
-        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
+
+    @Override
+    protected Object doInBackground() throws Exception {
+      downloadTask = new SDKDownloadTask();
+      String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
+      String addonUrl = REPOSITORY_URL + ADDON_LIST;
+      String haxmUrl = HAXM_URL + ADDON_LIST;
+      try {
+        downloadTask.getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
+        getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());
+        getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (XPathException e) {
+        e.printStackTrace();
+      } catch (ParserConfigurationException e) {
+        e.printStackTrace();
+      } catch (SAXException e) {
+        e.printStackTrace();
       }
+      return null;
+    }
+
+    @Override
+    protected void done() {
+      super.done();
+      createInitLayout(downloadUrls);
     }
   }
 
@@ -468,6 +478,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     expr = xpath.compile("//remotePackage[@path=\"extras;intel;Hardware_Accelerated_Execution_Manager\"]");
     remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     if (remotePackages != null) {
+      ArrayList<String> haxmDetailsArray = getRecentVersion(remotePackages,2);
       for (int i=0; i < remotePackages.getLength(); ++i) {
         NodeList childNodes = remotePackages.item(i).getChildNodes();
         NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
@@ -482,6 +493,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
         NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
 
+        urlHolder.haxmVersion = haxmDetailsArray.get(1);
         urlHolder.haxmFilename = url.item(0).getTextContent();
         urlHolder.haxmUrl = HAXM_URL + urlHolder.haxmFilename;
         urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
@@ -492,45 +504,107 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   private void parseAndSet(SDKUrlHolder urlHolder, NodeList remotePackages, String requiredHostOs, int packageN) {
     NodeList childNodes = remotePackages.item(0).getChildNodes();
+    ArrayList<String> recentsArray = null;
+    if(packageN == PLATFORM_TOOLS) { //if usb driver, the repository structure is different
+      recentsArray = getRecentVersion(remotePackages,2);
+      childNodes = remotePackages.item(Integer.parseInt(recentsArray.get(0))).getChildNodes();
+    }
+
+    ArrayList<String> urlData;
+
+    switch (packageN) {
+      case PLATFORM_TOOLS:
+        urlData = parseURL(childNodes,true,requiredHostOs);
+        urlHolder.platformToolsVersion = recentsArray.get(1);
+        urlHolder.platformToolsFilename = urlData.get(0);
+        urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
+        urlHolder.totalSize += Integer.parseInt(urlData.get(1));
+        break;
+//       case ANDROID_REPO:
+//         urlHolder.supportRepoFilename = url.item(0).getTextContent();
+//         urlHolder.supportRepoUrl = REPOSITORY_URL + urlHolder.supportRepoFilename;
+//         urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+//         break;
+//       case GOOGLE_REPO:
+//          urlHolder.googleRepoFilename = url.item(0).getTextContent();
+//          urlHolder.googleRepoUrl = REPOSITORY_URL + urlHolder.googleRepoFilename;
+//          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+//          break;
+      case USB_DRIVER:
+        urlData = parseURL(childNodes,false,requiredHostOs);
+        urlHolder.usbDriverFilename = urlData.get(0);
+        urlHolder.usbDriverUrl = REPOSITORY_URL + urlHolder.usbDriverFilename;
+        urlHolder.totalSize += Integer.parseInt(urlData.get(1));
+        break;
+    }
+  }
+
+
+  //check stability of all listed versions and return the most recent one
+  private ArrayList<String> getRecentVersion(NodeList remotePackages,int packageType){
+    ArrayList versionList = new ArrayList();
+    ArrayList<String> recentsArray = new ArrayList<String>();
+
+    for(int i=0;i<remotePackages.getLength();i++){
+      NodeList childNodes = remotePackages.item(i).getChildNodes();
+      NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+
+      if(!(channel.item(0).getAttributes().getNamedItem("ref").getTextContent().equals("channel-0"))) {
+        continue;
+      }
+      switch (packageType){
+        case 1://platforms
+          NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
+          NodeList apiLevel = ((Element) typeDetails.item(0)).getElementsByTagName("api-level");
+          versionList.add(Integer.parseInt(apiLevel.item(0).getTextContent()));
+          break;
+
+        case 2 ://platform-tools , tools, buildTools, Emulator
+          NodeList revision = ((Element) childNodes).getElementsByTagName("revision");
+          int majorVersion = Integer.parseInt(((Element) revision.item(0).getChildNodes()).getElementsByTagName("major").item(0).getTextContent()) * 100;
+          int minorVersion = Integer.parseInt(((Element) revision.item(0).getChildNodes()).getElementsByTagName("minor").item(0).getTextContent()) * 10;
+          int microVersion = Integer.parseInt(((Element) revision.item(0).getChildNodes()).getElementsByTagName("micro").item(0).getTextContent()) * 1;
+          versionList.add(majorVersion+minorVersion+microVersion);
+          break;
+      }
+    }
+    recentsArray.add(versionList.indexOf(Collections.max(versionList))+"");
+    int version = (int) Collections.max(versionList);
+    if(packageType!=1){
+      recentsArray.add(version/100 + "." + (version/10)%10 + "." + (version%10));
+    } else{
+      recentsArray.add(version+"");
+    }
+    return recentsArray;
+  }
+
+  private ArrayList<String> parseURL(NodeList childNodes,boolean checkPlatform,String requiredHostOs){
+
+    ArrayList<String> parseURLArray = new ArrayList<String>();
     NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
 
-    for (int i = 0; i < archives.getLength(); ++i) {
-      NodeList archive = archives.item(i).getChildNodes();
+    for (int j = 0; j < archives.getLength(); ++j) {
+      NodeList archive = archives.item(j).getChildNodes();
       NodeList complete = ((Element) archive).getElementsByTagName("complete");
 
       NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
       NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
 
-      switch (packageN) {
-        case PLATFORM_TOOLS:
-          NodeList os = ((Element) archive).getElementsByTagName("host-os");
-          if (!os.item(0).getTextContent().equals(requiredHostOs))
-            continue;
-          urlHolder.platformToolsFilename = url.item(0).getTextContent();
-          urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
-          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+      parseURLArray.add(url.item(0).getTextContent());
+      parseURLArray.add(size.item(0).getTextContent());
+
+      if (checkPlatform) {
+        NodeList os = ((Element) archive).getElementsByTagName("host-os");
+        if (os.item(0).getTextContent().equals(requiredHostOs)) {
+          parseURLArray.add(os.item(0).getTextContent());
           break;
-//        case ANDROID_REPO:
-//          urlHolder.supportRepoFilename = url.item(0).getTextContent();
-//          urlHolder.supportRepoUrl = REPOSITORY_URL + urlHolder.supportRepoFilename;
-//          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-//          break;
-//        case GOOGLE_REPO:
-//          urlHolder.googleRepoFilename = url.item(0).getTextContent();
-//          urlHolder.googleRepoUrl = REPOSITORY_URL + urlHolder.googleRepoFilename;
-//          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-//          break;
-        case USB_DRIVER:
-          urlHolder.usbDriverFilename = url.item(0).getTextContent();
-          urlHolder.usbDriverUrl = REPOSITORY_URL + urlHolder.usbDriverFilename;
-          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-          break;
+        }
       }
-      break;
     }
+    return parseURLArray;
   }
   
-  private void renameFolder(File baseFolder, String expected, String actual) 
+  private void renameFolder(File baseFolder, String expected, String actual)
       throws IOException {
     File expectedPath = new File(baseFolder, expected);
     File actualPath = new File(baseFolder, actual);
@@ -568,25 +642,176 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   public SDKDownloader(Frame editor) {
     super(editor, AndroidMode.getTextString("sdk_downloader.download_title"), true);
     this.editor = editor;
-    this.sdk = null;    
-    createLayout();
+    this.sdk = null;
+    SDKUrlHolder downloadUrls = new SDKUrlHolder();
+    QueryUrl queryTask = new QueryUrl(downloadUrls);
+    queryTask.execute();
+
+    //Base UX----------------------------------
+    add(new JLabel("Querying...",SwingConstants.CENTER));
+    setSize(150,100);
+    setLocationRelativeTo(editor);
+    setAlwaysOnTop(false);
+    setVisible(true);
   }
   
-  public void run() {
+  public void run(SDKUrlHolder downloadUrls, File sdkFolder) {
     cancelled = false;
-    downloadTask = new SDKDownloadTask();
+    downloadTask = new SDKDownloadTask(downloadUrls,sdkFolder);
     downloadTask.addPropertyChangeListener(this);
     downloadTask.execute();
-    setAlwaysOnTop(true);
-    setVisible(true);
   }
   
   public boolean cancelled() {
     return cancelled;
   }
+
+  public boolean isGoBack() {return goBack;}
   
   public AndroidSDK getSDK() {
     return sdk;
+  }
+
+  private void addPackage(GridBagConstraints gc, int gridy, JPanel packagesPanel,
+                          String packageName, String packageVersion){
+    gc.gridx = 0; gc.gridy = gridy;
+    gc.weightx = 0.5;
+    JLabel packageLabel = new JLabel(packageName);
+    packagesPanel.add(packageLabel,gc);
+    JLabel versionLabel = new JLabel(packageVersion);
+    gc.gridx = 1; gc.gridy = gridy;
+    gc.weightx = 1;
+    packagesPanel.add(versionLabel,gc);
+  }
+
+  private void createInitLayout(SDKUrlHolder downloadUrls) {
+    goBack = false;
+    Container outer = getContentPane();
+    outer.removeAll();
+    final SDKUrlHolder urlHolder = downloadUrls;
+
+    outer.setLayout(new BorderLayout());
+
+    JPanel mainPanel = new JPanel();
+    mainPanel.setPreferredSize(Toolkit.zoom(300,225));
+    outer.add(mainPanel,BorderLayout.EAST);
+
+    //List Packages to be downloaded here------------------------------------------
+    JPanel packagesPanel = new JPanel();
+    packagesPanel.setPreferredSize(Toolkit.zoom(300,125));
+    packagesPanel.setAlignmentX(RIGHT_ALIGNMENT);
+    Border border = BorderFactory.createLineBorder(Color.black,1,true);
+    packagesPanel.setBorder(BorderFactory.createTitledBorder(border,"Packages to download: "));
+    packagesPanel.setLayout(new GridBagLayout());
+
+    mainPanel.add(packagesPanel);
+
+    GridBagConstraints gc = new GridBagConstraints();
+    gc.anchor = NORTHWEST;
+    gc.weighty = 0.5;
+
+    addPackage(gc,0,packagesPanel,"SDK Platform: ",downloadUrls.platformVersion);
+    addPackage(gc,1,packagesPanel,"SDK PlatformTools: ",downloadUrls.platformToolsVersion);
+    addPackage(gc,2,packagesPanel,"Android Build Tools: ",downloadUrls.buildToolsVersion);
+    addPackage(gc,3,packagesPanel,"Android Tools: ",downloadUrls.toolsVersion);
+    //faddPackage(gc,4,packagesPanel,"Android Emulator: ",downloadUrls.emulatorVersion);
+    if(Platform.getName()!="linux") addPackage(gc,5,packagesPanel,"Android Build Tools: ",downloadUrls.haxmVersion);
+
+    //SDK_Path selection Panel---------------------------------------
+    JPanel downloadPathPanel = new JPanel();
+    downloadPathPanel.setLayout(new BorderLayout());
+    JLabel pathLabel = new JLabel("Installation Path: ");
+    downloadPathPanel.add(pathLabel,BorderLayout.NORTH);
+
+    final JLabel locationLabel = new JLabel(processing.app.Base.getSketchbookFolder().getAbsolutePath());
+    locationLabel.setMaximumSize(Toolkit.zoom(100,locationLabel.getHeight()));
+    locationLabel.setPreferredSize(Toolkit.zoom(100,locationLabel.getHeight()));
+    locationLabel.setToolTipText(locationLabel.getText());
+    downloadPathPanel.add(locationLabel,BorderLayout.WEST);
+
+    JButton selectPathButton = new JButton("Change");
+    Dimension dim = new Dimension(Toolkit.getButtonWidth(),
+            Toolkit.zoom(selectPathButton.getPreferredSize().height));
+    selectPathButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if (Platform.isMacOS()){
+          FileDialog fd = new FileDialog(editor,"Select Download Location", FileDialog.LOAD);
+          fd.setDirectory(processing.app.Base.getSketchbookFolder().getAbsolutePath());
+          System.setProperty("apple.awt.fileDialogForDirectories", "true");
+          fd.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+          fd.setVisible(true);
+          System.setProperty("apple.awt.fileDialogForDirectories", "false");
+          if(fd.getFile() != null){
+            locationLabel.setText(new File(fd.getDirectory(),fd.getFile()).getAbsolutePath());
+            locationLabel.setToolTipText(locationLabel.getText());
+          }
+        } else {
+          JFileChooser fc = new JFileChooser();
+          fc.setDialogTitle("Select Download Location");
+          fc.setCurrentDirectory(processing.app.Base.getSketchbookFolder());
+          fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+          fc.showOpenDialog(SDKDownloader.super.rootPane); //To put it on top of the modalDialog
+          if (fc.getSelectedFile() != null) {
+            locationLabel.setText(fc.getSelectedFile().getAbsolutePath());
+            locationLabel.setToolTipText(locationLabel.getText());
+          }
+        }
+      }
+    });
+    downloadPathPanel.add(selectPathButton,BorderLayout.EAST);
+    mainPanel.add(downloadPathPanel);
+
+    //Buttons Panel on the bottom-------------------------------------------
+    JPanel buttons = new JPanel();
+    buttons.setAlignmentX(LEFT_ALIGNMENT);
+
+    JButton backButton = new JButton("Back");
+    backButton.setPreferredSize(dim);
+    backButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        dispose();
+        goBack = true;
+      }
+    });
+    buttons.add(backButton);
+
+    JButton continueButton = new JButton("Continue");
+    continueButton.setPreferredSize(dim);
+    continueButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        File sdkFolder = new File(locationLabel.getText());
+        run(urlHolder,sdkFolder);
+        createLayout();
+      }
+    });
+    buttons.add(continueButton);
+
+    JButton cancelButton = new JButton("Cancel");
+    cancelButton.setPreferredSize(dim);
+    buttons.add(cancelButton);
+    cancelButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        dispose();
+        cancelled = true;
+      }
+    });
+    mainPanel.add(buttons);
+
+    //The side panel with image Icon-------------------------------------------
+    JPanel sidePanel = new JPanel(new BorderLayout());
+    sidePanel.setPreferredSize(Toolkit.zoom(100,0));
+    sidePanel.setBackground(Color.white);
+    outer.add(sidePanel,BorderLayout.WEST);
+    sidePanel.setAlignmentY(CENTER_ALIGNMENT);
+    JLabel logo = new JLabel(Toolkit.getLibIcon("/icons/pde-64.png"));
+    sidePanel.add(logo,BorderLayout.CENTER);
+
+    pack();
+    setLocationRelativeTo(editor);
   }
   
   private void createLayout() {
