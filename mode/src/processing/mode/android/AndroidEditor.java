@@ -183,22 +183,6 @@ public class AndroidEditor extends JavaEditor {
     });
     androidMenu.add(item);
 
-    //For testing SDK Downloader - Remove Later. --------------------------------------
-    item = new JMenuItem("SDK Downloader");
-    item.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        try {
-          AndroidSDK.download(null,androidMode);
-        } catch (AndroidSDK.BadSDKException ex) {
-          ex.printStackTrace();
-        } catch (AndroidSDK.CancelException ex) {
-          ex.printStackTrace();
-        }
-      }
-    });
-    androidMenu.add(item);
-    //--------------------------------------------------------------------
-
     androidMenu.addSeparator();
      
     fragmentItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.app"));
