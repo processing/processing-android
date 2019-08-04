@@ -171,8 +171,8 @@ public class AndroidMode extends JavaMode {
       }
     }
     if (sdk == null) {
-      Messages.showWarning(AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_title"),
-              AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_body"), tr);
+      Messages.showWarning(AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_title"), 
+                           AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_body"), tr);
     } else {
       Devices devices = Devices.getInstance();
       devices.setSDK(sdk);
