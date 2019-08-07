@@ -468,6 +468,8 @@ public class AVD {
     } catch (final InterruptedException ie) {
       ie.printStackTrace();
     } finally {
+      //reload the avdList array
+      AVD.list(sdk);
       process.destroy();
     }
 

@@ -22,7 +22,7 @@ import java.util.TimerTask;
 import java.util.Vector;
 
 
-public class RunConfiguration extends JFrame {
+public class EmulatorManager extends JFrame {
   private AndroidSDK sdk;
   private AndroidEditor editor;
   private AndroidMode mode;
@@ -46,7 +46,7 @@ public class RunConfiguration extends JFrame {
 
   private JPanel mainPanel;
 
-  public RunConfiguration(AndroidSDK sdk, AndroidEditor editor, Mode mode) {
+  public EmulatorManager(AndroidSDK sdk, AndroidEditor editor, Mode mode) {
     super("Run Configurations");
     this.sdk = sdk;
     this.editor = editor;
@@ -132,34 +132,35 @@ public class RunConfiguration extends JFrame {
             devices.setSelectedDevice(selectedDevice);
           }
 
+          final Vector<Vector<String>> devicesVector = new Vector<>();
+
+          DefaultTableModel devicesModel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+              return false;
+            }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+              return String.class;
+            }
+
+          };
           for (final Device device : deviceList) {
-            final Vector<Vector<String>> devicesVector = new Vector<>();
             final Vector<String> deviceItem = new Vector<>();
 
-            DefaultTableModel devicesModel = new DefaultTableModel() {
-              @Override
-              public boolean isCellEditable(int row, int column) {
-                return false;
-              }
-
-              @Override
-              public Class<?> getColumnClass(int columnIndex) {
-                return String.class;
-              }
-
-            };
-
+            System.out.println(device.getName());
             deviceItem.add(device.getName());
             deviceItem.add("Device");
 
             devicesVector.add(deviceItem);
 
-            table.setModel(devicesModel);
-            devicesModel.setDataVector(devicesVector,columns);
-            devicesModel.fireTableDataChanged();
             int pos = deviceList.indexOf(device);
-            if (device.equals(selectedDevice)) table.addRowSelectionInterval(pos,pos);
+            //if (device.equals(selectedDevice)) table.addRowSelectionInterval(pos,pos);
           }
+          table.setModel(devicesModel);
+          devicesModel.setDataVector(devicesVector,columns);
+          devicesModel.fireTableDataChanged();
         }
       }
     }
@@ -357,7 +358,7 @@ public class RunConfiguration extends JFrame {
         deleteButton.setEnabled(false); //delete is possible only if its emulator
         GetDevicesTask getDevicesTask = new GetDevicesTask();
         timer = new Timer();
-        timer.schedule(getDevicesTask, 400, 3000);
+        timer.schedule(getDevicesTask, 400, 10000);
       }
     });
 
