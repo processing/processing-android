@@ -225,10 +225,7 @@ class AndroidSDK {
         //platforms.add(name);
       }
     }
-    System.out.println(platforms.size());
-    System.out.println(platforms.get(0)+":1");
     Collections.reverse(platforms);
-    System.out.println(platforms.get(0)+":2");
     return platforms;
   }
 

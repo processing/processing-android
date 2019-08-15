@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.Future;
 
 /** 
@@ -230,6 +231,7 @@ public class AndroidMode extends JavaMode {
       RunnerListener listener, String avdName) throws SketchException, IOException, CancelException {
 
     //check for emulator
+    System.out.println("Checking Emulator....");
     String imageName = null;
     boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
     if (!checkEmulator) {
@@ -245,13 +247,22 @@ public class AndroidMode extends JavaMode {
           throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
         }
         Messages.showMessage("Completed","Emulator Downloaded");
-        try {
-          imageName = AVD.downloadImage(sdk, editor, this);
-        } catch (Error e){
-          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
-        }
       }
+    }
 
+    //Check if any Image exists, then use that or download:
+    System.out.println("Checking System Image....");
+    try {
+      Vector<Vector<String>> existingImages = AVD.listImages(sdk,false);
+
+      if(existingImages.isEmpty())
+        imageName = AVD.downloadImage(sdk, editor, this);
+      else{
+        Vector<String> target = existingImages.get(0);
+        imageName = "system-images;"+target.get(0)+";"+target.get(1)+";"+target.get(2);
+      }
+    } catch (Error e){
+      throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
     }
 
     //Check if atleast one AVD already exists :
@@ -272,6 +283,7 @@ public class AndroidMode extends JavaMode {
 
     //if first, then create a new AVD
     if (firstAVD) {
+      System.out.println("Creating Default AVD....");
       AVD newAvd = new AVD("processing_phone","Nexus One",imageName);
       boolean result = newAvd.create(sdk);
       if(!result){
