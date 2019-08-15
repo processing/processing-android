@@ -230,6 +230,7 @@ public class AndroidMode extends JavaMode {
       RunnerListener listener, String avdName) throws SketchException, IOException, CancelException {
 
     //check for emulator
+    String imageName = null;
     boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
     if (!checkEmulator) {
       String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
@@ -243,7 +244,14 @@ public class AndroidMode extends JavaMode {
         if (downloader.cancelled()) {
           throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
         }
+        Messages.showMessage("Completed","Emulator Downloaded");
+        try {
+          imageName = AVD.downloadImage(sdk, editor, this);
+        } catch (Error e){
+          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+        }
       }
+
     }
 
     //Check if atleast one AVD already exists :
@@ -264,10 +272,11 @@ public class AndroidMode extends JavaMode {
 
     //if first, then create a new AVD
     if (firstAVD) {
-      CreateAVD createAVD = new CreateAVD(sdk, editor, this);
-      if (createAVD.isCancelled()) throw new CancelException(AndroidMode.getTextString("android_avd.error.create_avd_cancel"));
-      else if (createAVD.isFailed()) throw new CancelException(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"));
-      avdName = createAVD.getNewAvd().getName();
+      AVD newAvd = new AVD("processing_phone","Nexus One",imageName);
+      boolean result = newAvd.create(sdk);
+      if(!result){
+        throw new CancelException(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"));
+      }
     }
 
     Preferences.set("android.emulator.avd.name",avdName);

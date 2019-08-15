@@ -47,7 +47,7 @@ public class EmulatorManager extends JFrame {
   private JPanel mainPanel;
 
   public EmulatorManager(AndroidSDK sdk, AndroidEditor editor, Mode mode) {
-    super("Run Configurations");
+    super("Emulator Manager");
     this.sdk = sdk;
     this.editor = editor;
     this.mode = (AndroidMode) mode;

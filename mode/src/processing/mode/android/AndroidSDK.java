@@ -44,9 +44,7 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Vector;
+import java.util.*;
 
 /** 
  * Class holding all needed references (path, tools, etc) to the SDK used by 
@@ -213,15 +211,24 @@ class AndroidSDK {
     }
   }
 
+  //Lists all Platforms Top to bottom : Only if above 26
   public Vector<String> getAvailPlatforms() {
     Vector<String> platforms = new Vector<String>();
     File platformFolder = new File(getSdkFolder(),"platforms");
     File[] subfolders = platformFolder.listFiles();
     for (File folder : subfolders) {
       if (folder.isDirectory()) {
-        platforms.add(folder.getName());
+        String name = folder.getName();
+        if(Integer.parseInt(name.substring(name.indexOf("-")+1)) > 26) {
+          platforms.add(name);
+        }
+        //platforms.add(name);
       }
     }
+    System.out.println(platforms.size());
+    System.out.println(platforms.get(0)+":1");
+    Collections.reverse(platforms);
+    System.out.println(platforms.get(0)+":2");
     return platforms;
   }
 

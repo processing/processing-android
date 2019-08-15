@@ -74,9 +74,21 @@ public class CreateAVD extends JDialog {
   }
 
   class ListImagesTask extends SwingWorker<Object,Object> {
+    private boolean imgExists;
+    private Vector<String> image;
     @Override
     protected Object doInBackground() throws Exception {
       Vector<Vector<String>> images = AVD.listImages(sdk,wear);
+      for(Vector<String> image:images){
+        if (image.get(3).equals("Installed")) {
+          imgExists = true;
+          this.image = image;
+          break;
+        } else {
+          imgExists = false;
+        }
+
+      }
       return images;
     }
 
@@ -84,15 +96,32 @@ public class CreateAVD extends JDialog {
     protected void done() {
       super.done();
       remove(mainPanel);
-      showImageSelector();
-      try {
-        imageTable.setDataVector((Vector<Vector<String>>) get(),columns_image);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      } catch (ExecutionException e) {
-        e.printStackTrace();
+      if(imgExists){
+        String API = image.get(0);
+        String TAG = image.get(1);
+        String ABI = image.get(2);
+        imageName = "system-images;"+ API+ ";"+ TAG+ ";"+ ABI;
+        imageAPI = API;
+        showConfirmWindow();
+      } else {
+        Messages.showMessage(AndroidMode.getTextString("android_avd.error.image_not_available_title")
+        , AndroidMode.getTextString("android_avd.error.image_not_available_body"));
+        String platform = sdk.getAvailPlatforms().get(0);
+        String API = platform.substring(platform.indexOf("-"),platform.length()-1);
+        String ABI = AVD.getSupportedABI();
+        String TAG = "google_apis";
+        if(wear){
+          TAG = "android-wear";
+        }
+        try {
+          boolean result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+          if (result) {
+            showLoadingScreen(1);
+          }
+        } catch (AndroidSDK.BadSDKException | AndroidSDK.CancelException ex) {
+          ex.printStackTrace();
+        }
       }
-      imageTable.fireTableDataChanged();
     }
   }
 
@@ -307,127 +336,6 @@ public class CreateAVD extends JDialog {
     buttons.add(nextButton);
 
     mainPanel.add(buttons,BorderLayout.SOUTH);
-
-    pack();
-    setLocationRelativeTo(editor);
-    setAlwaysOnTop(false);
-    setVisible(true);
-  }
-
-  private void showImageSelector() {
-    final JPanel mainPanel = new JPanel();
-    mainPanel.setLayout(new BorderLayout());
-    mainPanel.setBorder(new EmptyBorder(0,10,0,0));
-    add(mainPanel,BorderLayout.EAST);
-
-    JPanel tablePanel = new JPanel();
-
-    imageTable = new DefaultTableModel(NUM_ROWS,columns_image.size()) {
-      @Override
-      public boolean isCellEditable(int row, int column) {
-        return false;
-      }
-
-      @Override
-      public Class<?> getColumnClass(int columnIndex) {
-        return String.class;
-      }
-
-
-    };
-    JPanel infoPanel = new JPanel();
-    String desc = "<html>"+ AndroidMode.getTextString("sys_image_downloader.dialog.select_image_body") + "<html>";
-    JLabel abiDescription = new JLabel(desc);
-    infoPanel.add(abiDescription);
-
-    final JTable table = new JTable(imageTable){
-      @Override
-      public String getColumnName(int column) {
-        return columns_image.get(column);
-      }
-    };
-    table.setFillsViewportHeight(true);
-    table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-    table.setRowHeight(Toolkit.zoom(table.getRowHeight()));
-    int COL_WIDTH = infoPanel.getPreferredSize().width / columns_image.size() - 5;
-    Dimension dim = new Dimension(table.getColumnCount() * COL_WIDTH,
-            table.getRowHeight() * NUM_ROWS);
-    table.setPreferredScrollableViewportSize(dim);
-    table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-    tablePanel.add(new JScrollPane(table));
-
-    mainPanel.add(infoPanel,BorderLayout.NORTH);
-    mainPanel.add(tablePanel,BorderLayout.CENTER);
-
-    JPanel buttonPanel = new JPanel(new FlowLayout());
-
-    final JButton backButton = new JButton("Back");
-    backButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        currWindowSize = getSize();
-        remove(mainPanel);
-        showLoadingScreen(0);
-      }
-    });
-    buttonPanel.add(backButton);
-
-    final JButton installButton = new JButton("Install");
-    installButton.setEnabled(false);//without selection both install and next will be disabled
-    installButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        int selectedRow = table.getSelectedRow();
-        String ABI = (String) table.getValueAt(selectedRow,2);
-        String API = (String) table.getValueAt(selectedRow,0);
-        String TAG = (String) table.getValueAt(selectedRow,1);
-        String status = (String) table.getValueAt(selectedRow,3);
-        try {
-          boolean result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
-          if (result) {
-            showLoadingScreen(1);
-          }
-        } catch (AndroidSDK.BadSDKException | AndroidSDK.CancelException ex) {
-          ex.printStackTrace();
-        }
-      }
-    });
-    buttonPanel.add(installButton);
-
-    final JButton nextButton = new JButton("Next");
-    nextButton.setEnabled(false);//without selection both install and next will be disabled
-    nextButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        remove(mainPanel);
-        int selectedRow = table.getSelectedRow();
-        String ABI = (String) table.getValueAt(selectedRow,2);
-        String API = (String) table.getValueAt(selectedRow,0);
-        String TAG = (String) table.getValueAt(selectedRow,1);
-        imageName = "system-images;"+ API+ ";"+ TAG+ ";"+ ABI;
-        imageAPI = API;
-        showConfirmWindow();
-      }
-    });
-    buttonPanel.add(nextButton);
-
-    //enable or disable next and install button based on selection.
-    table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-      @Override
-      public void valueChanged(ListSelectionEvent e) {
-        int row = table.getSelectedRow();
-        if (((String) table.getValueAt(row,3)).equals("Not Installed")) {
-          installButton.setEnabled(true);
-          nextButton.setEnabled(false);
-        } else {
-          installButton.setEnabled(false);
-          nextButton.setEnabled(true);
-        }
-      }
-    });
-
-    mainPanel.add(buttonPanel,BorderLayout.SOUTH);
 
     pack();
     setLocationRelativeTo(editor);

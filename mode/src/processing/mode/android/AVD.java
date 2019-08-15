@@ -401,6 +401,23 @@ public class AVD {
     }
   }
 
+  protected static String downloadImage(AndroidSDK sdk,AndroidEditor editor,AndroidMode mode) throws Error{
+    String API = sdk.getAvailPlatforms().get(0);
+    String ABI = getSupportedABI();
+    String TAG = "goole_apis";
+    String imageName = "system-images;"+ API+ ";"+ TAG+ ";"+ ABI;
+    try {
+      boolean result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+      if(!result){
+        throw new Error("Image Could not be downloaded");
+      }
+    } catch (AndroidSDK.BadSDKException | AndroidSDK.CancelException e) {
+      e.printStackTrace();
+    }
+    return imageName;
+
+  }
+
   protected boolean create(final AndroidSDK sdk) throws IOException {
     File sketchbookFolder = processing.app.Base.getSketchbookFolder();
     File androidFolder = new File(sketchbookFolder, "android");

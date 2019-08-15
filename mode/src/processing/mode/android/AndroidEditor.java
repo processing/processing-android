@@ -75,6 +75,13 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
 
+    //Check the Emulator listing at this point.
+    try {
+      AVD.list(androidMode.getSDK());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     debugger = new AndroidDebugger(this, androidMode);
     // Set saved breakpoints when sketch is opened for the first time
     for (LineID lineID : stripBreakpointComments()) {
@@ -257,9 +264,8 @@ public class AndroidEditor extends JavaEditor {
 
     final JMenu devicesMenu = new JMenu(AndroidMode.getTextString("menu.android.devices"));
 
-    JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
+    final JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
     noDevicesItem.setEnabled(false);
-    devicesMenu.add(noDevicesItem);
     androidMenu.add(devicesMenu);
   
     // Update the device list only when the Android menu is selected.
@@ -269,6 +275,8 @@ public class AndroidEditor extends JavaEditor {
       
       @Override
       public void menuSelected(MenuEvent e) {
+        devicesMenu.removeAll();
+        devicesMenu.add(noDevicesItem);
         task = new UpdateDeviceListTask(devicesMenu);
         timer = new java.util.Timer();
         timer.schedule(task, 400, 5000);
@@ -681,7 +689,6 @@ public class AndroidEditor extends JavaEditor {
       if (prevDeviceList.equals(deviceList)) {
         sameDevices = true;
       } else {
-        System.out.println("setting to different");
         prevDeviceList = deviceList;
       }
       Device selectedDevice = devices.getSelectedDevice();
@@ -735,11 +742,6 @@ public class AndroidEditor extends JavaEditor {
             @Override
             public void actionPerformed(ActionEvent e) {
               devices.setSelectedDevice(device);
-
-              for (int i = 0; i < deviceMenu.getItemCount(); i++) {
-                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
-              }
-
               deviceItem.setState(true);
             }
           });
@@ -748,13 +750,14 @@ public class AndroidEditor extends JavaEditor {
         }
       }
 
-      deviceMenu.addSeparator();
+
       ArrayList<String> emulators = AVD.avdList;
 
       //preventReloading
       if(emulators == prevEmuList){
         return;
       } else {
+        deviceMenu.addSeparator();
         prevEmuList = emulators;
       }
       for (final String emulator : emulators) {
