@@ -92,6 +92,8 @@ class AndroidSDK {
   private static final int INVALID_SDK  = 3;
   private static int loadError = NO_ERROR;
 
+  private static boolean backOptionSelected;
+
   public AndroidSDK(File folder) throws BadSDKException, IOException {
     this.folder = folder;
     if (!folder.exists()) {
@@ -117,11 +119,17 @@ class AndroidSDK {
     if (!platforms.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_platforms_folder", folder));
     }
-    
-    targetPlatform = new File(platforms, AndroidBuild.TARGET_PLATFORM);
+
+    String[] availPlatforms = platforms.list();
+    int maxVersion = 26;
+    for (String availPlatform:availPlatforms){
+      int platformVersion = Integer.parseInt(availPlatform.substring(availPlatform.length()-2));
+      if (platformVersion >= maxVersion) maxVersion = platformVersion;
+    }
+    targetPlatform = new File(platforms, "android-"+maxVersion);
     if (!targetPlatform.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_target_platform", 
-                                                          AndroidBuild.TARGET_SDK, platforms.getAbsolutePath()));
+                                                          maxVersion, platforms.getAbsolutePath()));
     }
 
     androidJar = new File(targetPlatform, "android.jar");
@@ -132,6 +140,8 @@ class AndroidSDK {
 
     avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
+
+    Preferences.set("android.sdk.target",maxVersion+"");
 
     String path = Platform.getenv("PATH");
 
@@ -403,11 +413,17 @@ class AndroidSDK {
 
   static public AndroidSDK locate(final Frame window, final AndroidMode androidMode)
       throws BadSDKException, CancelException, IOException {
-    
+    backOptionSelected = false;
+
     if (loadError == SKIP_ENV_SDK) {
       // The user does not want to use the environment SDK, so let's simply
       // download a new one to the sketchbook folder.
-      return download(window, androidMode);
+      AndroidSDK sdk = download(window, androidMode);
+      if(sdk==null && backOptionSelected){
+        return locate(window,androidMode);
+      } else {
+        return sdk;
+      }
     }
     
     // At this point, there is no ANDROID_SDK env variable, no SDK in the preferences,
@@ -416,7 +432,11 @@ class AndroidSDK {
     int result = showLocateDialog(window);
     
     if (result == JOptionPane.YES_OPTION) {
-      return download(window, androidMode);
+      AndroidSDK sdk = download(window, androidMode);
+      if(sdk==null && backOptionSelected){
+        return locate(window,androidMode);
+      }
+      return sdk;
     } else if (result == JOptionPane.NO_OPTION) {
       // User will manually select folder containing SDK folder
       File folder = selectFolder(AndroidMode.getTextString("android_sdk.dialog.select_sdk_folder"), null, window);
@@ -448,9 +468,13 @@ class AndroidSDK {
   static public AndroidSDK download(final Frame editor, final AndroidMode androidMode) 
       throws BadSDKException, CancelException {
     final SDKDownloader downloader = new SDKDownloader(editor);    
-    downloader.run(); // This call blocks until the SDK download complete, or user cancels.
-    
-    if (downloader.cancelled()) {
+    //downloader.run(); // This call blocks until the SDK download complete, or user cancels.
+
+    if (downloader.isGoBack()){
+      backOptionSelected = true;
+      return null;
+    }
+    else if (downloader.cancelled()) {
       throw new CancelException(AndroidMode.getTextString("android_sdk.error.sdk_download_canceled"));  
     } 
     AndroidSDK sdk = downloader.getSDK();
