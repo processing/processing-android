@@ -284,7 +284,8 @@ public class AndroidMode extends JavaMode {
     //if first, then create a new AVD
     if (firstAVD) {
       System.out.println("Creating Default AVD....");
-      AVD newAvd = new AVD("processing_phone","Nexus One",imageName);
+      avdName = "processing_phone";
+      AVD newAvd = new AVD(avdName,"Nexus One",imageName);
       boolean result = newAvd.create(sdk);
       if(!result){
         throw new CancelException(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"));
