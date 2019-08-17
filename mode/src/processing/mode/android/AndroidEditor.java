@@ -770,7 +770,7 @@ public class AndroidEditor extends JavaEditor {
         emuItem.addChangeListener(new ChangeListener() {
           @Override
           public void stateChanged(ChangeEvent e) {
-            if (selectedEmu.equals(emulator)) emuItem.setState(true);
+            if (selectedEmu != null && selectedEmu.equals(emulator)) emuItem.setState(true);
             else emuItem.setState(false);
           }
         });

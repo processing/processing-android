@@ -147,7 +147,6 @@ public class AVD {
       ProcessBuilder pb =
               new ProcessBuilder(sdk.getAvdManagerPath(), "list", "avd");
       Map<String, String> env = pb.environment();
-      env.clear();
       env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
       pb.redirectErrorStream(true);
 
@@ -221,7 +220,6 @@ public class AVD {
     try {
       ProcessBuilder pb = new ProcessBuilder(sdk.getAvdManagerPath(), "list", "devices");
       Map<String, String> env = pb.environment();
-      env.clear();
       env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
       pb.redirectErrorStream(true);
       process = pb.start();
@@ -280,7 +278,6 @@ public class AVD {
     try {
       ProcessBuilder pb = new ProcessBuilder(sdk.getSDKManagerPath(), "--list");
       Map<String, String> env = pb.environment();
-      env.clear();
       env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
       pb.redirectErrorStream(true);
       process = pb.start();
@@ -329,7 +326,6 @@ public class AVD {
     try {
       ProcessBuilder pb = new ProcessBuilder(sdk.getAvdManagerPath(), "delete", "avd", "-n", name);
       Map<String, String> env = pb.environment();
-      env.clear();
       env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
       pb.redirectErrorStream(true);
       process = pb.start();
@@ -447,7 +443,6 @@ public class AVD {
     avdList = null;
 
     Map<String, String> env = pb.environment();
-    env.clear();
     env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
     pb.redirectErrorStream(true);
 

@@ -397,7 +397,7 @@ public class CreateAVD extends JDialog {
       public void actionPerformed(ActionEvent e) {
         currWindowSize = mainPanel.getSize();
         remove(mainPanel);
-        showLoadingScreen(1);
+        showLoadingScreen(0);
       }
     });
     buttonsPanel.add(backButton);
