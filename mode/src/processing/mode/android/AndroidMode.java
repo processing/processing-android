@@ -255,8 +255,11 @@ public class AndroidMode extends JavaMode {
     try {
       Vector<Vector<String>> existingImages = AVD.listImages(sdk,false);
 
-      if(existingImages.isEmpty())
+      if (existingImages.isEmpty()) {
+        Messages.showMessage(AndroidMode.getTextString("sys_image_downloader.missing_image_title")
+                , AndroidMode.getTextString("sys_image_downloader.missing_image_body"));
         imageName = AVD.downloadImage(sdk, editor, this);
+      }
       else{
         Vector<String> target = existingImages.get(0);
         imageName = "system-images;"+target.get(0)+";"+target.get(1)+";"+target.get(2);

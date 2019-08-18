@@ -273,6 +273,7 @@ public class AVD {
     return false;
   }
 
+  //Return installed images
   static protected Vector<Vector<String>> listImages(AndroidSDK sdk, boolean wear) {
     Vector<Vector<String>> imageList = new Vector<Vector<String>>();
     try {
@@ -304,12 +305,13 @@ public class AVD {
               image.add(imageProps[2]); //Tag
               image.add(imageProps[3].substring(0, 3)); //ABI
               if (available) image.add("Not Installed");
-              else image.add("Installed"); //installed status
-              if (wear && imageProps[2].equals("android-wear") &&
-                      !checkInstalled(image,imageList)) imageList.add(image);
-              if (!wear && imageProps[2].equals("google_apis") &&
-                      !checkInstalled(image,imageList)) imageList.add(image);
-
+              else { //Add to return list only if it is already isntalled
+                image.add("Installed"); //installed status
+                if (wear && imageProps[2].equals("android-wear") &&
+                        !checkInstalled(image, imageList)) imageList.add(image);
+                if (!wear && imageProps[2].equals("google_apis") &&
+                        !checkInstalled(image, imageList)) imageList.add(image);
+              }
             }
           }
         }
@@ -400,7 +402,7 @@ public class AVD {
   protected static String downloadImage(AndroidSDK sdk,AndroidEditor editor,AndroidMode mode) throws Error{
     String API = sdk.getAvailPlatforms().get(0);
     String ABI = getSupportedABI();
-    String TAG = "goole_apis";
+    String TAG = "google_apis";
     String imageName = "system-images;"+ API+ ";"+ TAG+ ";"+ ABI;
     try {
       boolean result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);

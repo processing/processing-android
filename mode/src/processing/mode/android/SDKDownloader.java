@@ -811,7 +811,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       }
     });
     downloadPathPanel.add(selectPathButton,BorderLayout.EAST);
-    if (downloadMode == DOWNLOAD_EMU) selectPathButton.setEnabled(false);
+    if (downloadMode == DOWNLOAD_EMU) selectPathButton.setVisible(false);
     mainPanel.add(downloadPathPanel);
 
     //Buttons Panel on the bottom-------------------------------------------
