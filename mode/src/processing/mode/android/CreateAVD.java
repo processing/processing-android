@@ -69,6 +69,8 @@ public class CreateAVD extends JDialog {
     protected void done() {
       super.done();
       remove(mainPanel);
+      revalidate();
+      repaint();
       showDeviceSelector();
     }
   }
@@ -96,6 +98,8 @@ public class CreateAVD extends JDialog {
     protected void done() {
       super.done();
       remove(mainPanel);
+      revalidate();
+      repaint();
       if(imgExists){
         String API = image.get(0);
         String TAG = image.get(1);
@@ -315,6 +319,8 @@ public class CreateAVD extends JDialog {
       public void actionPerformed(ActionEvent e) {
         currWindowSize = mainPanel.getSize();
         remove(mainPanel);
+        revalidate();
+        repaint();
         if (wearRB.isSelected()) wear = true;
         else {
           if (!wear) {
@@ -397,6 +403,8 @@ public class CreateAVD extends JDialog {
       public void actionPerformed(ActionEvent e) {
         currWindowSize = mainPanel.getSize();
         remove(mainPanel);
+        revalidate();
+        repaint();
         showLoadingScreen(0);
       }
     });
