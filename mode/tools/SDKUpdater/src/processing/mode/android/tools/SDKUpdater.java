@@ -509,7 +509,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   }
 
   private void createLayout(final boolean standalone) {
-    setTitle(getMenuTitle());
+    setTitle("SDK Updater");
     
     Container outer = getContentPane();
     outer.removeAll();
