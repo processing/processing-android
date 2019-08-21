@@ -33,6 +33,7 @@ import javax.swing.*;
 import java.awt.Frame;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Vector;
 
@@ -301,11 +302,18 @@ public class AVD {
             if (imageProps[3].substring(0, 3).equals(abi) && (!imageProps[3].contains("_64") ||
                     imageProps[3].contains("armeabi-v7a")))  {
               Vector<String> image = new Vector<String>();
-              image.add(imageProps[1]); //API Level
-              image.add(imageProps[2]); //Tag
-              image.add(imageProps[3].substring(0, 3)); //ABI
-              if (available) image.add("Not Installed");
-              else { //Add to return list only if it is already isntalled
+              String apiLevel = imageProps[1]; //API Level
+              int level = 0;
+              try {
+                level = Integer.parseInt(apiLevel.substring(apiLevel.indexOf("-") + 1));
+              } catch (NumberFormatException e){
+                continue;
+              }
+              //Add to return list only if it is already isntalled
+              if (!available && level >= 26) {
+                image.add(apiLevel); //API
+                image.add(imageProps[2]); //Tag
+                image.add(imageProps[3].substring(0, 3)); //ABI
                 image.add("Installed"); //installed status
                 if (wear && imageProps[2].equals("android-wear") &&
                         !checkInstalled(image, imageList)) imageList.add(image);
@@ -321,6 +329,9 @@ public class AVD {
     } finally {
       process.destroy();
     }
+
+    Collections.reverse(imageList);
+
     return imageList;
   }
 

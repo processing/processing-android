@@ -219,7 +219,7 @@ class AndroidSDK {
     for (File folder : subfolders) {
       if (folder.isDirectory()) {
         String name = folder.getName();
-        if(Integer.parseInt(name.substring(name.indexOf("-")+1)) > 26) {
+        if(Integer.parseInt(name.substring(name.indexOf("-")+1)) >= 26) {
           platforms.add(name);
         }
         //platforms.add(name);

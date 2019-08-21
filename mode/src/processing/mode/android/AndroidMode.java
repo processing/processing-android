@@ -246,7 +246,6 @@ public class AndroidMode extends JavaMode {
         if (downloader.cancelled()) {
           throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
         }
-        Messages.showMessage("Completed","Emulator Downloaded");
       }
     }
 
