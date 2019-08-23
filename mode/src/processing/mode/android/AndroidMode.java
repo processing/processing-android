@@ -304,6 +304,12 @@ public class AndroidMode extends JavaMode {
     build.build("debug");
 
     int comp = build.getAppComponent();
+
+    //Check port and add if not present
+    Integer portNumber = EmulatorController.getPort(avdName); //search ports
+    if(portNumber==null || portNumber<0){ //if not found
+      EmulatorController.addToPorts(avdName); // add to ports
+    }
     Future<Device> emu = Devices.getInstance().getEmulator(build.isWear(),avdName);
     runner = new AndroidRunner(build, listener);
     runner.launch(emu, comp, true);

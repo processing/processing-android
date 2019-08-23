@@ -82,6 +82,9 @@ public class AndroidEditor extends JavaEditor {
       e.printStackTrace();
     }
 
+    //Initialize EmulatorPort maps
+    EmulatorController.mapSelectedEmulator();
+
     debugger = new AndroidDebugger(this, androidMode);
     // Set saved breakpoints when sketch is opened for the first time
     for (LineID lineID : stripBreakpointComments()) {

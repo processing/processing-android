@@ -160,7 +160,7 @@ class Devices {
 
 
   private final Device blockingGetEmulator(final boolean wear, String avdName) {
-    String port = AVD.getPreferredPort(wear);
+    String port = EmulatorController.getPort(avdName).toString();
     Device emu = find(true, port);
     if (emu != null) {
       return emu;

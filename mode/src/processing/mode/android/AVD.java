@@ -83,16 +83,16 @@ public class AVD {
   static public String getPreferredPort(boolean wear) {
     String port = "";
     if (wear) {
-      port = Preferences.get("android.emulator.port.wear");
+      port = Preferences.get("android.emulator.port");
       if (port == null) {
         port = DEFAULT_WEAR_PORT;
-        Preferences.set("android.emulator.port.wear", port);
+        Preferences.set("android.emulator.port", port);
       }
     } else {
-      port = Preferences.get("android.emulator.port.phone");
+      port = Preferences.get("android.emulator.port");
       if (port == null) {
         port = DEFAULT_PHONE_PORT;
-        Preferences.set("android.emulator.port.phone", port);
+        Preferences.set("android.emulator.port", port);
       }
     }
     return port;
