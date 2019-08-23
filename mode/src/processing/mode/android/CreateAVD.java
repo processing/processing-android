@@ -89,7 +89,6 @@ public class CreateAVD extends JDialog {
         } else {
           imgExists = false;
         }
-
       }
       return images;
     }
@@ -111,14 +110,18 @@ public class CreateAVD extends JDialog {
         Messages.showMessage(AndroidMode.getTextString("android_avd.error.image_not_available_title")
         , AndroidMode.getTextString("android_avd.error.image_not_available_body"));
         String platform = sdk.getAvailPlatforms().get(0);
-        String API = platform.substring(platform.indexOf("-"),platform.length()-1);
+        String API = platform;
         String ABI = AVD.getSupportedABI();
         String TAG = "google_apis";
         if(wear){
           TAG = "android-wear";
         }
         try {
-          boolean result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+          boolean result = false;
+          if(!wear)
+            result = AndroidSDK.downloadSysImage(editor, mode, false, ABI, API,TAG);
+          else
+            result = AndroidSDK.downloadSysImage(editor, mode, true, ABI, API,TAG);
           if (result) {
             showLoadingScreen(1);
           }
@@ -322,21 +325,19 @@ public class CreateAVD extends JDialog {
         revalidate();
         repaint();
         if (wearRB.isSelected()) wear = true;
-        else {
-          if (!wear) {
-            deviceName = idsList.get(deviceSelector.getSelectedIndex());
-            //remove the begining and trailing " "
-            deviceName = deviceName.replaceAll("^\"|\"$", "");
-          }
-          else {
-            deviceName = wearIds.get(deviceSelector.getSelectedIndex());
-            deviceName = deviceName.replaceAll("^\"|\"$", "");
-          }
-          String baseName = deviceName.replaceAll("\\s+","");
-          if (!wear) avdName = baseName + "_" + "phone"; //construct name automatically
-          else avdName = baseName + "_" + "wear";
-          showLoadingScreen(1);
+        if (!wear) {
+          deviceName = idsList.get(deviceSelector.getSelectedIndex());
+          //remove the begining and trailing " "
+          deviceName = deviceName.replaceAll("^\"|\"$", "");
         }
+        else {
+          deviceName = wearIds.get(deviceSelector.getSelectedIndex());
+          deviceName = deviceName.replaceAll("^\"|\"$", "");
+        }
+        String baseName = deviceName.replaceAll("\\s+","");
+        if (!wear) avdName = baseName + "_" + "phone"; //construct name automatically
+        else avdName = baseName + "_" + "wear";
+        showLoadingScreen(1);
       }
     });
     buttons.add(nextButton);
