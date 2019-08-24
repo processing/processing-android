@@ -410,7 +410,7 @@ public class AVD {
     }
   }
 
-  protected static String downloadImage(AndroidSDK sdk,AndroidEditor editor,AndroidMode mode) throws Error{
+  protected static String downloadDefaultImage(AndroidSDK sdk,AndroidEditor editor,AndroidMode mode) throws Error{
     String API = sdk.getAvailPlatforms().get(0);
     String ABI = getSupportedABI();
     String TAG = "google_apis";

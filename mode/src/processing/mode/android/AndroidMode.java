@@ -234,6 +234,8 @@ public class AndroidMode extends JavaMode {
     System.out.println("Checking Emulator....");
     String imageName = null;
     boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
+    Vector<Vector<String>> existingImages = AVD.listImages(sdk,false);
+    boolean checkSysImage = existingImages.isEmpty();
     if (!checkEmulator) {
       String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
       String message = AndroidMode.getTextString("android_sdk.dialog.install_emu_body");
@@ -247,24 +249,6 @@ public class AndroidMode extends JavaMode {
           throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
         }
       }
-    }
-
-    //Check if any Image exists, then use that or download:
-    System.out.println("Checking System Image....");
-    try {
-      Vector<Vector<String>> existingImages = AVD.listImages(sdk,false);
-
-      if (existingImages.isEmpty()) {
-        Messages.showMessage(AndroidMode.getTextString("sys_image_downloader.missing_image_title")
-                , AndroidMode.getTextString("sys_image_downloader.missing_image_body"));
-        imageName = AVD.downloadImage(sdk, editor, this);
-      }
-      else{
-        Vector<String> target = existingImages.get(0);
-        imageName = "system-images;"+target.get(0)+";"+target.get(1)+";"+target.get(2);
-      }
-    } catch (Error e){
-      throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
     }
 
     //Check if atleast one AVD already exists :

@@ -735,6 +735,15 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     outer.removeAll();
     final SDKUrlHolder urlHolder = downloadUrls;
 
+    if (downloadMode == DOWNLOAD_EMU){
+      System.out.println("sdsdsd");
+      String path = Preferences.get("android.sdk.path");
+      sdkFolder = new File(path);
+      run(urlHolder,sdkFolder);
+      createLayout();
+      return;
+    }
+
     outer.setLayout(new BorderLayout());
 
     JPanel mainPanel = new JPanel();
@@ -761,9 +770,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       addPackage(gc, 2, packagesPanel, "Android Build Tools: ", downloadUrls.buildToolsVersion);
       addPackage(gc, 3, packagesPanel, "Android Tools: ", downloadUrls.toolsVersion);
       if (Platform.getName() != "linux")
-        addPackage(gc, 4, packagesPanel, "Android Build Tools: ", downloadUrls.haxmVersion);
-    } else if (downloadMode == DOWNLOAD_EMU) {
-      addPackage(gc,0,packagesPanel,"Android Emulator: ",downloadUrls.emulatorVersion);
+        addPackage(gc, 4, packagesPanel, "Intel HAXM", downloadUrls.haxmVersion);
     }
 
     //SDK_Path selection Panel---------------------------------------
@@ -811,8 +818,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       }
     });
     downloadPathPanel.add(selectPathButton,BorderLayout.EAST);
-    if (downloadMode == DOWNLOAD_EMU) selectPathButton.setVisible(false);
-    mainPanel.add(downloadPathPanel);
+    if (downloadMode != DOWNLOAD_EMU)
+      mainPanel.add(downloadPathPanel);
 
     //Buttons Panel on the bottom-------------------------------------------
     JPanel buttons = new JPanel();
