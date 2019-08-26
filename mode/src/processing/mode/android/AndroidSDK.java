@@ -519,11 +519,11 @@ class AndroidSDK {
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
     
     if (downloader.cancelled()) {
-      throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));  
+      throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
     } 
     boolean res = downloader.getResult();
     if (!res) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.emulator_download_failed"));
+      throw new BadSDKException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
     }
     return res;
   }

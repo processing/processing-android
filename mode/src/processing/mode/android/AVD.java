@@ -410,7 +410,7 @@ public class AVD {
     }
   }
 
-  protected static String downloadDefaultImage(AndroidSDK sdk,AndroidEditor editor,AndroidMode mode) throws Error{
+  protected static String downloadDefaultImage(AndroidSDK sdk,AndroidEditor editor,AndroidMode mode) throws Error, AndroidSDK.CancelException, AndroidSDK.BadSDKException {
     String API = sdk.getAvailPlatforms().get(0);
     String ABI = getSupportedABI();
     String TAG = "google_apis";
@@ -421,7 +421,7 @@ public class AVD {
         throw new Error("Image Could not be downloaded");
       }
     } catch (AndroidSDK.BadSDKException | AndroidSDK.CancelException e) {
-      e.printStackTrace();
+      throw e;
     }
     return imageName;
 

@@ -248,9 +248,11 @@ public class AndroidMode extends JavaMode {
         }
         try {
           AVD.downloadDefaultImage(sdk, editor, this);
-        } catch (Error e){
+        } catch (Exception e){
           throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
         }
+      } else {
+        throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
       }
     }
 
@@ -261,15 +263,23 @@ public class AndroidMode extends JavaMode {
     System.out.println("Checking System Image....");
     try {
       if (existingImages.isEmpty()) {
-        Messages.showMessage(AndroidMode.getTextString("sys_image_downloader.missing_image_title")
-                , AndroidMode.getTextString("sys_image_downloader.missing_image_body"));
-        imageName = AVD.downloadDefaultImage(sdk, editor, this);
+        String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
+        String message = AndroidMode.getTextString("sys_image_downloader.missing_image_body");
+        String title = AndroidMode.getTextString("sys_image_downloader.missing_image_title");
+        int result = JOptionPane.showOptionDialog(null, message, title,
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, options, options[0]);
+        if(result == JOptionPane.YES_OPTION) {
+          imageName = AVD.downloadDefaultImage(sdk, editor, this);
+        } else {
+          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+        }
       }
       else{
         Vector<String> target = existingImages.get(0);
         imageName = "system-images;"+target.get(0)+";"+target.get(1)+";"+target.get(2);
       }
-    } catch (Error e){
+    } catch (AndroidSDK.BadSDKException e){
       throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
     }
 
