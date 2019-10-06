@@ -117,7 +117,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     sdkFolder = new File(path);
 
     //start by checking internet connection:
-    if(checkConnectivity()) {
+    if (checkConnectivity()) {
       queryTask = new QueryTask();
       queryTask.addPropertyChangeListener(this);
       queryTask.execute();
@@ -200,7 +200,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       for (RemotePackage remote : packages.getRemotePackages().values()){
         String path = remote.getPath();
         int pathIndex = path.indexOf(";");
-        if(pathIndex!=-1 && path.substring(0,pathIndex).equals("platforms")) {
+        if (pathIndex!=-1 && path.substring(0,pathIndex).equals("platforms")) {
           String name = remote.getDisplayName();
           int platformIndex = name.indexOf("Platform");
           String platformName = name.substring(platformIndex);
@@ -388,7 +388,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
               .createInstaller(p, mRepoManager, downloader, mHandler.getFileOp());
           status.setText("Downloading. . .");
           if ((installer.prepare(progress))) {
-            if(isPlatform) statusPlatform.setText("Unzipping. . .");
+            if (isPlatform) statusPlatform.setText("Unzipping. . .");
             else status.setText("Unzipping");
             if (!installer.complete(progress)) {
               // there was an error, abort.
@@ -454,7 +454,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       public java.util.List<String> getPaths(RepoManager mgr,Boolean isPlatform) {
         List<String> updates = new ArrayList<>();
 //        for(UpdatablePackage upd : mgr.getPackages().getUpdatedPkgs()) {
-//          if(!upd.getRemote().obsolete()) {
+//          if (!upd.getRemote().obsolete()) {
 //            updates.add(upd.getRepresentative().getPath());
 //          }
 //        }
@@ -542,7 +542,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 
       @Override
       public Class<?> getColumnClass(int columnIndex) {
-        if(columnIndex == 0) return Boolean.class;
+        if (columnIndex == 0) return Boolean.class;
         return String.class;
       }
     };
@@ -649,7 +649,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       @Override
       public boolean isCellEditable(int row, int column) {
         String status = (String) platformTable.getValueAt(row,3);
-        if(status.equals("Not Installed")) return true;
+        if (status.equals("Not Installed")) return true;
         return false;
       }
 
