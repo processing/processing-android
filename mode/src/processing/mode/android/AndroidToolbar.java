@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import processing.app.Base;
+import processing.app.Preferences;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorButton;
 import processing.app.ui.EditorToolbar;
@@ -210,7 +211,8 @@ public class AndroidToolbar extends EditorToolbar {
     if (!shift) {
       aEditor.handleRunDevice();
     } else {
-      aEditor.handleRunEmulator();
+      String avdName = Preferences.get("android.emulator.avd.name");
+      aEditor.handleRunEmulator(avdName);
     }
   }
 

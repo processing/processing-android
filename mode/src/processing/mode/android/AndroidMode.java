@@ -22,13 +22,7 @@
 
 package processing.mode.android;
 
-import processing.app.Base;
-import processing.app.Library;
-import processing.app.Messages;
-import processing.app.Platform;
-import processing.app.RunnerListener;
-import processing.app.Sketch;
-import processing.app.SketchException;
+import processing.app.*;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -36,12 +30,14 @@ import processing.core.PApplet;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.Future;
 
 /** 
@@ -232,24 +228,105 @@ public class AndroidMode extends JavaMode {
 
 
   public void handleRunEmulator(Sketch sketch, AndroidEditor editor, 
-      RunnerListener listener) throws SketchException, IOException {
+      RunnerListener listener, String avdName) throws SketchException, IOException, CancelException {
+
+    //check for emulator
+    System.out.println("Checking Emulator....");
+    String imageName = null;
+    boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
+    if (!checkEmulator) {
+      String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
+      String message = AndroidMode.getTextString("android_sdk.dialog.install_emu_body");
+      String title = AndroidMode.getTextString("android_sdk.dialog.install_emu_title");
+      int result = JOptionPane.showOptionDialog(null, message, title,
+              JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+              null, options, options[0]);
+      if (result == JOptionPane.YES_OPTION) {
+        SDKDownloader downloader = new SDKDownloader(editor, SDKDownloader.DOWNLOAD_EMU);
+        if (downloader.cancelled()) {
+          throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
+        }
+        try {
+          AVD.downloadDefaultImage(sdk, editor, this);
+        } catch (Exception e){
+          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+        }
+      } else {
+        throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
+      }
+    }
+
+
+    Vector<Vector<String>> existingImages = AVD.listImages(sdk,false);
+    boolean checkSysImage = existingImages.isEmpty();
+    //this is to install image in cases when emulator alone is installed
+    System.out.println("Checking System Image....");
+    try {
+      if (existingImages.isEmpty()) {
+        String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
+        String message = AndroidMode.getTextString("sys_image_downloader.missing_image_body");
+        String title = AndroidMode.getTextString("sys_image_downloader.missing_image_title");
+        int result = JOptionPane.showOptionDialog(null, message, title,
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, options, options[0]);
+        if(result == JOptionPane.YES_OPTION) {
+          imageName = AVD.downloadDefaultImage(sdk, editor, this);
+        } else {
+          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+        }
+      }
+      else{
+        Vector<String> target = existingImages.get(0);
+        imageName = "system-images;"+target.get(0)+";"+target.get(1)+";"+target.get(2);
+      }
+    } catch (AndroidSDK.BadSDKException e){
+      throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+    }
+
+    //Check if atleast one AVD already exists :
+    boolean firstAVD;
+    if(avdName !=null)
+      firstAVD = avdName.isEmpty();
+    else firstAVD = true;
+
+    //Check if previously selected AVD exits :
+    if(!AVD.exists(sdk, avdName)) {
+      int result = AVD.showEmulatorNotFoundDialog();
+      if (result == JOptionPane.YES_OPTION) {
+        firstAVD = true;
+      } else {
+        throw new CancelException(AndroidMode.getTextString("android_avd.error.selected_emu_not_found_title"));
+      }
+    }
+
+    //if first, then create a new AVD
+    if (firstAVD) {
+      System.out.println("Creating Default AVD....");
+      avdName = "processing_phone";
+      AVD newAvd = new AVD(avdName,"Nexus One",imageName);
+      boolean result = newAvd.create(sdk);
+      if(!result){
+        throw new CancelException(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"));
+      }
+    }
+
+    Preferences.set("android.emulator.avd.name",avdName);
+
     listener.startIndeterminate();
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
     build.build("debug");
-        
-    boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
-    if (!avd) {
-      SketchException se =
-        new SketchException(AndroidMode.getTextString("android_mode.error.cannot_create_avd"));
-      se.hideStackTrace();
-      throw se;
-    }
 
     int comp = build.getAppComponent();
-    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear());
+
+    //Check port and add if not present
+    Integer portNumber = EmulatorController.getPort(avdName); //search ports
+    if(portNumber==null || portNumber<0){ //if not found
+      EmulatorController.addToPorts(avdName); // add to ports
+    }
+    Future<Device> emu = Devices.getInstance().getEmulator(build.isWear(),avdName);
     runner = new AndroidRunner(build, listener);
     runner.launch(emu, comp, true);
   }

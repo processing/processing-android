@@ -22,11 +22,7 @@
 
 package processing.mode.android;
 
-import processing.app.Base;
-import processing.app.Mode;
-import processing.app.Platform;
-import processing.app.Settings;
-import processing.app.SketchException;
+import processing.app.*;
 import processing.app.tools.Tool;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
@@ -46,10 +42,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TimerTask;
+import java.util.*;
 
 
 @SuppressWarnings("serial")
@@ -81,6 +74,16 @@ public class AndroidEditor extends JavaEditor {
     androidMode = (AndroidMode) mode;
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
+
+    //Check the Emulator listing at this point.
+    try {
+      AVD.list(androidMode.getSDK());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    //Initialize EmulatorPort maps
+    EmulatorController.mapSelectedEmulator();
 
     debugger = new AndroidDebugger(this, androidMode);
     // Set saved breakpoints when sketch is opened for the first time
@@ -157,7 +160,8 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN, true), 'R');
     presentItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          handleRunEmulator();
+          String emulator = Preferences.get("android.emulator.avd.name");
+          handleRunEmulator(emulator);
         }
       });
 
@@ -263,9 +267,8 @@ public class AndroidEditor extends JavaEditor {
 
     final JMenu devicesMenu = new JMenu(AndroidMode.getTextString("menu.android.devices"));
 
-    JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
+    final JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
     noDevicesItem.setEnabled(false);
-    devicesMenu.add(noDevicesItem);
     androidMenu.add(devicesMenu);
   
     // Update the device list only when the Android menu is selected.
@@ -275,9 +278,11 @@ public class AndroidEditor extends JavaEditor {
       
       @Override
       public void menuSelected(MenuEvent e) {
+        devicesMenu.removeAll();
+        devicesMenu.add(noDevicesItem);
         task = new UpdateDeviceListTask(devicesMenu);
         timer = new java.util.Timer();
-        timer.schedule(task, 400, 3000);        
+        timer.schedule(task, 400, 5000);
       }
 
       @Override
@@ -289,7 +294,17 @@ public class AndroidEditor extends JavaEditor {
       public void menuCanceled(MenuEvent e) {
         timer.cancel();
       }
-    });    
+    });
+
+    //run config window item
+    item = new JMenuItem("Emulator Manager");
+    final AndroidEditor editor = this;
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new EmulatorManager(androidMode.getSDK(),editor,mode);
+      }
+    });
+    androidMenu.add(item);
     
     androidMenu.addSeparator();
 
@@ -373,17 +388,19 @@ public class AndroidEditor extends JavaEditor {
   /**
    * Build the sketch and run it inside an emulator with the debugger.
    */
-  public void handleRunEmulator() {
+  public void handleRunEmulator(final String avdName) {
     new Thread() {
       public void run() {
         toolbar.activateRun();
         startIndeterminate();
         prepareRun();
         try {
-          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this);
+          androidMode.handleRunEmulator(sketch, AndroidEditor.this, AndroidEditor.this, avdName);
         } catch (SketchException e) {
           statusError(e);
         } catch (IOException e) {
+          statusError(e);
+        } catch (AndroidSDK.CancelException e) {
           statusError(e);
         }
         stopIndeterminate();
@@ -646,11 +663,13 @@ public class AndroidEditor extends JavaEditor {
   class UpdateDeviceListTask extends TimerTask {
 
     private JMenu deviceMenu;
+    private java.util.List<Device> prevDeviceList = new ArrayList<Device>();
+    private ArrayList<String> prevEmuList;
 
     public UpdateDeviceListTask(JMenu deviceMenu) {
       this.deviceMenu = deviceMenu;
     }
-    
+
     private Device selectFirstDevice(java.util.List<Device> deviceList) {
       if (0 < deviceList.size()) return deviceList.get(0);
       return null;
@@ -661,15 +680,23 @@ public class AndroidEditor extends JavaEditor {
       if (androidMode == null || androidMode.getSDK() == null) return;
 
       final Devices devices = Devices.getInstance();
-      
-      if (appComponent == AndroidBuild.WATCHFACE) {        
+
+      if (appComponent == AndroidBuild.WATCHFACE) {
         devices.enableBluetoothDebugging();
       }
-      
+
+      boolean sameDevices = false;
       java.util.List<Device> deviceList = devices.findMultiple(false);
+
+      //prevent Reloading
+      if (prevDeviceList.equals(deviceList)) {
+        sameDevices = true;
+      } else {
+        prevDeviceList = deviceList;
+      }
       Device selectedDevice = devices.getSelectedDevice();
 
-      if (deviceList.size() == 0) {
+      if (deviceList.size() == 0 && !sameDevices) {
         if (0 < deviceMenu.getItemCount()) {
           deviceMenu.removeAll();
           JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
@@ -677,12 +704,12 @@ public class AndroidEditor extends JavaEditor {
           deviceMenu.add(noDevicesItem);
         }
         devices.setSelectedDevice(null);
-      } else {
+      } else if (!sameDevices) {
         deviceMenu.removeAll();
 
         if (selectedDevice == null) {
           selectedDevice = selectFirstDevice(deviceList);
-          devices.setSelectedDevice(selectedDevice);  
+          devices.setSelectedDevice(selectedDevice);
         } else {
           // check if selected device is still connected
           boolean found = false;
@@ -695,7 +722,7 @@ public class AndroidEditor extends JavaEditor {
 
           if (!found) {
             selectedDevice = selectFirstDevice(deviceList);
-            devices.setSelectedDevice(selectedDevice);  
+            devices.setSelectedDevice(selectedDevice);
           }
         }
 
@@ -718,11 +745,6 @@ public class AndroidEditor extends JavaEditor {
             @Override
             public void actionPerformed(ActionEvent e) {
               devices.setSelectedDevice(device);
-
-              for (int i = 0; i < deviceMenu.getItemCount(); i++) {
-                ((JCheckBoxMenuItem) deviceMenu.getItem(i)).setState(false);
-              }
-
               deviceItem.setState(true);
             }
           });
@@ -730,6 +752,42 @@ public class AndroidEditor extends JavaEditor {
           deviceMenu.add(deviceItem);
         }
       }
+
+
+      ArrayList<String> emulators = AVD.avdList;
+
+      //preventReloading
+      if(emulators == prevEmuList){
+        return;
+      } else {
+        deviceMenu.addSeparator();
+        prevEmuList = emulators;
+      }
+      for (final String emulator : emulators) {
+        final JCheckBoxMenuItem emuItem = new JCheckBoxMenuItem(emulator);
+        emuItem.setEnabled(true);
+        final String selectedEmu = Preferences.get("android.emulator.avd.name");
+        if (selectedEmu != null && selectedEmu.equals(emulator)) emuItem.setState(true);
+
+        // prevent checkboxmenuitem automatic state changing onclick
+        emuItem.addChangeListener(new ChangeListener() {
+          @Override
+          public void stateChanged(ChangeEvent e) {
+            if (selectedEmu != null && selectedEmu.equals(emulator)) emuItem.setState(true);
+            else emuItem.setState(false);
+          }
+        });
+
+        emuItem.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            Preferences.set("android.emulator.avd.name", emulator);
+            emuItem.setState(true);
+          }
+        });
+
+        deviceMenu.add(emuItem);
+      }
     }
-  }  
+  }
 }
