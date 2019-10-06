@@ -1,5 +1,3 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-
 /*
  Part of the Processing project - http://processing.org
 
@@ -9,12 +7,11 @@
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
  as published by the Free Software Foundation.
-
+ 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,8 +40,9 @@ public class AndroidPreprocessor extends PdePreprocessor {
   protected String sketchQuality;
 
   protected String kindStatement;
-  protected String sketchKind;
+  protected String sketchKind;  
   
+
   public static final String SMOOTH_REGEX =
       "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
@@ -60,21 +58,23 @@ public class AndroidPreprocessor extends PdePreprocessor {
   }
 
 
-  public SurfaceInfo initSketchSize(String code) throws SketchException {
-    SurfaceInfo surfaceInfo = parseSketchSize(code, true);
-    if (surfaceInfo == null) {
-      System.err.println(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_size"));
-      throw new SketchException(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_size_exception"));
+  public PreprocessorResult initSketchSize(String code) throws SketchException {
+    PreprocessorResult result = write(new StringWriter(), code);
+    if (result.getSketchWidth() == null || result.getSketchHeight() == null) {
+      System.err.println("More about the size() command on Android can be");
+      System.err.println("found here: http://wiki.processing.org/w/Android");
+      throw new SketchException("Could not parse the size() command.");
     }
-    return surfaceInfo;
+    return result;
   }
 
 
   public String[] initSketchSmooth(String code) throws SketchException {
     String[] info = parseSketchSmooth(code, true);
     if (info == null) {
-      System.err.println(AndroidMode.getTextString("android_preprocessor.error.cannot_smooth_size"));
-      throw new SketchException(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_smooth_exception"));
+      System.err.println("More about the smooth() command on Android can be");
+      System.err.println("found here: http://wiki.processing.org/w/Android");
+      throw new SketchException("Could not parse the smooth() command.");
     }
     smoothStatement = info[0];
     sketchQuality = info[1];
@@ -94,8 +94,12 @@ public class AndroidPreprocessor extends PdePreprocessor {
 
       if (badSmooth && fussy) {
         // found a reference to smooth, but it didn't seem to contain numbers
-        Messages.showWarning(AndroidMode.getTextString("android_preprocessor.warn.cannot_find_smooth_level_title"), 
-                             AndroidMode.getTextString("android_preprocessor.warn.cannot_find_smooth_level_body"), null);
+        final String message =
+          "The smooth level of this applet could not automatically\n" +
+          "be determined from your code. Use only a numeric\n" +
+          "value (not variables) for the smooth() command.\n" +
+          "See the smooth() reference for an explanation.";
+        Messages.showWarning("Could not find smooth level", message, null);
         return null;
       }
 
@@ -120,7 +124,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
   
   @Override
   protected void writeFooter(PrintWriter out, String className) {
-    SurfaceInfo info = null;
+    PreprocessorResult info = null;
     try {
       info = initSketchSize(sketch.getMainProgram());
     } catch (SketchException e) {
@@ -145,7 +149,13 @@ public class AndroidPreprocessor extends PdePreprocessor {
         // doesn't remove the original size() method, but calling size()
         // again in setup() is harmless.        
         if (!hasMethod("settings") && info.hasSettings()) {
-          out.println(indent + "public void settings() { " + info.getSettings() + " }");
+          StringJoiner argJoiner = new StringJoiner(",");
+          argJoiner.add(params.getSketchWidth().get());
+          argJoiner.add(params.getSketchHeight().get());
+         
+          // TODO: Other renders?
+          String settingsInner = String.format("size(%s);", argJoiner.toString());
+          out.println(indent + "public void settings() { " + settingsInner + " }");
         }
         
         // close off the class definition
@@ -171,18 +181,14 @@ public class AndroidPreprocessor extends PdePreprocessor {
       "processing.opengl.*"
     };
   }
-
-
   @Override
   public String[] getDefaultImports() {
     final String prefsLine = Preferences.get("android.preproc.imports");
     if (prefsLine != null) {
       return PApplet.splitTokens(prefsLine, ", ");
     }
-
     // The initial values are stored in here for the day when Android
     // is broken out as a separate mode.
-
     // In the future, this may include standard classes for phone or
     // accelerometer access within the Android APIs. This is currently living
     // in code rather than preferences.txt because Android mode needs to
@@ -195,10 +201,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
       "java.util.*" // for ArrayList and friends
       //"java.util.zip.*", "java.util.regex.*" // not necessary w/ newer i/o
     };
-
     Preferences.set("android.preproc.imports",
                     PApplet.join(androidImports, ","));
-
     return androidImports;
   }
   */
@@ -221,7 +225,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
         "android.app.Fragment"
       };    
   } 
-
   
   public String[] getAndroidImports() {
     return new String[] {
@@ -236,15 +239,12 @@ public class AndroidPreprocessor extends PdePreprocessor {
     // or variables or whatever. This way, no warning is shown if size() isn't
     // actually used in the applet, which is the case especially for anyone
     // who is cutting/pasting from the reference.
-
     String scrubbed = processing.mode.java.JavaBuild.scrubComments(sketch.getCode(0).getProgram());
     String[] matches = PApplet.match(scrubbed, processing.mode.java.JavaBuild.SIZE_REGEX);
 //    PApplet.println("matches: " + Sketch.SIZE_REGEX);
 //    PApplet.println(matches);
-
     if (matches != null) {
       boolean badSize = false;
-
       if (matches[1].equals("screenWidth") ||
           matches[1].equals("screenHeight") ||
           matches[2].equals("screenWidth") ||
@@ -255,7 +255,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
         Base.showWarning("Time for a quick update", message, null);
         return false;
       }
-
       if (!matches[1].equals("displayWidth") &&
           !matches[1].equals("displayHeight") &&
           PApplet.parseInt(matches[1], -1) == -1) {
@@ -266,7 +265,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
           PApplet.parseInt(matches[2], -1) == -1) {
         badSize = true;
       }
-
       if (badSize) {
         // found a reference to size, but it didn't seem to contain numbers
         final String message =
@@ -278,7 +276,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
         System.out.println("found here: http://wiki.processing.org/w/Android");
         return false;
       }
-
 //      PApplet.println(matches);
       sizeStatement = matches[0];  // the full method to be removed from the source
       sketchWidth = matches[1];
