@@ -9,12 +9,15 @@ apply plugin: 'java'
 buildscript {
     repositories {
         google()
-        jcenter()
+        jcenter()        
     }
     dependencies {
+        // classpath 'com.android.tools.build:gradle:3.5.1'
+        // classpath group: 'commons-io', name: 'commons-io', version: '2.6'
+        // classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'        
         classpath 'com.android.tools.build:gradle:3.0.1'
         classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'        
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'           
     }
 }
 
@@ -28,10 +31,10 @@ allprojects {
     ext.wearVersion = '2.1.0'
     ext.gvrVersion = '1.150.0'
     ext.garVersion = '1.2.0'
-    ext.processingVersion = '3.3.7'
-    ext.toolingVersion = '4.3'
-    ext.slf4jVersion = '1.7.10'
-    ext.gradlewVersion = '4.4.1'
+    ext.processingVersion = '270'
+    ext.toolingVersion = '5.6.2'
+    ext.slf4jVersion = '1.7.28'
+    ext.gradlewVersion = '5.6.2'
     ext.toolsLibVersion = '26.0.0-dev'
     ext.jdtVersion = '3.11.100'
 
@@ -78,13 +81,18 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven {
+            url "https://repo1.maven.org/maven2"
+            artifactUrls "https://repo.gradle.org/gradle/libs-releases-local"
+        }
         flatDir dirs: androidPlatformPath
         flatDir dirs: androidToolsLibPath
         flatDir dirs: "${rootDir}/core/dist"
+        flatDir dirs: "${rootDir}/../../libs"
     }
 
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7    
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8    
 }
 
 clean.doFirst {
