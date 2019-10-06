@@ -11,13 +11,15 @@ buildscript {
         google()
         jcenter()        
     }
-    dependencies {
+    dependencies {        
+        // Newer versions of gradle break the jar extraction from aar
         // classpath 'com.android.tools.build:gradle:3.5.1'
-        // classpath group: 'commons-io', name: 'commons-io', version: '2.6'
-        // classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'        
+
+        // So keep using 3.0.1 for the time being
         classpath 'com.android.tools.build:gradle:3.0.1'
-        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'           
+
+        classpath group: 'commons-io', name: 'commons-io', version: '2.6'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'
     }
 }
 
