@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-app"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-java"/>
-	<classpathentry kind="lib" path="mode/gradle-tooling-api-4.3.jar"/>
 	<classpathentry kind="lib" path="mode/jdi.jar"/>
+	<classpathentry kind="lib" path="mode/gradle-tooling-api-5.6.2.jar"/>
 	<classpathentry kind="output" path="core/bin"/>
 </classpath>
