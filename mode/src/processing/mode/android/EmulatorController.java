@@ -23,10 +23,12 @@ package processing.mode.android;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
 import processing.app.Base;
 import processing.app.Platform;
+import processing.app.Preferences;
 import processing.app.exec.*;
 
 import processing.core.PApplet;
@@ -38,7 +40,28 @@ class EmulatorController {
   }
 
   private volatile State state = State.NOT_RUNNING;
+  private static HashMap<String,Integer> portMap = new HashMap<>();
+  private static Integer lastAssignedPort = 5566;
 
+  public static void mapSelectedEmulator(){
+    String emulatorName = Preferences.get("android.emulator.avd.name");
+    String emulatorPort = Preferences.get("android.emulator.avd.port");
+    if(emulatorName != null && emulatorPort != null) {
+      portMap.put(emulatorName,Integer.parseInt(emulatorPort));
+      lastAssignedPort = Integer.parseInt(emulatorPort);
+    }
+  }
+
+  public static Integer addToPorts(String avdName){
+    lastAssignedPort += 2; //Consecutive ports cannot be given, as it will be used for ADB
+    portMap.put(avdName, lastAssignedPort);
+    System.out.println(portMap.size());
+    return lastAssignedPort;
+  }
+
+  public static Integer getPort(String avdName){
+    return portMap.get(avdName);
+  }
 
   public State getState() {
     return state;
@@ -64,7 +87,7 @@ class EmulatorController {
    * Blocks until emulator is running, or some catastrophe happens.
    * @throws IOException
    */
-  synchronized public void launch(final AndroidSDK sdk, final boolean wear) 
+  synchronized public void launch(final AndroidSDK sdk, final boolean wear, final String avd)
       throws IOException {
     if (state != State.NOT_RUNNING) {
       String illegal = "You can't launch an emulator whose state is " + state;
@@ -73,9 +96,14 @@ class EmulatorController {
 
     // Emulator options:
     // https://developer.android.com/studio/run/emulator-commandline.html
-    String avdName = AVD.getName(wear);
+    String avdName = avd;
+
+    Integer portNumber = getPort(avdName);
+    if(portNumber==null || portNumber<0){
+      portNumber = addToPorts(avdName);
+    }
     
-    final String portString = AVD.getPreferredPort(wear);
+    final String portString = portNumber.toString();
         
     // We let the emulator decide what's better for hardware acceleration:
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics

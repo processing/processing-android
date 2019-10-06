@@ -244,7 +244,7 @@ class AndroidBuild extends JavaBuild {
    * @throws IOException
    */
   public File build(String target) throws IOException, SketchException {
-    this.target = target;        
+    this.target = target;
     File folder = createProject(true);
     if (folder == null) return null;
     if (!gradleBuild()) return null;
