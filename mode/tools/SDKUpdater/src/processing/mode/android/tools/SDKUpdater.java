@@ -56,6 +56,8 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 @SuppressWarnings("serial")
 public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
@@ -140,17 +142,22 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       progressBar.setIndeterminate(false);
       progressBarPlatform.setIndeterminate(false);
       actionButtonPlatform.setEnabled(true);
-      statusPlatform.setText("Install a platform");
-      if (numUpdates == 0) {
+      statusPlatform.setText("Install a platform");      
+      if (!checkInternet()) {
         actionButton.setEnabled(false);
-        status.setText("No updates available");
-      } else {
-        actionButton.setEnabled(true);
-        if (numUpdates == 1) {
-          status.setText("1 update found!");
+        status.setText("No internet Connection");
+      } else {        
+        if (numUpdates == 0) {
+          actionButton.setEnabled(false);
+          status.setText("No updates available");
         } else {
-          status.setText(numUpdates + " updates found!");
-        }
+          actionButton.setEnabled(true);
+          if (numUpdates == 1) {
+            status.setText("1 update found!");
+          } else {
+            status.setText(numUpdates + " updates found!");
+          }
+        }      
       }
       break;
     }
@@ -508,6 +515,19 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     update.start();
   }
 
+  private boolean checkInternet() {
+    String repoUrl = "https://dl.google.com/android/repository/repository2-1.xml";
+    Socket socket = new Socket();
+    InetSocketAddress address = new InetSocketAddress(repoUrl,80);
+    try {
+      socket.connect(address,80);
+    }
+    catch(Exception e){
+      return false;
+    }
+    return true;
+  }  
+  
   private void createLayout(final boolean standalone) {
     setTitle(getMenuTitle());
     
