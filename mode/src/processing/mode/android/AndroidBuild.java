@@ -34,6 +34,7 @@ import processing.app.Util;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 //import processing.mode.j  /ava.preproc.SurfaceInfo;
+import processing.mode.java.preproc.PreprocessorResult;
 
 import java.io.*;
 import java.util.HashMap;
@@ -275,19 +276,19 @@ class AndroidBuild extends JavaBuild {
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
     
-    /*
     // On Android, this init will throw a SketchException if there's a problem with size()
-    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());
-    preproc.initSketchSmooth(sketch.getMainProgram());
+    PreprocessorResult info = preproc.initSketchSize(sketch.getMainProgram());
     
+//    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());        
+//    preproc.initSketchSmooth(sketch.getMainProgram());
+
     sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
     if (sketchClassName != null) {
-      renderer = info.getRenderer();
+      renderer = info.getSketchRenderer();
       writeMainClass(srcFolder, renderer, external);
       createTopModule("':" + module +"'");
       createAppModule(module);
     }
-    */
     
     return tmpFolder;
   }
