@@ -22,10 +22,9 @@ package processing.mode.android;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 //import java.io.Writer;
-import java.util.List;
 import processing.app.*;
-import processing.core.PApplet;
 import processing.mode.java.preproc.PdePreprocessor;
 import processing.mode.java.preproc.PreprocessorResult;
 
@@ -44,9 +43,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
   protected String sketchKind;  
   
 
-  public static final String SMOOTH_REGEX =
-      "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
-
   public AndroidPreprocessor(final String sketchName) {
     super(sketchName);
   } 
@@ -63,12 +59,29 @@ public class AndroidPreprocessor extends PdePreprocessor {
     PreprocessorResult result = write(new StringWriter(), code);
     if (result.getSketchWidth() == null || result.getSketchHeight() == null) {
       System.err.println("More about the size() command on Android can be");
-      System.err.println("found here: http://wiki.processing.org/w/Android");
+      System.err.println("found here: https://github.com/processing/processing-android/wiki");
       throw new SketchException("Could not parse the size() command.");
     }
     return result;
   }
+  
+  
+  public PreprocessorResult write(Writer outWriter, String inProgram,
+      Iterable<String> codeFolderPackages)
+        throws SketchException {
+    String pkgString = "package " + packageName + ";\n";
+    PrintWriter outPrintWriter = new PrintWriter(outWriter);
+    outPrintWriter.print(pkgString);    
+    return super.write(outWriter, inProgram, codeFolderPackages); 
+  }
 
+
+
+
+/*
+
+  public static final String SMOOTH_REGEX =
+      "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
 
   public String[] initSketchSmooth(String code) throws SketchException {
     String[] info = parseSketchSmooth(code, true);
@@ -110,7 +123,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return new String[] { null, null };  // not an error, just empty
   }
 
-/*
   @Override
   protected int writeImports(final PrintWriter out,
                              final List<String> programImports,
