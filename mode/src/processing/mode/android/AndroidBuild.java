@@ -59,6 +59,16 @@ class AndroidBuild extends JavaBuild {
   static public final String MIN_SDK_VR        = "19"; // Android 4.4
   static public final String MIN_SDK_AR        = "24"; // Android 7.0.0
   static public final String MIN_SDK_WATCHFACE = "25"; // Android 7.1.1
+
+  // Version of Android Gradle plugin is stored in the preferences file.
+  static public String GRADLE_VER;
+  static {
+    GRADLE_VER = Preferences.get("android.gradle.plugin");
+    if (GRADLE_VER == null || !versionCheck(GRADLE_VER, "3.5.1")) {
+      GRADLE_VER = "3.5.1"; 
+      Preferences.set("android.sdk.support", GRADLE_VER);
+    }
+  }  
   
   // Target SDK is stored in the preferences file.
   static public String TARGET_SDK;  
@@ -341,7 +351,9 @@ class AndroidBuild extends JavaBuild {
       throws IOException {
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
-    Util.copyFile(buildTemplate, buildlFile);
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@gradle_ver@@", GRADLE_VER);
+    AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);    
     
     writeLocalProps(new File(tmpFolder, "local.properties"));
     AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
@@ -349,7 +361,7 @@ class AndroidBuild extends JavaBuild {
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
     File settingsFile = new File(tmpFolder, "settings.gradle");
-    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap = new HashMap<String, String>();
     replaceMap.put("@@project_modules@@", projectModules);    
     AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
   }
