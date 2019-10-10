@@ -356,8 +356,16 @@ class AndroidBuild extends JavaBuild {
     AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);    
     
     writeLocalProps(new File(tmpFolder, "local.properties"));
-    AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
-        new String[]{"org.gradle.jvmargs=-Xmx1536m"});
+    
+    if (exportProject) {
+      AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
+          new String[]{"org.gradle.jvmargs=-Xmx1536m"});      
+    } else {
+      String javaHome = Platform.getJavaHome().getAbsolutePath();
+      AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
+          new String[]{"org.gradle.java.home=" + javaHome,
+                       "org.gradle.jvmargs=-Xmx1536m"});      
+    }    
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
     File settingsFile = new File(tmpFolder, "settings.gradle");

@@ -32,6 +32,7 @@ android {
         noCompress "lite"
     }  
     
+    /*
     // We create a variant of the compile task, where we use the Eclipse Compiler for Java
     // (ECJ) instead of the JDK (which would require the user to download and install
     // the Oracle JDK). Inspired by the following:
@@ -79,10 +80,11 @@ android {
             throw new StopExecutionException("skip javac")
         }
     }
+    */
 }
 
 dependencies {
-    compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
+//    compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:@@support_version@@'
     implementation 'com.android.support:design:@@support_version@@'
