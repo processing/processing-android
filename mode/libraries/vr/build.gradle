@@ -1,24 +1,20 @@
-import com.android.build.gradle.internal.dependency.ExtractAarTransform
-import com.android.build.gradle.internal.dependency.AarTransform
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
-import com.google.common.collect.ImmutableList
-import org.gradle.api.artifacts.transform.ArtifactTransform
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition
-import java.util.regex.Pattern
+// import com.android.build.gradle.internal.dependency.ExtractAarTransform
+// import com.android.build.gradle.internal.dependency.AarTransform
+// import com.android.build.gradle.internal.publishing.AndroidArtifacts
+// import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+// import com.google.common.collect.ImmutableList
+// import org.gradle.api.artifacts.transform.ArtifactTransform
+// import org.gradle.api.artifacts.type.ArtifactTypeDefinition
+// import java.util.regex.Pattern
 
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
+// import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
 
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'maven'
 
-/**
- * Custom aar configuration needed to use aar files as dependencies in a pure java 
- * library project, lifted from the following repo:
- * https://github.com/nekocode/Gradle-Import-Aar
- */
+/*
 configurations {
     aar {
         attributes {
@@ -63,9 +59,6 @@ dependencies {
     aar "com.google.vr:sdk-base:${gvrVersion}"
 }
 
-/**
- * An ArtifactTransform for renaming the classes.jar
- */
 class ClassesJarArtifactTransform extends ArtifactTransform {
     @Override
     List<File> transform(File file) {
@@ -79,6 +72,19 @@ class ClassesJarArtifactTransform extends ArtifactTransform {
         Files.copy(renamedJar.toPath(), libraryJar.toPath(), REPLACE_EXISTING);
         return ImmutableList.of(renamedJar)
     }
+}
+*/
+
+// Apply the plugin
+apply plugin: 'GreetingPlugin'
+
+dependencies {
+    compileOnly name: "android"
+
+    compileOnly "org.p5android:processing-core:${modeVersion}"
+
+    implementationAar "com.google.vr:sdk-audio:${gvrVersion}"
+    implementationAar "com.google.vr:sdk-base:${gvrVersion}" 
 }
 
 task createPom {
@@ -154,6 +160,18 @@ clean.doFirst {
     delete "dist"
     delete "library/vr.jar"
 }
+
+
+compileJava.doFirst {
+    String[] deps = ["sdk-audio.jar",
+                     "sdk-base.jar",
+                     "sdk-common.jar"]
+    for (String fn : deps) {
+        Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
+                   file("library/" + fn).toPath(), REPLACE_EXISTING);
+    }
+}
+
 
 build.doLast {
     // // Copying vr jar to library folder

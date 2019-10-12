@@ -1,24 +1,12 @@
-import com.android.build.gradle.internal.dependency.ExtractAarTransform
-import com.android.build.gradle.internal.dependency.AarTransform
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
-import com.google.common.collect.ImmutableList
-import org.gradle.api.artifacts.transform.ArtifactTransform
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition
-import java.util.regex.Pattern
-
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
-
 import java.nio.file.Files
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 apply plugin: 'maven'
 
-/**
- * Custom aar configuration needed to use aar files as dependencies in a pure java 
- * library project, lifted from the following repo:
- * https://github.com/nekocode/Gradle-Import-Aar
- */
+/*
+// Custom aar configuration needed to use aar files as dependencies in a pure java 
+// library project, lifted from the following repo:
+// https://github.com/nekocode/Gradle-Import-Aar
 configurations {
     aar {
         attributes {
@@ -61,23 +49,35 @@ dependencies {
     aar "com.google.android.support:wearable:${wearVersion}"
 }
 
-/**
- * An ArtifactTransform for renaming the classes.jar
- */
 class ClassesJarArtifactTransform extends ArtifactTransform {
     @Override
     List<File> transform(File file) {
+        println "Transforming---------------------------------" 
+        print "SRC "
+        println file      
         final String[] names = file.getPath().split(Pattern.quote(File.separator))
         final String aarName = names[names.length - 4].replace(".aar", "")
         final File renamedJar = new File(getOutputDirectory(), aarName + ".jar")
         renamedJar << file.bytes
+        print "DST "
+        println renamedJar
+        println "----------------------------------------DONE"        
         return ImmutableList.of(renamedJar)
     }
 }
+*/
+
+// Apply the plugin
+apply plugin: 'GreetingPlugin'
+
+dependencies {
+    implementation name: "android"
+
+    implementationAar "com.android.support:support-v4:${supportLibsVersion}"
+    implementationAar "com.google.android.support:wearable:${wearVersion}"  
+}
 
 task createPom {
-    // The compile configuration should be replaced by implementation eventually:
-    // https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration#new_configurations
     pom {
        project {
            groupId "org.p5android"
@@ -96,13 +96,13 @@ task createPom {
                    groupId "com.android.support"
                    artifactId "support-v4"
                    version "${supportLibsVersion}"
-                   scope "compile"
+                   scope "implementation"
                }
                dependency {
                    groupId "com.google.android.support"
                    artifactId "wearable"
                    version "${wearVersion}"
-                   scope "compile"
+                   scope "implementation"
                }               
            }
         }
@@ -145,18 +145,62 @@ clean.doFirst {
     delete "${coreZipPath}"
 }
 
+compileJava.doFirst {
+    String[] deps = ["percent.jar",
+                     "recyclerview-v7.jar",
+                     "support-compat.jar",
+                     "support-core-ui.jar",
+                     "support-core-utils.jar",
+                     "support-fragment.jar",
+                     "support-media-compat.jar",
+                     "support-v4.jar",
+                     "wearable.jar"]                    
+    for (String fn : deps) {
+        Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
+                   file("${rootDir}/mode/mode/" + fn).toPath(), REPLACE_EXISTING)
+    }
+}
+
 build.doLast {
     // Copying core jar as zip inside the mode folder
     Files.copy(file("${buildDir}/libs/core.jar").toPath(),
-               file("${coreZipPath}").toPath(), REPLACE_EXISTING);
+               file("${coreZipPath}").toPath(), REPLACE_EXISTING)
 
     // Copying the files for release on JCentral
-    File distFolder = file("dist");
-    distFolder.mkdirs();
-    Files.copy(file("$buildDir/libs/core.jar").toPath(),
-               file("dist/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
-    Files.copy(file("$buildDir/libs/core-sources.jar").toPath(),
-               file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    Files.copy(file("$buildDir/libs/core.jar.MD5").toPath(),
-               file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    File distFolder = file("dist")
+    distFolder.mkdirs()
+    Files.copy(file("${buildDir}/libs/core.jar").toPath(),
+               file("dist/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING)
+    Files.copy(file("${buildDir}/libs/core-sources.jar").toPath(),
+               file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING)
+    Files.copy(file("${buildDir}/libs/core.jar.MD5").toPath(),
+               file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
 }
+
+
+// tasks.whenTaskAdded { task ->
+//     if (task.name == 'build') {
+//         task.finalizedBy copyArtifacts
+//     }
+// }
+
+// task copyArtifacts(type: Copy) {
+//     print '*********************'
+//     print "$buildDir/outputs/aar"
+
+//     from("$buildDir/outputs/aar") {
+//         include "*.aar"
+//     }
+//     from("$buildDir/outputs/jar") {
+//         include "*.jar"
+//     }
+//     into file("${rootProject.projectDir}/tmp/exploded")
+//     doLast {
+//         def path = ant.path {
+//             fileset(dir: "${rootProject.projectDir}/tmp/exploded", includes: "*.aar, *.jar")
+//         }
+//         path.list().each {
+//             println it
+//         }
+//     }
+// }

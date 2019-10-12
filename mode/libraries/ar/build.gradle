@@ -14,11 +14,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'maven'
 
-/**
- * Custom aar configuration needed to use aar files as dependencies in a pure java 
- * library project, lifted from the following repo:
- * https://github.com/nekocode/Gradle-Import-Aar
- */
+/*
 configurations {
     aar {
         attributes {
@@ -62,9 +58,6 @@ dependencies {
     aar "com.google.ar:core:${garVersion}"
 }
 
-/**
- * An ArtifactTransform for renaming the classes.jar
- */
 class ClassesJarArtifactTransform extends ArtifactTransform {
     @Override
     List<File> transform(File file) {
@@ -78,6 +71,19 @@ class ClassesJarArtifactTransform extends ArtifactTransform {
         Files.copy(renamedJar.toPath(), libraryJar.toPath(), REPLACE_EXISTING);
         return ImmutableList.of(renamedJar)
     }
+}
+*/
+
+// Apply the plugin
+apply plugin: 'GreetingPlugin'
+
+
+dependencies {
+    compileOnly name: "android"
+
+    compileOnly "org.p5android:processing-core:${modeVersion}"
+
+    implementationAar "com.google.ar:core:${garVersion}"
 }
 
 task createPom {
@@ -149,6 +155,14 @@ jar.doLast { task ->
 clean.doFirst {
     delete "dist"
     delete "library/ar.jar"
+}
+
+compileJava.doFirst {
+    String[] deps = ["core.jar"]
+    for (String fn : deps) {
+        Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
+                   file("library/" + fn).toPath(), REPLACE_EXISTING);
+    }
 }
 
 build.doLast {

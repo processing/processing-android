@@ -13,10 +13,10 @@ buildscript {
     }
     dependencies {        
         // Newer versions of gradle break the jar extraction from aar
-        // classpath 'com.android.tools.build:gradle:3.5.1'
+        classpath 'com.android.tools.build:gradle:3.5.1'
 
         // So keep using 3.0.1 for the time being
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        // classpath 'com.android.tools.build:gradle:3.5.1'
 
         classpath group: 'commons-io', name: 'commons-io', version: '2.6'
         classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'
@@ -27,7 +27,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
 
-    // Versions of all dependencies
+    // Versions of all dependencies - TODO: read from some properties file...
     ext.targetSdkVersion = '26'
     ext.supportLibsVersion = '26.0.2'
     ext.wearVersion = '2.1.0'
@@ -121,10 +121,10 @@ task dist {
         delete "${root}/mode/jdimodel.jar"
                    
         Files.copy(file("mode/processing-core.zip").toPath(),
-                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING);
+                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING)
 
         Files.copy(file("mode/mode.properties").toPath(),
-                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING);
+                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING)
 
         FileUtils.copyDirectory(file("mode/languages"), 
                                 file("${root}/languages"))
@@ -141,7 +141,7 @@ task dist {
         FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
                                 file("${root}/libraries/vr/src"))
         Files.copy(file("mode/libraries/vr/library.properties").toPath(),
-                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);   
+                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING)
 
         FileUtils.copyDirectory(file("mode/libraries/ar/examples"), 
                                 file("${root}/libraries/ar/examples"))
@@ -150,12 +150,12 @@ task dist {
         FileUtils.copyDirectory(file("mode/libraries/ar/src"), 
                                 file("${root}/libraries/ar/src"))
         Files.copy(file("mode/libraries/ar/library.properties").toPath(),
-                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING); 
+                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING) 
 
-        File distFolder = file("dist");
-        distFolder.mkdirs();
-        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"));
+        File distFolder = file("dist")
+        distFolder.mkdirs()
+        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"))
         Files.copy(file("mode/mode.properties").toPath(),
-                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING);
+                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING)
     }
 }
