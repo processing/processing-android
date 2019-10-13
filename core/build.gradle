@@ -2,73 +2,7 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 apply plugin: 'maven'
-
-/*
-// Custom aar configuration needed to use aar files as dependencies in a pure java 
-// library project, lifted from the following repo:
-// https://github.com/nekocode/Gradle-Import-Aar
-configurations {
-    aar {
-        attributes {
-            attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
-        }
-
-        // Add the aar inner jars to the compileClasspath
-        sourceSets.main.compileClasspath += it
-
-        // Put our custom dependencies onto IDEA's PROVIDED scope
-        apply plugin: "idea"
-        idea.module.scopes.PROVIDED.plus += [it]
-    }
-}
-
-dependencies {
-    // Transforamtions to extract the classes.jar in the aar package
-    def explodedAarType = ArtifactType.EXPLODED_AAR.getType()
-    registerTransform {
-        from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR)
-        to.attribute(ARTIFACT_FORMAT, explodedAarType)
-        artifactTransform(ExtractAarTransform)
-    }
-
-    registerTransform {
-        from.attribute(ARTIFACT_FORMAT, explodedAarType)
-        to.attribute(ARTIFACT_FORMAT, "classes.jar")
-        artifactTransform(AarTransform) { params(ArtifactType.JAR) }
-    }
-
-    registerTransform {
-        from.attribute(ARTIFACT_FORMAT, "classes.jar")
-        to.attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
-        artifactTransform(ClassesJarArtifactTransform)
-    }
-
-    compileOnly name: "android"
-
-    aar "com.android.support:support-v4:${supportLibsVersion}"
-    aar "com.google.android.support:wearable:${wearVersion}"
-}
-
-class ClassesJarArtifactTransform extends ArtifactTransform {
-    @Override
-    List<File> transform(File file) {
-        println "Transforming---------------------------------" 
-        print "SRC "
-        println file      
-        final String[] names = file.getPath().split(Pattern.quote(File.separator))
-        final String aarName = names[names.length - 4].replace(".aar", "")
-        final File renamedJar = new File(getOutputDirectory(), aarName + ".jar")
-        renamedJar << file.bytes
-        print "DST "
-        println renamedJar
-        println "----------------------------------------DONE"        
-        return ImmutableList.of(renamedJar)
-    }
-}
-*/
-
-// Apply the plugin
-apply plugin: 'GreetingPlugin'
+apply plugin: 'ImportAar'
 
 dependencies {
     implementation name: "android"
@@ -176,31 +110,3 @@ build.doLast {
     Files.copy(file("${buildDir}/libs/core.jar.MD5").toPath(),
                file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
 }
-
-
-// tasks.whenTaskAdded { task ->
-//     if (task.name == 'build') {
-//         task.finalizedBy copyArtifacts
-//     }
-// }
-
-// task copyArtifacts(type: Copy) {
-//     print '*********************'
-//     print "$buildDir/outputs/aar"
-
-//     from("$buildDir/outputs/aar") {
-//         include "*.aar"
-//     }
-//     from("$buildDir/outputs/jar") {
-//         include "*.jar"
-//     }
-//     into file("${rootProject.projectDir}/tmp/exploded")
-//     doLast {
-//         def path = ant.path {
-//             fileset(dir: "${rootProject.projectDir}/tmp/exploded", includes: "*.aar, *.jar")
-//         }
-//         path.list().each {
-//             println it
-//         }
-//     }
-// }
