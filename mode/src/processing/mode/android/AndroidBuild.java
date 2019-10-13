@@ -284,7 +284,7 @@ class AndroidBuild extends JavaBuild {
     manifest.setSdkTarget(TARGET_SDK);
 
     // build the preproc and get to work
-    AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
+    PdePreprocessor preproc = AndroidPreprocessorFactory.build(sketch.getName(), getPackageName());
     
     // On Android, this init will throw a SketchException if there's a problem with size()
     PreprocessorResult info = preproc.initSketchSize(sketch.getMainProgram());

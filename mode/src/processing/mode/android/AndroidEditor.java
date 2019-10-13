@@ -101,7 +101,7 @@ public class AndroidEditor extends JavaEditor {
 
   @Override
   public PdePreprocessor createPreprocessor(final String sketchName) {
-    return new AndroidPreprocessor(sketchName);  
+    return AndroidPreprocessorFactory.build(sketchName);
   }
 
 
