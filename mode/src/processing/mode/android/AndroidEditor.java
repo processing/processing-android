@@ -28,6 +28,7 @@ import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
+import processing.app.Language;
 import processing.mode.java.JavaEditor;
 import processing.mode.java.debug.LineID;
 import processing.mode.java.preproc.PdePreprocessor;
@@ -176,10 +177,10 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildModeMenu() {
-    androidMenu = new JMenu(AndroidMode.getTextString("menu.android"));
+    androidMenu = new JMenu(Language.text("menu.android"));
     JMenuItem item;
 
-    item = new JMenuItem(AndroidMode.getTextString("menu.android.sketch_permissions"));
+    item = new JMenuItem(Language.text("menu.android.sketch_permissions"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new Permissions(sketch, appComponent, androidMode.getFolder());
@@ -189,11 +190,11 @@ public class AndroidEditor extends JavaEditor {
 
     androidMenu.addSeparator();
      
-    fragmentItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.app"));
-    wallpaperItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.wallpaper"));
-    watchfaceItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.watch_face"));
-    vrItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.vr"));
-    arItem = new JCheckBoxMenuItem(AndroidMode.getTextString("menu.android.ar"));    
+    fragmentItem = new JCheckBoxMenuItem(Language.text("menu.android.app"));
+    wallpaperItem = new JCheckBoxMenuItem(Language.text("menu.android.wallpaper"));
+    watchfaceItem = new JCheckBoxMenuItem(Language.text("menu.android.watch_face"));
+    vrItem = new JCheckBoxMenuItem(Language.text("menu.android.vr"));
+    arItem = new JCheckBoxMenuItem(Language.text("menu.android.ar"));    
 
     fragmentItem.addActionListener(new ActionListener() {
       @Override
@@ -265,9 +266,9 @@ public class AndroidEditor extends JavaEditor {
     
     androidMenu.addSeparator();
 
-    final JMenu devicesMenu = new JMenu(AndroidMode.getTextString("menu.android.devices"));
+    final JMenu devicesMenu = new JMenu(Language.text("menu.android.devices"));
 
-    final JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
+    final JMenuItem noDevicesItem = new JMenuItem(Language.text("menu.android.devices.no_connected_devices"));
     noDevicesItem.setEnabled(false);
     androidMenu.add(devicesMenu);
   
@@ -344,7 +345,7 @@ public class AndroidEditor extends JavaEditor {
 
     menu.addSeparator();
 
-    item = new JMenuItem(AndroidMode.getTextString("menu.help.processing_for_android_site"));
+    item = new JMenuItem(Language.text("menu.help.processing_for_android_site"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         Platform.openURL("http://android.processing.org/");
@@ -353,7 +354,7 @@ public class AndroidEditor extends JavaEditor {
     menu.add(item);
 
 
-    item = new JMenuItem(AndroidMode.getTextString("menu.help.android_developer_site"));
+    item = new JMenuItem(Language.text("menu.help.android_developer_site"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         Platform.openURL("http://developer.android.com/");
@@ -497,15 +498,15 @@ public class AndroidEditor extends JavaEditor {
         public void run() {
           ((AndroidToolbar) toolbar).activateExport();
           startIndeterminate();
-          statusNotice(AndroidMode.getTextString("android_editor.status.exporting_project"));
+          statusNotice(Language.text("android_editor.status.exporting_project"));
           AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
           try {
             File exportFolder = build.exportProject();
             if (exportFolder != null) {
               Platform.openFolder(exportFolder);
-              statusNotice(AndroidMode.getTextString("android_editor.status.project_export_completed"));
+              statusNotice(Language.text("android_editor.status.project_export_completed"));
             } else {
-              statusError(AndroidMode.getTextString("android_editor.status.project_export_failed"));
+              statusError(Language.text("android_editor.status.project_export_failed"));
             }
           } catch (IOException e) {
             statusError(e);
@@ -536,15 +537,15 @@ public class AndroidEditor extends JavaEditor {
     new Thread() {
       public void run() {
         startIndeterminate();
-        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_package"));
+        statusNotice(Language.text("android_editor.status.exporting_package"));
         AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
           if (projectFolder != null) {
-            statusNotice(AndroidMode.getTextString("android_editor.status.package_export_completed"));
+            statusNotice(Language.text("android_editor.status.package_export_completed"));
             Platform.openFolder(projectFolder);
           } else {
-            statusError(AndroidMode.getTextString("android_editor.status.package_export_failed"));
+            statusError(Language.text("android_editor.status.package_export_failed"));
           }
         } catch (IOException e) {
           statusError(e);
@@ -605,7 +606,7 @@ public class AndroidEditor extends JavaEditor {
 
       if (save) androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
-      System.err.println(AndroidMode.getTextString("android_editor.error.cannot_create_sketch_properties", sketchProps, e.getMessage()));
+      System.err.println(Language.interpolate("android_editor.error.cannot_create_sketch_properties", sketchProps, e.getMessage()));
     }
   }
   
@@ -629,7 +630,7 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem item;
     
     for (final Tool tool : androidTools) {
-      item = new JMenuItem(AndroidMode.getTextString(tool.getMenuTitle()));
+      item = new JMenuItem(Language.text(tool.getMenuTitle()));
       item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           tool.run();
@@ -647,7 +648,7 @@ public class AndroidEditor extends JavaEditor {
 //    });
 //    menu.add(item);
 
-    item = new JMenuItem(AndroidMode.getTextString("menu.android.reset_adb"));
+    item = new JMenuItem(Language.text("menu.android.reset_adb"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 //        editor.statusNotice("Resetting the Android Debug Bridge server.");
@@ -699,7 +700,7 @@ public class AndroidEditor extends JavaEditor {
       if (deviceList.size() == 0 && !sameDevices) {
         if (0 < deviceMenu.getItemCount()) {
           deviceMenu.removeAll();
-          JMenuItem noDevicesItem = new JMenuItem(AndroidMode.getTextString("menu.android.devices.no_connected_devices"));
+          JMenuItem noDevicesItem = new JMenuItem(Language.text("menu.android.devices.no_connected_devices"));
           noDevicesItem.setEnabled(false);
           deviceMenu.add(noDevicesItem);
         }

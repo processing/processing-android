@@ -31,6 +31,7 @@ import processing.app.Preferences;
 import processing.app.Sketch;
 import processing.app.SketchException;
 import processing.app.Util;
+import processing.app.Language;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 //import processing.mode.j  /ava.preproc.SurfaceInfo;
@@ -271,7 +272,7 @@ class AndroidBuild extends JavaBuild {
   protected File createProject(boolean external) 
       throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
-    System.out.println(AndroidMode.getTextString("android_build.error.build_folder", tmpFolder.getAbsolutePath()));
+    System.out.println(Language.interpolate("android_build.error.build_folder", tmpFolder.getAbsolutePath()));
 
     // Create the 'src' folder with the preprocessed code.
     srcFolder = new File(tmpFolder, module + "/src/main/java");
@@ -709,7 +710,7 @@ class AndroidBuild extends JavaBuild {
           if (localIcons[i].exists()) copyIcon(localIcons[i], buildIcons[i]);
         }
       } catch (IOException e) {
-        System.err.println(AndroidMode.getTextString("android_build.error.cannot_copy_icons"));
+        System.err.println(Language.text("android_build.error.cannot_copy_icons"));
         e.printStackTrace();
       }
     }
@@ -721,7 +722,7 @@ class AndroidBuild extends JavaBuild {
     if (parent.exists() || parent.mkdirs()) {
       Util.copyFile(srcFile, destFile);
     } else {
-      System.err.println(AndroidMode.getTextString("android_build.error.cannot_create_icon_folder", destFile.getParentFile()));
+      System.err.println(Language.interpolate("android_build.error.cannot_create_icon_folder", destFile.getParentFile()));
     }    
   }  
 
@@ -785,8 +786,8 @@ class AndroidBuild extends JavaBuild {
       throws IOException, InterruptedException {
     File zipAlign = sdk.getZipAlignTool();
     if (zipAlign == null || !zipAlign.exists()) {
-      Messages.showWarning(AndroidMode.getTextString("android_build.warn.cannot_find_zipalign.title"),
-                           AndroidMode.getTextString("android_build.warn.cannot_find_zipalign.body"));
+      Messages.showWarning(Language.text("android_build.warn.cannot_find_zipalign.title"),
+                           Language.text("android_build.warn.cannot_find_zipalign.body"));
       return null;
     }
     
@@ -854,7 +855,7 @@ class AndroidBuild extends JavaBuild {
         if (appComponent == AR && exportName.toLowerCase().startsWith("core-")) continue;
 
         if (!exportFile.exists()) {
-          System.err.println(AndroidMode.getTextString("android_build.error.export_file_does_not_exist", exportFile.getName()));
+          System.err.println(Language.interpolate("android_build.error.export_file_does_not_exist", exportFile.getName()));
         } else if (exportFile.isDirectory()) {
           // Copy native library folders to the correct location
           if (exportName.equals("armeabi") ||
@@ -873,7 +874,7 @@ class AndroidBuild extends JavaBuild {
         } else if (exportName.toLowerCase().endsWith(".zip")) {
           // As of r4 of the Android SDK, it looks like .zip files
           // are ignored in the libs folder, so rename to .jar
-          System.err.println(AndroidMode.getTextString("android_build.error.zip_files_not_allowed", exportFile.getName()));
+          System.err.println(Language.interpolate("android_build.error.zip_files_not_allowed", exportFile.getName()));
           String jarName = exportName.substring(0, exportName.length() - 4) + ".jar";
           Util.copyFile(exportFile, new File(libsFolder, jarName));
 
@@ -938,7 +939,7 @@ class AndroidBuild extends JavaBuild {
   private File createTempBuildFolder(final Sketch sketch) throws IOException {
     final File tmp = File.createTempFile("android", "sketch");
     if (!(tmp.delete() && tmp.mkdir())) {
-      throw new IOException(AndroidMode.getTextString("android_build.error.cannot_create_build_folder", tmp));
+      throw new IOException(Language.interpolate("android_build.error.cannot_create_build_folder", tmp));
     }
     return tmp;
   }

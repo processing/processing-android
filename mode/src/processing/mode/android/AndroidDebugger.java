@@ -6,6 +6,7 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import processing.app.Messages;
+import processing.app.Language;
 import processing.mode.java.Debugger;
 import processing.mode.java.debug.ClassLoadListener;
 import processing.mode.java.debug.LineBreakpoint;
@@ -60,9 +61,9 @@ public class AndroidDebugger extends Debugger {
       device.forwardPort(port);
 
       // connect
-      System.out.println(AndroidMode.getTextString("android_debugger.info.attaching_debugger"));
+      System.out.println(Language.text("android_debugger.info.attaching_debugger"));
       VirtualMachine vm = runner.connectVirtualMachine(port);
-      System.out.println(AndroidMode.getTextString("android_debugger.info.debugger_attached"));
+      System.out.println(Language.text("android_debugger.info.debugger_attached"));
 
       // start receiving vm events
       VMEventReader eventThread = new VMEventReader(vm.eventQueue(), vmEventListener);
@@ -75,7 +76,7 @@ public class AndroidDebugger extends Debugger {
       vm.resume();
 
     } catch (IOException e) {
-      Messages.log(AndroidMode.getTextString("android_debugger.error.debugger_exception", e.getMessage()));
+      Messages.log(Language.interpolate("android_debugger.error.debugger_exception", e.getMessage()));
       // Retry
       startDebug(runner, device);
     } catch (InterruptedException e) {

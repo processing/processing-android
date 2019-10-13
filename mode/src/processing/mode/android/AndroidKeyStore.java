@@ -22,6 +22,7 @@
 package processing.mode.android;
 
 import processing.app.Messages;
+import processing.app.Language;
 import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.core.PApplet;
@@ -53,8 +54,8 @@ public class AndroidKeyStore {
       boolean result = keyStoreFolder.mkdirs();
 
       if (!result) {
-        Messages.showWarning(AndroidMode.getTextString("android_keystore.warn.cannot_create_folders.title"),
-                             AndroidMode.getTextString("android_keystore.warn.cannot_create_folders.body"));
+        Messages.showWarning(Language.text("android_keystore.warn.cannot_create_folders.title"),
+                             Language.text("android_keystore.warn.cannot_create_folders.body"));
         return null;
       }
     }
@@ -88,12 +89,12 @@ public class AndroidKeyStore {
       ProcessResult result = ph.execute();
       if (result.succeeded()) {
         if (getKeyStore() == null) {
-          Messages.showWarning(AndroidMode.getTextString("android_keystore.warn.cannot_find_keystore.title"),
-                               AndroidMode.getTextString("android_keystore.warn.cannot_find_keystore.body"));
+          Messages.showWarning(Language.text("android_keystore.warn.cannot_find_keystore.title"),
+                               Language.text("android_keystore.warn.cannot_find_keystore.body"));
         }
       } else {
         String[] lines = PApplet.split(result.getStderr(), '\n');
-        System.err.println(AndroidMode.getTextString("android_keystore.error.cannot_create_keystore"));
+        System.err.println(Language.text("android_keystore.error.cannot_create_keystore"));
         for (String line: lines) {
           System.err.println(line);
         }

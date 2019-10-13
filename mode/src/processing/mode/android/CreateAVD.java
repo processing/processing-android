@@ -3,6 +3,7 @@ package processing.mode.android;
 import processing.app.Messages;
 import processing.app.ui.Editor;
 import processing.app.ui.Toolkit;
+import processing.app.Language;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -107,8 +108,8 @@ public class CreateAVD extends JDialog {
         imageAPI = API;
         showConfirmWindow();
       } else {
-        Messages.showMessage(AndroidMode.getTextString("android_avd.error.image_not_available_title")
-        , AndroidMode.getTextString("android_avd.error.image_not_available_body"));
+        Messages.showMessage(Language.text("android_avd.error.image_not_available_title")
+        , Language.text("android_avd.error.image_not_available_body"));
         String platform = sdk.getAvailPlatforms().get(0);
         String API = platform;
         String ABI = AVD.getSupportedABI();
@@ -157,7 +158,7 @@ public class CreateAVD extends JDialog {
       setVisible(false);
       dispose();
       if (result) {
-       System.out.println(AndroidMode.getTextString("android_avd.status.create_avd_completed"));
+       System.out.println(Language.text("android_avd.status.create_avd_completed"));
       }
     }
   }
@@ -236,7 +237,7 @@ public class CreateAVD extends JDialog {
     add(mainPanel,BorderLayout.EAST);
 
     JPanel infoPanel = new JPanel();
-    String infoString = AndroidMode.getTextString("android_avd.create.info_message");
+    String infoString = Language.text("android_avd.create.info_message");
     JLabel info = new JLabel(infoString);
 
     infoPanel.add(info);
@@ -415,7 +416,7 @@ public class CreateAVD extends JDialog {
     confirmButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        System.out.println(AndroidMode.getTextString("android_avd.status.create_avd_started"));
+        System.out.println(Language.text("android_avd.status.create_avd_started"));
         createProgress.setIndeterminate(true);
         CreateAvdTask createAvdTask = new CreateAvdTask();
         createAvdTask.execute();

@@ -76,8 +76,8 @@ public class AndroidToolbar extends EditorToolbar {
     case NEW:    return "New";
     case OPEN:   return "Open";
     case SAVE:   return "Save";
-    case EXPORT: return !shift ? AndroidMode.getTextString("menu.file.export_signed_package") : 
-                                 AndroidMode.getTextString("menu.file.export_android_project");
+    case EXPORT: return !shift ? Language.text("menu.file.export_signed_package") : 
+                                 Language.text("menu.file.export_android_project");
     }
     return null;
   }

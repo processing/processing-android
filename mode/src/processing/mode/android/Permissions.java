@@ -118,8 +118,8 @@ public class Permissions extends JFrame {
     vbox.setBorder(new EmptyBorder(BORDER, BORDER, BORDER, BORDER));
     outer.add(vbox);
 
-    String labelText = AndroidMode.getTextString("permissions.dialog.label");
-    String urlText = AndroidMode.getTextString("permissions.dialog.url", GUIDE_URL);
+    String labelText = Language.text("permissions.dialog.label");
+    String urlText = Language.interpolate("permissions.dialog.url", GUIDE_URL);
     JLabel textarea = new JLabel(labelText);
     JLabel urlarea = new JLabel(urlText);
     textarea.setPreferredSize(new Dimension(TEXT_WIDTH, TEXT_HEIGHT));
