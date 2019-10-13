@@ -150,7 +150,7 @@ public class AndroidMode extends JavaMode {
     Boolean broken = false;
     if (sdk != null) { //when mode changes, sdk object is not recreated, this ensures that
       try {
-        sdk = new AndroidSDK(sdk.getSdkFolder());
+        sdk = new AndroidSDK(sdk.getSdkFolder(), getFolder());
       } catch (AndroidSDK.BadSDKException | IOException e) {
         Messages.showWarning(Language.text("android_mode.warn.cannot_load_sdk_title"),
                 Language.interpolate("android_mode.warn.broken_sdk_folder",e.getMessage()));
