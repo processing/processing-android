@@ -9,12 +9,12 @@ apply plugin: 'java'
 buildscript {
     repositories {
         google()
-        jcenter()
+        jcenter()        
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
-        classpath group: 'commons-io', name: 'commons-io', version: '2.5'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.9'        
+    dependencies {        
+        classpath 'com.android.tools.build:gradle:3.5.1'
+        classpath group: 'commons-io', name: 'commons-io', version: '2.6'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'
     }
 }
 
@@ -22,16 +22,16 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
 
-    // Versions of all dependencies
+    // Versions of all dependencies - TODO: read from some properties file...
     ext.targetSdkVersion = '26'
     ext.supportLibsVersion = '26.0.2'
     ext.wearVersion = '2.1.0'
     ext.gvrVersion = '1.150.0'
     ext.garVersion = '1.2.0'
     ext.processingVersion = '3.3.7'
-    ext.toolingVersion = '4.3'
-    ext.slf4jVersion = '1.7.10'
-    ext.gradlewVersion = '4.4.1'
+    ext.toolingVersion = '5.6.2'
+    ext.slf4jVersion = '1.7.28'
+    ext.gradlewVersion = '5.6.2'
     ext.toolsLibVersion = '26.0.0-dev'
     ext.jdtVersion = '3.11.100'
 
@@ -78,13 +78,20 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven {
+            // mavenCentral() does not work to download the Gradle releases of gradle-tooling-api, one needs
+            // to set the artifact url as below to get the latest packages.
+            // https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api?repo=gradle-libs-releases-local
+            url "https://repo1.maven.org/maven2"
+            artifactUrls "https://repo.gradle.org/gradle/libs-releases-local"
+        }
         flatDir dirs: androidPlatformPath
         flatDir dirs: androidToolsLibPath
         flatDir dirs: "${rootDir}/core/dist"
     }
 
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7    
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8    
 }
 
 clean.doFirst {
@@ -106,10 +113,10 @@ task dist {
         delete "${root}/mode/jdimodel.jar"
                    
         Files.copy(file("mode/processing-core.zip").toPath(),
-                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING);
+                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING)
 
         Files.copy(file("mode/mode.properties").toPath(),
-                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING);
+                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING)
 
         FileUtils.copyDirectory(file("mode/languages"), 
                                 file("${root}/languages"))
@@ -126,7 +133,7 @@ task dist {
         FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
                                 file("${root}/libraries/vr/src"))
         Files.copy(file("mode/libraries/vr/library.properties").toPath(),
-                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING);   
+                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING)
 
         FileUtils.copyDirectory(file("mode/libraries/ar/examples"), 
                                 file("${root}/libraries/ar/examples"))
@@ -135,12 +142,12 @@ task dist {
         FileUtils.copyDirectory(file("mode/libraries/ar/src"), 
                                 file("${root}/libraries/ar/src"))
         Files.copy(file("mode/libraries/ar/library.properties").toPath(),
-                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING); 
+                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING) 
 
-        File distFolder = file("dist");
-        distFolder.mkdirs();
-        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"));
+        File distFolder = file("dist")
+        distFolder.mkdirs()
+        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"))
         Files.copy(file("mode/mode.properties").toPath(),
-                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING);
+                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING)
     }
 }

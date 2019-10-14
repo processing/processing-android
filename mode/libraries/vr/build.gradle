@@ -1,89 +1,19 @@
-import com.android.build.gradle.internal.dependency.ExtractAarTransform
-import com.android.build.gradle.internal.dependency.AarTransform
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
-import com.google.common.collect.ImmutableList
-import org.gradle.api.artifacts.transform.ArtifactTransform
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition
-import java.util.regex.Pattern
-
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
-
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'maven'
-
-/**
- * Custom aar configuration needed to use aar files as dependencies in a pure java 
- * library project, lifted from the following repo:
- * https://github.com/nekocode/Gradle-Import-Aar
- */
-configurations {
-    aar {
-        attributes {
-            attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
-        }
-
-        // Add the aar inner jars to the compileClasspath
-        sourceSets.main.compileClasspath += it
-
-        // Put our custom dependencies onto IDEA's PROVIDED scope
-        apply plugin: "idea"
-        idea.module.scopes.PROVIDED.plus += [it]
-    }
-}
+apply plugin: 'aar'
 
 dependencies {
-    // Transforamtions to extract the classes.jar in the aar package
-    def explodedAarType = ArtifactType.EXPLODED_AAR.getType()
-    registerTransform {
-        from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR)
-        to.attribute(ARTIFACT_FORMAT, explodedAarType)
-        artifactTransform(ExtractAarTransform)
-    }
-
-    registerTransform {
-        from.attribute(ARTIFACT_FORMAT, explodedAarType)
-        to.attribute(ARTIFACT_FORMAT, "classes.jar")
-        artifactTransform(AarTransform) { params(ArtifactType.JAR) }
-    }
-
-    registerTransform {
-        from.attribute(ARTIFACT_FORMAT, "classes.jar")
-        to.attribute(ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
-        artifactTransform(ClassesJarArtifactTransform)
-    }
-
     compileOnly name: "android"
 
     compileOnly "org.p5android:processing-core:${modeVersion}"
 
-    aar "com.google.vr:sdk-audio:${gvrVersion}"
-    aar "com.google.vr:sdk-base:${gvrVersion}"
-}
-
-/**
- * An ArtifactTransform for renaming the classes.jar
- */
-class ClassesJarArtifactTransform extends ArtifactTransform {
-    @Override
-    List<File> transform(File file) {
-        final String[] names = file.getPath().split(Pattern.quote(File.separator))
-        final String aarName = names[names.length - 4].replace(".aar", "")
-        final File renamedJar = new File(getOutputDirectory(), aarName + ".jar")
-        renamedJar << file.bytes
-        File libraryFolder = new File(System.getProperty("user.dir"), "mode/libraries/vr/library")
-        libraryFolder.mkdirs();
-        final File libraryJar = new File(libraryFolder, aarName + ".jar")
-        Files.copy(renamedJar.toPath(), libraryJar.toPath(), REPLACE_EXISTING);
-        return ImmutableList.of(renamedJar)
-    }
+    implementationAar "com.google.vr:sdk-audio:${gvrVersion}"
+    implementationAar "com.google.vr:sdk-base:${gvrVersion}" 
 }
 
 task createPom {
-    // The compile configuration should be replaced by implementation eventually:
-    // https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration#new_configurations  
     pom {
        project {
            groupId "org.p5android"
@@ -102,20 +32,20 @@ task createPom {
                    groupId "org.p5android"
                    artifactId "processing-core"
                    version "${modeVersion}"
-                   scope "compile"
+                   scope "implementation"
                }
 
                dependency {
                    groupId "com.google.vr"
                    artifactId "sdk-base"
                    version "${gvrVersion}"
-                   scope "compile"
+                   scope "implementation"
                }
                dependency {
                    groupId "com.google.vr"
                    artifactId "sdk-audio"
                    version "${gvrVersion}"
-                   scope "compile"
+                   scope "implementation"
                }               
            }
         }
@@ -154,6 +84,20 @@ clean.doFirst {
     delete "dist"
     delete "library/vr.jar"
 }
+
+
+compileJava.doFirst {
+    String[] deps = ["sdk-audio.jar",
+                     "sdk-base.jar",
+                     "sdk-common.jar"]
+    File libFolder = file("library")
+    libFolder.mkdirs()
+    for (String fn : deps) {
+        Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
+                   file("library/" + fn).toPath(), REPLACE_EXISTING);
+    }
+}
+
 
 build.doLast {
     // // Copying vr jar to library folder
