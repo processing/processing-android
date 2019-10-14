@@ -84,6 +84,8 @@ clean.doFirst {
 
 compileJava.doFirst {
     String[] deps = ["core.jar"]
+    File libFolder = file("library")
+    libFolder.mkdirs()
     for (String fn : deps) {
         Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
                    file("library/" + fn).toPath(), REPLACE_EXISTING);
