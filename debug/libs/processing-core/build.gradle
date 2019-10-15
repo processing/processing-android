@@ -4,7 +4,7 @@ android {
     compileSdkVersion 26
     defaultConfig {
         minSdkVersion 17
-        targetSdkVersion 21
+        targetSdkVersion 26
     }
     sourceSets {
         main {
