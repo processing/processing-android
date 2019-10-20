@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 26
+        targetSdkVersion 28
     }
     sourceSets {
         main {
@@ -14,8 +14,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     productFlavors {
     }
@@ -23,5 +23,5 @@ android {
 
 dependencies {
     implementation project(':libs:processing-core')
-    implementation 'com.google.ar:core:1.2.0'
+    implementation 'com.google.ar:core:1.12.0'
 }
