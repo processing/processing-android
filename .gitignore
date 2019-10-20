@@ -17,6 +17,8 @@ debug/.idea
 debug/gradle
 debug/gradlew*
 
+**/examples/**/AndroidManifest.xml
+
 **/*.iml
 **/.DS_Store
 **/build
