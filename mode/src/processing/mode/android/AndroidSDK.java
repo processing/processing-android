@@ -61,7 +61,7 @@ class AndroidSDK {
   private final File folder;
   private final File tools;
   private final File platforms;
-  private final File targetPlatform;
+  private final File highestPlatform;
   private final File androidJar;
   private final File platformTools;
   private final File buildTools;
@@ -118,16 +118,27 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_platforms_folder", folder));
     }
     
-    targetPlatform = new File(platforms, AndroidBuild.TARGET_PLATFORM);
-    if (!targetPlatform.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_target_platform", 
-                                                          AndroidBuild.TARGET_SDK, platforms.getAbsolutePath()));
+    // Retrieve the highest platform from the available targets
+    ArrayList<SDKTarget> targets = getAvailableSdkTargets();
+    int highest = 1;
+    for (SDKTarget targ: targets) {
+      System.out.println(targ);
+      if (highest < targ.version) {
+        highest = targ.version;
+      }
     }
+    
+    if (highest < PApplet.parseInt(AndroidBuild.TARGET_SDK)) {
+      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_target_platform", 
+          AndroidBuild.TARGET_SDK, platforms.getAbsolutePath()));      
+    }
+        
+    highestPlatform = new File(platforms, "android-" + highest);
 
-    androidJar = new File(targetPlatform, "android.jar");
+    androidJar = new File(highestPlatform, "android.jar");
     if (!androidJar.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_android_jar", 
-                                                          AndroidBuild.TARGET_SDK, targetPlatform.getAbsolutePath()));
+                                                          AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
     }
 
     avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
@@ -218,8 +229,8 @@ class AndroidSDK {
   }
 
 
-  public File getTargetPlatform() {
-    return targetPlatform;
+  public File getHighestPlatform() {
+    return highestPlatform;
   }
   
   public File getAndroidJarPath() {
@@ -750,7 +761,7 @@ class AndroidSDK {
   public ArrayList<SDKTarget> getAvailableSdkTargets() throws IOException {
     ArrayList<SDKTarget> targets = new ArrayList<SDKTarget>();
 
-    for(File platform : platforms.listFiles()) {
+    for (File platform : platforms.listFiles()) {
       File propFile = new File(platform, "build.prop");
       if (!propFile.exists()) continue;
 
