@@ -62,6 +62,8 @@ public class AndroidMode extends JavaMode {
   // Using this temporarily until support for mode translations is finalized in the Processing app
   private static Map<String, String> textStrings = null;
 
+  private static final String VERSIONS_FILE = "version.properties";
+  
   private static final String BLUETOOTH_DEBUG_URL = 
       "https://developer.android.com/training/wearables/apps/debugging.html";
     
@@ -70,6 +72,7 @@ public class AndroidMode extends JavaMode {
   
   public AndroidMode(Base base, File folder) {
     super(base, folder);
+    AndroidBuild.initVersions(getContentFile(VERSIONS_FILE));
     loadTextStrings();
   }
 

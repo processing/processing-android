@@ -37,6 +37,7 @@ import processing.mode.java.preproc.SurfaceInfo;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Properties;
 
 /** 
  * Class with all the infrastructure needed to build a sketch in the Android 
@@ -53,71 +54,20 @@ class AndroidBuild extends JavaBuild {
   static public final int AR           = 4;
   
   // Minimum SDK's API levels required for each component:
-  static public final String MIN_SDK_APP       = "17"; // Android 4.2
-  static public final String MIN_SDK_WALLPAPER = "17"; // Android 4.2
-  static public final String MIN_SDK_VR        = "19"; // Android 4.4
-  static public final String MIN_SDK_AR        = "24"; // Android 7.0.0
-  static public final String MIN_SDK_WATCHFACE = "25"; // Android 7.1.1
+  static public String MIN_SDK_APP;
+  static public String MIN_SDK_WALLPAPER;
+  static public String MIN_SDK_VR;
+  static public String MIN_SDK_AR;
+  static public String MIN_SDK_WATCHFACE;
   
-  // Target SDK is stored in the preferences file.
+  // Versions of all required dependencies
   static public String TARGET_SDK;  
   static public String TARGET_PLATFORM;
-  static {
-    TARGET_SDK = Preferences.get("android.sdk.target");
-    if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) < 26) { 
-      TARGET_SDK = "26"; 
-      Preferences.set("android.sdk.target", TARGET_SDK);
-    }
-    TARGET_PLATFORM = "android-" + TARGET_SDK;
-  }
-
-  // Versions of support, play services, wear and VR in use, also stored in
-  // preferences file so they can be changed without having to rebuilt/reinstall
-  // the mode.
   static public String SUPPORT_VER;
-  static {
-    SUPPORT_VER = Preferences.get("android.sdk.support");
-    if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, "26.0.2")) {
-      SUPPORT_VER = "26.0.2"; 
-      Preferences.set("android.sdk.support", SUPPORT_VER);
-    }
-  }
-
   static public String PLAY_SERVICES_VER;
-  static {
-    PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
-    if (PLAY_SERVICES_VER == null || !versionCheck(PLAY_SERVICES_VER, "11.0.4")) {
-      PLAY_SERVICES_VER = "11.0.4"; 
-      Preferences.set("android.sdk.play_services", PLAY_SERVICES_VER);
-    }
-  }  
-  
   static public String WEAR_VER;
-  static {
-    WEAR_VER = Preferences.get("android.sdk.wear");
-    if (WEAR_VER == null || !versionCheck(WEAR_VER, "2.1.0")) {
-      WEAR_VER = "2.1.0"; 
-      Preferences.set("android.sdk.wear", WEAR_VER);
-    }
-  }  
-  
   static public String GVR_VER;
-  static {
-    GVR_VER = Preferences.get("android.sdk.gvr");
-    if (GVR_VER == null || !versionCheck(GVR_VER, "1.150.0")) {
-      GVR_VER = "1.150.0";
-      Preferences.set("android.sdk.gvr", GVR_VER);
-    }
-  }
-
   static public String GAR_VER;
-  static {
-    GAR_VER = Preferences.get("android.sdk.ar");
-    if (GAR_VER == null) {
-      GAR_VER = "1.2.0";
-      Preferences.set("android.sdk.ar", GAR_VER);
-    }
-  }
   
   // Main activity or service 
   static private final String APP_ACTIVITY_TEMPLATE = "AppActivity.java.tmpl";
@@ -375,7 +325,7 @@ class AndroidBuild extends JavaBuild {
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
-    replaceMap.put("@@target_platform@@", sdk.getTargetPlatform().getPath().replace('\\', '/'));
+    replaceMap.put("@@target_platform@@", TARGET_SDK);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", TARGET_SDK);
@@ -825,9 +775,9 @@ class AndroidBuild extends JavaBuild {
       for (File exportFile : library.getAndroidExports()) {
         String exportName = exportFile.getName();
         
-        // Skip the GVR and ARCore jars, because the gradle will resolve the dependencies
-        if (appComponent == VR && exportName.toLowerCase().startsWith("sdk-")) continue;
-        if (appComponent == AR && exportName.toLowerCase().startsWith("core-")) continue;
+        // Skip the GVR and ARCore jars, because gradle will resolve the dependencies
+        if (appComponent == VR && exportName.toLowerCase().startsWith("sdk")) continue;
+        if (appComponent == AR && exportName.toLowerCase().startsWith("core")) continue;
 
         if (!exportFile.exists()) {
           System.err.println(AndroidMode.getTextString("android_build.error.export_file_does_not_exist", exportFile.getName()));
@@ -933,6 +883,73 @@ class AndroidBuild extends JavaBuild {
   private File createExportFolder(String name) throws IOException {
     return AndroidUtil.createSubFolder(sketch.getFolder(), name);
   }  
+  
+  
+  static public void initVersions(File file) {    
+    InputStream input;
+    try {
+      input = new FileInputStream(file);
+      Properties props = new Properties();
+      props.load(input);
+      
+      MIN_SDK_APP = props.getProperty("android-min-app");
+      MIN_SDK_WALLPAPER = props.getProperty("android-min-wallpaper");        
+      MIN_SDK_VR = props.getProperty("android-min-vr");
+      MIN_SDK_AR = props.getProperty("android-min-ar");
+      MIN_SDK_WATCHFACE = props.getProperty("android-min-wear");
+
+      // Versions of the target sdk, support, play services, wear, VR, and AR are stored in
+      // preferences file so they can be changed by the user without having to rebuilt/reinstall
+      // the mode.
+      
+      TARGET_SDK = Preferences.get("android.sdk.target");
+      String defTargetSDK = props.getProperty("android-platform");
+      if (TARGET_SDK == null || PApplet.parseInt(TARGET_SDK) != PApplet.parseInt(defTargetSDK)) {
+        TARGET_SDK = defTargetSDK;
+        Preferences.set("android.sdk.target", TARGET_SDK);
+      }
+      TARGET_PLATFORM = "android-" + TARGET_SDK;
+      
+      SUPPORT_VER = Preferences.get("android.sdk.support");
+      String defSupportVer = props.getProperty("com.android.support%support-v4");
+      if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, defSupportVer)) {
+        SUPPORT_VER = defSupportVer;
+        Preferences.set("android.sdk.support", SUPPORT_VER);
+      }        
+      
+      PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
+      String defPlayServicesVer = props.getProperty("com.google.android.gms%play-services-wearable");
+      if (PLAY_SERVICES_VER == null || !versionCheck(PLAY_SERVICES_VER, defPlayServicesVer)) {
+        PLAY_SERVICES_VER = defPlayServicesVer;
+        Preferences.set("android.sdk.play_services", PLAY_SERVICES_VER);
+      }
+      
+      WEAR_VER = Preferences.get("android.sdk.wear");
+      String defWearVer = props.getProperty("com.google.android.support%wearable");
+      if (WEAR_VER == null || !versionCheck(WEAR_VER, defWearVer)) {
+        WEAR_VER = defWearVer;
+        Preferences.set("android.sdk.wear", WEAR_VER);
+      }
+      
+      GVR_VER = Preferences.get("android.sdk.gvr");
+      String defVRVer = props.getProperty("com.google.vr");
+      if (GVR_VER == null || !versionCheck(GVR_VER, defVRVer)) {
+        GVR_VER = defVRVer;
+        Preferences.set("android.sdk.gvr", GVR_VER);
+      }        
+      
+      GAR_VER = Preferences.get("android.sdk.ar");
+      String defARVer = props.getProperty("com.google.ar");
+      if (GAR_VER == null || !versionCheck(GAR_VER, defARVer)) {
+        GAR_VER = defARVer;
+        Preferences.set("android.sdk.ar", GAR_VER);
+      }        
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
   
   
   static private boolean versionCheck(String currentVersion, String minVersion) {
