@@ -81,8 +81,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     public String platformVersion, buildToolsVersion;
     public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl, emulatorUrl;
     public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename, emulatorFilename;
-//    public String supportRepoUrl, googleRepoUrl;
-//    public String supportRepoFilename, googleRepoFilename;
     public String usbDriverUrl;
     public String usbDriverFilename;
     public String haxmFilename, haxmUrl;
@@ -112,9 +110,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
-      if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();   
-//    File androidRepoFolder = new File(extrasFolder, "android");
-//    if (!androidRepoFolder.exists()) androidRepoFolder.mkdir();  
+      if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();
       File haxmFolder = new File(extrasFolder, "intel/HAXM");
       if (!haxmFolder.exists()) haxmFolder.mkdirs();      
       
@@ -151,14 +147,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // emulator, unpacks directly to sdk folder 
         File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
         downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
-        
-        // google repository
-//        File downloadedGoogleRepo = new File(tempFolder, downloadUrls.googleRepoFilename);
-//        downloadAndUnpack(downloadUrls.googleRepoUrl, downloadedGoogleRepo, googleRepoFolder, false);
-
-        // android repository
-//        File downloadedSupportRepo = new File(tempFolder, downloadUrls.supportRepoFilename);
-//        downloadAndUnpack(downloadUrls.supportRepoUrl, downloadedSupportRepo, androidRepoFolder, false);
       
         // usb driver
         if (Platform.isWindows()) {
@@ -345,11 +333,11 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // tools
-      expr = xpath.compile("//remotePackage[@path=\"tools\"]"); //Matches two items according to xml file
+      expr = xpath.compile("//remotePackage[@path=\"tools\"]"); // Matches two items according to xml file
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        NodeList childNodes = remotePackages.item(1).getChildNodes(); //Second item is the latest tools for now
+        NodeList childNodes = remotePackages.item(1).getChildNodes(); // Second item is the latest tools for now
         NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
 
         for (int i = 0; i < archives.getLength(); ++i) {
@@ -375,7 +363,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
       // -----------------------------------------------------------------------
       // emulator
-      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); //Matches two items according to xml file
+      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); // Matches two items according to xml file
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
@@ -510,16 +498,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
           urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
           break;
-//        case ANDROID_REPO:
-//          urlHolder.supportRepoFilename = url.item(0).getTextContent();
-//          urlHolder.supportRepoUrl = REPOSITORY_URL + urlHolder.supportRepoFilename;
-//          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-//          break;
-//        case GOOGLE_REPO:
-//          urlHolder.googleRepoFilename = url.item(0).getTextContent();
-//          urlHolder.googleRepoUrl = REPOSITORY_URL + urlHolder.googleRepoFilename;
-//          urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-//          break;
         case USB_DRIVER:
           urlHolder.usbDriverFilename = url.item(0).getTextContent();
           urlHolder.usbDriverUrl = REPOSITORY_URL + urlHolder.usbDriverFilename;
