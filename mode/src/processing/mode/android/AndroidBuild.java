@@ -553,7 +553,7 @@ class AndroidBuild extends JavaBuild {
   
   private void writeLocalProps(final File file) {
     final PrintWriter writer = PApplet.createWriter(file);
-    final String sdkPath = sdk.getSdkFolder().getAbsolutePath();
+    final String sdkPath = sdk.getFolder().getAbsolutePath();
     if (Platform.isWindows()) {
       // Windows needs backslashes escaped, or it will also accept forward
       // slashes in the build file. We're using the forward slashes since this

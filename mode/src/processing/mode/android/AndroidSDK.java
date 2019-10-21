@@ -61,12 +61,13 @@ class AndroidSDK {
   private final File folder;
   private final File tools;
   private final File platforms;
-  private final File highestPlatform;
+  private final File highestPlatform;  
   private final File androidJar;
   private final File platformTools;
   private final File buildTools;
   private final File avdManager;
   private final File sdkManager;
+  private final File emulator;
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
@@ -122,7 +123,6 @@ class AndroidSDK {
     ArrayList<SDKTarget> targets = getAvailableSdkTargets();
     int highest = 1;
     for (SDKTarget targ: targets) {
-      System.out.println(targ);
       if (highest < targ.version) {
         highest = targ.version;
       }
@@ -143,7 +143,16 @@ class AndroidSDK {
 
     avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
-
+    
+    File emuFolder = new File(folder, "emulator");
+    if (emuFolder.exists()) {
+      // First try the new location of the emulator inside its own folder
+      emulator = findCliTool(emuFolder, "emulator");   
+    } else {
+      // If not found, use old location inside tools
+      emulator = findCliTool(tools, "emulator");
+    }
+    
     String path = Platform.getenv("PATH");
 
     Platform.setenv("ANDROID_SDK", folder.getCanonicalPath());
@@ -214,27 +223,8 @@ class AndroidSDK {
   }
 
 
-  public File getToolsFolder() {
-    return tools;
-  }
-
-
-  public String getAvdManagerPath() {
-    return avdManager.getAbsolutePath();
-  }
-
-
-  public File getSdkFolder() {
+  public File getFolder() {
     return folder;
-  }
-
-
-  public File getHighestPlatform() {
-    return highestPlatform;
-  }
-  
-  public File getAndroidJarPath() {
-    return androidJar;  
   }
   
   
@@ -246,17 +236,32 @@ class AndroidSDK {
   public File getPlatformToolsFolder() {
     return platformTools;
   }
+  
+  
+  public File getAndroidJarPath() {
+    return androidJar;  
+  }  
+  
+  
+  public File getToolsFolder() {
+    return tools;
+  }
 
   
-//  public File getWearableFolder() {
-//    return wearablePath;
-//  }
+  public File getEmulatorTool() {
+    return emulator;
+  }
   
 
-//  public File getSupportLibrary() {
-//    return supportLibPath;
-//  } 
-  
+  public File getAVDManagerTool() {
+    return avdManager;
+  }
+
+
+  public File getHighestPlatform() {
+    return highestPlatform;
+  }
+
   
   public File getZipAlignTool() {    
     File[] files = buildTools.listFiles();
@@ -276,8 +281,7 @@ class AndroidSDK {
   private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
   
   private void acceptLicenses() {
-    ProcessBuilder pb = new ProcessBuilder(sdkManager.getAbsolutePath(), 
-                                           "--licenses");
+    ProcessBuilder pb = new ProcessBuilder(sdkManager.getAbsolutePath(), "--licenses");
     pb.redirectErrorStream(true);
     try {
       Process process = pb.start();
@@ -324,7 +328,7 @@ class AndroidSDK {
 
   /**
    * Checks a path to see if there's a tools/android file inside, a rough check
-   * for the SDK installation. Also figures out the name of android/android.bat
+   * for the SDK installation. Also figures out the name of android/android.bat/android.exe
    * so that it can be called explicitly.
    */
   private static File findCliTool(final File tools, String name) 
@@ -332,6 +336,9 @@ class AndroidSDK {
     if (new File(tools, name + ".bat").exists()) {
       return new File(tools, name + ".bat");
     }
+    if (new File(tools, name + ".exe").exists()) {
+      return new File(tools, name + ".exe");
+    }    
     if (new File(tools, name).exists()) {
       return new File(tools, name);
     }

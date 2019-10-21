@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import processing.app.Base;
-import processing.app.Platform;
 import processing.app.exec.*;
 
 import processing.core.PApplet;
@@ -75,10 +74,9 @@ class EmulatorController {
     // https://developer.android.com/studio/run/emulator-acceleration.html#accel-graphics
     String gpuFlag = "auto";
     
-    File emulatorPath = Platform.isWindows() ? new File(sdk.getToolsFolder(), "emulator.exe") :
-                                               new File(sdk.getToolsFolder(), "emulator");
+    final File emulator = sdk.getEmulatorTool();
     final String[] cmd = new String[] {
-      emulatorPath.getCanonicalPath(),
+      emulator.getCanonicalPath(),
       "-avd", avdName,
       "-port", portString,
       "-gpu", gpuFlag

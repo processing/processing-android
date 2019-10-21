@@ -160,8 +160,8 @@ public class AVD {
     try {
       avdList = new ArrayList<String>();
       badList = new ArrayList<String>();
-      ProcessBuilder pb =
-              new ProcessBuilder(sdk.getAvdManagerPath(), "list", "avd");
+      File avdManager = sdk.getAVDManagerTool();
+      ProcessBuilder pb = new ProcessBuilder(avdManager.getCanonicalPath(), "list", "avd");
       Map<String, String> env = pb.environment();
       env.clear();
       env.put("JAVA_HOME", Platform.getJavaHome().getCanonicalPath());
@@ -286,12 +286,13 @@ public class AVD {
   
   protected void getImages(final ArrayList<String> images, final AndroidSDK sdk, 
       final String imageAbi) throws IOException {
-    boolean wear = type == WEAR;
+    final boolean wear = type == WEAR;
     final String imagePlatform = getPreferredPlatform(wear, imageAbi);
     final String imageTag = getPreferredTag(wear, imageAbi); 
     
+    final File avdManager = sdk.getAVDManagerTool();
     final String[] cmd = new String[] {
-        sdk.getAvdManagerPath(),
+        avdManager.getCanonicalPath(),
         "create", "avd",
         "-n", "dummy",
         "-k", "dummy"
@@ -361,8 +362,9 @@ public class AVD {
     if (!androidFolder.exists()) androidFolder.mkdir();    
     File avdPath = new File(androidFolder, "avd/" + name);
     
+    File avdManager = sdk.getAVDManagerTool();
     final String[] cmd = new String[] {
-        sdk.getAvdManagerPath(),
+        avdManager.getCanonicalPath(),
         "create", "avd",
         "-n", name,      
         "-k", getSdkId(),
