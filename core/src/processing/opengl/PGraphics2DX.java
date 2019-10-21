@@ -849,9 +849,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       return;
     }
 
-    //TODO: optimize this function, it is still pretty slow
-    //TODO: try using a lookup table and see if we can make it faster than real trig
-
     beginShape(POLYGON);
 
     //convert corner/diameter to center/radius
@@ -866,10 +863,15 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     int segments = circleDetail(PApplet.max(rx, ry) + (stroke? strokeWeight : 0), TWO_PI);
     float step = TWO_PI / segments;
 
-    float angle = 0;
+    float cos = PApplet.cos(step);
+    float sin = PApplet.sin(step);
+    float dx = 0, dy = 1;
     for (int i = 0; i < segments; ++i) {
-      angle += step;
-      shapeVertex(x + PApplet.sin(angle) * rx, y + PApplet.cos(angle) * ry, 0, 0, fillColor, 0);
+      shapeVertex(x + dx * rx, y + dy * ry, 0, 0, fillColor, 0);
+      //this is the equivalent of multiplying the vector <dx, dy> by the 2x2 rotation matrix [[cos -sin] [sin cos]]
+      float tempx = dx * cos - dy * sin;
+      dy = dx * sin + dy * cos;
+      dx = tempx;
     }
 
     knownConvexPolygon = true;
@@ -934,17 +936,20 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       appendContour(vertCount);
     }
 
+    float dx = PApplet.cos(start);
+    float dy = PApplet.sin(start);
+    float c = PApplet.cos(step);
+    float s = PApplet.sin(step);
     for (int i = 0; i <= segments; ++i) {
-      float s = PApplet.cos(start) * w;
-      float c = PApplet.sin(start) * h;
-
-      vertex(x + s, y + c);
-
-      start += step;
+      shapeVertex(x + dx * w, y + dy * h, 0, 0, fillColor, 0);
+      //this is the equivalent of multiplying the vector <dx, dy> by the 2x2 rotation matrix [[c -s] [s c]]
+      float tempx = dx * c - dy * s;
+      dy = dx * s + dy * c;
+      dx = tempx;
     }
 
     //for the case `(mode == PIE || mode == 0) && diff > HALF_PI`, the polygon
-    //will not actually be convex, but we still want to tessellate as if it is
+    //will not actually be convex, but due to known vertex order, we can still safely tessellate as if it is
     knownConvexPolygon = true;
     if (mode == CHORD || mode == PIE) {
       endShape(CLOSE);
@@ -1913,9 +1918,9 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     float syi = projmodelview.m10 * height / 2;
     float sxj = projmodelview.m01 * width / 2;
     float syj = projmodelview.m11 * height / 2;
-    float Imag = PApplet.sqrt(sxi * sxi + syi * syi);
-    float Jmag = PApplet.sqrt(sxj * sxj + syj * syj);
-    ellipseDetailMultiplier = PApplet.max(Imag, Jmag);
+    float Imag2 = sxi * sxi + syi * syi;
+    float Jmag2 = sxj * sxj + syj * syj;
+    ellipseDetailMultiplier = PApplet.sqrt(PApplet.max(Imag2, Jmag2));
   }
 
 
@@ -1952,55 +1957,40 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     triangle(x2 + tx, y2 - ty, x2 - tx, y2 + ty, x1 + tx, y1 - ty, color);
 
     if (r >= LINE_DETAIL_LIMIT && strokeCap == ROUND) {
-      float angle = PApplet.atan2(dx, dy);
-
       int segments = circleDetail(r, HALF_PI);
       float step = HALF_PI / segments;
+      float c = PApplet.cos(step);
+      float s = PApplet.sin(step);
+      for (int i = 0; i < segments; ++i) {
+        //this is the equivalent of multiplying the vector <tx, ty> by the 2x2 rotation matrix [[c -s] [s c]]
+        float nx = c * tx - s * ty;
+        float ny = s * tx + c * ty;
 
-      float psin = ty;
-      float pcos = tx;
-      for (int i = 1; i < segments; ++i) {
-        angle += step;
-        float nsin = PApplet.sin(angle) * r;
-        float ncos = PApplet.cos(angle) * r;
+        triangle(x2, y2, x2 + ty, y2 + tx, x2 + ny, y2 + nx, color);
+        triangle(x2, y2, x2 - tx, y2 + ty, x2 - nx, y2 + ny, color);
+        triangle(x1, y1, x1 - ty, y1 - tx, x1 - ny, y1 - nx, color);
+        triangle(x1, y1, x1 + tx, y1 - ty, x1 + nx, y1 - ny, color);
 
-        triangle(x2, y2, x2 + psin, y2 + pcos, x2 + nsin, y2 + ncos, color);
-        triangle(x2, y2, x2 - pcos, y2 + psin, x2 - ncos, y2 + nsin, color);
-        triangle(x1, y1, x1 - psin, y1 - pcos, x1 - nsin, y1 - ncos, color);
-        triangle(x1, y1, x1 + pcos, y1 - psin, x1 + ncos, y1 - nsin, color);
-
-        psin = nsin;
-        pcos = ncos;
+        tx = nx;
+        ty = ny;
       }
-
-      triangle(x2, y2, x2 + psin, y2 + pcos, x2 + tx, y2 - ty, color);
-      triangle(x2, y2, x2 - pcos, y2 + psin, x2 + ty, y2 + tx, color);
-      triangle(x1, y1, x1 - psin, y1 - pcos, x1 - tx, y1 + ty, color);
-      triangle(x1, y1, x1 + pcos, y1 - psin, x1 - ty, y1 - tx, color);
     }
   }
 
 
   private void singlePoint(float x, float y, int color) {
     float r = strokeWeight * 0.5f;
-    if (strokeCap == ROUND) {
+    if (r >= LINE_DETAIL_LIMIT && strokeCap == ROUND) {
       int segments = circleDetail(r);
       float step = QUARTER_PI / segments;
 
-      float x1 = 0;
-      float y1 = r;
-      float angle = 0;
+      float x1 = 0, y1 = r;
+      float c = PApplet.cos(step);
+      float s = PApplet.sin(step);
       for (int i = 0; i < segments; ++i) {
-        angle += step;
-        float x2, y2;
-        //this is not just for performance
-        //it also ensures the circle is drawn with no diagonal gaps
-        if (i < segments - 1) {
-          x2 = PApplet.sin(angle) * r;
-          y2 = PApplet.cos(angle) * r;
-        } else {
-          x2 = y2 = PApplet.sin(QUARTER_PI) * r;
-        }
+        //this is the equivalent of multiplying the vector <x1, y1> by the 2x2 rotation matrix [[c -s] [s c]]
+        float x2 = c * x1 - s * y1;
+        float y2 = s * x1 + c * y1;
 
         triangle(x, y, x + x1, y + y1, x + x2, y + y2, strokeColor);
         triangle(x, y, x + x1, y - y1, x + x2, y - y2, strokeColor);
@@ -2033,6 +2023,34 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
     float lx, ly;
     float r;
 
+
+    void arcJoin(float x, float y, float dx1, float dy1, float dx2, float dy2) {
+      //we don't need to normalize before doing these products
+      //since the vectors are the same length and only used as arguments to atan2()
+      float cross = dx1 * dy2 - dy1 * dx2;
+      float dot = dx1 * dx2 + dy1 * dy2;
+      float theta = PApplet.atan2(cross, dot);
+      int segments = circleDetail(r, theta);
+      float px = x + dx1, py = y + dy1;
+      if (segments > 1) {
+        float c = PApplet.cos(theta / segments);
+        float s = PApplet.sin(theta / segments);
+        for (int i = 1; i < segments; ++i) {
+          //this is the equivalent of multiplying the vector <dx1, dy1> by the 2x2 rotation matrix [[c -s] [s c]]
+          float tempx = c * dx1 - s * dy1;
+          dy1 = s * dx1 + c * dy1;
+          dx1 = tempx;
+
+          float nx = x + dx1;
+          float ny = y + dy1;
+          triangle(x, y, px, py, nx, ny, strokeColor);
+          px = nx;
+          py = ny;
+        }
+      }
+      triangle(x, y, px, py, x + dx2, y + dy2, strokeColor);
+    }
+
     void beginLine() {
       lineVertexCount = 0;
       r = strokeWeight * 0.5f;
@@ -2054,23 +2072,23 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
         sx = x;
         sy = y;
       } else {
-        //find leg angles
-        float angle1 = PApplet.atan2(lx - px, ly - py);
-        float angle2 = PApplet.atan2(lx -  x, ly -  y);
+        //calculate normalized direction vectors for each leg
+        float leg1x = lx - px;
+        float leg1y = ly - py;
+        float leg2x = x - lx;
+        float leg2y = y - ly;
+        float len1 = PApplet.sqrt(leg1x * leg1x + leg1y * leg1y);
+        float len2 = PApplet.sqrt(leg2x * leg2x + leg2y * leg2y);
+        leg1x /= len1;
+        leg1y /= len1;
+        leg2x /= len2;
+        leg2y /= len2;
 
-        //find minimum absolute angle between the two legs
-        //FROM: https://stackoverflow.com/a/7869457/3064745
-        //NOTE: this only works for angles that are in range [-180, 180] !!!
-        float diff = angle1 - angle2;
-        diff += diff > PI? -TWO_PI : diff < -PI? TWO_PI : 0;
-
-        if (strokeJoin == BEVEL || strokeJoin == ROUND ||
-            PApplet.abs(diff) < PI/15 || PApplet.abs(diff) > PI - 0.001f) {
-          float dx = lx - px;
-          float dy = ly - py;
-          float d = PApplet.sqrt(dx*dx + dy*dy);
-          float tx =  dy / d * r;
-          float ty = -dx / d * r;
+        float legDot = -leg1x * leg2x - leg1y * leg2y;
+        float cosPiOver15 = 0.97815f;
+        if (strokeJoin == BEVEL || strokeJoin == ROUND || legDot > cosPiOver15 || legDot < -0.999) {
+          float tx =  leg1y * r;
+          float ty = -leg1x * r;
 
           if (lineVertexCount == 2) {
             sdx = tx;
@@ -2080,28 +2098,17 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
             triangle(px + pdx, py + pdy, lx - tx, ly - ty, lx + tx, ly + ty, strokeColor);
           }
 
-          dx = x - lx;
-          dy = y - ly;
-          d = PApplet.sqrt(dx*dx + dy*dy);
-          float nx =  dy / d * r;
-          float ny = -dx / d * r;
+          float nx =  leg2y * r;
+          float ny = -leg2x * r;
 
+          float legCross = leg1x * leg2y - leg1y * leg2x;
           if (strokeJoin == ROUND) {
-            float theta1 = diff > 0? angle1 - HALF_PI : angle1 + HALF_PI;
-            float theta2 = diff > 0? angle2 + HALF_PI : angle2 - HALF_PI;
-
-            //find minimum absolute angle diff (again)
-            float delta = theta2 - theta1;
-            delta += delta > PI? -TWO_PI : delta < -PI? TWO_PI : 0;
-
-            //start and end points of arc
-            float ax1 = diff < 0? lx + tx : lx - tx;
-            float ay1 = diff < 0? ly + ty : ly - ty;
-            float ax2 = diff < 0? lx + nx : lx - nx;
-            float ay2 = diff < 0? ly + ny : ly - ny;
-
-            arcJoin(lx, ly, theta1, delta, ax1, ay1, ax2, ay2);
-          } else if (diff < 0) {
+            if (legCross > 0) {
+              arcJoin(lx, ly, tx, ty, nx, ny);
+            } else {
+              arcJoin(lx, ly, -tx, -ty, -nx, -ny);
+            }
+          } else if (legCross > 0) {
             triangle(lx, ly, lx + tx, ly + ty, lx + nx, ly + ny, strokeColor);
           } else {
             triangle(lx, ly, lx - tx, ly - ty, lx - nx, ly - ny, strokeColor);
@@ -2109,19 +2116,17 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
           pdx = nx;
           pdy = ny;
-        } else {
-          //find offset (hypotenuse) of miter joint
-          float theta = HALF_PI - diff/2;
-          float offset = r / PApplet.cos(theta);
-
-          //find bisecting vector
-          float angle = (angle1 + angle2)/2;
-          float bx = PApplet.sin(angle) * offset;
-          float by = PApplet.cos(angle) * offset;
-          if (PApplet.abs(angle1 - angle2) < PI) {
-            bx *= -1;
-            by *= -1;
-          }
+        } else { //miter joint
+          //find the bisecting vector
+          float x1 = leg2x - leg1x;
+          float y1 = leg2y - leg1y;
+          //find a (normalized) vector perpendicular to one of the legs
+          float x2 =  leg1y;
+          float y2 = -leg1x;
+          //scale the bisecting vector to the correct length using magic (not sure how to explain this one)
+          float dot = x1 * x2 + y1 * y2;
+          float bx = x1 * (r / dot);
+          float by = y1 * (r / dot);
 
           if (lineVertexCount == 2) {
             sdx = bx;
@@ -2142,6 +2147,26 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
       ly = y;
 
       lineVertexCount += 1;
+    }
+
+    void lineCap(float x, float y, float dx, float dy) {
+      int segments = circleDetail(r, HALF_PI);
+      float px = dy, py = -dx;
+      if (segments > 1) {
+        float c = PApplet.cos(HALF_PI / segments);
+        float s = PApplet.sin(HALF_PI / segments);
+        for (int i = 1; i < segments; ++i) {
+          //this is the equivalent of multiplying the vector <px, py> by the 2x2 rotation matrix [[c -s] [s c]]
+          float nx = c * px - s * py;
+          float ny = s * px + c * py;
+          triangle(x, y, x + px, y + py, x + nx, y + ny, strokeColor);
+          triangle(x, y, x - py, y + px, x - ny, y + nx, strokeColor);
+          px = nx;
+          py = ny;
+        }
+      }
+      triangle(x, y, x + px, y + py, x + dx, y + dy, strokeColor);
+      triangle(x, y, x - py, y + px, x - dy, y + dx, strokeColor);
     }
 
     void endLine(boolean closed) {
@@ -2186,7 +2211,7 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
         triangle(px + pdx, py + pdy, lx - tx, ly - ty, lx + tx, ly + ty, strokeColor);
 
         if (strokeCap == ROUND) {
-          lineCap(lx, ly, PApplet.atan2(dx, dy));
+          lineCap(lx, ly, -ty, tx);
         }
 
         //draw first line (with cap)
@@ -2205,51 +2230,9 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
         triangle(sx + sdx, sy + sdy, fx + tx, fy + ty, fx - tx, fy - ty, strokeColor);
 
         if (strokeCap == ROUND) {
-          lineCap(fx, fy, PApplet.atan2(dx, dy));
+          lineCap(fx, fy, -ty, tx);
         }
       }
-    }
-
-    void arcJoin(float x, float y, float start, float delta, float x1, float y1, float x3, float y3) {
-      int segments = circleDetail(r, delta);
-      float step = delta / segments;
-
-      for (int i = 0; i < segments - 1; ++i) {
-        start += step;
-        float x2 = x + PApplet.sin(start) * r;
-        float y2 = y + PApplet.cos(start) * r;
-
-        triangle(x, y, x1, y1, x2, y2, strokeColor);
-
-        x1 = x2;
-        y1 = y2;
-      }
-
-      triangle(x, y, x1, y1, x3, y3, strokeColor);
-    }
-
-    //XXX: wet code, will probably get removed when we optimize lineCap()
-    void arcJoin(float x, float y, float start, float delta) {
-      int segments = circleDetail(r, delta);
-      float step = delta / segments;
-
-      float x1 = x + PApplet.sin(start) * r;
-      float y1 = y + PApplet.cos(start) * r;
-      for (int i = 0; i < segments; ++i) {
-        start += step;
-        float x2 = x + PApplet.sin(start) * r;
-        float y2 = y + PApplet.cos(start) * r;
-
-        triangle(x, y, x1, y1, x2, y2, strokeColor);
-
-        x1 = x2;
-        y1 = y2;
-      }
-    }
-
-    void lineCap(float x, float y, float angle) {
-      //TODO: optimize this
-      arcJoin(x, y, angle - HALF_PI, PI);
     }
   }
 
