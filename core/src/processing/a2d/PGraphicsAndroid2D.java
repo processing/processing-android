@@ -2330,8 +2330,8 @@ public class PGraphicsAndroid2D extends PGraphics {
 //    Bitmap bitsy = Bitmap.createBitmap(image, sx, sy, sw, sh);
 //    rect.set(dx, dy, dx + dw, dy + dh);
 //    canvas.drawBitmap(bitsy,
-    rect.set(sx, sy, sx+sw, sy+sh);
-    Rect src = new Rect(dx, dy, dx+dw, dy+dh);
+    rect.set(dx, dy, dx+dw, dy+dh);
+    Rect src = new Rect(sx, sy, sx+sw, sy+sh);
     canvas.drawBitmap(bitmap, src, rect, null);
 
 //    if ((sw != dw) || (sh != dh)) {
