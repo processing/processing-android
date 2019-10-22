@@ -345,6 +345,15 @@ public class Manifest {
     if (manifestFile.exists()) {
       try {
         xml = new XML(manifestFile);
+        
+        XML app = xml.getChild("application");
+        String icon = app.getString("android:icon");
+        if (icon.equals("@drawable/icon")) {
+          // Manifest file generated with older version of the mode, replace icon and save
+          app.setString("android:icon", "@mipmap/ic_launcher");
+          if (!forceNew) save();
+        }        
+        
       } catch (Exception e) {
         e.printStackTrace();
         System.err.println("Problem reading AndroidManifest.xml, creating a new version");

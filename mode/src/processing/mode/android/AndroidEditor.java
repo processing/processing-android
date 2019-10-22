@@ -586,7 +586,7 @@ public class AndroidEditor extends JavaEditor {
         arItem.setState(true);
       }
 
-      if (save) androidMode.initManifest(sketch, appComponent);
+      androidMode.initManifest(sketch, appComponent);
     } catch (IOException e) {
       System.err.println(AndroidMode.getTextString("android_editor.error.cannot_create_sketch_properties", sketchProps, e.getMessage()));
     }
