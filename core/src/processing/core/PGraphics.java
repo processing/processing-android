@@ -4376,6 +4376,40 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
+  //////////////////////////////////////////////////////////////
+
+  // RAY CASTING
+
+
+  public boolean intersectsBox(float w, PVector origin, PVector dir) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector dir) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  public boolean intersectsPlane(PVector origin, PVector dir) {
+    showMissingWarning("intersectsPlane");
+    return false;
+  }
+
+
+  public boolean intersectsSphere(float r, PVector origin, PVector dir) {
+    showMissingWarning("intersectsSphere");
+    return false;
+  }
+
+
+  public PVector[] getRayFromScreen(float screenX, float screenY) {
+    showMissingWarning("getRayFromScreen");
+    return null;
+  }
+
 
   //////////////////////////////////////////////////////////////
 

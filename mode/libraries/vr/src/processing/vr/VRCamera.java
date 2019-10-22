@@ -46,6 +46,10 @@ public class VRCamera {
     parent.popMatrix();
   }
 
+  public void setPosition(float x, float y, float z) {
+
+  }
+
   public void setNear(float near) {
     graphics.defCameraNear = near;
   }

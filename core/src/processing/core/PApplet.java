@@ -2496,6 +2496,36 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   //////////////////////////////////////////////////////////////
 
+  // Ray casting API
+
+
+  public boolean intersectsBox(float w, PVector origin, PVector dir) {
+    return g.intersectsBox(w, origin, dir);
+  }
+
+
+  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector dir) {
+    return g.intersectsBox(w, h, d, origin, dir);
+  }
+
+
+  public boolean intersectsPlane(PVector origin, PVector dir) {
+    return g.intersectsPlane(origin, dir);
+  }
+
+
+  public boolean intersectsSphere(float r, PVector origin, PVector dir) {
+    return g.intersectsSphere(r, origin, dir);
+  }
+
+
+  public PVector[] getRayFromScreen(float screenX, float screenY) {
+    return g.getRayFromScreen(screenX, screenY);
+  }
+
+
+  //////////////////////////////////////////////////////////////
+
 
 //  KeyEvent[] keyEventQueue = new KeyEvent[10];
 //  int keyEventCount;

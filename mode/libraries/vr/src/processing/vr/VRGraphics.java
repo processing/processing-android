@@ -30,6 +30,7 @@ import com.google.vr.sdk.base.Viewport;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PMatrix3D;
+import processing.core.PVector;
 import processing.opengl.PGL;
 import processing.opengl.PGLES;
 import processing.opengl.PGraphics3D;
@@ -128,6 +129,41 @@ public class VRGraphics extends PGraphics3D {
     modelviewInv.preApply(cameraInv);
 
     updateProjmodelview();
+  }
+
+
+  @Override
+  public boolean intersectsBox(float w, PVector origin, PVector dir) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  @Override
+  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector dir) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  @Override
+  public boolean intersectsPlane(PVector origin, PVector dir) {
+    showMissingWarning("intersectsPlane");
+    return false;
+  }
+
+
+  @Override
+  public boolean intersectsSphere(float r, PVector origin, PVector dir) {
+    showMissingWarning("intersectsSphere");
+    return false;
+  }
+
+
+  @Override
+  public PVector[] getRayFromScreen(float screenX, float screenY) {
+    showMissingWarning("getRayFromScreen");
+    return null;
   }
 
 
