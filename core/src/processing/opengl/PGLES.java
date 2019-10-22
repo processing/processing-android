@@ -58,6 +58,10 @@ public class PGLES extends PGL {
   /** The current surface view */
   public GLSurfaceView glview;
 
+
+  /** Requested major version of the OpenGL ES context */
+  static public int version = 2;
+
   // ........................................................
 
   // Static initialization for some parameters that need to be different for

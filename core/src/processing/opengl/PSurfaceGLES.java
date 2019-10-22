@@ -118,7 +118,7 @@ public class PSurfaceGLES extends PSurfaceNone {
       h.addCallback(this);
 
       // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
-      setEGLContextClientVersion(2);
+      setEGLContextClientVersion(PGLES.version);
       setPreserveEGLContextOnPause(true);
 
       int samples = sketch.sketchSmooth();
@@ -295,7 +295,7 @@ public class PSurfaceGLES extends PSurfaceNone {
     GLSurfaceView.EGLContextFactory {
     public EGLContext createContext(EGL10 egl, EGLDisplay display,
         EGLConfig eglConfig) {
-      int[] attrib_list = { PGLES.EGL_CONTEXT_CLIENT_VERSION, 2,
+      int[] attrib_list = { PGLES.EGL_CONTEXT_CLIENT_VERSION, PGLES.version,
                             EGL10.EGL_NONE };
       EGLContext context = egl.eglCreateContext(display, eglConfig,
                                                 EGL10.EGL_NO_CONTEXT,
