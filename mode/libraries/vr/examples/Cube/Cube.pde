@@ -1,7 +1,7 @@
 import processing.vr.*;
 
 void setup() {
-  fullScreen(STEREO);
+  fullScreen(VR);
 }
 
 void draw() {

@@ -1,7 +1,10 @@
 import processing.vr.*;
 
+VRCamera cam;
+
 void setup() {
-  fullScreen(STEREO);  
+  fullScreen(VR);
+  cam = new VRCamera(this);
 }
 
 void calculate() {
@@ -57,8 +60,9 @@ void draw() {
   popMatrix();
   
   // Use eye coordinates at 100 units from the camera position:;
-  eye();
+  cam.sticky();
   stroke(255, 200);
   strokeWeight(50);
-  point(0, 0, 100);  
+  point(0, 0, 100);
+  cam.noSticky();  
 }
