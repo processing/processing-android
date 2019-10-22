@@ -1,0 +1,28 @@
+import processing.vr.*;
+
+VRCamera cam;
+float rotSpeed = 0.3; 
+float rotAngle = 0;
+
+void setup() {
+  fullScreen(VR);
+  cameraUp();
+  VRCamera cam;
+}
+
+void draw() {
+  backgroundColor(200, 0, 150);
+
+  cam.setPosition(0, 0, 200);
+  push();
+  angleMode(DEGREES);
+  rotateZ(rotAngle);
+  translate(100, 0, 0);
+  fill(255, 0, 0);
+  if (intersectsBox(50)) {
+    rotAngle += rotSpeed;
+    fill(0, 0, 255);
+  }
+  box(50);
+  pop();
+}
