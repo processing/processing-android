@@ -2509,7 +2509,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
-  public boolean intersectsPlane(PVector origin, PVector dir) {
+  public PVector intersectsPlane(PVector origin, PVector dir) {
     return g.intersectsPlane(origin, dir);
   }
 

@@ -147,9 +147,9 @@ public class VRGraphics extends PGraphics3D {
 
 
   @Override
-  public boolean intersectsPlane(PVector origin, PVector dir) {
+  public PVector intersectsPlane(PVector origin, PVector dir) {
     showMissingWarning("intersectsPlane");
-    return false;
+    return null;
   }
 
 

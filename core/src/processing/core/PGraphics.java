@@ -4393,9 +4393,9 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public boolean intersectsPlane(PVector origin, PVector dir) {
+  public PVector intersectsPlane(PVector origin, PVector dir) {
     showMissingWarning("intersectsPlane");
-    return false;
+    return null;
   }
 
 

@@ -47,7 +47,7 @@ public class VRCamera {
   }
 
   public void setPosition(float x, float y, float z) {
-
+    graphics.translate(-x, -y, -z);
   }
 
   public void setNear(float near) {
