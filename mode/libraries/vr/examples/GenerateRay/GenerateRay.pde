@@ -16,7 +16,7 @@ void setup() {
 }
 
 void draw() {
-  backgroundColor(200, 0, 150);
+  background(200, 0, 150);
 
   cam.setPosition(0, 0, 400);
   push();
@@ -25,14 +25,15 @@ void draw() {
   sphere(30);
   rotateZ(millis() / 1000);
   line(0, 0, 0, 1000, 1000, 0);
-  PVector[] ray = generateRay(0, 0, 0, 1000, 1000, 0);
+  PVector origin = new PVector(0, 0, 0);
+  PVector dest = new PVector(1000, 1000, 0);
 
   pop();
   for (int i = 1; i < 5; ++i) {
     push();
     translate(randomx[i], randomy[i]);
     fill(255, 0, 0);
-    if (intersectsSphere(70, ray)) {
+    if (intersectsSphere(70, origin, dest)) {
       fill(0, 0, 255);
     }
     sphere(70);

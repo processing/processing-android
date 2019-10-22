@@ -11,7 +11,7 @@ void setup() {
 }
 
 void draw() {
-  backgroundColor(200, 0, 150);
+  background(200, 0, 150);
 
   cam.setPosition(0, 0, 200);
   push();
