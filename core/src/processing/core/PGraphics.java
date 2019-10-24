@@ -760,10 +760,10 @@ public class PGraphics extends PImage implements PConstants {
    * image data, for instance a BufferedImage with tint() settings applied for
    * PGraphicsJava2D, or resized image data and OpenGL texture indices for
    * PGraphicsOpenGL.
-   * @param renderer The PGraphics renderer associated to the image
+   * @param image The image to be stored
    * @param storage The metadata required by the renderer
    */
-  public void setCache(PImage image, Object storage) {
+  public void setCache(PImage image, Object storage) {  // ignore
     cacheMap.put(image, storage);
   }
 
@@ -773,22 +773,20 @@ public class PGraphics extends PImage implements PConstants {
    * will cache data in different formats, it's necessary to store cache data
    * keyed by the renderer object. Otherwise, attempting to draw the same
    * image to both a PGraphicsJava2D and a PGraphicsOpenGL will cause errors.
-   * @param renderer The PGraphics renderer associated to the image
    * @return metadata stored for the specified renderer
    */
-  public Object getCache(PImage image) {
+  public Object getCache(PImage image) {  // ignore
     return cacheMap.get(image);
   }
 
 
   /**
    * Remove information associated with this renderer from the cache, if any.
-   * @param renderer The PGraphics renderer whose cache data should be removed
+   * @param image The image whose cache data should be removed
    */
-  public void removeCache(PImage image) {
+  public void removeCache(PImage image) {  // ignore
     cacheMap.remove(image);
   }
-
 
 
   //////////////////////////////////////////////////////////////
@@ -1579,6 +1577,12 @@ public class PGraphics extends PImage implements PConstants {
 
 
   public PShape loadShape(String filename) {
+    showMissingWarning("loadShape");
+    return null;
+  }
+
+
+  public PShape loadShape(String filename, String options) {
     showMissingWarning("loadShape");
     return null;
   }
@@ -3390,6 +3394,11 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
+  public float textWidth(char[] chars, int start, int length) {
+    return textWidthImpl(chars, start, start + length);
+  }
+
+
   /**
    * Implementation of returning the text width of
    * the chars [start, stop) in the buffer.
@@ -3460,14 +3469,6 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-//  /**
-//   * Write text where we just left off.
-//   */
-//  public void text(String str) {
-//    text(str, textX, textY, textZ);
-//  }
-
-
   /**
    * Draw a chunk of text.
    * Newlines that are \n (Unix newline or linefeed char, ascii 10)
@@ -3526,6 +3527,52 @@ public class PGraphics extends PImage implements PConstants {
 
 
   /**
+   * Method to draw text from an array of chars. This method will usually be
+   * more efficient than drawing from a String object, because the String will
+   * not be converted to a char array before drawing.
+   */
+  public void text(char[] chars, int start, int stop, float x, float y) {
+    // If multiple lines, sum the height of the additional lines
+    float high = 0; //-textAscent();
+    for (int i = start; i < stop; i++) {
+      if (chars[i] == '\n') {
+        high += textLeading;
+      }
+    }
+    if (textAlignY == CENTER) {
+      // for a single line, this adds half the textAscent to y
+      // for multiple lines, subtract half the additional height
+      //y += (textAscent() - textDescent() - high)/2;
+      y += (textAscent() - high)/2;
+    } else if (textAlignY == TOP) {
+      // for a single line, need to add textAscent to y
+      // for multiple lines, no different
+      y += textAscent();
+    } else if (textAlignY == BOTTOM) {
+      // for a single line, this is just offset by the descent
+      // for multiple lines, subtract leading for each line
+      y -= textDescent() + high;
+      //} else if (textAlignY == BASELINE) {
+      // do nothing
+    }
+
+//    int start = 0;
+    int index = 0;
+    while (index < stop) { //length) {
+      if (chars[index] == '\n') {
+        textLineAlignImpl(chars, start, index, x, y);
+        start = index + 1;
+        y += textLeading;
+      }
+      index++;
+    }
+    if (start < stop) {  //length) {
+      textLineAlignImpl(chars, start, index, x, y);
+    }
+  }
+
+
+  /**
    * Same as above but with a z coordinate.
    */
   public void text(String str, float x, float y, float z) {
@@ -3540,6 +3587,17 @@ public class PGraphics extends PImage implements PConstants {
 //    textZ = z;
 
     if (z != 0) translate(0, 0, -z);
+  }
+
+
+  public void text(char[] chars, int start, int stop,
+                   float x, float y, float z) {
+    if (z != 0) translate(0, 0, z);  // slow!
+
+    text(chars, start, stop, x, y);
+//    textZ = z;
+
+    if (z != 0) translate(0, 0, -z);  // inaccurate!
   }
 
 
@@ -4381,32 +4439,61 @@ public class PGraphics extends PImage implements PConstants {
   // RAY CASTING
 
 
-  public boolean intersectsBox(float w, PVector origin, PVector dir) {
-    showMissingWarning("intersectsBox");
-    return false;
-  }
-
-
-  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector dir) {
-    showMissingWarning("intersectsBox");
-    return false;
-  }
-
-
-  public PVector intersectsPlane(PVector origin, PVector dir) {
-    showMissingWarning("intersectsPlane");
+  public PVector[] getRayFromScreen(float screenX, float screenY, PVector[] ray) {
+    showMissingWarning("getRayFromScreen");
     return null;
   }
 
 
-  public boolean intersectsSphere(float r, PVector origin, PVector dir) {
+  public void getRayFromScreen(float screenX, float screenY, PVector eye, PVector dir) {
+    showMissingWarning("getRayFromScreen");
+  }
+
+
+  public boolean intersectsSphere(float r, float screenX, float screenY) {
     showMissingWarning("intersectsSphere");
     return false;
   }
 
 
-  public PVector[] getRayFromScreen(float screenX, float screenY) {
-    showMissingWarning("getRayFromScreen");
+  public boolean intersectsSphere(float r, PVector eye, PVector dir) {
+    showMissingWarning("intersectsSphere");
+    return false;
+  }
+
+
+  public boolean intersectsBox(float size, float screenX, float screenY) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  public boolean intersectsBox(float w, float h, float d, float screenX, float screenY) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  public boolean intersectsBox(float size, PVector eye, PVector dir) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  public boolean intersectsBox(float w, float h, float d, PVector eye, PVector dir) {
+    showMissingWarning("intersectsBox");
+    return false;
+  }
+
+
+  public PVector intersectsPlane(float screenX, float screenY) {
+    showMissingWarning("intersectsPlane");
+    return null;
+  }
+
+
+  public PVector intersectsPlane(PVector eye, PVector dir) {
+    showMissingWarning("intersectsPlane");
     return null;
   }
 

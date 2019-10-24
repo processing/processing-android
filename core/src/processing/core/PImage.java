@@ -563,6 +563,11 @@ public class PImage implements PConstants, Cloneable {
   }
 
 
+  public PImage copy() {
+    return get(0, 0, pixelWidth, pixelHeight);
+  }
+
+
   /**
    * Set a single pixel to the specified color.
    */
