@@ -15,11 +15,10 @@ void draw() {
 
   cam.setPosition(0, 0, 200);
   push();
-  angleMode(DEGREES);
-  rotateZ(rotAngle);
+  rotateZ(radians(rotAngle));
   translate(100, 0, 0);
   fill(255, 0, 0);
-  if (intersectsBox(50)) {
+  if (intersectsBox(50, 0, 0)) {
     rotAngle += rotSpeed;
     fill(0, 0, 255);
   }
