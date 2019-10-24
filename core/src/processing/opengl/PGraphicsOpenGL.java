@@ -520,6 +520,27 @@ public class PGraphicsOpenGL extends PGraphics {
 
   // ........................................................
 
+  protected PMatrix3D eyeMatrix;
+  protected PMatrix3D objMatrix;
+
+  public float forwardX, forwardY, forwardZ;
+  public float rightX, rightY, rightZ;
+  public float upX, upY, upZ;
+
+  // Variables used in ray casting
+  protected PVector[] ray;
+  protected PVector hit = new PVector();
+  protected PVector screen = new PVector();
+  protected PVector objCenter = new PVector();
+  protected PVector objToOrig = new PVector();
+  protected PVector origInObjCoord = new PVector();
+  protected PVector hitInObjCoord = new PVector();
+  protected PVector dirInObjCoord = new PVector();
+  protected PVector origInWorldCoord = new PVector();
+  protected PVector dirInWorldCoord = new PVector();
+
+  // ........................................................
+
   // Error strings:
 
   static final String OPENGL_THREAD_ERROR =
@@ -827,6 +848,264 @@ public class PGraphicsOpenGL extends PGraphics {
 
     return true;
     */
+  }
+
+
+  //////////////////////////////////////////////////////////////
+
+  // EYE/OBJECT MATRICES
+
+
+  @Override
+  public PMatrix3D getEyeMatrix() {
+    return getEyeMatrix(null);
+  }
+
+
+  @Override
+  public PMatrix3D getEyeMatrix(PMatrix3D target) {
+    if (target == null) {
+      target = new PMatrix3D();
+    }
+    float sign = cameraUp ? +1 : -1;
+    target.set(rightX, sign * upX, forwardX, cameraX,
+               rightY, sign * upY, forwardY, cameraY,
+               rightZ, sign * upZ, forwardZ, cameraZ,
+              0,          0,  0, 1);
+    return target;
+  }
+
+
+  @Override
+  public PMatrix3D getObjectMatrix() {
+    PMatrix3D mat = new PMatrix3D();
+    mat.set(modelviewInv);
+    mat.apply(camera);
+    return mat;
+  }
+
+
+  @Override
+  public PMatrix3D getObjectMatrix(PMatrix3D target) {
+    if (target == null) {
+      target = new PMatrix3D();
+    }
+    target.set(modelviewInv);
+    target.apply(camera);
+    return target;
+  }
+
+
+  @Override
+  public void eye() {
+    eyeMatrix = getEyeMatrix(eyeMatrix);
+
+    // Erasing any previous transformation in modelview
+    modelview.set(camera);
+    modelview.apply(eyeMatrix);
+
+    // The 3x3 block of eyeMatrix is orthogonal, so taking the transpose inverts it...
+    eyeMatrix.transpose();
+    // ...and then invert the translation separately:
+    eyeMatrix.m03 = -cameraX;
+    eyeMatrix.m13 = -cameraY;
+    eyeMatrix.m23 = -cameraZ;
+    eyeMatrix.m30 = 0;
+    eyeMatrix.m31 = 0;
+    eyeMatrix.m32 = 0;
+
+    // Applying the inverse of the previous transformations in the opposite order
+    // to compute the modelview inverse
+    modelviewInv.set(eyeMatrix);
+    modelviewInv.preApply(cameraInv);
+
+    updateProjmodelview();
+  }
+
+
+  //////////////////////////////////////////////////////////////
+
+  // RAY CASTING
+
+
+  @Override
+  public PVector[] getRayFromScreen(float screenX, float screenY, PVector[] ray) {
+    if (ray == null || ray.length < 2) {
+      ray = new PVector[2];
+      ray[0] = new PVector();
+      ray[1] = new PVector();
+    }
+    getRayFromScreen(screenX, screenY, ray[0], ray[1]);
+    return ray;
+  }
+
+
+  @Override
+  public void getRayFromScreen(float screenX, float screenY, PVector origin, PVector direction) {
+    eyeMatrix = getEyeMatrix(eyeMatrix);
+
+    // Transforming screen coordinates to world coordinates
+    screen.x = screenX;
+    screen.y = screenY;
+    screen.z = 0;
+    eyeMatrix.mult(screen, origin);
+
+    // The direction of the ray is simply extracted from the third column of the eye matrix (the
+    // forward vector).
+    direction.set(eyeMatrix.m02, eyeMatrix.m12, eyeMatrix.m22);
+  }
+
+
+  @Override
+  public boolean intersectsSphere(float r, float screenX, float screenY) {
+    ray = getRayFromScreen(screenX, screenY, ray);
+    return intersectsSphere(r, ray[0], ray[1]);
+  }
+
+
+  @Override
+  public boolean intersectsSphere(float r, PVector origin, PVector direction) {
+    // Get the center of the sphere in world coordinates
+    objCenter.x = modelview.m03;
+    objCenter.y = modelview.m13;
+    objCenter.z = modelview.m23;
+
+    PVector.sub(origin, objCenter, objToOrig);
+    float d = objToOrig.mag();
+
+    // The eye is inside the sphere
+    if (d <= r) return true;
+
+    // Check if sphere is in front of ray
+    if (PVector.dot(objToOrig, direction) > 0) return false;
+
+    // Check intersection of ray with sphere
+    float b = 2 * PVector.dot(direction, objToOrig);
+    float c = d * d - r * r;
+    float det = b * b - 4 * c;
+    return det >= 0;
+  }
+
+
+  @Override
+  public boolean intersectsBox(float size, float screenX, float screenY) {
+    ray = getRayFromScreen(screenX, screenY, ray);
+    return intersectsBox(size, size, size, ray[0], ray[1]);
+  }
+
+
+  @Override
+  public boolean intersectsBox(float w, float h, float d, float screenX, float screenY) {
+    ray = getRayFromScreen(screenX, screenY, ray);
+    return intersectsBox(w, h, d, ray[0], ray[1]);
+  }
+
+
+  @Override
+  public boolean intersectsBox(float size, PVector origin, PVector direction) {
+    return intersectsBox(size, size, size, origin, direction);
+  }
+
+
+  @Override
+  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector direction) {
+    objMatrix = getObjectMatrix(objMatrix);
+    objMatrix.mult(origin, origInObjCoord);
+    PVector.add(origin, direction, hit);
+    objMatrix.mult(hit, hitInObjCoord);
+
+    PVector.sub(hitInObjCoord, origInObjCoord, dirInObjCoord);
+    return lineIntersectsAABB(origInObjCoord, dirInObjCoord, w, h, d);
+  }
+
+
+  // Line intersection with an axis-aligned bounding box (AABB), calculated using the algorithm
+  // from Amy William et al: http:// dl.acm.org/citation.cfm?id=1198748
+  protected boolean lineIntersectsAABB(PVector orig, PVector dir, float w, float h, float d) {
+    float minx = -w/2;
+    float miny = -h/2;
+    float minz = -d/2;
+
+    float maxx = +w/2;
+    float maxy = +h/2;
+    float maxz = +d/2;
+
+    float idx = 1/dir.x;
+    float idy = 1/dir.y;
+    float idz = 1/dir.z;
+
+    boolean sdx = idx < 0;
+    boolean sdy = idy < 0;
+    boolean sdz = idz < 0;
+
+    float bbx = sdx ? maxx : minx;
+    float txmin = (bbx - orig.x) * idx;
+    bbx = sdx ? minx : maxx;
+    float txmax = (bbx - orig.x) * idx;
+    float bby = sdy ? maxy : miny;
+    float tymin = (bby - orig.y) * idy;
+    bby = sdy ? miny : maxy;
+    float tymax = (bby - orig.y) * idy;
+
+    if ((txmin > tymax) || (tymin > txmax)) {
+      return false;
+    }
+    if (tymin > txmin) {
+      txmin = tymin;
+    }
+    if (tymax < txmax) {
+      txmax = tymax;
+    }
+
+    float bbz = sdz ? maxz : minz;
+    float tzmin = (bbz - orig.z) * idz;
+    bbz = sdz ? minz : maxz;
+    float tzmax = (bbz - orig.z) * idz;
+
+    if ((txmin > tzmax) || (tzmin > txmax)) {
+      return false;
+    }
+    if (tzmin > txmin) {
+      txmin = tzmin;
+    }
+    if (tzmax < txmax) {
+      txmax = tzmax;
+    }
+
+    if ((txmin < defCameraFar) && (txmax > 0)) {
+      // The intersection coordinates:
+      // x = orig.x + txmin * dir.x;
+      // y = orig.y + txmin * dir.y;
+      // z = orig.z + txmin * dir.z;
+      return true;
+    }
+
+    return false;
+  }
+
+
+  @Override
+  public PVector intersectsPlane(float screenX, float screenY) {
+    ray = getRayFromScreen(screenX, screenY, ray);
+    return intersectsPlane(ray[0], ray[1]);
+  }
+
+
+  @Override
+  public PVector intersectsPlane(PVector origin, PVector direction) {
+    modelview.mult(origin, origInWorldCoord);
+    modelview.mult(direction, dirInWorldCoord);
+
+    // Ray-plane intersection algorithm
+    PVector w = new PVector(-origInWorldCoord.x, -origInWorldCoord.y, -origInWorldCoord.z);
+    float d = PApplet.abs(dirInWorldCoord.z * dirInWorldCoord.z);
+
+    if (d == 0) return null;
+
+    float k = PApplet.abs((w.z * w.z)/d);
+    PVector p = PVector.add(origInWorldCoord, dirInWorldCoord).setMag(k);
+
+    return p;
   }
 
 
@@ -4604,6 +4883,18 @@ public class PGraphicsOpenGL extends PGraphics {
     y0 =  z1 * x2 - z2 * x1;
     y1 = -z0 * x2 + z2 * x0;
     y2 =  z0 * x1 - z1 * x0;
+
+    forwardX = 0;
+    forwardY = 0;
+    forwardZ = 1;
+
+    rightX = 1;
+    rightY = 0;
+    rightZ = 0;
+
+    this.upX = 0;
+    this.upY = -1;
+    this.upZ = 0;
 
     // Cross product gives area of parallelogram, which is < 1.0 for
     // non-perpendicular unit-length vectors; so normalize x, y here:
