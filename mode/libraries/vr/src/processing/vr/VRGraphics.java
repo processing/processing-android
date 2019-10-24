@@ -69,6 +69,8 @@ public class VRGraphics extends PGraphics3D {
   private PVector origInObjCoord = new PVector();
   private PVector hitInObjCoord = new PVector();
   private PVector dirInObjCoord = new PVector();
+  private PVector origInWorldCoord = new PVector();
+  private PVector dirInWorldCoord = new PVector();
 
   @Override
   protected PGL createPGL(PGraphicsOpenGL pg) {
@@ -299,8 +301,6 @@ public class VRGraphics extends PGraphics3D {
   }
 
 
-
-
   @Override
   public PVector intersectsPlane(float screenX, float screenY) {
     ray = getRayFromScreen(screenX, screenY, ray);
@@ -310,8 +310,19 @@ public class VRGraphics extends PGraphics3D {
 
   @Override
   public PVector intersectsPlane(PVector origin, PVector direction) {
-    showMissingWarning("intersectsPlane");
-    return null;
+    modelview.mult(origin, origInWorldCoord);
+    modelview.mult(direction, dirInWorldCoord);
+
+    // Ray-plane intersection algorithm
+    PVector w = new PVector(-origInWorldCoord.x, -origInWorldCoord.y, -origInWorldCoord.z);
+    float d = PApplet.abs(dirInWorldCoord.z * dirInWorldCoord.z);
+
+    if (d == 0) return null;
+
+    float k = PApplet.abs((w.z * w.z)/d);
+    PVector p = PVector.add(origInWorldCoord, dirInWorldCoord).setMag(k);
+
+    return p;
   }
 
 
