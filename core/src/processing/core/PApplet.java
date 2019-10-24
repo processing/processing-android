@@ -1248,10 +1248,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
-  public void calculate() {
-  }
-
-
   public void draw() {
     // if no draw method, then shut things down
     //System.out.println("no draw method, goodbye");
@@ -2431,121 +2427,6 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void touchCancelled(TouchEvent event) {
     touchCancelled();
-  }
-
-
-  //////////////////////////////////////////////////////////////
-
-  // Wallpaper and wear API
-
-
-  public boolean wallpaperPreview() {
-    return surface.getEngine().isPreview();
-  }
-
-
-  public float wallpaperOffset() {
-    return surface.getEngine().getXOffset();
-  }
-
-
-  public int wallpaperHomeCount() {
-    float step = surface.getEngine().getXOffsetStep();
-    if (0 < step) {
-      return (int)(1 + 1 / step);
-    } else {
-      return 1;
-    }
-  }
-
-
-  public boolean wearAmbient() {
-    return surface.getEngine().isInAmbientMode();
-  }
-
-
-  public boolean wearInteractive() {
-    return !surface.getEngine().isInAmbientMode();
-  }
-
-
-  public boolean wearRound() {
-    return surface.getEngine().isRound();
-  }
-
-
-  public boolean wearSquare() {
-    return !surface.getEngine().isRound();
-  }
-
-
-  public Rect wearInsets() {
-    return surface.getEngine().getInsets();
-  }
-
-
-  public boolean wearLowBit() {
-    return surface.getEngine().useLowBitAmbient();
-  }
-
-
-  public boolean wearBurnIn() {
-    return surface.getEngine().requireBurnInProtection();
-  }
-
-
-  //////////////////////////////////////////////////////////////
-
-  // Ray casting API
-
-
-  public PVector[] getRayFromScreen(float screenX, float screenY, PVector[] ray) {
-    return g.getRayFromScreen(screenX, screenY, ray);
-  }
-
-
-  public void getRayFromScreen(float screenX, float screenY, PVector origin, PVector direction) {
-    g.getRayFromScreen(screenX, screenY, origin, direction);
-  }
-
-
-  public boolean intersectsSphere(float r, float screenX, float screenY) {
-    return g.intersectsSphere(r, screenX, screenY);
-  }
-
-
-  public boolean intersectsSphere(float r, PVector origin, PVector direction) {
-    return g.intersectsSphere(r, origin, direction);
-  }
-
-
-  public boolean intersectsBox(float w, float screenX, float screenY) {
-    return g.intersectsBox(w, screenX, screenY);
-  }
-
-
-  public boolean intersectsBox(float w, float h, float d, float screenX, float screenY) {
-    return g.intersectsBox(w, h, d, screenX, screenY);
-  }
-
-
-  public boolean intersectsBox(float size, PVector origin, PVector direction) {
-    return g.intersectsBox(size, origin, direction);
-  }
-
-
-  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector direction) {
-    return g.intersectsBox(w, h, d, origin, direction);
-  }
-
-
-  public PVector intersectsPlane(float screenX, float screenY) {
-    return g.intersectsPlane(screenX, screenY);
-  }
-
-
-  public PVector intersectsPlane(PVector origin, PVector direction) {
-    return g.intersectsPlane(origin, direction);
   }
 
 
@@ -4057,7 +3938,9 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 
 
   public PImage loadImage(String filename) { //, Object params) {
@@ -8102,6 +7985,177 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public void updatePixels(int x1, int y1, int x2, int y2) {
     g.updatePixels(x1, y1, x2, y2);
+  }
+
+
+  //////////////////////////////////////////////////////////////
+
+  // ANDROID-SPECIFIC API
+
+
+  // Wallpaper and wear API
+
+
+  public boolean wallpaperPreview() {
+    return surface.getEngine().isPreview();
+  }
+
+
+  public float wallpaperOffset() {
+    return surface.getEngine().getXOffset();
+  }
+
+
+  public int wallpaperHomeCount() {
+    float step = surface.getEngine().getXOffsetStep();
+    if (0 < step) {
+      return (int)(1 + 1 / step);
+    } else {
+      return 1;
+    }
+  }
+
+
+  public boolean wearAmbient() {
+    return surface.getEngine().isInAmbientMode();
+  }
+
+
+  public boolean wearInteractive() {
+    return !surface.getEngine().isInAmbientMode();
+  }
+
+
+  public boolean wearRound() {
+    return surface.getEngine().isRound();
+  }
+
+
+  public boolean wearSquare() {
+    return !surface.getEngine().isRound();
+  }
+
+
+  public Rect wearInsets() {
+    return surface.getEngine().getInsets();
+  }
+
+
+  public boolean wearLowBit() {
+    return surface.getEngine().useLowBitAmbient();
+  }
+
+
+  public boolean wearBurnIn() {
+    return surface.getEngine().requireBurnInProtection();
+  }
+
+
+  // Ray casting API
+
+
+  public PVector[] getRayFromScreen(float screenX, float screenY, PVector[] ray) {
+    return g.getRayFromScreen(screenX, screenY, ray);
+  }
+
+
+  public void getRayFromScreen(float screenX, float screenY, PVector origin, PVector direction) {
+    g.getRayFromScreen(screenX, screenY, origin, direction);
+  }
+
+
+  public boolean intersectsSphere(float r, float screenX, float screenY) {
+    return g.intersectsSphere(r, screenX, screenY);
+  }
+
+
+  public boolean intersectsSphere(float r, PVector origin, PVector direction) {
+    return g.intersectsSphere(r, origin, direction);
+  }
+
+
+  public boolean intersectsBox(float w, float screenX, float screenY) {
+    return g.intersectsBox(w, screenX, screenY);
+  }
+
+
+  public boolean intersectsBox(float w, float h, float d, float screenX, float screenY) {
+    return g.intersectsBox(w, h, d, screenX, screenY);
+  }
+
+
+  public boolean intersectsBox(float size, PVector origin, PVector direction) {
+    return g.intersectsBox(size, origin, direction);
+  }
+
+
+  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector direction) {
+    return g.intersectsBox(w, h, d, origin, direction);
+  }
+
+
+  public PVector intersectsPlane(float screenX, float screenY) {
+    return g.intersectsPlane(screenX, screenY);
+  }
+
+
+  public PVector intersectsPlane(PVector origin, PVector direction) {
+    return g.intersectsPlane(origin, direction);
+  }
+
+
+  public void eye() {
+    g.eye();
+  }
+
+
+  public void calculate() {
+  }
+  
+
+  /**
+   * Sets the coordinate system in 3D centered at (width/2, height/2)
+   * and with the Y axis pointing up.
+   */
+
+  public void cameraUp() {
+    g.cameraUp();
+  }
+
+
+  /**
+   * Returns a copy of the current object matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix() {
+    return g.getObjectMatrix();
+  }
+
+
+  /**
+   * Copy the current object matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getObjectMatrix(PMatrix3D target) {
+    return g.getObjectMatrix(target);
+  }
+
+
+  /**
+   * Returns a copy of the current eye matrix.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix() {
+    return g.getEyeMatrix();
+  }
+
+
+  /**
+   * Copy the current eye matrix into the specified target.
+   * Pass in null to create a new matrix.
+   */
+  public PMatrix3D getEyeMatrix(PMatrix3D target) {
+    return g.getEyeMatrix(target);
   }
 
 

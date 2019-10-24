@@ -4445,7 +4445,7 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public void getRayFromScreen(float screenX, float screenY, PVector eye, PVector dir) {
+  public void getRayFromScreen(float screenX, float screenY, PVector origin, PVector direction) {
     showMissingWarning("getRayFromScreen");
   }
 
@@ -4456,7 +4456,7 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public boolean intersectsSphere(float r, PVector eye, PVector dir) {
+  public boolean intersectsSphere(float r, PVector origin, PVector direction) {
     showMissingWarning("intersectsSphere");
     return false;
   }
@@ -4474,13 +4474,13 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public boolean intersectsBox(float size, PVector eye, PVector dir) {
+  public boolean intersectsBox(float size, PVector origin, PVector direction) {
     showMissingWarning("intersectsBox");
     return false;
   }
 
 
-  public boolean intersectsBox(float w, float h, float d, PVector eye, PVector dir) {
+  public boolean intersectsBox(float w, float h, float d, PVector origin, PVector direction) {
     showMissingWarning("intersectsBox");
     return false;
   }
@@ -4492,7 +4492,7 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public PVector intersectsPlane(PVector eye, PVector dir) {
+  public PVector intersectsPlane(PVector origin, PVector direction) {
     showMissingWarning("intersectsPlane");
     return null;
   }
