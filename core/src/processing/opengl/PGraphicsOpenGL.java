@@ -341,6 +341,18 @@ public class PGraphicsOpenGL extends PGraphics {
   /** Projection matrix stack **/
   protected float[][] projectionStack = new float[MATRIX_STACK_DEPTH][16];
 
+
+  /** Matrix that transform coordinates to the eye coordinate system **/
+  protected PMatrix3D eyeMatrix;
+
+  /** Matrix that transform coordinates to the system that results from appling the modelview transformation **/
+  protected PMatrix3D objMatrix;
+
+  /** Vectors defining the eye axes **/
+  public float forwardX, forwardY, forwardZ;
+  public float rightX, rightY, rightZ;
+  public float upX, upY, upZ;
+
   // ........................................................
 
   // Lights:
@@ -520,14 +532,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
   // ........................................................
 
-  protected PMatrix3D eyeMatrix;
-  protected PMatrix3D objMatrix;
+  // Variables used in ray casting:
 
-  public float forwardX, forwardY, forwardZ;
-  public float rightX, rightY, rightZ;
-  public float upX, upY, upZ;
-
-  // Variables used in ray casting
   protected PVector[] ray;
   protected PVector hit = new PVector();
   protected PVector screen = new PVector();
@@ -4869,32 +4875,32 @@ public class PGraphicsOpenGL extends PGraphics {
       z2 /= eyeDist;
     }
 
+    forwardX = z0;
+    forwardY = z1;
+    forwardZ = z2;
+
     // Calculating Y vector
     float y0 = upX;
     float y1 = upY;
     float y2 = upZ;
+
+    this.upX = upX;
+    this.upY = upY;
+    this.upZ = upZ;
 
     // Computing X vector as Y cross Z
     float x0 =  y1 * z2 - y2 * z1;
     float x1 = -y0 * z2 + y2 * z0;
     float x2 =  y0 * z1 - y1 * z0;
 
+    rightX = x0;
+    rightY = x1;
+    rightZ = x2;
+
     // Recompute Y = Z cross X
     y0 =  z1 * x2 - z2 * x1;
     y1 = -z0 * x2 + z2 * x0;
     y2 =  z0 * x1 - z1 * x0;
-
-    forwardX = 0;
-    forwardY = 0;
-    forwardZ = 1;
-
-    rightX = 1;
-    rightY = 0;
-    rightZ = 0;
-
-    this.upX = 0;
-    this.upY = -1;
-    this.upZ = 0;
 
     // Cross product gives area of parallelogram, which is < 1.0 for
     // non-perpendicular unit-length vectors; so normalize x, y here:
