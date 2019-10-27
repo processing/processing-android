@@ -537,11 +537,11 @@ public class PGraphicsOpenGL extends PGraphics {
   protected PVector[] ray;
   protected PVector hit = new PVector();
   protected PVector screen = new PVector();
-  protected PVector objCenter = new PVector();
-  protected PVector objToOrig = new PVector();
+
   protected PVector origInObjCoord = new PVector();
   protected PVector hitInObjCoord = new PVector();
   protected PVector dirInObjCoord = new PVector();
+
   protected PVector origInWorldCoord = new PVector();
   protected PVector dirInWorldCoord = new PVector();
 
@@ -933,7 +933,6 @@ public class PGraphicsOpenGL extends PGraphics {
 
   // RAY CASTING
 
-
   @Override
   public PVector[] getRayFromScreen(float screenX, float screenY, PVector[] ray) {
     if (ray == null || ray.length < 2) {
@@ -971,22 +970,24 @@ public class PGraphicsOpenGL extends PGraphics {
 
   @Override
   public boolean intersectsSphere(float r, PVector origin, PVector direction) {
-    // Get the center of the sphere in world coordinates
-    objCenter.x = modelview.m03;
-    objCenter.y = modelview.m13;
-    objCenter.z = modelview.m23;
+    objMatrix = getObjectMatrix(objMatrix);
+    objMatrix.mult(origin, origInObjCoord);
+    PVector.add(origin, direction, hit);
+    objMatrix.mult(hit, hitInObjCoord);
+    PVector.sub(hitInObjCoord, origInObjCoord, dirInObjCoord);
 
-    PVector.sub(origin, objCenter, objToOrig);
-    float d = objToOrig.mag();
+    float d = origInObjCoord.mag();
 
     // The eye is inside the sphere
     if (d <= r) return true;
 
+    float p = PVector.dot(dirInObjCoord, origInObjCoord);
+
     // Check if sphere is in front of ray
-    if (PVector.dot(objToOrig, direction) > 0) return false;
+    if (p > 0) return false;
 
     // Check intersection of ray with sphere
-    float b = 2 * PVector.dot(direction, objToOrig);
+    float b = 2 * p;
     float c = d * d - r * r;
     float det = b * b - 4 * c;
     return det >= 0;
@@ -1101,14 +1102,18 @@ public class PGraphicsOpenGL extends PGraphics {
   public PVector intersectsPlane(PVector origin, PVector direction) {
     modelview.mult(origin, origInWorldCoord);
     modelview.mult(direction, dirInWorldCoord);
+    dirInWorldCoord.normalize();
+
+    // Plane representation
+    PVector point = new PVector(0, 0, 0);
+    PVector normal = new PVector(0, 0, 1);
 
     // Ray-plane intersection algorithm
-    PVector w = new PVector(-origInWorldCoord.x, -origInWorldCoord.y, -origInWorldCoord.z);
-    float d = PApplet.abs(dirInWorldCoord.z * dirInWorldCoord.z);
-
+    float d = PApplet.abs(PVector.dot(normal, dirInWorldCoord));
     if (d == 0) return null;
 
-    float k = PApplet.abs((w.z * w.z)/d);
+    PVector w = PVector.sub(point, origInWorldCoord);
+    float k = PApplet.abs(PVector.dot(normal, w)/d);
     PVector p = PVector.add(origInWorldCoord, dirInWorldCoord).setMag(k);
 
     return p;
