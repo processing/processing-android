@@ -18,6 +18,8 @@ void setup() {
 void draw() {
   background(200, 0, 150);
 
+  lights();
+  noStroke();
   cam.setPosition(0, 0, 400);
   for (int i = 0; i < 5; ++i) {
     push();
@@ -27,11 +29,14 @@ void draw() {
       fill(0, 0, 255);
     }
     sphere(70);
-//    noLoop();
     pop();
   }
+
   cam.sticky();
-  circle(windowWidth/2, windowHeight/2, 25);
-//  image(pg, -windowWidth/2, -windowHeight/2, windowWidth, windowHeight);
+  strokeWeight(5 * displayDensity);
+  stroke(0, 0, 255);
+  noFill();
+  translate(0, 0, 200);
+  circle(0, 0, 50);
   cam.noSticky();
 }

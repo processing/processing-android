@@ -7,7 +7,7 @@ float rotAngle = 0;
 void setup() {
   fullScreen(VR);
   cameraUp();
-  VRCamera cam;
+  cam = new VRCamera(this);
 }
 
 void draw() {
