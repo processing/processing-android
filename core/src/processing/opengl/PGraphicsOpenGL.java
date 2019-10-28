@@ -976,13 +976,13 @@ public class PGraphicsOpenGL extends PGraphics {
     objMatrix.mult(hit, hitInObjCoord);
     PVector.sub(hitInObjCoord, origInObjCoord, dirInObjCoord);
 
-    return lineIntersectsSphere(origInObjCoord, dirInObjCoord, r);
+    return rayIntersectsSphere(origInObjCoord, dirInObjCoord, r);
   }
 
 
-  // Line-sphere intersecton algorithm as described in:
+  // Ray-sphere intersecton algorithm as described in:
   // http://paulbourke.net/geometry/circlesphere/
-  private boolean lineIntersectsSphere(PVector orig, PVector dir, float r) {
+  private boolean rayIntersectsSphere(PVector orig, PVector dir, float r) {
     float d = orig.mag();
 
     // The eye is inside the sphere
@@ -996,7 +996,6 @@ public class PGraphicsOpenGL extends PGraphics {
     // Check intersection of ray with sphere
     float b = 2 * p;
     float c = d * d - r * r;
-
     float det = b * b - 4 * c;
     return det >= 0;
   }
