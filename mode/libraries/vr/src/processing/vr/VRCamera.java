@@ -23,10 +23,12 @@
 package processing.vr;
 
 import processing.core.PApplet;
+import processing.core.PVector;
 
 public class VRCamera {
   protected PApplet parent;
   protected VRGraphics graphics;
+  protected PVector pos = new PVector();
 
   public VRCamera(PApplet parent) {
     if (parent.g instanceof VRGraphics) {
@@ -47,7 +49,14 @@ public class VRCamera {
   }
 
   public void setPosition(float x, float y, float z) {
-    graphics.translate(-x, -y, -z);
+    if (pos.x != x || pos.y != y || pos.z != z) {
+      graphics.beginCamera();
+      // Eliminate previous position from matrix stack by applying inverse transformation.
+      graphics.translate(-pos.x, -pos.y, -pos.z);
+      pos.set(-x, -y, -z);
+      graphics.translate(pos.x, pos.y, pos.z);
+      graphics.endCamera();
+    }
   }
 
   public void setNear(float near) {
