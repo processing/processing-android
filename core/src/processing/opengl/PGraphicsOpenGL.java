@@ -976,12 +976,19 @@ public class PGraphicsOpenGL extends PGraphics {
     objMatrix.mult(hit, hitInObjCoord);
     PVector.sub(hitInObjCoord, origInObjCoord, dirInObjCoord);
 
-    float d = origInObjCoord.mag();
+    return lineIntersectsSphere(origInObjCoord, dirInObjCoord, r);
+  }
+
+
+  // Line-sphere intersecton algorithm as described in:
+  // http://paulbourke.net/geometry/circlesphere/
+  private boolean lineIntersectsSphere(PVector orig, PVector dir, float r) {
+    float d = orig.mag();
 
     // The eye is inside the sphere
     if (d <= r) return true;
 
-    float p = PVector.dot(dirInObjCoord, origInObjCoord);
+    float p = PVector.dot(orig, dir);
 
     // Check if sphere is in front of ray
     if (p > 0) return false;
@@ -989,6 +996,7 @@ public class PGraphicsOpenGL extends PGraphics {
     // Check intersection of ray with sphere
     float b = 2 * p;
     float c = d * d - r * r;
+
     float det = b * b - 4 * c;
     return det >= 0;
   }
@@ -1020,15 +1028,15 @@ public class PGraphicsOpenGL extends PGraphics {
     objMatrix.mult(origin, origInObjCoord);
     PVector.add(origin, direction, hit);
     objMatrix.mult(hit, hitInObjCoord);
-
     PVector.sub(hitInObjCoord, origInObjCoord, dirInObjCoord);
+
     return lineIntersectsAABB(origInObjCoord, dirInObjCoord, w, h, d);
   }
 
 
   // Line intersection with an axis-aligned bounding box (AABB), calculated using the algorithm
   // from Amy William et al: http:// dl.acm.org/citation.cfm?id=1198748
-  protected boolean lineIntersectsAABB(PVector orig, PVector dir, float w, float h, float d) {
+  private boolean lineIntersectsAABB(PVector orig, PVector dir, float w, float h, float d) {
     float minx = -w/2;
     float miny = -h/2;
     float minz = -d/2;
