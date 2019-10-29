@@ -58,8 +58,8 @@ public class PShapeOBJ extends PShape {
     ArrayList<PVector> coords = new ArrayList<PVector>();
     ArrayList<PVector> normals = new ArrayList<PVector>();
     ArrayList<PVector> texcoords = new ArrayList<PVector>();
-    parseOBJ(parent, basePath, reader,
-        faces, materials, coords, normals, texcoords);
+    parseOBJ(parent, basePath,
+             reader, faces, materials, coords, normals, texcoords);
 
     // The OBJ geometry is stored with each face in a separate child shape.
     parent = null;
@@ -222,23 +222,22 @@ public class PShapeOBJ extends PShape {
           if (parts[0].equals("v")) {
             // vertex
             PVector tempv = new PVector(Float.valueOf(parts[1]).floatValue(),
-                Float.valueOf(parts[2]).floatValue(),
-                Float.valueOf(parts[3]).floatValue());
+                                        Float.valueOf(parts[2]).floatValue(),
+                                        Float.valueOf(parts[3]).floatValue());
             coords.add(tempv);
             readv = true;
           } else if (parts[0].equals("vn")) {
             // normal
             PVector tempn = new PVector(Float.valueOf(parts[1]).floatValue(),
-                Float.valueOf(parts[2]).floatValue(),
-                Float.valueOf(parts[3]).floatValue());
+                                        Float.valueOf(parts[2]).floatValue(),
+                                        Float.valueOf(parts[3]).floatValue());
             normals.add(tempn);
             readvn = true;
           } else if (parts[0].equals("vt")) {
             // uv, inverting v to take into account Processing's inverted Y axis
             // with respect to OpenGL.
             PVector tempv = new PVector(Float.valueOf(parts[1]).floatValue(),
-                1 - Float.valueOf(parts[2]).
-                    floatValue());
+                                     1 - Float.valueOf(parts[2]).floatValue());
             texcoords.add(tempv);
             readvt = true;
           } else if (parts[0].equals("o")) {
@@ -252,7 +251,8 @@ public class PShapeOBJ extends PShape {
               }
               BufferedReader mreader = parent.createReader(fn);
               if (mreader != null) {
-                parseMTL(parent, path, mreader, materials, mtlTable);
+                parseMTL(parent, path,
+                         mreader, materials, mtlTable);
               }
             }
           } else if (parts[0].equals("g")) {
@@ -432,14 +432,10 @@ public class PShapeOBJ extends PShape {
 
 
   static protected String getBasePath(PApplet parent, String filename) {
-    // Obtaining the path
-    File file = new File(parent.dataPath(filename));
-    if (!file.exists()) {
-      file = parent.sketchFile(filename);
+    if (-1 < filename.indexOf(File.separator)) {
+      return filename.substring(0, filename.lastIndexOf(File.separator));
     }
-    String absolutePath = file.getAbsolutePath();
-    return absolutePath.substring(0,
-        absolutePath.lastIndexOf(File.separator));
+    return "";
   }
 
 
