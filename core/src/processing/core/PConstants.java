@@ -50,7 +50,7 @@ public interface PConstants {
   static final String P3D = "processing.opengl.PGraphics3D";
   static final String OPENGL = P3D;
   static final String STEREO = "processing.vr.VRGraphicsStereo";
-  static final String MONO = "processing.vr.VRPGraphicsMono";
+  static final String MONO = "processing.vr.VRGraphicsMono";
   static final String VR = STEREO;
   static final String AR = "processing.ar.ARGraphics";
   static final String ARCORE = AR;
