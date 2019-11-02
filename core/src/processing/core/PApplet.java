@@ -178,6 +178,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    */
   public int pmouseX, pmouseY;
 
+  public int mouseButton;
 
   public boolean mousePressed;
 
@@ -2089,7 +2090,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 //    }
 
     // Get the (already processed) button code
-//    mouseButton = event.getButton();
+    mouseButton = event.getButton();
 
     // Added in 0215 (2.0b7) so that pmouseX/Y behave more like one would
     // expect from the desktop. This makes the ContinousLines example behave.
