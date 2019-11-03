@@ -33,6 +33,7 @@ import processing.mode.android.LogEntry.Severity;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -256,6 +257,7 @@ class Device {
 
   public void setPackageName(String pkgName) {
     packageName = pkgName;
+    System.out.println("setting package name to " + packageName);
   }
 
   // I/Process ( 9213): Sending signal. PID: 9213 SIG: 9
@@ -267,12 +269,10 @@ class Device {
   private class LogLineProcessor implements LineProcessor {
     public void processLine(final String line) {
       final LogEntry entry = new LogEntry(line);
-//      System.err.println("***************************************************");
+//      System.out.println("***************************************************");
 //      System.out.println(line);
-//      System.err.println(activeProcesses);
-//      System.err.println(entry.message);
-
-        System.out.println(line);
+//      System.out.println(activeProcesses);
+//      System.out.println(entry.message);
 
       if (entry.message.startsWith("PROCESSING")) {
         // Old start/stop process detection, does not seem to work anymore.
@@ -391,7 +391,7 @@ class Device {
 
   void initialize() throws IOException, InterruptedException {
     adb("logcat", "-c");
-    final String[] cmd = generateAdbCommand("logcat");
+    final String[] cmd = generateAdbCommand("logcat", "-v", "brief");
     final String title = PApplet.join(cmd, ' ');
     logcat = Runtime.getRuntime().exec(cmd);
     ProcessRegistry.watch(logcat);
@@ -403,9 +403,6 @@ class Device {
       public void run() {
         try {
           logcat.waitFor();
-          //          final int result = logcat.waitFor();
-          //          System.err.println("AndroidDevice: " + getId() + " logcat exited "
-          //              + (result == 0 ? "normally" : "with status " + result));
         } catch (final InterruptedException e) {
           System.err
               .println("AndroidDevice: logcat process monitor interrupted");
