@@ -7,5 +7,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/processing-java"/>
 	<classpathentry kind="lib" path="mode/jdi.jar"/>
 	<classpathentry kind="lib" path="mode/gradle-tooling-api-5.6.2.jar"/>
+	<classpathentry kind="lib" path="mode/jdimodel.jar"/>
 	<classpathentry kind="output" path="core/bin"/>
 </classpath>
