@@ -92,7 +92,8 @@ public class AndroidMode extends JavaMode {
 
   public File[] getKeywordFiles() {
     return new File[] {
-      Platform.getContentFile("modes/java/keywords.txt")
+      Platform.getContentFile("modes/java/keywords.txt"),
+      getContentFile("keywords.txt")
     };
   }
 

@@ -33,7 +33,6 @@ import processing.mode.android.LogEntry.Severity;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -257,7 +256,6 @@ class Device {
 
   public void setPackageName(String pkgName) {
     packageName = pkgName;
-    System.out.println("setting package name to " + packageName);
   }
 
   // I/Process ( 9213): Sending signal. PID: 9213 SIG: 9
