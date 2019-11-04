@@ -24,6 +24,8 @@ package processing.a2d;
 
 import android.content.Context;
 
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.service.wallpaper.WallpaperService;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.view.MotionEvent;
@@ -84,6 +86,11 @@ public class PSurfaceAndroid2D extends PSurfaceNone {
 //    println("done making surface view");
 
       surfaceReady = false; // Will be ready when the surfaceCreated() event is called
+
+      // Solves screen flickering:
+      // https://github.com/processing/processing-android/issues/570
+      setBackgroundColor(Color.argb(0, 0, 0, 0));
+      getHolder().setFormat(PixelFormat.TRANSPARENT);
     }
 
     @Override
