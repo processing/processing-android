@@ -69,13 +69,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
   static protected final int SHADER2D = 7;
 
-  // Enables/disables matrix pre-multiplication
-  // https://github.com/processing/processing/wiki/Advanced-OpenGL#vertex-coordinates-are-in-model-space
-  // https://github.com/processing/processing/issues/2904
-  // see above URLs for some discussion on premultiplying matrix vs. flushing buffer on matrix change.
-  // rather than committing to one or the other, this implementation supports both
-  public static boolean premultiplyMatrices = true;
-
   // Uses the implementations in the parent PGraphicsOpenGL class, which is needed to to draw obj files
   // and apply shader filters.
   protected boolean useParentImpl = false;
@@ -1103,200 +1096,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
   //////////////////////////////////////////////////////////////
 
-  // MATRIX OPS
-
-
-  /*
-   * Monkey-patch all methods that modify matrices to optionally flush the vertex buffer.
-   * If you see a method that isn't here but should be, or is here but shouldn't,
-   * feel free to add/remove it.
-   */
-
-
-  @Override
-  public void applyMatrix(float n00, float n01, float n02, float n10, float n11, float n12) {
-    preMatrixChanged();
-    super.applyMatrix(n00, n01, n02, n10, n11, n12);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void applyMatrix(PMatrix2D source) {
-    preMatrixChanged();
-    super.applyMatrix(source);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void applyProjection(float n00, float n01, float n02, float n03,
-      float n10, float n11, float n12, float n13,
-      float n20, float n21, float n22, float n23,
-      float n30, float n31, float n32, float n33) {
-    preMatrixChanged();
-    super.applyProjection(n00, n01, n02, n03,
-        n10, n11, n12, n13,
-        n20, n21, n22, n23,
-        n30, n31, n32, n33);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void applyProjection(PMatrix3D mat) {
-    preMatrixChanged();
-    super.applyProjection(mat);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void popMatrix() {
-    preMatrixChanged();
-    super.popMatrix();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void popProjection() {
-    preMatrixChanged();
-    super.popProjection();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void pushMatrix() {
-    preMatrixChanged();
-    super.pushMatrix();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void pushProjection() {
-    preMatrixChanged();
-    super.pushProjection();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void resetMatrix() {
-    preMatrixChanged();
-    super.resetMatrix();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void resetProjection() {
-    preMatrixChanged();
-    super.resetProjection();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void rotate(float angle) {
-    preMatrixChanged();
-    super.rotate(angle);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void scale(float s) {
-    preMatrixChanged();
-    super.scale(s);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void scale(float sx, float sy) {
-    preMatrixChanged();
-    super.scale(sx, sy);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void setMatrix(PMatrix2D source) {
-    preMatrixChanged();
-    super.setMatrix(source);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void setProjection(PMatrix3D mat) {
-    preMatrixChanged();
-    super.setProjection(mat);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void shearX(float angle) {
-    preMatrixChanged();
-    super.shearX(angle);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void shearY(float angle) {
-    preMatrixChanged();
-    super.shearY(angle);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void translate(float tx, float ty) {
-    preMatrixChanged();
-    super.translate(tx, ty);
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void updateProjmodelview() {
-    preMatrixChanged();
-    super.updateProjmodelview();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void updateGLModelview() {
-    preMatrixChanged();
-    super.updateGLModelview();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void updateGLProjection() {
-    preMatrixChanged();
-    super.updateGLProjection();
-    postMatrixChanged();
-  }
-
-
-  @Override
-  public void updateGLProjmodelview() {
-    preMatrixChanged();
-    super.updateGLProjmodelview();
-    postMatrixChanged();
-  }
-
-
-  //////////////////////////////////////////////////////////////
-
   // MATRIX MORE!
 
 
@@ -1781,11 +1580,7 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
   private void loadUniforms() {
     //set matrix uniform
-    if (premultiplyMatrices) {
-      pgl.uniformMatrix4fv(transformLoc, 1, true, FloatBuffer.wrap(new PMatrix3D().get(null)));
-    } else {
-      pgl.uniformMatrix4fv(transformLoc, 1, true, FloatBuffer.wrap(projmodelview.get(null)));
-    }
+    pgl.uniformMatrix4fv(transformLoc, 1, true, FloatBuffer.wrap(new PMatrix3D().get(null)));
 
     //set texture info
     pgl.activeTexture(PGL.TEXTURE0);
@@ -1820,14 +1615,9 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
   private void vertexImpl(float x, float y, float u, float v, int c, float f) {
     int idx = usedVerts * 7;
-    if (premultiplyMatrices) {
-      //inline multiply only x and y to avoid an allocation and a few flops
-      vertexData[idx + 0] = projmodelview.m00*x + projmodelview.m01*y + projmodelview.m03;
-      vertexData[idx + 1] = projmodelview.m10*x + projmodelview.m11*y + projmodelview.m13;
-    } else {
-      vertexData[idx + 0] = x;
-      vertexData[idx + 1] = y;
-    }
+    //inline multiply only x and y to avoid an allocation and a few flops
+    vertexData[idx + 0] = projmodelview.m00*x + projmodelview.m01*y + projmodelview.m03;
+    vertexData[idx + 1] = projmodelview.m10*x + projmodelview.m11*y + projmodelview.m13;
     vertexData[idx + 2] = depth;
     vertexData[idx + 3] = u;
     vertexData[idx + 4] = v;
@@ -1897,30 +1687,6 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
     shapeVerts[vertCount].set(x, y, u, v, c, f);
     vertCount += 1;
-  }
-
-
-  float ellipseDetailMultiplier = 1;
-
-
-  private void preMatrixChanged() {
-    if (!premultiplyMatrices) {
-      flushBuffer();
-    }
-  }
-
-
-  private void postMatrixChanged() {
-    //this serves as a rough approximation of how much the longest axis
-    //of an ellipse will be scaled by a given matrix
-    //(in other words, the amount by which its on-screen size changes)
-    float sxi = projmodelview.m00 * width / 2;
-    float syi = projmodelview.m10 * height / 2;
-    float sxj = projmodelview.m01 * width / 2;
-    float syj = projmodelview.m11 * height / 2;
-    float Imag2 = sxi * sxi + syi * syi;
-    float Jmag2 = sxj * sxj + syj * syj;
-    ellipseDetailMultiplier = PApplet.sqrt(PApplet.max(Imag2, Jmag2));
   }
 
 
@@ -2239,6 +2005,16 @@ public final class PGraphics2DX extends PGraphicsOpenGL {
 
   //returns the total number of points needed to approximate an arc of a given radius and extent
   int circleDetail(float radius, float delta) {
+    //this serves as a rough approximation of how much the longest axis
+    //of an ellipse will be scaled by a given matrix
+    //(in other words, the amount by which its on-screen size changes)
+    float sxi = projmodelview.m00 * width / 2;
+    float syi = projmodelview.m10 * height / 2;
+    float sxj = projmodelview.m01 * width / 2;
+    float syj = projmodelview.m11 * height / 2;
+    float Imag2 = sxi * sxi + syi * syi;
+    float Jmag2 = sxj * sxj + syj * syj;
+    float ellipseDetailMultiplier = PApplet.sqrt(PApplet.max(Imag2, Jmag2));
     radius *= ellipseDetailMultiplier;
     return (int)(PApplet.min(127, PApplet.sqrt(radius) / QUARTER_PI * PApplet.abs(delta) * 0.75f) + 1);
   }
