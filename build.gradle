@@ -116,6 +116,9 @@ task dist {
         Files.copy(file("mode/processing-core.zip").toPath(),
                    file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING)
 
+        Files.copy(file("mode/keywords.txt").toPath(),
+                   file("${root}/keywords.txt").toPath(), REPLACE_EXISTING)
+
         Files.copy(file("mode/version.properties").toPath(),
                    file("${root}/version.properties").toPath(), REPLACE_EXISTING)
 
