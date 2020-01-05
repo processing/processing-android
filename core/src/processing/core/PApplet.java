@@ -2507,6 +2507,36 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
     postEvent(ke);
   }
+  
+  public void turnOnFlash() {
+        Context context = surface.getContext();
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+            CameraManager mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+            try {
+                String mCameraId = mCameraManager.getCameraIdList()[0];
+                mCameraManager.setTorchMode(mCameraId, true);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "No Flash found in your device", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void turnOffFlash() {
+        Context context = surface.getContext();
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+            CameraManager mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+            try {
+                String mCameraId = mCameraManager.getCameraIdList()[0];
+                mCameraManager.setTorchMode(mCameraId, false);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "No Flash found in your device", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 
   public void openKeyboard() {
