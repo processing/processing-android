@@ -33,8 +33,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -96,7 +96,7 @@ public class PSurfaceNone implements PSurface, PConstants {
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       return watchface;
     }
-    return null;
+    return activity; //Defaults to the fragment instead of null
   }
 
 

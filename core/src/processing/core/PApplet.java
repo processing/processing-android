@@ -45,7 +45,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.LayoutRes;
+import androidx.annotation.LayoutRes;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
