@@ -2,13 +2,15 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 apply plugin: 'maven'
+apply plugin: 'kotlin'
 apply plugin: 'aar'
 
 dependencies {
     implementation name: "android"
 
     implementationAar "com.android.support:support-v4:${supportLibsVersion}"
-    implementationAar "com.google.android.support:wearable:${wearVersion}"  
+    implementationAar "com.google.android.support:wearable:${wearVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
 task createPom {
@@ -109,4 +111,26 @@ build.doLast {
                file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING)
     Files.copy(file("${buildDir}/libs/core.jar.MD5").toPath(),
                file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
+}
+buildscript {
+    ext.kotlin_version = '1.3.72'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+repositories {
+    mavenCentral()
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }

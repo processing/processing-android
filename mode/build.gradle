@@ -1,3 +1,6 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
 import java.nio.file.Files
 import org.zeroturnaround.zip.ZipUtil
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -22,6 +25,7 @@ dependencies {
     compileAndCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
 
     compile fileTree(include: ["jdi.jar", "jdimodel.jar"], dir: 'mode')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 // This task copies the gradle tooling jar into the mode folder
@@ -86,4 +90,17 @@ clean.doFirst {
 build.doLast {
     Files.copy(file("$buildDir/libs/mode.jar").toPath(),
                file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
+}
+repositories {
+    mavenCentral()
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
