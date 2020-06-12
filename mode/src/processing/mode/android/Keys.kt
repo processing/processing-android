@@ -1,6 +1,4 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-
-/*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
  Part of the Processing project - http://processing.org
 
  Copyright (c) 2012-16 The Processing Foundation
@@ -19,20 +17,14 @@
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+package processing.mode.android
 
-package processing.mode.android;
+import processing.app.ui.Editor
+import javax.swing.JFrame
 
-import javax.swing.*;
+class Keys(var editor: Editor) : JFrame() {
 
-import processing.app.ui.Editor;
-
-
-@SuppressWarnings("serial")
-public class Keys extends JFrame {
-  Editor editor;
-
-  public Keys(Editor editor) {
-    this.editor = editor;
-    setVisible(true);
-  }
+    init {
+        isVisible = true
+    }
 }
