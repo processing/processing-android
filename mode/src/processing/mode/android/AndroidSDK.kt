@@ -222,7 +222,7 @@ internal class AndroidSDK(val folder: File) {
         }
     }
 
-    internal class SDKTarget {
+    class SDKTarget {
         var version = 0
         var name: String? = null
     }

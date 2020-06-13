@@ -22,7 +22,7 @@ package processing.mode.android
 import processing.app.ui.Editor
 import javax.swing.JFrame
 
-class Keys(var editor: Editor) : JFrame() {
+internal class Keys(var editor: Editor) : JFrame() {
 
     init {
         isVisible = true

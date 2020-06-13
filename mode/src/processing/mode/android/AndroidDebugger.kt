@@ -36,7 +36,7 @@ import processing.mode.java.debug.LineID
 import java.io.IOException
 import javax.swing.SwingUtilities
 
-internal class AndroidDebugger internal constructor(editor: AndroidEditor, androidMode: AndroidMode) : Debugger(editor) {
+internal class AndroidDebugger (editor: AndroidEditor, androidMode: AndroidMode) : Debugger(editor) {
 
     /// editor window, acting as main view
     var androideditor: AndroidEditor? = null

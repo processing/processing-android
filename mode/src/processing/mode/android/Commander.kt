@@ -36,7 +36,7 @@ import kotlin.system.exitProcess
  *
  * @author ostap.andrusiv
  */
-class Commander(args: Array<String>) : RunnerListener {
+internal class Commander(args: Array<String>) : RunnerListener {
 
     private var androidMode: AndroidMode? = null
     private var task = HELP

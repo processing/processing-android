@@ -44,7 +44,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
                                           mode: Mode?) : JavaEditor(base, path, state, mode) {
     private var androidMenu: JMenu? = null
     var appComponent = 0
-    private val androiddebugger: AndroidDebugger
+    val androiddebugger: AndroidDebugger
     private var settings: Settings? = null
     private val androidMode: AndroidMode?
     private val androidTools: List<AndroidTool>
