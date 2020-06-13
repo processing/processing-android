@@ -262,14 +262,14 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
     fun showPostBuildMessage(appComp: Int) {
         if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
             AndroidUtil.showMessage(getTextString("android_mode.dialog.wallpaper_installed_title"),
-                    getTextString("android_mode.dialog.wallpaper_installed_body"))
+                    getTextString("android_mode.dialog.wallpaper_installed_body").toString())
 
             showWallpaperSelectMessage = false
         }
 
         if (showWatchFaceSelectMessage && appComp == AndroidBuild.WATCHFACE) {
             AndroidUtil.showMessage(getTextString("android_mode.dialog.watchface_installed_title"),
-                    getTextString("android_mode.dialog.watchface_installed_body"))
+                    getTextString("android_mode.dialog.watchface_installed_body").toString())
 
             showWatchFaceSelectMessage = false
         }

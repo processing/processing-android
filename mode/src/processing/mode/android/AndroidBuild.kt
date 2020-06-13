@@ -32,6 +32,7 @@ import processing.mode.java.JavaBuild
 
 import java.io.*
 import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * Class with all the infrastructure needed to build a sketch in the Android
@@ -209,9 +210,9 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
         val settingsTemplate = mode.getContentFile("templates/$GRADLE_SETTINGS_TEMPLATE")
         val settingsFile = File(tmpFolder, "settings.gradle")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@project_modules@@"] = projectModules
+        replaceMap?.set("@@project_modules@@", projectModules)
         AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap)
     }
 
@@ -237,7 +238,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
         val appBuildTemplate = mode.getContentFile("templates/$tmplFile")
         val appBuildFile = File(moduleFolder, "build.gradle")
-        val replaceMap = HashMap<String, String?>()
+        val replaceMap = HashMap<String?, String?>()
 
         replaceMap["@@tools_folder@@"] = Base.getToolsFolder().path.replace('\\', '/')
         replaceMap["@@target_platform@@"] = TARGET_SDK
@@ -327,11 +328,11 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
                                       permissions: Array<String>, external: Boolean) {
         val javaTemplate = mode.getContentFile("templates/$APP_ACTIVITY_TEMPLATE")
         val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainActivity.java")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@package_name@@"] = packageName
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
-        replaceMap["@@external@@"] = if (external) "sketch.setExternal(true);" else ""
+        replaceMap?.set("@@package_name@@", packageName)
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
+        replaceMap?.set("@@external@@", if (external) "sketch.setExternal(true);" else "")
 
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
@@ -340,10 +341,10 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
                                       permissions: Array<String>, external: Boolean) {
         val javaTemplate = mode.getContentFile("templates/$WALLPAPER_SERVICE_TEMPLATE")
         val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainService.java")
-        val replaceMap = HashMap<String, String>()
-        replaceMap["@@package_name@@"] = packageName
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
-        replaceMap["@@external@@"] = if (external) "sketch.setExternal(true);" else ""
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
+        replaceMap?.set("@@package_name@@", packageName)
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
+        replaceMap?.set("@@external@@", if (external) "sketch.setExternal(true);" else "")
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
 
@@ -351,12 +352,12 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
                                           permissions: Array<String>, external: Boolean) {
         val javaTemplate = mode.getContentFile("templates/$WATCHFACE_SERVICE_TEMPLATE")
         val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainService.java")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@watchface_classs@@"] = "PWatchFaceGLES"
-        replaceMap["@@package_name@@"] = packageName
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
-        replaceMap["@@external@@"] = if (external) "sketch.setExternal(true);" else ""
+        replaceMap?.set("@@watchface_classs@@", "PWatchFaceGLES")
+        replaceMap?.set("@@package_name@@", packageName)
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
+        replaceMap?.set("@@external@@", if (external) "sketch.setExternal(true);" else "")
 
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
@@ -366,12 +367,12 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
         val javaTemplate = mode.getContentFile("templates/$WATCHFACE_SERVICE_TEMPLATE")
         val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainService.java")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@watchface_classs@@"] = "PWatchFaceCanvas"
-        replaceMap["@@package_name@@"] = packageName
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
-        replaceMap["@@external@@"] = if (external) "sketch.setExternal(true);" else ""
+        replaceMap?.set("@@watchface_classs@@", "PWatchFaceCanvas")
+        replaceMap?.set("@@package_name@@", packageName)
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
+        replaceMap?.set("@@external@@", if (external) "sketch.setExternal(true);" else "")
 
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
@@ -381,11 +382,11 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
         val javaTemplate = mode.getContentFile("templates/$VR_ACTIVITY_TEMPLATE")
         val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainActivity.java")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@package_name@@"] = packageName
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
-        replaceMap["@@external@@"] = if (external) "sketch.setExternal(true);" else ""
+        replaceMap?.set("@@package_name@@", packageName)
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
+        replaceMap?.set("@@external@@", if (external) "sketch.setExternal(true);" else "")
 
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
@@ -395,11 +396,11 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
         val javaTemplate = mode.getContentFile("templates/$AR_ACTIVITY_TEMPLATE")
         val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainActivity.java")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@package_name@@"] = packageName
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
-        replaceMap["@@external@@"] = if (external) "sketch.setExternal(true);" else ""
+        replaceMap?.set("@@package_name@@", packageName)
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
+        replaceMap?.set("@@external@@", if (external) "sketch.setExternal(true);" else "")
 
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
@@ -408,50 +409,50 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
         val xmlTemplate = mode.getContentFile("templates/$LAYOUT_ACTIVITY_TEMPLATE")
         val xmlFile = File(layoutFolder, "main.xml")
-        val replaceMap = HashMap<String, String>()
+        val replaceMap:HashMap<String?,String?>? = HashMap<String?, String?>()
 
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
 
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap)
     }
 
     private fun writeResStylesFragment(valuesFolder: File) {
-        val xmlTemplate = mode.getContentFile("templates/$STYLES_FRAGMENT_TEMPLATE")
-        val xmlFile = File(valuesFolder, "styles.xml")
+        val xmlTemplate: File? = mode.getContentFile("templates/$STYLES_FRAGMENT_TEMPLATE")
+        val xmlFile: File? = File(valuesFolder, "styles.xml")
 
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile)
     }
 
     private fun writeResStylesVR(valuesFolder: File) {
-        val xmlTemplate = mode.getContentFile("templates/$STYLES_VR_TEMPLATE")
-        val xmlFile = File(valuesFolder, "styles.xml")
+        val xmlTemplate: File? = mode.getContentFile("templates/$STYLES_VR_TEMPLATE")
+        val xmlFile: File? = File(valuesFolder, "styles.xml")
 
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile)
     }
 
     private fun writeResStylesAR(valuesFolder: File) {
-        val xmlTemplate = mode.getContentFile("templates/$STYLES_AR_TEMPLATE")
-        val xmlFile = File(valuesFolder, "styles.xml")
+        val xmlTemplate: File? = mode.getContentFile("templates/$STYLES_AR_TEMPLATE")
+        val xmlFile: File? = File(valuesFolder, "styles.xml")
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile)
     }
 
     private fun writeResXMLWallpaper(xmlFolder: File) {
-        val xmlTemplate = mode.getContentFile("templates/$XML_WALLPAPER_TEMPLATE")
-        val xmlFile = File(xmlFolder, "wallpaper.xml")
+        val xmlTemplate: File? = mode.getContentFile("templates/$XML_WALLPAPER_TEMPLATE")
+        val xmlFile: File? = File(xmlFolder, "wallpaper.xml")
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile)
     }
 
     private fun writeResStringsWallpaper(valuesFolder: File) {
-        val xmlTemplate = mode.getContentFile("templates/$STRINGS_WALLPAPER_TEMPLATE")
-        val xmlFile = File(valuesFolder, "strings.xml")
-        val replaceMap = HashMap<String, String>()
-        replaceMap["@@sketch_class_name@@"] = sketchClassName
+        val xmlTemplate: File? = mode.getContentFile("templates/$STRINGS_WALLPAPER_TEMPLATE")
+        val xmlFile: File? = File(valuesFolder, "strings.xml")
+        val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
+        replaceMap?.set("@@sketch_class_name@@", sketchClassName)
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap)
     }
 
     private fun writeResXMLWatchFace(xmlFolder: File) {
-        val xmlTemplate = mode.getContentFile("templates/$XML_WATCHFACE_TEMPLATE")
-        val xmlFile = File(xmlFolder, "watch_face.xml")
+        val xmlTemplate: File? = mode.getContentFile("templates/$XML_WATCHFACE_TEMPLATE")
+        val xmlFile: File? = File(xmlFolder, "watch_face.xml")
         AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile)
     }
 
@@ -516,21 +517,20 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     private fun writeWatchFaceIconFiles(sketchFolder: File, resFolder: File) {
-        writeIconFiles(sketchFolder, resFolder, SKETCH_WATCHFACE_ICONS, null, BUILD_WATCHFACE_ICONS)
+        writeIconFiles(sketchFolder, resFolder, SKETCH_WATCHFACE_ICONS, emptyArray(), BUILD_WATCHFACE_ICONS)
     }
 
-    private fun writeIconFiles(sketchFolder: File, resFolder: File,
-                               sketchIconNames: Array<String>, oldIconNames: Array<String>?, buildIconNames: Array<String>) {
-        val localIcons = AndroidUtil.getFileList(sketchFolder, sketchIconNames, oldIconNames)
+    private fun writeIconFiles(sketchFolder: File?, resFolder: File?,
+                               sketchIconNames: Array<String?>, oldIconNames: Array<String?>, buildIconNames: Array<String?>) {
+        val localIcons = AndroidUtil.getFileList(sketchFolder!!, sketchIconNames!!, oldIconNames!!)
         val buildIcons = AndroidUtil.getFileList(resFolder, buildIconNames)
 
         if (AndroidUtil.noFileExists(localIcons)) {
             // If no icons are in the sketch folder, then copy all the defaults      
-            val defaultIcons = AndroidUtil.getFileList(mode, "icons/", sketchIconNames)
+            val defaultIcons = AndroidUtil.getFileList(mode, "icons/", sketchIconNames!!)
             try {
                 for (i in localIcons.indices) {
-                    copyIcon(defaultIcons[i], buildIcons[i])
-                }
+                    copyIcon(defaultIcons[i]!!, buildIcons[i]!!);                  }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -538,8 +538,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
             // If at least one of the icons already exists, then use that across the board
             try {
                 for (i in localIcons.indices) {
-                    if (localIcons[i].exists()) copyIcon(localIcons[i], buildIcons[i])
-                }
+                    if (localIcons[i]!!.exists()) copyIcon(localIcons[i]!!, buildIcons[i]!!);                }
             } catch (e: IOException) {
                 System.err.println(getTextString("android_build.error.cannot_copy_icons"))
                 e.printStackTrace()
@@ -573,7 +572,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
         Util.copyDir(projectFolder, exportFolder)
         installGradlew(exportFolder)
 
-        return exportFolder
+        return exportFolder!!
     }
 
     // ---------------------------------------------------------------------------
@@ -768,7 +767,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     @Throws(IOException::class)
-    private fun installGradlew(exportFolder: File) {
+    private fun installGradlew(exportFolder: File?) {
         val gradlewFile = mode.getContentFile("mode/gradlew.zip")
 
         AndroidUtil.extractFolder(gradlewFile, exportFolder, false, true)
@@ -780,7 +779,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     @Throws(IOException::class)
-    private fun createExportFolder(name: String): File {
+    private fun createExportFolder(name: String): File? {
         return AndroidUtil.createSubFolder(sketch.folder, name)
     }
 
@@ -848,22 +847,22 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
         private const val WEAR_GRADLE_BUILD_TEMPLATE = "WearBuild.gradle.tmpl"
 
         // Launcher and watch face icon files
-        val SKETCH_LAUNCHER_ICONS = arrayOf("launcher_36.png", "launcher_48.png",
+        val SKETCH_LAUNCHER_ICONS: Array<String?> = arrayOf("launcher_36.png", "launcher_48.png",
                 "launcher_72.png", "launcher_96.png",
                 "launcher_144.png", "launcher_192.png")
 
-        val SKETCH_OLD_LAUNCHER_ICONS = arrayOf("icon-36.png", "icon-48.png",
+        val SKETCH_OLD_LAUNCHER_ICONS:Array<String?> = arrayOf("icon-36.png", "icon-48.png",
                 "icon-72.png", "icon-96.png",
                 "icon-144.png", "icon-192.png")
 
-        val BUILD_LAUNCHER_ICONS = arrayOf("mipmap-ldpi/ic_launcher.png", "mipmap-mdpi/ic_launcher.png",
+        val BUILD_LAUNCHER_ICONS: Array<String?> = arrayOf("mipmap-ldpi/ic_launcher.png", "mipmap-mdpi/ic_launcher.png",
                 "mipmap-hdpi/ic_launcher.png", "mipmap-xhdpi/ic_launcher.png",
                 "mipmap-xxhdpi/ic_launcher.png", "mipmap-xxxhdpi/ic_launcher.png")
 
-        val SKETCH_WATCHFACE_ICONS = arrayOf("preview_circular.png",
+        val SKETCH_WATCHFACE_ICONS: Array<String?> = arrayOf("preview_circular.png",
                 "preview_rectangular.png")
 
-        val BUILD_WATCHFACE_ICONS = arrayOf("drawable-nodpi/preview_circular.png",
+        val BUILD_WATCHFACE_ICONS: Array<String?> = arrayOf("drawable-nodpi/preview_circular.png",
                 "drawable-nodpi/preview_rectangular.png")
 
         fun initVersions(file: File?) {
