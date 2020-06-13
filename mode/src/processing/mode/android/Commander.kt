@@ -24,6 +24,7 @@ package processing.mode.android
 
 import processing.app.*
 import processing.app.contrib.ModeContribution
+
 import java.io.File
 import java.io.IOException
 import java.io.PrintStream
@@ -174,13 +175,13 @@ class Commander(args: Array<String>) : RunnerListener {
             val runOnEmu = runArg_EMULATOR == device
             sketch = Sketch(pdePath, androidMode)
             if (task == BUILD || task == RUN) {
-                val build = AndroidBuild(sketch, androidMode, appComponent)
-                build.build(target)
+                val build = androidMode?.let { AndroidBuild(sketch, it, appComponent) }
+                build!!.build(target)
 
                 if (task == RUN) {
                     val runner = AndroidRunner(build, this)
-                    runner.launch(if (runOnEmu) Devices.getInstance().getEmulator(build.isWear) else Devices.getInstance().hardware,
-                            build.appComponent,
+                    runner.launch(if (runOnEmu) Devices.getInstance().getEmulator(build!!.isWear) else Devices.getInstance().hardware,
+                            build!!.appComponent,
                             runOnEmu)
 
                 }
@@ -188,8 +189,8 @@ class Commander(args: Array<String>) : RunnerListener {
                 success = true
 
             } else if (task == EXPORT) {
-                val build = AndroidBuild(sketch, androidMode, appComponent)
-                build.exportProject()
+                val build = androidMode?.let { AndroidBuild(sketch, it, appComponent) }
+                build!!.exportProject()
 
                 success = true
             }
