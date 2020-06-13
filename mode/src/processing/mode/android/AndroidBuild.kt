@@ -593,7 +593,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
 
     @Throws(Exception::class)
     private fun signPackage(projectFolder: File, keyStorePassword: String): File? {
-        val keyStore = AndroidKeyStore.getKeyStore() ?: return null
+        val keyStore = AndroidKeyStore.keyStore ?: return null
         val unsignedPackage = File(projectFolder,
                 pathToAPK + sketch.name.toLowerCase() + "_release_unsigned.apk")
 

@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
  Part of the Processing project - http://processing.org
 
  Copyright (c) 2014-17 The Processing Foundation
@@ -22,6 +24,7 @@ import processing.app.Language
 import processing.app.Messages
 import processing.app.Platform
 import processing.app.ui.Toolkit
+
 import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
@@ -31,6 +34,7 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
 import java.util.*
+
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.MatteBorder
@@ -46,28 +50,35 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
     var localityName: JTextField? = null
     var country: JTextField? = null
     var stateName: JTextField? = null
+
     private fun createLayout() {
+
         val outer = contentPane
         outer.removeAll()
         val vbox = Box.createVerticalBox()
         vbox.border = EmptyBorder(BOX_BORDER, BOX_BORDER, BOX_BORDER, BOX_BORDER)
         outer.add(vbox)
-        keyStore = AndroidKeyStore.getKeyStore()
+        keyStore = AndroidKeyStore.keyStore
+
         if (keyStore != null) {
             showKeystorePasswordLayout(vbox)
         } else {
             showKeystoreCredentialsLayout(vbox)
         }
+
         vbox.add(Box.createVerticalStrut(GAP))
 
         // buttons
         val buttons = JPanel()
         buttons.alignmentX = Component.LEFT_ALIGNMENT
+
         val okButton = JButton(Language.text("prompt.ok"))
         var dim = Dimension(Toolkit.getButtonWidth(),
                 okButton.preferredSize.height)
+
         okButton.preferredSize = dim
         okButton.addActionListener {
+
             if (checkRequiredFields()) {
                 if (keyStore == null) {
                     try {
@@ -85,15 +96,18 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
                 }
             }
         }
+
         okButton.isEnabled = true
         val cancelButton = JButton(Language.text("prompt.cancel"))
         cancelButton.preferredSize = dim
         cancelButton.addActionListener { isVisible = false }
         cancelButton.isEnabled = true
+
         val resetKeystoreButton = JButton(AndroidMode.getTextString("keystore_manager.reset_password"))
         dim = Dimension(Toolkit.getButtonWidth() * 2,
                 resetKeystoreButton.preferredSize.height)
         resetKeystoreButton.preferredSize = dim
+
         resetKeystoreButton.addActionListener {
             isVisible = false
             val result = Messages.showYesNoQuestion(editor, AndroidMode.getTextString("keystore_manager.dialog.reset_keyboard_title"),
@@ -112,6 +126,7 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
                 }
             }
         }
+
         resetKeystoreButton.isEnabled = true
 
         // think different, biznatchios!
@@ -126,28 +141,36 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
             //      buttons.add(Box.createHorizontalStrut(8));
             buttons.add(cancelButton)
         }
+
         //    buttons.setMaximumSize(new Dimension(300, buttons.getPreferredSize().height));
         vbox.add(buttons)
+
         val root = getRootPane()
+
         root.defaultButton = okButton
         val disposer = ActionListener { isVisible = false }
         Toolkit.registerWindowCloseKeys(root, disposer)
         Toolkit.setIcon(this)
+
         pack()
         /*
     Dimension screen = Toolkit.getScreenSize();
     Dimension windowSize = getSize();
     setLocation((screen.width - windowSize.width) / 2,
         (screen.height - windowSize.height) / 2);
-     */setLocationRelativeTo(null)
+     */
+        setLocationRelativeTo(null)
+
         isVisible = true
     }
 
     private fun showKeystorePasswordLayout(pain: Box) {
         passwordField = JPasswordField(15)
+
         val passwordLabel = JLabel("<html><body><b>" + AndroidMode.getTextString("keystore_manager.password_label") + " </b></body></html>")
         passwordLabel.labelFor = passwordField
         val textPane = JPanel(FlowLayout(FlowLayout.TRAILING))
+
         textPane.add(passwordLabel)
         textPane.add(passwordField)
         textPane.alignmentX = Component.LEFT_ALIGNMENT
@@ -174,20 +197,25 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
     private fun showKeystoreCredentialsLayout(box: Box) {
         val labelText = AndroidMode.getTextString("keystore_manager.top_label")
         val textarea = JLabel(labelText)
+
         textarea.preferredSize = Dimension(LABEL_WIDTH, LABEL_HEIGHT)
         textarea.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 Platform.openURL(GUIDE_URL)
             }
         })
+
         textarea.alignmentX = Component.LEFT_ALIGNMENT
         box.add(textarea)
 
         // password field
         passwordField = JPasswordField(15)
+
         val passwordLabel = JLabel("<html><body><b>" + AndroidMode.getTextString("keystore_manager.password_label") + " </b></body></html>")
         passwordLabel.labelFor = passwordField
+
         var textPane = JPanel(FlowLayout(FlowLayout.TRAILING))
+
         textPane.add(passwordLabel)
         textPane.add(passwordField)
         textPane.alignmentX = Component.LEFT_ALIGNMENT
@@ -203,20 +231,24 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
         textPane.alignmentX = Component.LEFT_ALIGNMENT
         textPane.border = EmptyBorder(0, 0, PASS_BORDER, 0)
         box.add(textPane)
+
         val mb = MatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY)
         val tb = TitledBorder(mb, AndroidMode.getTextString("keystore_manager.issuer_credentials_header"), TitledBorder.LEFT, TitledBorder.DEFAULT_POSITION)
         val separatorPanel = JPanel()
+
         separatorPanel.border = tb
         box.add(separatorPanel)
 
         // common name (CN)
         commonName = JTextField(15)
+
         val commonNameLabel = JLabel(AndroidMode.getTextString("keystore_manager.common_name_label"))
         commonNameLabel.labelFor = commonName
         textPane = JPanel(FlowLayout(FlowLayout.TRAILING))
         textPane.add(commonNameLabel)
         textPane.add(commonName)
         textPane.alignmentX = Component.LEFT_ALIGNMENT
+
         box.add(textPane)
 
         // organizational unit (OU)
@@ -247,6 +279,7 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
         textPane.add(localityNameLabel)
         textPane.add(localityName)
         textPane.alignmentX = Component.LEFT_ALIGNMENT
+
         box.add(textPane)
 
         // state name (S)
@@ -257,6 +290,7 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
         textPane.add(stateNameLabel)
         textPane.add(stateName)
         textPane.alignmentX = Component.LEFT_ALIGNMENT
+
         box.add(textPane)
 
         // country (C)
@@ -279,6 +313,7 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
         const val GUIDE_URL = "https://developer.android.com/studio/publish/app-signing.html"
     }
 
+    // constructor or initializer block
     init {
         createLayout()
     }
