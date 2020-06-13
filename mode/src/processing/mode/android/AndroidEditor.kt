@@ -498,7 +498,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
         val toolPath = File(androidMode!!.folder, "tools/SDKUpdater")
         var tool: AndroidTool? = null
         try {
-            tool = AndroidTool(toolPath, androidMode.getSdk())
+            tool = AndroidTool(toolPath, androidMode.getSdk()!!)
             tool.init(base)
             outgoing.add(tool)
         } catch (e: Throwable) {
