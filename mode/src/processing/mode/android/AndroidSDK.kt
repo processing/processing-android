@@ -449,7 +449,7 @@ internal class AndroidSDK(val folder: File) {
 
         @Throws(BadSDKException::class, CancelException::class)
         fun download(editor: Frame?, androidMode: AndroidMode?): AndroidSDK {
-            val downloader = SDKDownloader(editor)
+            val downloader = SDKDownloader(editor!!)
 
             downloader.run() // This call blocks until the SDK download complete, or user cancels.
 
@@ -457,7 +457,7 @@ internal class AndroidSDK(val folder: File) {
                 throw CancelException(getTextString("android_sdk.error.sdk_download_canceled"))
             }
 
-            val sdk = downloader.sdk ?: throw BadSDKException(getTextString("android_sdk.error.sdk_download_failed"))
+            val sdk = downloader.sDK ?: throw BadSDKException(getTextString("android_sdk.error.sdk_download_failed"))
             val result = showSDKLicenseDialog(editor)
 
             if (result == JOptionPane.YES_OPTION) {
