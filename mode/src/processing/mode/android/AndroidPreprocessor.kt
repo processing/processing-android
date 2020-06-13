@@ -1,6 +1,4 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
-
-/*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
  Part of the Processing project - http://processing.org
 
  Copyright (c) 2012-17 The Processing Foundation
@@ -19,149 +17,142 @@
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+package processing.mode.android
 
-package processing.mode.android;
+import processing.app.Messages
+import processing.app.Sketch
+import processing.app.SketchException
+import processing.core.PApplet
 
-import java.io.IOException;
-import java.io.PrintWriter;
-//import java.io.Writer;
-import java.util.List;
-import processing.app.*;
-import processing.core.PApplet;
-import processing.mode.java.preproc.PdePreprocessor;
-import processing.mode.java.preproc.SurfaceInfo;
+import processing.mode.android.AndroidMode.Companion.getTextString
+import processing.mode.java.preproc.PdePreprocessor
+import processing.mode.java.preproc.SurfaceInfo
 
+import java.io.PrintWriter
 
-/** 
+/**
  * Processing preprocessor, supporting the Android specifics.
  */
-public class AndroidPreprocessor extends PdePreprocessor {
-  protected Sketch sketch;
-  protected String packageName;
+internal class AndroidPreprocessor : PdePreprocessor {
+    private var sketch: Sketch? = null
+    private var packageName: String? = null
+    private var smoothStatement: String? = null
+    private var sketchQuality: String? = null
+    private var kindStatement: String? = null
+    private var sketchKind: String? = null
 
-  protected String smoothStatement;
-  protected String sketchQuality;
+    constructor(sketchName: String?) : super(sketchName) {
 
-  protected String kindStatement;
-  protected String sketchKind;
-  
-  public static final String SMOOTH_REGEX =
-      "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;";
-
-  public AndroidPreprocessor(final String sketchName) {
-    super(sketchName);
-  } 
-  
-  public AndroidPreprocessor(final Sketch sketch,
-                             final String packageName) throws IOException {
-    super(sketch.getName());
-    this.sketch = sketch;
-    this.packageName = packageName;
-  }
-
-
-  public SurfaceInfo initSketchSize(String code) throws SketchException {
-    SurfaceInfo surfaceInfo = parseSketchSize(code, true);
-    if (surfaceInfo == null) {
-      System.err.println(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_size"));
-      throw new SketchException(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_size_exception"));
     }
-    return surfaceInfo;
-  }
-
-
-  public String[] initSketchSmooth(String code) throws SketchException {
-    String[] info = parseSketchSmooth(code, true);
-    if (info == null) {
-      System.err.println(AndroidMode.getTextString("android_preprocessor.error.cannot_smooth_size"));
-      throw new SketchException(AndroidMode.getTextString("android_preprocessor.error.cannot_parse_smooth_exception"));
+    constructor(sketch: Sketch,
+                packageName: String?) : super(sketch.name) {
+        this.sketch = sketch
+        this.packageName = packageName
     }
-    smoothStatement = info[0];
-    sketchQuality = info[1];
-    return info;
-  }
 
-
-  static public String[] parseSketchSmooth(String code, boolean fussy) {
-    String[] matches = PApplet.match(scrubComments(code), SMOOTH_REGEX);
-
-    if (matches != null) {
-      boolean badSmooth = false;
-
-      if (PApplet.parseInt(matches[1], -1) == -1) {
-        badSmooth = true;
-      }
-
-      if (badSmooth && fussy) {
-        // found a reference to smooth, but it didn't seem to contain numbers
-        Messages.showWarning(AndroidMode.getTextString("android_preprocessor.warn.cannot_find_smooth_level_title"), 
-                             AndroidMode.getTextString("android_preprocessor.warn.cannot_find_smooth_level_body"), null);
-        return null;
-      }
-
-      return matches;
-    }
-    return new String[] { null, null };  // not an error, just empty
-  }
-
-
-  @Override
-  protected int writeImports(final PrintWriter out,
-                             final List<String> programImports,
-                             final List<String> codeFolderImports) {
-    out.println("package " + packageName + ";");
-    out.println();
-    int count = 2;
-    count += super.writeImports(out, programImports, codeFolderImports);
-//    count += writeImportList(out, getAndroidImports());
-    return count;
-  }
-
-  
-  @Override
-  protected void writeFooter(PrintWriter out, String className) {
-    SurfaceInfo info = null;
-    try {
-      info = initSketchSize(sketch.getMainProgram());
-    } catch (SketchException e) {
-      e.printStackTrace();
-    }
-    
-    if (info == null) {
-      // Cannot get size info, just use parent's implementation.
-      super.writeFooter(out, className);
-    } else {
-      // Same as in the parent, but without writing the main() method, which is
-      // not needed in Android.
-      
-      if (mode == Mode.STATIC) {
-        // close off setup() definition
-        out.println(indent + indent + "noLoop();");
-        out.println(indent + "}");
-        out.println();
-      }
-
-      if ((mode == Mode.STATIC) || (mode == Mode.ACTIVE)) {
-        // doesn't remove the original size() method, but calling size()
-        // again in setup() is harmless.        
-        if (!hasMethod("settings") && info.hasSettings()) {
-          out.println(indent + "public void settings() { " + info.getSettings() + " }");
+    @Throws(SketchException::class)
+    fun initSketchSize(code: String?): SurfaceInfo {
+        val surfaceInfo = parseSketchSize(code, true)
+        if (surfaceInfo == null) {
+            System.err.println(getTextString("android_preprocessor.error.cannot_parse_size"))
+            throw SketchException(getTextString("android_preprocessor.error.cannot_parse_size_exception"))
         }
-        
-        // close off the class definition
-        out.println("}");
-      }
+        return surfaceInfo
     }
-  }
-  
-  
-////////////////////////////////////////////////////////////////////////////////
-// Assorted commented out code
-//
 
-  // As of revision 0215 (2.0b7-ish), the default imports are now identical
-  // between desktop and Android (to avoid unintended incompatibilities).
-  /*
+    @Throws(SketchException::class)
+    fun initSketchSmooth(code: String?): Array<String?> {
+        val info = parseSketchSmooth(code, true)
+        if (info == null) {
+            System.err.println(getTextString("android_preprocessor.error.cannot_smooth_size"))
+            throw SketchException(getTextString("android_preprocessor.error.cannot_parse_smooth_exception"))
+        }
+        smoothStatement = info[0]
+        sketchQuality = info[1]
+        return info
+    }
+
+    override fun writeImports(out: PrintWriter,
+                              programImports: List<String>,
+                              codeFolderImports: List<String>): Int {
+        out.println("package $packageName;")
+
+        out.println()
+        var count = 2
+
+        count += super.writeImports(out, programImports, codeFolderImports)
+
+        //    count += writeImportList(out, getAndroidImports());
+        return count
+    }
+
+    override fun writeFooter(out: PrintWriter, className: String) {
+        var info: SurfaceInfo? = null
+
+        try {
+            info = initSketchSize(sketch!!.mainProgram)
+        } catch (e: SketchException) {
+            e.printStackTrace()
+        }
+
+        if (info == null) {
+            // Cannot get size info, just use parent's implementation.
+            super.writeFooter(out, className)
+        } else {
+
+            // Same as in the parent, but without writing the main() method, which is
+            // not needed in Android.
+            if (mode == Mode.STATIC) {
+                // close off setup() definition
+                out.println(indent + indent + "noLoop();")
+                out.println("$indent}")
+                out.println()
+            }
+
+            if (mode == Mode.STATIC || mode == Mode.ACTIVE) {
+                // doesn't remove the original size() method, but calling size()
+                // again in setup() is harmless.        
+                if (!hasMethod("settings") && info.hasSettings()) {
+                    out.println(indent + "public void settings() { " + info.settings + " }")
+                }
+
+                // close off the class definition
+                out.println("}")
+            }
+        }
+    }
+
+    companion object {
+        const val SMOOTH_REGEX = "(?:^|\\s|;)smooth\\s*\\(\\s*([^\\s,]+)\\s*\\)\\s*\\;"
+
+        fun parseSketchSmooth(code: String?, fussy: Boolean): Array<String?>? {
+            val matches = PApplet.match(scrubComments(code), SMOOTH_REGEX)
+            if (matches != null) {
+                var badSmooth = false
+
+                if (PApplet.parseInt(matches[1], -1) == -1) {
+                    badSmooth = true
+                }
+                if (badSmooth && fussy) {
+                    // found a reference to smooth, but it didn't seem to contain numbers
+                    Messages.showWarning(getTextString("android_preprocessor.warn.cannot_find_smooth_level_title"),
+                            getTextString("android_preprocessor.warn.cannot_find_smooth_level_body"), null)
+                    return null
+                }
+
+                return matches
+            }
+            return arrayOf(null, null) // not an error, just empty
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    // Assorted commented out code
+    //
+    // As of revision 0215 (2.0b7-ish), the default imports are now identical
+    // between desktop and Android (to avoid unintended incompatibilities).
+    /*
   @Override
   public String[] getCoreImports() {
     return new String[] {
@@ -202,9 +193,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return androidImports;
   }
   */
-  
-  // No need for it now
-  /*
+    // No need for it now
+    /*
   public String[] getDefaultImports() {
 //    String[] defs = super.getDefaultImports();    
 //    return defs;
@@ -228,9 +218,8 @@ public class AndroidPreprocessor extends PdePreprocessor {
       "processing.android.ServiceEngine"
     };
   }  
-  */  
-  
-  /*
+  */
+    /*
   protected boolean parseSketchSize() {
     // This matches against any uses of the size() function, whether numbers
     // or variables or whatever. This way, no warning is shown if size() isn't
@@ -296,9 +285,7 @@ public class AndroidPreprocessor extends PdePreprocessor {
     return true;
   }
   */
-
-
-  /*
+    /*
   public PreprocessorResult write(Writer out, String program, String[] codeFolderPackages)
   throws SketchException, RecognitionException, TokenStreamException {
     if (sizeStatement != null) {
@@ -310,5 +297,6 @@ public class AndroidPreprocessor extends PdePreprocessor {
     //program = program.replaceAll("import\\s+processing\\.opengl\\.\\S+;", "");
     return super.write(out, program, codeFolderPackages);
   }
-  */  
+  */
+
 }
