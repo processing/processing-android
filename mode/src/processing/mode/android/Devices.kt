@@ -113,7 +113,7 @@ internal class Devices private constructor() {
         }
         if (emuController.state == EmulatorController.State.NOT_RUNNING) {
             try {
-                emuController.launch(sDK, wear) // this blocks until emulator boots
+                emuController.launch(sDK!!, wear) // this blocks until emulator boots
             } catch (e: IOException) {
                 System.err.println("Problem while launching emulator.")
                 e.printStackTrace(System.err)
