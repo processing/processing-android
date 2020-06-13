@@ -82,14 +82,14 @@ internal class AndroidDebugger internal constructor(editor: AndroidEditor, andro
             println(getTextString("android_debugger.info.debugger_attached"))
 
             // start receiving vm events
-            val eventThread = VMEventReader(vm.eventQueue(), vmEventListener)
+            val eventThread = VMEventReader(vm!!.eventQueue(), vmEventListener)
             eventThread.start()
 
             // watch for loaded classes
-            addClassWatch(vm)
+            addClassWatch(vm!!)
 
             // resume the vm
-            vm.resume()
+            vm!!.resume()
         } catch (e: IOException) {
             Messages.log(getTextString("android_debugger.error.debugger_exception", e.message))
             // Retry
@@ -152,7 +152,7 @@ internal class AndroidDebugger internal constructor(editor: AndroidEditor, andro
         }
 
         paused = false // resuming now
-        androidruntime!!.vm().resume()
+        androidruntime!!.vm()!!.resume()
 
     }
 
@@ -169,7 +169,7 @@ internal class AndroidDebugger internal constructor(editor: AndroidEditor, andro
 
         // hit a breakpoint during a step, need to cancel the step.
         if (requestedStep != null) {
-            androidruntime!!.vm().eventRequestManager().deleteEventRequest(requestedStep)
+            androidruntime!!.vm()!!.eventRequestManager().deleteEventRequest(requestedStep)
             requestedStep = null
         }
 
@@ -194,7 +194,7 @@ internal class AndroidDebugger internal constructor(editor: AndroidEditor, andro
         }
 
         // delete the steprequest that triggered this step so new ones can be placed (only one per thread)
-        val mgr: EventRequestManager = androidruntime!!.vm().eventRequestManager()
+        val mgr: EventRequestManager = androidruntime!!.vm()!!.eventRequestManager()
         mgr.deleteEventRequest(se.request())
 
         requestedStep = null // mark that there is no step request pending
@@ -219,7 +219,7 @@ internal class AndroidDebugger internal constructor(editor: AndroidEditor, andro
         if (!isStarted) {
             startDebug()
         } else if (isPaused) {
-            androidruntime!!.vm().resume()
+            androidruntime!!.vm()!!.resume()
             paused = false
             androideditor!!.statusBusy()
         }
@@ -233,11 +233,11 @@ internal class AndroidDebugger internal constructor(editor: AndroidEditor, andro
             androideditor!!.activateStep()
 
             // use global to mark that there is a step request pending
-            requestedStep = androidruntime!!.vm().eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth)
+            requestedStep = androidruntime!!.vm()!!.eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth)
             requestedStep.addCountFilter(1) // valid for one step only
             requestedStep.enable()
             paused = false
-            androidruntime!!.vm().resume()
+            androidruntime!!.vm()!!.resume()
             androideditor!!.statusBusy()
         }
     }
