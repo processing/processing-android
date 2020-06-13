@@ -180,7 +180,7 @@ internal class Commander(args: Array<String>) : RunnerListener {
 
                 if (task == RUN) {
                     val runner = AndroidRunner(build, this)
-                    runner.launch(if (runOnEmu) Devices.getInstance().getEmulator(build!!.isWear) else Devices.getInstance().hardware,
+                    runner.launch(if (runOnEmu) Devices.instance.getEmulator(build!!.isWear) else Devices.instance.hardware,
                             build!!.appComponent,
                             runOnEmu)
 

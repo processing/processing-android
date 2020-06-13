@@ -171,8 +171,8 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
                     getTextString("android_mode.warn.cannot_load_sdk_body"), tr)
 
         } else {
-            val devices = Devices.getInstance()
-            devices.sdk = sdk
+            val devices = Devices.instance
+            devices.sDK = sdk
         }
         checkingSDK = false
     }
@@ -209,7 +209,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
             throw se
         }
         val comp = build.appComponent
-        val emu = Devices.getInstance().getEmulator(build.isWear)
+        val emu = Devices.instance.getEmulator(build.isWear)
 
         runner = AndroidRunner(build, listener)
         runner!!.launch(emu, comp, true)
@@ -218,7 +218,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
     @Throws(SketchException::class, IOException::class)
     fun handleRunDevice(sketch: Sketch?, editor: AndroidEditor,
                         listener: RunnerListener) {
-        val devices = Devices.getInstance()
+        val devices = Devices.instance
         val deviceList = devices.findMultiple(false)
 
         if (deviceList.size == 0) {
@@ -242,7 +242,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
         }
 
         val comp = build.appComponent
-        val dev = Devices.getInstance().hardware
+        val dev = Devices.instance.hardware
 
         runner = AndroidRunner(build, listener)
 

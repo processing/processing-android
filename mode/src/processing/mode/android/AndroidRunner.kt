@@ -37,10 +37,7 @@ import processing.mode.java.runner.Runner
 
 import java.io.IOException
 import java.io.PrintStream
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.*
 import java.util.regex.Pattern
 
 /**
@@ -52,7 +49,7 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
     private var vm: VirtualMachine? = null
     private var isDebugEnabled = false
 
-    fun launch(deviceFuture: Future<Device>, comp: Int, emu: Boolean): Boolean {
+    fun launch(deviceFuture: Future<Device?>, comp: Int, emu: Boolean): Boolean {
         val devStr = if (emu) "emulator" else "device"
         listener.statusNotice(getTextString("android_runner.status.waiting_for_device", devStr))
         val device = waitForDevice(deviceFuture, listener)
@@ -60,7 +57,7 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
             listener.statusError(getTextString("android_runner.status.lost_connection_with_device", devStr))
             // Reset the server, in case that's the problem. Sometimes when
             // launching the emulator times out, the device list refuses to update.
-            val devices = Devices.getInstance()
+            val devices = Devices.instance
             devices.killAdbServer()
             return false
         }
@@ -82,7 +79,7 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
         // this stopped working with Android SDK tools revision 17
         if (!device.installApp(build, listener)) {
             listener.statusError(getTextString("android_runner.status.lost_connection", devStr))
-            val devices = Devices.getInstance()
+            val devices = Devices.instance
             devices.killAdbServer() // see above
             return false
         }
@@ -177,7 +174,7 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
         return false
     }
 
-    private fun waitForDevice(deviceFuture: Future<Device>, listener: RunnerListener): Device? {
+    private fun waitForDevice(deviceFuture: Future<Device?>, listener: RunnerListener): Device? {
         for (i in 0..119) {
             if (listener.isHalted) {
                 deviceFuture.cancel(true)

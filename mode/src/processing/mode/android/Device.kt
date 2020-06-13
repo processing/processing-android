@@ -69,11 +69,11 @@ internal class Device(val env: Devices, val id: String) {
         get() {
             var name = ""
             try {
-                var result = env.sdk.runADB("-s", id, "shell", "getprop", "ro.product.brand")
+                var result = env.sDK!!.runADB("-s", id, "shell", "getprop", "ro.product.brand")
                 if (result.succeeded()) {
                     name += result.stdout + " "
                 }
-                result = env.sdk.runADB("-s", id, "shell", "getprop", "ro.product.model")
+                result = env.sDK!!.runADB("-s", id, "shell", "getprop", "ro.product.model")
                 if (result.succeeded()) {
                     name += result.stdout
                 }
@@ -440,12 +440,12 @@ internal class Device(val env: Devices, val id: String) {
     @Throws(InterruptedException::class, IOException::class)
     private fun adb(vararg cmd: String): ProcessResult {
         val adbCmd = generateAdbCommand(*cmd)
-        return env.sdk.runADB(*adbCmd)
+        return env.sDK!!.runADB(*adbCmd)
     }
 
     @Throws(IOException::class)
     private fun generateAdbCommand(vararg cmd: String): Array<String> {
-        val toolsPath = env.sdk.platformToolsFolder
+        val toolsPath = env.sDK!!.platformToolsFolder
         val abdPath = if (Platform.isWindows()) File(toolsPath, "adb.exe") else File(toolsPath, "adb")
         return PApplet.concat(arrayOf(abdPath.canonicalPath, "-s", id), cmd)
     }

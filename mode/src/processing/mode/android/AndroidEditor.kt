@@ -526,7 +526,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
 //    menu.add(item);
         item = JMenuItem(getTextString("menu.android.reset_adb"))
         item.addActionListener { //        editor.statusNotice("Resetting the Android Debug Bridge server.");
-            val devices = Devices.getInstance()
+            val devices = Devices.instance
             devices.killAdbServer()
             devices.startAdbServer()
         }
@@ -534,13 +534,13 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
     }
 
     internal inner class UpdateDeviceListTask(private val deviceMenu: JMenu) : TimerTask() {
-        private fun selectFirstDevice(deviceList: List<Device>): Device? {
+        private fun selectFirstDevice(deviceList: List<Device?>): Device? {
             return if (0 < deviceList.size) deviceList[0] else null
         }
 
         override fun run() {
             if (androidMode == null || androidMode.getSdk() == null) return
-            val devices = Devices.getInstance()
+            val devices = Devices.instance
             if (appComponent == AndroidBuild.WATCHFACE) {
                 devices.enableBluetoothDebugging()
             }
@@ -574,7 +574,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
                     }
                 }
                 for (device in deviceList) {
-                    val deviceItem = JCheckBoxMenuItem(device.name)
+                    val deviceItem = JCheckBoxMenuItem(device!!.name)
                     deviceItem.isEnabled = true
                     if (device == selectedDevice) deviceItem.state = true
 
