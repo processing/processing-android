@@ -36,7 +36,7 @@ import processing.mode.java.debug.LineID
 import java.io.IOException
 import javax.swing.SwingUtilities
 
-internal class AndroidDebugger(editor: AndroidEditor, androidMode: AndroidMode) : Debugger(editor) {
+internal class AndroidDebugger internal constructor(editor: AndroidEditor, androidMode: AndroidMode) : Debugger(editor) {
 
     /// editor window, acting as main view
     var androideditor: AndroidEditor? = null
@@ -70,7 +70,7 @@ internal class AndroidDebugger(editor: AndroidEditor, androidMode: AndroidMode) 
         androidruntime = runner
         packageName = runner.build.packageName
         sketchClassName = runner.build.sketchClassName
-        mainClassName = packageName + "." + sketchClassName
+        mainClassName = "$packageName.$sketchClassName"
 
         try {
             val port = 8000 + (Math.random() * 1000).toInt()
@@ -351,7 +351,7 @@ internal class AndroidDebugger(editor: AndroidEditor, androidMode: AndroidMode) 
      */
     @Synchronized
     fun removeBreakpoint() {
-        removeBreakpoint(androideditor!!.getCurrentLineID().lineIdx())
+        removeBreakpoint(androideditor!!.currentLineID.lineIdx())
     }
 
     /**

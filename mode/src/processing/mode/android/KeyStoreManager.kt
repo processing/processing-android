@@ -36,7 +36,7 @@ import javax.swing.border.EmptyBorder
 import javax.swing.border.MatteBorder
 import javax.swing.border.TitledBorder
 
-class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keystore manager") {
+internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keystore manager") {
     var keyStore: File? = null
     var passwordField: JPasswordField? = null
     var repeatPasswordField: JPasswordField? = null
