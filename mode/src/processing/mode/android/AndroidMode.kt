@@ -295,7 +295,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
         val defName = Manifest.BASE_PACKAGE + "." + sketch.name.toLowerCase()
         val name = manifest.packageName
 
-        if (name.toLowerCase() == defName.toLowerCase()) {
+        if (name!!.toLowerCase() == defName.toLowerCase()) {
             // The user did not set the package name, show error and stop
             AndroidUtil.showMessage(getTextString("android_mode.dialog.cannot_export_package_title"),
                     getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL))

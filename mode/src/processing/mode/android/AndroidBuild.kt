@@ -64,7 +64,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     /** Name of the Gradle module in the project, either app or wear  */
     private var module = ""
 
-    val packageName: String
+    val packageName: String?
         get() = manifest!!.packageName
 
     val isWear: Boolean
@@ -325,9 +325,9 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     private fun writeFragmentActivity(srcDirectory: File,
-                                      permissions: Array<String>, external: Boolean) {
+                                      permissions: Array<String?>, external: Boolean) {
         val javaTemplate = mode.getContentFile("templates/$APP_ACTIVITY_TEMPLATE")
-        val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainActivity.java")
+        val javaFile = File(File(srcDirectory, packageName!!.replace(".", "/")), "MainActivity.java")
         val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
         replaceMap?.set("@@package_name@@", packageName)
@@ -338,9 +338,9 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     private fun writeWallpaperService(srcDirectory: File,
-                                      permissions: Array<String>, external: Boolean) {
+                                      permissions: Array<String?>, external: Boolean) {
         val javaTemplate = mode.getContentFile("templates/$WALLPAPER_SERVICE_TEMPLATE")
-        val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainService.java")
+        val javaFile = File(File(srcDirectory, packageName!!.replace(".", "/")), "MainService.java")
         val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
         replaceMap?.set("@@package_name@@", packageName)
         replaceMap?.set("@@sketch_class_name@@", sketchClassName)
@@ -349,9 +349,9 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     private fun writeWatchFaceGLESService(srcDirectory: File,
-                                          permissions: Array<String>, external: Boolean) {
+                                          permissions: Array<String?>, external: Boolean) {
         val javaTemplate = mode.getContentFile("templates/$WATCHFACE_SERVICE_TEMPLATE")
-        val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainService.java")
+        val javaFile = File(File(srcDirectory, packageName!!.replace(".", "/")), "MainService.java")
         val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
         replaceMap?.set("@@watchface_classs@@", "PWatchFaceGLES")
@@ -363,10 +363,10 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     private fun writeWatchFaceCanvasService(srcDirectory: File,
-                                            permissions: Array<String>, external: Boolean) {
+                                            permissions: Array<String?>, external: Boolean) {
 
         val javaTemplate = mode.getContentFile("templates/$WATCHFACE_SERVICE_TEMPLATE")
-        val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainService.java")
+        val javaFile = File(File(srcDirectory, packageName!!.replace(".", "/")), "MainService.java")
         val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
         replaceMap?.set("@@watchface_classs@@", "PWatchFaceCanvas")
@@ -377,11 +377,11 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
 
-    private fun writeVRActivity(srcDirectory: File, permissions: Array<String>,
+    private fun writeVRActivity(srcDirectory: File, permissions: Array<String?>,
                                 external: Boolean) {
 
         val javaTemplate = mode.getContentFile("templates/$VR_ACTIVITY_TEMPLATE")
-        val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainActivity.java")
+        val javaFile = File(File(srcDirectory, packageName!!.replace(".", "/")), "MainActivity.java")
         val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
         replaceMap?.set("@@package_name@@", packageName)
@@ -391,11 +391,11 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
         AndroidUtil.createFileFromTemplate(javaTemplate, javaFile, replaceMap)
     }
 
-    private fun writeARActivity(srcDirectory: File, permissions: Array<String>,
+    private fun writeARActivity(srcDirectory: File, permissions: Array<String?>,
                                 external: Boolean) {
 
         val javaTemplate = mode.getContentFile("templates/$AR_ACTIVITY_TEMPLATE")
-        val javaFile = File(File(srcDirectory, packageName.replace(".", "/")), "MainActivity.java")
+        val javaFile = File(File(srcDirectory, packageName!!.replace(".", "/")), "MainActivity.java")
         val replaceMap: HashMap<String?,String?>? = HashMap<String?, String?>()
 
         replaceMap?.set("@@package_name@@", packageName)

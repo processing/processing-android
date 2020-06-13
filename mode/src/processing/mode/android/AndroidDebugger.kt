@@ -68,7 +68,7 @@ internal class AndroidDebugger (editor: AndroidEditor, androidMode: AndroidMode)
         }
 
         androidruntime = runner
-        packageName = runner.build.packageName
+        packageName = runner.build.packageName!!
         sketchClassName = runner.build.sketchClassName
         mainClassName = "$packageName.$sketchClassName"
 

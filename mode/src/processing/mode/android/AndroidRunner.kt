@@ -164,7 +164,7 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
         val packageName = build.packageName
 
         try {
-            if (device.launchApp(packageName, isDebugEnabled)) {
+            if (device.launchApp(packageName!!, isDebugEnabled)) {
                 return true
             }
         } catch (e: Exception) {
