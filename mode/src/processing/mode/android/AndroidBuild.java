@@ -145,7 +145,7 @@ class AndroidBuild extends JavaBuild {
   public AndroidBuild(Sketch sketch, AndroidMode mode, int comp) {
     super(sketch);
     appComponent = comp;
-    sdk = mode.getSDK();
+    sdk = mode.getSdk();
     coreZipFile = mode.getCoreZipLocation();
     module = appComponent == WATCHFACE ? "wear" : "app";
   }

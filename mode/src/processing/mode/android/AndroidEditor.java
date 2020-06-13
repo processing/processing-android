@@ -598,7 +598,7 @@ public class AndroidEditor extends JavaEditor {
     File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
     AndroidTool tool = null;
     try {
-      tool = new AndroidTool(toolPath, androidMode.getSDK());
+      tool = new AndroidTool(toolPath, androidMode.getSdk());
       tool.init(base);
       outgoing.add(tool);
     } catch (Throwable e) {
@@ -658,7 +658,7 @@ public class AndroidEditor extends JavaEditor {
 
     @Override
     public void run() {
-      if (androidMode == null || androidMode.getSDK() == null) return;
+      if (androidMode == null || androidMode.getSdk() == null) return;
 
       final Devices devices = Devices.getInstance();
       
