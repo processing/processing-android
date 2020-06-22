@@ -1,16 +1,41 @@
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
+  Part of the Processing project - http://processing.org
+
+  Copyright (c) 2019 The Processing Foundation
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation, version 2.1.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General
+  Public License along with this library; if not, write to the
+  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+  Boston, MA  02111-1307  USA
+*/
+
 package processing.ar
 
 import android.content.Context
-import processing.ar.ShaderUtils
 import android.opengl.GLES20
+
+import processing.ar.ShaderUtils
+
 import processing.core.PApplet
 import processing.core.PGraphics
+
 import java.io.IOException
 import java.lang.RuntimeException
 import java.lang.StringBuilder
 import java.net.URL
 
-internal object ShaderUtils {
+object ShaderUtils {
     @JvmStatic
     fun loadGLShader(tag: String?, context: Context?, type: Int, resUrl: URL): Int {
         val code = readRawTextFile(resUrl)

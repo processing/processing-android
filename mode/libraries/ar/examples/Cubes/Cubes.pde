@@ -88,6 +88,6 @@ void trackableEvent(ARTrackable t) {
       // The new trackable is a floor plane, so adding the anchor 0.3 meters below it
       y0 = -0.3;
     }
-    trackAnchors.add(new ARAnchor(t, x0, y0, 0));
+    trackAnchors.add(new ARAnchor(t, x0, y0, 0.0));
   }
 }
