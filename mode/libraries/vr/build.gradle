@@ -120,6 +120,7 @@ build.doLast {
 }
 repositories {
     mavenCentral()
+    jcenter()
 }
 compileKotlin {
     kotlinOptions {
