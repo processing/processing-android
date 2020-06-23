@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
   Part of the Processing project - http://processing.org
 
   Copyright (c) 2016-19 The Processing Foundation
@@ -17,14 +19,17 @@
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
 */
+
 package processing.vr
 
 import com.google.vr.sdk.base.Eye
 import com.google.vr.sdk.base.HeadTransform
 import com.google.vr.sdk.base.Viewport
+
 import processing.core.PApplet
 import processing.core.PConstants
 import processing.core.PGraphics
+
 import processing.opengl.PGL
 import processing.opengl.PGLES
 import processing.opengl.PGraphics3D

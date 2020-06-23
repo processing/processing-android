@@ -24,6 +24,7 @@ package processing.vr
 
 import android.content.Intent
 import android.util.DisplayMetrics
+import android.view.SurfaceHolder
 
 import com.google.vr.sdk.base.GvrActivity
 
@@ -31,11 +32,12 @@ import processing.android.AppComponent
 import processing.android.ServiceEngine
 import processing.core.PApplet
 
-class VRActivity : GvrActivity, AppComponent {
+open class VRActivity : GvrActivity, AppComponent {
 
     private var metrics: DisplayMetrics? = null
     private var sketch: PApplet? = null
 
+    // empty constructor
     constructor() {
 
     }
@@ -68,16 +70,16 @@ class VRActivity : GvrActivity, AppComponent {
 
     }
 
-    override fun setSketch(sketch: PApplet) {
+    override fun setSketch(sketch: PApplet?) {
         this.sketch = sketch
         if (sketch != null) {
-            sketch.initSurface(this@VRActivity, null)
+            sketch!!.initSurface(this@VRActivity, null as SurfaceHolder?)
             // Required to read the paired viewer's distortion parameters.
-            sketch.requestPermission("android.permission.READ_EXTERNAL_STORAGE")
+            sketch!!.requestPermission("android.permission.READ_EXTERNAL_STORAGE")
         }
     }
 
-    override fun getSketch(): PApplet {
+    override fun getSketch(): PApplet? {
         return sketch!!
     }
 

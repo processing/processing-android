@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
   Part of the Processing project - http://processing.org
 
   Copyright (c) 2016-19 The Processing Foundation
@@ -17,14 +19,16 @@
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
 */
+
 package processing.vr
 
 import android.view.SurfaceHolder
 import processing.android.AppComponent
 import processing.core.PSurface
 
-class VRGraphicsStereo : VRGraphics() {
-    override fun createSurface(component: AppComponent, holder: SurfaceHolder, reset: Boolean): PSurface {  // ignore
+open class VRGraphicsStereo : VRGraphics() {
+    override fun createSurface(component: AppComponent, holder: SurfaceHolder?, reset: Boolean): PSurface {
+        // ignore
         if (reset) pgl.resetFBOLayer()
         return VRSurface(this, component, holder, true)
     }

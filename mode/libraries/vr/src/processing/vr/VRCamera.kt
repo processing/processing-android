@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
   Part of the Processing project - http://processing.org
 
   Copyright (c) 2019 The Processing Foundation
@@ -17,12 +19,13 @@
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
 */
+
 package processing.vr
 
 import processing.core.PApplet
 import processing.core.PMatrix3D
 
-class VRCamera(parent: PApplet) {
+open class VRCamera(parent: PApplet) {
     private var parent: PApplet? = null
     private var graphics: VRGraphics? = null
     private var eyeMat: PMatrix3D? = null
@@ -52,6 +55,7 @@ class VRCamera(parent: PApplet) {
         graphics!!.defCameraFar = far
     }
 
+    // constructor or initializer block
     init {
         if (parent.g is VRGraphics) {
             this.parent = parent
