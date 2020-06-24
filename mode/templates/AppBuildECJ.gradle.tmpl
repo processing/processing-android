@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion @@target_sdk@@
@@ -26,7 +28,12 @@ android {
     }
     lintOptions {
         abortOnError false
-    }  
+    }
+
+     kotlinOptions {
+                jvmTarget = "1.8"
+            }
+
     aaptOptions {
         noCompress "tflite"
         noCompress "lite"
@@ -84,6 +91,7 @@ android {
 dependencies {
     compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72"
     implementation 'com.android.support:appcompat-v7:@@support_version@@'
     implementation 'com.android.support:design:@@support_version@@'
     implementation 'com.google.android.support:wearable:@@wear_version@@'

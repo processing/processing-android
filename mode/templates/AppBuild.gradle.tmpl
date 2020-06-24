@@ -1,4 +1,7 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion @@target_sdk@@
@@ -14,7 +17,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }      
+    }
+
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+
     buildTypes {
         debug {
             debuggable true
@@ -35,6 +43,11 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72"{
+    isTransitive = false
+    }
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.72"
     implementation 'com.android.support:appcompat-v7:@@support_version@@'
     implementation 'com.android.support:design:@@support_version@@'
     implementation 'com.google.android.support:wearable:@@wear_version@@'
