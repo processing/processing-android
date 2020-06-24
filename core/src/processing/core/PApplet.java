@@ -2040,7 +2040,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     while (eventQueue.available()) {
       Event e = eventQueue.remove();
 
-      switch (e.getFlavor()) {
+      switch (e.flavor) {
       case Event.TOUCH:
         handleTouchEvent((TouchEvent) e);
         break;
@@ -2067,8 +2067,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     // see also the id check below.. both of these go together
 //  if ((id == java.awt.event.MouseEvent.MOUSE_DRAGGED) ||
 //      (id == java.awt.event.MouseEvent.MOUSE_MOVED)) {
-    if (event.getAction() == MouseEvent.DRAG ||
-        event.getAction() == MouseEvent.MOVE) {
+    if (event.action == MouseEvent.DRAG ||
+        event.action == MouseEvent.MOVE) {
       pmouseX = emouseX;
       pmouseY = emouseY;
       mouseX = event.getX();
@@ -2094,7 +2094,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
     // Added in 0215 (2.0b7) so that pmouseX/Y behave more like one would
     // expect from the desktop. This makes the ContinousLines example behave.
-    if (event.getAction() == MouseEvent.PRESS) {
+    if (event.action == MouseEvent.PRESS) {
       mouseX = event.getX();
       mouseY = event.getY();
       pmouseX = mouseX;
@@ -2113,7 +2113,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     // Do this up here in case a registered method relies on the
     // boolean for mousePressed.
 
-    switch (event.getAction()) {
+    switch (event.action) {
     case MouseEvent.PRESS:
       mousePressed = true;
       break;
@@ -2124,7 +2124,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
     handleMethods("mouseEvent", new Object[] { event });
 
-    switch (event.getAction()) {
+    switch (event.action) {
     case MouseEvent.PRESS:
       mousePressed(event);
       break;
@@ -2148,12 +2148,12 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
       break;
     }
 
-    if ((event.getAction() == MouseEvent.DRAG) ||
-        (event.getAction() == MouseEvent.MOVE)) {
+    if ((event.action == MouseEvent.DRAG) ||
+        (event.action == MouseEvent.MOVE)) {
       emouseX = mouseX;
       emouseY = mouseY;
     }
-    if (event.getAction() == MouseEvent.PRESS) {  // Android-only
+    if (event.action == MouseEvent.PRESS) {  // Android-only
       emouseX = mouseX;
       emouseY = mouseY;
     }
@@ -2459,13 +2459,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   protected void handleKeyEvent(KeyEvent event) {
 
     // Get rid of auto-repeating keys if desired and supported
-    if (!keyRepeatEnabled && event.isAutoRepeat()) return;
+    if (!keyRepeatEnabled && event.isAutoRepeat) return;
 
 //    keyEvent = event;
-    key = event.getKey();
-    keyCode = event.getKeyCode();
+    key = event.key;
+    keyCode = event.keyCode;
 
-    switch (event.getAction()) {
+    switch (event.action) {
     case KeyEvent.PRESS:
       keyPressed = true;
       keyPressed(event);
