@@ -20,32 +20,31 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.android;
+package processing.android
 
-import android.content.Intent;
-import processing.core.PApplet;
-import processing.core.PConstants;
+import android.content.Intent
+import processing.core.PApplet
+import processing.core.PConstants
 
-abstract public interface AppComponent extends PConstants {
-  static public final int FRAGMENT  = 0;
-  static public final int WALLPAPER = 1;
-  static public final int WATCHFACE = 2;
+interface AppComponent : PConstants {
 
-  public void initDimensions();
-  public int getDisplayWidth();
-  public int getDisplayHeight();
-  public float getDisplayDensity();
-  public int getKind();
-  public void setSketch(PApplet sketch);
-  public PApplet getSketch();
+    fun initDimensions()
+    fun getDisplayWidth(): Int
+    fun getDisplayHeight(): Int
+    fun getDisplayDensity(): Float
+    fun getKind(): Int
+    fun setSketch(sketch: PApplet?)
+    fun getSketch(): PApplet?
+    fun isService(): Boolean
+    fun getEngine(): ServiceEngine?
+    fun startActivity(intent: Intent?)
+    fun requestDraw()
+    fun canDraw(): Boolean
+    fun dispose()
 
-  public boolean isService();
-  public ServiceEngine getEngine();
-
-  public void startActivity(Intent intent);
-
-  public void requestDraw();
-  public boolean canDraw();
-
-  public void dispose();
+    companion object {
+        const val FRAGMENT:  Int = 0
+        const val WALLPAPER: Int = 1
+        const val WATCHFACE: Int = 2
+    }
 }
