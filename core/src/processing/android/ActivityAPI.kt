@@ -20,46 +20,46 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.android;
+package processing.android
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
+import android.app.FragmentManager
+import android.content.Intent
+import android.os.Bundle
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.app.FragmentManager;
-
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo
 
 // Methods that should be implemented in PApplet to maintain backward
 // compatibility with (some) functionality available from Activity/Fragment
-public interface ActivityAPI {
-  // Lifecycle events
-  public void onCreate(Bundle savedInstanceState);
-  public void onDestroy();
-  public void onStart();
-  public void onStop();
-  public void onPause();
-  public void onResume();
+interface ActivityAPI {
 
-  // Activity and intent events
-  public void onActivityResult(int requestCode, int resultCode, Intent data);
-  public void onNewIntent(Intent intent);
+    // Lifecycle events
+    fun onCreate(savedInstanceState: Bundle?)
+    fun onDestroy()
+    fun onStart()
+    fun onStop()
+    fun onPause()
+    fun onResume()
 
-  // Menu API
-  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater);
-  public boolean onOptionsItemSelected(MenuItem item);
-  public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo);
-  public boolean onContextItemSelected(MenuItem item);
-  public void setHasOptionsMenu(boolean hasMenu);
+    // Activity and intent events
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
+    fun onNewIntent(intent: Intent?)
 
-  // IO events
-  public void onBackPressed();
+    // Menu API
+    fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?)
+    fun onOptionsItemSelected(item: MenuItem?): Boolean
+    fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenuInfo?)
+    fun onContextItemSelected(item: MenuItem?): Boolean
+    fun setHasOptionsMenu(hasMenu: Boolean)
 
-  // Activity management
-  public FragmentManager getFragmentManager();
-  public Window getWindow();
+    // IO events
+    fun onBackPressed()
+
+    // Activity management
+    val fragmentManager: FragmentManager?
+    val window: Window?
 }
