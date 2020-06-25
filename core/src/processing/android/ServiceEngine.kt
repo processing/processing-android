@@ -20,30 +20,30 @@
   Boston, MA  02111-1307  USA
 */
 
-package processing.android;
+package processing.android
 
-import android.graphics.Rect;
-import processing.core.PConstants;
+import android.graphics.Rect
+import processing.core.PConstants
 
-public interface ServiceEngine extends PConstants {
-  // wallpapers
-  public boolean isPreview();
-  public float getXOffset();
-  public float getYOffset();
-  public float getXOffsetStep();
-  public float getYOffsetStep();
-  public int getXPixelOffset();
-  public int getYPixelOffset();
+interface ServiceEngine : PConstants {
+    // wallpapers
+    fun isPreview(): Boolean
+    fun getXOffset(): Float
+    fun getYOffset(): Float
+    fun getXOffsetStep(): Float
+    fun getYOffsetStep(): Float
+    fun getXPixelOffset(): Int
+    fun getYPixelOffset(): Int
 
-  // wear
-  public boolean isInAmbientMode();
-  public boolean isRound();
-  public Rect getInsets();
-  public boolean useLowBitAmbient();
-  public boolean requireBurnInProtection();
+    // wear
+    fun isInAmbientMode(): Boolean
+    fun isRound(): Boolean
+    fun getInsets(): Rect?
+    fun useLowBitAmbient(): Boolean
+    fun requireBurnInProtection(): Boolean
 
-  // Service permissions
-  public void onRequestPermissionsResult(int requestCode,
-                                         String permissions[],
-                                         int[] grantResults);
+    // Service permissions
+    fun onRequestPermissionsResult(requestCode: Int,
+                                   permissions: Array<String?>?,
+                                   grantResults: IntArray?)
 }
