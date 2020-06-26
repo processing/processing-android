@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
   Part of the Processing project - http://processing.org
 
   Copyright (c) 2016-17 The Processing Foundation
@@ -17,6 +19,7 @@
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
 */
+
 package processing.android
 
 import android.support.annotation.IdRes
