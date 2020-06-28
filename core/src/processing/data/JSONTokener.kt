@@ -311,7 +311,7 @@ class JSONTokener(reader: Reader) {
         if ("" == string) {
             throw RuntimeException("Missing value")
         }
-        return JSONObject.stringToValue(string)
+        return JSONObject.stringToValue(string)!!
     }
 
     /**
