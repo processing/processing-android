@@ -103,13 +103,13 @@ class StringDict {
      * in a TableRow. If two columns have the same name, the later column's
      * values will override the earlier values.
      */
-    constructor(row: TableRow) : this(row.columnCount) {
-        var titles = row.columnTitles
+    constructor(row: TableRow) : this(row.getColumnCount()) {
+        var titles = row.getColumnTitles()
         if (titles == null) {
-            titles = StringList(fromRange(row.columnCount)).array()
+            titles = StringList(fromRange(row.getColumnCount())).array()
         }
-        for (col in 0 until row.columnCount) {
-            set(titles!![col], row.getString(col))
+        for (col in 0 until row.getColumnCount()) {
+            set(titles[col]!!, row.getString(col)!!)
         }
         // remove unused and overwritten entries
         crop()
