@@ -737,7 +737,7 @@ open class Table {
             var found = false
             for (sheet in sheets) {
 //        System.out.println(sheet.getAttribute("table:name"));
-                if (worksheet == null || worksheet == sheet.getString("table:name")) {
+                if (worksheet == null || worksheet == sheet!!.getString("table:name")) {
                     odsParseSheet(sheet, header)
                     found = true
                     if (worksheet == null) {
@@ -768,7 +768,7 @@ open class Table {
      * Parses a single sheet of XML from this file.
      * @param The XML object for a single worksheet from the ODS file
      */
-    private fun odsParseSheet(sheet: XML, header: Boolean) {
+    private fun odsParseSheet(sheet: XML?, header: Boolean) {
         // Extra <p> or <a> tags inside the text tag for the cell will be stripped.
         // Different from showing formulas, and not quite the same as 'save as
         // displayed' option when saving from inside OpenOffice. Only time we
@@ -776,83 +776,87 @@ open class Table {
         // styling information intact, but that's out of scope for the p5 version.
         var header = header
         val ignoreTags = true
-        val rows = sheet.getChildren("table:table-row")
+        val rows = sheet!!.getChildren("table:table-row")
         //xml.getChildren("office:body/office:spreadsheet/table:table/table:table-row");
         var rowIndex = 0
         for (row in rows) {
-            val rowRepeat = row.getInt("table:number-rows-repeated", 1)
+            val rowRepeat = row!!.getInt("table:number-rows-repeated", 1)
             //      if (rowRepeat != 1) {
 //          System.out.println(rowRepeat + " " + rowCount + " " + (rowCount + rowRepeat));
 //      }
             var rowNotNull = false
-            val cells = row.getChildren()
+            val cells = row!!.getChildren()
             var columnIndex = 0
-            for (cell in cells) {
-                val cellRepeat = cell.getInt("table:number-columns-repeated", 1)
+            if (cells != null) {
+                for (cell in cells) {
+                    val cellRepeat = cell!!.getInt("table:number-columns-repeated", 1)
 
-//        <table:table-cell table:formula="of:=SUM([.E7:.E8])" office:value-type="float" office:value="4150">
-//        <text:p>4150.00</text:p>
-//        </table:table-cell>
-                var cellData = if (ignoreTags) cell.getString("office:value") else null
+    //        <table:table-cell table:formula="of:=SUM([.E7:.E8])" office:value-type="float" office:value="4150">
+    //        <text:p>4150.00</text:p>
+    //        </table:table-cell>
+                    var cellData = if (ignoreTags) cell!!.getString("office:value") else null
 
-                // if there's an office:value in the cell, just roll with that
-                if (cellData == null) {
-                    val cellKids = cell.childCount
-                    if (cellKids != 0) {
-                        val paragraphElements = cell.getChildren("text:p")
-                        if (paragraphElements.size != 1) {
-                            for (el in paragraphElements) {
-                                System.err.println(el.toString())
-                            }
-                            throw RuntimeException("found more than one text:p element")
-                        }
-                        val textp = paragraphElements[0]
-                        val textpContent = textp.content
-                        // if there are sub-elements, the content shows up as a child element
-                        // (for which getName() returns null.. which seems wrong)
-                        cellData = if (textpContent != null) {
-                            textpContent // nothing fancy, the text is in the text:p element
-                        } else {
-                            val textpKids = textp.getChildren()
-                            val cellBuffer = StringBuilder()
-                            for (kid: XML in textpKids) {
-                                val kidName = kid.name
-                                if (kidName == null) {
-                                    odsAppendNotNull(kid, cellBuffer)
-                                } else if (kidName == "text:s") {
-                                    val spaceCount = kid.getInt("text:c", 1)
-                                    for (space in 0 until spaceCount) {
-                                        cellBuffer.append(' ')
-                                    }
-                                } else if (kidName == "text:span") {
-                                    odsAppendNotNull(kid, cellBuffer)
-                                } else if (kidName == "text:a") {
-                                    // <text:a xlink:href="http://blah.com/">blah.com</text:a>
-                                    if (ignoreTags) {
-                                        cellBuffer.append(kid.getString("xlink:href"))
-                                    } else {
-                                        odsAppendNotNull(kid, cellBuffer)
-                                    }
-                                } else {
-                                    odsAppendNotNull(kid, cellBuffer)
-                                    System.err.println(javaClass.name + ": don't understand: " + kid)
-                                    //throw new RuntimeException("I'm not used to this.");
+                    // if there's an office:value in the cell, just roll with that
+                    if (cellData == null) {
+                        val cellKids = cell!!.childCount
+                        if (cellKids != 0) {
+                            val paragraphElements = cell!!.getChildren("text:p")
+                            if (paragraphElements.size != 1) {
+                                for (el in paragraphElements) {
+                                    System.err.println(el.toString())
                                 }
+                                throw RuntimeException("found more than one text:p element")
                             }
-                            cellBuffer.toString()
+                            val textp = paragraphElements[0]
+                            val textpContent = textp!!.getContent()
+                            // if there are sub-elements, the content shows up as a child element
+                            // (for which getName() returns null.. which seems wrong)
+                            cellData = if (textpContent != null) {
+                                textpContent // nothing fancy, the text is in the text:p element
+                            } else {
+                                val textpKids = textp!!.getChildren()
+                                val cellBuffer = StringBuilder()
+                                if (textpKids != null) {
+                                    for (kid: XML? in textpKids) {
+                                        val kidName = kid!!.name
+                                        if (kidName == null) {
+                                            odsAppendNotNull(kid, cellBuffer)
+                                        } else if (kidName == "text:s") {
+                                            val spaceCount = kid.getInt("text:c", 1)
+                                            for (space in 0 until spaceCount) {
+                                                cellBuffer.append(' ')
+                                            }
+                                        } else if (kidName == "text:span") {
+                                            odsAppendNotNull(kid, cellBuffer)
+                                        } else if (kidName == "text:a") {
+                                            // <text:a xlink:href="http://blah.com/">blah.com</text:a>
+                                            if (ignoreTags) {
+                                                cellBuffer.append(kid.getString("xlink:href"))
+                                            } else {
+                                                odsAppendNotNull(kid, cellBuffer)
+                                            }
+                                        } else {
+                                            odsAppendNotNull(kid, cellBuffer)
+                                            System.err.println(javaClass.name + ": don't understand: " + kid)
+                                            //throw new RuntimeException("I'm not used to this.");
+                                        }
+                                    }
+                                }
+                                cellBuffer.toString()
+                            }
+                            //setString(rowIndex, columnIndex, c); //text[0].getContent());
+                            //columnIndex++;
                         }
-                        //setString(rowIndex, columnIndex, c); //text[0].getContent());
-                        //columnIndex++;
                     }
-                }
-                for (r in 0 until cellRepeat) {
-                    cellData?.let { setString(rowIndex, columnIndex, it) }
-                    columnIndex++
-                    if (cellData != null) {
-//            if (columnIndex > columnMax) {
-//              columnMax = columnIndex;
-//            }
-                        rowNotNull = true
+                    for (r in 0 until cellRepeat) {
+                        cellData?.let { setString(rowIndex, columnIndex, it) }
+                        columnIndex++
+                        if (cellData != null) {
+    //            if (columnIndex > columnMax) {
+    //              columnMax = columnIndex;
+    //            }
+                            rowNotNull = true
+                        }
                     }
                 }
             }
@@ -872,7 +876,7 @@ open class Table {
     }
 
     private fun odsAppendNotNull(kid: XML, buffer: StringBuilder) {
-        val content = kid.content
+        val content = kid.getContent()
         if (content != null) {
             buffer.append(content)
         }
