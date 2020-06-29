@@ -4257,23 +4257,18 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   public Table loadTable(String filename, String options) {
-    try {
-      String ext = checkExtension(filename);
-      if (ext != null) {
-        if (ext.equals("csv") || ext.equals("tsv")) {
-          if (options == null) {
-            options = ext;
-          } else {
-            options = ext + "," + options;
-          }
+    String ext = checkExtension(filename);
+    if (ext != null) {
+      if (ext.equals("csv") || ext.equals("tsv")) {
+        if (options == null) {
+          options = ext;
+        } else {
+          options = ext + "," + options;
         }
       }
-      return new Table(createInput(filename), options);
-
-    } catch (IOException e) {
-      printStackTrace(e);
-      return null;
     }
+    return new Table(createInput(filename), options);
+
   }
 
 
