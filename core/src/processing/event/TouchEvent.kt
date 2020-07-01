@@ -26,6 +26,13 @@ package processing.event
 open class TouchEvent(nativeObject: Any?, millis: Long, action: Int, modifiers: Int,
                       button: Int) : Event(nativeObject!!, millis, action, modifiers) {
     override var action = 0
+
+    override var native: Any
+        get() = super.native
+        set(value) {
+            native = value
+        }
+
     var button: Int
         protected set
     private var numPointers = 0
