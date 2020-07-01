@@ -51,6 +51,7 @@
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
 */
+
 package processing.opengl.tess
 
 internal class CachedVertex {

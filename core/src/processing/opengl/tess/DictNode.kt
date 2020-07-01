@@ -52,10 +52,10 @@
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-class DictNode {
-    Object key;
-    DictNode next;
-    DictNode prev;
+internal class DictNode {
+    var key: Any? = null
+    var next: DictNode? = null
+    var prev: DictNode? = null
 }
