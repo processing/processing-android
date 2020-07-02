@@ -52,10 +52,19 @@
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-class TessMono {
-/* __gl_meshTessellateMonoRegion( face ) tessellates a monotone region
+import processing.opengl.tess.Geom.EdgeCos
+import processing.opengl.tess.Geom.EdgeGoesLeft
+import processing.opengl.tess.Geom.EdgeGoesRight
+import processing.opengl.tess.Geom.EdgeSign
+import processing.opengl.tess.Geom.VertLeq
+import processing.opengl.tess.Mesh.__gl_meshConnect
+import processing.opengl.tess.Mesh.__gl_meshDelete
+import processing.opengl.tess.Mesh.__gl_meshZapFace
+
+internal object TessMono {
+    /* __gl_meshTessellateMonoRegion( face ) tessellates a monotone region
  * (what else would it do??)  The region must consist of a single
  * loop of half-edges (see mesh.h) oriented CCW.  "Monotone" in this
  * case means that any vertical line intersects the interior of the
@@ -82,27 +91,29 @@ class TessMono {
  * to the fan is a simple orientation test.  By making the fan as large
  * as possible, we restore the invariant (check it yourself).
  */
-    static boolean __gl_meshTessellateMonoRegion(GLUface face, boolean avoidDegenerateTris) {
-        GLUhalfEdge up, lo;
+    @JvmStatic
+    fun __gl_meshTessellateMonoRegion(face: GLUface?, avoidDegenerateTris: Boolean): Boolean {
+        var up: GLUhalfEdge?
+        var lo: GLUhalfEdge?
 
         /* All edges are oriented CCW around the boundary of the region.
          * First, find the half-edge whose origin vertex is rightmost.
          * Since the sweep goes from left to right, face->anEdge should
          * be close to the edge we want.
          */
-        up = face.anEdge;
-        assert (up.Lnext != up && up.Lnext.Lnext != up);
-
-        for (; Geom.VertLeq(up.Sym.Org, up.Org); up = up.Onext.Sym)
-            ;
-        for (; Geom.VertLeq(up.Org, up.Sym.Org); up = up.Lnext)
-            ;
-        lo = up.Onext.Sym;
-
-        boolean mustConnect = false; // hack for avoidDegenerateTris
-
-        while (up.Lnext != lo) {
+        up = face!!.anEdge
+        assert(up!!.Lnext != up && up.Lnext!!.Lnext != up)
+        while (VertLeq(up!!.Sym!!.Org, up.Org)) {
+            up = up.Onext!!.Sym
+        }
+        while (VertLeq(up!!.Org, up.Sym!!.Org)) {
+            up = up.Lnext
+        }
+        lo = up.Onext!!.Sym
+        var mustConnect = false // hack for avoidDegenerateTris
+        while (up!!.Lnext != lo) {
             if (avoidDegenerateTris && !mustConnect) {
+
                 // Skip over regions where several vertices are collinear,
                 // to try to avoid producing degenerate (zero-area) triangles
                 //
@@ -110,105 +121,106 @@ class TessMono {
                 // skipping too large regions and causing incorrect
                 // triangulations. This entire modification is overall
                 // not robust and needs more work
-                if (Geom.EdgeCos(lo.Lnext.Org, lo.Org, lo.Lnext.Lnext.Org) <= -Geom.ONE_MINUS_EPSILON) {
+
+                if (EdgeCos(lo!!.Lnext!!.Org!!, lo.Org!!, lo.Lnext!!.Lnext!!.Org!!) <= -Geom.ONE_MINUS_EPSILON) {
                     // Lines around lo
                     do {
-                        lo = lo.Onext.Sym;
-                        mustConnect = true;
+                        lo = lo!!.Onext!!.Sym
+                        mustConnect = true
                     } while (up.Lnext != lo &&
-                             Geom.EdgeCos(lo.Lnext.Org, lo.Org, lo.Lnext.Lnext.Org) <= -Geom.ONE_MINUS_EPSILON);
-                } else if (Geom.EdgeCos(up.Onext.Sym.Org, up.Org, up.Onext.Sym.Onext.Sym.Org) <= -Geom.ONE_MINUS_EPSILON) {
+                            EdgeCos(lo!!.Lnext!!.Org!!, lo.Org!!, lo.Lnext!!.Lnext!!.Org!!) <= -Geom.ONE_MINUS_EPSILON)
+                } else if (EdgeCos(up.Onext!!.Sym!!.Org!!, up.Org!!, up.Onext!!.Sym!!.Onext!!.Sym!!.Org!!) <= -Geom.ONE_MINUS_EPSILON) {
                     // Lines around up
                     do {
-                        up = up.Lnext;
-                        mustConnect = true;
-                    } while (up.Lnext != lo &&
-                             Geom.EdgeCos(up.Onext.Sym.Org, up.Org, up.Onext.Sym.Onext.Sym.Org) <= -Geom.ONE_MINUS_EPSILON);
+                        up = up!!.Lnext
+                        mustConnect = true
+                    } while (up!!.Lnext != lo &&
+                            EdgeCos(up.Onext!!.Sym!!.Org!!, up.Org!!, up.Onext!!.Sym!!.Onext!!.Sym!!.Org!!) <= -Geom.ONE_MINUS_EPSILON)
                 }
-
-                if (up.Lnext == lo)
-                    break;
+                if (up.Lnext == lo) break
             }
+            if (VertLeq(up.Sym!!.Org, lo!!.Org)) {
 
-            if (Geom.VertLeq(up.Sym.Org, lo.Org)) {
                 /* up.Sym.Org is on the left.  It is safe to form triangles from lo.Org.
                  * The EdgeGoesLeft test guarantees progress even when some triangles
                  * are CW, given that the upper and lower chains are truly monotone.
                  */
-                while (lo.Lnext != up && (Geom.EdgeGoesLeft(lo.Lnext)
-                        || Geom.EdgeSign(lo.Org, lo.Sym.Org, lo.Lnext.Sym.Org) <= 0)) {
-                    GLUhalfEdge tempHalfEdge = Mesh.__gl_meshConnect(lo.Lnext, lo);
-                    mustConnect = false;
-                    if (tempHalfEdge == null) return false;
-                    lo = tempHalfEdge.Sym;
+                while (lo!!.Lnext != up && (EdgeGoesLeft(lo.Lnext!!)
+                                || EdgeSign(lo.Org!!, lo.Sym!!.Org!!, lo.Lnext!!.Sym!!.Org!!) <= 0)) {
+                    val tempHalfEdge = __gl_meshConnect(lo.Lnext!!, lo)
+                    mustConnect = false
+                    if (tempHalfEdge == null) return false
+                    lo = tempHalfEdge.Sym
                 }
-                lo = lo.Onext.Sym;
+                lo = lo.Onext!!.Sym
             } else {
                 /* lo.Org is on the left.  We can make CCW triangles from up.Sym.Org. */
-                while (lo.Lnext != up && (Geom.EdgeGoesRight(up.Onext.Sym)
-                        || Geom.EdgeSign(up.Sym.Org, up.Org, up.Onext.Sym.Org) >= 0)) {
-                    GLUhalfEdge tempHalfEdge = Mesh.__gl_meshConnect(up, up.Onext.Sym);
-                    mustConnect = false;
-                    if (tempHalfEdge == null) return false;
-                    up = tempHalfEdge.Sym;
+                while (lo.Lnext != up && (EdgeGoesRight(up!!.Onext!!.Sym!!)
+                                || EdgeSign(up.Sym!!.Org!!, up.Org!!, up.Onext!!.Sym!!.Org!!) >= 0)) {
+                    val tempHalfEdge = __gl_meshConnect(up, up.Onext!!.Sym!!)
+                    mustConnect = false
+                    if (tempHalfEdge == null) return false
+                    up = tempHalfEdge.Sym
                 }
-                up = up.Lnext;
+                up = up!!.Lnext
             }
         }
-
-        /* Now lo.Org == up.Sym.Org == the leftmost vertex.  The remaining region
-         * can be tessellated in a fan from this leftmost vertex.
-         */
-        assert (lo.Lnext != up);
-        while (lo.Lnext.Lnext != up) {
-            GLUhalfEdge tempHalfEdge = Mesh.__gl_meshConnect(lo.Lnext, lo);
-            if (tempHalfEdge == null) return false;
-            lo = tempHalfEdge.Sym;
+        assert(lo!!.Lnext != up)
+        while (lo!!.Lnext!!.Lnext != up) {
+            val tempHalfEdge = __gl_meshConnect(lo.Lnext!!, lo) ?: return false
+            lo = tempHalfEdge.Sym
         }
-
-        return true;
+        return true
     }
-
 
 /* __gl_meshTessellateInterior( mesh ) tessellates each region of
  * the mesh which is marked "inside" the polygon.  Each such region
  * must be monotone.
  */
-    public static boolean __gl_meshTessellateInterior(GLUmesh mesh, boolean avoidDegenerateTris) {
-        GLUface f, next;
+    @JvmStatic
+    fun __gl_meshTessellateInterior(mesh: GLUmesh?, avoidDegenerateTris: Boolean): Boolean {
+        var f: GLUface?
+        var next: GLUface?
 
         /*LINTED*/
-        for (f = mesh.fHead.next; f != mesh.fHead; f = next) {
+        f = mesh?.fHead?.next
+        while (f != mesh?.fHead) {
+
             /* Make sure we don''t try to tessellate the new triangles. */
-            next = f.next;
+            next = f!!.next
             if (f.inside) {
-                if (!__gl_meshTessellateMonoRegion(f, avoidDegenerateTris)) return false;
+                if (!__gl_meshTessellateMonoRegion(f, avoidDegenerateTris)) return false
             }
+            f = next
         }
-
-        return true;
+        return true
     }
-
 
 /* __gl_meshDiscardExterior( mesh ) zaps (ie. sets to NULL) all faces
  * which are not marked "inside" the polygon.  Since further mesh operations
  * on NULL faces are not allowed, the main purpose is to clean up the
  * mesh so that exterior loops are not represented in the data structure.
  */
-    public static void __gl_meshDiscardExterior(GLUmesh mesh) {
-        GLUface f, next;
+    @JvmStatic
+    fun __gl_meshDiscardExterior(mesh: GLUmesh) {
+        var f: GLUface?
+        var next: GLUface?
 
         /*LINTED*/
-        for (f = mesh.fHead.next; f != mesh.fHead; f = next) {
+        f = mesh.fHead.next
+
+        while (f != mesh.fHead) {
+
             /* Since f will be destroyed, save its next pointer. */
-            next = f.next;
+            next = f!!.next
             if (!f.inside) {
-                Mesh.__gl_meshZapFace(f);
+                __gl_meshZapFace(f)
             }
+            f = next
         }
     }
 
-//    private static final int MARKED_FOR_DELETION = 0x7fffffff;
+    //    private static final int MARKED_FOR_DELETION = 0x7fffffff;
 
 /* __gl_meshSetWindingNumber( mesh, value, keepOnlyBoundary ) resets the
  * winding numbers on all edges so that regions marked "inside" the
@@ -218,26 +230,28 @@ class TessMono {
  * If keepOnlyBoundary is TRUE, it also deletes all edges which do not
  * separate an interior region from an exterior one.
  */
-    public static boolean __gl_meshSetWindingNumber(GLUmesh mesh, int value, boolean keepOnlyBoundary) {
-        GLUhalfEdge e, eNext;
-
-        for (e = mesh.eHead.next; e != mesh.eHead; e = eNext) {
-            eNext = e.next;
-            if (e.Sym.Lface.inside != e.Lface.inside) {
+    @JvmStatic
+    fun __gl_meshSetWindingNumber(mesh: GLUmesh?, value: Int, keepOnlyBoundary: Boolean): Boolean {
+        var e: GLUhalfEdge?
+        var eNext: GLUhalfEdge?
+        e = mesh?.eHead?.next
+        while (e != mesh?.eHead) {
+            eNext = e!!.next
+            if (e.Sym!!.Lface!!.inside != e.Lface!!.inside) {
 
                 /* This is a boundary edge (one side is interior, one is exterior). */
-                e.winding = (e.Lface.inside) ? value : -value;
+                e.winding = if (e.Lface!!.inside) value else -value
             } else {
 
                 /* Both regions are interior, or both are exterior. */
                 if (!keepOnlyBoundary) {
-                    e.winding = 0;
+                    e.winding = 0
                 } else {
-                    if (!Mesh.__gl_meshDelete(e)) return false;
+                    if (!__gl_meshDelete(e)) return false
                 }
             }
+            e = eNext
         }
-        return true;
+        return true
     }
-
 }
