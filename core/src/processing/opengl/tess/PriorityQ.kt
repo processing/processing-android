@@ -52,51 +52,50 @@
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-abstract class PriorityQ {
-    public static final int INIT_SIZE = 32;
-
-    public static class PQnode {
-        int handle;
+internal abstract class PriorityQ {
+    class PQnode {
+        @JvmField
+        var handle = 0
     }
 
-    public static class PQhandleElem {
-        Object key;
-        int node;
+    class PQhandleElem {
+        @JvmField
+        var key: Any? = null
+        @JvmField
+        var node = 0
     }
 
-    public static interface Leq {
-        boolean leq(Object key1, Object key2);
+    interface Leq {
+        fun leq(key1: Any?, key2: Any?): Boolean
     }
 
-    //    #ifdef FOR_TRITE_TEST_PROGRAM
-//    private static boolean LEQ(PriorityQCommon.Leq leq, Object x,Object y) {
-//        return pq.leq.leq(x,y);
-//    }
-//    #else
-/* Violates modularity, but a little faster */
-//    #include "geom.h"
-    public static boolean LEQ(Leq leq, Object x, Object y) {
-        return Geom.VertLeq((GLUvertex) x, (GLUvertex) y);
+    abstract fun pqDeletePriorityQ()
+    abstract fun pqInit(): Boolean
+    abstract fun pqInsert(keyNew: Any?): Int
+    abstract fun pqExtractMin(): Any?
+    abstract fun pqDelete(hCurr: Int)
+    abstract fun pqMinimum(): Any?
+    abstract fun pqIsEmpty(): Boolean //    #endif
+
+    companion object {
+        const val INIT_SIZE = 32
+
+        //    #ifdef FOR_TRITE_TEST_PROGRAM
+        //    private static boolean LEQ(PriorityQCommon.Leq leq, Object x,Object y) {
+        //        return pq.leq.leq(x,y);
+        //    }
+        //    #else
+        /* Violates modularity, but a little faster */ //    #include "geom.h"
+        @JvmStatic
+        fun LEQ(leq: Leq?, x: Any?, y: Any?): Boolean {
+            return Geom.VertLeq(x as GLUvertex?, y as GLUvertex?)
+        }
+
+        @JvmStatic
+        fun pqNewPriorityQ(leq: Leq?): PriorityQ {
+            return PriorityQSort(leq!!)
+        }
     }
-
-    static PriorityQ pqNewPriorityQ(Leq leq) {
-        return new PriorityQSort(leq);
-    }
-
-    abstract void pqDeletePriorityQ();
-
-    abstract boolean pqInit();
-
-    abstract int pqInsert(Object keyNew);
-
-    abstract Object pqExtractMin();
-
-    abstract void pqDelete(int hCurr);
-
-    abstract Object pqMinimum();
-
-    abstract boolean pqIsEmpty();
-//    #endif
 }
