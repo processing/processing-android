@@ -1,5 +1,6 @@
 /*
 * Portions Copyright (C) 2003-2006 Sun Microsystems, Inc.
+
 * All rights reserved.
 */
 
@@ -48,19 +49,19 @@
 **
 ** Author: Eric Veach, July 1994
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
+** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-class GLUface {
-    public GLUface next;        /* next face (never NULL) */
-    public GLUface prev;        /* previous face (never NULL) */
-    public GLUhalfEdge anEdge;    /* a half edge with this left face */
-    public Object data;        /* room for client's data */
-
-    /* Internal data (keep hidden) */
-    public GLUface trail;        /* "stack" for conversion to strips */
-    public boolean marked;        /* flag for conversion to strips */
-    public boolean inside;        /* this face is in the polygon interior */
+internal class GLUmesh {
+    @JvmField
+    var vHead = GLUvertex() /* dummy header for vertex list */
+    @JvmField
+    var fHead = GLUface() /* dummy header for face list */
+    @JvmField
+    var eHead = GLUhalfEdge(true) /* dummy header for edge list */
+    @JvmField
+    var eHeadSym = GLUhalfEdge(false) /* and its symmetric counterpart */
 }

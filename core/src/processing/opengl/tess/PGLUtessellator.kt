@@ -1,5 +1,6 @@
 /*
 * Portions Copyright (C) 2003-2006 Sun Microsystems, Inc.
+
 * All rights reserved.
 */
 
@@ -48,25 +49,22 @@
 **
 ** Author: Eric Veach, July 1994
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
+** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-class GLUhalfEdge {
-    public GLUhalfEdge next;        /* doubly-linked list (prev==Sym->next) */
-    public GLUhalfEdge Sym;        /* same edge, opposite direction */
-    public GLUhalfEdge Onext;        /* next edge CCW around origin */
-    public GLUhalfEdge Lnext;        /* next edge CCW around left face */
-    public GLUvertex Org;        /* origin vertex (Overtex too long) */
-    public GLUface Lface;        /* left face */
-
-    /* Internal data (keep hidden) */
-    public ActiveRegion activeRegion;    /* a region with this upper edge (sweep.c) */
-    public int winding;    /* change in winding number when crossing */
-    public boolean first;
-
-    public GLUhalfEdge(boolean first) {
-        this.first = first;
-    }
-}
+/**
+ * The **GLUtessellator** object is used to hold the data, such as the
+ * vertices, edges and callback objects, to describe and tessellate complex
+ * polygons.  A **GLUtessellator** object is used with the
+ * [GLU][PGLU] tessellator methods and
+ * [GLU callbacks][PGLUtessellatorCallback].
+ *
+ * @author Eric Veach, July 1994
+ * @author Java Port: Pepijn Van Eechhoudt, July 2003
+ * @author Java Port: Nathan Parker Burg, August 2003
+ * @author Processing integration: Andres Colubri, February 2012
+ */
+interface PGLUtessellator {}

@@ -1,6 +1,5 @@
 /*
 * Portions Copyright (C) 2003-2006 Sun Microsystems, Inc.
-
 * All rights reserved.
 */
 
@@ -49,22 +48,26 @@
 **
 ** Author: Eric Veach, July 1994
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
-** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-/**
- * The <b>GLUtessellator</b> object is used to hold the data, such as the
- * vertices, edges and callback objects, to describe and tessellate complex
- * polygons.  A <b>GLUtessellator</b> object is used with the
- * {@link PGLU GLU} tessellator methods and
- * {@link PGLUtessellatorCallback GLU callbacks}.
- *
- * @author Eric Veach, July 1994
- * @author Java Port: Pepijn Van Eechhoudt, July 2003
- * @author Java Port: Nathan Parker Burg, August 2003
- * @author Processing integration: Andres Colubri, February 2012
- */
-public interface PGLUtessellator {}
+internal class GLUface {
+    @JvmField
+    var next: GLUface? = null /* next face (never NULL) */
+    @JvmField
+    var prev: GLUface? = null /* previous face (never NULL) */
+    @JvmField
+    var anEdge: GLUhalfEdge? = null /* a half edge with this left face */
+    @JvmField
+    var data: Any? = null /* room for client's data */
+
+    /* Internal data (keep hidden) */
+    @JvmField
+    var trail: GLUface? = null /* "stack" for conversion to strips */
+    @JvmField
+    var marked = false /* flag for conversion to strips */
+    @JvmField
+    var inside = false /* this face is in the polygon interior */
+}

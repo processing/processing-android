@@ -1,6 +1,5 @@
 /*
 * Portions Copyright (C) 2003-2006 Sun Microsystems, Inc.
-
 * All rights reserved.
 */
 
@@ -53,11 +52,25 @@
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-class GLUmesh {
-    GLUvertex vHead = new GLUvertex();        /* dummy header for vertex list */
-    GLUface fHead = new GLUface();        /* dummy header for face list */
-    GLUhalfEdge eHead = new GLUhalfEdge(true);        /* dummy header for edge list */
-    GLUhalfEdge eHeadSym = new GLUhalfEdge(false);    /* and its symmetric counterpart */
+internal class GLUvertex {
+    @JvmField
+    var next: GLUvertex? = null /* next vertex (never NULL) */
+    @JvmField
+    var prev: GLUvertex? = null /* previous vertex (never NULL) */
+    @JvmField
+    var anEdge: GLUhalfEdge? = null /* a half-edge with this origin */
+    @JvmField
+    var data: Any? = null /* client's data */
+
+    /* Internal data (keep hidden) */
+    @JvmField
+    var coords = DoubleArray(3) /* vertex location in 3D */
+    @JvmField
+    var s = 0.0
+    @JvmField
+    var t = 0.0 /* projection onto the sweep plane */
+    @JvmField
+    var pqHandle = 0 /* to allow deletion from priority queue */
 }
