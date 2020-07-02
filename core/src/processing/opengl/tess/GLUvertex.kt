@@ -59,8 +59,10 @@ internal class GLUvertex {
     var next: GLUvertex? = null /* next vertex (never NULL) */
     @JvmField
     var prev: GLUvertex? = null /* previous vertex (never NULL) */
+
     @JvmField
     var anEdge: GLUhalfEdge? = null /* a half-edge with this origin */
+
     @JvmField
     var data: Any? = null /* client's data */
 

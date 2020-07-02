@@ -65,7 +65,7 @@ package processing.opengl.tess
  * @author Java Port: Nathan Parker Burg, August 2003
  * @author Processing integration: Andres Colubri, February 2012
  */
-open class PGLUtessellatorCallbackAdapter : PGLUtessellatorCallback {
+internal open class PGLUtessellatorCallbackAdapter : PGLUtessellatorCallback {
     override fun begin(type: Int) {}
     override fun edgeFlag(boundaryEdge: Boolean) {}
     override fun vertex(vertexData: Any?) {}
