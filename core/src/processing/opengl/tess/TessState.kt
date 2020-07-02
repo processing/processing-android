@@ -52,10 +52,10 @@
 ** Processing integration: Andres Colubri, February 2012
 */
 
-package processing.opengl.tess;
+package processing.opengl.tess
 
-class TessState {
-    public static final int T_DORMANT = 0;
-    public static final int T_IN_POLYGON = 1;
-    public static final int T_IN_CONTOUR = 2;
+internal object TessState {
+    const val T_DORMANT = 0
+    const val T_IN_POLYGON = 1
+    const val T_IN_CONTOUR = 2
 }
