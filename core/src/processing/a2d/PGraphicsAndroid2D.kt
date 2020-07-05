@@ -45,10 +45,13 @@ open class PGraphicsAndroid2D : PGraphics() {
             : Canvas? = null
 
     /// break the shape at the next vertex (next vertex() call is a moveto())
+    @JvmField
     var breakShape = false
 
     /// coordinates for internal curve calculation
+    @JvmField
     var curveCoordX: FloatArray? = null
+
     lateinit var curveCoordY: FloatArray
     lateinit var curveDrawX: FloatArray
     lateinit var curveDrawY: FloatArray
@@ -57,6 +60,8 @@ open class PGraphicsAndroid2D : PGraphics() {
     var transform: PMatrix2D
     protected var transformMatrix: Matrix
     protected var transformArray: FloatArray
+
+    @JvmField
     var transformCount = 0
 
     //  Line2D.Float line = new Line2D.Float();
@@ -754,7 +759,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     override fun imageImpl(src: PImage,
                            x1: Float, y1: Float, x2: Float, y2: Float,
                            u1: Int, v1: Int, u2: Int, v2: Int) {
-        var bitmap: Bitmap? = src.native as Bitmap
+        var bitmap: Bitmap? = src.native as Bitmap?
         if (bitmap != null && bitmap.isRecycled) {
             // Let's make sure it is recreated
             bitmap = null
@@ -875,15 +880,15 @@ open class PGraphicsAndroid2D : PGraphics() {
     //    }
     //    return fillPaint.descent();
     //  }
-    override fun textFont(which: PFont) {
+    override fun textFont(which: PFont?) {
         super.textFont(which)
-        fillPaint.typeface = which.native as Typeface
-        fillPaint.textSize = which.defaultSize.toFloat()
+        fillPaint.typeface = which?.native as Typeface?
+        fillPaint.textSize = which?.defaultSize!!.toFloat()
     }
 
-    override fun textFont(which: PFont, size: Float) {
+    override fun textFont(which: PFont?, size: Float) {
         super.textFont(which, size)
-        fillPaint.typeface = which.native as Typeface
+        fillPaint.typeface = which?.native as Typeface?
         fillPaint.textSize = size
     }
 
@@ -904,7 +909,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         if (textFont == null) {
             defaultFontOrDeath("textSize", size)
         }
-        val font = textFont.native as Typeface
+        val font = textFont.native as Typeface?
         if (font != null) {
             fillPaint.textSize = size
         }
@@ -923,7 +928,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //public float textWidth(String str)
     override fun textWidthImpl(buffer: CharArray, start: Int, stop: Int): Float {
 //    Font font = textFont.getFont();
-        val font = textFont.native as Typeface ?: return super.textWidthImpl(buffer, start, stop)
+        val font = textFont.native as (Typeface?) ?: return super.textWidthImpl(buffer, start, stop)
         // maybe should use one of the newer/fancier functions for this?
         val length = stop - start
         //    FontMetrics metrics = canvas.getFontMetrics(font);
@@ -940,7 +945,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //                                 float x, float y)
     override fun textLineImpl(buffer: CharArray, start: Int, stop: Int,
                               x: Float, y: Float) {
-        val font = textFont.native as Typeface
+        val font = textFont.native as Typeface?
         if (font == null) {
             showWarning("Inefficient font rendering: use createFont() with a TTF/OTF instead of loadFont().")
             //new Exception().printStackTrace(System.out);
