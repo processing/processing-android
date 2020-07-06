@@ -92,7 +92,7 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
     var pixelBuffer: IntBuffer? = null
 
     @JvmOverloads
-    constructor(pg: PGraphicsOpenGL, w: Int, h: Int, samples: Int = 1, colorBuffers: Int = 1,
+    constructor(pg: PGraphicsOpenGL?, w: Int, h: Int, samples: Int = 1, colorBuffers: Int = 1,
                 depthBits: Int = 0, stencilBits: Int = 0, packedDepthStencil: Boolean = false,
                 screen: Boolean = false) : this(pg, false) {
 
@@ -160,7 +160,9 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
         pixelBuffer = null
     }
 
-    constructor(pg: PGraphicsOpenGL, w: Int, h: Int, screen: Boolean) : this(pg, w, h, 1, 1, 0, 0, false, screen) {}
+    constructor(pg: PGraphicsOpenGL?, w: Int, h: Int, screen: Boolean) : this(pg, w, h, 1, 1, 0, 0, false, screen) {
+
+    }
 
     fun clear() {
         pg?.pushFramebuffer()
