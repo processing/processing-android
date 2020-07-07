@@ -430,7 +430,8 @@ class ARGraphics : PGraphics3D() {
 
     override fun updateShader(shader: PShader) {
         super.updateShader(shader)
-        shader["colorCorrection", colorCorrection] = 4
+        //shader["colorCorrection", colorCorrection] = 4
+        shader.set("colorCorrection",colorCorrection,4)
     }
 
     companion object {

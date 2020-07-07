@@ -7533,7 +7533,7 @@ public class PGraphicsOpenGL extends PGraphics {
     int type = PShader.getShaderType(parent.loadStrings(fragFilename),
                                      PShader.POLY);
     PShader shader = new PShader(parent);
-    shader.setType(type);
+    shader.type = type;
     shader.setFragmentShader(fragFilename);
     if (type == PShader.POINT) {
       String[] vertSource = pgl.loadVertexShader(defPointShaderVertURL);
