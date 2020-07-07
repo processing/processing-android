@@ -56,7 +56,7 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
     var camera: Camera? = null
 
     private var arsurfaceView: GLSurfaceView? = null
-    private var renderer: AndroidARRenderer? = null
+    private var ARrenderer: AndroidARRenderer? = null
     private var par: ARGraphics
     private var displayRotationHelper: RotationHandler
 
@@ -142,13 +142,13 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
 
     val aRRenderer: AndroidARRenderer
         get() {
-            renderer = AndroidARRenderer()
-            return renderer!!
+            ARrenderer = AndroidARRenderer()
+            return ARrenderer!!
         }
 
     inner class AndroidARRenderer : GLSurfaceView.Renderer {
         override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-            pgl.getGL(null)
+            pgl?.getGL(null)
             par.createBackgroundRenderer()
         }
 

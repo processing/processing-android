@@ -49,7 +49,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
     protected var vrView: SurfaceViewVR
     protected var pvr: VRGraphics
     protected var vrActivity: GvrActivity
-    protected var renderer: AndroidVRStereoRenderer? = null
+    protected var VRrenderer: AndroidVRStereoRenderer? = null
     private var needCalculate = false
     override fun getContext(): Context {
         return vrActivity
@@ -190,14 +190,14 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
     // Android specific classes (Renderer, ConfigChooser)
     val vRStereoRenderer: AndroidVRStereoRenderer
         get() {
-            renderer = AndroidVRStereoRenderer()
-            return renderer!!
+            VRrenderer = AndroidVRStereoRenderer()
+            return VRrenderer!!
         }
 
     inner class AndroidVRStereoRenderer : StereoRenderer {
         override fun onNewFrame(transform: HeadTransform) {
             hadnleGVREnumError()
-            pgl.getGL(null)
+            pgl?.getGL(null)
             pvr.headTransform(transform)
             needCalculate = true
         }
@@ -237,10 +237,10 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
         // seems harmless as it happens in the first frame only
         // TODO: need to find the reason for the error (gl config?)
         private fun hadnleGVREnumError() {
-            val err = pgl.error
+            val err = pgl?.error
             if (err != 0 && err != 1280) {
                 val where = "top onNewFrame"
-                val errString = pgl.errorString(err)
+                val errString = err?.let { pgl?.errorString(it) }
                 val msg = "OpenGL error $err at $where: $errString"
                 PGraphics.showWarning(msg)
             }
