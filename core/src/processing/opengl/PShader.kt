@@ -60,8 +60,7 @@ open class PShader : PConstants {
     @JvmField
     var context = 0 // The context that created this shader.
 
-    @JvmField
-    protected var type = 0
+    @JvmField var type = 0
 
     @JvmField
     var glProgram: Int

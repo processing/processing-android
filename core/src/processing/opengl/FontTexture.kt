@@ -48,7 +48,7 @@ import java.util.*
  * over several textures.
  * @author Andres Colubri
  */
-internal open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PConstants {
+open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PConstants {
     protected var pgl: PGL?
     protected var is3D: Boolean
     protected var minSize = 0
@@ -306,7 +306,7 @@ internal open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolea
         texinfoMap!![glyph] = tinfo
     }
 
-    internal inner class TextureInfo(@JvmField var texIndex: Int, cropX: Int, cropY: Int, cropW: Int, cropH: Int,
+    inner class TextureInfo(@JvmField var texIndex: Int, cropX: Int, cropY: Int, cropW: Int, cropH: Int,
                                      pix: IntArray) {
         @JvmField
         var width = 0
