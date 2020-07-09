@@ -68,11 +68,11 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
         sketch.activity.finish()
     }
 
-    override fun getAssets(): AssetManager {
+    override fun getAssets(): AssetManager? {
         return sketch.context.assets
     }
 
-    override fun startActivity(intent: Intent) {
+    override fun startActivity(intent: Intent?) {
         sketch.context.startActivity(intent)
     }
 
@@ -97,11 +97,11 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
         return sketch.activity.filesDir
     }
 
-    override fun openFileInput(filename: String): InputStream? {
+    override fun openFileInput(filename: String?): InputStream? {
         return null
     }
 
-    override fun getFileStreamPath(path: String): File {
+    override fun getFileStreamPath(path: String?): File? {
         return sketch.activity.getFileStreamPath(path)
     }
 

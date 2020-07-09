@@ -330,7 +330,7 @@ class ARGraphics : PGraphics3D() {
     }
 
     fun createBackgroundRenderer() {
-        backgroundRenderer = BackgroundRenderer(surfar!!.activity)
+        backgroundRenderer = BackgroundRenderer(surfar!!.getActivity())
     }
 
     fun setCameraTexture() {

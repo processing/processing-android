@@ -67,7 +67,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
         return vrActivity.assets
     }
 
-    override fun startActivity(intent: Intent) {
+    override fun startActivity(intent: Intent?) {
         vrActivity.startActivity(intent)
     }
 
@@ -99,11 +99,11 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
         return vrActivity.filesDir
     }
 
-    override fun openFileInput(filename: String): InputStream? {
+    override fun openFileInput(filename: String?): InputStream? {
         return null
     }
 
-    override fun getFileStreamPath(path: String): File {
+    override fun getFileStreamPath(path: String?): File? {
         return vrActivity.getFileStreamPath(path)
     }
 
