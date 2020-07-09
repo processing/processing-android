@@ -46,17 +46,17 @@ open class PSurfaceAndroid2D : PSurfaceNone {
     constructor(graphics: PGraphics, component: AppComponent, holder: SurfaceHolder?) {
         sketch = graphics.parent
         this.graphics = graphics
-        this.component = component
+        this.appcomponent = component
         if (component.getKind() == AppComponent.FRAGMENT) {
             val frag = component as PFragment
-            activity = frag.getActivity()
-            surfaceView = SurfaceViewAndroid2D(activity, null)
+            appactivity = frag.getActivity()
+            msurfaceView = SurfaceViewAndroid2D(appactivity, null)
         } else if (component.getKind() == AppComponent.WALLPAPER) {
             wallpaper = component as WallpaperService
-            surfaceView = SurfaceViewAndroid2D(wallpaper, holder)
+            msurfaceView = SurfaceViewAndroid2D(wallpaper, holder)
         } else if (component.getKind() == AppComponent.WATCHFACE) {
             watchface = component as CanvasWatchFaceService
-            surfaceView = null
+            msurfaceView = null
             // Set as ready here, as watch faces don't have a surface view with a
             // surfaceCreate() event to do it.
             surfaceReady = true
@@ -99,26 +99,26 @@ open class PSurfaceAndroid2D : PSurfaceNone {
             if (PApplet.DEBUG) {
                 println("SketchSurfaceView.surfaceChanged() $iwidth $iheight")
             }
-            sketch.surfaceChanged()
-            sketch.setSize(iwidth, iheight)
+            sketch?.surfaceChanged()
+            sketch?.setSize(iwidth, iheight)
         }
 
         override fun onWindowFocusChanged(hasFocus: Boolean) {
             super.onWindowFocusChanged(hasFocus)
-            sketch.surfaceWindowFocusChanged(hasFocus)
+            sketch?.surfaceWindowFocusChanged(hasFocus)
         }
 
         override fun onTouchEvent(event: MotionEvent): Boolean {
-            return sketch.surfaceTouchEvent(event)
+            return sketch!!.surfaceTouchEvent(event)
         }
 
         override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyDown(code, event)
+            sketch?.surfaceKeyDown(code, event)
             return super.onKeyDown(code, event)
         }
 
         override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyUp(code, event)
+            sketch?.surfaceKeyUp(code, event)
             return super.onKeyUp(code, event)
         }
 

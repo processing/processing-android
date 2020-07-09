@@ -60,41 +60,41 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
     private var par: ARGraphics
     private var displayRotationHelper: RotationHandler
 
-    override fun getContext(): Context {
-        return activity
+    override fun getContext(): Context? {
+        return appactivity
     }
 
     override fun finish() {
-        sketch.activity.finish()
+        sketch?.activity?.finish()
     }
 
     override fun getAssets(): AssetManager? {
-        return sketch.context.assets
+        return sketch?.context?.assets
     }
 
     override fun startActivity(intent: Intent?) {
-        sketch.context.startActivity(intent)
+        sketch?.context?.startActivity(intent)
     }
 
     override fun initView(sketchWidth: Int, sketchHeight: Int) {
-        val window = sketch.activity.window
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        val window = sketch?.activity?.window
+        window?.decorView?.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN
                 or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.setContentView(arsurfaceView)
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window?.setContentView(arsurfaceView)
     }
 
-    override fun getName(): String {
-        return sketch.activity.componentName.packageName
+    override fun getName(): String? {
+        return sketch?.activity?.componentName?.packageName
     }
 
     override fun setOrientation(which: Int) {}
-    override fun getFilesDir(): File {
-        return sketch.activity.filesDir
+    override fun getFilesDir(): File? {
+        return sketch?.activity?.filesDir
     }
 
     override fun openFileInput(filename: String?): InputStream? {
@@ -102,28 +102,28 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
     }
 
     override fun getFileStreamPath(path: String?): File? {
-        return sketch.activity.getFileStreamPath(path)
+        return sketch?.activity?.getFileStreamPath(path)
     }
 
     override fun dispose() {}
 
-    inner class SurfaceViewAR(context: Context) : GLSurfaceView(context) {
+    inner class SurfaceViewAR(context: Context?) : GLSurfaceView(context) {
         override fun onTouchEvent(event: MotionEvent): Boolean {
-            return sketch.surfaceTouchEvent(event)
+            return sketch!!.surfaceTouchEvent(event)
         }
 
         override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyDown(code, event)
+            sketch?.surfaceKeyDown(code, event)
             return super.onKeyDown(code, event)
         }
 
         override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyUp(code, event)
+            sketch?.surfaceKeyUp(code, event)
             return super.onKeyUp(code, event)
         }
 
         init {
-            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val activityManager = context?.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val configurationInfo = activityManager.deviceConfigurationInfo
             val supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000
             if (!supportsGLES2) {
@@ -155,10 +155,10 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
         override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
             displayRotationHelper.onSurfaceChanged(width, height)
             GLES20.glViewport(0, 0, width, height)
-            sketch.surfaceChanged()
-            graphics.surfaceChanged()
-            sketch.setSize(width, height)
-            graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight())
+            sketch?.surfaceChanged()
+            graphics?.surfaceChanged()
+            sketch?.setSize(width, height)
+            graphics?.setSize(sketch!!.sketchWidth(), sketch!!.sketchHeight())
         }
 
         override fun onDrawFrame(gl: GL10) {
@@ -170,8 +170,8 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
                 camera = frame!!.camera
                 if (camera!!.trackingState == TrackingState.TRACKING) par.updateTrackables()
                 par.updateMatrices()
-                sketch.calculate()
-                sketch.handleDraw()
+                sketch?.calculate()
+                sketch?.handleDraw()
             } catch (tr: Throwable) {
                 PGraphics.showWarning("An error occurred in ARCORE: " + tr.message)
             }
@@ -188,14 +188,14 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
     }
 
     override fun resumeThread() {
-        if (!sketch.hasPermission("android.permission.CAMERA")) return
+        if (!sketch?.hasPermission("android.permission.CAMERA")!!) return
         if (session == null) {
             var message: String? = null
             var exception: String? = null
             try {
                 // Perhaps this should be done in the MainActivity?
                 // https://github.com/google-ar/arcore-android-sdk/blob/master/samples/hello_ar_java/app/src/main/java/com/google/ar/core/examples/java/helloar/HelloArActivity.java
-                when (ArCoreApk.getInstance().requestInstall(sketch.activity, true)) {
+                when (ArCoreApk.getInstance().requestInstall(sketch?.activity, true)) {
                     ArCoreApk.InstallStatus.INSTALL_REQUESTED -> {
                         message(T_ALERT_MESSAGE, C_NOT_SUPPORTED)
                         return
@@ -203,7 +203,7 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
                     ArCoreApk.InstallStatus.INSTALLED -> {
                     }
                 }
-                session = Session(activity)
+                session = Session(appactivity)
             } catch (e: UnavailableArcoreNotInstalledException) {
                 message = C_EXCEPT_INSTALL
                 exception = e.toString()
@@ -238,8 +238,8 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
     }
 
     fun message(_title: String, _message: String) {
-        val parent = activity
-        parent.runOnUiThread {
+        val parent = appactivity
+        parent!!.runOnUiThread {
             AlertDialog.Builder(parent)
                     .setTitle(_title)
                     .setMessage(_message)
@@ -262,10 +262,10 @@ class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder
     init {
         sketch = graphics!!.parent
         this.graphics = graphics!!
-        component = appComponent
+        appcomponent = appComponent
         pgl = (graphics!! as PGraphicsOpenGL).pgl as PGLES
         par = graphics!! as ARGraphics
-        displayRotationHelper = RotationHandler(activity)
-        arsurfaceView = SurfaceViewAR(activity)
+        displayRotationHelper = RotationHandler(getContext())
+        arsurfaceView = SurfaceViewAR(getActivity())
     }
 }

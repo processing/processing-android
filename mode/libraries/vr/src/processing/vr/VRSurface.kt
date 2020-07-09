@@ -144,16 +144,16 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
 
     inner class SurfaceViewVR(context: Context) : GvrView(context) {
         override fun onTouchEvent(event: MotionEvent): Boolean {
-            return sketch.surfaceTouchEvent(event)
+            return sketch!!.surfaceTouchEvent(event)
         }
 
         override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyDown(code, event)
+            sketch?.surfaceKeyDown(code, event)
             return super.onKeyDown(code, event)
         }
 
         override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyUp(code, event)
+            sketch?.surfaceKeyUp(code, event)
             return super.onKeyUp(code, event)
         }
 
@@ -172,7 +172,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
             isFocusableInTouchMode = true
 
             requestFocus()
-            val samples = sketch.sketchSmooth()
+            val samples = sketch!!.sketchSmooth()
 
             if (1 < samples) {
                 setMultisampling(samples)
@@ -209,10 +209,10 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
                 // This allows to update the modelview and projection matrices, so
                 // geometry-related calculations can also be conducted in calculate().
                 pvr.updateView()
-                sketch.calculate()
+                sketch?.calculate()
                 needCalculate = false
             }
-            sketch.handleDraw()
+            sketch?.handleDraw()
         }
 
         override fun onFinishFrame(arg0: Viewport) {
@@ -224,10 +224,10 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
         }
 
         override fun onSurfaceChanged(iwidth: Int, iheight: Int) {
-            sketch.surfaceChanged()
-            graphics.surfaceChanged()
-            sketch.setSize(iwidth, iheight)
-            graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight())
+            sketch?.surfaceChanged()
+            graphics?.surfaceChanged()
+            sketch?.setSize(iwidth, iheight)
+            graphics?.setSize(sketch!!.sketchWidth(), sketch!!.sketchHeight())
         }
 
         override fun onSurfaceCreated(arg0: EGLConfig) {}
@@ -251,11 +251,11 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
     init {
         sketch = graphics.parent
         this.graphics = graphics
-        this.component = component
+        this.appcomponent = component
 
         pgl = (graphics as PGraphicsOpenGL).pgl as PGLES
         vrActivity = component as GvrActivity
-        activity = vrActivity
+        appactivity = vrActivity
         pvr = graphics as VRGraphics
         vrView = SurfaceViewVR(vrActivity)
 
@@ -280,7 +280,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent, holder: Surfa
             AndroidCompat.setSustainedPerformanceMode(vrActivity, true)
         }
         vrActivity.gvrView = vrView
-        surfaceView = null
+        msurfaceView = null
 
         // The glview is ready right after creation, does not need to wait for a
         // surfaceCreate() event.

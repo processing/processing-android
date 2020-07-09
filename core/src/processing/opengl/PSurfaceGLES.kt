@@ -57,23 +57,23 @@ open class PSurfaceGLES : PSurfaceNone {
     constructor(graphics: PGraphics?, component: AppComponent?, holder: SurfaceHolder?) {
         sketch = graphics?.parent
         this.graphics = graphics
-        this.component = component
+        this.appcomponent = component
         pgl = (graphics as PGraphicsOpenGL).pgl as PGLES
 
         if (component!!.getKind() == AppComponent.FRAGMENT) {
             val frag = component as PFragment
-            activity = frag.activity
-            surfaceView = SurfaceViewGLES(activity, null)
+            appactivity = frag.activity
+            msurfaceView = SurfaceViewGLES(appactivity!!, null)
         } else if (component!!.getKind() == AppComponent.WALLPAPER) {
             wallpaper = component as WallpaperService
-            surfaceView = SurfaceViewGLES(wallpaper, holder)
+            msurfaceView = SurfaceViewGLES(wallpaper!!, holder)
         } else if (component!!.getKind() == AppComponent.WATCHFACE) {
             watchface = component as Gles2WatchFaceService
             // Set as ready here, as watch faces don't have a surface view with a
             // surfaceCreate() event to do it.
             surfaceReady = true
         }
-        glsurf = surfaceView as SurfaceViewGLES
+        glsurf = msurfaceView as SurfaceViewGLES
     }
 
     override fun dispose() {
@@ -89,8 +89,8 @@ open class PSurfaceGLES : PSurfaceNone {
     // Thread handling
 
     override fun callDraw() {
-        component.requestDraw()
-        if (component.canDraw() && glsurf != null) {
+        appcomponent?.requestDraw()
+        if (appcomponent!!.canDraw() && glsurf != null) {
             glsurf!!.requestRender()
         }
     }
@@ -146,27 +146,27 @@ open class PSurfaceGLES : PSurfaceNone {
         // Inform the view that the window focus has changed.
         override fun onWindowFocusChanged(hasFocus: Boolean) {
             super.onWindowFocusChanged(hasFocus)
-            sketch.surfaceWindowFocusChanged(hasFocus)
+            sketch?.surfaceWindowFocusChanged(hasFocus)
         }
 
         // Do we need these to capture events...?
         override fun onTouchEvent(event: MotionEvent): Boolean {
-            val fullscreen = sketch.width == sketch.displayWidth &&
-                    sketch.height == sketch.displayHeight
+            val fullscreen = sketch?.width == sketch?.displayWidth &&
+                    sketch?.height == sketch?.displayHeight
             if (fullscreen && PApplet.SDK < 19) {
                 // The best we can do pre-KitKat to keep the navigation bar hidden
                 systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
             }
-            return sketch.surfaceTouchEvent(event)
+            return sketch!!.surfaceTouchEvent(event)
         }
 
         override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyDown(code, event)
+            sketch?.surfaceKeyDown(code, event)
             return super.onKeyDown(code, event)
         }
 
         override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
-            sketch.surfaceKeyUp(code, event)
+            sketch?.surfaceKeyUp(code, event)
             return super.onKeyUp(code, event)
         }
 
@@ -185,7 +185,7 @@ open class PSurfaceGLES : PSurfaceNone {
             // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
             setEGLContextClientVersion(PGLES.version)
             preserveEGLContextOnPause = true
-            val samples = sketch.sketchSmooth()
+            val samples = sketch!!.sketchSmooth()
             if (1 < samples) {
                 setEGLConfigChooser(getConfigChooser(samples))
             } else {
@@ -234,7 +234,7 @@ open class PSurfaceGLES : PSurfaceNone {
     inner class RendererGLES : GLSurfaceView.Renderer {
         override fun onDrawFrame(igl: GL10) {
             pgl!!.getGL(igl)
-            sketch.handleDraw()
+            sketch?.handleDraw()
         }
 
         override fun onSurfaceChanged(igl: GL10, iwidth: Int, iheight: Int) {
@@ -251,8 +251,8 @@ open class PSurfaceGLES : PSurfaceNone {
 //
 //      sketch.setSize(iwidth, iheight);
 //      graphics.setSize(sketch.sketchWidth(), sketch.sketchHeight());
-            sketch.surfaceChanged()
-            sketch.setSize(iwidth, iheight)
+            sketch?.surfaceChanged()
+            sketch?.setSize(iwidth, iheight)
         }
 
         override fun onSurfaceCreated(igl: GL10, config: EGLConfig) {
