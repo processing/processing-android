@@ -24,20 +24,15 @@
 
 package processing.core;
 
-import java.util.HashMap;
-import java.util.WeakHashMap;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
-
+import android.graphics.Color;
+import android.view.SurfaceHolder;
 import processing.android.AppComponent;
 import processing.opengl.PGL;
 import processing.opengl.PShader;
-import android.graphics.Color;
-import android.view.SurfaceHolder;
+
+import java.util.HashMap;
+import java.util.WeakHashMap;
+import java.util.concurrent.*;
 
 
 /**
@@ -3199,7 +3194,7 @@ public class PGraphics extends PImage implements PConstants {
     if (which == null) {
       throw new RuntimeException(ERROR_TEXTFONT_NULL_PFONT);
     }
-    textFontImpl(which, which.getDefaultSize());
+    textFontImpl(which, which.size);
   }
 
 

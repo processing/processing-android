@@ -4070,10 +4070,10 @@ public class PGraphicsOpenGL extends PGraphics {
           tinfo = textTex.addToTexture(this, glyph);
         }
 
-        float high    = glyph.height     / (float) textFont.getSize();
-        float bwidth  = glyph.width      / (float) textFont.getSize();
-        float lextent = glyph.leftExtent / (float) textFont.getSize();
-        float textent = glyph.topExtent  / (float) textFont.getSize();
+        float high    = glyph.height     / (float) textFont.size;
+        float bwidth  = glyph.width      / (float) textFont.size;
+        float lextent = glyph.leftExtent / (float) textFont.size;
+        float textent = glyph.topExtent  / (float) textFont.size;
 
         // The default text setting assumes an Y axis pointing down, so
         // inverting in the the case Y points up

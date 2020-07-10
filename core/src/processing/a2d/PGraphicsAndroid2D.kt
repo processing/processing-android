@@ -883,7 +883,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     override fun textFont(which: PFont?) {
         super.textFont(which)
         fillPaint.typeface = which?.native as Typeface?
-        fillPaint.textSize = which?.defaultSize!!.toFloat()
+        fillPaint.textSize = which?.size!!.toFloat()
     }
 
     override fun textFont(which: PFont?, size: Float) {

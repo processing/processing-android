@@ -253,7 +253,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
             for (y in 0 until glyph.height) {
                 rgba[t++] = -0x100 // Set the leftmost pixel in this row as blank
                 for (x in 0 until glyph.width) {
-                    rgba[t++] = -0x100 or glyph.image.pixels[p++]
+                    rgba[t++] = -0x100 or glyph.image!!.pixels[p++]
                 }
                 rgba[t++] = -0x100 // Set the rightmost pixel in this row as blank
             }
@@ -264,7 +264,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
             for (y in 0 until glyph.height) {
                 rgba[t++] = 0x00FFFFFF // Set the leftmost pixel in this row as blank
                 for (x in 0 until glyph.width) {
-                    rgba[t++] = glyph.image.pixels[p++] shl 24 or 0x00FFFFFF
+                    rgba[t++] = glyph.image!!.pixels[p++] shl 24 or 0x00FFFFFF
                 }
                 rgba[t++] = 0x00FFFFFF // Set the rightmost pixel in this row as blank
             }
