@@ -1580,7 +1580,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
 
     pg.setparent(this);
-    pg.setPrimary(primary);
+    pg.setprimary(primary);
     pg.setSize(w, h);
     return pg;
   }

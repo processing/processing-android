@@ -24,23 +24,18 @@
 
 package processing.opengl;
 
+import android.content.Context;
+import android.os.Environment;
+import android.view.SurfaceHolder;
 import processing.android.AppComponent;
 import processing.core.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.nio.*;
 import java.util.*;
-
-import android.content.Context;
-import android.os.Environment;
-import android.view.SurfaceHolder;
 
 import static android.os.Environment.isExternalStorageRemovable;
 
@@ -660,8 +655,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
-  public void setPrimary(boolean primary) {
-    super.setPrimary(primary);
+  public void setprimary(boolean primary) {
+    super.setprimary(primary);
     pgl.setPrimary(primary);
     format = ARGB;
     if (primary) {

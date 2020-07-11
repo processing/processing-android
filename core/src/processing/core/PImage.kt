@@ -83,8 +83,7 @@ open class PImage : PConstants, Cloneable {
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     /** for renderers that need to store info about the image  */
-    @JvmField
-    protected var cacheMap: HashMap<PGraphics, Any>? = null
+    protected open var cacheMap: HashMap<PGraphics, Any>? = null
 
     /** for renderers that need to store parameters about the image  */
     @JvmField
