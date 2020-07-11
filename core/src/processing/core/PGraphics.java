@@ -667,7 +667,7 @@ public class PGraphics extends PImage implements PConstants {
   }
 
 
-  public void setParent(PApplet parent) {  // ignore
+  public void setparent(PApplet parent) {  // ignore
     this.parent = parent;
   }
 
@@ -5990,7 +5990,7 @@ public class PGraphics extends PImage implements PConstants {
       asyncImageSaver = new AsyncImageSaver();
     }
 
-    if (!loaded) loadPixels();
+    if (!isLoaded) loadPixels();
     PImage target = asyncImageSaver.getAvailableTarget(pixelWidth, pixelHeight,
                                                        format);
     if (target == null) return false;

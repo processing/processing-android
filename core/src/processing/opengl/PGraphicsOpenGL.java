@@ -651,8 +651,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
-  public void setParent(PApplet parent) {
-    super.setParent(parent);
+  public void setparent(PApplet parent) {
+    super.setparent(parent);
     if (pgl != null) {
       pgl.sketch = parent;
     }
@@ -2281,7 +2281,7 @@ public class PGraphicsOpenGL extends PGraphics {
       flush();
     } else {
       // pixels array is not up-to-date anymore
-      loaded = false;
+      isLoaded = false;
     }
   }
 
@@ -2299,7 +2299,7 @@ public class PGraphicsOpenGL extends PGraphics {
       flush();
     } else {
       // pixels array is not up-to-date anymore
-      loaded = false;
+      isLoaded = false;
     }
   }
 
@@ -2595,7 +2595,7 @@ public class PGraphicsOpenGL extends PGraphics {
     boolean hasPoints = 0 < tessGeo.pointVertexCount &&
                         0 < tessGeo.pointIndexCount;
 
-    boolean hasPixels = modified && pixels != null;
+    boolean hasPixels = isModified && pixels != null;
 
     if (hasPixels) {
       // If the user has been manipulating individual pixels,
@@ -2658,7 +2658,7 @@ public class PGraphicsOpenGL extends PGraphics {
         updateProjmodelview();
       }
 
-      loaded = false;
+      isLoaded = false;
     }
 
     tessGeo.clear();
@@ -2667,8 +2667,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   protected void flushPixels() {
-    drawPixels(mx1, my1, mx2 - mx1, my2 - my1);
-    modified = false;
+    drawPixels(modifiedX1, modifiedY1, modifiedX2 - modifiedX1, modifiedY2 - modifiedY1);
+    isModified = false;
   }
 
 
@@ -5799,7 +5799,7 @@ public class PGraphicsOpenGL extends PGraphics {
     // blending operations during draw create translucent areas in the
     // color buffer.
     backgroundA = 1;
-    loaded = false;
+    isLoaded = false;
   }
 
 
@@ -5808,7 +5808,7 @@ public class PGraphicsOpenGL extends PGraphics {
     flush();
     pgl.clearBackground(backgroundR, backgroundG, backgroundB, backgroundA,
                         !hints[DISABLE_DEPTH_MASK], true);
-    loaded = false;
+    isLoaded = false;
   }
 
 
@@ -5903,7 +5903,7 @@ public class PGraphicsOpenGL extends PGraphics {
       needEndDraw = true;
     }
 
-    if (!loaded) {
+    if (!isLoaded) {
       // Draws any remaining geometry in case the user is still not
       // setting/getting new pixels.
       flush();
@@ -5911,12 +5911,12 @@ public class PGraphicsOpenGL extends PGraphics {
 
     allocatePixels();
 
-    if (!loaded) {
+    if (!isLoaded) {
       readPixels();
     }
 
     // Pixels are now up-to-date, set the flag.
-    loaded = true;
+    isLoaded = true;
 
 
     if (needEndDraw) {
@@ -5930,7 +5930,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if ((pixels == null) || (pixels.length != pixelWidth * pixelHeight)) {
       pixels = new int[pixelWidth * pixelHeight];
       pixelBuffer = PGL.allocateIntBuffer(pixels);
-      loaded = false;
+      isLoaded = false;
     }
   }
 
@@ -6972,7 +6972,7 @@ public class PGraphicsOpenGL extends PGraphics {
     Texture tex = (Texture)initCache(img);
     if (tex == null) return null;
 
-    if (img.isModified()) {
+    if (img.isModified) {
       if (img.width != tex.width || img.height != tex.height) {
         tex.init(img.width, img.height);
       }
@@ -7019,12 +7019,12 @@ public class PGraphicsOpenGL extends PGraphics {
         boolean dispose = img.pixels == null;
         img.loadPixels();
         tex.set(img.pixels, img.format);
-        img.setModified();
+        img.SetModified();
         if (dispose) {
           // We only used the pixels to load the image into the texture and the user did not request
           // to load the pixels, so we should dispose the pixels array to avoid wasting memory
           img.pixels = null;
-          img.loaded = false;
+          img.isLoaded = false;
         }
       }
     }
@@ -7118,15 +7118,15 @@ public class PGraphicsOpenGL extends PGraphics {
 
   protected void updateTexture(PImage img, Texture tex) {
     if (tex != null) {
-      if (img.isModified()) {
-        int x = img.getModifiedX1();
-        int y = img.getModifiedY1();
-        int w = img.getModifiedX2() - x;
-        int h = img.getModifiedY2() - y;
+      if (img.isModified) {
+        int x = img.modifiedX1;
+        int y = img.modifiedY1;
+        int w = img.modifiedX2 - x;
+        int h = img.modifiedY2 - y;
         tex.set(img.pixels, x, y, w, h, img.format);
       }
     }
-    img.setModified(false);
+    img.SetModified(false);
   }
 
 
@@ -7460,8 +7460,8 @@ public class PGraphicsOpenGL extends PGraphics {
 
     pixelsOp = OP_NONE;
 
-    modified = false;
-    loaded = false;
+    isModified = false;
+    isLoaded = false;
   }
 
 

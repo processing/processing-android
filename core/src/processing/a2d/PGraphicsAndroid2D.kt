@@ -115,7 +115,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     }
 
     override fun dispose() {
-        if (bitmap != null) bitmap.recycle()
+        if (bitmap != null) bitmap!!.recycle()
     }
 
     override fun createSurface(component: AppComponent, holder: SurfaceHolder?, reset: Boolean): PSurface {  // ignore
@@ -127,12 +127,12 @@ open class PGraphicsAndroid2D : PGraphics() {
     @SuppressLint("NewApi")
     protected fun checkCanvas(): Canvas? {
         if ((canvas == null || sized) && (useBitmap || !primaryGraphics)) {
-            if (bitmap == null || bitmap.width * bitmap.height < width * height || Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-                if (bitmap != null) bitmap.recycle()
+            if (bitmap == null || bitmap!!.width * bitmap!!.height < width * height || Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+                if (bitmap != null) bitmap!!.recycle()
                 bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             } else {
                 // reconfigure is only available in API level 19 or higher.
-                bitmap.reconfigure(width, height, bitmap.config)
+                bitmap!!.reconfigure(width, height, bitmap!!.config)
             }
             canvas = Canvas(bitmap)
             sized = false
@@ -153,7 +153,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     override fun endDraw() {
         if (bitmap == null) return
         if (primaryGraphics) {
-            val holder = parent.surface.getSurfaceHolder()
+            val holder = parent?.surface?.getSurfaceHolder()
             if (holder != null) {
                 var screen: Canvas? = null
                 try {
@@ -180,7 +180,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         // the super class, which just sets the mx1, my1, mx2, my2
         // coordinates of the modified area. This avoids doing the
         // full copy of the pixels to the surface in this.updatePixels().
-        setModified()
+        SetModified()
         super.updatePixels()
     }
 
@@ -767,12 +767,12 @@ open class PGraphicsAndroid2D : PGraphics() {
         if (bitmap == null && src.format == PConstants.ALPHA) {
             // create an alpha bitmap for this feller
             bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
-            val px = IntArray(src.pixels.size)
+            val px = IntArray(src.pixels!!.size)
             for (i in px.indices) {
-                px[i] = src.pixels[i] shl 24 or 0xFFFFFF
+                px[i] = src.pixels!![i] shl 24 or 0xFFFFFF
             }
             bitmap.setPixels(px, 0, src.width, 0, 0, src.width, src.height)
-            modified = false
+            isModified = false
             src.native = bitmap
         }
 
@@ -786,7 +786,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         if (bitmap == null || src.width != bitmap.width || src.height != bitmap.height) {
             bitmap?.recycle()
             bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
-            modified = true
+            isModified = true
             src.native = bitmap
         }
         if (src.isModified) {
@@ -799,7 +799,7 @@ open class PGraphicsAndroid2D : PGraphics() {
             if (src.pixels != null) {
                 bitmap!!.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height)
             }
-            src.isModified = false
+            src.SetModified(false)
         }
         if (imageImplSrcRect == null) {
             imageImplSrcRect = Rect(u1, v1, u2, v2)
@@ -818,7 +818,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         // but I don't think it is particularly efficient, as the bitmaps are stored
         // in native heap for Android 10 and older.
         val mi = ActivityManager.MemoryInfo()
-        val activity = parent.surface.getActivity() ?: return
+        val activity = parent!!.surface.getActivity() ?: return
         val activityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(mi)
         if (mi.lowMemory) {
@@ -839,10 +839,10 @@ open class PGraphicsAndroid2D : PGraphics() {
         val extension = PApplet.getExtension(filename)
         var svg: PShapeSVG? = null
         if (extension == "svg") {
-            svg = PShapeSVG(parent.loadXML(filename))
+            svg = PShapeSVG(parent!!.loadXML(filename))
         } else if (extension == "svgz") {
             try {
-                val input: InputStream = GZIPInputStream(parent.createInput(filename))
+                val input: InputStream = GZIPInputStream(parent?.createInput(filename))
                 val xml = XML(input)
                 svg = PShapeSVG(xml)
             } catch (e: Exception) {
@@ -1400,12 +1400,12 @@ open class PGraphicsAndroid2D : PGraphics() {
             throw RuntimeException("The pixels array is not available in this " +
                     "renderer withouth a backing bitmap")
         }
-        if (pixels == null || pixels.size != width * height) {
+        if (pixels == null || pixels!!.size != width * height) {
             pixels = IntArray(width * height)
         }
         //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.getDataElements(0, 0, width, height, pixels);
-        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+        bitmap?.getPixels(pixels, 0, width, 0, 0, width, height)
     }
 
     /**
@@ -1422,7 +1422,7 @@ open class PGraphicsAndroid2D : PGraphics() {
 
 //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.setDataElements(0, 0, width, height, pixels);
-        bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
+        bitmap?.setPixels(pixels, 0, width, 0, 0, width, height)
     }
 
     /**
@@ -1454,15 +1454,15 @@ open class PGraphicsAndroid2D : PGraphics() {
 
     override fun saveState() {
         super.saveState()
-        val context = parent.context
-        if (context == null || bitmap == null || parent.surface.getComponent()!!.isService()) return
+        val context = parent?.context
+        if (context == null || bitmap == null || parent!!.surface.getComponent()!!.isService()) return
         try {
             // Saving current width and height to avoid restoring the screen after a screen rotation
             restoreWidth = pixelWidth
             restoreHeight = pixelHeight
-            val size = bitmap.height * bitmap.rowBytes
+            val size = bitmap!!.height * bitmap!!.rowBytes
             val restoreBitmap = ByteBuffer.allocate(size)
-            bitmap.copyPixelsToBuffer(restoreBitmap)
+            bitmap?.copyPixelsToBuffer(restoreBitmap)
 
             // Tries to use external but if not mounted, falls back on internal storage, as shown in
             // https://developer.android.com/topic/performance/graphics/cache-bitmap#java
@@ -1494,7 +1494,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         } else if (restoreCount > 0) {
             restoreCount--
             if (restoreCount == 0) {
-                val context = parent.context ?: return
+                val context = parent?.context ?: return
                 try {
                     // Load cached bitmap and draw
                     val cacheFile = File(restoreFilename)
@@ -1502,9 +1502,9 @@ open class PGraphicsAndroid2D : PGraphics() {
                     val din = ObjectInputStream(inStream)
                     val array = din.readObject() as ByteArray
                     val restoreBitmap = ByteBuffer.wrap(array)
-                    if (restoreBitmap.capacity() == bitmap.height * bitmap.rowBytes) {
+                    if (restoreBitmap.capacity() == bitmap!!.height * bitmap!!.rowBytes) {
                         restoreBitmap.rewind()
-                        bitmap.copyPixelsFromBuffer(restoreBitmap)
+                        bitmap?.copyPixelsFromBuffer(restoreBitmap)
                     }
                     inStream.close()
                     cacheFile.delete()
@@ -1523,7 +1523,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     }
 
     override fun get(x: Int, y: Int): Int {
-        return if (bitmap == null || x < 0 || y < 0 || x >= width || y >= height) 0 else bitmap.getPixel(x, y)
+        return if (bitmap == null || x < 0 || y < 0 || x >= width || y >= height) 0 else bitmap!!.getPixel(x, y)
         //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.getDataElements(x, y, getset);
 //    return getset[0];
@@ -1553,7 +1553,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         //    getset[0] = argb;
 //    WritableRaster raster = ((BufferedImage) image).getRaster();
 //    raster.setDataElements(x, y, getset);
-        bitmap.setPixel(x, y, argb)
+        bitmap?.setPixel(x, y, argb)
     }
 
     override fun set(x: Int, y: Int, src: PImage) {
@@ -1566,14 +1566,14 @@ open class PGraphicsAndroid2D : PGraphics() {
         if (bitmap == null) {
             bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
             src.native = bitmap
-            src.setModified()
+            src.SetModified()
         }
         if (src.width != bitmap!!.width ||
                 src.height != bitmap.height) {
             bitmap.recycle()
             bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
             src.native = bitmap
-            src.setModified()
+            src.SetModified()
         }
         if (src.isModified) {
             if (!bitmap!!.isMutable) {
@@ -1582,7 +1582,7 @@ open class PGraphicsAndroid2D : PGraphics() {
                 native = bitmap
             }
             bitmap!!.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height)
-            src.isModified = false
+            src.SetModified(false)
         }
         // set() happens in screen coordinates, so need to clear the ctm
         pushMatrix()
@@ -1631,7 +1631,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //    }
     //////////////////////////////////////////////////////////////
     // MASK
-    override fun mask(alpha: IntArray) {
+    override fun mask(alpha: IntArray?) {
         showMethodWarning("mask")
     }
 

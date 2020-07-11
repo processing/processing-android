@@ -774,7 +774,7 @@ open class PFont : PConstants {
             val pixels = image!!.pixels
             for (y in 0 until h) {
                 for (x in 0 until w) {
-                    pixels[y * width + x] = (temp[y * w + x] and 0xff.toByte()).toInt()
+                    pixels!![y * width + x] = (temp[y * w + x] and 0xff.toByte()).toInt()
                     //          System.out.print((image.pixels[y*64+x] > 128) ? "*" : ".");
                 }
                 //        System.out.println();
@@ -788,7 +788,7 @@ open class PFont : PConstants {
             val pixels = image!!.pixels
             for (y in 0 until height) {
                 for (x in 0 until width) {
-                    os.write(pixels[y * width + x] and 0xff)
+                    os.write(pixels!![y * width + x] and 0xff)
                 }
             }
         }
@@ -854,7 +854,7 @@ open class PFont : PConstants {
                 for (x in minX..maxX) {
                     val `val` = 255 - (lazySamples[y * mbox3 + x] and 0xff)
                     val pindex = (y - minY) * width + (x - minX)
-                    pixels[pindex] = `val`
+                    pixels!![pindex] = `val`
                 }
             }
 

@@ -507,7 +507,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
         fun loadShapeImpl(pg: PGraphics,
                           filename: String?, extension: String): PShape? {
             if (extension == "svg" || extension == "svgz") {
-                val svg = PShapeSVG(pg.parent.loadXML(filename))
+                val svg = PShapeSVG(pg.parent!!.loadXML(filename))
                 return PShapeOpenGL.createShape(pg as PGraphicsOpenGL, svg)
             }
             return null
