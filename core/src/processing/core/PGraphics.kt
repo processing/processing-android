@@ -120,24 +120,36 @@ open class PGraphics: PImage(), PConstants {
     //  /// height minus one (useful for many calculations)
     //  protected int height1;
     /// width * height (useful for many calculations)
+    @JvmField
     var pixelCount = 0
 
     /// true if smoothing is enabled (read-only)
+    @JvmField
     var smooth = 0
 
     // ........................................................
+
     /// true if defaults() has been called a first time
+
+    @JvmField
     protected var settingsInited = false
 
     /// true if settings should be re-applied on next beginDraw()
+    @JvmField
     protected var reapplySettings = false
 
     // ignore
     /// set to a PGraphics object being used inside a beginRaw/endRaw() block
+
+    @JvmField
     var raw: PGraphics? = null
-        protected set
+
+
     // ........................................................
+
+
     /** path to the file being saved for this renderer (if any)  */
+    @JvmField
     protected var path: String? = null
 
     /**
@@ -148,7 +160,11 @@ open class PGraphics: PImage(), PConstants {
      */
     @JvmField
     protected var primaryGraphics = false
+
+
     // ........................................................
+
+
     /**
      * Array of hint[] items. These are hacks to get around various
      * temporary workarounds inside the environment.
@@ -175,10 +191,16 @@ open class PGraphics: PImage(), PConstants {
      * map that points at any of the images it has worked on already. When the
      * images go out of scope, they will be properly garbage collected.
      */
-    override var cacheMap: WeakHashMap<PImage, Any> = WeakHashMap<PImage, Any>()
+    @JvmField
+    protected var cacheMap = WeakHashMap<PImage, Any>()
+
+
     ////////////////////////////////////////////////////////////
+
     // STYLE PROPERTIES
+
     // Also inherits imageMode() and smooth() (among others) from PImage.
+
     /** The current colorMode  */
     @JvmField
     var colorMode = 0 // = RGB; = 0
@@ -200,12 +222,18 @@ open class PGraphics: PImage(), PConstants {
     var colorModeA = 0f // = 255; = 0f
 
     /** True if colors are not in the range 0..1  */
+    @JvmField
     var colorModeScale: Boolean = false // = true; = false
 
     /** True if colorMode(RGB, 255)  */
+    @JvmField
     var colorModeDefault: Boolean = false // = true; = false
+
+
     // ........................................................
+
     // Tint color for images
+
     /**
      * True if tint() is enabled (read-only).
      *
@@ -238,6 +266,7 @@ open class PGraphics: PImage(), PConstants {
     // Fill color
 
     /** true if fill() is enabled, (read-only)  */
+    @JvmField
     var fill = false
 
     /** fill that was last set (read-only)  */
@@ -261,6 +290,7 @@ open class PGraphics: PImage(), PConstants {
     // Stroke color
 
     /** true if stroke() is enabled, (read-only)  */
+    @JvmField
     var stroke = false
 
     /** stroke that was last set (read-only)  */
@@ -282,6 +312,7 @@ open class PGraphics: PImage(), PConstants {
      * setting, rather than fighting with renderers about whether that
      * renderer supports thick lines.
      */
+    @JvmField
     var strokeWeight = DEFAULT_STROKE_WEIGHT
 
     /**
@@ -289,6 +320,7 @@ open class PGraphics: PImage(), PConstants {
      * so that strokeJoin() need not be called by defaults,
      * because subclasses may not implement it (i.e. PGraphicsGL)
      */
+    @JvmField
     var strokeJoin = DEFAULT_STROKE_JOIN
 
     /**
@@ -296,27 +328,40 @@ open class PGraphics: PImage(), PConstants {
      * so that strokeCap() need not be called by defaults,
      * because subclasses may not implement it (i.e. PGraphicsGL)
      */
+    @JvmField
     var strokeCap = DEFAULT_STROKE_CAP
     // ........................................................
     // Shape placement properties
     // imageMode() is inherited from PImage
     /** The current rect mode (read-only)  */
+    @JvmField
     var rectMode = 0
 
     /** The current ellipse mode (read-only)  */
+    @JvmField
     var ellipseMode = 0
 
     /** The current shape alignment mode (read-only)  */
+    @JvmField
     var shapeMode = 0
 
     /** The current image alignment (read-only)  */
+    @JvmField
     var imageMode = PConstants.CORNER
+
+
     // ........................................................
+
+
     // Text and font properties
+
+
     /** The current text font (read-only)  */
+    @JvmField
     var textFont: PFont? = null
 
     /** The current text align (read-only)  */
+    @JvmField
     var textAlign = PConstants.LEFT
 
     /** The current vertical text alignment (read-only)  */
@@ -324,12 +369,15 @@ open class PGraphics: PImage(), PConstants {
     var textAlignY = PConstants.BASELINE
 
     /** The current text mode (read-only)  */
+    @JvmField
     var textMode = PConstants.MODEL
 
     /** The current text size (read-only)  */
+    @JvmField
     var textSize = 0f
 
     /** The current text leading (read-only)  */
+    @JvmField
     var textLeading = 0f
 
     // ........................................................
@@ -359,6 +407,7 @@ open class PGraphics: PImage(), PConstants {
     var emissiveR = 0f
     var emissiveG = 0f
     var emissiveB = 0f
+    @JvmField
     var shininess = 0f
 
     var styleStack = arrayOfNulls<PStyle>(STYLE_STACK_DEPTH)
@@ -393,6 +442,7 @@ open class PGraphics: PImage(), PConstants {
     protected var backgroundAi = 0
 
     /** The current blending mode.  */
+    @JvmField
     protected var blendMode = 0
 
     // ........................................................
@@ -417,9 +467,11 @@ open class PGraphics: PImage(), PConstants {
     protected var calcAlpha = false
 
     /** The last RGB value converted to HSB  */
+    @JvmField
     var cacheHsbKey = 0
 
     /** Result of the last conversion to HSB  */
+    @JvmField
     var cacheHsbValue = FloatArray(3)
 
 
@@ -430,9 +482,12 @@ open class PGraphics: PImage(), PConstants {
      * Type of shape passed to beginShape(),
      * zero if no shape is currently being drawn.
      */
+    @JvmField
     protected var shape = 0
+    @JvmField
     protected var vertices = Array(DEFAULT_VERTICES) { FloatArray(VERTEX_FIELD_COUNT) }
 
+    @JvmField
     protected var vertexCount: Int = 0 // total number of vertices = 0
 
 
@@ -465,7 +520,9 @@ open class PGraphics: PImage(), PConstants {
     @JvmField
     var curveTightness = 0f
 
+
     // catmull-rom basis matrix, perhaps with optional s parameter
+
     protected var curveBasisMatrix: PMatrix3D? = null
 
     @JvmField
@@ -716,6 +773,7 @@ open class PGraphics: PImage(), PConstants {
          * Show a renderer error, and keep track of it so that it's only shown once.
          * @param msg the error message (which will be stored for later comparison)
          */
+        @JvmStatic
         fun showWarning(msg: String) {  // ignore
             if (warnings == null) {
                 warnings = HashMap()
@@ -840,6 +898,7 @@ open class PGraphics: PImage(), PConstants {
 
     /// Keep track of how many calls to normal, to determine the mode.
     //protected int normalCount;
+    @JvmField
     protected var autoNormal = false
 
     /** Current normal vector.  */
@@ -861,6 +920,7 @@ open class PGraphics: PImage(), PConstants {
      * vertex() calls will be based on coordinates that are
      * based on the IMAGE or NORMALIZED.
      */
+    @JvmField
     var textureMode = PConstants.IMAGE
 
     /**
@@ -1211,7 +1271,7 @@ open class PGraphics: PImage(), PConstants {
         // Nothing to do here, it depends on the renderer's implementation.
     }
 
-    fun restoreState() {  // ignore
+    open fun restoreState() {  // ignore
         // This method probably does not need to be re-implemented in the subclasses. All we need to
         // do is to check for the resume in no-loop state situation:
         restoredSurface = false
@@ -3979,19 +4039,33 @@ open class PGraphics: PImage(), PConstants {
      */
     //////////////////////////////////////////////////////////////
     // MATRIX GET/SET/PRINT
-    open var matrix: PMatrix?
-        get() {
-            showMissingWarning("getMatrix")
-            return null
-        }
-        set(source) {
-            if (source is PMatrix2D) {
-                setMatrix(source as PMatrix2D?)
-            } else if (source is PMatrix3D) {
-                setMatrix(source as PMatrix3D?)
-            }
-        }
+    private  var matrix: PMatrix? = null
+//        get() {
+//            showMissingWarning("getMatrix")
+//            return null
+//        }
+//        set(source) {
+//            if (source is PMatrix2D) {
+//                setMatrix(source as PMatrix2D?)
+//            } else if (source is PMatrix3D) {
+//                setMatrix(source as PMatrix3D?)
+//            }
+//        }
 
+
+    open fun getMatrix(): PMatrix? {
+        showMissingWarning("getMatrix")
+        return null
+    }
+
+     fun setMatrix(source: PMatrix?) {
+        if (source is PMatrix2D) {
+            setMatrix(source as PMatrix2D?)
+        }
+        else if(source is PMatrix3D){
+            setMatrix(source as PMatrix3D?)
+        }
+    }
     /**
      * Copy the current transformation matrix into the specified target.
      * Pass in null to create a new matrix.
@@ -4972,6 +5046,16 @@ open class PGraphics: PImage(), PConstants {
     //  }
     //////////////////////////////////////////////////////////////
     // COLOR MODE
+
+    fun colorMode(mode: Int) {
+        colorMode(mode,colorModeX,colorModeY,colorModeZ,colorModeA)
+    }
+
+
+    fun colorMode(mode: Int,maxX: Float,maxY: Float,maxZ: Float) {
+        colorMode(mode,maxX,maxY,maxZ,colorModeA)
+    }
+
     /**
      * Set the colorMode and the maximum values for (r, g, b)
      * or (h, s, b).
@@ -4981,9 +5065,8 @@ open class PGraphics: PImage(), PConstants {
     </P> * <PRE>colorMode(HSB, 360, 100, 100);</PRE>
      * because the alpha values were still between 0 and 255.
      */
-    @JvmOverloads
     fun colorMode(mode: Int,
-                  maxX: Float = colorModeX, maxY: Float = colorModeY, maxZ: Float = colorModeZ, maxA: Float = colorModeA) {
+                  maxX: Float, maxY: Float, maxZ: Float, maxA: Float) {
         colorMode = mode
         colorModeX = maxX // still needs to be set for hsb
         colorModeY = maxY
@@ -5045,6 +5128,7 @@ open class PGraphics: PImage(), PConstants {
         }
     }
 
+    @JvmOverloads
     protected fun colorCalc(gray: Float, alpha: Float = colorModeA) {
         var gray = gray
         var alpha = alpha
@@ -5064,6 +5148,7 @@ open class PGraphics: PImage(), PConstants {
         calcAlpha = calcAi != 255
     }
 
+    @JvmOverloads
     protected fun colorCalc(x: Float, y: Float, z: Float, a: Float = colorModeA) {
         var x = x
         var y = y
@@ -5365,6 +5450,7 @@ open class PGraphics: PImage(), PConstants {
     /**
      * Same as below, but defaults to a 12 point font, just as MacWrite intended.
      */
+    @JvmOverloads
     protected fun defaultFontOrDeath(method: String, size: Float = 12f) {
         textFont = if (parent != null) {
             parent!!.createDefaultFont(size)

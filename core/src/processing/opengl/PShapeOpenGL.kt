@@ -4247,9 +4247,9 @@ open class PShapeOpenGL : PShape {
 
     protected fun rawPolys(g: PGraphicsOpenGL, textureImage: PImage?) {
         val raw = g.raw
-        raw.colorMode(PConstants.RGB)
-        raw.noStroke()
-        raw.beginShape(PConstants.TRIANGLES)
+        raw!!.colorMode(PConstants.RGB)
+        raw!!.noStroke()
+        raw!!.beginShape(PConstants.TRIANGLES)
         val vertices = tessGeo!!.polyVertices
         val color = tessGeo!!.polyColors
         val uv = tessGeo!!.polyTexCoords
@@ -4281,54 +4281,54 @@ open class PShapeOpenGL : PShape {
                 g.modelview.mult(src1, pt1)
                 g.modelview.mult(src2, pt2)
                 if (textureImage != null) {
-                    raw.texture(textureImage)
-                    if (raw.is3D) {
-                        raw.fill(argb0)
-                        raw.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z], uv[2 * i0 + 0], uv[2 * i0 + 1])
-                        raw.fill(argb1)
-                        raw.vertex(pt1[PConstants.X], pt1[PConstants.Y], pt1[PConstants.Z], uv[2 * i1 + 0], uv[2 * i1 + 1])
-                        raw.fill(argb2)
-                        raw.vertex(pt2[PConstants.X], pt2[PConstants.Y], pt2[PConstants.Z], uv[2 * i2 + 0], uv[2 * i2 + 1])
-                    } else if (raw.is2D) {
+                    raw!!.texture(textureImage)
+                    if (raw!!.is3D()) {
+                        raw!!.fill(argb0)
+                        raw!!.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z], uv[2 * i0 + 0], uv[2 * i0 + 1])
+                        raw!!.fill(argb1)
+                        raw!!.vertex(pt1[PConstants.X], pt1[PConstants.Y], pt1[PConstants.Z], uv[2 * i1 + 0], uv[2 * i1 + 1])
+                        raw!!.fill(argb2)
+                        raw!!.vertex(pt2[PConstants.X], pt2[PConstants.Y], pt2[PConstants.Z], uv[2 * i2 + 0], uv[2 * i2 + 1])
+                    } else if (raw!!.is2D()) {
                         val sx0 = g.screenXImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                         val sy0 = g.screenYImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                         val sx1 = g.screenXImpl(pt1[0], pt1[1], pt1[2], pt1[3])
                         val sy1 = g.screenYImpl(pt1[0], pt1[1], pt1[2], pt1[3])
                         val sx2 = g.screenXImpl(pt2[0], pt2[1], pt2[2], pt2[3])
                         val sy2 = g.screenYImpl(pt2[0], pt2[1], pt2[2], pt2[3])
-                        raw.fill(argb0)
-                        raw.vertex(sx0, sy0, uv[2 * i0 + 0], uv[2 * i0 + 1])
-                        raw.fill(argb1)
-                        raw.vertex(sx1, sy1, uv[2 * i1 + 0], uv[2 * i1 + 1])
-                        raw.fill(argb1)
-                        raw.vertex(sx2, sy2, uv[2 * i2 + 0], uv[2 * i2 + 1])
+                        raw!!.fill(argb0)
+                        raw!!.vertex(sx0, sy0, uv[2 * i0 + 0], uv[2 * i0 + 1])
+                        raw!!.fill(argb1)
+                        raw!!.vertex(sx1, sy1, uv[2 * i1 + 0], uv[2 * i1 + 1])
+                        raw!!.fill(argb1)
+                        raw!!.vertex(sx2, sy2, uv[2 * i2 + 0], uv[2 * i2 + 1])
                     }
                 } else {
-                    if (raw.is3D) {
-                        raw.fill(argb0)
-                        raw.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z])
-                        raw.fill(argb1)
-                        raw.vertex(pt1[PConstants.X], pt1[PConstants.Y], pt1[PConstants.Z])
-                        raw.fill(argb2)
-                        raw.vertex(pt2[PConstants.X], pt2[PConstants.Y], pt2[PConstants.Z])
-                    } else if (raw.is2D) {
+                    if (raw!!.is3D()) {
+                        raw!!.fill(argb0)
+                        raw!!.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z])
+                        raw!!.fill(argb1)
+                        raw!!.vertex(pt1[PConstants.X], pt1[PConstants.Y], pt1[PConstants.Z])
+                        raw!!.fill(argb2)
+                        raw!!.vertex(pt2[PConstants.X], pt2[PConstants.Y], pt2[PConstants.Z])
+                    } else if (raw!!.is2D()) {
                         val sx0 = g.screenXImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                         val sy0 = g.screenYImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                         val sx1 = g.screenXImpl(pt1[0], pt1[1], pt1[2], pt1[3])
                         val sy1 = g.screenYImpl(pt1[0], pt1[1], pt1[2], pt1[3])
                         val sx2 = g.screenXImpl(pt2[0], pt2[1], pt2[2], pt2[3])
                         val sy2 = g.screenYImpl(pt2[0], pt2[1], pt2[2], pt2[3])
-                        raw.fill(argb0)
-                        raw.vertex(sx0, sy0)
-                        raw.fill(argb1)
-                        raw.vertex(sx1, sy1)
-                        raw.fill(argb2)
-                        raw.vertex(sx2, sy2)
+                        raw!!.fill(argb0)
+                        raw!!.vertex(sx0, sy0)
+                        raw!!.fill(argb1)
+                        raw!!.vertex(sx1, sy1)
+                        raw!!.fill(argb2)
+                        raw!!.vertex(sx2, sy2)
                     }
                 }
             }
         }
-        raw.endShape()
+        raw!!.endShape()
     }
 
     protected fun renderLines(g: PGraphicsOpenGL) {
@@ -4352,11 +4352,11 @@ open class PShapeOpenGL : PShape {
 
     protected fun rawLines(g: PGraphicsOpenGL) {
         val raw = g.raw
-        raw.colorMode(PConstants.RGB)
-        raw.noFill()
-        raw.strokeCap(strokeCap)
-        raw.strokeJoin(strokeJoin)
-        raw.beginShape(PConstants.LINES)
+        raw!!.colorMode(PConstants.RGB)
+        raw!!.noFill()
+        raw!!.strokeCap(strokeCap)
+        raw!!.strokeJoin(strokeJoin)
+        raw!!.beginShape(PConstants.LINES)
         val vertices = tessGeo!!.lineVertices
         val color = tessGeo!!.lineColors
         val attribs = tessGeo!!.lineDirections
@@ -4389,28 +4389,28 @@ open class PShapeOpenGL : PShape {
                 // modelview matrix of the renderer.
                 g.modelview.mult(src0, pt0)
                 g.modelview.mult(src1, pt1)
-                if (raw.is3D) {
-                    raw.strokeWeight(sw0)
-                    raw.stroke(argb0)
-                    raw.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z])
-                    raw.strokeWeight(sw1)
-                    raw.stroke(argb1)
-                    raw.vertex(pt1[PConstants.X], pt1[PConstants.Y], pt1[PConstants.Z])
-                } else if (raw.is2D) {
+                if (raw!!.is3D()) {
+                    raw!!.strokeWeight(sw0)
+                    raw!!.stroke(argb0)
+                    raw!!.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z])
+                    raw!!.strokeWeight(sw1)
+                    raw!!.stroke(argb1)
+                    raw!!.vertex(pt1[PConstants.X], pt1[PConstants.Y], pt1[PConstants.Z])
+                } else if (raw!!.is2D()) {
                     val sx0 = g.screenXImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                     val sy0 = g.screenYImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                     val sx1 = g.screenXImpl(pt1[0], pt1[1], pt1[2], pt1[3])
                     val sy1 = g.screenYImpl(pt1[0], pt1[1], pt1[2], pt1[3])
-                    raw.strokeWeight(sw0)
-                    raw.stroke(argb0)
-                    raw.vertex(sx0, sy0)
-                    raw.strokeWeight(sw1)
-                    raw.stroke(argb1)
-                    raw.vertex(sx1, sy1)
+                    raw!!.strokeWeight(sw0)
+                    raw!!.stroke(argb0)
+                    raw!!.vertex(sx0, sy0)
+                    raw!!.strokeWeight(sw1)
+                    raw!!.stroke(argb1)
+                    raw!!.vertex(sx1, sy1)
                 }
             }
         }
-        raw.endShape()
+        raw!!.endShape()
     }
 
     protected fun renderPoints(g: PGraphicsOpenGL) {
@@ -4434,10 +4434,10 @@ open class PShapeOpenGL : PShape {
 
     protected fun rawPoints(g: PGraphicsOpenGL) {
         val raw = g.raw
-        raw.colorMode(PConstants.RGB)
-        raw.noFill()
-        raw.strokeCap(strokeCap)
-        raw.beginShape(PConstants.POINTS)
+        raw!!.colorMode(PConstants.RGB)
+        raw!!.noFill()
+        raw!!.strokeCap(strokeCap)
+        raw!!.beginShape(PConstants.POINTS)
         val vertices = tessGeo!!.pointVertices
         val color = tessGeo!!.pointColors
         val attribs = tessGeo!!.pointOffsets
@@ -4468,21 +4468,21 @@ open class PShapeOpenGL : PShape {
                 val src0 = floatArrayOf(0f, 0f, 0f, 0f)
                 PApplet.arrayCopy(vertices, 4 * i0, src0, 0, 4)
                 g.modelview.mult(src0, pt0)
-                if (raw.is3D) {
-                    raw.strokeWeight(weight)
-                    raw.stroke(argb0)
-                    raw.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z])
-                } else if (raw.is2D) {
+                if (raw!!.is3D()) {
+                    raw!!.strokeWeight(weight)
+                    raw!!.stroke(argb0)
+                    raw!!.vertex(pt0[PConstants.X], pt0[PConstants.Y], pt0[PConstants.Z])
+                } else if (raw!!.is2D()) {
                     val sx0 = g.screenXImpl(pt0[0], pt0[1], pt0[2], pt0[3])
                     val sy0 = g.screenYImpl(pt0[0], pt0[1], pt0[2], pt0[3])
-                    raw.strokeWeight(weight)
-                    raw.stroke(argb0)
-                    raw.vertex(sx0, sy0)
+                    raw!!.strokeWeight(weight)
+                    raw!!.stroke(argb0)
+                    raw!!.vertex(sx0, sy0)
                 }
                 pt += perim
             }
         }
-        raw.endShape()
+        raw!!.endShape()
     }
 
     companion object {

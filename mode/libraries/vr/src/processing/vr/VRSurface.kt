@@ -45,7 +45,7 @@ import java.io.File
 import java.io.InputStream
 import javax.microedition.khronos.egl.EGLConfig
 
-open class VRSurface(graphics: PGraphics, component: AppComponent, holder: SurfaceHolder?, vr: Boolean) : PSurfaceGLES() {
+open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: SurfaceHolder?, vr: Boolean) : PSurfaceGLES() {
     protected var vrView: SurfaceViewVR
     protected var pvr: VRGraphics
     protected var vrActivity: GvrActivity

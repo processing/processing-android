@@ -162,11 +162,11 @@ open class PGraphics2D : PGraphicsOpenGL() {
         }
     }
 
-    public override fun shape(shape: PShape, x: Float, y: Float, z: Float) {
+    public override fun shape(shape: PShape?, x: Float, y: Float, z: Float) {
         PGraphics.showDepthWarningXYZ("shape")
     }
 
-    public override fun shape(shape: PShape, x: Float, y: Float, z: Float,
+    public override fun shape(shape: PShape?, x: Float, y: Float, z: Float,
                               c: Float, d: Float, e: Float) {
         PGraphics.showDepthWarningXYZ("shape")
     }
@@ -427,7 +427,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
         return 0F
     }
 
-    override fun getMatrix(target: PMatrix2D): PMatrix2D {
+    override fun getMatrix(target: PMatrix2D?): PMatrix2D {
         var target: PMatrix2D? = target
         if (target == null) {
             target = PMatrix2D()
@@ -438,12 +438,12 @@ open class PGraphics2D : PGraphicsOpenGL() {
         return target
     }
 
-    override fun getMatrix(target: PMatrix3D): PMatrix3D {
+    override fun getMatrix(target: PMatrix3D?): PMatrix3D? {
         PGraphics.showVariationWarning("getMatrix")
         return target
     }
 
-    override fun setMatrix(source: PMatrix3D) {
+    override fun setMatrix(source: PMatrix3D?) {
         PGraphics.showVariationWarning("setMatrix")
     }
 

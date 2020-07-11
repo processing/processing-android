@@ -43,18 +43,18 @@ open class PSurfaceAndroid2D : PSurfaceNone {
 
     }
 
-    constructor(graphics: PGraphics, component: AppComponent, holder: SurfaceHolder?) {
+    constructor(graphics: PGraphics, component: AppComponent?, holder: SurfaceHolder?) {
         sketch = graphics.parent
         this.graphics = graphics
         this.appcomponent = component
-        if (component.getKind() == AppComponent.FRAGMENT) {
+        if (component!!.getKind() == AppComponent.FRAGMENT) {
             val frag = component as PFragment
             appactivity = frag.getActivity()
             msurfaceView = SurfaceViewAndroid2D(appactivity, null)
-        } else if (component.getKind() == AppComponent.WALLPAPER) {
+        } else if (component!!.getKind() == AppComponent.WALLPAPER) {
             wallpaper = component as WallpaperService
             msurfaceView = SurfaceViewAndroid2D(wallpaper, holder)
-        } else if (component.getKind() == AppComponent.WATCHFACE) {
+        } else if (component!!.getKind() == AppComponent.WATCHFACE) {
             watchface = component as CanvasWatchFaceService
             msurfaceView = null
             // Set as ready here, as watch faces don't have a surface view with a

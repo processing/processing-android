@@ -141,7 +141,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
             val tex0 = textures!![lastTex]
             tex.put(tex0)
             textures!![lastTex] = tex
-            pg?.setCache(images!![lastTex], tex)
+            pg?.setCache(images?.get(lastTex)!!, tex)
             images!![lastTex]!!.width = tex.width
             images!![lastTex]!!.height = tex.height
         } else {

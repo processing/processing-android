@@ -6025,7 +6025,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
-  protected void clearState() {
+  public void clearState() {
     super.clearState();
     if (restoreFilename != null) {
       File cacheFile = new File(restoreFilename);
@@ -6035,7 +6035,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
-  protected void saveState() {
+  public void saveState() {
     super.saveState();
 
     // Queue the pixel read operation so it is performed when the surface is ready
@@ -6127,7 +6127,7 @@ public class PGraphicsOpenGL extends PGraphics {
 
 
   @Override
-  protected boolean requestNoLoop() {
+  public boolean requestNoLoop() {
     return true;
   }
 

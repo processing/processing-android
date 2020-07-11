@@ -228,11 +228,11 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         }
     }
 
-    public override fun shape(shape: PShape, x: Float, y: Float, z: Float) {
+    public override fun shape(shape: PShape?, x: Float, y: Float, z: Float) {
         PGraphics.showDepthWarningXYZ("shape")
     }
 
-    public override fun shape(shape: PShape, x: Float, y: Float, z: Float,
+    public override fun shape(shape: PShape?, x: Float, y: Float, z: Float,
                               c: Float, d: Float, e: Float) {
         PGraphics.showDepthWarningXYZ("shape")
     }
@@ -258,7 +258,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     //////////////////////////////////////////////////////////////
     // VERTEX SHAPES
-    override fun texture(image: PImage) {
+    override fun texture(image: PImage?) {
         super.texture(image)
         if (image == null) {
             return
@@ -529,12 +529,12 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         //(these are the only lines that are different)
         var x1 = shapeVerts[vertCount - 1]!!.x
         var y1 = shapeVerts[vertCount - 1]!!.y
-        var xplot1 = draw.m10 * x1 + draw.m11 * x2 + draw.m12 * x3 + draw.m13 * x4
-        var xplot2 = draw.m20 * x1 + draw.m21 * x2 + draw.m22 * x3 + draw.m23 * x4
-        val xplot3 = draw.m30 * x1 + draw.m31 * x2 + draw.m32 * x3 + draw.m33 * x4
-        var yplot1 = draw.m10 * y1 + draw.m11 * y2 + draw.m12 * y3 + draw.m13 * y4
-        var yplot2 = draw.m20 * y1 + draw.m21 * y2 + draw.m22 * y3 + draw.m23 * y4
-        val yplot3 = draw.m30 * y1 + draw.m31 * y2 + draw.m32 * y3 + draw.m33 * y4
+        var xplot1 = draw!!.m10 * x1 + draw!!.m11 * x2 + draw!!.m12 * x3 + draw!!.m13 * x4
+        var xplot2 = draw!!.m20 * x1 + draw!!.m21 * x2 + draw!!.m22 * x3 + draw!!.m23 * x4
+        val xplot3 = draw!!.m30 * x1 + draw!!.m31 * x2 + draw!!.m32 * x3 + draw!!.m33 * x4
+        var yplot1 = draw!!.m10 * y1 + draw!!.m11 * y2 + draw!!.m12 * y3 + draw!!.m13 * y4
+        var yplot2 = draw!!.m20 * y1 + draw!!.m21 * y2 + draw!!.m22 * y3 + draw!!.m23 * y4
+        val yplot3 = draw!!.m30 * y1 + draw!!.m31 * y2 + draw!!.m32 * y3 + draw!!.m33 * y4
         for (j in 0 until bezierDetail) {
             x1 += xplot1
             xplot1 += xplot2
@@ -610,12 +610,12 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         if (curveVerts > 3) {
             PApplet.println("drawing curve...")
             val draw = curveDrawMatrix
-            var xplot1 = draw.m10 * cx1 + draw.m11 * cx2 + draw.m12 * cx3 + draw.m13 * cx4
-            var xplot2 = draw.m20 * cx1 + draw.m21 * cx2 + draw.m22 * cx3 + draw.m23 * cx4
-            val xplot3 = draw.m30 * cx1 + draw.m31 * cx2 + draw.m32 * cx3 + draw.m33 * cx4
-            var yplot1 = draw.m10 * cy1 + draw.m11 * cy2 + draw.m12 * cy3 + draw.m13 * cy4
-            var yplot2 = draw.m20 * cy1 + draw.m21 * cy2 + draw.m22 * cy3 + draw.m23 * cy4
-            val yplot3 = draw.m30 * cy1 + draw.m31 * cy2 + draw.m32 * cy3 + draw.m33 * cy4
+            var xplot1 = draw!!.m10 * cx1 + draw!!.m11 * cx2 + draw!!.m12 * cx3 + draw!!.m13 * cx4
+            var xplot2 = draw!!.m20 * cx1 + draw!!.m21 * cx2 + draw!!.m22 * cx3 + draw!!.m23 * cx4
+            val xplot3 = draw!!.m30 * cx1 + draw!!.m31 * cx2 + draw!!.m32 * cx3 + draw!!.m33 * cx4
+            var yplot1 = draw!!.m10 * cy1 + draw!!.m11 * cy2 + draw!!.m12 * cy3 + draw!!.m13 * cy4
+            var yplot2 = draw!!.m20 * cy1 + draw!!.m21 * cy2 + draw!!.m22 * cy3 + draw!!.m23 * cy4
+            val yplot3 = draw!!.m30 * cy1 + draw!!.m31 * cy2 + draw!!.m32 * cy3 + draw!!.m33 * cy4
             var x0 = cx2
             var y0 = cy2
             if (curveVerts == 4) {
@@ -923,7 +923,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     // SHADER FILTER
 
-    override fun filter(shader: PShader) {
+    override fun filter(shader: PShader?) {
         // TODO: not working... the loadShader() method uses the P2 vertex stage
         // The filter method needs to use the geometry-generation in the base class.
         // We could re-implement it here, but this is easier.
@@ -940,7 +940,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     // SHADER API
 
-    override fun loadShader(fragFilename: String): PShader? {
+    override fun loadShader(fragFilename: String?): PShader? {
         if (fragFilename == null || fragFilename == "") {
             PGraphics.showWarning(MISSING_FRAGMENT_SHADER)
             return null
@@ -952,7 +952,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         return shader
     }
 
-    override fun shader(shader: PShader) {
+    override fun shader(shader: PShader?) {
         if (useParentImpl) {
             super.shader(shader)
             return
@@ -962,13 +962,13 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         val res = checkShaderLocs(shader)
         if (res) {
             twoShader = shader
-            shader.type = SHADER2D
+            shader!!.type = SHADER2D
         } else {
             PGraphics.showWarning(NON_2D_SHADER_ERROR)
         }
     }
 
-    override fun shader(shader: PShader, kind: Int) {
+    override fun shader(shader: PShader?, kind: Int) {
         if (useParentImpl) {
             super.shader(shader, kind)
             return
@@ -1051,12 +1051,12 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         return 0F
     }
 
-    override fun getMatrix(target: PMatrix3D): PMatrix3D {
+    override fun getMatrix(target: PMatrix3D?): PMatrix3D? {
         PGraphics.showVariationWarning("getMatrix")
         return target
     }
 
-    override fun setMatrix(source: PMatrix3D) {
+    override fun setMatrix(source: PMatrix3D?) {
         PGraphics.showVariationWarning("setMatrix")
     }
 
@@ -1236,15 +1236,15 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 //    println("flushed: " + tex + ", " + imageTex);
     }
 
-    private fun checkShaderLocs(shader: PShader): Boolean {
-        var positionLoc = shader.getAttributeLoc("position")
+    private fun checkShaderLocs(shader: PShader?): Boolean {
+        var positionLoc = shader!!.getAttributeLoc("position")
         if (positionLoc == -1) {
-            positionLoc = shader.getAttributeLoc("vertex")
+            positionLoc = shader!!.getAttributeLoc("vertex")
         }
         //    int colorLoc = shader.getAttributeLoc("color");
-        var transformLoc = shader.getUniformLoc("transform")
+        var transformLoc = shader!!.getUniformLoc("transform")
         if (transformLoc == -1) {
-            transformLoc = shader.getUniformLoc("transformMatrix")
+            transformLoc = shader!!.getUniformLoc("transformMatrix")
         }
 
         /*

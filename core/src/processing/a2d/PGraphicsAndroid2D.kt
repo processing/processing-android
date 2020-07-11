@@ -118,7 +118,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         if (bitmap != null) bitmap!!.recycle()
     }
 
-    override fun createSurface(component: AppComponent, holder: SurfaceHolder?, reset: Boolean): PSurface {  // ignore
+    override fun createSurface(component: AppComponent?, holder: SurfaceHolder?, reset: Boolean): PSurface? {  // ignore
         return PSurfaceAndroid2D(this, component, holder)
     }
 
@@ -214,7 +214,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //public boolean edge(boolean e)
     //public void normal(float nx, float ny, float nz) {
     //public void textureMode(int mode)
-    override fun texture(image: PImage) {
+    override fun texture(image: PImage?) {
         showMethodWarning("texture")
     }
 
@@ -436,8 +436,8 @@ open class PGraphicsAndroid2D : PGraphics() {
         curveCoordY[2] = y3
         curveCoordX!![3] = x4
         curveCoordY[3] = y4
-        curveToBezierMatrix.mult(curveCoordX, curveDrawX)
-        curveToBezierMatrix.mult(curveCoordY, curveDrawY)
+        curveToBezierMatrix!!.mult(curveCoordX, curveDrawX)
+        curveToBezierMatrix!!.mult(curveCoordY, curveDrawY)
 
         // since the paths are continuous,
         // only the first point needs the actual moveto
@@ -756,24 +756,24 @@ open class PGraphicsAndroid2D : PGraphics() {
     /**
      * Handle renderer-specific image drawing.
      */
-    override fun imageImpl(src: PImage,
+    override fun imageImpl(src: PImage?,
                            x1: Float, y1: Float, x2: Float, y2: Float,
                            u1: Int, v1: Int, u2: Int, v2: Int) {
-        var bitmap: Bitmap? = src.native as Bitmap?
+        var bitmap: Bitmap? = src?.native as Bitmap?
         if (bitmap != null && bitmap.isRecycled) {
             // Let's make sure it is recreated
             bitmap = null
         }
-        if (bitmap == null && src.format == PConstants.ALPHA) {
+        if (bitmap == null && src!!.format == PConstants.ALPHA) {
             // create an alpha bitmap for this feller
-            bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
-            val px = IntArray(src.pixels!!.size)
+            bitmap = Bitmap.createBitmap(src!!.width, src!!.height, Bitmap.Config.ARGB_8888)
+            val px = IntArray(src!!.pixels!!.size)
             for (i in px.indices) {
-                px[i] = src.pixels!![i] shl 24 or 0xFFFFFF
+                px[i] = src!!.pixels!![i] shl 24 or 0xFFFFFF
             }
-            bitmap.setPixels(px, 0, src.width, 0, 0, src.width, src.height)
+            bitmap.setPixels(px, 0, src!!.width, 0, 0, src!!.width, src!!.height)
             isModified = false
-            src.native = bitmap
+            src!!.native = bitmap
         }
 
         // this version's not usable because it doesn't allow you to set output w/h
@@ -783,23 +783,23 @@ open class PGraphicsAndroid2D : PGraphics() {
 //                        x1, y1, u2-u1, v2-v1,
 //                        src.format == ARGB, tint ? tintPaint : null);
 //    } else {
-        if (bitmap == null || src.width != bitmap.width || src.height != bitmap.height) {
+        if (bitmap == null || src!!.width != bitmap.width || src!!.height != bitmap.height) {
             bitmap?.recycle()
-            bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+            bitmap = Bitmap.createBitmap(src!!.width, src!!.height, Bitmap.Config.ARGB_8888)
             isModified = true
-            src.native = bitmap
+            src!!.native = bitmap
         }
-        if (src.isModified) {
+        if (src!!.isModified) {
             //System.out.println("mutable, recycled = " + who.bitmap.isMutable() + ", " + who.bitmap.isRecycled());
             if (!bitmap!!.isMutable) {
                 bitmap.recycle()
-                bitmap = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
-                src.native = bitmap
+                bitmap = Bitmap.createBitmap(src!!.width, src!!.height, Bitmap.Config.ARGB_8888)
+                src!!.native = bitmap
             }
-            if (src.pixels != null) {
-                bitmap!!.setPixels(src.pixels, 0, src.width, 0, 0, src.width, src.height)
+            if (src!!.pixels != null) {
+                bitmap!!.setPixels(src!!.pixels, 0, src!!.width, 0, 0, src!!.width, src!!.height)
             }
-            src.SetModified(false)
+            src!!.SetModified(false)
         }
         if (imageImplSrcRect == null) {
             imageImplSrcRect = Rect(u1, v1, u2, v2)
@@ -823,7 +823,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         activityManager.getMemoryInfo(mi)
         if (mi.lowMemory) {
             bitmap!!.recycle()
-            src.native = null
+            src!!.native = null
         }
     }
 
@@ -835,7 +835,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //public void shape(PShape shape, float x, float y, float c, float d)
     //////////////////////////////////////////////////////////////
     // SHAPE I/O
-    override fun loadShape(filename: String): PShape {
+    override fun loadShape(filename: String?): PShape {
         val extension = PApplet.getExtension(filename)
         var svg: PShapeSVG? = null
         if (extension == "svg") {
@@ -909,7 +909,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         if (textFont == null) {
             defaultFontOrDeath("textSize", size)
         }
-        val font = textFont.native as Typeface?
+        val font = textFont!!.native as Typeface?
         if (font != null) {
             fillPaint.textSize = size
         }
@@ -928,7 +928,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //public float textWidth(String str)
     override fun textWidthImpl(buffer: CharArray, start: Int, stop: Int): Float {
 //    Font font = textFont.getFont();
-        val font = textFont.native as (Typeface?) ?: return super.textWidthImpl(buffer, start, stop)
+        val font = textFont!!.native as (Typeface?) ?: return super.textWidthImpl(buffer, start, stop)
         // maybe should use one of the newer/fancier functions for this?
         val length = stop - start
         //    FontMetrics metrics = canvas.getFontMetrics(font);
@@ -945,7 +945,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //                                 float x, float y)
     override fun textLineImpl(buffer: CharArray, start: Int, stop: Int,
                               x: Float, y: Float) {
-        val font = textFont.native as Typeface?
+        val font = textFont!!.native as Typeface?
         if (font == null) {
             showWarning("Inefficient font rendering: use createFont() with a TTF/OTF instead of loadFont().")
             //new Exception().printStackTrace(System.out);
@@ -983,7 +983,7 @@ open class PGraphicsAndroid2D : PGraphics() {
 //                            textFont.smooth ?
 //                            RenderingHints.VALUE_ANTIALIAS_ON :
 //                            RenderingHints.VALUE_ANTIALIAS_OFF);
-        fillPaint.isAntiAlias = textFont.isSmooth
+        fillPaint.isAntiAlias = textFont!!.isSmooth
 
         //System.out.println("setting frac metrics");
         //g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
@@ -1114,11 +1114,11 @@ open class PGraphicsAndroid2D : PGraphics() {
 
     //////////////////////////////////////////////////////////////
     // MATRIX GET/SET
-    override fun getMatrix(): PMatrix {
-        return getMatrix((null as PMatrix2D?)!!)
+    override fun getMatrix(): PMatrix? {
+        return getMatrix((null as PMatrix2D?))
     }
 
-    override fun getMatrix(target: PMatrix2D): PMatrix2D {
+    override fun getMatrix(target: PMatrix2D?): PMatrix2D? {
         var target: PMatrix2D? = target
         if (target == null) {
             target = PMatrix2D()
@@ -1127,24 +1127,24 @@ open class PGraphicsAndroid2D : PGraphics() {
         return target
     }
 
-    override fun getMatrix(target: PMatrix3D): PMatrix3D {
+    override fun getMatrix(target: PMatrix3D?): PMatrix3D? {
         showVariationWarning("getMatrix")
         return target
     }
 
     //public void setMatrix(PMatrix source)
-    override fun setMatrix(source: PMatrix2D) {
+    override fun setMatrix(source: PMatrix2D?) {
         transform.set(source)
         updateTransformMatrix()
         canvas!!.matrix = transformMatrix
     }
 
-    override fun setMatrix(source: PMatrix3D) {
+    override fun setMatrix(source: PMatrix3D?) {
         showVariationWarning("setMatrix")
     }
 
     override fun printMatrix() {
-        getMatrix((null as PMatrix2D?)!!).print()
+        getMatrix((null as PMatrix2D?))!!.print()
     }
 
     //    return canvas.getMatrix();

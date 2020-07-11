@@ -27,7 +27,7 @@ import processing.android.AppComponent
 import processing.core.PSurface
 
 open class VRGraphicsMono : VRGraphics() {
-    override fun createSurface(component: AppComponent, holder: SurfaceHolder, reset: Boolean): PSurface {
+    override fun createSurface(component: AppComponent?, holder: SurfaceHolder?, reset: Boolean): PSurface? {
         // ignore
         if (reset) pgl.resetFBOLayer()
         return VRSurface(this, component, holder, false)
