@@ -77,6 +77,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * The surface this sketch draws to.
    */
+  // need to make it public as kotlin code will not be having getSurface()
   protected PSurface surface;
 
   /**
@@ -85,6 +86,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   public @LayoutRes int parentLayout = -1;
 
   /** The PGraphics renderer associated with this PApplet */
+  // nullable type
   public PGraphics g;
 
   /**
@@ -113,6 +115,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * for purposes of how sketchPath is used in practice from a sketch,
    * even though it's technically different than the desktop version.
    */
+  // nullable type
   public String sketchPath; //folder;
 
   /** When debugging headaches */
@@ -126,6 +129,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Set true when the surface dimensions have changed, so that the PGraphics
    * object can be resized on the next trip through handleDraw().
    */
+  // take care of surfaceChanged() function
   protected boolean surfaceChanged;
 
   /**
@@ -134,6 +138,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * When used with OpenGL or Java2D, this value will
    * be null until loadPixels() has been called.
    */
+  // nullable type - not sure
   public int[] pixels;
 
   /** width of this applet's associated PGraphics */
@@ -185,7 +190,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   public boolean touchIsStarted;
 
-
+// I think itself is not nullable but elements are of nullable type as per gettouches() in TouchEvent class
   public TouchEvent.Pointer[] touches = new TouchEvent.Pointer[0];
 
 
@@ -279,12 +284,14 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Callback methods to handle permission requests
    */
+  // not sure about nullability; recommendation is to not take them as  nullable
   protected HashMap<String, String> permissionMethods = new HashMap<String, String>();
 
 
   /**
    * Permissions requested during one frame
    */
+  //  not sure ; but as recommendation non-nullable
   protected ArrayList<String> reqPermissions = new ArrayList<String>();
 
 
@@ -343,6 +350,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   boolean insideSettings;
 
+  // renderer is of non-nullable type
   String renderer = JAVA2D;
 
   int smooth = 1;  // default smoothing (whatever that means for the renderer)
@@ -419,6 +427,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   static public final String EXTERNAL_MOVE = "__MOVE__";
 
   /** true if this sketch is being run by the PDE */
+  // need to remove setExternal(value)
   boolean external = false;
 
 
@@ -433,7 +442,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   }
 
-
+// will throw JVM Clash
   public PSurface getSurface() {
     return surface;
   }
@@ -449,12 +458,14 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // all nullable args
   public void initSurface(AppComponent component, SurfaceHolder holder) {
     parentLayout = -1;
     initSurface(null, null,  null, component, holder);
   }
 
 
+  // all args nullable
   public void initSurface(LayoutInflater inflater, ViewGroup container,
                           Bundle savedInstanceState,
                           AppComponent component, SurfaceHolder holder) {
@@ -680,6 +691,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // nullable arg
   public boolean hasPermission(String permission) {
     return surface.hasPermission(permission);
   }
@@ -696,7 +708,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     requestPermission(permission, callback, this);
   }
 
-
+// permission is nullable ;
   public void requestPermission(String permission, String callback, Object target) {
     registerWithArgs(callback, target, new Class[] { boolean.class });
     if (hasPermission(permission)) {
@@ -766,6 +778,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @param args parameters passed to the function so we can show the user
    * @return true if safely inside the settings() method
    */
+  // method non-nullable type
   boolean insideSettings(String method, Object... args) {
     if (insideSettings) {
       return true;
@@ -943,6 +956,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   /** Map of registered methods, stored by name. */
+  // value is of nullable type
   HashMap<String, RegisteredMethods> registerMap =
     new HashMap<String, PApplet.RegisteredMethods>();
 
@@ -1369,6 +1383,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // will throw JVM Clash due to var external: boolean
   public void setExternal(boolean external) {
     this.external = external;
   }
@@ -1399,6 +1414,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
+  // may be non-nullable
  private void smoothWarning(String method) {
    // When running from the PDE, say setup(), otherwise say settings()
    final String where = external ? "setup" : "settings";
@@ -1409,6 +1425,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
+  // may throw JVM-CLash
   public PGraphics getGraphics() {
     return g;
   }
@@ -1465,7 +1482,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-
+  // return nullability
   public PGraphics createGraphics(int iwidth, int iheight) {
     return createGraphics(iwidth, iheight, JAVA2D);
   }
@@ -1521,11 +1538,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * <A HREF="http://dev.processing.org/reference/core/javadoc/processing/core/PImage.html#save(java.lang.String)">PImage.save()</A>.
    * </UL>
    */
+  // return nullability
   public PGraphics createGraphics(int iwidth, int iheight, String irenderer) {
     return makeGraphics(iwidth, iheight, irenderer, false);
   }
 
 
+  // return nullability
   protected PGraphics makeGraphics(int w, int h,
                                    String renderer, boolean primary) {
     PGraphics pg = null;
@@ -1645,6 +1664,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Creates a new PImage (the datatype for storing images). This provides a fresh buffer of pixels to play with. Set the size of the buffer with the <b>width</b> and <b>height</b> parameters. The <b>format</b> parameter defines how the pixels are stored. See the PImage reference for more information.
    */
+  // todo - may be return nullability
   public PImage createImage(int wide, int high, int format) {
 //    return createImage(wide, high, format, null);
 //  }
@@ -1959,6 +1979,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // JVM-Clash
   public boolean isLooping() {
     return looping;
   }
@@ -1990,6 +2011,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   //////////////////////////////////////////////////////////////
 
 
+  // not sure about nullability
   InternalEventQueue eventQueue = new InternalEventQueue();
 
 
@@ -2738,6 +2760,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * or whatever you want as your browser, since Linux doesn't
    * yet have a standard method for launching URLs.
    */
+  // frameTitle is nullable; not sure about url
   public void link(String url, String frameTitle) {
     Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse(url));
     surface.startActivity(viewIntent);
@@ -2747,6 +2770,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Attempt to open a file using the platform's shell.
    */
+  // not sure about nullability but mostly nullable
   static public void open(String filename) {
     open(new String[] { filename });
   }
@@ -2788,6 +2812,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Function for an applet/application to kill itself and
    * display an error. Mostly this is here to be improved later.
    */
+  // maybe nullable
   public void die(String what) {
     stop();
     throw new RuntimeException(what);
@@ -2797,6 +2822,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Same as above but with an exception. Also needs work.
    */
+  // e is nullable
   public void die(String what, Exception e) {
     if (e != null) e.printStackTrace();
     die(what);
@@ -2856,6 +2882,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * 'public' is automatically added, but when used without the preprocessor,
    * (like from Eclipse) you'll have to do it yourself.
    */
+  // TODO - must be non-nullable as per declaration of getClass().getMethod(name)...
   public void method(String name) {
     try {
       Method method = getClass().getMethod(name, new Class[] {});
@@ -2885,6 +2912,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * 'public' is automatically added, but when used without the preprocessor,
    * (like from Eclipse) you'll have to do it yourself.
    */
+  // TODO - non-nullable arg {name} as per upper todo()
   public void thread(final String name) {
     Thread later = new Thread() {
       @Override
@@ -2907,6 +2935,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * to the sketch folder) before passing to save() in PImage.
    * (Changed in 0100)
    */
+  // TODO - NON-NULLABLE arg {filename} as per g.save(name) in parent class
   public void save(String filename) {
     g.save(savePath(filename));
   }
@@ -2957,6 +2986,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * it will be ignored, under the assumption that it's probably not
    * intended to be the frame number.
    */
+  // todo - what is og non-nullable type
   protected String insertFrame(String what) {
     int first = what.indexOf('#');
     int last = what.lastIndexOf('#');
@@ -3096,6 +3126,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * @param variables list of data, separated by commas
    */
+  // todo - args nullable type
   static public void print(Object... variables) {
     StringBuilder sb = new StringBuilder();
     for (Object o : variables) {
@@ -3163,6 +3194,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     println();
   }
 
+  // todo - {what} is of nullable type
   static public void println(Object what) {
     if (what == null) {
       // special case since this does fuggly things on > 1.1
@@ -3251,6 +3283,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
  * @see PApplet#print(byte)
  * @see PApplet#println()
  */
+// todo - {what} is of nullable type
   static public void printArray(Object what) {
     if (what == null) {
       // special case since this does fuggly things on > 1.1
@@ -3605,7 +3638,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   // RANDOM NUMBERS
 
-
+// todo - nullable type
   Random internalRandom;
 
   /**
@@ -3745,6 +3778,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   float[] perlin_cosTable;
   float[] perlin;
 
+  // nullable type
   Random perlinRandom;
 
 
@@ -3944,6 +3978,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
 
+  // todo - return @ nullable; {filename} may also nullable type
   public PImage loadImage(String filename) { //, Object params) {
 //    return loadImage(filename, null);
     InputStream stream = createInput(filename);
@@ -3974,11 +4009,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - both args are fo nullable type
   public PImage loadImage(String filename, String extension) {
     return loadImage(filename);
   }
 
 
+  // todo - both args are of nullable type and return @ nullable
   public PImage requestImage(String filename) {
     PImage vessel = createImage(0, 0, ARGB);
     AsyncImageLoader ail = new AsyncImageLoader(filename, vessel);
@@ -4049,6 +4086,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   // DATA I/O
 
 
+  // todo - return @ nullable and {name} is nullable
   public XML createXML(String name) {
     try {
       return new XML(name);
@@ -4067,12 +4105,14 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#loadStrings(String)
    * @see PApplet#loadTable(String)
    */
+  // todo - return @ nullable and {filename} is of nullable type
   public XML loadXML(String filename) {
     return loadXML(filename, null);
   }
 
 
   // version that uses 'options' though there are currently no supported options
+  // todo - both args are nullable and return @ nullable
   public XML loadXML(String filename, String options) {
     try {
       return new XML(createInput(filename), options);
@@ -4083,11 +4123,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+// todo nullable type both args and return type
   public XML parseXML(String xmlString) {
     return parseXML(xmlString, null);
   }
 
 
+  // todo nullable type both args and return type
   public XML parseXML(String xmlString, String options) {
     try {
       return XML.parse(xmlString, options);
@@ -4097,12 +4139,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-
+// todo - both args @ nullable-type
   public boolean saveXML(XML xml, String filename) {
     return saveXML(xml, filename, null);
   }
 
 
+  // todo both args @ nullable-type
   public boolean saveXML(XML xml, String filename, String options) {
     return xml.save(saveFile(filename), options);
   }
@@ -4114,6 +4157,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#loadJSONObject(String)
    * @see PApplet#saveJSONObject(JSONObject, String)
    */
+  // todo - nullable-type @ args and return type
   public JSONObject parseJSONObject(String input) {
     return new JSONObject(new StringReader(input));
   }
@@ -4128,6 +4172,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#saveJSONObject(JSONObject, String)
    * @see PApplet#saveJSONArray(JSONArray, String)
    */
+  // todo - nullable-type both args and return-type
   public JSONObject loadJSONObject(String filename) {
     // can't pass of createReader() to the constructor b/c of resource leak
     BufferedReader reader = createReader(filename);
@@ -4141,6 +4186,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable type both args and return-type
   static public JSONObject loadJSONObject(File file) {
     // can't pass of createReader() to the constructor b/c of resource leak
     BufferedReader reader = createReader(file);
@@ -4162,6 +4208,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#loadJSONArray(String)
    * @see PApplet#saveJSONArray(JSONArray, String)
    */
+  // todo - nullable-type args and return-type
   public boolean saveJSONObject(JSONObject json, String filename) {
     return saveJSONObject(json, filename, null);
   }
@@ -4170,6 +4217,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * @nowebref
    */
+  // todo - nullable-type args
   public boolean saveJSONObject(JSONObject json, String filename, String options) {
     return json.save(saveFile(filename), options);
   }
@@ -4182,6 +4230,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#loadJSONObject(String)
    * @see PApplet#saveJSONObject(JSONObject, String)
    */
+  // todo - nullable-type args and return-type
   public JSONArray parseJSONArray(String input) {
     return new JSONArray(new StringReader(input));
   }
@@ -4195,6 +4244,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#saveJSONObject(JSONObject, String)
    * @see PApplet#saveJSONArray(JSONArray, String)
    */
+  // todo - nullable-type args and return-type
   public JSONArray loadJSONArray(String filename) {
     // can't pass of createReader() to the constructor b/c of resource leak
     BufferedReader reader = createReader(filename);
@@ -4208,6 +4258,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public JSONArray loadJSONArray(File file) {
     // can't pass of createReader() to the constructor b/c of resource leak
     BufferedReader reader = createReader(file);
@@ -4229,11 +4280,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#loadJSONArray(String)
    * @see PApplet#saveJSONObject(JSONObject, String)
    */
+  // todo - nullable-type args
   public boolean saveJSONArray(JSONArray json, String filename) {
     return saveJSONArray(json, filename, null);
   }
 
 
+  // todo - nullable-type args and
   public boolean saveJSONArray(JSONArray json, String filename, String options) {
     return json.save(saveFile(filename), options);
   }
@@ -4251,11 +4304,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PApplet#loadStrings(String)
    * @see PApplet#loadXML(String)
    */
+  // todo - nullable-type args and return-type
   public Table loadTable(String filename) {
     return loadTable(filename, null);
   }
 
 
+  // todo - nullable-type args and return-type
   public Table loadTable(String filename, String options) {
     String ext = checkExtension(filename);
     if (ext != null) {
@@ -4271,12 +4326,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   }
 
-
+  // todo - nullable-type args
   public boolean saveTable(Table table, String filename) {
     return saveTable(table, filename, null);
   }
 
 
+  // todo - nullable-type args
   public boolean saveTable(Table table, String filename, String options) {
     try {
       table.save(saveFile(filename), options);
@@ -4292,6 +4348,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   // FONT I/O
 
 
+  // todo - nullable-type args and return-type
   public PFont loadFont(String filename) {
     try {
       InputStream input = createInput(filename);
@@ -4309,16 +4366,17 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Used by PGraphics to remove the requirement for loading a font!
    */
+  // todo - nullable-type return-type
   protected PFont createDefaultFont(float size) {
     return createFont("SansSerif", size, true, null);
   }
 
-
+  // todo - nullable-type args and return-type
   public PFont createFont(String name, float size) {
     return createFont(name, size, true, null);
   }
 
-
+  // todo - nullable-type args and return-type
   public PFont createFont(String name, float size, boolean smooth) {
     return createFont(name, size, smooth, null);
   }
@@ -4332,6 +4390,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Use 'null' for the charset if you want to dynamically create
    * character bitmaps only as they're needed.
    */
+  // todo - nullable-type args and return-type
   public PFont createFont(String name, float size,
                           boolean smooth, char[] charset) {
     String lowerName = name.toLowerCase();
@@ -4628,6 +4687,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @param filename The filename to check
    * @return an extension, skipping past .gz if it's present
    */
+  // todo - nullable-type args and return-type
   static public String checkExtension(String filename) {
     // Don't consider the .gz as part of the name, createInput()
     // and createOuput() will take care of fixing that up.
@@ -4651,6 +4711,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * I want to read lines from a file. I have RSI from typing these
    * eight lines of code so many times.
    */
+  // todo - nullable-type args and return-type
   public BufferedReader createReader(String filename) {
     try {
       InputStream is = createInput(filename);
@@ -4674,6 +4735,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * I want to read lines from a file. And I'm still annoyed.
    */
+  // todo - nullable-type args and return-type
   static public BufferedReader createReader(File file) {
     try {
       InputStream is = new FileInputStream(file);
@@ -4699,6 +4761,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * I want to read lines from a stream. If I have to type the
    * following lines any more I'm gonna send Sun my medical bills.
    */
+  // todo - nullable-type args and return-type - not sure
   static public BufferedReader createReader(InputStream input) {
     InputStreamReader isr =
       new InputStreamReader(input, CompatUtils.getCharsetUTF8());
@@ -4722,6 +4785,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * I want to print lines to a file. Why can't I?
    */
+  // todo - nullable-type args and return-type
   public PrintWriter createWriter(String filename) {
     return createWriter(saveFile(filename));
   }
@@ -4731,6 +4795,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * I want to print lines to a file. I have RSI from typing these
    * eight lines of code so many times.
    */
+  // todo - nullable-type args and return-type
   static public PrintWriter createWriter(File file) {
     try {
       OutputStream output = new FileOutputStream(file);
@@ -4756,6 +4821,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * I want to print lines to a file. Why am I always explaining myself?
    * It's the JavaSoft API engineers who need to explain themselves.
    */
+  // todo - nullable-type args and return-type
   static public PrintWriter createWriter(OutputStream output) {
     BufferedOutputStream bos = new BufferedOutputStream(output, 8192);
     OutputStreamWriter osw =
@@ -4800,6 +4866,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * <LI>Another file to be opened locally (when running as an application)
    * </UL>
    */
+  // todo return-type @ nullable; {filename} may also be nullable
   public InputStream createInput(String filename) {
     InputStream input = createInputRaw(filename);
     final String lower = filename.toLowerCase();
@@ -4820,6 +4887,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Call createInput() without automatic gzip decompression.
    */
+  // todo - nullable-type args and return-type
   public InputStream createInputRaw(String filename) {
     // Additional considerations for Android version:
     // http://developer.android.com/guide/topics/resources/resources-i18n.html
@@ -4996,7 +5064,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return surface.openFileInput(filename);
   }
 
-
+  // todo - nullable-type args and return-type
   static public InputStream createInput(File file) {
     if (file == null) {
       throw new IllegalArgumentException("File passed to createInput() was null");
@@ -5016,6 +5084,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   public byte[] loadBytes(String filename) {
     InputStream is = createInput(filename);
     if (is != null) return loadBytes(is);
@@ -5027,7 +5096,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return null;
   }
 
-
+  // todo - nullable-type args and return-type
   static public byte[] loadBytes(InputStream input) {
     try {
       BufferedInputStream bis = new BufferedInputStream(input);
@@ -5048,12 +5117,14 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public byte[] loadBytes(File file) {
     InputStream is = createInput(file);
     return loadBytes(is);
   }
 
 
+  // todo - nullable-type args and return-type
   static public String[] loadStrings(File file) {
     InputStream is = createInput(file);
     if (is != null) return loadStrings(is);
@@ -5061,6 +5132,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public String[] loadStrings(BufferedReader reader) {
     try {
       String lines[] = new String[100];
@@ -5105,6 +5177,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * in a "scripting" fashion. If you want to handle exceptions,
    * use Java methods for I/O.
    */
+  // todo - nullable-type args and return-type
   public String[] loadStrings(String filename) {
     InputStream is = createInput(filename);
     if (is != null) return loadStrings(is);
@@ -5117,6 +5190,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public String[] loadStrings(InputStream input) {
     try {
       BufferedReader reader =
@@ -5172,6 +5246,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * little too clever (and then we'd have to add the same features to the
    * other file functions like createWriter). Who you callin' bloated?
    */
+  // todo - nullable-type args and return-type
   public OutputStream createOutput(String filename) {
     try {
       // in spite of appearing to be the 'correct' option, this doesn't allow
@@ -5197,6 +5272,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public OutputStream createOutput(File file) {
     try {
       createPath(file);  // make sure the path exists
@@ -5229,16 +5305,18 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Note that unlike other api methods, this will not automatically
    * compress or uncompress gzip files.
    */
+  // todo - nullable-type args
   public boolean saveStream(File targetFile, String sourceLocation) {
     return saveStream(targetFile, createInputRaw(sourceLocation));
   }
 
-
+  // todo - nullable-type args
   public boolean saveStream(String targetFilename, InputStream sourceStream) {
     return saveStream(saveFile(targetFilename), sourceStream);
   }
 
 
+  // todo - nullable-type args
   static public boolean saveStream(File target, InputStream source) {
     File tempFile = null;
     try {
@@ -5273,7 +5351,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-
+  // todo - nullable-type args
   static public void saveStream(OutputStream target,
                                 InputStream source) throws IOException {
     BufferedInputStream bis = new BufferedInputStream(source, 16384);
@@ -5308,6 +5386,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * from the same directory so that renaming the file later won't cross file
    * system boundaries.
    */
+  // todo - nullable-type args and return-type
   static private File createTempFile(File file) throws IOException {
     File parentDir = file.getParentFile();
     String name = file.getName();
@@ -5332,6 +5411,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Saves bytes to a specific File location specified by the user.
    */
+  // todo - nullable-type args
   static public void saveBytes(File file, byte[] data) {
     File tempFile = null;
     try {
@@ -5366,6 +5446,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Spews a buffer of bytes to an OutputStream.
    */
+  // todo - nullable-type args
   static public void saveBytes(OutputStream output, byte[] data) {
     try {
       output.write(data);
@@ -5376,13 +5457,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     }
   }
 
-  //
-
+  // todo - nullable-type args
   public void saveStrings(String filename, String strings[]) {
     saveStrings(saveFile(filename), strings);
   }
 
 
+  // todo - nullable-type args
   static public void saveStrings(File file, String strings[]) {
     try {
       String location = file.getAbsolutePath();
@@ -5400,6 +5481,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args
   static public void saveStrings(OutputStream output, String strings[]) {
     try {
       OutputStreamWriter osw = new OutputStreamWriter(output, "UTF-8");
@@ -5429,6 +5511,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * my some other main() or by other code. For proper use of init(),
    * see the examples in the main description text for PApplet.
    */
+  // todo - nullable-type args and return-type
   public String sketchPath(String where) {
     if (sketchPath == null) {
       return where;
@@ -5448,6 +5531,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   public File sketchFile(String where) {
     return new File(sketchPath(where));
   }
@@ -5466,6 +5550,8 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * If you know you're running locally, and want to save to the data folder,
    * use <TT>saveXxxx("data/blah.dat")</TT>.
    */
+  // todo - nullable return type but expected is non-nullable type or has to change the PImage.save() return type nullable heirarchy to figure this out
+  // todo - nullable-type args and return-type
   public String savePath(String where) {
     if (where == null) return null;
 //    System.out.println("filename before sketchpath is " + where);
@@ -5479,6 +5565,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Identical to savePath(), but returns a File object.
    */
+  // todo nullable type both args and return type
   public File saveFile(String where) {
     return new File(savePath(where));
   }
@@ -5494,6 +5581,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Discussed here:
    * https://github.com/processing/processing-android/issues/450
    */
+  // todo - nullable-type args and return-type
   public String dataPath(String where) {
     // First, we check if it is asset:
     boolean isAsset = false;
@@ -5519,6 +5607,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Return a full path to an item in the data folder as a File object.
    * See the dataPath() method for more information.
    */
+  // todo - nullable-type args and return-type
   public File dataFile(String where) {
     return new File(dataPath(where));
   }
@@ -5529,11 +5618,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * already exist. Useful when trying to save to a subfolder that
    * may not actually exist.
    */
+  // todo - nullable-type args
   static public void createPath(String path) {
     createPath(new File(path));
   }
 
 
+  // todo - nullable-type args
   static public void createPath(File file) {
     try {
       String parent = file.getParent();
@@ -5547,6 +5638,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public String getExtension(String filename) {
     String extension;
 
@@ -5572,6 +5664,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   // URL ENCODING
 
+  // todo - nullable-type args and return-type
   static public String urlEncode(String what) {
     try {
       return URLEncoder.encode(what, "UTF-8");
@@ -5581,6 +5674,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type args and return-type
   static public String urlDecode(String what) {
     try {
       return URLDecoder.decode(what, "UTF-8");
@@ -5672,6 +5766,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * avoid people needing to learn about the System object
    * before they can just copy an array.
    */
+  // todo - some args are @ Non-nullable
   static public void arrayCopy(Object src, int srcPosition,
                                Object dst, int dstPosition,
                                int length) {
@@ -5683,6 +5778,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Convenience method for arraycopy().
    * Identical to <CODE>arraycopy(src, 0, dst, 0, length);</CODE>
    */
+  // todo - some args are @ Non-nullable
   static public void arrayCopy(Object src, Object dst, int length) {
     System.arraycopy(src, 0, dst, 0, length);
   }
@@ -6421,6 +6517,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   static protected HashMap<String, Pattern> matchPatterns;
 
+  // todo - nullable-type args and return-type
   static Pattern matchPattern(String regexp) {
     Pattern p = null;
     if (matchPatterns == null) {
@@ -6456,6 +6553,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * end of any lines found in the source, and the . operator will also
    * pick up newline characters.
    */
+  // todo - nullable-type args and return-type
   static public String[] match(String what, String regexp) {
     Pattern p = matchPattern(regexp);
     Matcher m = p.matcher(what);
@@ -6475,6 +6573,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Identical to match(), except that it returns an array of all matches in
    * the specified String, rather than just the first.
    */
+  // todo - nullable-type args and return-type
   static public String[][] matchAll(String what, String regexp) {
     Pattern p = matchPattern(regexp);
     Matcher m = p.matcher(what);
@@ -7009,7 +7108,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   static private int int_nf_digits;
   static private boolean int_nf_commas;
 
-
+// todo - nullable return type
   static public String[] nf(int num[], int digits) {
     String formatted[] = new String[num.length];
     for (int i = 0; i < formatted.length; i++) {
@@ -7018,7 +7117,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return formatted;
   }
 
-
+// todo - nullable return type
   static public String nf(int num, int digits) {
     if ((int_nf != null) &&
         (int_nf_digits == digits) &&
@@ -7043,7 +7142,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     return formatted;
   }
 
-
+// todo - return-type may be nullable
   static public String nfc(int num) {
     if ((int_nf != null) &&
         (int_nf_digits == 0) &&
@@ -7066,6 +7165,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * when it's positive so that it can be properly aligned with
    * numbers that have a negative sign in front of them.
    */
+  // todo - return @ Nullable
   static public String nfs(int num, int digits) {
     return (num < 0) ? nf(num, digits) : (' ' + nf(num, digits));
   }
@@ -8050,11 +8150,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   // Ray casting API
 
 
+  // todo - nullable-type arg {ray} and return-type
   public PVector[] getRayFromScreen(float screenX, float screenY, PVector[] ray) {
     return g.getRayFromScreen(screenX, screenY, ray);
   }
 
 
+  // todo - nullable-type arg and return-type
   public void getRayFromScreen(float screenX, float screenY, PVector origin, PVector direction) {
     g.getRayFromScreen(screenX, screenY, origin, direction);
   }
@@ -8090,11 +8192,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable-type return
   public PVector intersectsPlane(float screenX, float screenY) {
     return g.intersectsPlane(screenX, screenY);
   }
 
 
+  // todo - return-type @ Nullable
   public PVector intersectsPlane(PVector origin, PVector direction) {
     return g.intersectsPlane(origin, direction);
   }
@@ -8123,6 +8227,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Returns a copy of the current object matrix.
    * Pass in null to create a new matrix.
    */
+  // todo - return-type @ Nullable
   public PMatrix3D getObjectMatrix() {
     return g.getObjectMatrix();
   }
@@ -8132,6 +8237,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Copy the current object matrix into the specified target.
    * Pass in null to create a new matrix.
    */
+  // todo - return-type @ Nullable
   public PMatrix3D getObjectMatrix(PMatrix3D target) {
     return g.getObjectMatrix(target);
   }
@@ -8141,6 +8247,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Returns a copy of the current eye matrix.
    * Pass in null to create a new matrix.
    */
+  // todo - return-type @ Nullable
   public PMatrix3D getEyeMatrix() {
     return g.getEyeMatrix();
   }
@@ -8150,6 +8257,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Copy the current eye matrix into the specified target.
    * Pass in null to create a new matrix.
    */
+  // todo - return-type @ Nullable
   public PMatrix3D getEyeMatrix(PMatrix3D target) {
     return g.getEyeMatrix(target);
   }
@@ -8164,6 +8272,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   // public functions for processing.core
 
 
+  // todo - return-type @ Nullable
   public PGL beginPGL() {
     return g.beginPGL();
   }
@@ -8480,6 +8589,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PShape
    * @see PApplet#createShape()
    */
+  // todo both arg and return-type are nullable
   public PShape loadShape(String filename) {
     return g.loadShape(filename);
   }
@@ -8488,6 +8598,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * @nowebref
    */
+  // todo both args and return-type are nullable
   public PShape loadShape(String filename, String options) {
     return g.loadShape(filename, options);
   }
@@ -8499,11 +8610,12 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @see PShape#endShape()
    * @see PApplet#loadShape(String)
    */
+  // todo - return-type @ Non-nullable
   public PShape createShape() {
     return g.createShape();
   }
 
-
+  // todo - return-type @ Non-nullable
   public PShape createShape(int type) {
     return g.createShape(type);
   }
@@ -8513,6 +8625,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @param kind either POINT, LINE, TRIANGLE, QUAD, RECT, ELLIPSE, ARC, BOX, SPHERE
    * @param p parameters that match the kind of shape
    */
+  // todo - return-type @ Non-nullable
   public PShape createShape(int kind, float... p) {
     return g.createShape(kind, p);
   }
@@ -8528,6 +8641,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @webref rendering:shaders
    * @param fragFilename name of fragment shader file
    */
+  // todo - both arg and return-type are Nullable
   public PShader loadShader(String fragFilename) {
     return g.loadShader(fragFilename);
   }
@@ -8536,6 +8650,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * @param vertFilename name of vertex shader file
    */
+  // todo - both arg and return-type are Nullable
   public PShader loadShader(String fragFilename, String vertFilename) {
     return g.loadShader(fragFilename, vertFilename);
   }
@@ -8551,6 +8666,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @webref rendering:shaders
    * @param shader name of shader file
    */
+  // todo - arg @ Nullable
   public void shader(PShader shader) {
     g.shader(shader);
   }
@@ -8559,6 +8675,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * @param kind type of shader, either POINTS, LINES, or TRIANGLES
    */
+  // todo - nullable {shader}
   public void shader(PShader shader, int kind) {
     g.shader(shader, kind);
   }
@@ -10580,6 +10697,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  // todo - nullable return-type
   public PMatrix getMatrix() {
     return g.getMatrix();
   }
@@ -10589,6 +10707,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Copy the current transformation matrix into the specified target.
    * Pass in null to create a new matrix.
    */
+  // todo - both arg and return-type are Nullable
   public PMatrix2D getMatrix(PMatrix2D target) {
     return g.getMatrix(target);
   }
@@ -10598,6 +10717,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Copy the current transformation matrix into the specified target.
    * Pass in null to create a new matrix.
    */
+  // todo - both arg and return-type are Nullable
   public PMatrix3D getMatrix(PMatrix3D target) {
     return g.getMatrix(target);
   }
@@ -10606,6 +10726,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   /**
    * Set the current transformation matrix to the contents of another.
    */
+  // todo - arg @ Nullable
   public void setMatrix(PMatrix source) {
     g.setMatrix(source);
   }
@@ -12319,6 +12440,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @param w width of pixel rectangle to get
    * @param h height of pixel rectangle to get
    */
+  // todo - return @ Non-nullable
   public PImage get(int x, int y, int w, int h) {
     return g.get(x, y, w, h);
   }
@@ -12328,11 +12450,13 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * Returns a copy of this PImage. Equivalent to get(0, 0, width, height).
    * Deprecated, just use copy() instead.
    */
+  // todo - return @ Non-nullable
   public PImage get() {
     return g.get();
   }
 
 
+  // todo - return @ Non-nullable
   public PImage copy() {
     return g.copy();
   }
@@ -12422,6 +12546,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @param img image to use as the mask
    * @brief Masks part of an image with another image as an alpha channel
    */
+  // todo - arg @ Non-nullable
   public void mask(PImage img) {
     g.mask(img);
   }
