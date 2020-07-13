@@ -50,14 +50,14 @@ class StringDict {
      * @nowebref
      */
     constructor(reader: BufferedReader?) {
-        val lines = PApplet.loadStrings(reader)
-        keys = arrayOfNulls(lines.size)
-        values = arrayOfNulls(lines.size)
-        for (i in lines.indices) {
-            val pieces = PApplet.split(lines[i], '\t')
-            if (pieces.size == 2) {
-                keys[count] = pieces[0]
-                values[count] = pieces[1]
+        val lines = PApplet.loadStrings(reader!!)
+        keys = arrayOfNulls(lines!!.size)
+        values = arrayOfNulls(lines!!.size)
+        for (i in lines!!.indices) {
+            val pieces = PApplet.split(lines!![i], '\t')
+            if (pieces!!.size == 2) {
+                keys[count] = pieces!![0]
+                values[count] = pieces!![1]
                 indices[keys[count]!!] = count
                 count++
             }

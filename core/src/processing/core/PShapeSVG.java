@@ -1534,7 +1534,7 @@ public class PShapeSVG extends PShape {
         }
       }
       offset = PApplet.subset(offset, 0, count);
-      color = PApplet.subset(color, 0, count);
+      color = (int[]) PApplet.subset(color, 0, count);
     }
   }
 

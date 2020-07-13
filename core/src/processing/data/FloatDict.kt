@@ -48,15 +48,15 @@ open class FloatDict {
      * @nowebref
      */
     constructor(reader: BufferedReader?) {
-        val lines = PApplet.loadStrings(reader)
-        keys = arrayOfNulls(lines.size)
-        values = FloatArray(lines.size)
-        for (i in lines.indices) {
+        val lines = PApplet.loadStrings(reader!!)
+        keys = arrayOfNulls(lines!!.size)
+        values = FloatArray(lines!!.size)
+        for (i in lines!!.indices) {
             val pieces = PApplet.split(lines[i], '\t')
-            if (pieces.size == 2) {
+            if (pieces!!.size == 2) {
                 keys[count] = pieces[0]
-                values[count] = PApplet.parseFloat(pieces[1])
-                indices[pieces[0]] = count
+                values[count] = PApplet.parseFloat(pieces!![1]!!)
+                indices[pieces!![0]!!] = count
                 count++
             }
         }

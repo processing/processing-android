@@ -1026,11 +1026,11 @@ open class JSONArray {
         var indentFactor = 2
         if (options != null) {
             val opts = PApplet.split(options, ',')
-            for (opt in opts) {
+            for (opt in opts!!) {
                 if (opt == "compact") {
                     indentFactor = -1
-                } else if (opt.startsWith("indent=")) {
-                    indentFactor = PApplet.parseInt(opt.substring(7), -2)
+                } else if (opt!!.startsWith("indent=")) {
+                    indentFactor = PApplet.parseInt(opt!!.substring(7), -2)
                     require(indentFactor != -2) { "Could not read a number from $opt" }
                 } else {
                     System.err.println("Ignoring $opt")

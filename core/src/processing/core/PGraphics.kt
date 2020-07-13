@@ -1275,7 +1275,7 @@ open class PGraphics: PImage(), PConstants {
         // This method probably does not need to be re-implemented in the subclasses. All we need to
         // do is to check for the resume in no-loop state situation:
         restoredSurface = false
-        if (!parent!!.looping) {
+        if (!parent!!.isLooping) {
             // The sketch needs to draw a few frames after resuming so it has the chance to restore the
             // screen contents:
             // https://github.com/processing/processing-android/issues/492
@@ -3754,7 +3754,7 @@ open class PGraphics: PImage(), PConstants {
 
     protected fun textSentenceBreak(start: Int, stop: Int) {
         if (textBreakCount == textBreakStart!!.size) {
-            textBreakStart = PApplet.expand(textBreakStart)
+            textBreakStart = PApplet.expand(textBreakStart!!)
             textBreakStop = PApplet.expand(textBreakStop)
         }
         textBreakStart!![textBreakCount] = start

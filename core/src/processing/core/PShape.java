@@ -29,8 +29,6 @@ import android.graphics.BitmapFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import processing.core.PApplet;
-
 
 /**
    * ( begin auto-generated from PShape.xml )
@@ -2964,7 +2962,7 @@ public class PShape implements PConstants {
       return null;
     }
     if (vertexCodes.length != vertexCodeCount) {
-      vertexCodes = PApplet.subset(vertexCodes, 0, vertexCodeCount);
+      vertexCodes = (int[]) PApplet.subset(vertexCodes, 0, vertexCodeCount);
     }
     return vertexCodes;
   }

@@ -49,15 +49,15 @@ open class IntDict {
      * @nowebref
      */
     constructor(reader: BufferedReader?) {
-        val lines = PApplet.loadStrings(reader)
-        keys = arrayOfNulls(lines.size)
-        values = IntArray(lines.size)
-        for (i in lines.indices) {
-            val pieces = PApplet.split(lines[i], '\t')
-            if (pieces.size == 2) {
-                keys[count] = pieces[0]
-                values[count] = PApplet.parseInt(pieces[1])
-                indices[pieces[0]] = count
+        val lines = PApplet.loadStrings(reader!!)
+        keys = arrayOfNulls(lines!!.size)
+        values = IntArray(lines!!.size)
+        for (i in lines!!.indices) {
+            val pieces = PApplet.split(lines!![i], '\t')
+            if (pieces!!.size == 2) {
+                keys[count] = pieces!![0]
+                values[count] = PApplet.parseInt(pieces!![1]!!)
+                indices[pieces!![0]!!] = count
                 count++
             }
         }

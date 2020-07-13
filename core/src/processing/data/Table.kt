@@ -239,10 +239,10 @@ open class Table {
         var encoding: String = "UTF-8"
         var worksheet: String? = null
         val sheetParam = "worksheet="
-        var opts: Array<String>? = null
+        var opts: Array<String?>? = null
         if (options != null) {
-            opts = PApplet.trim(PApplet.split(options, ','))
-            for (opt in opts) {
+            opts = PApplet.split(options, ',')?.let { PApplet.trim(it) }
+            for (opt in opts!!) {
                 if (opt == "tsv") {
                     extension = "tsv"
                 } else if (opt == "csv") {
@@ -260,12 +260,12 @@ open class Table {
                     extension = "bin"
                 } else if (opt == "header") {
                     header = true
-                } else if (opt.startsWith(sheetParam)) {
-                    worksheet = opt.substring(sheetParam.length)
-                } else if (opt.startsWith("dictionary=")) {
+                } else if (opt!!.startsWith(sheetParam)) {
+                    worksheet = opt!!.substring(sheetParam.length)
+                } else if (opt!!.startsWith("dictionary=")) {
                     // ignore option, this is only handled by PApplet
-                } else if (opt.startsWith("encoding=")) {
-                    encoding = opt.substring(9)
+                } else if (opt!!.startsWith("encoding=")) {
+                    encoding = opt!!.substring(9)
                 } else {
                     throw IllegalArgumentException("'$opt' is not a valid option for loading a Table")
                 }
@@ -1039,9 +1039,9 @@ open class Table {
         if (options == null) {
             throw IllegalArgumentException("No extension specified for saving this Table")
         }
-        val opts = PApplet.trim(PApplet.split(options, ','))
+        val opts = PApplet.split(options, ',')?.let { PApplet.trim(it) }
         // Only option for save is the extension, so we can safely grab the last
-        extension = opts[opts.size - 1]
+        extension = opts!![opts!!.size - 1]
         var found = false
         for (ext in saveExtensions) {
             if (extension == ext) {
@@ -1250,7 +1250,7 @@ open class Table {
                 "</manifest:manifest>"
         )
         zos.putNextEntry(entry)
-        zos.write(PApplet.join(lines, "\n").toByteArray())
+        zos.write(PApplet.join(lines as Array<String>?, "\n").toByteArray())
         zos.closeEntry()
 
         /*
@@ -1308,7 +1308,7 @@ open class Table {
                 "<office:document-meta office:version=\"1.0\"" +
                         " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" />"
         )
-        val dummyBytes = PApplet.join(lines, "\n").toByteArray()
+        val dummyBytes = PApplet.join(lines as Array<String>?, "\n").toByteArray()
         for (filename in dummyFiles) {
             entry = ZipEntry(filename)
             zos.putNextEntry(entry)
@@ -1581,7 +1581,7 @@ open class Table {
             columnTitles = arrayOfNulls(columns.size)
         }
         if (columnTitles != null) {
-            columnTitles = PApplet.splice(columnTitles, title, index)
+            columnTitles = PApplet.splice(columnTitles!!, title, index)
             columnIndices = null
         }
         columnTypes = PApplet.splice(columnTypes, type, index)
@@ -1679,7 +1679,7 @@ open class Table {
                 columns[c] = arrayOfNulls<String>(rowCount)
             }
             if (columnTitles != null) {
-                columnTitles = PApplet.expand(columnTitles, newCount)
+                columnTitles = PApplet.expand(columnTitles!!, newCount)
             }
             columnTypes = PApplet.expand(columnTypes, newCount)
             columnCategories = PApplet.expand(columnCategories, newCount) as Array<HashMapBlows?>
@@ -1987,12 +1987,12 @@ open class Table {
             val t = System.currentTimeMillis()
             for (col in columns.indices) {
                 when (columnTypes[col]) {
-                    INT -> columns[col] = PApplet.expand(columns[col] as IntArray?, newCount)
-                    LONG -> columns[col] = PApplet.expand(columns[col] as LongArray?, newCount)
-                    FLOAT -> columns[col] = PApplet.expand(columns[col] as FloatArray?, newCount)
-                    DOUBLE -> columns[col] = PApplet.expand(columns[col] as DoubleArray?, newCount)
-                    STRING -> columns[col] = PApplet.expand(columns[col] as Array<String?>?, newCount)
-                    CATEGORY -> columns[col] = PApplet.expand(columns[col] as IntArray?, newCount)
+                    INT -> columns[col] = PApplet.expand((columns[col] as IntArray?)!!, newCount)
+                    LONG -> columns[col] = PApplet.expand((columns[col] as LongArray?)!!, newCount)
+                    FLOAT -> columns[col] = PApplet.expand((columns[col] as FloatArray?)!!, newCount)
+                    DOUBLE -> columns[col] = PApplet.expand((columns[col] as DoubleArray?)!!, newCount)
+                    STRING -> columns[col] = PApplet.expand((columns[col] as Array<String?>?)!!, newCount)
+                    CATEGORY -> columns[col] = PApplet.expand((columns[col] as IntArray?)!!, newCount)
                 }
                 if (newCount > 1000000) {
                     try {
@@ -3334,7 +3334,7 @@ open class Table {
             val stringData = columns[column] as Array<String?>?
             for (row in 0 until rowCount) {
                 if (stringData!![row] != null &&
-                        PApplet.match(stringData[row], regexp) != null) {
+                        PApplet.match(stringData[row], regexp!!) != null) {
                     return row
                 }
             }
@@ -3342,7 +3342,7 @@ open class Table {
             for (row in 0 until rowCount) {
                 val str = getString(row, column)
                 if (str != null &&
-                        PApplet.match(str, regexp) != null) {
+                        PApplet.match(str, regexp!!) != null) {
                     return row
                 }
             }
@@ -3373,7 +3373,7 @@ open class Table {
             val stringData = columns[column] as Array<String?>?
             for (row in 0 until rowCount) {
                 if (stringData!![row] != null &&
-                        PApplet.match(stringData[row], regexp) != null) {
+                        PApplet.match(stringData[row], regexp!!) != null) {
                     outgoing[count++] = row
                 }
             }
@@ -3381,7 +3381,7 @@ open class Table {
             for (row in 0 until rowCount) {
                 val str = getString(row, column)
                 if (str != null &&
-                        PApplet.match(str, regexp) != null) {
+                        PApplet.match(str, regexp!!) != null) {
                     outgoing[count++] = row
                 }
             }
@@ -3592,7 +3592,7 @@ open class Table {
      * @see Table.removeTokens
      */
     fun trim() {
-        columnTitles = PApplet.trim(columnTitles)
+        columnTitles = PApplet.trim(columnTitles!!)
         for (col in 0 until getColumnCount()) {
             trim(col)
         }
@@ -3659,7 +3659,7 @@ open class Table {
             val stringData = columns[column] as Array<String?>?
             for (row in 0 until rowCount) {
                 if (stringData!![row] != null) {
-                    stringData[row] = PApplet.trim(stringData[row])
+                    stringData[row] = PApplet.trim(stringData!![row]!!)
                 }
             }
         }
@@ -4237,7 +4237,7 @@ open class Table {
         var prev = -1
         var row = 0
         while ((reader!!.readLine().also { line = it }) != null) {
-            convertRow(output, if (tsv) PApplet.split(line, '\t') else splitLineCSV(line, reader))
+            convertRow(output, if (tsv) PApplet.split(line, '\t')!! else splitLineCSV(line, reader))
             row++
             if (row % 10000 == 0) {
                 if (row < rowCount) {
@@ -4288,19 +4288,19 @@ open class Table {
     protected fun convertRow(output: DataOutputStream, pieces: Array<String?>) {
         if (pieces.size > getColumnCount()) {
             throw IllegalArgumentException("Row with too many columns: " +
-                    PApplet.join(pieces, ","))
+                    PApplet.join(pieces as Array<String>? , ","))
         }
         // pieces.length may be less than columns.length, so loop over pieces
         for (col in pieces.indices) {
             when (columnTypes[col]) {
                 STRING -> output.writeUTF(pieces[col])
-                INT -> output.writeInt(PApplet.parseInt(pieces[col], missingInt))
+                INT -> output.writeInt(PApplet.parseInt(pieces[col]!!, missingInt))
                 LONG -> try {
                     output.writeLong(pieces[col]!!.toLong())
                 } catch (nfe: NumberFormatException) {
                     output.writeLong(missingLong)
                 }
-                FLOAT -> output.writeFloat(PApplet.parseFloat(pieces[col], missingFloat))
+                FLOAT -> output.writeFloat(PApplet.parseFloat(pieces[col]!!, missingFloat))
                 DOUBLE -> try {
                     output.writeDouble(pieces[col]!!.toDouble())
                 } catch (nfe: NumberFormatException) {
@@ -4418,7 +4418,7 @@ open class Table {
         val loadExtensions = arrayOf("csv", "tsv", "ods", "bin")
         val saveExtensions = arrayOf("csv", "tsv", "ods", "bin", "html")
         fun extensionOptions(loading: Boolean, filename: String?, options: String?): String? {
-            val extension = PApplet.checkExtension(filename)
+            val extension = PApplet.checkExtension(filename!!)
             if (extension != null) {
                 for (possible in if (loading) loadExtensions else saveExtensions) {
                     if (extension == possible) {

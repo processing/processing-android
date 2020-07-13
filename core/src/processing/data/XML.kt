@@ -378,9 +378,9 @@ open class XML : Serializable {
      * @param name element name or path/to/element
      * @return the first matching element or null if no match
      */
-    fun getChild(name: String): XML? {
-        require(!(name.length > 0 && name[0] == '/')) { "getChild() should not begin with a slash" }
-        if (name.indexOf('/') != -1) {
+    fun getChild(name: String?): XML? {
+        require(!(name!!.isNotEmpty() && name[0] == '/')) { "getChild() should not begin with a slash" }
+        if (name!!.indexOf('/') != -1) {
             return getChildRecursive(PApplet.split(name, '/'), 0)
         }
         val childCount = childCount
@@ -402,11 +402,11 @@ open class XML : Serializable {
      * @return matching element or null if no match
      * @author processing.org
      */
-    protected fun getChildRecursive(items: Array<String>, offset: Int): XML? {
+    protected fun getChildRecursive(items: Array<String?>?, offset: Int): XML? {
         // if it's a number, do an index instead
-        if (Character.isDigit(items[offset][0])) {
-            val kid = getChild(items[offset].toInt())
-            return if (offset == items.size - 1) {
+        if (Character.isDigit(items!![offset]!![0])) {
+            val kid = getChild(items!![offset]!!.toInt())
+            return if (offset == items!!.size - 1) {
                 kid
             } else {
                 kid!!.getChildRecursive(items, offset + 1)
@@ -416,8 +416,8 @@ open class XML : Serializable {
         for (i in 0 until childCount) {
             val kid = getChild(i)
             val kidName = kid!!.name
-            if (kidName != null && kidName == items[offset]) {
-                return if (offset == items.size - 1) {
+            if (kidName != null && kidName == items!![offset]) {
+                return if (offset == items!!.size - 1) {
                     kid
                 } else {
                     kid.getChildRecursive(items, offset + 1)
@@ -438,7 +438,7 @@ open class XML : Serializable {
     fun getChildren(name: String?): Array<XML?> {
         require(!(name!!.isNotEmpty() && name[0] == '/')) { "getChildren() should not begin with a slash" }
         if (name.indexOf('/') != -1) {
-            return getChildrenRecursive(PApplet.split(name, '/'), 0)
+            return getChildrenRecursive(PApplet.split(name, '/') as Array<String>, 0)
         }
         // if it's a number, do an index instead
         // (returns a single element array, since this will be a single match
@@ -492,7 +492,7 @@ open class XML : Serializable {
         node!!.appendChild(newNode)
         val newbie = XML(this, newNode)
         if (children != null) {
-            children = PApplet.concat(children, arrayOf(newbie)) as Array<XML?>
+            children = PApplet.concat(children!!, arrayOf(newbie)) as Array<XML?>
         }
         return newbie
     }
@@ -945,11 +945,11 @@ open class XML : Serializable {
             transformer.transform(DOMSource(node), tempResult)
             var tempLines = PApplet.split(tempWriter.toString(), sep)
             //      PApplet.println(tempLines);
-            if (tempLines[0].startsWith("<?xml")) {
+            if (tempLines[0]!!.startsWith("<?xml")) {
                 // Remove XML declaration from the top before slamming into one line
-                val declEnd = tempLines[0].indexOf("?>") + 2
+                val declEnd = tempLines[0]!!.indexOf("?>") + 2
                 //if (tempLines[0].length() == decl.length()) {
-                if (tempLines[0].length == declEnd) {
+                if (tempLines[0]!!.length == declEnd) {
                     // If it's all the XML declaration, remove it
 //          PApplet.println("removing first line");
                     tempLines = PApplet.subset(tempLines, 1)
@@ -957,10 +957,10 @@ open class XML : Serializable {
 //          PApplet.println("removing part of first line");
                     // If the first node has been moved to this line, be more careful
                     //tempLines[0] = tempLines[0].substring(decl.length());
-                    tempLines[0] = tempLines[0].substring(declEnd)
+                    tempLines[0] = tempLines[0]!!.substring(declEnd)
                 }
             }
-            val singleLine = PApplet.join(PApplet.trim(tempLines), "")
+            val singleLine = PApplet.join(PApplet.trim(tempLines) as Array<String>?, "")
             if (indent == -1) {
                 return singleLine
             }
