@@ -137,7 +137,7 @@ class PFragment : Fragment, AppComponent {
             // immediately after onCreate():
             // https://developer.android.com/reference/android/app/Fragment.html#Lifecycle
             sketch!!.onCreate(savedInstanceState)
-            sketch!!.surface.getRootView()
+            sketch!!.surface!!.getRootView()
         } else {
             null
         }

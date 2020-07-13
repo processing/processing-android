@@ -138,7 +138,7 @@ open class PWallpaper : WallpaperService(), AppComponent {
             // continues to run (unlike the case of regular apps, where its re-created) so we need to
             // force a reset of the renderer so the backing FBOs (in the case of the OpenGL renderers)
             // get reinitalized with the correct size.
-            sketch!!.g.reset()
+            sketch!!.graphics!!.reset()
             super.onSurfaceChanged(holder, format, width, height)
         }
 

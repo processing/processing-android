@@ -818,7 +818,7 @@ open class PGraphicsAndroid2D : PGraphics() {
         // but I don't think it is particularly efficient, as the bitmaps are stored
         // in native heap for Android 10 and older.
         val mi = ActivityManager.MemoryInfo()
-        val activity = parent!!.surface.getActivity() ?: return
+        val activity = parent!!.surface!!.getActivity() ?: return
         val activityManager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(mi)
         if (mi.lowMemory) {
@@ -836,7 +836,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     //////////////////////////////////////////////////////////////
     // SHAPE I/O
     override fun loadShape(filename: String?): PShape {
-        val extension = PApplet.getExtension(filename)
+        val extension = PApplet.getExtension(filename!!)
         var svg: PShapeSVG? = null
         if (extension == "svg") {
             svg = PShapeSVG(parent!!.loadXML(filename))
@@ -1455,7 +1455,7 @@ open class PGraphicsAndroid2D : PGraphics() {
     override fun saveState() {
         super.saveState()
         val context = parent?.context
-        if (context == null || bitmap == null || parent!!.surface.getComponent()!!.isService()) return
+        if (context == null || bitmap == null || parent!!.surface!!.getComponent()!!.isService()) return
         try {
             // Saving current width and height to avoid restoring the screen after a screen rotation
             restoreWidth = pixelWidth

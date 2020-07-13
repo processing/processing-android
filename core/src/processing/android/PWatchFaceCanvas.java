@@ -250,7 +250,7 @@ public class PWatchFaceCanvas extends CanvasWatchFaceService implements AppCompo
     public void onDraw(Canvas canvas, Rect bounds) {
       super.onDraw(canvas, bounds);
       if (sketch != null) {
-        PGraphicsAndroid2D g2 = (PGraphicsAndroid2D)sketch.g;
+        PGraphicsAndroid2D g2 = (PGraphicsAndroid2D)sketch.graphics;
         g2.canvas = canvas;
         sketch.handleDraw();
       }
