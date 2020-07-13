@@ -28,7 +28,7 @@ import java.util.*
 
 class ARTracker(private var p: PApplet) {
 
-    private var g: ARGraphics? = p.g!! as ARGraphics
+    private var g: ARGraphics? = p.graphics!! as ARGraphics
     private val trackables = HashMap<String, ARTrackable>()
     private val toRemove = ArrayList<ARAnchor>()
     private var trackableEventMethod: Method? = null

@@ -72,7 +72,7 @@ object ShaderUtils {
         try {
             val sample = PApplet.loadStrings(url.openStream())
             val stringBuilder = StringBuilder()
-            for (sam in sample) {
+            for (sam in sample!!) {
                 stringBuilder.append(sam).append("\n")
             }
             return stringBuilder.toString()
