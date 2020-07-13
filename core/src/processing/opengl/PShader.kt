@@ -152,7 +152,7 @@ open class PShader : PConstants {
 
     constructor(parent: PApplet?) : this() {
         this.parent = parent
-        primaryPG = parent?.g as PGraphicsOpenGL?
+        primaryPG = parent?.graphics as PGraphicsOpenGL?
         pgl = primaryPG!!.pgl
         context = pgl!!.createEmptyContext()
     }
@@ -167,7 +167,7 @@ open class PShader : PConstants {
      */
     constructor(parent: PApplet?, vertFilename: String?, fragFilename: String?) {
         this.parent = parent
-        primaryPG = parent?.g as PGraphicsOpenGL?
+        primaryPG = parent?.graphics as PGraphicsOpenGL?
         pgl = primaryPG!!.pgl
         vertexURL = null
         fragmentURL = null
@@ -201,7 +201,7 @@ open class PShader : PConstants {
      */
     constructor(parent: PApplet?, vertURL: URL?, fragURL: URL?) {
         this.parent = parent
-        primaryPG = parent?.g as PGraphicsOpenGL?
+        primaryPG = parent?.graphics as PGraphicsOpenGL?
         pgl = primaryPG!!.pgl
         vertexURL = vertURL
         fragmentURL = fragURL
@@ -231,7 +231,7 @@ open class PShader : PConstants {
 
     constructor(parent: PApplet?, vertSource: Array<String>?, fragSource: Array<String>?) {
         this.parent = parent
-        primaryPG = parent?.g as PGraphicsOpenGL?
+        primaryPG = parent?.graphics as PGraphicsOpenGL?
         pgl = primaryPG!!.pgl
         vertexURL = null
         fragmentURL = null

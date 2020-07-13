@@ -1811,7 +1811,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (primaryGraphics) {
       return this;
     } else {
-      return (PGraphicsOpenGL)parent.g;
+      return (PGraphicsOpenGL)parent.graphics;
     }
   }
 
@@ -1831,7 +1831,7 @@ public class PGraphicsOpenGL extends PGraphics {
     if (primaryGraphics) {
       return pgl;
     } else {
-      return ((PGraphicsOpenGL)parent.g).pgl;
+      return ((PGraphicsOpenGL)parent.graphics).pgl;
     }
   }
 
