@@ -57,9 +57,9 @@ open class VRCamera(parent: PApplet) {
 
     // constructor or initializer block
     init {
-        if (parent.g is VRGraphics) {
+        if (parent.graphics is VRGraphics) {
             this.parent = parent
-            graphics = parent.g as VRGraphics
+            graphics = parent.graphics as VRGraphics
         } else {
             System.err.println("The VR camera can only be created when the VR renderer is in use")
         }

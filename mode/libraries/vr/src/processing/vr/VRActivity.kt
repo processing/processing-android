@@ -138,7 +138,7 @@ open class VRActivity : GvrActivity, AppComponent {
                                             permissions: Array<String>,
                                             grantResults: IntArray) {
         if (sketch != null) {
-            sketch!!.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            sketch!!.onRequestPermissionsResult(requestCode, permissions as Array<String?>?, grantResults)
         }
     }
 
@@ -165,7 +165,7 @@ open class VRActivity : GvrActivity, AppComponent {
 
         @JvmStatic
         fun getRenderer(p: PApplet): VRGraphics {
-            return p.g as VRGraphics
+            return p.graphics as VRGraphics
         }
     }
 }
