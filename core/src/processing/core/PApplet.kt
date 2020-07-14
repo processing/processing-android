@@ -8780,8 +8780,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
         graphics!!.blend(src!!, sx, sy, sw, sh, dx, dy, dw, dh, mode)
     }
 
-    companion object {D
-
+    companion object {
         const val DEBUG = false
 
         //  static final public boolean DEBUG = true;
@@ -11944,8 +11943,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //        }
         //      });
         //  }
-
-
         /**
          * GIF image of the Processing logo.
          */
