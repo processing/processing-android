@@ -32,6 +32,9 @@ import processing.android.AppComponent
 import processing.android.ServiceEngine
 import processing.core.PApplet
 
+/**
+ * @author Aditya Rana
+ */
 open class VRActivity : GvrActivity, AppComponent {
 
     private var metrics: DisplayMetrics? = null

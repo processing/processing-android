@@ -45,12 +45,18 @@ import java.io.File
 import java.io.InputStream
 import javax.microedition.khronos.egl.EGLConfig
 
+/**
+ * @author Aditya Rana
+ */
 open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: SurfaceHolder?, vr: Boolean) : PSurfaceGLES() {
     protected var vrView: SurfaceViewVR
     protected var pvr: VRGraphics
+
     protected var vrActivity: GvrActivity
     protected var VRrenderer: AndroidVRStereoRenderer? = null
+
     private var needCalculate = false
+
     override fun getContext(): Context {
         return vrActivity
     }
@@ -84,6 +90,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: Surf
         // This does the actual full screen work
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
         window.setContentView(vrView)
     }
 
@@ -178,7 +185,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: Surf
                 setMultisampling(samples)
             } else {
                 // use default EGL config chooser for now
-//        setEGLConfigChooser(8, 8, 8, 8, 16, 8);
+ //            setEGLConfigChooser(8, 8, 8, 8, 16, 8);
             }
 
             // The renderer can be set only once.
@@ -187,7 +194,10 @@ open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: Surf
     }
 
     ///////////////////////////////////////////////////////////
+
     // Android specific classes (Renderer, ConfigChooser)
+
+
     val vRStereoRenderer: AndroidVRStereoRenderer
         get() {
             VRrenderer = AndroidVRStereoRenderer()
@@ -257,6 +267,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: Surf
         vrActivity = component as GvrActivity
         appactivity = vrActivity
         pvr = graphics as VRGraphics
+
         vrView = SurfaceViewVR(vrActivity)
 
         // Enables/disables the transition view used to prompt the user to place
@@ -266,6 +277,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: Surf
         // Enables Cardboard-trigger feedback with Daydream headsets. This is a simple way of supporting
         // Daydream controller input for basic interactions using the existing Cardboard trigger API.
         vrView.enableCardboardTriggerEmulation()
+
         vrView.stereoModeEnabled = vr
 
         if (vr) {
@@ -280,6 +292,7 @@ open class VRSurface(graphics: PGraphics, component: AppComponent?, holder: Surf
             AndroidCompat.setSustainedPerformanceMode(vrActivity, true)
         }
         vrActivity.gvrView = vrView
+
         msurfaceView = null
 
         // The glview is ready right after creation, does not need to wait for a

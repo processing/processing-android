@@ -36,7 +36,7 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 /**
- * @author Adityq Rana
+ * @author Aditya Rana
  */
 open class BackgroundRenderer(context: Context?) {
 

@@ -25,6 +25,9 @@ package processing.vr
 import processing.core.PApplet
 import processing.core.PMatrix3D
 
+/**
+ * @author Aditya Rana
+ */
 open class VRCamera(parent: PApplet) {
     private var parent: PApplet? = null
     private var graphics: VRGraphics? = null

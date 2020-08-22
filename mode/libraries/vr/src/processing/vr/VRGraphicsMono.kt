@@ -26,6 +26,9 @@ import android.view.SurfaceHolder
 import processing.android.AppComponent
 import processing.core.PSurface
 
+/**
+ * @author Aditya Rana
+ */
 open class VRGraphicsMono : VRGraphics() {
     override fun createSurface(component: AppComponent?, holder: SurfaceHolder?, reset: Boolean): PSurface? {
         // ignore

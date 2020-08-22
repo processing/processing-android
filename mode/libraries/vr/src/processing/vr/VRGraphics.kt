@@ -35,7 +35,11 @@ import processing.opengl.PGLES
 import processing.opengl.PGraphics3D
 import processing.opengl.PGraphicsOpenGL
 
+/**
+ * @author Aditya Rana
+ */
 open class VRGraphics : PGraphics3D() {
+
     protected var isInitialized = false
 
     var headTransform: HeadTransform? = null
@@ -45,6 +49,7 @@ open class VRGraphics : PGraphics3D() {
     private var forwardVector: FloatArray = FloatArray(3)
     private var rightVector: FloatArray = FloatArray(3)
     private var upVector: FloatArray = FloatArray(3)
+
     private var eyeViewport: Viewport? = null
     private var eyeView: FloatArray = FloatArray(16)
     private var eyePerspective: FloatArray = FloatArray(16)
@@ -118,20 +123,25 @@ open class VRGraphics : PGraphics3D() {
 
     fun headTransform(ht: HeadTransform?) {
         initVR()
+
         headTransform = ht
 
         // Forward, right, and up vectors are given in the original system with Y
         // pointing up. Need to invert y coords in the non-gl case:
         val yf = if (cameraUp) (+1).toFloat() else -1.toFloat()
+
         headTransform!!.getForwardVector(forwardVector, 0)
         headTransform!!.getRightVector(rightVector, 0)
         headTransform!!.getUpVector(upVector, 0)
+
         forwardX = forwardVector[0]
         forwardY = yf * forwardVector[1]
         forwardZ = forwardVector[2]
+
         rightX = rightVector[0]
         rightY = yf * rightVector[1]
         rightZ = rightVector[2]
+
         upX = upVector[0]
         upY = yf * upVector[1]
         upZ = upVector[2]
