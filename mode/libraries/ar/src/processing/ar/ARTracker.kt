@@ -26,7 +26,10 @@ import processing.core.PApplet
 import java.lang.reflect.Method
 import java.util.*
 
-class ARTracker(private var p: PApplet) {
+/**
+ * @author Aditya Rana
+ */
+open class ARTracker(private var p: PApplet) {
 
     private var g: ARGraphics? = p.graphics!! as ARGraphics
     private val trackables = HashMap<String, ARTrackable>()

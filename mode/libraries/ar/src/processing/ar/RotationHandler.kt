@@ -29,7 +29,11 @@ import android.view.Display
 import android.view.WindowManager
 import com.google.ar.core.Session
 
-class RotationHandler(private val context: Context?) : DisplayListener {
+/**
+ * Rotational Handler class for AR objects
+ * @author Aditya Rana
+ */
+open class RotationHandler(private val context: Context?) : DisplayListener {
 
     private var viewportChanged = false
     private var viewportWidth = 0

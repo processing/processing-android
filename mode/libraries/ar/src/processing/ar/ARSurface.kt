@@ -46,7 +46,10 @@ import java.io.InputStream
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder: SurfaceHolder?) : PSurfaceGLES(graphics, appComponent, surfaceHolder) {
+/**
+ * @author Aditya Rana
+ */
+open class ARSurface(graphics: PGraphics?, appComponent: AppComponent?, surfaceHolder: SurfaceHolder?) : PSurfaceGLES(graphics, appComponent, surfaceHolder) {
     // Made these public so they can be accessed from the sketch
     @JvmField
     var session: Session? = null

@@ -35,23 +35,32 @@ import java.lang.RuntimeException
 import java.lang.StringBuilder
 import java.net.URL
 
+/**
+ * Utils class for AR Shaders
+ * @author Aditya Rana
+ */
 object ShaderUtils {
     @JvmStatic
     fun loadGLShader(tag: String?, context: Context?, type: Int, resUrl: URL): Int {
         val code = readRawTextFile(resUrl)
         var shader = GLES20.glCreateShader(type)
+
         GLES20.glShaderSource(shader, code)
         GLES20.glCompileShader(shader)
+
         val compileStatus = IntArray(1)
         GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
+
         if (compileStatus[0] == 0) {
             PGraphics.showWarning("Error compiling shader: " + GLES20.glGetShaderInfoLog(shader))
             GLES20.glDeleteShader(shader)
             shader = 0
         }
+
         if (shader == 0) {
             throw RuntimeException("Error creating shader.")
         }
+
         return shader
     }
 

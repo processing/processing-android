@@ -24,7 +24,11 @@ package processing.ar
 
 import processing.core.PMatrix3D
 
-class ARAnchor {
+/**
+ * Anchor class for AR objects
+ * @author Aditya Rana
+ */
+open class ARAnchor {
     var g: ARGraphics? = null
     var isDisposed = false
         private set

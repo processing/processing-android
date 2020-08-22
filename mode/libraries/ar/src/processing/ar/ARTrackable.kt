@@ -25,7 +25,11 @@ package processing.ar
 import com.google.ar.core.HitResult
 import processing.core.PMatrix3D
 
-class ARTrackable(@JvmField var g: ARGraphics?, @JvmField private val id: Int?) {
+/**
+ * Trackable class for AR objects and Anchors
+ * @author Aditya Rana
+ */
+open class ARTrackable(@JvmField var g: ARGraphics?, @JvmField private val id: Int?) {
 
     @JvmField
     var hit: HitResult? = null

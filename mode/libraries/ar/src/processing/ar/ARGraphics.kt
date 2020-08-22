@@ -39,7 +39,10 @@ import processing.opengl.*
 import java.nio.FloatBuffer
 import java.util.*
 
-class ARGraphics : PGraphics3D() {
+/**
+ * @author Aditya Rana
+ */
+open class ARGraphics : PGraphics3D() {
     // Convenience reference to the AR surface. It is the same object one gets from PApplet.getSurface().
     private var surfar: ARSurface? = null
     private var backgroundRenderer: BackgroundRenderer? = null
