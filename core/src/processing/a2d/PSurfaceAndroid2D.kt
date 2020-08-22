@@ -37,6 +37,9 @@ import processing.core.PApplet
 import processing.core.PGraphics
 import processing.core.PSurfaceNone
 
+/**
+ * @author Aditya Rana
+ */
 open class PSurfaceAndroid2D : PSurfaceNone {
 
     constructor() {
@@ -66,6 +69,8 @@ open class PSurfaceAndroid2D : PSurfaceNone {
     ///////////////////////////////////////////////////////////
 
     // SurfaceView
+
+
     inner class SurfaceViewAndroid2D(context: Context?, private var holder: SurfaceHolder?) : SurfaceView(context), SurfaceHolder.Callback {
         override fun getHolder(): SurfaceHolder? {
             return if (holder == null) {

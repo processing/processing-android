@@ -30,6 +30,9 @@ import processing.core.PGraphics
 import processing.core.PShapeSVG
 import processing.data.XML
 
+/**
+ * @author Aditya Rana
+ */
 open class PShapeAndroid2D : PShapeSVG {
     protected var strokeGradientPaint: Shader? = null
     protected var fillGradientPaint: Shader? = null
