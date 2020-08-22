@@ -166,6 +166,7 @@ allprojects {
 tasks.clean {
     doFirst {
         delete("dist")
+        delete("Docs")
     }
 }
 

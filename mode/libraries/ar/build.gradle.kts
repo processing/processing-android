@@ -68,7 +68,7 @@ sourceSets {
 }
 
 val dokka by tasks.getting(DokkaTask::class) {
-    outputDirectory = "$buildDir/dokka"
+    outputDirectory = "$rootDir/Docs/ar"
     outputFormat = "html"
 }
 
