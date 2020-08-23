@@ -7,6 +7,7 @@ import java.util.*
 import processing.core.PApplet
 
 /**
+ * @author Aditya Rana
  * Helper class for a list of floats. Lists are designed to have some of the
  * features of ArrayLists, but to maintain the simplicity and efficiency of
  * working with arrays.
@@ -19,7 +20,7 @@ import processing.core.PApplet
  *
  * @see StringList
  */
-class DoubleList : Iterable<Double?> {
+open class DoubleList : Iterable<Double?> {
     var count = 0
     var data: DoubleArray
 
@@ -336,6 +337,7 @@ class DoubleList : Iterable<Double?> {
     //      count++;
     //    }
     //  }
+
     fun insert(index: Int, value: Double) {
         insert(index, doubleArrayOf(value))
     }

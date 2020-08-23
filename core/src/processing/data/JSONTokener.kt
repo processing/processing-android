@@ -1,14 +1,3 @@
-package processing.data
-
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.Reader
-import java.io.StringReader
-
-import java.lang.RuntimeException
-import java.lang.StringBuilder
 
 /*
 Copyright (c) 2002 JSON.org
@@ -34,14 +23,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+package processing.data
+
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.Reader
+import java.io.StringReader
+
+import java.lang.RuntimeException
+import java.lang.StringBuilder
+
+
 /**
+ * @author Aditya Rana
  * A JSONTokener takes a source string and extracts characters and tokens from
  * it. It is used by the JSONObject and JSONArray constructors to parse
  * JSON source strings.
  * @author JSON.org
  * @version 2012-02-16
  */
-class JSONTokener(reader: Reader) {
+open class JSONTokener(reader: Reader) {
     private var character: Long
     private var eof: Boolean
     private var index: Long

@@ -3,6 +3,7 @@ package processing.data
 import java.io.PrintWriter
 
 /**
+ * @author Aditya Rana
  * @webref data:composite
  * @see Table
  *

@@ -10,6 +10,7 @@ import processing.core.PApplet
 // trim, join for String versions
 
 /**
+ * @author Aditya Rana
  * Helper class for a list of ints. Lists are designed to have some of the
  * features of ArrayLists, but to maintain the simplicity and efficiency of
  * working with arrays.
@@ -286,6 +287,7 @@ open class IntList : Iterable<Int?> {
     //      count++;
     //    }
     //  }
+
     fun insert(index: Int, value: Int) {
         insert(index, intArrayOf(value))
     }
@@ -356,6 +358,7 @@ open class IntList : Iterable<Int?> {
     //      data[index] = value;
     //      count++;
     //    }
+
     /** Return the first index of a particular value.  */
     fun index(what: Int): Int {
         /*
@@ -374,6 +377,7 @@ open class IntList : Iterable<Int?> {
         }
         return -1
     }
+
     // !!! TODO this is not yet correct, because it's not being reset when
     // the rest of the entries are changed
     //  protected void cacheIndices() {
@@ -382,6 +386,7 @@ open class IntList : Iterable<Int?> {
     //      indexCache.put(data[i], i);
     //    }
     //  }
+
     /**
      * @webref intlist:method
      * @brief Check if a number is a part of the list
@@ -580,6 +585,7 @@ open class IntList : Iterable<Int?> {
             }
         }.run()
     }
+
     // use insert()
     //  public void splice(int index, int value) {
     //  }
@@ -594,6 +600,7 @@ open class IntList : Iterable<Int?> {
     //    }
     //    count = num;
     //  }
+
     /**
      * @webref intlist:method
      * @brief Reverse the order of the list elements
@@ -697,6 +704,7 @@ open class IntList : Iterable<Int?> {
         System.arraycopy(data, 0, array, 0, count)
         return array
     }
+
     //  public int[] toIntArray() {
     //    int[] outgoing = new int[count];
     //    for (int i = 0; i < count; i++) {
@@ -730,6 +738,8 @@ open class IntList : Iterable<Int?> {
     //    }
     //    return outgoing;
     //  }
+
+
     /**
      * Returns a normalized version of this array. Called getPercent() for
      * consistency with the Dict classes. It's a getter method because it needs
@@ -761,6 +771,8 @@ open class IntList : Iterable<Int?> {
     //    }
     //    return outgoing;
     //  }
+
+
     fun getSubset(start: Int): IntList {
         return getSubset(start, count - start)
     }

@@ -1,20 +1,5 @@
-package processing.data
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
-import processing.core.PApplet
-
-import java.io.*
-import java.lang.reflect.Modifier
-import java.util.*
-
-// This code has been modified heavily to more closely match the rest of the
-// Processing API. In the spirit of the rest of the project, where we try to
-// keep the API as simple as possible, we have erred on the side of being
-// conservative in choosing which functions to include, since we haven't yet
-// decided what's truly necessary. Power users looking for a full-featured
-// version can use the original version from json.org, or one of the many
-// other APIs that are available. As with all Processing API, if there's a
-// function that should be added, please let use know, and have others vote:
-// http://code.google.com/p/processing/issues/list
 /*
 Copyright (c) 2002 JSON.org
 
@@ -37,7 +22,29 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */ /**
+ */
+
+package processing.data
+
+import processing.core.PApplet
+
+import java.io.*
+import java.lang.reflect.Modifier
+import java.util.*
+
+// This code has been modified heavily to more closely match the rest of the
+// Processing API. In the spirit of the rest of the project, where we try to
+// keep the API as simple as possible, we have erred on the side of being
+// conservative in choosing which functions to include, since we haven't yet
+// decided what's truly necessary. Power users looking for a full-featured
+// version can use the original version from json.org, or one of the many
+// other APIs that are available. As with all Processing API, if there's a
+// function that should be added, please let use know, and have others vote:
+// http://code.google.com/p/processing/issues/list
+
+
+/**
+ * @author Aditya Rana
  * A JSONObject is an unordered collection of name/value pairs. Its external
  * form is a string wrapped in curly braces with colons between the names and
  * values, and commas between the values and names. The internal form is an
@@ -102,7 +109,6 @@ SOFTWARE.
  * @see PApplet.saveJSONArray
  */
 open class JSONObject {
-    // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     /**
      * JSONObject.NULL is equivalent to the value that JavaScript calls null,
@@ -608,6 +614,7 @@ open class JSONObject {
     //    }
     //    return names;
     //  }
+
     /**
      * Determine if the JSONObject contains a specific key.
      * @param key   A key string.
@@ -934,6 +941,7 @@ open class JSONObject {
     fun setJSONArray(key: String?, value: JSONArray?): JSONObject? {
         return put(key, value)
     }
+
     //  /**
     //   * Put a key/value pair in the JSONObject, where the value will be a
     //   * JSONArray which is produced from a Collection.
@@ -959,6 +967,7 @@ open class JSONObject {
     //    this.put(key, new JSONObject(value));
     //    return this;
     //  }
+
     /**
      * Put a key/value pair in the JSONObject. If the value is null,
      * then the key will be removed from the JSONObject if it is present.
@@ -1045,6 +1054,7 @@ open class JSONObject {
     //  protected boolean save(OutputStream output) {
     //    return save(PApplet.createWriter(output));
     //  }
+
     fun save(file: File?, options: String?): Boolean {
         val writer = PApplet.createWriter(file)
         val success = write(writer, options)
@@ -1160,7 +1170,6 @@ open class JSONObject {
             throw RuntimeException(exception)
         }
     }
-    //  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     //
     //

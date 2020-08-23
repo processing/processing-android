@@ -1,25 +1,5 @@
-package processing.data
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 
-import processing.core.PApplet
-
-import processing.data.JSONObject.Companion.indent
-import processing.data.JSONObject.Companion.testValidity
-import processing.data.JSONObject.Companion.valueToString
-import processing.data.JSONObject.Companion.wrap
-import processing.data.JSONObject.Companion.writeValue
-
-import java.io.*
-import java.util.*
-
-// This code has been modified heavily to more closely match the rest of the
-// Processing API. In the spirit of the rest of the project, where we try to
-// keep the API as simple as possible, we have erred on the side of being
-// conservative in choosing which functions to include, since we haven't yet
-// decided what's truly necessary. Power users looking for a full-featured
-// version can use the original version from json.org, or one of the many
-// other APIs that are available. As with all Processing API, if there's a
-// function that should be added, please let use know, and have others vote:
-// http://code.google.com/p/processing/issues/list
 /*
 Copyright (c) 2002 JSON.org
 
@@ -42,7 +22,33 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */ /**
+ */
+
+package processing.data
+
+import processing.core.PApplet
+
+import processing.data.JSONObject.Companion.indent
+import processing.data.JSONObject.Companion.testValidity
+import processing.data.JSONObject.Companion.valueToString
+import processing.data.JSONObject.Companion.wrap
+import processing.data.JSONObject.Companion.writeValue
+
+import java.io.*
+import java.util.*
+
+// This code has been modified heavily to more closely match the rest of the
+// Processing API. In the spirit of the rest of the project, where we try to
+// keep the API as simple as possible, we have erred on the side of being
+// conservative in choosing which functions to include, since we haven't yet
+// decided what's truly necessary. Power users looking for a full-featured
+// version can use the original version from json.org, or one of the many
+// other APIs that are available. As with all Processing API, if there's a
+// function that should be added, please let use know, and have others vote:
+// http://code.google.com/p/processing/issues/list
+
+ /**
+  * @author Aditya Rana
  * A JSONArray is an ordered sequence of values. Its external text form is a
  * string wrapped in square brackets with commas separating the values. The
  * internal form is an object having `get` and `opt`
@@ -195,6 +201,7 @@ open class JSONArray {
     //      }
     //    }
     //  }
+
     // TODO not decided whether we keep this one, but used heavily by JSONObject
 
     /**
@@ -883,6 +890,7 @@ open class JSONArray {
     fun setBoolean(index: Int, value: Boolean): JSONArray {
         return set(index, if (value) java.lang.Boolean.TRUE else java.lang.Boolean.FALSE)
     }
+
     //  /**
     //   * Put a value in the JSONArray, where the value will be a
     //   * JSONObject that is produced from a Map.
@@ -896,6 +904,7 @@ open class JSONArray {
     //    this.set(index, new JSONObject(value));
     //    return this;
     //  }
+
     /**
      * @webref jsonarray:method
      * @brief Sets the JSONArray value associated with an index value

@@ -8,6 +8,7 @@ import java.io.PrintWriter
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * A simple class to use a String as a lookup for an int value.
  *
  * @webref data:composite

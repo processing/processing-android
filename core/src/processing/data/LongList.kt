@@ -10,6 +10,7 @@ import processing.core.PApplet
 // splice, slice, subset, concat, reverse
 // trim, join for String versions
 /**
+ * @author Aditya Rana
  * Helper class for a list of ints. Lists are designed to have some of the
  * features of ArrayLists, but to maintain the simplicity and efficiency of
  * working with arrays.
@@ -377,7 +378,9 @@ open class LongList : Iterable<Long?> {
         }
         return -1
     }
+
     // !!! TODO this is not yet correct, because it's not being reset when
+
     // the rest of the entries are changed
     //  protected void cacheIndices() {
     //    indexCache = new HashMap<Integer, Integer>();
@@ -385,6 +388,7 @@ open class LongList : Iterable<Long?> {
     //      indexCache.put(data[i], i);
     //    }
     //  }
+
     /**
      * @webref intlist:method
      * @brief Check if a number is a part of the list
@@ -584,6 +588,7 @@ open class LongList : Iterable<Long?> {
             }
         }.run()
     }
+
     // use insert()
     //  public void splice(int index, int value) {
     //  }
@@ -598,6 +603,7 @@ open class LongList : Iterable<Long?> {
     //    }
     //    count = num;
     //  }
+
     /**
      * @webref intlist:method
      * @brief Reverse the order of the list elements
@@ -680,6 +686,7 @@ open class LongList : Iterable<Long?> {
             }
         }
     }
+
     /**
      * Copy values into the specified array. If the specified array is null or
      * not the same size, a new array will be allocated.
@@ -767,6 +774,7 @@ open class LongList : Iterable<Long?> {
     //    }
     //    return outgoing;
     //  }
+
     fun getSubset(start: Int): LongList {
         return getSubset(start, count - start)
     }

@@ -8,6 +8,7 @@ import java.io.PrintWriter
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * A simple table class to use a String as a lookup for another String value.
  *
  * @webref data:composite
@@ -15,7 +16,7 @@ import java.util.*
  *
  * @see FloatDict
  */
-class StringDict {
+open class StringDict {
     /** Number of elements in the table  */
     protected var count = 0
     protected var keys: Array<String?>
@@ -159,6 +160,7 @@ class StringDict {
     }
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     inner class Entry internal constructor(var key: String?, var value: String?)
 
     fun entries(): Iterable<Entry?> {
@@ -189,6 +191,7 @@ class StringDict {
     }
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     fun key(index: Int): String {
         return keys[index]!!
     }

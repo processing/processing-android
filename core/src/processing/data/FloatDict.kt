@@ -7,6 +7,7 @@ import java.io.PrintWriter
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * A simple table class to use a String as a lookup for an float value.
  *
  * @webref data:composite

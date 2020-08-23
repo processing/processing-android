@@ -8,6 +8,7 @@ import processing.core.PApplet
 
 
 /**
+ * @author Aditya Rana
  * Helper class for a list of Strings. Lists are designed to have some of the
  * features of ArrayLists, but to maintain the simplicity and efficiency of
  * working with arrays.
@@ -420,6 +421,7 @@ open class StringList : Iterable<String?> {
     }
 
     // !!! TODO this is not yet correct, because it's not being reset when
+
     // the rest of the entries are changed
     //  protected void cacheIndices() {
     //    indexCache = new HashMap<Integer, Integer>();

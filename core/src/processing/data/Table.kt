@@ -47,6 +47,7 @@ import java.util.zip.ZipOutputStream
 import javax.xml.parsers.ParserConfigurationException
 
 /**
+ * @author Aditya Rana
  *
  * Generic class for handling tabular data, typically from a CSV, TSV, or
  * other sort of spreadsheet file.
@@ -160,8 +161,8 @@ open class Table {
             //addRow(row);
 //      try {
             setRow(row++, incoming)
-            //      } catch (ArrayIndexOutOfBoundsException aioobe) {
-//        for (int i = 0; i < incoming.getColumnCount(); i++) {
+            //      } catch (aioobe: ArrayIndexOutOfBoundsException) {
+//        for (var i = 0; i < incoming.getColumnCount(); i++) {
 //          System.out.format("[%d] %s%n", i, incoming.getString(i));
 //        }
 //        throw aioobe;
@@ -205,8 +206,8 @@ open class Table {
                     }
                 }
                 row++
-                //        String[] row = new String[columnCount];
-//        for (int col = 0; col < columnCount; col++) {
+                //        var row = String[columnCount];
+//        for (var col = 0; col < columnCount; col++) {
 //          row[col] = rs.get(col + 1);
 //        }
 //        addRow(row);
@@ -1558,6 +1559,7 @@ open class Table {
         }
         input.close()
     }
+
     /**
      * @param type the type to be used for the new column: INT, LONG, FLOAT, DOUBLE, or STRING
      */
@@ -2302,7 +2304,9 @@ open class Table {
             else -> throw IllegalArgumentException("That's not a valid column type.")
         }
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * @webref table:method
      * @brief Gets a row from a table
@@ -2535,6 +2539,7 @@ open class Table {
             rp = RowPointer(table, -1)
         }
     }
+
     /*
   static public Iterator<TableRow> createIterator(final ResultSet rs) {
     return new Iterator<TableRow>() {
@@ -2841,7 +2846,9 @@ open class Table {
         }
         return outgoing
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * Get a float value from the specified row and column. If the value is null
      * or not parseable as a float, the "missing" value is returned. By default,
@@ -3257,7 +3264,9 @@ open class Table {
     fun findRowIndices(value: String?, columnName: String?): IntArray {
         return findRowIndices(value, getColumnIndex(columnName))
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * @webref table:method
      * @brief Finds a row that contains the given value
@@ -3322,7 +3331,9 @@ open class Table {
     fun findRowIterator(value: String?, columnName: String?): Iterator<TableRow> {
         return findRowIterator(value, getColumnIndex(columnName))
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * Return the row that contains the first String that matches.
      * @param regexp the String to match
@@ -3466,7 +3477,9 @@ open class Table {
     fun matchRowIterator(value: String?, columnName: String?): Iterator<TableRow> {
         return matchRowIterator(value, getColumnIndex(columnName))
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * Replace a String with another. Set empty entries null by using
      * replace("", null) or use replace(null, "") to go the other direction.
@@ -3534,7 +3547,9 @@ open class Table {
     fun replaceAll(regex: String, replacement: String?, columnName: String?) {
         replaceAll(regex, replacement, getColumnIndex(columnName))
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * Remove any of the specified characters from the entire table.
      *
@@ -3585,7 +3600,9 @@ open class Table {
     fun removeTokens(tokens: String, columnName: String?) {
         removeTokens(tokens, getColumnIndex(columnName))
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /**
      * @webref table:method
      * @brief Trims whitespace from values
@@ -3629,6 +3646,7 @@ open class Table {
         }
         return true
     }
+
     /*
   protected boolean isEmptyColumn(int column) {
     String[] contents = getStringColumn(column);
@@ -3651,6 +3669,7 @@ open class Table {
     return true;
   }
   */
+
     /**
      * @param column ID number of the column to trim
      */
@@ -3671,7 +3690,9 @@ open class Table {
     fun trim(columnName: String?) {
         trim(getColumnIndex(columnName))
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     /** Make sure this is a legit column, and if not, expand the table.  */
     protected fun ensureColumn(col: Int) {
         if (col >= columns.size) {
@@ -3785,6 +3806,7 @@ open class Table {
             }
         }
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     //  class HashMapSucks extends HashMap<String,Integer> {
@@ -4327,6 +4349,7 @@ open class Table {
             }
         }
     }
+
     /*
   private void convertRowCol(DataOutputStream output, int row, int col, String piece) {
     switch (columnTypes[col]) {
@@ -4363,6 +4386,7 @@ open class Table {
     }
   }
   */
+
     /** Make a copy of the current table  */
     fun copy(): Table {
         return Table(rows())

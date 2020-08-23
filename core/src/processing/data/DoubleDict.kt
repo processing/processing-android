@@ -8,6 +8,7 @@ import java.util.*
 import processing.core.PApplet
 
 /**
+ * @author Aditya Rana
  * A simple table class to use a String as a lookup for an double value.
  *
  * @webref data:composite

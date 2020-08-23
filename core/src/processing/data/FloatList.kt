@@ -6,6 +6,7 @@ import java.io.PrintWriter
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * Helper class for a list of floats. Lists are designed to have some of the
  * features of ArrayLists, but to maintain the simplicity and efficiency of
  * working with arrays.
@@ -18,7 +19,7 @@ import java.util.*
  *
  * @see StringList
  */
-class FloatList : Iterable<Float?> {
+open class FloatList : Iterable<Float?> {
     var count = 0
     var data: FloatArray
 
@@ -401,6 +402,7 @@ class FloatList : Iterable<Float?> {
     //      data[index] = value;
     //      count++;
     //    }
+
     /** Return the first index of a particular value.  */
     fun index(what: Float): Int {
         /*

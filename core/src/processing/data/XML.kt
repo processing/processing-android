@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
   Part of the Processing project - http://processing.org
 
   Copyright (c) 2012 The Processing Foundation
@@ -18,6 +20,7 @@
   Free Software Foundation, Inc., 59 Temple Place, Suite 330,
   Boston, MA  02111-1307  USA
 */
+
 package processing.data
 
 import org.w3c.dom.Element
@@ -39,6 +42,7 @@ import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
 
 /**
+ * @author Aditya Rana
  * This is the base class used for the Processing XML library,
  * representing a single node of an XML tree.
  *
@@ -75,6 +79,7 @@ open class XML : Serializable {
      *
      * @nowebref
      */
+
     //  /**
     //   * Begin parsing XML data passed in from a PApplet. This code
     //   * wraps exception handling, for more advanced exception handling,
@@ -87,6 +92,7 @@ open class XML : Serializable {
     //  public XML(PApplet parent, String filename) throws IOException, ParserConfigurationException, SAXException {
     //    this(parent.createReader(filename));
     //  }
+
     /**
      * Advanced users only; use loadXML() in PApplet. This is not a supported
      * function and is subject to change. It is available simply for users that
