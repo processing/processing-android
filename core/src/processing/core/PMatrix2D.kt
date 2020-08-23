@@ -24,6 +24,7 @@
 package processing.core
 
 /**
+ * @author Aditya Rana
  * 3x2 affine matrix implementation.
  */
 open class PMatrix2D : PMatrix {
@@ -275,7 +276,10 @@ open class PMatrix2D : PMatrix {
                           n30: Float, n31: Float, n32: Float, n33: Float) {
         throw IllegalArgumentException("Cannot use this version of preApply() on a PMatrix2D.")
     }
+
     //////////////////////////////////////////////////////////////
+
+
     /**
      * Multiply the x and y coordinates of a PVector against this matrix.
      */
@@ -356,6 +360,7 @@ open class PMatrix2D : PMatrix {
     }
 
     //////////////////////////////////////////////////////////////
+
     fun print() {
         var big = abs(max(PApplet.max(abs(m00), abs(m01), abs(m02)),
                 PApplet.max(abs(m10), abs(m11), abs(m12)))).toInt()
@@ -375,6 +380,7 @@ open class PMatrix2D : PMatrix {
     }
 
     //////////////////////////////////////////////////////////////
+
     // TODO these need to be added as regular API, but the naming and
     // implementation needs to be improved first. (e.g. actually keeping track
     // of whether the matrix is in fact identity internally.)
@@ -389,6 +395,7 @@ open class PMatrix2D : PMatrix {
                     m10 != 0f || m11 != 1f
 
     //////////////////////////////////////////////////////////////
+
     private fun max(a: Float, b: Float): Float {
         return if (a > b) a else b
     }

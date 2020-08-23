@@ -22,6 +22,9 @@
 
 package processing.core
 
+/**
+ * @author Aditya Rana
+ */
 open class PStyle : PConstants {
     @JvmField
     var imageMode = 0

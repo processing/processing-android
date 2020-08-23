@@ -32,6 +32,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
+ * @author Aditya Rana
  * ( begin auto-generated from PVector.xml )
  *
  * A class to describe a two or three dimensional vector. This datatype

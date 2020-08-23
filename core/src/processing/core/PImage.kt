@@ -33,6 +33,7 @@ import java.util.*
 import kotlin.experimental.and
 
 /**
+ * @author Aditya Rana
  * Storage class for pixel data. This is the base class for most image and
  * pixel information, such as PGraphics and the video library classes.
  * <P>

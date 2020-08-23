@@ -24,9 +24,10 @@
 package processing.core
 
 /**
+ * @author Aditya Rana
  * 4x4 matrix implementation.
  */
-class PMatrix3D : PMatrix /*, PConstants*/ {
+open class PMatrix3D : PMatrix /*, PConstants*/ {
 
     @JvmField
     var m00 = 0f

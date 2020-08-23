@@ -30,6 +30,7 @@ import java.util.*
 import kotlin.experimental.and
 
 /**
+ * @author Aditya Rana
  * Grayscale bitmap font class used by Processing.
  * <P>
  * Awful (and by that, I mean awesome) ASCII (non-)art for how this works:

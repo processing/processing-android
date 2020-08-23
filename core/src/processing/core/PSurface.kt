@@ -41,7 +41,8 @@ import android.view.SurfaceView
 import android.view.SurfaceHolder
 
 
-/*
+/**
+ * @author Aditya Rana
  * Holds the surface view associated with the sketch, and the rendering thread
  * handling
  */

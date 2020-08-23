@@ -56,6 +56,7 @@ import java.io.FileNotFoundException
 import java.io.InputStream
 
 /**
+ * @author Aditya Rana
  * Base surface for Android2D and OpenGL renderers.
  * It includes the implementation of the rendering thread.
  */
@@ -328,7 +329,10 @@ open class PSurfaceNone : PSurface, PConstants {
     }
 
     ///////////////////////////////////////////////////////////
+
     // Thread handling
+
+
     fun createThread(): Thread {
         return AnimationThread()
     }

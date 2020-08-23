@@ -33,6 +33,7 @@ import java.util.*
 import java.util.concurrent.*
 
 /**
+ * @author Aditya Rana
  * Main graphics and rendering context, as well as the base API implementation.
  *
  * <h2>Subclassing and initializing PGraphics objects</h2>
@@ -757,6 +758,7 @@ open class PGraphics: PImage(), PConstants {
 //      float bo = PActivity.lerp(lerpColorHSB1[2], lerpColorHSB2[2], amt);
 //    return alfa | (Color.HSVtoRGB(ho, so, bo) & 0xFFFFFF);
 //    return Color.HSVToColor(alfa, new float[] { ho, so, bo });
+
                 lerpColorHSB3[0] = PApplet.lerp(lerpColorHSB1!![0], lerpColorHSB2[0], amt)
                 lerpColorHSB3[1] = PApplet.lerp(lerpColorHSB1!![1], lerpColorHSB2[1], amt)
                 lerpColorHSB3[2] = PApplet.lerp(lerpColorHSB1!![2], lerpColorHSB2[2], amt)
@@ -766,7 +768,10 @@ open class PGraphics: PImage(), PConstants {
         }
 
         //////////////////////////////////////////////////////////////
+
         // WARNINGS and EXCEPTIONS
+
+
         protected var warnings: HashMap<String, Any?>? = null
 
         /**
@@ -867,10 +872,13 @@ open class PGraphics: PImage(), PConstants {
         }
     }
     // ........................................................
-    /** The current font if a Java version of it is installed  */ //protected Font textFontNative;
-    /** Metrics for the current native Java font  */ //protected FontMetrics textFontNativeMetrics;
+    /** The current font if a Java version of it is installed  */
+    //protected Font textFontNative;
+    /** Metrics for the current native Java font  */
+    //protected FontMetrics textFontNativeMetrics;
     //  /** Last text position, because text often mixed on lines together */
     //  protected float textX, textY, textZ;
+
     /**
      * Internal buffer used by the text() functions
      * because the String object is slow
@@ -890,6 +898,7 @@ open class PGraphics: PImage(), PConstants {
     protected lateinit var textBreakStop: IntArray
 
     // ........................................................
+
     var edge = true
 
     /// Current mode for normals, one of AUTO, SHAPE, or VERTEX
@@ -956,11 +965,14 @@ open class PGraphics: PImage(), PConstants {
     var sphereDetailU = 0
 
     /// Number of V steps (aka "phi") along latitudinally top-to-bottom spanning pi
+
     @JvmField
     var sphereDetailV = 0
 
     // ........................................................
+
     // Variables used to save the surface contents before the activity is taken to the background.
+
     @JvmField
     protected var restoreFilename: String? = null
 
@@ -1056,7 +1068,10 @@ open class PGraphics: PImage(), PConstants {
         return null
     }
     //////////////////////////////////////////////////////////////
+
     // IMAGE METADATA FOR THIS RENDERER
+
+
     /**
      * Store data of some kind for the renderer that requires extra metadata of
      * some kind. Usually this is a renderer-specific representation of the
@@ -1089,7 +1104,10 @@ open class PGraphics: PImage(), PConstants {
         cacheMap!!.remove(image)
     }
     //////////////////////////////////////////////////////////////
+
     // FRAME
+
+
     /**
      * Handle grabbing the focus from the parent applet. Other renderers can
      * override this if handling needs to be different.
@@ -1102,11 +1120,13 @@ open class PGraphics: PImage(), PConstants {
     //  public boolean canDraw() {  // ignore
     //    return true;
     //  }
+
     /**
      * Try to draw, or put a draw request on the queue.
      */
     //  public void requestDraw() {  // ignore
     //  }
+
     /**
      * Prepares the PGraphics for drawing.
      *
@@ -1262,7 +1282,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // RENDERER STATE
+
+
     open fun clearState() {  // ignore
         // Nothing to do here, it depends on the renderer's implementation.
     }
@@ -1310,8 +1333,12 @@ open class PGraphics: PImage(), PConstants {
     protected open val isLooping: Boolean
         get() =// ignore
             parent!!.isLooping && (!requestNoLoop() || !requestedNoLoop)
+
     //////////////////////////////////////////////////////////////
+
     // HINTS
+
+
     /**
      * Enable a hint option.
      * <P>
@@ -1348,7 +1375,10 @@ open class PGraphics: PImage(), PConstants {
         }
     }
     //////////////////////////////////////////////////////////////
+
     // VERTEX SHAPES
+
+
     /**
      * Start a new shape of type POLYGON
      */
@@ -1723,7 +1753,10 @@ open class PGraphics: PImage(), PConstants {
     open fun endShape(mode: Int) {}
 
     //////////////////////////////////////////////////////////////
+
     // CLIPPING
+
+
     fun clip(a: Float, b: Float, c: Float, d: Float) {
         var a = a
         var b = b
@@ -1770,7 +1803,9 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // BLEND
+
     fun blendMode(mode: Int) {
         blendMode = mode
         blendModeImpl()
@@ -1783,7 +1818,9 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // SHAPE I/O
+
     open fun loadShape(filename: String?): PShape? {
         showMissingWarning("loadShape")
         return null
@@ -1794,8 +1831,12 @@ open class PGraphics: PImage(), PConstants {
         return null
     }
     // POINTS, LINES, TRIANGLES, TRIANGLE_FAN, TRIANGLE_STRIP, QUADS, QUAD_STRIP
+
     //////////////////////////////////////////////////////////////
+
     // SHAPE CREATION
+
+
     /**
      * @webref shape
      * @see PShape
@@ -1869,7 +1910,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // SHADERS
+
+
     open fun loadShader(fragFilename: String?): PShader? {
         showMissingWarning("loadShader")
         return null
@@ -1906,7 +1950,9 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // CURVE/BEZIER VERTEX HANDLING
+
     protected fun bezierVertexCheck(shape: Int = this.shape, vertexCount: Int = this.vertexCount) {
         if (shape == 0 || shape != PConstants.POLYGON) {
             throw RuntimeException("beginShape() or beginShape(POLYGON) " +
@@ -2193,7 +2239,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // RECT
+
+
     fun rectMode(mode: Int) {
         rectMode = mode
     }
@@ -2341,7 +2390,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // ELLIPSE AND ARC
+
+
     fun ellipseMode(mode: Int) {
         ellipseMode = mode
     }
@@ -2443,7 +2495,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // BOX
+
+
     fun box(size: Float) {
         box(size, size, size)
     }
@@ -2504,7 +2559,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // SPHERE
+
+
     fun sphereDetail(res: Int) {
         sphereDetail(res, res)
     }
@@ -2642,8 +2700,12 @@ open class PGraphics: PImage(), PConstants {
         endShape()
         edge(true)
     }
+
     //////////////////////////////////////////////////////////////
+
     // BEZIER
+
+
     /**
      * Evalutes quadratic bezier at point t for points a, b, c, d.
      * t varies between 0 and 1, and a and d are the on curve points,
@@ -2757,7 +2819,10 @@ open class PGraphics: PImage(), PConstants {
         endShape()
     }
     //////////////////////////////////////////////////////////////
+
     // CATMULL-ROM CURVE
+
+
     /**
      * Get a location along a catmull-rom curve segment.
      *
@@ -2882,8 +2947,12 @@ open class PGraphics: PImage(), PConstants {
         curveVertex(x4, y4, z4)
         endShape()
     }
+
     //////////////////////////////////////////////////////////////
+
     // SPLINE UTILITY FUNCTIONS (used by both Bezier and Catmull-Rom)
+
+
     /**
      * Setup forward-differencing matrix to be used for speedy
      * curve rendering. It's based on using a specific number
@@ -2901,7 +2970,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // SMOOTHING
+
+
     fun smooth() {  // ignore
         smooth(1)
     }
@@ -2929,8 +3001,11 @@ open class PGraphics: PImage(), PConstants {
     private fun smoothWarning(method: String) {
         showWarning("%s() can only be used before beginDraw()", method)
     }
+
     //////////////////////////////////////////////////////////////
+
     // IMAGE
+
     /**
      * The mode can only be set to CORNERS, CORNER, and CENTER.
      *
@@ -3070,8 +3145,12 @@ open class PGraphics: PImage(), PConstants {
         fillB = savedFillB
         fillA = savedFillA
     }
+
     //////////////////////////////////////////////////////////////
+
     // SHAPE
+
+
     /**
      * Set the orientation for the shape() command (like imageMode() or rectMode()).
      * @param mode Either CORNER, CORNERS, or CENTER.
@@ -3143,8 +3222,12 @@ open class PGraphics: PImage(), PConstants {
     protected open fun shape(shape: PShape?, x: Float, y: Float, z: Float, c: Float, d: Float, e: Float) {
         showMissingWarning("shape")
     }
+
     //////////////////////////////////////////////////////////////
+
     // TEXT/FONTS
+
+
     /**
      * Sets the alignment of the text to one of LEFT, CENTER, or RIGHT.
      * This will also reset the vertical text alignment to BASELINE.
@@ -3256,7 +3339,8 @@ open class PGraphics: PImage(), PConstants {
 
         // float w = font.getStringBounds(text, g2.getFontRenderContext()).getWidth();
       }
-      */handleTextSize(size)
+      */
+        handleTextSize(size)
     }
 
     /**
@@ -3339,6 +3423,7 @@ open class PGraphics: PImage(), PConstants {
     }
 
     // ........................................................
+
     fun textWidth(c: Char): Float {
         textWidthBuffer[0] = c
         return textWidthImpl(textWidthBuffer, 0, 1)
@@ -3391,13 +3476,16 @@ open class PGraphics: PImage(), PConstants {
         }
         return wide
     }
+
     // ........................................................
+
     //  /**
     //   * Write text where we just left off.
     //   */
     //  public void text(char c) {
     //    text(c, textX, textY, textZ);
     //  }
+
     /**
      * Draw a single character on screen.
      * Extremely slow when used with textMode(SCREEN) and Java 2D,
@@ -3792,8 +3880,12 @@ open class PGraphics: PImage(), PConstants {
     fun text(num: Float, x: Float, y: Float, z: Float) {
         text(PApplet.nfs(num, 0, 3), x, y, z)
     }
+
     //////////////////////////////////////////////////////////////
+
     // TEXT IMPL
+
+
     // These are most likely to be overridden by subclasses, since the other
     // (public) functions handle generic features like setting alignment.
     /**
@@ -3863,7 +3955,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // PARITY WITH P5.JS
+
+
     fun push() {
         pushStyle()
         pushMatrix()
@@ -3873,8 +3968,12 @@ open class PGraphics: PImage(), PConstants {
         popStyle()
         popMatrix()
     }
+
     //////////////////////////////////////////////////////////////
+
     // MATRIX STACK
+
+
     /**
      * Push a copy of the current transformation matrix onto the stack.
      */
@@ -3888,8 +3987,12 @@ open class PGraphics: PImage(), PConstants {
     open fun popMatrix() {
         showMethodWarning("popMatrix")
     }
+
     //////////////////////////////////////////////////////////////
+
     // MATRIX TRANSFORMATIONS
+
+
     /**
      * Translate in X and Y.
      */
@@ -3987,8 +4090,12 @@ open class PGraphics: PImage(), PConstants {
     open fun shearY(angle: Float) {
         showMissingWarning("shearY")
     }
+
     //////////////////////////////////////////////////////////////
+
     // MATRIX FULL MONTY
+
+
     /**
      * Set the current transformation matrix to identity.
      */
@@ -4034,11 +4141,15 @@ open class PGraphics: PImage(), PConstants {
         showMissingWarning("applyMatrix")
     }
 
+
+    //////////////////////////////////////////////////////////////
+
+    // MATRIX GET/SET/PRINT
+
+
     /**
      * Set the current transformation matrix to the contents of another.
      */
-    //////////////////////////////////////////////////////////////
-    // MATRIX GET/SET/PRINT
     private  var matrix: PMatrix? = null
 //        get() {
 //            showMissingWarning("getMatrix")
@@ -4144,7 +4255,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // CAMERA
+
+
     open fun cameraUp() {
         showMethodWarning("cameraUp")
     }
@@ -4176,7 +4290,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // PROJECTION
+
+
     open fun ortho() {
         showMissingWarning("ortho")
     }
@@ -4209,8 +4326,12 @@ open class PGraphics: PImage(), PConstants {
     open fun printProjection() {
         showMethodWarning("printCamera")
     }
+
     //////////////////////////////////////////////////////////////
+
     // SCREEN TRANSFORMS
+
+
     /**
      * Given an x and y coordinate, returns the x position of where
      * that point would be placed on screen, once affected by translate(),
@@ -4302,7 +4423,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // RAY CASTING
+
+
     open fun getRayFromScreen(screenX: Float, screenY: Float, ray: Array<PVector?>?): Array<PVector?>? {
         showMissingWarning("getRayFromScreen")
         return null
@@ -4353,7 +4477,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // STYLE
+
+
     fun pushStyle() {
         if (styleStackDepth == styleStack.size) {
             styleStack = PApplet.expand(styleStack) as Array<PStyle?>
@@ -4495,7 +4622,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // STROKE CAP/JOIN/WEIGHT
+
+
     open fun strokeWeight(weight: Float) {
         strokeWeight = weight
     }
@@ -4509,7 +4639,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // STROKE COLOR
+
+
     fun noStroke() {
         stroke = false
     }
@@ -4577,7 +4710,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // TINT COLOR
+
+
     fun noTint() {
         tint = false
     }
@@ -4644,7 +4780,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // FILL COLOR
+
+
     fun noFill() {
         fill = false
     }
@@ -4711,7 +4850,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // MATERIAL PROPERTIES
+
+
     fun ambient(rgb: Int) {
 //    if (((rgb & 0xff000000) == 0) && (rgb <= colorModeX)) {
 //      ambient((float) rgb);
@@ -4805,7 +4947,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // LIGHTS
+
+
     // The details of lighting are very implementation-specific, so this base
     // class does not handle any details of settings lights. It does however
     // display warning messages that the functions are not available.
@@ -4850,8 +4995,12 @@ open class PGraphics: PImage(), PConstants {
     open fun lightSpecular(x: Float, y: Float, z: Float) {
         showMethodWarning("lightSpecular")
     }
+
     //////////////////////////////////////////////////////////////
+
     // BACKGROUND
+
+
     /**
      * Set the background to a gray or ARGB color.
      *
@@ -5044,8 +5193,11 @@ open class PGraphics: PImage(), PConstants {
     //      raw.endShape();
     //    }
     //  }
+
     //////////////////////////////////////////////////////////////
+
     // COLOR MODE
+
 
     fun colorMode(mode: Int) {
         colorMode(mode,colorModeX,colorModeY,colorModeZ,colorModeA)
@@ -5082,8 +5234,12 @@ open class PGraphics: PImage(), PConstants {
                 colorModeA == 255f && colorModeX == 255f &&
                 colorModeY == 255f && colorModeZ == 255f
     }
+
     //////////////////////////////////////////////////////////////
+
     // COLOR CALCULATIONS
+
+
     // Given input values for coloring, these functions will fill the calcXxxx
     // variables with values that have been properly filtered through the
     // current colorMode settings.
@@ -5262,7 +5418,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // COLOR DATATYPE STUFFING
+
+
     // The 'color' primitive type in Processing syntax is in fact a 32-bit int.
     // These functions handle stuffing color values into a 32-bit cage based
     // on the current colorMode settings.
@@ -5366,7 +5525,10 @@ open class PGraphics: PImage(), PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     // COLOR DATATYPE EXTRACTION
+
+
     // Vee have veys of making the colors talk.
     fun alpha(what: Int): Float {
         val c = (what shr 24 and 0xff.toFloat().toInt()).toFloat()
@@ -5414,8 +5576,11 @@ open class PGraphics: PImage(), PConstants {
         }
         return cacheHsbValue[2] * colorModeZ
     }
+
     //////////////////////////////////////////////////////////////
+
     // BEGINRAW/ENDRAW
+
     /**
      * Record individual lines and triangles by echoing them to another renderer.
      */
@@ -5458,8 +5623,12 @@ open class PGraphics: PImage(), PConstants {
             throw RuntimeException("Use textFont() before $method()")
         }
     }
+
     //////////////////////////////////////////////////////////////
+
     // RENDERER SUPPORT QUERIES
+
+
     /**
      * Return true if this renderer should be drawn to the screen. Defaults to
      * returning true, since nearly all renderers are on-screen beasts. But can
@@ -5493,7 +5662,9 @@ open class PGraphics: PImage(), PConstants {
         get() = false
 
     //////////////////////////////////////////////////////////////
+
     // ASYNC IMAGE SAVING
+
     override fun save(filename: String): Boolean { // ignore
         if (hints[PConstants.DISABLE_ASYNC_SAVEFRAME]) {
             return super.save(filename)
