@@ -70,7 +70,9 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import kotlin.experimental.and
 
-
+/**
+ * @author Aditya Rana
+ */
 open class PApplet: Any, ActivityAPI, PConstants {
 
     /**
@@ -83,7 +85,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * The surface this sketch draws to.
      */
-    //todo  need to make it public as kotlin code will not be having getSurface()
     var surface: PSurface? = null
         protected set
 
@@ -99,7 +100,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     // may throw JVM-CLash
 
     /** The PGraphics renderer associated with this PApplet  */
-    // todo - nullable type
     @JvmField
     var graphics: PGraphics? = null
 
@@ -127,14 +127,13 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * <P>
      * This does not include the arguments passed in to PApplet itself.
     </P> */
-    //  public String[] args;
+    //  var args: Array<String>;
     /**
      * Path to where sketch can read/write files (read-only).
      * Android: This is the writable area for the Activity, which is correct
      * for purposes of how sketchPath is used in practice from a sketch,
      * even though it's technically different than the desktop version.
      */
-    // todo nullable type
     @JvmField
     var sketchPath: String? = null  //folder;
 
@@ -152,8 +151,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * When used with OpenGL or Java2D, this value will
      * be null until loadPixels() has been called.
     </P> */
-
-    // todo - nullable type - not sure
     @JvmField
     var pixels: IntArray? = null
 
@@ -191,6 +188,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // Mouse events
 
+
     /** absolute x position of input on screen  */
     @JvmField
     var mouseX = 0
@@ -223,7 +221,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     @JvmField
     var touchIsStarted = false
 
-    // todo - I think itself is not nullable but elements are of nullable type as per gettouches() in TouchEvent class
     @JvmField
     var touches = arrayOfNulls<TouchEvent.Pointer>(0)
 
@@ -267,6 +264,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // Key events
 
+
     /**
      * Last key pressed.
      * <P>
@@ -295,7 +293,9 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * the last KeyEvent object passed into a mouse function.
      */
-    //  public KeyEvent keyEvent;
+
+    //  var keyEvent: KeyEvent
+
     /**
      * Gets set to true/false as the applet gains/loses focus.
      */
@@ -331,21 +331,23 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // Permission handling
 
+
     /**
      * Callback methods to handle permission requests
      */
-    // todo - not sure about nullability; recommendation is to not take them as  nullable
     @JvmField
     protected var permissionMethods = HashMap<String, String>()
 
     /**
      * Permissions requested during one frame
      */
-    //  todo - not sure ; but as recommendation non-nullable
     @JvmField
     protected var reqPermissions = ArrayList<String?>()
     ///////////////////////////////////////////////////////////////
+
     // Rendering/timing
+
+
     /**
      * Time in milliseconds when the applet was started.
      * <P>
@@ -373,7 +375,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     @JvmField
     var frameRate = 10f
 
-    // JVM-Clash
+
     var isLooping = false
         protected set
 
@@ -425,12 +427,11 @@ open class PApplet: Any, ActivityAPI, PConstants {
     // Background default needs to be different from the default value in
     // PGraphics.backgroundColor, otherwise size(100, 100) bg spills over.
     // https://github.com/processing/processing/issues/2297
-    // todo - need to test this value as previous value was 0xffDDDDDD
+    // previous initial value was 0xffDDDDDD in Java
     @JvmField
     var windowColor = -0x222223
 
-    /** true if this sketch is being run by the PDE  */ // need to remove setExternal(value)
-
+    /** true if this sketch is being run by the PDE  */
     private var external = false
 
 
@@ -440,13 +441,13 @@ open class PApplet: Any, ActivityAPI, PConstants {
     val activity: Activity?
         get() = surface!!.getActivity()
 
-    // all nullable args
+
     open fun initSurface(component: AppComponent, holder: SurfaceHolder?) {
         parentLayout = -1
         initSurface(null, null, null, component, holder)
     }
 
-    // todo - all args nullable
+
     open fun initSurface(inflater: LayoutInflater?, container: ViewGroup?,
                     savedInstanceState: Bundle?,
                     component: AppComponent, holder: SurfaceHolder?) {
@@ -633,7 +634,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         surface!!.runOnUiThread(action)
     }
 
-    // todo - nullable arg
     open fun hasPermission(permission: String?): Boolean {
         return surface!!.hasPermission(permission)
     }
@@ -644,7 +644,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         }
     }
 
-    // todo - permission is nullable ;
     @JvmOverloads
     open fun requestPermission(permission: String, callback: String, target: Any = this) {
         registerWithArgs(callback, target, arrayOf(Boolean::class.javaPrimitiveType))
@@ -708,7 +707,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @param args parameters passed to the function so we can show the user
      * @return true if safely inside the settings() method
      */
-    // todo -  method non-nullable type
     open fun insideSettings(method: String, vararg args: Any?): Boolean {
         if (insideSettings) {
             return true
@@ -870,7 +868,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    /** Map of registered methods, stored by name.  */ // value is of nullable type
+    /** Map of registered methods, stored by name.  */
     @JvmField
     var registerMap = HashMap<String, RegisteredMethods?>()
 
@@ -1051,7 +1049,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     }
 
 
-    //  public void registerMethod(String methodName, Object target, Object... args) {
+    // fun registerMethod(methodName: String, target: Any, vararg args: Any) {
     //    registerWithArgs(methodName, target, args);
     //  }
     open fun unregisterMethod(name: String, target: Any) {
@@ -1060,7 +1058,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
             die("No registered methods with the name $name() were found.")
         }
         try {
-//      Method method = o.getClass().getMethod(name, new Class[] {});
+//      var method: Method = o.getClass().getMethod(name, new Class[] {});
 //      meth.remove(o, method);
             meth!!.remove(target)
         } catch (e: Exception) {
@@ -1260,6 +1258,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+
     @JvmOverloads
    open fun smooth(level: Int = 1) {
         if (insideSettings) {
@@ -1287,8 +1286,11 @@ open class PApplet: Any, ActivityAPI, PConstants {
     open fun orientation(which: Int) {
         surface!!.setOrientation(which)
     }
+
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
     // not finished yet--will swap the renderer at a bad time
+
     /*
   public void renderer(String name) {
     if (name.equals(A2D)) {
@@ -1455,6 +1457,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //    pg.parent = this;  // make save() work
     //    return pg;
     //  }
+
+
     /**
      * Version of createGraphics() used internally.
      *
@@ -1498,7 +1502,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * Creates a new PImage (the datatype for storing images). This provides a fresh buffer of pixels to play with. Set the size of the buffer with the **width** and **height** parameters. The **format** parameter defines how the pixels are stored. See the PImage reference for more information.
      */
-    // todo - may be return nullability
     open fun createImage(wide: Int, high: Int, format: Int): PImage {
 //    return createImage(wide, high, format, null);
 //  }
@@ -1805,7 +1808,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     //////////////////////////////////////////////////////////////
 
-    // todo - not sure about nullability
+
     var eventQueue = InternalEventQueue()
 
     inner class InternalEventQueue {
@@ -2166,6 +2169,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     //  KeyEvent[] keyEventQueue = new KeyEvent[10];
     //  int keyEventCount;
     //
@@ -2282,6 +2286,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     }
 
     //////////////////////////////////////////////////////////////
+
     open fun focusGained() {
 
     }
@@ -2303,6 +2308,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //////////////////////////////////////////////////////////////
 
     // getting the time
+
     /**
      * Get the number of milliseconds since the applet started.
      * <P>
@@ -2316,6 +2322,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //////////////////////////////////////////////////////////////
 
     // controlling time (playing god)
+
     /**
      * The delay() function causes the program to halt for a specified time.
      * Delay times are specified in thousandths of a second. For example,
@@ -2377,6 +2384,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //    }
     //    return null;
     //  }
+
+
     /**
      * Show status in the status bar of a web browser, or in the
      * System.out console. Eventually this might show status in the
@@ -2390,6 +2399,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //      System.out.println(what);  // something more interesting?
     //    }
     //  }
+
+
     open fun link(here: String?) {
         link(here, null)
     }
@@ -2541,7 +2552,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * to the sketch folder) before passing to save() in PImage.
      * (Changed in 0100)
      */
-    // TODO - NON-NULLABLE arg {filename} as per g.save(name) in parent class
     open fun save(filename: String?) {
         graphics!!.save(savePath(filename)!!)
     }
@@ -2606,7 +2616,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // RANDOM NUMBERS
 
-    // todo - nullable type
     var internalRandom: Random? = null
 
     /**
@@ -2766,10 +2775,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.noiseDetail
      * @see PApplet.random
      */
-    /**
-     */
-    /**
-     */
     @JvmOverloads
     open fun noise(x: Float, y: Float = 0f, z: Float = 0f): Float {
         var x = x
@@ -2923,7 +2928,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-    // todo - return @ nullable; {filename} may also nullable type
     open fun loadImage(filename: String): PImage? { //, Object params) {
 //    return loadImage(filename, null);
         var stream = createInput(filename)
@@ -2956,12 +2960,10 @@ open class PApplet: Any, ActivityAPI, PConstants {
         }
     }
 
-    // todo - both args are fo nullable type
     open fun loadImage(filename: String, extension: String?): PImage? {
         return loadImage(filename)
     }
 
-    // todo - both args are of nullable type and return @ nullable
     open fun requestImage(filename: String?): PImage {
         val vessel = createImage(0, 0, PConstants.ARGB)
         val ail = AsyncImageLoader(filename!!, vessel)
@@ -3021,7 +3023,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // DATA I/O
 
-    // todo - return @ nullable and {name} is nullable
     open fun createXML(name: String?): XML? {
         return try {
             XML(name)
@@ -3041,7 +3042,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.loadStrings
      * @see PApplet.loadTable
      */
-    // todo - return @ nullable and {filename} is of nullable type
     @JvmOverloads
     open fun loadXML(filename: String?, options: String? = null): XML? {
         return try {
@@ -3052,7 +3052,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         }
     }
 
-    // todo nullable type both args and return type
     @JvmOverloads
     open fun parseXML(xmlString: String?, options: String? = null): XML? {
         return try {
@@ -3063,7 +3062,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         }
     }
 
-    // todo both args @ nullable-type
     @JvmOverloads
     open fun saveXML(xml: XML, filename: String?, options: String? = null): Boolean {
         return xml.save(saveFile(filename), options)
@@ -3075,7 +3073,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.loadJSONObject
      * @see PApplet.saveJSONObject
      */
-    // todo - nullable-type @ args and return type
     open fun parseJSONObject(input: String?): JSONObject {
         return JSONObject(StringReader(input))
     }
@@ -3091,7 +3088,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.saveJSONObject
      * @see PApplet.saveJSONArray
      */
-    // todo - nullable-type both args and return-type
     open fun loadJSONObject(filename: String?): JSONObject {
         // can't pass of createReader() to the constructor b/c of resource leak
         val reader = createReader(filename)
@@ -3118,7 +3114,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.loadJSONArray
      * @see PApplet.saveJSONArray
      */
-    // todo - nullable-type args and return-type
     @JvmOverloads
     open fun saveJSONObject(json: JSONObject, filename: String?, options: String? = null): Boolean {
         return json.save(saveFile(filename), options)
@@ -3132,7 +3127,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.loadJSONObject
      * @see PApplet.saveJSONObject
      */
-    // todo - nullable-type args and return-type
     open fun parseJSONArray(input: String?): JSONArray {
         return JSONArray(StringReader(input))
     }
@@ -3146,7 +3140,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.saveJSONObject
      * @see PApplet.saveJSONArray
      */
-    // todo - nullable-type args and return-type
     open fun loadJSONArray(filename: String?): JSONArray {
         // can't pass of createReader() to the constructor b/c of resource leak
         val reader = createReader(filename)
@@ -3160,7 +3153,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     }
 
 
-    // todo - nullable-type args and
     /**
      * @webref output:files
      * @see JSONObject
@@ -3171,7 +3163,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.loadJSONArray
      * @see PApplet.saveJSONObject
      */
-    // todo - nullable-type args
     @JvmOverloads
     open fun saveJSONArray(json: JSONArray, filename: String?, options: String? = null): Boolean {
         return json.save(saveFile(filename), options)
@@ -3182,7 +3173,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     }
 
 
-    // todo - nullable-type args and return-type
     /**
      * @webref input:files
      * @param filename name of a file in the data folder or a URL.
@@ -3190,7 +3180,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PApplet.loadStrings
      * @see PApplet.loadXML
      */
-    // todo - nullable-type args and return-type
     @JvmOverloads
     open fun loadTable(filename: String, options: String? = null): Table {
         var options = options
@@ -3207,7 +3196,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         return Table(createInput(filename), options)
     }
 
-    // todo - nullable-type args
     @JvmOverloads
     open fun saveTable(table: Table, filename: String?, options: String? = null): Boolean {
         try {
@@ -3221,7 +3209,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // FONT I/O
 
-    // todo - nullable-type args and return-type
+
     open fun loadFont(filename: String): PFont? {
         try {
             val input = createInput(filename)
@@ -3237,7 +3225,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * Used by PGraphics to remove the requirement for loading a font!
      */
-    // todo - nullable-type return-type
     open fun createDefaultFont(size: Float): PFont {
         return createFont("SansSerif", size, true, null)
     }
@@ -3250,7 +3237,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Use 'null' for the charset if you want to dynamically create
      * character bitmaps only as they're needed.
      */
-    // todo - nullable-type args and return-type
     @JvmOverloads
     open fun createFont(name: String, size: Float,
                    smooth: Boolean = true, charset: CharArray? = null): PFont {
@@ -3413,6 +3399,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // LISTING DIRECTORIES
 
+
     open fun listPaths(path: String, vararg options: String): Array<String?> {
         var path = path
         val list = listFiles(path, *options)
@@ -3447,6 +3434,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //////////////////////////////////////////////////////////////
 
     // READERS AND WRITERS
+
 
     /**
      * I want to read lines from a file. I have RSI from typing these
@@ -3515,7 +3503,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     </LI> * <LI>Another file to be opened locally (when running as an application)
     </LI></UL> *
      */
-    // todo return-type @ nullable; {filename} may also be nullable
     open fun createInput(filename: String?): InputStream? {
         val input = createInputRaw(filename)
         val lower = filename!!.toLowerCase()
@@ -3705,7 +3692,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         return surface!!.openFileInput(filename)
     }
 
-    // todo - nullable-type args and return-type
     open fun loadBytes(filename: String): ByteArray? {
         val `is` = createInput(filename)
         if (`is` != null) return loadBytes(`is`)
@@ -3728,7 +3714,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * in a "scripting" fashion. If you want to handle exceptions,
      * use Java methods for I/O.
     </P> */
-    // todo - nullable-type args and return-type
     open fun loadStrings(filename: String): Array<String?>? {
         val `is` = createInput(filename)
         if (`is` != null) return loadStrings(`is`)
@@ -3760,7 +3745,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * little too clever (and then we'd have to add the same features to the
      * other file functions like createWriter). Who you callin' bloated?
      */
-    // todo - nullable-type args and return-type
     open fun createOutput(filename: String?): OutputStream? {
         try {
             // in spite of appearing to be the 'correct' option, this doesn't allow
@@ -3797,12 +3781,10 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Note that unlike other api methods, this will not automatically
      * compress or uncompress gzip files.
      */
-    // todo - nullable-type args
     open fun saveStream(targetFile: File, sourceLocation: String?): Boolean {
         return saveStream(targetFile, createInputRaw(sourceLocation))
     }
 
-    // todo - nullable-type args
     open fun saveStream(targetFilename: String?, sourceStream: InputStream?): Boolean {
         return saveStream(saveFile(targetFilename), sourceStream)
     }
@@ -3842,7 +3824,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * my some other main() or by other code. For proper use of init(),
      * see the examples in the main description text for PApplet.
      */
-    // todo - nullable-type args and return-type
     open fun sketchPath(where: String?): String? {
         if (sketchPath == null) {
             return where
@@ -3861,7 +3842,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         return surface!!.getFileStreamPath(where)!!.absolutePath
     }
 
-    // todo - nullable-type args and return-type
     open fun sketchFile(where: String?): File {
         return File(sketchPath(where))
     }
@@ -3880,7 +3860,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * If you know you're running locally, and want to save to the data folder,
      * use <TT>saveXxxx("data/blah.dat")</TT>.
      */
-    // todo - nullable return type but expected is non-nullable type or has to change the PImage.save() return type nullable heirarchy to figure this out
     open fun savePath(where: String?): String? {
         if (where == null) return null
         //    System.out.println("filename before sketchpath is " + where);
@@ -3893,7 +3872,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * Identical to savePath(), but returns a File object.
      */
-    // todo nullable type both args and return type
     open fun saveFile(where: String?): File {
         return File(savePath(where))
     }
@@ -3909,7 +3887,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Discussed here:
      * https://github.com/processing/processing-android/issues/450
      */
-    // todo - nullable-type args and return-type
     open fun dataPath(where: String?): String? {
         // First, we check if it is asset:
         var isAsset = false
@@ -3934,7 +3911,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Return a full path to an item in the data folder as a File object.
      * See the dataPath() method for more information.
      */
-    // todo - nullable-type args and return-type
     open fun dataFile(where: String?): File {
         return File(dataPath(where))
     }
@@ -4385,6 +4361,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //    beginRecord(rec);
     //    return rec;
     //  }
+
+
     /**
      * Begin recording (echoing) commands to the specified PGraphics object.
      */
@@ -4394,6 +4372,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //  public void endRecord() {
     //    PGraphics.showMethodWarning("endRecord");
     //  }
+
+
     /**
      * Begin recording raw shape data to a renderer of the specified type,
      * using the width and height of the main drawing surface.
@@ -4407,6 +4387,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //    g.beginRaw(rec);
     //    return rec;
     //  }
+
+
     /**
      * Begin recording raw shape data to the specified renderer.
      *
@@ -4417,6 +4399,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
     //  public void beginRaw(PGraphics rawGraphics) {
     //    g.beginRaw(rawGraphics);
     //  }
+
+
     /**
      * Stop recording raw shape data to the specified renderer.
      *
@@ -4502,12 +4486,10 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
     // Ray casting API
 
-    // todo - nullable-type arg {ray} and return-type
     open fun getRayFromScreen(screenX: Float, screenY: Float, ray: Array<PVector?>?): Array<PVector?>? {
         return graphics!!.getRayFromScreen(screenX, screenY, ray)
     }
 
-    // todo - nullable-type arg and return-type
     open fun getRayFromScreen(screenX: Float, screenY: Float, origin: PVector?, direction: PVector?) {
         graphics!!.getRayFromScreen(screenX, screenY, origin, direction)
     }
@@ -4536,12 +4518,10 @@ open class PApplet: Any, ActivityAPI, PConstants {
         return graphics!!.intersectsBox(w, h, d, origin, direction)
     }
 
-    // todo - nullable-type return
     open fun intersectsPlane(screenX: Float, screenY: Float): PVector? {
         return graphics!!.intersectsPlane(screenX, screenY)
     }
 
-    // todo - return-type @ Nullable
     open fun intersectsPlane(origin: PVector?, direction: PVector?): PVector? {
         return graphics!!.intersectsPlane(origin, direction)
     }
@@ -4566,7 +4546,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Returns a copy of the current object matrix.
      * Pass in null to create a new matrix.
      */
-    // todo - return-type @ Nullable
     val objectMatrix: PMatrix3D?
         get() = graphics!!.objectMatrix
 
@@ -4574,7 +4553,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Copy the current object matrix into the specified target.
      * Pass in null to create a new matrix.
      */
-    // todo - return-type @ Nullable
     open fun getObjectMatrix(target: PMatrix3D?): PMatrix3D? {
         return graphics!!.getObjectMatrix(target)
     }
@@ -4583,7 +4561,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Returns a copy of the current eye matrix.
      * Pass in null to create a new matrix.
      */
-    // todo - return-type @ Nullable
     val eyeMatrix: PMatrix3D?
         get() = graphics!!.eyeMatrix
 
@@ -4591,7 +4568,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Copy the current eye matrix into the specified target.
      * Pass in null to create a new matrix.
      */
-    // todo - return-type @ Nullable
     open fun getEyeMatrix(target: PMatrix3D?): PMatrix3D? {
         return graphics!!.getEyeMatrix(target)
     }
@@ -4601,7 +4577,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     // This includes the Javadoc comments, which are automatically copied from
     // the PImage and PGraphics source code files.
     // public functions for processing.core
-    // todo - return-type @ Nullable
     open fun beginPGL(): PGL? {
         return graphics!!.beginPGL()
     }
@@ -4896,7 +4871,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      *
      * @see PApplet.createShape
      */
-    // todo both arg and return-type are nullable
     open fun loadShape(filename: String?): PShape? {
         return graphics!!.loadShape(filename)
     }
@@ -4904,7 +4878,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * @nowebref
      */
-    // todo both args and return-type are nullable
     open fun loadShape(filename: String?, options: String?): PShape? {
         return graphics!!.loadShape(filename, options)
     }
@@ -4916,12 +4889,10 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @see PShape.endShape
      * @see PApplet.loadShape
      */
-    // todo - return-type @ Non-nullable
     open fun createShape(): PShape {
         return graphics!!.createShape()
     }
 
-    // todo - return-type @ Non-nullable
     open fun createShape(type: Int): PShape {
         return graphics!!.createShape(type)
     }
@@ -4930,7 +4901,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @param kind either POINT, LINE, TRIANGLE, QUAD, RECT, ELLIPSE, ARC, BOX, SPHERE
      * @param p parameters that match the kind of shape
      */
-    // todo - return-type @ Non-nullable
     open fun createShape(kind: Int, vararg p: Float): PShape {
         return graphics!!.createShape(kind, *p)
     }
@@ -4945,7 +4915,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @webref rendering:shaders
      * @param fragFilename name of fragment shader file
      */
-    // todo - both arg and return-type are Nullable
     open fun loadShader(fragFilename: String?): PShader? {
         return graphics!!.loadShader(fragFilename)
     }
@@ -4953,7 +4922,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * @param vertFilename name of vertex shader file
      */
-    // todo - both arg and return-type are Nullable
     open fun loadShader(fragFilename: String?, vertFilename: String?): PShader? {
         return graphics!!.loadShader(fragFilename, vertFilename)
     }
@@ -4968,7 +4936,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * @webref rendering:shaders
      * @param shader name of shader file
      */
-    // todo - arg @ Nullable
     open fun shader(shader: PShader?) {
         graphics!!.shader(shader)
     }
@@ -4976,7 +4943,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * @param kind type of shader, either POINTS, LINES, or TRIANGLES
      */
-    // todo - nullable {shader}
     open fun shader(shader: PShader?, kind: Int) {
         graphics!!.shader(shader, kind)
     }
@@ -6907,8 +6873,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
     /**
      * Set the current transformation matrix to the contents of another.
      */
-    // todo - arg @ Nullable
-    // todo - nullable return-type
     var matrix: PMatrix?
         get() = graphics!!.getMatrix()
         set(source) {
@@ -6919,7 +6883,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Copy the current transformation matrix into the specified target.
      * Pass in null to create a new matrix.
      */
-    // todo - both arg and return-type are Nullable
     open fun getMatrix(target: PMatrix2D?): PMatrix2D? {
         return graphics!!.getMatrix(target)
     }
@@ -6928,7 +6891,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
      * Copy the current transformation matrix into the specified target.
      * Pass in null to create a new matrix.
      */
-    // todo - both arg and return-type are Nullable
     open fun getMatrix(target: PMatrix3D?): PMatrix3D? {
         return graphics!!.getMatrix(target)
     }
@@ -8794,11 +8756,17 @@ open class PApplet: Any, ActivityAPI, PConstants {
         const val DEFAULT_HEIGHT = -1
 
         ///////////////////////////////////////////////////////////////
+
         // Error messages
+
+
         const val ERROR_MIN_MAX = "Cannot use min() or max() on an empty array."
 
         ///////////////////////////////////////////////////////////////
+
         // Command line options
+
+
         /**
          * Position of the upper-lefthand corner of the editor window
          * that launched this applet.
@@ -8943,6 +8911,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //    cursorVisible = true;
         //    this.cursorType = cursorType;
         //  }
+
+
         /**
          * Replace the cursor with the specified PImage. The x- and y-
          * coordinate of the center will be the center of the image.
@@ -8950,6 +8920,7 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //  public void cursor(PImage image) {
         //    cursor(image, image.width/2, image.height/2);
         //  }
+
         /**
          * Set a custom cursor to an image with a specific hotspot.
          * Only works with JDK 1.2 and later.
@@ -8972,6 +8943,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //    setCursor(cursor);
         //    cursorVisible = true;
         //  }
+
+
         /**
          * Show the cursor after noCursor() was called.
          * Notice that the program remembers the last set cursor type
@@ -8986,6 +8959,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //      setCursor(Cursor.getPredefinedCursor(cursorType));
         //    }
         //  }
+
+
         /**
          * Hide the cursor by creating a transparent image
          * and using it as a custom cursor.
@@ -9044,7 +9019,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         /**
          * @param variables list of data, separated by commas
          */
-        // todo - args nullable type
         @JvmStatic
         fun print(vararg variables: Any?) {
             val sb = StringBuilder()
@@ -9125,7 +9099,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             kotlin.io.println()
         }
 
-        // todo - {what} is of nullable type
         @JvmStatic
         fun println(what: Any?) {
             if (what == null) {
@@ -9206,7 +9179,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * @see PApplet.print
          * @see PApplet.println
          */
-        // todo - {what} is of nullable type
         @JvmStatic
         fun printArray(what: Any?) {
             if (what == null) {
@@ -9746,7 +9718,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         /**
          * I want to read lines from a file. And I'm still annoyed.
          */
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun createReader(file: File?): BufferedReader {
             return try {
@@ -9771,7 +9742,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * I want to read lines from a stream. If I have to type the
          * following lines any more I'm gonna send Sun my medical bills.
          */
-        // todo - nullable-type args and return-type - not sure
         @JvmStatic
         fun createReader(input: InputStream?): BufferedReader {
             val isr = InputStreamReader(input, charsetUTF8)
@@ -9819,7 +9789,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * I want to print lines to a file. Why am I always explaining myself?
          * It's the JavaSoft API engineers who need to explain themselves.
          */
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun createWriter(output: OutputStream?): PrintWriter {
             val bos = BufferedOutputStream(output, 8192)
@@ -9827,7 +9796,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             return PrintWriter(osw)
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun createInput(file: File?): InputStream? {
             requireNotNull(file) { "File passed to createInput() was null" }
@@ -9843,7 +9811,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun loadBytes(input: InputStream?): ByteArray? {
             try {
@@ -9862,21 +9829,18 @@ open class PApplet: Any, ActivityAPI, PConstants {
             return null
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun loadBytes(file: File?): ByteArray? {
             val `is` = createInput(file)
             return loadBytes(`is`)
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun loadStrings(file: File?): Array<String?>? {
             val `is` = createInput(file)
             return `is`?.let { loadStrings(it) }
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun loadStrings(reader: BufferedReader): Array<String?>? {
             try {
@@ -9907,7 +9871,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             return null
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun loadStrings(input: InputStream?): Array<String?>? {
             try {
@@ -9939,7 +9902,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             return null
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun createOutput(file: File?): OutputStream? {
             try {
@@ -9954,7 +9916,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             return null
         }
 
-        // todo - nullable-type args
         @JvmStatic
         fun saveStream(target: File, source: InputStream?): Boolean {
             var tempFile: File? = null
@@ -9985,7 +9946,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
         }
 
-        // todo - nullable-type args
         @JvmStatic
         @Throws(IOException::class)
         fun saveStream(target: OutputStream?,
@@ -10007,7 +9967,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * from the same directory so that renaming the file later won't cross file
          * system boundaries.
          */
-        // todo - nullable-type args and return-type
         @JvmStatic
         @Throws(IOException::class)
         private fun createTempFile(file: File): File {
@@ -10033,7 +9992,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         /**
          * Saves bytes to a specific File location specified by the user.
          */
-        // todo - nullable-type args
         @JvmStatic
         fun saveBytes(file: File, data: ByteArray?) {
             var tempFile: File? = null
@@ -10062,7 +10020,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
         /**
          * Spews a buffer of bytes to an OutputStream.
          */
-        // todo - nullable-type args
         @JvmStatic
         fun saveBytes(output: OutputStream?, data: ByteArray?) {
             try {
@@ -10073,7 +10030,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
         }
 
-        // todo - nullable-type args
         @JvmStatic
         fun saveStrings(file: File, strings: Array<String?>) {
             try {
@@ -10090,7 +10046,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
         }
 
-        // todo - nullable-type args
         @JvmStatic
         fun saveStrings(output: OutputStream?, strings: Array<String?>) {
             try {
@@ -10109,7 +10064,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * already exist. Useful when trying to save to a subfolder that
          * may not actually exist.
          */
-        // todo - nullable-type args
         @JvmStatic
         fun createPath(path: String?) {
             createPath(File(path))
@@ -10129,7 +10083,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun getExtension(filename: String): String {
             var extension: String
@@ -10154,7 +10107,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
 
         // URL ENCODING
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun urlEncode(what: String?): String? {
             return try {
@@ -10164,7 +10116,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
         }
 
-        // todo - nullable-type args and return-type
         @JvmStatic
         fun urlDecode(what: String?): String? {
             return try {
@@ -10234,7 +10185,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * avoid people needing to learn about the System object
          * before they can just copy an array.
          */
-        // todo - some args are @ Non-nullable
         @JvmStatic
         fun arrayCopy(src: Any?, srcPosition: Int,
                       dst: Any?, dstPosition: Int,
@@ -10246,7 +10196,6 @@ open class PApplet: Any, ActivityAPI, PConstants {
          * Convenience method for arraycopy().
          * Identical to <CODE>arraycopy(src, 0, dst, 0, length);</CODE>
          */
-        // todo - some args are @ Non-nullable
         @JvmStatic
         fun arrayCopy(src: Any?, dst: Any?, length: Int) {
             System.arraycopy(src, 0, dst, 0, length)
@@ -10856,6 +10805,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
             }
             return buffer.toString()
         }
+
+
         /**
          * Splits a string into pieces, using any of the chars in the
          * String 'delim' as separator characters. For instance,
@@ -11913,6 +11864,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //        }
         //      });
         //  }
+
+
         /**
          * Set up a listener that will fire proper component resize events
          * in cases where frame.setResizable(true) is called.
@@ -11943,6 +11896,8 @@ open class PApplet: Any, ActivityAPI, PConstants {
         //        }
         //      });
         //  }
+
+
         /**
          * GIF image of the Processing logo.
          */
