@@ -44,6 +44,9 @@ import javax.microedition.khronos.egl.EGLContext
 import javax.microedition.khronos.egl.EGLDisplay
 import javax.microedition.khronos.opengles.GL10
 
+/**
+ * @author Aditya Rana
+ */
 open class PSurfaceGLES : PSurfaceNone {
 
     var pgl: PGLES? = null
@@ -176,16 +179,20 @@ open class PSurfaceGLES : PSurfaceNone {
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val configurationInfo = activityManager.deviceConfigurationInfo
             val supportsGLES2 = configurationInfo.reqGlEsVersion >= 0x20000
+
             if (!supportsGLES2) {
                 throw RuntimeException("OpenGL ES 2.0 is not supported by this device.")
             }
+
             val h = getHolder()
             h?.addCallback(this)
 
             // Tells the default EGLContextFactory and EGLConfigChooser to create an GLES2 context.
             setEGLContextClientVersion(PGLES.version)
             preserveEGLContextOnPause = true
+
             val samples = sketch!!.sketchSmooth()
+
             if (1 < samples) {
                 setEGLConfigChooser(getConfigChooser(samples))
             } else {
@@ -285,16 +292,22 @@ open class PSurfaceGLES : PSurfaceNone {
         // device.
         @JvmField
         var redBits = 0
+
         @JvmField
         var greenBits = 0
+
         @JvmField
         var blueBits = 0
+
         @JvmField
         var alphaBits = 0
+
         @JvmField
         var depthBits = 0
+
         @JvmField
         var stencilBits = 0
+
         @JvmField
         var tempValue = IntArray(1)
 
@@ -427,16 +440,22 @@ open class PSurfaceGLES : PSurfaceNone {
                 if (isGLES2) {
                     val d = findConfigAttrib(egl, display, config,
                             EGL10.EGL_DEPTH_SIZE, 0)
+
                     val s = findConfigAttrib(egl, display, config,
                             EGL10.EGL_STENCIL_SIZE, 0)
+
                     val r = findConfigAttrib(egl, display, config,
                             EGL10.EGL_RED_SIZE, 0)
+
                     val g = findConfigAttrib(egl, display, config,
                             EGL10.EGL_GREEN_SIZE, 0)
+
                     val b = findConfigAttrib(egl, display, config,
                             EGL10.EGL_BLUE_SIZE, 0)
+
                     val a = findConfigAttrib(egl, display, config,
                             EGL10.EGL_ALPHA_SIZE, 0)
+
                     val score = 0.20f * PApplet.abs(r - redTarget) + 0.20f * PApplet.abs(g - greenTarget) + 0.20f * PApplet.abs(b - blueTarget) + 0.15f * PApplet.abs(a - alphaTarget) + 0.15f * PApplet.abs(d - depthTarget) + 0.10f * PApplet.abs(s - stencilTarget)
                     if (score < bestScore) {
                         // We look for the config closest to the target config.
@@ -466,24 +485,34 @@ open class PSurfaceGLES : PSurfaceNone {
                                   config: EGLConfig?): String {
             val r = findConfigAttrib(egl, display, config,
                     EGL10.EGL_RED_SIZE, 0)
+
             val g = findConfigAttrib(egl, display, config,
                     EGL10.EGL_GREEN_SIZE, 0)
+
             val b = findConfigAttrib(egl, display, config,
                     EGL10.EGL_BLUE_SIZE, 0)
+
             val a = findConfigAttrib(egl, display, config,
                     EGL10.EGL_ALPHA_SIZE, 0)
+
             val d = findConfigAttrib(egl, display, config,
                     EGL10.EGL_DEPTH_SIZE, 0)
+
             val s = findConfigAttrib(egl, display, config,
                     EGL10.EGL_STENCIL_SIZE, 0)
+
             val type = findConfigAttrib(egl, display, config,
                     EGL10.EGL_RENDERABLE_TYPE, 0)
+
             val nat = findConfigAttrib(egl, display, config,
                     EGL10.EGL_NATIVE_RENDERABLE, 0)
+
             val bufSize = findConfigAttrib(egl, display, config,
                     EGL10.EGL_BUFFER_SIZE, 0)
+
             val bufSurf = findConfigAttrib(egl, display, config,
                     EGL10.EGL_RENDER_BUFFER, 0)
+
             return (String.format("EGLConfig rgba=%d%d%d%d depth=%d stencil=%d",
                     r, g, b, a, d, s) + " type=" + type
                     + " native=" + nat

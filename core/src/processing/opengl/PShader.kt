@@ -31,6 +31,7 @@ import java.nio.IntBuffer
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * This class encapsulates a GLSL shader program, including a vertex
  * and a fragment shader. Based on the GLSLShader class from GLGraphics, which
  * in turn was originally based in the code by JohnG:
@@ -72,13 +73,18 @@ open class PShader : PConstants {
     var glFragment: Int
 
     private var glres: PGraphicsOpenGL.GLResourceShader? = null
+
     protected var vertexURL: URL?
     protected var fragmentURL: URL?
+
     protected var vertexFilename: String?
     protected var fragmentFilename: String?
-    protected var vertexShaderSource: Array<String>? = null
-    protected var fragmentShaderSource: Array<String>? = null
+
+    protected var vertexShaderSource: Array<String>?    = null
+    protected var fragmentShaderSource: Array<String>?  = null
+
     protected var bound = false
+
     protected var uniformValues: HashMap<Int, UniformValue>? = null
     protected var textures: HashMap<Int, Texture>? = null
     protected var texUnits: HashMap<Int, Int?>? = null
@@ -90,63 +96,70 @@ open class PShader : PConstants {
     protected var loadedUniforms = false
 
     // Uniforms common to all shader types
-    protected var transformMatLoc = 0
-    protected var modelviewMatLoc = 0
-    protected var projectionMatLoc = 0
-    protected var ppixelsLoc = 0
-    protected var ppixelsUnit = 0
-    protected var viewportLoc = 0
-    protected var resolutionLoc = 0
+    protected var transformMatLoc   = 0
+    protected var modelviewMatLoc   = 0
+    protected var projectionMatLoc  = 0
+    protected var ppixelsLoc        = 0
+    protected var ppixelsUnit       = 0
+    protected var viewportLoc       = 0
+    protected var resolutionLoc     = 0
 
     // Uniforms only for lines and points
-    protected var perspectiveLoc = 0
-    protected var scaleLoc = 0
+    protected var perspectiveLoc    = 0
+    protected var scaleLoc          = 0
 
     // Lighting uniforms
-    protected var lightCountLoc = 0
-    protected var lightPositionLoc = 0
-    protected var lightNormalLoc = 0
-    protected var lightAmbientLoc = 0
-    protected var lightDiffuseLoc = 0
-    protected var lightSpecularLoc = 0
-    protected var lightFalloffLoc = 0
-    protected var lightSpotLoc = 0
+    protected var lightCountLoc     = 0
+    protected var lightPositionLoc  = 0
+    protected var lightNormalLoc    = 0
+    protected var lightAmbientLoc   = 0
+    protected var lightDiffuseLoc   = 0
+    protected var lightSpecularLoc  = 0
+    protected var lightFalloffLoc   = 0
+    protected var lightSpotLoc      = 0
 
     // Texturing uniforms
     private var texture: Texture? = null
-    protected var texUnit = 0
-    protected var textureLoc = 0
-    protected var texMatrixLoc = 0
-    protected var texOffsetLoc = 0
+
+    protected var texUnit       = 0
+    protected var textureLoc    = 0
+    protected var texMatrixLoc  = 0
+    protected var texOffsetLoc  = 0
     protected var tcmat: FloatArray? = null
 
     // Vertex attributes
-    protected var vertexLoc = 0
-    protected var colorLoc = 0
-    protected var normalLoc = 0
-    protected var texCoordLoc = 0
-    protected var normalMatLoc = 0
-    protected var directionLoc = 0
-    protected var offsetLoc = 0
-    protected var ambientLoc = 0
-    protected var specularLoc = 0
-    protected var emissiveLoc = 0
-    protected var shininessLoc = 0
+    protected var vertexLoc     = 0
+    protected var colorLoc      = 0
+    protected var normalLoc     = 0
+    protected var texCoordLoc   = 0
+    protected var normalMatLoc  = 0
+    protected var directionLoc  = 0
+    protected var offsetLoc     = 0
+    protected var ambientLoc    = 0
+    protected var specularLoc   = 0
+    protected var emissiveLoc   = 0
+    protected var shininessLoc  = 0
 
     constructor() {
         parent = null
         pgl = null
+
         context = -1
+
         vertexURL = null
         fragmentURL = null
         vertexFilename = null
         fragmentFilename = null
+
         glProgram = 0
         glVertex = 0
         glFragment = 0
+
         intBuffer = PGL.allocateIntBuffer(1)
         floatBuffer = PGL.allocateFloatBuffer(1)
+
         bound = false
+
         type = -1
     }
 
@@ -167,21 +180,29 @@ open class PShader : PConstants {
      */
     constructor(parent: PApplet?, vertFilename: String?, fragFilename: String?) {
         this.parent = parent
+
         primaryPG = parent?.graphics as PGraphicsOpenGL?
         pgl = primaryPG!!.pgl
+
         vertexURL = null
         fragmentURL = null
+
         vertexFilename = vertFilename
         fragmentFilename = fragFilename
+
         fragmentShaderSource = pgl?.loadFragmentShader(fragFilename)
         vertexShaderSource = pgl?.loadVertexShader(vertFilename)
+
         glProgram = 0
         glVertex = 0
         glFragment = 0
+
         intBuffer = PGL.allocateIntBuffer(1)
         floatBuffer = PGL.allocateFloatBuffer(1)
+
         val vertType = getShaderType(vertexShaderSource, -1)
         val fragType = getShaderType(fragmentShaderSource, -1)
+
         if (vertType == -1 && fragType == -1) {
             type = POLY
         } else if (vertType == -1) {
@@ -203,19 +224,26 @@ open class PShader : PConstants {
         this.parent = parent
         primaryPG = parent?.graphics as PGraphicsOpenGL?
         pgl = primaryPG!!.pgl
+
         vertexURL = vertURL
         fragmentURL = fragURL
+
         vertexFilename = null
         fragmentFilename = null
+
         fragmentShaderSource = pgl?.loadFragmentShader(fragURL)
         vertexShaderSource = pgl?.loadVertexShader(vertURL)
-        glProgram = 0
-        glVertex = 0
-        glFragment = 0
+
+        glProgram   = 0
+        glVertex    = 0
+        glFragment  = 0
+
         intBuffer = PGL.allocateIntBuffer(1)
         floatBuffer = PGL.allocateFloatBuffer(1)
+
         val vertType = getShaderType(vertexShaderSource, -1)
         val fragType = getShaderType(fragmentShaderSource, -1)
+
         if (vertType == -1 && fragType == -1) {
             type = POLY
         } else if (vertType == -1) {
@@ -237,15 +265,19 @@ open class PShader : PConstants {
         fragmentURL = null
         vertexFilename = null
         fragmentFilename = null
+
         vertexShaderSource = vertSource
         fragmentShaderSource = fragSource
+
         glProgram = 0
         glVertex = 0
         glFragment = 0
         intBuffer = PGL.allocateIntBuffer(1)
         floatBuffer = PGL.allocateFloatBuffer(1)
+
         val vertType = getShaderType(vertexShaderSource, -1)
         val fragType = getShaderType(fragmentShaderSource, -1)
+
         if (vertType == -1 && fragType == -1) {
             type = POLY
         } else if (vertType == -1) {
@@ -927,8 +959,11 @@ open class PShader : PConstants {
 
     fun loadAttributes() {
         if (loadedAttributes) return
+
         vertexLoc = getAttributeLoc("vertex")
+
         if (vertexLoc == -1) vertexLoc = getAttributeLoc("position")
+
         colorLoc = getAttributeLoc("color")
         texCoordLoc = getAttributeLoc("texCoord")
         normalLoc = getAttributeLoc("normal")
@@ -946,12 +981,16 @@ open class PShader : PConstants {
     fun loadUniforms() {
         if (loadedUniforms) return
         transformMatLoc = getUniformLoc("transform")
+
         if (transformMatLoc == -1) transformMatLoc = getUniformLoc("transformMatrix")
         modelviewMatLoc = getUniformLoc("modelview")
+
         if (modelviewMatLoc == -1) modelviewMatLoc = getUniformLoc("modelviewMatrix")
         projectionMatLoc = getUniformLoc("projection")
+
         if (projectionMatLoc == -1) projectionMatLoc = getUniformLoc("projectionMatrix")
         viewportLoc = getUniformLoc("viewport")
+
         resolutionLoc = getUniformLoc("resolution")
         ppixelsLoc = getUniformLoc("ppixels")
         normalMatLoc = getUniformLoc("normalMatrix")
@@ -964,9 +1003,11 @@ open class PShader : PConstants {
         lightFalloffLoc = getUniformLoc("lightFalloff")
         lightSpotLoc = getUniformLoc("lightSpot")
         textureLoc = getUniformLoc("texture")
+
         if (textureLoc == -1) {
             textureLoc = getUniformLoc("texMap")
         }
+
         texMatrixLoc = getUniformLoc("texMatrix")
         texOffsetLoc = getUniformLoc("texOffset")
         perspectiveLoc = getUniformLoc("perspective")
@@ -1015,7 +1056,9 @@ open class PShader : PConstants {
             loadAttributes()
             loadUniforms()
         }
+
         setCommonUniforms()
+
         if (-1 < vertexLoc) pgl!!.enableVertexAttribArray(vertexLoc)
         if (-1 < colorLoc) pgl!!.enableVertexAttribArray(colorLoc)
         if (-1 < texCoordLoc) pgl!!.enableVertexAttribArray(texCoordLoc)
@@ -1024,12 +1067,16 @@ open class PShader : PConstants {
             currentPG!!.updateGLNormal()
             setUniformMatrix(normalMatLoc, currentPG!!.glNormal)
         }
+
         if (-1 < ambientLoc) pgl!!.enableVertexAttribArray(ambientLoc)
         if (-1 < specularLoc) pgl!!.enableVertexAttribArray(specularLoc)
         if (-1 < emissiveLoc) pgl!!.enableVertexAttribArray(emissiveLoc)
         if (-1 < shininessLoc) pgl!!.enableVertexAttribArray(shininessLoc)
+
         val count = currentPG!!.lightCount
+
         setUniformValue(lightCountLoc, count)
+
         if (0 < count) {
             setUniformVector(lightPositionLoc, currentPG!!.lightPosition, 4, count)
             setUniformVector(lightNormalLoc, currentPG!!.lightNormal, 3, count)
@@ -1040,8 +1087,11 @@ open class PShader : PConstants {
                     3, count)
             setUniformVector(lightSpotLoc, currentPG!!.lightSpotParameters, 2, count)
         }
+
         if (-1 < directionLoc) pgl!!.enableVertexAttribArray(directionLoc)
+
         if (-1 < offsetLoc) pgl!!.enableVertexAttribArray(offsetLoc)
+
         if (-1 < perspectiveLoc) {
             if (currentPG!!.getHint(PConstants.ENABLE_STROKE_PERSPECTIVE) &&
                     currentPG!!.nonOrthoProjection()) {
@@ -1050,6 +1100,7 @@ open class PShader : PConstants {
                 setUniformValue(perspectiveLoc, 0)
             }
         }
+
         if (-1 < scaleLoc) {
             if (currentPG!!.getHint(PConstants.DISABLE_OPTIMIZED_STROKE)) {
                 setUniformValue(scaleLoc, 1.0f, 1.0f, 1.0f)
@@ -1066,21 +1117,33 @@ open class PShader : PConstants {
 
     protected fun unbindTyped() {
         if (-1 < offsetLoc) pgl!!.disableVertexAttribArray(offsetLoc)
+
+
         if (-1 < directionLoc) pgl!!.disableVertexAttribArray(directionLoc)
+
         if (-1 < textureLoc && texture != null) {
             pgl!!.activeTexture(PGL.TEXTURE0 + texUnit)
             texture!!.unbind()
             pgl!!.activeTexture(PGL.TEXTURE0)
             texture = null
         }
+
         if (-1 < ambientLoc) pgl!!.disableVertexAttribArray(ambientLoc)
+
         if (-1 < specularLoc) pgl!!.disableVertexAttribArray(specularLoc)
+
         if (-1 < emissiveLoc) pgl!!.disableVertexAttribArray(emissiveLoc)
+
         if (-1 < shininessLoc) pgl!!.disableVertexAttribArray(shininessLoc)
+
         if (-1 < vertexLoc) pgl!!.disableVertexAttribArray(vertexLoc)
+
         if (-1 < colorLoc) pgl!!.disableVertexAttribArray(colorLoc)
+
         if (-1 < texCoordLoc) pgl!!.disableVertexAttribArray(texCoordLoc)
+
         if (-1 < normalLoc) pgl!!.disableVertexAttribArray(normalLoc)
+
         if (-1 < ppixelsLoc) {
             pgl!!.enableFBOLayer()
             pgl!!.activeTexture(PGL.TEXTURE0 + ppixelsUnit)
@@ -1096,20 +1159,26 @@ open class PShader : PConstants {
         var scalev = 1f
         var dispu = 0f
         var dispv = 0f
+
         if (tex != null) {
+
             if (tex.invertedX()) {
                 scaleu = -1f
                 dispu = 1f
             }
+
             if (tex.invertedY()) {
                 scalev = -1f
                 dispv = 1f
             }
+
             scaleu *= tex.maxTexcoordU()
             dispu *= tex.maxTexcoordU()
             scalev *= tex.maxTexcoordV()
             dispv *= tex.maxTexcoordV()
+
             setUniformValue(texOffsetLoc, 1.0f / tex.width, 1.0f / tex.height)
+
             if (-1 < textureLoc) {
                 texUnit = if (-1 < ppixelsUnit) ppixelsUnit + 1 else lastTexUnit + 1
                 setUniformValue(textureLoc, texUnit)
@@ -1117,10 +1186,12 @@ open class PShader : PConstants {
                 tex.bind()
             }
         }
+
         if (-1 < texMatrixLoc) {
             if (tcmat == null) {
                 tcmat = FloatArray(16)
             }
+
             tcmat!![0] = scaleu
             tcmat!![4] = 0F
             tcmat!![8] = 0F
@@ -1137,6 +1208,7 @@ open class PShader : PConstants {
             tcmat!![7] = 0F
             tcmat!![11] = 0F
             tcmat!![15] = 0F
+
             setUniformMatrix(texMatrixLoc, tcmat!!)
         }
     }
@@ -1213,8 +1285,8 @@ open class PShader : PConstants {
 
     // ***************************************************************************
 
-    // Class to store a user-specified value for a uniform parameter
-    // in the shader
+    // Class to store a user-specified value for a uniform parameter in the shader
+
     protected class UniformValue internal constructor(@JvmField var type: Int, @JvmField var value: Any) {
 
         companion object {
@@ -1245,7 +1317,9 @@ open class PShader : PConstants {
     // ***************************************************************************
 
     // Processing specific
+
     // The shader type: POINT, LINE, POLY, etc.
+
     companion object {
         const val POINT = 0
         const val LINE = 1

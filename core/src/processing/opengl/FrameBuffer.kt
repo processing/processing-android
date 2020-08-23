@@ -36,14 +36,14 @@ import java.nio.IntBuffer
  * It transparently handles the situations when the FBO extension is
  * not available.
  *
- * By Andres Colubri.
+ * By Andres Colubri, Aditya Rana
  */
 open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenFb: Boolean) : PConstants {
     protected var pgl: PGL?
 
+    // The context that created this framebuffer.
     @JvmField
-    var context // The context that created this framebuffer.
-            : Int
+    var context: Int
 
     @JvmField
     var glFbo: Int = 0
@@ -247,6 +247,8 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
     ///////////////////////////////////////////////////////////
 
     // Color buffer setters.
+
+
     fun setColorBuffer(tex: Texture) {
         setColorBuffers(arrayOf(tex), 1)
     }
@@ -257,13 +259,16 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
 
     fun setColorBuffers(textures: Array<Texture>, n: Int) {
         if (screenFb) return
+
         if (numColorBuffers != PApplet.min(n, textures.size)) {
             throw RuntimeException("Wrong number of textures to set the color " +
                     "buffers.")
         }
+
         for (i in 0 until numColorBuffers) {
             colorBufferTex[i] = textures[i]
         }
+
         pg?.pushFramebuffer()
         pg?.setFramebuffer(this)
 
@@ -272,11 +277,13 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
             pgl?.framebufferTexture2D(PGL.FRAMEBUFFER, PGL.COLOR_ATTACHMENT0 + i,
                     PGL.TEXTURE_2D, 0, 0)
         }
+
         for (i in 0 until numColorBuffers) {
             pgl?.framebufferTexture2D(PGL.FRAMEBUFFER, PGL.COLOR_ATTACHMENT0 + i,
                     colorBufferTex[i]!!.glTarget,
                     colorBufferTex[i]!!.glName, 0)
         }
+
         pgl?.validateFramebuffer()
         pg?.popFramebuffer()
     }
@@ -288,13 +295,16 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
             colorBufferTex[i] = colorBufferTex[i1]
             colorBufferTex[i1] = tmp
         }
+
         pg?.pushFramebuffer()
         pg?.setFramebuffer(this)
+
         for (i in 0 until numColorBuffers) {
             pgl?.framebufferTexture2D(PGL.FRAMEBUFFER, PGL.COLOR_ATTACHMENT0 + i,
                     colorBufferTex[i]!!.glTarget,
                     colorBufferTex[i]!!.glName, 0)
         }
+
         pgl?.validateFramebuffer()
         pg?.popFramebuffer()
     }
@@ -316,10 +326,15 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
     ///////////////////////////////////////////////////////////
 
     // Allocate/release framebuffer.
+
+
     protected fun allocate() {
         dispose() // Just in the case this object is being re-allocated.
+
         context = pgl?.currentContext!!
+
         glres = PGraphicsOpenGL.GLResourceFrameBuffer(this) // create the FBO resources...
+
         if (screenFb) {
             glFbo = 0
         } else {
@@ -341,6 +356,7 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
 
     fun dispose() {
         if (screenFb) return
+
         if (glres != null) {
             glres!!.dispose()
             glFbo = 0
@@ -354,7 +370,9 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
 
     fun contextIsOutdated(): Boolean {
         if (screenFb) return false
+
         val outdated = !(pgl?.contextIsCurrent(context))!!
+
         if (outdated) {
             dispose()
             for (i in 0 until numColorBuffers) {
@@ -366,24 +384,33 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
 
     protected fun initColorBufferMultisample() {
         if (screenFb) return
+
         pg?.pushFramebuffer()
         pg?.setFramebuffer(this)
+
         pgl?.bindRenderbuffer(PGL.RENDERBUFFER, glMultisample)
+
         pgl?.renderbufferStorageMultisample(PGL.RENDERBUFFER, nsamples,
                 PGL.RGBA8, width, height)
+
         pgl?.framebufferRenderbuffer(PGL.FRAMEBUFFER, PGL.COLOR_ATTACHMENT0,
                 PGL.RENDERBUFFER, glMultisample)
+
         pg?.popFramebuffer()
     }
 
     protected fun initPackedDepthStencilBuffer() {
         if (screenFb) return
+
         if (width == 0 || height == 0) {
             throw RuntimeException("PFramebuffer: size undefined.")
         }
+
         pg?.pushFramebuffer()
         pg?.setFramebuffer(this)
+
         pgl?.bindRenderbuffer(PGL.RENDERBUFFER, glDepthStencil)
+
         if (multisample) {
             pgl?.renderbufferStorageMultisample(PGL.RENDERBUFFER, nsamples,
                     PGL.DEPTH24_STENCIL8, width, height)
@@ -391,22 +418,29 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
             pgl?.renderbufferStorage(PGL.RENDERBUFFER, PGL.DEPTH24_STENCIL8,
                     width, height)
         }
+
         pgl?.framebufferRenderbuffer(PGL.FRAMEBUFFER, PGL.DEPTH_ATTACHMENT,
                 PGL.RENDERBUFFER, glDepthStencil)
+
         pgl?.framebufferRenderbuffer(PGL.FRAMEBUFFER, PGL.STENCIL_ATTACHMENT,
                 PGL.RENDERBUFFER, glDepthStencil)
+
         pg?.popFramebuffer()
     }
 
     protected fun initDepthBuffer() {
         if (screenFb) return
+
         if (width == 0 || height == 0) {
             throw RuntimeException("PFramebuffer: size undefined.")
         }
+
         pg?.pushFramebuffer()
         pg?.setFramebuffer(this)
+
         pgl?.bindRenderbuffer(PGL.RENDERBUFFER, glDepth)
         var glConst = PGL.DEPTH_COMPONENT16
+
         if (depthBits == 16) {
             glConst = PGL.DEPTH_COMPONENT16
         } else if (depthBits == 24) {
@@ -420,6 +454,7 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
         } else {
             pgl?.renderbufferStorage(PGL.RENDERBUFFER, glConst, width, height)
         }
+
         pgl?.framebufferRenderbuffer(PGL.FRAMEBUFFER, PGL.DEPTH_ATTACHMENT,
                 PGL.RENDERBUFFER, glDepth)
         pg?.popFramebuffer()
@@ -427,13 +462,18 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
 
     protected fun initStencilBuffer() {
         if (screenFb) return
+
         if (width == 0 || height == 0) {
             throw RuntimeException("PFramebuffer: size undefined.")
         }
+
         pg?.pushFramebuffer()
         pg?.setFramebuffer(this)
+
         pgl?.bindRenderbuffer(PGL.RENDERBUFFER, glStencil)
+
         var glConst = PGL.STENCIL_INDEX1
+
         if (stencilBits == 1) {
             glConst = PGL.STENCIL_INDEX1
         } else if (stencilBits == 4) {
@@ -447,6 +487,7 @@ open class FrameBuffer(@JvmField var pg: PGraphicsOpenGL?, @JvmField var screenF
         } else {
             pgl?.renderbufferStorage(PGL.RENDERBUFFER, glConst, width, height)
         }
+
         pgl?.framebufferRenderbuffer(PGL.FRAMEBUFFER, PGL.STENCIL_ATTACHMENT,
                 PGL.RENDERBUFFER, glStencil)
         pg?.popFramebuffer()

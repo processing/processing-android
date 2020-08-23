@@ -33,6 +33,7 @@ import java.nio.IntBuffer
 import java.util.*
 
 /**
+ * @author Processing migrated into kotlin: Aditya Rana
  * This class wraps an OpenGL texture.
  * By Andres Colubri
  *
@@ -40,24 +41,34 @@ import java.util.*
 open class Texture : PConstants {
     @JvmField
     var width = 0
+
     @JvmField
     var height = 0
+
     @JvmField
     var glName: Int
+
     @JvmField
     var glTarget = 0
+
     @JvmField
     var glFormat = 0
+
     @JvmField
     var glMinFilter = 0
+
     @JvmField
     var glMagFilter = 0
+
     @JvmField
     var glWrapS = 0
+
     @JvmField
     var glWrapT = 0
+
     @JvmField
     var glWidth = 0
+
     @JvmField
     var glHeight = 0
 
@@ -76,6 +87,7 @@ open class Texture : PConstants {
     // FrameBuffer object.
     @JvmField
     var usingMipmaps = false
+
     @JvmField
     var usingRepeat = false
 
@@ -93,7 +105,9 @@ open class Texture : PConstants {
     protected var rgbaPixUpdateCount = 0
 
     //////////////////////////////////////////////////////////////
+
     // Modified flag
+
     /** Modified portion of the texture  */
     @JvmField
     var isModified = false
@@ -148,9 +162,11 @@ open class Texture : PConstants {
         glName = 0
         init(width, height, params as Parameters)
     }
+
     ////////////////////////////////////////////////////////////
 
     // Init, resize methods
+
     /**
      * Sets the size of the image and texture to width x height. If the texture is
      * already initialized, it first destroys the current OpenGL texture object
@@ -204,6 +220,7 @@ open class Texture : PConstants {
         this.glMagFilter = glMagFilter
         this.glWrapS = glWrapS
         this.glWrapT = glWrapT
+
         maxTexcoordU = width.toFloat() / glWidth
         maxTexcoordV = height.toFloat() / glHeight
         usingMipmaps = glMinFilter == PGL.LINEAR_MIPMAP_NEAREST ||
@@ -240,6 +257,7 @@ open class Texture : PConstants {
     ////////////////////////////////////////////////////////////
 
     // Set methods
+
     fun set(tex: Texture?) {
         copyTexture(tex, 0, 0, tex!!.width, tex!!.height, true)
     }
@@ -268,28 +286,37 @@ open class Texture : PConstants {
             PGraphics.showWarning("The pixels array is null.")
             return
         }
+
         if (pixels.size < w * h) {
             PGraphics.showWarning("The pixel array has a length of " +
                     pixels.size + ", but it should be at least " + w * h)
             return
         }
+
         if (pixels.isEmpty() || w == 0 || h == 0) {
             return
         }
+
         var enabledTex = false
+
         if (!pgl.texturingIsEnabled(glTarget)) {
             pgl.enableTexturing(glTarget)
             enabledTex = true
         }
+
         pgl.bindTexture(glTarget, glName)
         loadPixels(w * h)
         convertToRGBA(pixels, format, w, h)
+
         if (invertedX) flipArrayOnX(rgbaPixels, 1)
         if (invertedY) flipArrayOnY(rgbaPixels, 1)
+
         updatePixelBuffer(rgbaPixels)
         pgl.texSubImage2D(glTarget, 0, x, y, w, h, PGL.RGBA, PGL.UNSIGNED_BYTE,
                 pixelBuffer)
+
         fillEdges(x, y, w, h)
+
         if (usingMipmaps) {
             if (PGraphicsOpenGL.autoMipmapGenSupported) {
                 pgl.generateMipmap(glTarget)
@@ -297,10 +324,13 @@ open class Texture : PConstants {
                 manualMipmap()
             }
         }
+
         pgl.bindTexture(glTarget, 0)
+
         if (enabledTex) {
             pgl.disableTexturing(glTarget)
         }
+
         releasePixelBuffer()
         releaseRGBAPixels()
         updateTexels(x, y, w, h)
@@ -309,6 +339,7 @@ open class Texture : PConstants {
     ////////////////////////////////////////////////////////////
 
     // Native set methods
+
     fun setNative(pixels: IntArray?) {
         setNative(pixels, 0, 0, width, height)
     }
@@ -321,29 +352,37 @@ open class Texture : PConstants {
 
     fun setNative(pixBuf: IntBuffer?, x: Int, y: Int, w: Int, h: Int) {
         var pixBuf = pixBuf
+
         if (pixBuf == null) {
             pixBuf = null
             PGraphics.showWarning("The pixel buffer is null.")
             return
         }
+
         if (pixBuf.capacity() < w * h) {
             PGraphics.showWarning("The pixel bufer has a length of " +
                     pixBuf.capacity() + ", but it should be at least " + w * h)
             return
         }
+
         if (pixBuf.capacity() == 0) {
             // Nothing to do (means that w == h == 0) but not an erroneous situation
             return
         }
+
         var enabledTex = false
+
         if (!pgl.texturingIsEnabled(glTarget)) {
             pgl.enableTexturing(glTarget)
             enabledTex = true
         }
+
         pgl.bindTexture(glTarget, glName)
         pgl.texSubImage2D(glTarget, 0, x, y, w, h, PGL.RGBA, PGL.UNSIGNED_BYTE,
                 pixBuf)
+
         fillEdges(x, y, w, h)
+
         if (usingMipmaps) {
             if (PGraphicsOpenGL.autoMipmapGenSupported) {
                 pgl.generateMipmap(glTarget)
@@ -351,12 +390,16 @@ open class Texture : PConstants {
                 manualMipmap()
             }
         }
+
         pgl.bindTexture(glTarget, 0)
+
         if (enabledTex) {
             pgl.disableTexturing(glTarget)
         }
+
         updateTexels(x, y, w, h)
     }
+
     ////////////////////////////////////////////////////////////
 
     // Get methods
@@ -367,10 +410,12 @@ open class Texture : PConstants {
         if (pixels == null) {
             throw RuntimeException("Trying to copy texture to null pixels array")
         }
+
         if (pixels.size != width * height) {
             throw RuntimeException("Trying to copy texture to pixels array of " +
                     "wrong size")
         }
+
         if (tempFbo == null) {
             tempFbo = FrameBuffer(pg, glWidth, glHeight)
         }
@@ -385,13 +430,16 @@ open class Texture : PConstants {
         pg?.popFramebuffer()
         tempFbo!!.getPixels(pixels)
         convertToARGB(pixels)
+
         if (invertedX) flipArrayOnX(pixels, 1)
         if (invertedY) flipArrayOnY(pixels, 1)
     }
 
     ////////////////////////////////////////////////////////////
+
     // Put methods (the source texture is not resized to cover the entire
     // destination).
+
     fun put(tex: Texture?) {
         copyTexture(tex, 0, 0, tex!!.width, tex!!.height, false)
     }
@@ -409,8 +457,11 @@ open class Texture : PConstants {
             target: Int, tex: Int, x: Int, y: Int, w: Int, h: Int) {
         copyTexture(texTarget, texName, texWidth, texHeight, x, y, w, h, false)
     }
+
     ////////////////////////////////////////////////////////////
+
     // Get OpenGL parameters
+
     /**
      * Returns true or false whether or not the texture is using mipmaps.
      * @return boolean
@@ -422,6 +473,7 @@ open class Texture : PConstants {
     fun usingMipmaps(mipmaps: Boolean, sampling: Int) {
         val glMagFilter0 = glMagFilter
         val glMinFilter0 = glMinFilter
+
         if (mipmaps) {
             if (sampling == POINT) {
                 glMagFilter = PGL.NEAREST
@@ -457,6 +509,7 @@ open class Texture : PConstants {
                 throw RuntimeException("Unknown texture filtering mode")
             }
         }
+
         if (glMagFilter0 != glMagFilter || glMinFilter0 != glMinFilter) {
             bind()
             pgl.texParameteri(glTarget, PGL.TEXTURE_MIN_FILTER, glMinFilter)
@@ -491,7 +544,9 @@ open class Texture : PConstants {
             glWrapT = PGL.CLAMP_TO_EDGE
             usingRepeat = false
         }
+
         bind()
+
         pgl.texParameteri(glTarget, PGL.TEXTURE_WRAP_S, glWrapS)
         pgl.texParameteri(glTarget, PGL.TEXTURE_WRAP_T, glWrapT)
         unbind()
@@ -566,6 +621,7 @@ open class Texture : PConstants {
     ////////////////////////////////////////////////////////////
 
     // Bind/unbind
+
     fun bind() {
         // Binding a texture automatically enables texturing for the
         // texture target from that moment onwards. Unbinding the texture
@@ -650,6 +706,7 @@ open class Texture : PConstants {
     ////////////////////////////////////////////////////////////
 
     // Buffer sink interface.
+
     fun setBufferSource(source: Any?) {
         bufferSource = source
         sourceMethods
@@ -660,6 +717,7 @@ open class Texture : PConstants {
         if (bufferCache == null) {
             bufferCache = LinkedList()
         }
+
         if (bufferCache!!.size + 1 <= MAX_BUFFER_CACHE_SIZE) {
             bufferCache!!.add(BufferData(natRef, byteBuf.asIntBuffer(), w, h))
         } else {
@@ -692,15 +750,18 @@ open class Texture : PConstants {
         // transferred to the texture, so the pixels should be in sync with the
         // texture.
         var data: BufferData? = null
+
         if (usedBuffers != null && 0 < usedBuffers!!.size) {
             data = usedBuffers!!.last
         } else if (bufferCache != null && 0 < bufferCache!!.size) {
             data = bufferCache!!.last
         }
+
         if (data != null) {
             if (data.w != width || data.h != height) {
                 init(data.w, data.h)
             }
+
             data.rgbBuf!!.rewind()
             data.rgbBuf!![pixels]
             convertToARGB(pixels)
@@ -711,6 +772,7 @@ open class Texture : PConstants {
             if (usedBuffers == null) {
                 usedBuffers = LinkedList()
             }
+
             while (0 < bufferCache!!.size) {
                 data = bufferCache!!.removeAt(0)
                 usedBuffers!!.add(data)
@@ -728,11 +790,13 @@ open class Texture : PConstants {
 
     fun bufferUpdate(): Boolean {
         var data: BufferData? = null
+
         try {
             data = bufferCache!!.removeAt(0)
         } catch (ex: NoSuchElementException) {
             PGraphics.showWarning("Don't have pixel data to copy to texture")
         }
+
         return if (data != null) {
             if (data.w != width || data.h != height) {
                 init(data.w, data.h)
@@ -761,9 +825,11 @@ open class Texture : PConstants {
                         "disposeBuffer method.")
             }
         }
+
     ////////////////////////////////////////////////////////////
 
     // Utilities
+
     /**
      * Flips intArray along the X axis.
      * @param intArray int[]
@@ -821,8 +887,7 @@ open class Texture : PConstants {
     protected fun convertToRGBA(pixels: IntArray, format: Int, w: Int, h: Int) {
         if (PGL.BIG_ENDIAN) {
             when (format) {
-                PConstants.ALPHA ->         // Converting from xxxA into RGBA. RGB is set to white
-                    // (0xFFFFFF, i.e.: (255, 255, 255))
+                PConstants.ALPHA ->         // Converting from xxxA into RGBA. RGB is set to white (0xFFFFFF, i.e.: (255, 255, 255))
                 {
                     var i = 0
                     while (i < pixels.size) {
@@ -830,6 +895,7 @@ open class Texture : PConstants {
                         i++
                     }
                 }
+
                 PConstants.RGB ->         // Converting xRGB into RGBA. A is set to 0xFF (255, full opacity).
                 {
                     var i = 0
@@ -839,8 +905,8 @@ open class Texture : PConstants {
                         i++
                     }
                 }
-                PConstants.ARGB ->         // Converting ARGB into RGBA. Shifting RGB to 8 bits to the left,
-                    // and bringing A to the first byte.
+
+                PConstants.ARGB ->         // Converting ARGB into RGBA. Shifting RGB to 8 bits to the left, and bringing A to the first byte.
                 {
                     var i = 0
                     while (i < pixels.size) {
@@ -865,6 +931,7 @@ open class Texture : PConstants {
                         i++
                     }
                 }
+
                 PConstants.RGB ->         // We need to convert xRGB into ABGR,
                     // so R and B must be swapped, and the x just made 0xFF.
                 {
@@ -877,8 +944,8 @@ open class Texture : PConstants {
                         i++
                     }
                 }
-                PConstants.ARGB ->         // We need to convert ARGB into ABGR,
-                    // so R and B must be swapped, A and G just brought back in.
+
+                PConstants.ARGB ->         // We need to convert ARGB into ABGR, so R and B must be swapped, A and G just brought back in.
                 {
                     var i = 0
                     while (i < pixels.size) {
@@ -926,9 +993,11 @@ open class Texture : PConstants {
     ///////////////////////////////////////////////////////////
 
     // Allocate/release texture.
+
     protected fun setSize(w: Int, h: Int) {
         width = w
         height = h
+
         if (PGraphicsOpenGL.npotTexSupported) {
             glWidth = w
             glHeight = h
@@ -936,6 +1005,7 @@ open class Texture : PConstants {
             glWidth = PGL.nextPowerOfTwo(w)
             glHeight = PGL.nextPowerOfTwo(h)
         }
+
         if (glWidth > PGraphicsOpenGL.maxTextureSize ||
                 glHeight > PGraphicsOpenGL.maxTextureSize) {
             glHeight = 0
@@ -961,17 +1031,21 @@ open class Texture : PConstants {
     protected fun allocate() {
         dispose() // Just in the case this object is being re-allocated.
         var enabledTex = false
+
         if (!pgl.texturingIsEnabled(glTarget)) {
             pgl.enableTexturing(glTarget)
             enabledTex = true
         }
+
         context = pgl.currentContext
         glres = PGraphicsOpenGL.GLResourceTexture(this)
         pgl.bindTexture(glTarget, glName)
+
         pgl.texParameteri(glTarget, PGL.TEXTURE_MIN_FILTER, glMinFilter)
         pgl.texParameteri(glTarget, PGL.TEXTURE_MAG_FILTER, glMagFilter)
         pgl.texParameteri(glTarget, PGL.TEXTURE_WRAP_S, glWrapS)
         pgl.texParameteri(glTarget, PGL.TEXTURE_WRAP_T, glWrapT)
+
         if (PGraphicsOpenGL.anisoSamplingSupported) {
             pgl.texParameterf(glTarget, PGL.TEXTURE_MAX_ANISOTROPY,
                     PGraphicsOpenGL.maxAnisoAmount)
@@ -987,6 +1061,7 @@ open class Texture : PConstants {
         // any garbage.
         pgl.initTexture(glTarget, PGL.RGBA, width, height)
         pgl.bindTexture(glTarget, 0)
+
         if (enabledTex) {
             pgl.disableTexturing(glTarget)
         }
@@ -1024,11 +1099,13 @@ open class Texture : PConstants {
 
     // Utilities.
     // Copies source texture tex into this.
+
     protected fun copyTexture(tex: Texture?, x: Int, y: Int, w: Int, h: Int,
                               scale: Boolean) {
         if (tex == null) {
             throw RuntimeException("Source texture is null")
         }
+
         if (tempFbo == null) {
             tempFbo = FrameBuffer(pg, glWidth, glHeight)
         }
@@ -1040,10 +1117,12 @@ open class Texture : PConstants {
         // FBO copy:
         pg?.pushFramebuffer()
         pg?.setFramebuffer(tempFbo)
+
         // Replaces anything that this texture might contain in the area being
         // replaced by the new one.
         pg?.pushStyle()
         pg?.blendMode(PConstants.REPLACE)
+
         if (scale) {
             // Rendering tex into "this", and scaling the source rectangle
             // to cover the entire destination region.
@@ -1058,8 +1137,9 @@ open class Texture : PConstants {
                     0, 0, tempFbo!!.width, tempFbo!!.height, 1,
                     x, y, x + w, y + h, x, y, x + w, y + h)
         }
-        pgl.flush() // Needed to make sure that the change in this texture is
-        // available immediately.
+
+        pgl.flush() // Needed to make sure that the change in this texture is available immediately.
+
         pg?.popStyle()
         pg?.popFramebuffer()
         updateTexels(x, y, w, h)
@@ -1080,9 +1160,10 @@ open class Texture : PConstants {
         // FBO copy:
         pg?.pushFramebuffer()
         pg?.setFramebuffer(tempFbo)
-        // Replaces anything that this texture might contain in the area being
-        // replaced by the new one.
+
+        // Replaces anything that this texture might contain in the area being replaced by the new one.
         pg?.pushStyle()
+
         pg?.blendMode(PConstants.REPLACE)
         if (scale) {
             // Rendering tex into "this", and scaling the source rectangle
@@ -1109,6 +1190,7 @@ open class Texture : PConstants {
         // The OpenGL texture of this object is replaced with the one from the
         // source object, so we delete the former to avoid resource wasting.
         dispose()
+
         width = src.width
         height = src.height
         glName = src.glName
@@ -1159,6 +1241,7 @@ open class Texture : PConstants {
             if (glTarget == PGL.TEXTURE_2D) {
                 res.target = TEX2D
             }
+
             if (glFormat == PGL.RGB) {
                 res.format = PConstants.RGB
             } else if (glFormat == PGL.RGBA) {
@@ -1166,6 +1249,7 @@ open class Texture : PConstants {
             } else if (glFormat == PGL.ALPHA) {
                 res.format = PConstants.ALPHA
             }
+
             if (glMagFilter == PGL.NEAREST && glMinFilter == PGL.NEAREST) {
                 res.sampling = POINT
                 res.mipmaps = false
@@ -1188,6 +1272,7 @@ open class Texture : PConstants {
                 res.sampling = TRILINEAR
                 res.mipmaps = true
             }
+
             if (glWrapS == PGL.CLAMP_TO_EDGE) {
                 res.wrapU = PConstants.CLAMP
             } else if (glWrapS == PGL.REPEAT) {
@@ -1198,6 +1283,7 @@ open class Texture : PConstants {
             } else if (glWrapT == PGL.REPEAT) {
                 res.wrapV = PConstants.REPEAT
             }
+
             return res
         }
 
@@ -1207,6 +1293,7 @@ open class Texture : PConstants {
             } else {
                 throw RuntimeException("Unknown texture target")
             }
+
             glFormat = if (params.format == PConstants.RGB) {
                 PGL.RGB
             } else if (params.format == PConstants.ARGB) {
@@ -1216,7 +1303,9 @@ open class Texture : PConstants {
             } else {
                 throw RuntimeException("Unknown texture format")
             }
+
             var mipmaps = params.mipmaps && PGL.MIPMAPS_ENABLED
+
             if (mipmaps && !PGraphicsOpenGL.autoMipmapGenSupported) {
                 PGraphics.showWarning("Mipmaps were requested but automatic mipmap " +
                         "generation is not supported and manual " +
@@ -1224,6 +1313,7 @@ open class Texture : PConstants {
                         "will be disabled.")
                 mipmaps = false
             }
+
             if (params.sampling == POINT) {
                 glMagFilter = PGL.NEAREST
                 glMinFilter = PGL.NEAREST
@@ -1239,6 +1329,7 @@ open class Texture : PConstants {
             } else {
                 throw RuntimeException("Unknown texture filtering mode")
             }
+
             glWrapS = if (params.wrapU == PConstants.CLAMP) {
                 PGL.CLAMP_TO_EDGE
             } else if (params.wrapU == PConstants.REPEAT) {
@@ -1246,6 +1337,7 @@ open class Texture : PConstants {
             } else {
                 throw RuntimeException("Unknown wrapping mode")
             }
+
             glWrapT = if (params.wrapV == PConstants.CLAMP) {
                 PGL.CLAMP_TO_EDGE
             } else if (params.wrapV == PConstants.REPEAT) {
@@ -1253,9 +1345,11 @@ open class Texture : PConstants {
             } else {
                 throw RuntimeException("Unknown wrapping mode")
             }
-            usingMipmaps = glMinFilter == PGL.LINEAR_MIPMAP_NEAREST ||
-                    glMinFilter == PGL.LINEAR_MIPMAP_LINEAR
+
+            usingMipmaps = glMinFilter == PGL.LINEAR_MIPMAP_NEAREST || glMinFilter == PGL.LINEAR_MIPMAP_LINEAR
+
             usingRepeat = glWrapS == PGL.REPEAT || glWrapT == PGL.REPEAT
+
             invertedX = false
             invertedY = false
         }

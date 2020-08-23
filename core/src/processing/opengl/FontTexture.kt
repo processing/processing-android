@@ -46,11 +46,12 @@ import java.util.*
  * OpenGL texture might not be enough to store all the glyphs,
  * so PFontTexture also takes care of spreading a single font
  * over several textures.
- * @author Andres Colubri
+ * @author Andres Colubri, Aditya Rana
  */
 open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PConstants {
     protected var pgl: PGL?
     protected var is3D: Boolean
+
     protected var minSize = 0
     protected var maxSize = 0
     protected var offsetX = 0
@@ -62,6 +63,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
 
     protected var images: Array<PImage?>? = null
     protected var lastTex = 0
+
     protected lateinit var glyphTexinfos: Array<TextureInfo?>
     protected var texinfoMap: HashMap<PFont.Glyph, TextureInfo>? = null
 
@@ -99,6 +101,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
     fun addTexture(pg: PGraphicsOpenGL?): Boolean {
         val w: Int
         val h: Int
+
         val resize: Boolean
         w = maxSize
 
@@ -228,6 +231,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
     //                    tex.glWidth, tex.glHeight,
     //                    0, 0, tex.glWidth, tex.glHeight);
     //  }
+
     // Adds this glyph to the opengl texture in PFont.
     protected fun addToTexture(pg: PGraphicsOpenGL?, idx: Int, glyph: PFont.Glyph?) {
         // We add one pixel to avoid issues when sampling the font texture at
@@ -244,6 +248,7 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
         // Converting the pixels array from the PImage into a valid RGBA array for
         // OpenGL.
         val rgba = IntArray(w * h)
+
         var t = 0
         var p = 0
 
@@ -277,8 +282,11 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
             offsetX = 0
             offsetY += lineHeight
         }
+
         lineHeight = Math.max(lineHeight, h)
+
         var resized = false
+
         if (offsetY + lineHeight > textures!![lastTex]!!.glHeight) {
             // We run out of space in the current texture, so we add a new texture:
             resized = addTexture(pg)
@@ -296,12 +304,15 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
         }
 
         val tinfo = TextureInfo(lastTex, offsetX, offsetY, w, h, rgba)
+
         offsetX += w
+
         if (idx == glyphTexinfos.size) {
             val temp = arrayOfNulls<TextureInfo>(glyphTexinfos.size + 1)
             System.arraycopy(glyphTexinfos, 0, temp, 0, glyphTexinfos.size)
             glyphTexinfos = temp
         }
+
         glyphTexinfos[idx] = tinfo
         texinfoMap!![glyph] = tinfo
     }
@@ -310,19 +321,25 @@ open class FontTexture(pg: PGraphicsOpenGL?, font: PFont?, is3D: Boolean) : PCon
                                      pix: IntArray) {
         @JvmField
         var width = 0
+
         @JvmField
         var height = 0
+
         @JvmField
         var crop: IntArray
 
         @JvmField
         var u0 = 0f
+
         @JvmField
         var u1 = 0f
+
         @JvmField
         var v0 = 0f
+
         @JvmField
         var v1 = 0f
+
         @JvmField
         var pixels: IntArray
 

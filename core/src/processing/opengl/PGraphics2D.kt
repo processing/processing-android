@@ -26,9 +26,10 @@ package processing.opengl
 
 import processing.core.*
 
+/**
+ * @author Aditya Rana
+ */
 open class PGraphics2D : PGraphicsOpenGL() {
-
-    //////////////////////////////////////////////////////////////
 
     // RENDERER SUPPORT QUERIES
 
@@ -91,6 +92,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
     //////////////////////////////////////////////////////////////
 
     // CAMERA
+
 
     override fun beginCamera() {
         PGraphics.showMethodWarning("beginCamera")
@@ -204,6 +206,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
     //  protected PShape createShapePrimitive(int kind, float... p) {
     //    return new PShapeOpenGL(this, kind, p);
     //  }
+
     /*
   @Override
   public PShape createShape(PShape source) {
@@ -318,6 +321,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
 
     // BEZIER VERTICES
 
+
     override fun bezierVertex(x2: Float, y2: Float, z2: Float,
                               x3: Float, y3: Float, z3: Float,
                               x4: Float, y4: Float, z4: Float) {
@@ -328,6 +332,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
 
     // QUADRATIC BEZIER VERTICES
 
+
     override fun quadraticVertex(x2: Float, y2: Float, z2: Float,
                                  x4: Float, y4: Float, z4: Float) {
         PGraphics.showDepthWarningXYZ("quadVertex")
@@ -337,6 +342,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
 
     // CURVE VERTICES
 
+
     override fun curveVertex(x: Float, y: Float, z: Float) {
         PGraphics.showDepthWarningXYZ("curveVertex")
     }
@@ -344,6 +350,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
     //////////////////////////////////////////////////////////////
 
     // BOX
+
 
     override fun box(w: Float, h: Float, d: Float) {
         PGraphics.showMethodWarning("box")
@@ -494,6 +501,7 @@ open class PGraphics2D : PGraphicsOpenGL() {
     }
 
     companion object {
+
         //////////////////////////////////////////////////////////////
 
         // SHAPE I/O

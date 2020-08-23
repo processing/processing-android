@@ -28,6 +28,7 @@ import processing.core.*
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * This class holds a 3D model composed of vertices, normals, colors
  * (per vertex) and texture coordinates (also per vertex). All this data is
  * stored in Vertex Buffer Objects (VBO) in GPU memory for very fast access.
@@ -47,11 +48,15 @@ import java.util.*
 open class PShapeOpenGL : PShape {
     protected var pg: PGraphicsOpenGL? = null
     protected var pgl: PGL? = null
-    protected  var context = 0 // The context that created this shape.
+
+    // The context that created this shape.
+    protected  var context = 0
+
     protected var root: PShapeOpenGL? = null
 
     // ........................................................
     // Input, tessellated geometry
+
     private var inGeo: PGraphicsOpenGL.InGeometry? = null
     private var tessGeo: PGraphicsOpenGL.TessGeometry? = null
     private var tessellator: PGraphicsOpenGL.Tessellator? = null
@@ -59,12 +64,14 @@ open class PShapeOpenGL : PShape {
 
     // ........................................................
     // Texturing
+
     protected var textures: HashSet<PImage?>? = null
     protected var strokedTexture = false
     protected var untexChild = false
 
     // ........................................................
     // OpenGL buffers
+
     protected var bufPolyVertex: VertexBuffer? = null
     protected var bufPolyColor: VertexBuffer? = null
     protected var bufPolyNormal: VertexBuffer? = null
@@ -96,22 +103,26 @@ open class PShapeOpenGL : PShape {
     protected var pointIndCopyOffset = 0
     protected var polyIndexOffset = 0
     protected var polyVertexOffset = 0
+
     protected var polyVertexAbs = 0
     protected var polyVertexRel = 0
     protected var lineIndexOffset = 0
     protected var lineVertexOffset = 0
     protected var lineVertexAbs = 0
     protected var lineVertexRel = 0
+
     protected var pointIndexOffset = 0
     protected var pointVertexOffset = 0
     protected var pointVertexAbs = 0
     protected var pointVertexRel = 0
+
     protected var firstPolyIndexCache = 0
     protected var lastPolyIndexCache = 0
     protected var firstLineIndexCache = 0
     protected var lastLineIndexCache = 0
     protected var firstPointIndexCache = 0
     protected var lastPointIndexCache = 0
+
     protected var firstPolyVertex = 0
     protected var lastPolyVertex = 0
     protected var firstLineVertex = 0
@@ -121,12 +132,14 @@ open class PShapeOpenGL : PShape {
 
     // ........................................................
     // Geometric transformations.
+
     protected var transform: PMatrix? = null
     protected var transformInv: PMatrix? = null
     protected var matrixInv: PMatrix? = null
 
     // ........................................................
     // State/rendering flags
+
     protected var tessellated = false
     protected var needBufferInit = false
 
@@ -148,6 +161,7 @@ open class PShapeOpenGL : PShape {
 
     // ........................................................
     // Bezier and Catmull-Rom curves
+
     protected var bezierDetail = 0
     protected var curveDetail = 0
     protected var curveTightness = 0f
@@ -157,6 +171,7 @@ open class PShapeOpenGL : PShape {
 
     // ........................................................
     // Normals
+
     protected var normalX = 0f
     protected var normalY = 0f
     protected var normalZ = 0f
@@ -166,6 +181,7 @@ open class PShapeOpenGL : PShape {
 
     // ........................................................
     // Modification variables (used only by the root shape)
+
     protected var modified = false
     protected var modifiedPolyVertices = false
     protected var modifiedPolyColors = false
@@ -181,28 +197,35 @@ open class PShapeOpenGL : PShape {
     protected var modifiedPointVertices = false
     protected var modifiedPointColors = false
     protected var modifiedPointAttributes = false
+
     protected var firstModifiedPolyVertex = 0
     protected var lastModifiedPolyVertex = 0
+
     protected var firstModifiedPolyColor = 0
     protected var lastModifiedPolyColor = 0
     protected var firstModifiedPolyNormal = 0
     protected var lastModifiedPolyNormal = 0
+
     protected var firstModifiedPolyTexcoord = 0
     protected var lastModifiedPolyTexcoord = 0
     protected var firstModifiedPolyAmbient = 0
     protected var lastModifiedPolyAmbient = 0
     protected var firstModifiedPolySpecular = 0
     protected var lastModifiedPolySpecular = 0
+
     protected var firstModifiedPolyEmissive = 0
     protected var lastModifiedPolyEmissive = 0
     protected var firstModifiedPolyShininess = 0
     protected var lastModifiedPolyShininess = 0
+
     protected var firstModifiedLineVertex = 0
     protected var lastModifiedLineVertex = 0
     protected var firstModifiedLineColor = 0
     protected var lastModifiedLineColor = 0
+
     protected var firstModifiedLineAttribute = 0
     protected var lastModifiedLineAttribute = 0
+
     protected var firstModifiedPointVertex = 0
     protected var lastModifiedPointVertex = 0
     protected var firstModifiedPointColor = 0
@@ -235,8 +258,10 @@ open class PShapeOpenGL : PShape {
     constructor(pg: PGraphicsOpenGL, family: Int) {
         this.pg = pg
         this.family = family
+
         pgl = pg.pgl
         context = pgl!!.createEmptyContext()
+
         bufPolyVertex = null
         bufPolyColor = null
         bufPolyNormal = null
@@ -254,10 +279,12 @@ open class PShapeOpenGL : PShape {
         bufPointColor = null
         bufPointAttrib = null
         bufPointIndex = null
+
         tessellator = pg.tessellator
         this.root = this
         parent = null
         tessellated = false
+
         if (family == GEOMETRY || family == PRIMITIVE || family == PATH) {
             polyAttribs = PGraphicsOpenGL.newAttributeMap()
             inGeo = PGraphicsOpenGL.newInGeometry(pg, polyAttribs, PGraphicsOpenGL.RETAINED)
@@ -283,14 +310,17 @@ open class PShapeOpenGL : PShape {
         tint = pg.tint
         tintColor = pg.tintColor
         setAmbient = pg.setAmbient
+
         ambientColor = pg.ambientColor
         specularColor = pg.specularColor
         emissiveColor = pg.emissiveColor
+
         shininess = pg.shininess
         sphereDetailU = pg.sphereDetailU
         sphereDetailV = pg.sphereDetailV
         bezierDetail = pg.bezierDetail
         curveDetail = pg.curveDetail
+
         curveTightness = pg.curveTightness
         rectMode = pg.rectMode
         ellipseMode = pg.ellipseMode
@@ -302,6 +332,7 @@ open class PShapeOpenGL : PShape {
         // To make sure that the first vertex is marked as a break.
         // Same behavior as in the immediate mode.
         breakShape = false
+
         if (family == PConstants.GROUP) {
             // GROUP shapes are always marked as ended.
             shapeCreated = true
@@ -419,8 +450,9 @@ open class PShapeOpenGL : PShape {
   }
 */
     ///////////////////////////////////////////////////////////
-    //
+
     // Query methods
+
     override fun getWidth(): Float {
         val min = PVector(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
         val max = PVector(Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY)
@@ -526,8 +558,6 @@ open class PShapeOpenGL : PShape {
 
     ///////////////////////////////////////////////////////////
 
-    //
-
     // Drawing methods
 
     override fun setTextureMode(mode: Int) {
@@ -603,16 +633,18 @@ open class PShapeOpenGL : PShape {
     }
 
     protected fun scaleTextureUV(uFactor: Float, vFactor: Float) {
-        if (PGraphicsOpenGL.same(uFactor, 1f) &&
-                PGraphicsOpenGL.same(vFactor, 1f)) return
+        if (PGraphicsOpenGL.same(uFactor, 1f) && PGraphicsOpenGL.same(vFactor, 1f)) return
+
         for (i in 0 until inGeo!!.vertexCount) {
             val u = inGeo!!.texcoords[2 * i + 0]
             val v = inGeo!!.texcoords[2 * i + 1]
             inGeo!!.texcoords[2 * i + 0] = PApplet.min(1f, u * uFactor)
             inGeo!!.texcoords[2 * i + 1] = PApplet.min(1f, v * uFactor)
         }
+
         if (shapeCreated && tessellated && hasPolys) {
             var last1 = 0
+
             if (is3D()) {
                 last1 = lastPolyVertex + 1
             } else if (is2D) {
@@ -645,6 +677,7 @@ open class PShapeOpenGL : PShape {
 
         // First check that none of the child shapes have texture tex...
         var childHasTex = false
+
         for (i in 0 until childCount) {
             val child = children[i] as PShapeOpenGL
             if (child === caller) continue
@@ -653,6 +686,7 @@ open class PShapeOpenGL : PShape {
                 break
             }
         }
+
         if (!childHasTex) {
             // ...if not, it is safe to remove from this shape.
             textures!!.remove(tex)
@@ -670,6 +704,7 @@ open class PShapeOpenGL : PShape {
 
     protected fun strokedTexture(newValue: Boolean, caller: PShapeOpenGL? = null) {
         if (strokedTexture == newValue) return  // Nothing to change.
+
         if (newValue) {
             strokedTexture = true
         } else {
@@ -693,6 +728,7 @@ open class PShapeOpenGL : PShape {
 
     protected fun untexChild(newValue: Boolean, caller: PShapeOpenGL? = null) {
         if (untexChild == newValue) return  // Nothing to change.
+
         if (newValue) {
             untexChild = true
         } else {
@@ -1203,8 +1239,6 @@ open class PShapeOpenGL : PShape {
 
     ///////////////////////////////////////////////////////////
 
-    //
-
     // Catmull-Rom curves
 
     override fun curveDetail(detail: Int) {
@@ -1240,8 +1274,6 @@ open class PShapeOpenGL : PShape {
 
     ///////////////////////////////////////////////////////////
 
-    //
-
     // Setters/getters of individual vertices
 
     override fun getVertexCount(): Int {
@@ -1258,9 +1290,11 @@ open class PShapeOpenGL : PShape {
 
     override fun getVertex(index: Int, vec: PVector): PVector {
         var vec: PVector? = vec
+
         if (vec == null) {
             vec = PVector()
         }
+
         vec.x = inGeo!!.vertices[3 * index + 0]
         vec.y = inGeo!!.vertices[3 * index + 1]
         vec.z = inGeo!!.vertices[3 * index + 2]
@@ -1649,9 +1683,11 @@ open class PShapeOpenGL : PShape {
 
     protected fun setStrokeImpl(stroke: Int) {
         if (strokeColor == stroke) return
+
         strokeColor = stroke
         Arrays.fill(inGeo!!.strokeColors, 0, inGeo!!.vertexCount,
                 PGL.javaToNativeARGB(strokeColor))
+
         if (shapeCreated && tessellated && (hasLines || hasPoints)) {
             if (hasLines) {
                 if (is3D()) {
@@ -1664,6 +1700,7 @@ open class PShapeOpenGL : PShape {
                     root!!.setModifiedPolyColors(firstLineVertex, lastLineVertex)
                 }
             }
+
             if (hasPoints) {
                 if (is3D()) {
                     Arrays.fill(tessGeo!!.pointColors, firstPointVertex, lastPointVertex + 1,
@@ -1712,9 +1749,11 @@ open class PShapeOpenGL : PShape {
 
     protected fun setStrokeWeightImpl(weight: Float) {
         if (PGraphicsOpenGL.same(strokeWeight, weight)) return
+
         val oldWeight = strokeWeight
         strokeWeight = weight
         Arrays.fill(inGeo!!.strokeWeights, 0, inGeo!!.vertexCount, strokeWeight)
+
         if (shapeCreated && tessellated && (hasLines || hasPoints)) {
             val resizeFactor = weight / oldWeight
             if (hasLines) {
@@ -1878,9 +1917,11 @@ open class PShapeOpenGL : PShape {
 
     protected fun setSpecularImpl(specular: Int) {
         if (specularColor == specular) return
+
         specularColor = specular
         Arrays.fill(inGeo!!.specular, 0, inGeo!!.vertexCount,
                 PGL.javaToNativeARGB(specularColor))
+
         if (shapeCreated && tessellated && hasPolys) {
             if (is3D()) {
                 Arrays.fill(tessGeo!!.polySpecular, firstPolyVertex, lastPolyVertex + 1,
@@ -1931,9 +1972,11 @@ open class PShapeOpenGL : PShape {
 
     protected fun setEmissiveImpl(emissive: Int) {
         if (emissiveColor == emissive) return
+
         emissiveColor = emissive
         Arrays.fill(inGeo!!.emissive, 0, inGeo!!.vertexCount,
                 PGL.javaToNativeARGB(emissiveColor))
+
         if (shapeCreated && tessellated && 0 < tessGeo!!.polyVertexCount) {
             if (is3D()) {
                 Arrays.fill(tessGeo!!.polyEmissive, firstPolyVertex, lastPolyVertex + 1,
@@ -2012,8 +2055,6 @@ open class PShapeOpenGL : PShape {
 
     ///////////////////////////////////////////////////////////
 
-    //
-
     // Vertex codes
 
     override fun getVertexCodes(): IntArray? {
@@ -2047,8 +2088,6 @@ open class PShapeOpenGL : PShape {
 
     ///////////////////////////////////////////////////////////
 
-    //
-
     // Tessellated geometry getter.
 
     override fun getTessellation(): PShape {
@@ -2059,6 +2098,7 @@ open class PShapeOpenGL : PShape {
         val uv = tessGeo!!.polyTexCoords
         val indices = tessGeo!!.polyIndices
         val tess: PShape
+
         //    if (is3D()) {
 //      //tess = PGraphics3D.createShapeImpl(pg, PShape.GEOMETRY);
 //      tess = pg.createShapeFamily(PShape.GEOMETRY);
@@ -2069,6 +2109,7 @@ open class PShapeOpenGL : PShape {
 //      PGraphics.showWarning("This shape is not either 2D or 3D!");
 //      return null;
 //    }
+
         tess = pg!!.createShapeFamily(GEOMETRY)
         tess.is3D = is3D // if this is a 3D shape, make the new shape 3D as well
         tess.beginShape(PConstants.TRIANGLES)
@@ -2101,9 +2142,11 @@ open class PShapeOpenGL : PShape {
                     val nx2 = normals[3 * i2 + 0]
                     val ny2 = normals[3 * i2 + 1]
                     val nz2 = normals[3 * i2 + 2]
+
                     val argb0 = PGL.nativeToJavaARGB(color[i0])
                     val argb1 = PGL.nativeToJavaARGB(color[i1])
                     val argb2 = PGL.nativeToJavaARGB(color[i2])
+
                     tess.fill(argb0)
                     tess.normal(nx0, ny0, nz0)
                     tess.vertex(x0, y0, z0, uv[2 * i0 + 0], uv[2 * i0 + 1])
@@ -2113,6 +2156,7 @@ open class PShapeOpenGL : PShape {
                     tess.fill(argb2)
                     tess.normal(nx2, ny2, nz2)
                     tess.vertex(x2, y2, z2, uv[2 * i2 + 0], uv[2 * i2 + 1])
+
                 } else if (is2D) {
                     val x0 = vertices[4 * i0 + 0]
                     val y0 = vertices[4 * i0 + 1]
@@ -2120,9 +2164,11 @@ open class PShapeOpenGL : PShape {
                     val y1 = vertices[4 * i1 + 1]
                     val x2 = vertices[4 * i2 + 0]
                     val y2 = vertices[4 * i2 + 1]
+
                     val argb0 = PGL.nativeToJavaARGB(color[i0])
                     val argb1 = PGL.nativeToJavaARGB(color[i1])
                     val argb2 = PGL.nativeToJavaARGB(color[i2])
+
                     tess.fill(argb0)
                     tess.vertex(x0, y0, uv[2 * i0 + 0], uv[2 * i0 + 1])
                     tess.fill(argb1)
@@ -2268,6 +2314,7 @@ open class PShapeOpenGL : PShape {
         modifiedPointVertices = false
         modifiedPointColors = false
         modifiedPointAttributes = false
+
         firstModifiedPolyVertex = PConstants.MAX_INT
         lastModifiedPolyVertex = PConstants.MIN_INT
         firstModifiedPolyColor = PConstants.MAX_INT
@@ -2357,6 +2404,7 @@ open class PShapeOpenGL : PShape {
         lastLineIndexCache = -1
         firstPointIndexCache = -1
         lastPointIndexCache = -1
+
         if (family == PConstants.GROUP) {
             if (polyAttribs == null) {
                 polyAttribs = PGraphicsOpenGL.newAttributeMap()
@@ -2385,6 +2433,7 @@ open class PShapeOpenGL : PShape {
                 tessellator!!.setRenderer(pg)
                 tessellator!!.setTransform(matrix)
                 tessellator!!.set3D(is3D())
+
                 if (family == GEOMETRY) {
                     if (kind == PConstants.POINTS) {
                         tessellator!!.tessellatePoints()
@@ -2503,6 +2552,7 @@ open class PShapeOpenGL : PShape {
         var x2 = 0f
         var y2 = 0f
         var z2 = 0f
+
         if (params.size == 4) {
             x1 = params[0]
             y1 = params[1]
@@ -2516,12 +2566,15 @@ open class PShapeOpenGL : PShape {
             y2 = params[4]
             z2 = params[5]
         }
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         inGeo!!.setNormal(normalX, normalY, normalZ)
         inGeo!!.addLine(x1, y1, z1,
                 x2, y2, z2,
                 fill, stroke)
+
         tessellator!!.tessellateLines()
     }
 
@@ -2532,6 +2585,7 @@ open class PShapeOpenGL : PShape {
         var y2 = 0f
         var x3 = 0f
         var y3 = 0f
+
         if (params.size == 6) {
             x1 = params[0]
             y1 = params[1]
@@ -2540,13 +2594,17 @@ open class PShapeOpenGL : PShape {
             x3 = params[4]
             y3 = params[5]
         }
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         inGeo!!.setNormal(normalX, normalY, normalZ)
+
         inGeo!!.addTriangle(x1, y1, 0f,
                 x2, y2, 0f,
                 x3, y3, 0f,
                 fill, stroke)
+
         tessellator!!.tessellateTriangles()
     }
 
@@ -2559,6 +2617,7 @@ open class PShapeOpenGL : PShape {
         var y3 = 0f
         var x4 = 0f
         var y4 = 0f
+
         if (params.size == 8) {
             x1 = params[0]
             y1 = params[1]
@@ -2569,14 +2628,18 @@ open class PShapeOpenGL : PShape {
             x4 = params[6]
             y4 = params[7]
         }
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         inGeo!!.setNormal(normalX, normalY, normalZ)
+
         inGeo!!.addQuad(x1, y1, 0f,
                 x2, y2, 0f,
                 x3, y3, 0f,
                 x4, y4, 0f,
                 stroke)
+
         tessellator!!.tessellateQuads()
     }
 
@@ -2591,6 +2654,7 @@ open class PShapeOpenGL : PShape {
         var bl = 0f
         var rounded = false
         val mode = rectMode
+
         if (params.size == 4 || params.size == 5) {
             a = params[0]
             b = params[1]
@@ -2615,8 +2679,10 @@ open class PShapeOpenGL : PShape {
             bl = params[7]
             rounded = true
         }
+
         val hradius: Float
         val vradius: Float
+
         when (mode) {
             PConstants.CORNERS -> {
             }
@@ -2641,6 +2707,7 @@ open class PShapeOpenGL : PShape {
                 b -= vradius
             }
         }
+
         if (a > c) {
             val temp = a
             a = c
@@ -2651,14 +2718,19 @@ open class PShapeOpenGL : PShape {
             b = d
             d = temp
         }
+
         val maxRounding = PApplet.min((c - a) / 2, (d - b) / 2)
+
         if (tl > maxRounding) tl = maxRounding
         if (tr > maxRounding) tr = maxRounding
         if (br > maxRounding) br = maxRounding
         if (bl > maxRounding) bl = maxRounding
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         inGeo!!.setNormal(normalX, normalY, normalZ)
+
         if (rounded) {
             saveBezierVertexSettings()
             inGeo!!.addRect(a, b, c, d, tl, tr, br, bl, stroke)
@@ -2676,16 +2748,19 @@ open class PShapeOpenGL : PShape {
         var c = 0f
         var d = 0f
         val mode = ellipseMode
+
         if (4 <= params.size) {
             a = params[0]
             b = params[1]
             c = params[2]
             d = params[3]
         }
+
         var x = a
         var y = b
         var w = c
         var h = d
+
         if (mode == PConstants.CORNERS) {
             w = c - a
             h = d - b
@@ -2706,10 +2781,13 @@ open class PShapeOpenGL : PShape {
             y += h
             h = -h
         }
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         inGeo!!.setNormal(normalX, normalY, normalZ)
         inGeo!!.addEllipse(x, y, w, h, fill, stroke)
+
         tessellator!!.tessellateTriangleFan()
     }
 
@@ -2722,6 +2800,7 @@ open class PShapeOpenGL : PShape {
         var stop = 0f
         val mode = ellipseMode
         var arcMode = 0
+
         if (6 <= params.size) {
             a = params[0]
             b = params[1]
@@ -2733,10 +2812,12 @@ open class PShapeOpenGL : PShape {
                 arcMode = params[6].toInt()
             }
         }
+
         var x = a
         var y = b
         var w = c
         var h = d
+
         if (mode == PConstants.CORNERS) {
             w = c - a
             h = d - b
@@ -2776,6 +2857,7 @@ open class PShapeOpenGL : PShape {
         var w = 0f
         var h = 0f
         var d = 0f
+
         if (params.size == 1) {
             d = params[0]
             h = d
@@ -2785,8 +2867,10 @@ open class PShapeOpenGL : PShape {
             h = params[1]
             d = params[2]
         }
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         inGeo!!.addBox(w, h, d, fill, stroke)
         tessellator!!.tessellateQuads()
     }
@@ -2795,6 +2879,7 @@ open class PShapeOpenGL : PShape {
         var r = 0f
         var nu = sphereDetailU
         var nv = sphereDetailV
+
         if (1 <= params.size) {
             r = params[0]
             if (params.size == 2) {
@@ -2805,19 +2890,26 @@ open class PShapeOpenGL : PShape {
                 nv = params[2].toInt()
             }
         }
+
         if (nu < 3 || nv < 2) {
             nv = 30
             nu = nv
         }
+
         val savedDetailU = pg!!.sphereDetailU
         val savedDetailV = pg!!.sphereDetailV
+
         if (pg!!.sphereDetailU != nu || pg!!.sphereDetailV != nv) {
             pg!!.sphereDetail(nu, nv)
         }
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         val indices = inGeo!!.addSphere(r, nu, nv, fill, stroke)
+
         tessellator!!.tessellateTriangles(indices)
+
         if (0 < savedDetailU && savedDetailU != nu ||
                 0 < savedDetailV && savedDetailV != nv) {
             pg!!.sphereDetail(savedDetailU, savedDetailV)
@@ -2826,8 +2918,10 @@ open class PShapeOpenGL : PShape {
 
     protected fun tessellatePath() {
         if (vertices == null) return
+
         inGeo!!.setMaterial(fillColor, strokeColor, strokeWeight,
                 ambientColor, specularColor, emissiveColor, shininess)
+
         if (vertexCodeCount == 0) {  // each point is a simple vertex
             if (vertices[0].size == 2) {  // tessellating 2D vertices
                 for (i in 0 until vertexCount) {
@@ -2920,15 +3014,19 @@ open class PShapeOpenGL : PShape {
                 }
             }
         }
+
         val bez = inGeo!!.hasBezierVertex()
         val quad = inGeo!!.hasQuadraticVertex()
         val curv = inGeo!!.hasCurveVertex()
         if (bez || quad) saveBezierVertexSettings()
+
         if (curv) {
             saveCurveVertexSettings()
             tessellator!!.resetCurveVertexCount()
         }
+
         tessellator!!.tessellatePolygon(true, close, true)
+
         if (bez || quad) restoreBezierVertexSettings()
         if (curv) restoreCurveVertexSettings()
     }
@@ -2949,9 +3047,11 @@ open class PShapeOpenGL : PShape {
     protected fun saveCurveVertexSettings() {
         savedCurveDetail = pg!!.curveDetail
         savedCurveTightness = pg!!.curveTightness
+
         if (pg!!.curveDetail != curveDetail) {
             pg!!.curveDetail(curveDetail)
         }
+
         if (pg!!.curveTightness != curveTightness) {
             pg!!.curveTightness(curveTightness)
         }
@@ -2961,6 +3061,7 @@ open class PShapeOpenGL : PShape {
         if (savedCurveDetail != curveDetail) {
             pg!!.curveDetail(savedCurveDetail)
         }
+
         if (savedCurveTightness != curveTightness) {
             pg!!.curveTightness(savedCurveTightness)
         }
@@ -3027,25 +3128,31 @@ open class PShapeOpenGL : PShape {
             hasPolys = false
             hasLines = false
             hasPoints = false
+
             for (i in 0 until childCount) {
                 val child = children[i] as PShapeOpenGL
                 child.aggregateImpl()
                 hasPolys = hasPolys or child.hasPolys
                 hasLines = hasLines or child.hasLines
                 hasPoints = hasPoints or child.hasPoints
+
             }
+
         } else { // LEAF SHAPE (family either GEOMETRY, PATH or PRIMITIVE)
             hasPolys = -1 < firstPolyIndexCache && -1 < lastPolyIndexCache
             hasLines = -1 < firstLineIndexCache && -1 < lastLineIndexCache
             hasPoints = -1 < firstPointIndexCache && -1 < lastPointIndexCache
         }
+
         if (hasPolys) {
             updatePolyIndexCache()
         }
+
         if (is3D()) {
             if (hasLines) updateLineIndexCache()
             if (hasPoints) updatePointIndexCache()
         }
+
         if (matrix != null) {
             // Some geometric transformations were applied on
             // this shape before tessellation, so they are applied now.
@@ -3084,10 +3191,12 @@ open class PShapeOpenGL : PShape {
             lastPolyIndexCache = -1
             firstPolyIndexCache = lastPolyIndexCache
             var gindex = -1
+
             for (i in 0 until childCount) {
                 val child = children[i] as PShapeOpenGL
                 val first = child.firstPolyIndexCache
                 val count = if (-1 < first) child.lastPolyIndexCache - first + 1 else -1
+
                 for (n in first until first + count) {
                     if (gindex == -1) {
                         gindex = cache.addNew(n)
@@ -3114,6 +3223,7 @@ open class PShapeOpenGL : PShape {
                     }
                     firstPolyVertex = PApplet.min(firstPolyVertex, child.firstPolyVertex)
                 }
+
                 if (-1 < child.lastPolyVertex) {
                     lastPolyVertex = PApplet.max(lastPolyVertex, child.lastPolyVertex)
                 }
@@ -3133,6 +3243,7 @@ open class PShapeOpenGL : PShape {
             // to be restarted as well to reflect the new index offset.
             lastPolyVertex = cache.vertexOffset[firstPolyIndexCache]
             firstPolyVertex = lastPolyVertex
+
             for (n in firstPolyIndexCache..lastPolyIndexCache) {
                 val ioffset = cache.indexOffset[n]
                 val icount = cache.indexCount[n]
@@ -3155,7 +3266,9 @@ open class PShapeOpenGL : PShape {
                 root!!.polyVertexRel += vcount
                 lastPolyVertex += vcount
             }
+
             lastPolyVertex--
+
             if (is2D) {
                 setLastStrokeVertex(lastPolyVertex)
             }
@@ -3188,7 +3301,9 @@ open class PShapeOpenGL : PShape {
     }
 
     protected fun updateLineIndexCache() {
+
         val cache = tessGeo!!.lineIndexCache
+
         if (family == PConstants.GROUP) {
             lastLineIndexCache = -1
             firstLineIndexCache = lastLineIndexCache
@@ -3228,6 +3343,7 @@ open class PShapeOpenGL : PShape {
                 val ioffset = cache.indexOffset[n]
                 val icount = cache.indexCount[n]
                 val vcount = cache.vertexCount[n]
+
                 if (PGL.MAX_VERTEX_INDEX1 <= root!!.lineVertexRel + vcount) {
                     root!!.lineVertexRel = 0
                     root!!.lineVertexOffset = root!!.lineVertexAbs
@@ -3247,7 +3363,9 @@ open class PShapeOpenGL : PShape {
     }
 
     protected fun updatePointIndexCache() {
+
         val cache = tessGeo!!.pointIndexCache
+
         if (family == PConstants.GROUP) {
             lastPointIndexCache = -1
             firstPointIndexCache = lastPointIndexCache
@@ -3313,22 +3431,24 @@ open class PShapeOpenGL : PShape {
 
     ///////////////////////////////////////////////////////////
 
-    //
-
     //  Buffer initialization
 
     protected fun initBuffers() {
         val outdated = contextIsOutdated()
         context = pgl!!.currentContext
+
         if (hasPolys && (needBufferInit || outdated)) {
             initPolyBuffers()
         }
+
         if (hasLines && (needBufferInit || outdated)) {
             initLineBuffers()
         }
+
         if (hasPoints && (needBufferInit || outdated)) {
             initPointBuffers()
         }
+
         needBufferInit = false
     }
 
@@ -3336,46 +3456,56 @@ open class PShapeOpenGL : PShape {
         val size = tessGeo!!.polyVertexCount
         val sizef = size * PGL.SIZEOF_FLOAT
         val sizei = size * PGL.SIZEOF_INT
+
         tessGeo!!.updatePolyVerticesBuffer()
+
         if (bufPolyVertex == null) bufPolyVertex = VertexBuffer(pg, PGL.ARRAY_BUFFER, 4, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyVertex!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 4 * sizef,
                 tessGeo!!.polyVerticesBuffer, glUsage)
         tessGeo!!.updatePolyColorsBuffer()
+
         if (bufPolyColor == null) bufPolyColor = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_INT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyColor!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizei,
                 tessGeo!!.polyColorsBuffer, glUsage)
         tessGeo!!.updatePolyNormalsBuffer()
+
         if (bufPolyNormal == null) bufPolyNormal = VertexBuffer(pg, PGL.ARRAY_BUFFER, 3, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyNormal!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 3 * sizef,
                 tessGeo!!.polyNormalsBuffer, glUsage)
         tessGeo!!.updatePolyTexCoordsBuffer()
+
         if (bufPolyTexcoord == null) bufPolyTexcoord = VertexBuffer(pg, PGL.ARRAY_BUFFER, 2, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyTexcoord!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 2 * sizef,
                 tessGeo!!.polyTexCoordsBuffer, glUsage)
         tessGeo!!.updatePolyAmbientBuffer()
+
         if (bufPolyAmbient == null) bufPolyAmbient = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_INT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyAmbient!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizei,
                 tessGeo!!.polyAmbientBuffer, glUsage)
         tessGeo!!.updatePolySpecularBuffer()
+
         if (bufPolySpecular == null) bufPolySpecular = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_INT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolySpecular!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizei,
                 tessGeo!!.polySpecularBuffer, glUsage)
         tessGeo!!.updatePolyEmissiveBuffer()
+
         if (bufPolyEmissive == null) bufPolyEmissive = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_INT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyEmissive!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizei,
                 tessGeo!!.polyEmissiveBuffer, glUsage)
         tessGeo!!.updatePolyShininessBuffer()
+
         if (bufPolyShininess == null) bufPolyShininess = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPolyShininess!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizef,
                 tessGeo!!.polyShininessBuffer, glUsage)
+
         for (name in polyAttribs!!.keys) {
             val attrib = polyAttribs!![name]
             tessGeo!!.updateAttribBuffer(attrib!!.name)
@@ -3384,13 +3514,16 @@ open class PShapeOpenGL : PShape {
             pgl!!.bufferData(PGL.ARRAY_BUFFER, attrib.sizeInBytes(size),
                     tessGeo!!.polyAttribBuffers[name], glUsage)
         }
+
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, 0)
         tessGeo!!.updatePolyIndicesBuffer()
+
         if (bufPolyIndex == null) bufPolyIndex = VertexBuffer(pg, PGL.ELEMENT_ARRAY_BUFFER, 1, PGL.SIZEOF_INDEX, true)
         pgl!!.bindBuffer(PGL.ELEMENT_ARRAY_BUFFER, bufPolyIndex!!.glId)
         pgl!!.bufferData(PGL.ELEMENT_ARRAY_BUFFER,
                 tessGeo!!.polyIndexCount * PGL.SIZEOF_INDEX,
                 tessGeo!!.polyIndicesBuffer, glUsage)
+
         pgl!!.bindBuffer(PGL.ELEMENT_ARRAY_BUFFER, 0)
     }
 
@@ -3398,23 +3531,28 @@ open class PShapeOpenGL : PShape {
         val size = tessGeo!!.lineVertexCount
         val sizef = size * PGL.SIZEOF_FLOAT
         val sizei = size * PGL.SIZEOF_INT
+
         tessGeo!!.updateLineVerticesBuffer()
+
         if (bufLineVertex == null) bufLineVertex = VertexBuffer(pg, PGL.ARRAY_BUFFER, 4, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufLineVertex!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 4 * sizef,
                 tessGeo!!.lineVerticesBuffer, glUsage)
         tessGeo!!.updateLineColorsBuffer()
+
         if (bufLineColor == null) bufLineColor = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_INT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufLineColor!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizei,
                 tessGeo!!.lineColorsBuffer, glUsage)
         tessGeo!!.updateLineDirectionsBuffer()
+
         if (bufLineAttrib == null) bufLineAttrib = VertexBuffer(pg, PGL.ARRAY_BUFFER, 4, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufLineAttrib!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 4 * sizef,
                 tessGeo!!.lineDirectionsBuffer, glUsage)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, 0)
         tessGeo!!.updateLineIndicesBuffer()
+
         if (bufLineIndex == null) bufLineIndex = VertexBuffer(pg, PGL.ELEMENT_ARRAY_BUFFER, 1, PGL.SIZEOF_INDEX, true)
         pgl!!.bindBuffer(PGL.ELEMENT_ARRAY_BUFFER, bufLineIndex!!.glId)
         pgl!!.bufferData(PGL.ELEMENT_ARRAY_BUFFER,
@@ -3427,23 +3565,28 @@ open class PShapeOpenGL : PShape {
         val size = tessGeo!!.pointVertexCount
         val sizef = size * PGL.SIZEOF_FLOAT
         val sizei = size * PGL.SIZEOF_INT
+
         tessGeo!!.updatePointVerticesBuffer()
+
         if (bufPointVertex == null) bufPointVertex = VertexBuffer(pg, PGL.ARRAY_BUFFER, 4, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPointVertex!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 4 * sizef,
                 tessGeo!!.pointVerticesBuffer, glUsage)
         tessGeo!!.updatePointColorsBuffer()
+
         if (bufPointColor == null) bufPointColor = VertexBuffer(pg, PGL.ARRAY_BUFFER, 1, PGL.SIZEOF_INT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPointColor!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, sizei,
                 tessGeo!!.pointColorsBuffer, glUsage)
         tessGeo!!.updatePointOffsetsBuffer()
+
         if (bufPointAttrib == null) bufPointAttrib = VertexBuffer(pg, PGL.ARRAY_BUFFER, 2, PGL.SIZEOF_FLOAT)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, bufPointAttrib!!.glId)
         pgl!!.bufferData(PGL.ARRAY_BUFFER, 2 * sizef,
                 tessGeo!!.pointOffsetsBuffer, glUsage)
         pgl!!.bindBuffer(PGL.ARRAY_BUFFER, 0)
         tessGeo!!.updatePointIndicesBuffer()
+
         if (bufPointIndex == null) bufPointIndex = VertexBuffer(pg, PGL.ELEMENT_ARRAY_BUFFER, 1, PGL.SIZEOF_INDEX, true)
         pgl!!.bindBuffer(PGL.ELEMENT_ARRAY_BUFFER, bufPointIndex!!.glId)
         pgl!!.bufferData(PGL.ELEMENT_ARRAY_BUFFER,
@@ -3454,6 +3597,7 @@ open class PShapeOpenGL : PShape {
 
     protected fun contextIsOutdated(): Boolean {
         val outdated = !pgl!!.contextIsCurrent(context)
+
         if (outdated) {
             bufPolyVertex!!.dispose()
             bufPolyColor!!.dispose()
@@ -3463,9 +3607,11 @@ open class PShapeOpenGL : PShape {
             bufPolySpecular!!.dispose()
             bufPolyEmissive!!.dispose()
             bufPolyShininess!!.dispose()
+
             for (attrib in polyAttribs!!.values) {
                 attrib.buf.dispose()
             }
+
             bufPolyIndex!!.dispose()
             bufLineVertex!!.dispose()
             bufLineColor!!.dispose()
@@ -3480,8 +3626,6 @@ open class PShapeOpenGL : PShape {
     }
 
     ///////////////////////////////////////////////////////////
-
-    //
 
     //  Geometry update
 
@@ -3501,6 +3645,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyVertex = PConstants.MAX_INT
             lastModifiedPolyVertex = PConstants.MIN_INT
         }
+
         if (modifiedPolyColors) {
             val offset = firstModifiedPolyColor
             val size = lastModifiedPolyColor - offset + 1
@@ -3509,6 +3654,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyColor = PConstants.MAX_INT
             lastModifiedPolyColor = PConstants.MIN_INT
         }
+
         if (modifiedPolyNormals) {
             val offset = firstModifiedPolyNormal
             val size = lastModifiedPolyNormal - offset + 1
@@ -3517,6 +3663,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyNormal = PConstants.MAX_INT
             lastModifiedPolyNormal = PConstants.MIN_INT
         }
+
         if (modifiedPolyTexCoords) {
             val offset = firstModifiedPolyTexcoord
             val size = lastModifiedPolyTexcoord - offset + 1
@@ -3525,6 +3672,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyTexcoord = PConstants.MAX_INT
             lastModifiedPolyTexcoord = PConstants.MIN_INT
         }
+
         if (modifiedPolyAmbient) {
             val offset = firstModifiedPolyAmbient
             val size = lastModifiedPolyAmbient - offset + 1
@@ -3533,6 +3681,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyAmbient = PConstants.MAX_INT
             lastModifiedPolyAmbient = PConstants.MIN_INT
         }
+
         if (modifiedPolySpecular) {
             val offset = firstModifiedPolySpecular
             val size = lastModifiedPolySpecular - offset + 1
@@ -3541,6 +3690,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolySpecular = PConstants.MAX_INT
             lastModifiedPolySpecular = PConstants.MIN_INT
         }
+
         if (modifiedPolyEmissive) {
             val offset = firstModifiedPolyEmissive
             val size = lastModifiedPolyEmissive - offset + 1
@@ -3549,6 +3699,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyEmissive = PConstants.MAX_INT
             lastModifiedPolyEmissive = PConstants.MIN_INT
         }
+
         if (modifiedPolyShininess) {
             val offset = firstModifiedPolyShininess
             val size = lastModifiedPolyShininess - offset + 1
@@ -3557,6 +3708,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPolyShininess = PConstants.MAX_INT
             lastModifiedPolyShininess = PConstants.MIN_INT
         }
+
         for (name in polyAttribs!!.keys) {
             val attrib = polyAttribs!![name]
             if (attrib!!.modified) {
@@ -3568,6 +3720,7 @@ open class PShapeOpenGL : PShape {
                 attrib.lastModified = PConstants.MIN_INT
             }
         }
+
         if (modifiedLineVertices) {
             val offset = firstModifiedLineVertex
             val size = lastModifiedLineVertex - offset + 1
@@ -3576,6 +3729,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedLineVertex = PConstants.MAX_INT
             lastModifiedLineVertex = PConstants.MIN_INT
         }
+
         if (modifiedLineColors) {
             val offset = firstModifiedLineColor
             val size = lastModifiedLineColor - offset + 1
@@ -3584,6 +3738,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedLineColor = PConstants.MAX_INT
             lastModifiedLineColor = PConstants.MIN_INT
         }
+
         if (modifiedLineAttributes) {
             val offset = firstModifiedLineAttribute
             val size = lastModifiedLineAttribute - offset + 1
@@ -3592,6 +3747,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedLineAttribute = PConstants.MAX_INT
             lastModifiedLineAttribute = PConstants.MIN_INT
         }
+
         if (modifiedPointVertices) {
             val offset = firstModifiedPointVertex
             val size = lastModifiedPointVertex - offset + 1
@@ -3600,6 +3756,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPointVertex = PConstants.MAX_INT
             lastModifiedPointVertex = PConstants.MIN_INT
         }
+
         if (modifiedPointColors) {
             val offset = firstModifiedPointColor
             val size = lastModifiedPointColor - offset + 1
@@ -3608,6 +3765,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPointColor = PConstants.MAX_INT
             lastModifiedPointColor = PConstants.MIN_INT
         }
+
         if (modifiedPointAttributes) {
             val offset = firstModifiedPointAttribute
             val size = lastModifiedPointAttribute - offset + 1
@@ -3616,6 +3774,7 @@ open class PShapeOpenGL : PShape {
             firstModifiedPointAttribute = PConstants.MAX_INT
             lastModifiedPointAttribute = PConstants.MIN_INT
         }
+
         modified = false
     }
 
@@ -3915,23 +4074,28 @@ open class PShapeOpenGL : PShape {
         } else {
             setStroke(false)
         }
+
         if (savedFill) {
             setFill(true)
             setFill(savedFillColor)
         } else {
             setFill(false)
         }
+
         if (savedTint) {
             setTint(true)
             setTint(savedTintColor)
         }
+
         setAmbient(savedAmbientColor)
         setSpecular(savedSpecularColor)
         setEmissive(savedEmissiveColor)
         setShininess(savedShininess)
+
         if (image != null) {
             setTextureMode(savedTextureMode)
         }
+
         super.enableStyle()
     }
 
@@ -3946,20 +4110,24 @@ open class PShapeOpenGL : PShape {
             } else {
                 setStroke(false)
             }
+
             if (g.fill) {
                 setFill(true)
                 setFill(g.fillColor)
             } else {
                 setFill(false)
             }
+
             if (g.tint) {
                 setTint(true)
                 setTint(g.tintColor)
             }
+
             setAmbient(g.ambientColor)
             setSpecular(g.specularColor)
             setEmissive(g.emissiveColor)
             setShininess(g.shininess)
+
             if (image != null) {
                 setTextureMode(g.textureMode)
             }
@@ -3969,8 +4137,6 @@ open class PShapeOpenGL : PShape {
     }
 
     ///////////////////////////////////////////////////////////
-
-    //
 
     // Rendering methods
 
@@ -4038,6 +4204,7 @@ open class PShapeOpenGL : PShape {
             var y4: Float
             var idx = 0
             var insideContour = false
+
             for (j in 0 until inGeo!!.codeCount) {
                 when (inGeo!!.codes[j]) {
                     PConstants.VERTEX -> {
@@ -4163,13 +4330,16 @@ open class PShapeOpenGL : PShape {
 
     protected fun renderPolys(g: PGraphicsOpenGL, textureImage: PImage?) {
         val customShader = g.polyShader != null
+
         val needNormals = if (customShader) g.polyShader.accessNormals() else false
         val needTexCoords = if (customShader) g.polyShader.accessTexCoords() else false
         var tex = if (textureImage != null) g.getTexture(textureImage) else null
+
         var renderingFill = false
         var renderingStroke = false
         var shader: PShader? = null
         val cache = tessGeo!!.polyIndexCache
+
         for (n in firstPolyIndexCache..lastPolyIndexCache) {
             if (is3D() || tex != null && (firstLineIndexCache == -1 ||
                             n < firstLineIndexCache) &&
@@ -4200,13 +4370,16 @@ open class PShapeOpenGL : PShape {
                     renderingStroke = true
                 }
             }
+
             val ioffset = cache.indexOffset[n]
             val icount = cache.indexCount[n]
             val voffset = cache.vertexOffset[n]
+
             shader!!.setVertexAttribute(root!!.bufPolyVertex!!.glId, 4, PGL.FLOAT,
                     0, 4 * voffset * PGL.SIZEOF_FLOAT)
             shader.setColorAttribute(root!!.bufPolyColor!!.glId, 4, PGL.UNSIGNED_BYTE,
                     0, 4 * voffset * PGL.SIZEOF_BYTE)
+
             if (g.lights) {
                 shader.setNormalAttribute(root!!.bufPolyNormal!!.glId, 3, PGL.FLOAT,
                         0, 3 * voffset * PGL.SIZEOF_FLOAT)
@@ -4219,15 +4392,18 @@ open class PShapeOpenGL : PShape {
                 shader.setShininessAttribute(root!!.bufPolyShininess!!.glId, 1, PGL.FLOAT,
                         0, voffset * PGL.SIZEOF_FLOAT)
             }
+
             if (g.lights || needNormals) {
                 shader.setNormalAttribute(root!!.bufPolyNormal!!.glId, 3, PGL.FLOAT,
                         0, 3 * voffset * PGL.SIZEOF_FLOAT)
             }
+
             if (tex != null || needTexCoords) {
                 shader.setTexcoordAttribute(root!!.bufPolyTexcoord!!.glId, 2, PGL.FLOAT,
                         0, 2 * voffset * PGL.SIZEOF_FLOAT)
                 shader.setTexture(tex)
             }
+
             for (attrib in polyAttribs!!.values) {
                 if (!attrib.active(shader)) continue
                 attrib.bind(pgl)
@@ -4237,9 +4413,11 @@ open class PShapeOpenGL : PShape {
             }
             shader.draw(root!!.bufPolyIndex!!.glId, icount, ioffset)
         }
+
         for (attrib in polyAttribs!!.values) {
             if (attrib.active(shader)) attrib.unbind(pgl)
         }
+
         if (shader != null && shader.bound()) {
             shader.unbind()
         }
@@ -4250,11 +4428,13 @@ open class PShapeOpenGL : PShape {
         raw!!.colorMode(PConstants.RGB)
         raw!!.noStroke()
         raw!!.beginShape(PConstants.TRIANGLES)
+
         val vertices = tessGeo!!.polyVertices
         val color = tessGeo!!.polyColors
         val uv = tessGeo!!.polyTexCoords
         val indices = tessGeo!!.polyIndices
         val cache = tessGeo!!.polyIndexCache
+
         for (n in firstPolyIndexCache..lastPolyIndexCache) {
             val ioffset = cache.indexOffset[n]
             val icount = cache.indexCount[n]
@@ -4352,16 +4532,19 @@ open class PShapeOpenGL : PShape {
 
     protected fun rawLines(g: PGraphicsOpenGL) {
         val raw = g.raw
+
         raw!!.colorMode(PConstants.RGB)
         raw!!.noFill()
         raw!!.strokeCap(strokeCap)
         raw!!.strokeJoin(strokeJoin)
         raw!!.beginShape(PConstants.LINES)
+
         val vertices = tessGeo!!.lineVertices
         val color = tessGeo!!.lineColors
         val attribs = tessGeo!!.lineDirections
         val indices = tessGeo!!.lineIndices
         val cache = tessGeo!!.lineIndexCache
+
         for (n in firstLineIndexCache..lastLineIndexCache) {
             val ioffset = cache.indexOffset[n]
             val icount = cache.indexCount[n]
@@ -4416,7 +4599,9 @@ open class PShapeOpenGL : PShape {
     protected fun renderPoints(g: PGraphicsOpenGL) {
         val shader = g.getPointShader()
         shader.bind()
+
         val cache = tessGeo!!.pointIndexCache
+
         for (n in firstPointIndexCache..lastPointIndexCache) {
             val ioffset = cache.indexOffset[n]
             val icount = cache.indexCount[n]
@@ -4438,11 +4623,13 @@ open class PShapeOpenGL : PShape {
         raw!!.noFill()
         raw!!.strokeCap(strokeCap)
         raw!!.beginShape(PConstants.POINTS)
+
         val vertices = tessGeo!!.pointVertices
         val color = tessGeo!!.pointColors
         val attribs = tessGeo!!.pointOffsets
         val indices = tessGeo!!.pointIndices
         val cache = tessGeo!!.pointIndexCache
+
         for (n in 0 until cache.size) {
             val ioffset = cache.indexOffset[n]
             val icount = cache.indexCount[n]

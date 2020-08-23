@@ -24,16 +24,23 @@
 
 package processing.opengl
 
+/**
+ * @author Aditya Rana
+ */
 // TODO: need to combine with PGraphicsOpenGL.VertexAttribute
 open class VertexBuffer @JvmOverloads internal constructor(pg: PGraphicsOpenGL?, target: Int, ncoords: Int, esize: Int, index: Boolean = false) {
     @JvmField
     var glId = 0
+
     @JvmField
     var target: Int
+
     @JvmField
     var elementSize: Int
+
     @JvmField
     var ncoords: Int
+
     @JvmField
     var index: Boolean
 

@@ -27,6 +27,7 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 /**
+ * @author Aditya Rana
  * Super fast OpenGL 2D renderer originally contributed by Miles Fogle:
  * https://github.com/hazmatsuitor
  *
@@ -51,19 +52,23 @@ import java.nio.IntBuffer
  */
 //TODO: track debug performance stats
 open class PGraphics2DX : PGraphicsOpenGL() {
+
     // Uses the implementations in the parent PGraphicsOpenGL class, which is needed to to draw obj files
     // and apply shader filters.
+
     protected var useParentImpl = false
     protected var initialized = false
+
     private var tess: PGL.Tessellator? = null
     protected var twoShader: PShader? = null
     protected var defTwoShader: PShader? = null
-    protected var positionLoc = 0
-    protected var colorLoc = 0
-    protected var texCoordLoc = 0
-    protected var texFactorLoc = 0
-    protected var transformLoc = 0
-    protected var texScaleLoc = 0
+
+    protected var positionLoc   = 0
+    protected var colorLoc      = 0
+    protected var texCoordLoc   = 0
+    protected var texFactorLoc  = 0
+    protected var transformLoc  = 0
+    protected var texScaleLoc   = 0
 
     //////////////////////////////////////////////////////////////
 
@@ -97,6 +102,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     // These two methods are meant for debugging (comparing the new and old P2D renderers)
     // and will go away.
+
     fun useOldP2D() {
         useParentImpl = true
         pgl.depthFunc(PGL.LEQUAL)
@@ -257,7 +263,9 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     }
 
     //////////////////////////////////////////////////////////////
+
     // VERTEX SHAPES
+
     override fun texture(image: PImage?) {
         super.texture(image)
         if (image == null) {
@@ -288,31 +296,42 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
         //end the current contour
         appendContour(vertCount)
+
         if (fill) {
+
             incrementDepth()
+
             if (shapeType == PConstants.POLYGON) {
+
                 if (knownConvexPolygon) {
+
                     for (i in 2 until vertCount) {
                         check(3)
                         vertexImpl(shapeVerts[0])
                         vertexImpl(shapeVerts[i - 1])
                         vertexImpl(shapeVerts[i])
                     }
+
                     knownConvexPolygon = false
+
                 } else {
                     tess!!.beginPolygon(this)
                     tess!!.beginContour()
+
                     var c = 0
+
                     for (i in 0 until vertCount) {
                         if (contours[c] == i) {
                             tess!!.endContour()
                             tess!!.beginContour()
                             c++ //lol no, this is java
                         }
+
                         tempDoubles[0] = shapeVerts[i]!!.x.toDouble()
                         tempDoubles[1] = shapeVerts[i]!!.y.toDouble()
                         tess!!.addVertex(tempDoubles, 0, shapeVerts[i])
                     }
+
                     tess!!.endContour()
                     tess!!.endPolygon()
                 }
@@ -328,6 +347,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                     vertexImpl(shapeVerts[i + 3])
                     i += 2
                 }
+
             } else if (shapeType == PConstants.QUADS) {
                 var i = 0
                 while (i <= vertCount - 4) {
@@ -340,6 +360,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                     vertexImpl(shapeVerts[i + 3])
                     i += 4
                 }
+
             } else if (shapeType == PConstants.TRIANGLE_STRIP) {
                 var i = 0
                 while (i <= vertCount - 3) {
@@ -522,19 +543,25 @@ open class PGraphics2DX : PGraphicsOpenGL() {
             super.bezierVertex(x2, y2, x3, y3, x4, y4)
             return
         }
+
         bezierInitCheck()
-        //    bezierVertexCheck(); //TODO: re-implement this (and other run-time sanity checks)
+
+        //    bezierVertexCheck();
+        // TODO: re-implement this (and other run-time sanity checks)
+
         val draw = bezierDrawMatrix
 
         //(these are the only lines that are different)
         var x1 = shapeVerts[vertCount - 1]!!.x
         var y1 = shapeVerts[vertCount - 1]!!.y
+
         var xplot1 = draw!!.m10 * x1 + draw!!.m11 * x2 + draw!!.m12 * x3 + draw!!.m13 * x4
         var xplot2 = draw!!.m20 * x1 + draw!!.m21 * x2 + draw!!.m22 * x3 + draw!!.m23 * x4
         val xplot3 = draw!!.m30 * x1 + draw!!.m31 * x2 + draw!!.m32 * x3 + draw!!.m33 * x4
         var yplot1 = draw!!.m10 * y1 + draw!!.m11 * y2 + draw!!.m12 * y3 + draw!!.m13 * y4
         var yplot2 = draw!!.m20 * y1 + draw!!.m21 * y2 + draw!!.m22 * y3 + draw!!.m23 * y4
         val yplot3 = draw!!.m30 * y1 + draw!!.m31 * y2 + draw!!.m32 * y3 + draw!!.m33 * y4
+
         for (j in 0 until bezierDetail) {
             x1 += xplot1
             xplot1 += xplot2
@@ -553,9 +580,13 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     }
 
     //////////////////////////////////////////////////////////////
+
     // QUADRATIC BEZIER VERTICES
+
+
     //this method is almost wholesale copied from PGraphics.quadraticVertex()
     //TODO: de-duplicate this code if there is a convenient way to do so
+
     override fun quadraticVertex(cx: Float, cy: Float,
                                  x3: Float, y3: Float) {
         if (useParentImpl) {
@@ -579,8 +610,11 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     }
 
     //////////////////////////////////////////////////////////////
+
     // CURVE VERTICES
+
     //curve vertices
+
     private var cx1 = 0f
     private var cy1 = 0f
     private var cx2 = 0f
@@ -589,38 +623,51 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     private var cy3 = 0f
     private var cx4 = 0f
     private var cy4 = 0f
+
     private var curveVerts = 0
+
     override fun curveVertex(x: Float, y: Float) {
         if (useParentImpl) {
             super.curveVertex(x, y)
             return
         }
 
-//    curveVertexCheck(); //TODO: re-implement this (and other runtime checks)
+//    curveVertexCheck();
+// TODO: re-implement this (and other runtime checks)
+
         curveInitCheck()
+
         cx1 = cx2
         cx2 = cx3
         cx3 = cx4
         cy1 = cy2
         cy2 = cy3
         cy3 = cy4
+
         cx4 = x
         cy4 = y
+
         curveVerts += 1
+
         if (curveVerts > 3) {
             PApplet.println("drawing curve...")
+
             val draw = curveDrawMatrix
+
             var xplot1 = draw!!.m10 * cx1 + draw!!.m11 * cx2 + draw!!.m12 * cx3 + draw!!.m13 * cx4
             var xplot2 = draw!!.m20 * cx1 + draw!!.m21 * cx2 + draw!!.m22 * cx3 + draw!!.m23 * cx4
             val xplot3 = draw!!.m30 * cx1 + draw!!.m31 * cx2 + draw!!.m32 * cx3 + draw!!.m33 * cx4
             var yplot1 = draw!!.m10 * cy1 + draw!!.m11 * cy2 + draw!!.m12 * cy3 + draw!!.m13 * cy4
             var yplot2 = draw!!.m20 * cy1 + draw!!.m21 * cy2 + draw!!.m22 * cy3 + draw!!.m23 * cy4
             val yplot3 = draw!!.m30 * cy1 + draw!!.m31 * cy2 + draw!!.m32 * cy3 + draw!!.m33 * cy4
+
             var x0 = cx2
             var y0 = cy2
+
             if (curveVerts == 4) {
                 shapeVertex(x0, y0, 0f, 0f, fillColor, 0f)
             }
+
             for (j in 0 until curveDetail) {
                 x0 += xplot1
                 xplot1 += xplot2
@@ -650,12 +697,13 @@ open class PGraphics2DX : PGraphicsOpenGL() {
    * so as long as we're inheriting from PGraphicsOpenGL,
    * we need to re-implement them.
    */
-    override fun quad(x1: Float, y1: Float, x2: Float, y2: Float,
-                      x3: Float, y3: Float, x4: Float, y4: Float) {
+    override fun quad(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float, x4: Float, y4: Float) {
+
         if (useParentImpl) {
             super.quad(x1, y1, x2, y2, x3, y3, x4, y4)
             return
         }
+
         beginShape(PConstants.QUADS)
         vertex(x1, y1)
         vertex(x2, y2)
@@ -664,8 +712,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         endShape()
     }
 
-    override fun triangle(x1: Float, y1: Float, x2: Float, y2: Float,
-                          x3: Float, y3: Float) {
+    override fun triangle(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float) {
         if (useParentImpl) {
             super.triangle(x1, y1, x2, y2, x3, y3)
             return
@@ -678,10 +725,12 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     }
 
     override fun ellipseImpl(a: Float, b: Float, c: Float, d: Float) {
+
         if (useParentImpl) {
             super.ellipseImpl(a, b, c, d)
             return
         }
+
         beginShape(PConstants.POLYGON)
 
         //convert corner/diameter to center/radius
@@ -694,11 +743,15 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         //stroke to account for a significant portion of the overall radius,
         //we take it into account when calculating detail, just to be safe
         val segments = circleDetail(PApplet.max(rx, ry) + if (stroke) strokeWeight else 0F, PConstants.TWO_PI)
+
         val step = PConstants.TWO_PI / segments
+
         val cos = PApplet.cos(step)
         val sin = PApplet.sin(step)
+
         var dx = 0f
         var dy = 1f
+
         for (i in 0 until segments) {
             shapeVertex(x + dx * rx, y + dy * ry, 0f, 0f, fillColor, 0f)
             //this is the equivalent of multiplying the vector <dx, dy> by the 2x2 rotation matrix [[cos -sin] [sin cos]]
@@ -711,10 +764,12 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     }
 
     override fun line(x1: Float, y1: Float, x2: Float, y2: Float) {
+
         if (useParentImpl) {
             super.line(x1, y1, x2, y2)
             return
         }
+
         incrementDepth()
         singleLine(x1, y1, x2, y2, strokeColor)
     }
@@ -724,6 +779,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
             super.point(x, y)
             return
         }
+
         incrementDepth()
         singlePoint(x, y, strokeColor)
     }
@@ -733,6 +789,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         var y = y
         var w = w
         var h = h
+
         if (useParentImpl) {
             super.arcImpl(x, y, w, h, start, stop, mode)
             return
@@ -744,11 +801,14 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         //convert corner/diameter to center/radius
         w *= 0.5f
         h *= 0.5f
+
         x += w
         y += h
+
         val diff = stop - start
         val segments = circleDetail(PApplet.max(w, h), diff)
         val step = diff / segments
+
         beginShape(PConstants.POLYGON)
 
         //no constant is defined for the default arc mode, so we just use a literal 0
@@ -756,14 +816,17 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         if (mode == 0 || mode == PConstants.PIE) {
             vertex(x, y)
         }
+
         if (mode == 0) {
             //kinda hacky way to disable drawing a stroke along the first edge
             appendContour(vertCount)
         }
+
         var dx = PApplet.cos(start)
         var dy = PApplet.sin(start)
         val c = PApplet.cos(step)
         val s = PApplet.sin(step)
+
         for (i in 0..segments) {
             shapeVertex(x + dx * w, y + dy * h, 0f, 0f, fillColor, 0f)
             //this is the equivalent of multiplying the vector <dx, dy> by the 2x2 rotation matrix [[c -s] [s c]]
@@ -775,6 +838,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         //for the case `(mode == PIE || mode == 0) && diff > HALF_PI`, the polygon
         //will not actually be convex, but due to known vertex order, we can still safely tessellate as if it is
         knownConvexPolygon = true
+
         if (mode == PConstants.CHORD || mode == PConstants.PIE) {
             endShape(PConstants.CLOSE)
         } else {
@@ -782,13 +846,15 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         }
     }
 
-    override fun rectImpl(x1: Float, y1: Float, x2: Float, y2: Float,
-                          tl: Float, tr: Float, br: Float, bl: Float) {
+    override fun rectImpl(x1: Float, y1: Float, x2: Float, y2: Float, tl: Float, tr: Float, br: Float, bl: Float) {
+
         if (useParentImpl) {
             super.rectImpl(x1, y1, x2, y2, tl, tr, br, bl)
             return
         }
+
         beginShape()
+
         if (tr != 0f) {
             vertex(x2 - tr, y1)
             quadraticVertex(x2, y1, x2, y1 + tr)
@@ -813,6 +879,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         } else {
             vertex(x1, y1)
         }
+
         knownConvexPolygon = true
         endShape(PConstants.CLOSE)
     }
@@ -957,9 +1024,12 @@ open class PGraphics2DX : PGraphicsOpenGL() {
             super.shader(shader)
             return
         }
+
         flushBuffer() // Flushing geometry drawn with a different shader.
         shader?.init()
+
         val res = checkShaderLocs(shader)
+
         if (res) {
             twoShader = shader
             shader!!.type = SHADER2D
@@ -1261,17 +1331,22 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     private fun loadShaderLocs(shader: PShader?) {
         positionLoc = shader!!.getAttributeLoc("position")
+
         if (positionLoc == -1) {
             positionLoc = shader.getAttributeLoc("vertex")
         }
+
         colorLoc = shader.getAttributeLoc("color")
         texCoordLoc = shader.getAttributeLoc("texCoord")
         texFactorLoc = shader.getAttributeLoc("texFactor")
         transformLoc = shader.getUniformLoc("transform")
+
         if (transformLoc == -1) {
             transformLoc = shader.getUniformLoc("transformMatrix")
         }
+
         texScaleLoc = shader.getUniformLoc("texScale")
+
         if (texScaleLoc == -1) {
             texScaleLoc = shader.getUniformLoc("texOffset")
         }
@@ -1307,12 +1382,15 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     private fun setAttribs() {
         pgl.vertexAttribPointer(positionLoc, 3, PGL.FLOAT, false, vertSize, 0)
         pgl.enableVertexAttribArray(positionLoc)
+
         if (-1 < texCoordLoc) {
             pgl.vertexAttribPointer(texCoordLoc, 2, PGL.FLOAT, false, vertSize, 3 * java.lang.Float.BYTES)
             pgl.enableVertexAttribArray(texCoordLoc)
         }
+
         pgl.vertexAttribPointer(colorLoc, 4, PGL.UNSIGNED_BYTE, true, vertSize, 5 * java.lang.Float.BYTES)
         pgl.enableVertexAttribArray(colorLoc)
+
         if (-1 < texFactorLoc) {
             pgl.vertexAttribPointer(texFactorLoc, 1, PGL.FLOAT, false, vertSize, 6 * java.lang.Float.BYTES)
             pgl.enableVertexAttribArray(texFactorLoc)
@@ -1375,6 +1453,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     //list of indices (into shapeVerts array) at which a new contour begins
     private var contours = IntArray(2) //initial size is arbitrary
     private var contourCount = 0
+
     private fun appendContour(vertIndex: Int) {
         //dynamically expand contour array as needed
         if (contourCount >= contours.size) {
@@ -1393,6 +1472,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
     //TODO: Make this an optional argument to endShape()
     //once we start integrating PGraphics4D into the rest of the codebase.
     private var knownConvexPolygon = false
+
     private fun shapeVertex(x: Float, y: Float, u: Float, v: Float, c: Int, f: Float) {
         //avoid adding a duplicate because it will cause the GLU tess to fail spectacularly
         //by spitting out-of-memory errors and passing null parameters to the combine() callback
@@ -1413,6 +1493,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                 shapeVerts[i] = TessVertex()
             }
         }
+
         shapeVerts[vertCount]!![x, y, u, v, c] = f
         vertCount += 1
     }
@@ -1429,25 +1510,34 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         var y1 = y1
         var x2 = x2
         var y2 = y2
+
         val r = strokeWeight * 0.5f
+
         val dx = x2 - x1
         val dy = y2 - y1
+
         val d = PApplet.sqrt(dx * dx + dy * dy)
+
         var tx = dy / d * r
         var ty = dx / d * r
+
         if (strokeCap == PConstants.PROJECT) {
             x1 -= ty
             x2 += ty
             y1 -= tx
             y2 += tx
         }
+
         triangle(x1 - tx, y1 + ty, x1 + tx, y1 - ty, x2 - tx, y2 + ty, color)
         triangle(x2 + tx, y2 - ty, x2 - tx, y2 + ty, x1 + tx, y1 - ty, color)
+
         if (r >= LINE_DETAIL_LIMIT && strokeCap == PConstants.ROUND) {
             val segments = circleDetail(r, PConstants.HALF_PI)
             val step = PConstants.HALF_PI / segments
+
             val c = PApplet.cos(step)
             val s = PApplet.sin(step)
+
             for (i in 0 until segments) {
                 //this is the equivalent of multiplying the vector <tx, ty> by the 2x2 rotation matrix [[c -s] [s c]]
                 val nx = c * tx - s * ty
@@ -1464,13 +1554,16 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     private fun singlePoint(x: Float, y: Float, color: Int) {
         val r = strokeWeight * 0.5f
+
         if (r >= LINE_DETAIL_LIMIT && strokeCap == PConstants.ROUND) {
             val segments = circleDetail(r)
             val step = PConstants.QUARTER_PI / segments
             var x1 = 0f
             var y1 = r
+
             val c = PApplet.cos(step)
             val s = PApplet.sin(step)
+
             for (i in 0 until segments) {
                 //this is the equivalent of multiplying the vector <x1, y1> by the 2x2 rotation matrix [[c -s] [s c]]
                 val x2 = c * x1 - s * y1
@@ -1496,30 +1589,36 @@ open class PGraphics2DX : PGraphicsOpenGL() {
 
     private inner class StrokeRenderer {
         var lineVertexCount = 0
-        var fx = 0f
-        var fy = 0f
-        var sx = 0f
-        var sy = 0f
+
+        var fx  = 0f
+        var fy  = 0f
+        var sx  = 0f
+        var sy  = 0f
         var sdx = 0f
         var sdy = 0f
-        var px = 0f
-        var py = 0f
+        var px  = 0f
+        var py  = 0f
         var pdx = 0f
         var pdy = 0f
-        var lx = 0f
-        var ly = 0f
-        var r = 0f
+        var lx  = 0f
+        var ly  = 0f
+        var r   = 0f
+
         fun arcJoin(x: Float, y: Float, dx1: Float, dy1: Float, dx2: Float, dy2: Float) {
             //we don't need to normalize before doing these products
             //since the vectors are the same length and only used as arguments to atan2()
             var dx1 = dx1
             var dy1 = dy1
+
             val cross = dx1 * dy2 - dy1 * dx2
             val dot = dx1 * dx2 + dy1 * dy2
+
             val theta = PApplet.atan2(cross, dot)
             val segments = circleDetail(r, theta)
+
             var px = x + dx1
             var py = y + dy1
+
             if (segments > 1) {
                 val c = PApplet.cos(theta / segments)
                 val s = PApplet.sin(theta / segments)
@@ -1535,6 +1634,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                     py = ny
                 }
             }
+
             triangle(x, y, px, py, x + dx2, y + dy2, strokeColor)
         }
 
@@ -1549,6 +1649,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
             if (lineVertexCount > 0 && x == lx && y == ly) {
                 return
             }
+
             if (lineVertexCount == 0) {
                 fx = x
                 fy = y
@@ -1563,14 +1664,19 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                 var leg1y = ly - py
                 var leg2x = x - lx
                 var leg2y = y - ly
+
                 val len1 = PApplet.sqrt(leg1x * leg1x + leg1y * leg1y)
                 val len2 = PApplet.sqrt(leg2x * leg2x + leg2y * leg2y)
+
                 leg1x /= len1
                 leg1y /= len1
                 leg2x /= len2
                 leg2y /= len2
+
                 val legDot = -leg1x * leg2x - leg1y * leg2y
+
                 val cosPiOver15 = 0.97815f
+
                 if (strokeJoin == PConstants.BEVEL || strokeJoin == PConstants.ROUND || legDot > cosPiOver15 || legDot < -0.999) {
                     val tx = leg1y * r
                     val ty = -leg1x * r
@@ -1601,13 +1707,16 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                     //find the bisecting vector
                     val x1 = leg2x - leg1x
                     val y1 = leg2y - leg1y
+
                     //find a (normalized) vector perpendicular to one of the legs
                     val x2 = leg1y
                     val y2 = -leg1x
+
                     //scale the bisecting vector to the correct length using magic (not sure how to explain this one)
                     val dot = x1 * x2 + y1 * y2
                     val bx = x1 * (r / dot)
                     val by = y1 * (r / dot)
+
                     if (lineVertexCount == 2) {
                         sdx = bx
                         sdy = by
@@ -1615,6 +1724,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                         triangle(px - pdx, py - pdy, px + pdx, py + pdy, lx - bx, ly - by, strokeColor)
                         triangle(px + pdx, py + pdy, lx - bx, ly - by, lx + bx, ly + by, strokeColor)
                     }
+
                     pdx = bx
                     pdy = by
                 }
@@ -1643,6 +1753,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                     py = ny
                 }
             }
+
             triangle(x, y, x + px, y + py, x + dx, y + dy, strokeColor)
             triangle(x, y, x - py, y + px, x - dy, y + dx, strokeColor)
         }
@@ -1651,16 +1762,19 @@ open class PGraphics2DX : PGraphicsOpenGL() {
             if (lineVertexCount < 2) {
                 return
             }
+
             if (lineVertexCount == 2) {
                 singleLine(px, py, lx, ly, strokeColor)
                 return
             }
+
             if (r < LINE_DETAIL_LIMIT) {
                 if (closed) {
                     singleLine(lx, ly, fx, fy, strokeColor)
                 }
                 return
             }
+
             if (closed) {
                 //draw the last two legs
                 lineVertex(fx, fy)
@@ -1673,15 +1787,20 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                 //draw last line (with cap)
                 var dx = lx - px
                 var dy = ly - py
+
                 var d = PApplet.sqrt(dx * dx + dy * dy)
+
                 var tx = dy / d * r
                 var ty = -dx / d * r
+
                 if (strokeCap == PConstants.PROJECT) {
                     lx -= ty
                     ly += tx
                 }
+
                 triangle(px - pdx, py - pdy, px + pdx, py + pdy, lx - tx, ly - ty, strokeColor)
                 triangle(px + pdx, py + pdy, lx - tx, ly - ty, lx + tx, ly + ty, strokeColor)
+
                 if (strokeCap == PConstants.ROUND) {
                     lineCap(lx, ly, -ty, tx)
                 }
@@ -1692,6 +1811,7 @@ open class PGraphics2DX : PGraphicsOpenGL() {
                 d = PApplet.sqrt(dx * dx + dy * dy)
                 tx = dy / d * r
                 ty = -dx / d * r
+
                 if (strokeCap == PConstants.PROJECT) {
                     fx -= ty
                     fy += tx
@@ -1719,22 +1839,29 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         val syj = projmodelview.m11 * height / 2
         val Imag2 = sxi * sxi + syi * syi
         val Jmag2 = sxj * sxj + syj * syj
+
         val ellipseDetailMultiplier = PApplet.sqrt(PApplet.max(Imag2, Jmag2))
         radius *= ellipseDetailMultiplier
+
         return (PApplet.min(127f, PApplet.sqrt(radius) / PConstants.QUARTER_PI * PApplet.abs(delta) * 0.75f) + 1).toInt()
     }
 
     private inner class TessVertex {
         @JvmField
         var x = 0f
+
         @JvmField
         var y = 0f
+
         @JvmField
         var u = 0f
+
         @JvmField
         var v = 0f
+
         @JvmField
         var c = 0
+
         @JvmField
         var f = 0f //1.0 if textured, 0.0 if flat = 0f
 
@@ -1765,12 +1892,16 @@ open class PGraphics2DX : PGraphicsOpenGL() {
         const val STROKE_PERSPECTIVE_ERROR = "Strokes cannot be perspective-corrected in 2D"
         const val NON_2D_SHADER_ERROR = "This shader cannot be used for 2D rendering"
         const val WRONG_SHADER_PARAMS = "The P2D renderer does not accept shaders of different tyes"
+
         protected const val SHADER2D = 7
+
         protected var defP2DShaderVertURL = PGraphicsOpenGL::class.java.getResource("/assets/shaders/P2DVert.glsl")
         protected var defP2DShaderFragURL = PGraphicsOpenGL::class.java.getResource("/assets/shaders/P2DFrag.glsl")
 
         //////////////////////////////////////////////////////////////
+
         // SHAPE I/O
+
         @JvmStatic
         protected fun isSupportedExtension(extension: String): Boolean {
             return extension == "svg" || extension == "svgz"

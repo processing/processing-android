@@ -29,6 +29,9 @@ import processing.core.PGraphics
 import processing.core.PShape
 import processing.core.PShapeOBJ
 
+/**
+ * @author Aditya Rana
+ */
 open class PGraphics3D : PGraphicsOpenGL() {
 
     //////////////////////////////////////////////////////////////
@@ -71,12 +74,14 @@ open class PGraphics3D : PGraphicsOpenGL() {
         // Set camera for 2D rendering, it simply centers at (width/2, height/2)
         val centerX = width / 2f
         val centerY = height / 2f
+
         modelview.reset()
         modelview.translate(-centerX, -centerY)
         modelviewInv.set(modelview)
         modelviewInv.invert()
         camera.set(modelview)
         cameraInv.set(modelviewInv)
+
         updateProjmodelview()
     }
 

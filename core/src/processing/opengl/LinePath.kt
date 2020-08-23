@@ -31,6 +31,7 @@ import processing.core.PMatrix2D
 import processing.opengl.LinePath.PathIterator
 
 /**
+ * @author Processing migrated to kotlin: Aditya Rana
  * The `LinePath` class allows to represent polygonal paths,
  * potentially composed by several disjoint polygonal segments.
  * It can be iterated by the [PathIterator] class including all
@@ -38,10 +39,12 @@ import processing.opengl.LinePath.PathIterator
  *
  */
 open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initialCapacity: Int = INIT_SIZE) {
+
     protected var pointTypes: ByteArray
     protected var floatCoords: FloatArray
     protected var pointColors: IntArray
-    protected var numTypes = 0
+
+    protected var numTypes  = 0
     protected var numCoords = 0
     private var windingRule = 0
 
@@ -50,7 +53,9 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
             throw RuntimeException("missing initial moveto "
                     + "in path definition")
         }
+
         var size = pointTypes.size
+
         if (numTypes >= size) {
             var grow = size
             if (grow > EXPAND_MAX) {
@@ -58,7 +63,9 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
             }
             pointTypes = copyOf(pointTypes, size + grow)
         }
+
         size = floatCoords.size
+
         if (numCoords + newPoints * 2 > size) {
             var grow = size
             if (grow > EXPAND_MAX * 2) {
@@ -69,7 +76,9 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
             }
             floatCoords = copyOf(floatCoords, size + grow)
         }
+
         size = pointColors.size
+
         if (numCoords / 2 + newPoints > size) {
             var grow = size
             if (grow > EXPAND_MAX) {
@@ -197,8 +206,10 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
     class PathIterator internal constructor(@JvmField var path: LinePath) {
         var floatCoords: FloatArray
         var typeIdx = 0
+
         var pointIdx: Int
         var colorIdx: Int
+
         fun currentSegment(coords: FloatArray): Int {
             val type = path.pointTypes[typeIdx].toInt()
             val numCoords = curvecoords[type]
@@ -344,9 +355,12 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
          * @param miterlimit
          * @param transform
          */
+
         /////////////////////////////////////////////////////////////////////////////
-        //
+
         // Stroked path methods
+
+
         @JvmStatic
         @JvmOverloads
         fun createStrokedPath(src: LinePath, weight: Float,
@@ -393,6 +407,7 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
             while (!pi.isDone) {
                 var color: Int
                 when (pi.currentSegment(coords)) {
+
                     SEG_MOVETO.toInt() -> {
                         color = coords[2].toInt() shl 24 or
                                 (coords[3].toInt() shl 16) or
@@ -400,6 +415,7 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
                                 coords[5].toInt()
                         lsink.moveTo(FloatToS15_16(coords[0]), FloatToS15_16(coords[1]), color)
                     }
+
                     SEG_LINETO.toInt() -> {
                         color = coords[2].toInt() shl 24 or
                                 (coords[3].toInt() shl 16) or
@@ -408,10 +424,12 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
                         lsink.lineJoin()
                         lsink.lineTo(FloatToS15_16(coords[0]), FloatToS15_16(coords[1]), color)
                     }
+
                     SEG_CLOSE.toInt() -> {
                         lsink.lineJoin()
                         lsink.close()
                     }
+
                     else -> throw InternalError("unknown flattened segment type")
                 }
                 pi.next()
@@ -420,8 +438,10 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
         }
 
         /////////////////////////////////////////////////////////////////////////////
-        //
+
         // Utility methods
+
+
         @JvmStatic
         fun copyOf(source: FloatArray, length: Int): FloatArray {
             val target = FloatArray(length)
@@ -456,7 +476,9 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
             var root = 0
             var remHi = 0
             var remLo = x
+
             var count = 15 + fracbits / 2
+
             do {
                 remHi = remHi shl 2 or (remLo ushr 30) // N.B. - unsigned shift R
                 remLo = remLo shl 2
@@ -523,6 +545,7 @@ open class LinePath @JvmOverloads constructor(rule: Int = WIND_NON_ZERO, initial
             return fix / 65536f
         }
     }
+
     /**
      * Constructs a new `LinePath` object from the given specified initial
      * values. This method is only intended for internal use and should not be
