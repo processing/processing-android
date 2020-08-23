@@ -19,6 +19,7 @@
 package processing.event
 
 /**
+ * @author Aditya Rana
  * Get the platform-native event object. This might be the java.awt event
  * on the desktop, though if you're using OpenGL on the desktop it'll be a
  * NEWT event that JOGL uses. Android events are something else altogether.

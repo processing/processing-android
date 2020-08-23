@@ -18,7 +18,8 @@
 
 package processing.event
 
-/*
+/**
+ * @author Aditya Rana
  * IMPORTANT NOTICE: None of the methods and inner classes in TouchEvent are
  * part of the Processing API. Don't use them! They might be changed or removed
  * without notice.

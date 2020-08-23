@@ -18,7 +18,10 @@
 
 package processing.event
 
-class KeyEvent : Event {
+/**
+ * @author Aditya Rana
+ */
+open class KeyEvent : Event {
     @JvmField
     var key: Char
     @JvmField
