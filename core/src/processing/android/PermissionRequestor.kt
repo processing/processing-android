@@ -27,8 +27,11 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.os.ResultReceiver
 
-// A simple utility activity to request permissions in a service.
-class PermissionRequestor : Activity() {
+/**
+ * @author Aditya Rana
+ * A simple utility activity to request permissions in a service.
+ */
+open class PermissionRequestor : Activity() {
     var resultReceiver: ResultReceiver? = null
     lateinit var permissions: Array<String>
     var requestCode = 0

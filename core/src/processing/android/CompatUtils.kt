@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
+ * @author Aditya Rana
  * Compatibility utilities that work across versions of Android. Even though
  * the mode sets API level 17 (Android 4.2) as the minimum target, because the
  * core library could be used from another IDE and lower targets, then this

@@ -34,6 +34,9 @@ import android.view.SurfaceHolder
 import android.view.MotionEvent
 import processing.core.PApplet
 
+/**
+ * @author Aditya Rana
+ */
 open class PWallpaper : WallpaperService(), AppComponent {
     private var size: Point? = null
     private var metrics: DisplayMetrics? = null

@@ -43,7 +43,10 @@ import android.view.ContextMenu.ContextMenuInfo;
 import processing.core.PApplet
 import processing.core.PConstants
 
-class PFragment : Fragment, AppComponent {
+/**
+ * @author Aditya Rana
+ */
+open class PFragment : Fragment, AppComponent {
 
     private var metrics: DisplayMetrics? = null
     private var size: Point? = null

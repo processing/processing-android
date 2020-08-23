@@ -25,6 +25,9 @@ package processing.android
 import android.graphics.Rect
 import processing.core.PConstants
 
+/**
+ * @author Aditya Rana
+ */
 interface ServiceEngine : PConstants {
     // wallpapers
     fun isPreview(): Boolean

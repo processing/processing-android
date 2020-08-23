@@ -26,6 +26,9 @@ import android.content.Intent
 import processing.core.PApplet
 import processing.core.PConstants
 
+/**
+ * @author Aditya Rana
+ */
 interface AppComponent : PConstants {
 
     fun initDimensions()

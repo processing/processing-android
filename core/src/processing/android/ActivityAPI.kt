@@ -33,8 +33,11 @@ import android.view.Window;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo
 
-// Methods that should be implemented in PApplet to maintain backward
-// compatibility with (some) functionality available from Activity/Fragment
+/**
+ * @author Aditya Rana
+ * Methods that should be implemented in PApplet to maintain backward
+ * compatibility with (some) functionality available from Activity/Fragment
+ */
 interface ActivityAPI {
 
     // Lifecycle events
