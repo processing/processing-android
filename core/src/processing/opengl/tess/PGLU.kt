@@ -2,6 +2,9 @@ package processing.opengl.tess
 
 import android.opengl.GLES20
 
+/**
+ * @author Aditya Rana
+ */
 internal open class  PGLU {
     companion object {
         const val GLU_FALSE = 0

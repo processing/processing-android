@@ -53,21 +53,29 @@
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal class GLUface {
     @JvmField
     var next: GLUface? = null /* next face (never NULL) */
+
     @JvmField
     var prev: GLUface? = null /* previous face (never NULL) */
+
     @JvmField
     var anEdge: GLUhalfEdge? = null /* a half edge with this left face */
+
     @JvmField
     var data: Any? = null /* room for client's data */
 
     /* Internal data (keep hidden) */
     @JvmField
     var trail: GLUface? = null /* "stack" for conversion to strips */
+
     @JvmField
     var marked = false /* flag for conversion to strips */
+
     @JvmField
     var inside = false /* this face is in the polygon interior */
 }

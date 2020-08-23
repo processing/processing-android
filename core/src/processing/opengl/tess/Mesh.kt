@@ -50,17 +50,22 @@
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal object Mesh {
 
     /************************ Utility Routines  */
-    /* MakeEdge creates a new pair of half-edges which form their own loop.
- * No vertex or face structures are allocated, but these must be assigned
- * before the current edge operation is completed.
- */
+
+ /* MakeEdge creates a new pair of half-edges which form their own loop.
+  * No vertex or face structures are allocated, but these must be assigned
+  * before the current edge operation is completed.
+  */
     @JvmStatic
     fun MakeEdge(eNext: GLUhalfEdge?): GLUhalfEdge {
         var eNext = eNext
@@ -85,6 +90,7 @@ internal object Mesh {
         /* Insert in circular doubly-linked list before eNext.
          * Note that the prev pointer is stored in Sym->next.
          */
+
         ePrev = eNext!!.Sym!!.next
         eSym.next = ePrev
         ePrev!!.Sym!!.next = e
@@ -136,16 +142,21 @@ internal object Mesh {
         val vPrev: GLUvertex?
         assert(newVertex != null)
 
-        /* insert in circular doubly-linked list before vNext */vPrev = vNext!!.prev
+        /* insert in circular doubly-linked list before vNext */
+
+        vPrev = vNext!!.prev
         newVertex!!.prev = vPrev
         vPrev!!.next = newVertex
         newVertex.next = vNext
         vNext.prev = newVertex
         newVertex.anEdge = eOrig
         newVertex.data = null
+
         /* leave coords, s, t undefined */
 
-        /* fix other edges on this vertex loop */e = eOrig
+        /* fix other edges on this vertex loop */
+
+        e = eOrig
         do {
             e!!.Org = newVertex
             e = e.Onext
@@ -176,9 +187,13 @@ internal object Mesh {
 
         /* The new face is marked "inside" if the old one was.  This is a
          * convenience for the common case where a face has been split in two.
-         */newFace.inside = fNext.inside
+         */
 
-        /* fix other edges on this face loop */e = eOrig
+        newFace.inside = fNext.inside
+
+        /* fix other edges on this face loop */
+
+        e = eOrig
         do {
             e!!.Lface = newFace
             e = e.Lnext
@@ -242,13 +257,17 @@ internal object Mesh {
             e = e.Lnext
         } while (e != eStart)
 
-        /* delete from circular doubly-linked list */fPrev = fDel.prev
+        /* delete from circular doubly-linked list */
+
+        fPrev = fDel.prev
         fNext = fDel.next
         fNext!!.prev = fPrev
         fPrev!!.next = fNext
     }
 
-    /****************** Basic Edge Operations  */ /* __gl_meshMakeEdge creates one edge, two vertices, and a loop (face).
+    /****************** Basic Edge Operations  */
+
+    /* __gl_meshMakeEdge creates one edge, two vertices, and a loop (face).
  * The loop consists of the two new half-edges.
  */
     @JvmStatic
@@ -341,7 +360,9 @@ internal object Mesh {
 
         /* First step: disconnect the origin vertex eDel.Org.  We make all
          * changes to get a consistent mesh in this "intermediate" state.
-         */if (eDel.Lface != eDel.Sym!!.Lface) {
+         */
+
+        if (eDel.Lface != eDel.Sym!!.Lface) {
             /* We are joining two loops into one -- remove the left face */
             joiningLoops = true
             KillFace(eDel.Lface, eDel.Sym!!.Lface)
@@ -349,34 +370,46 @@ internal object Mesh {
         if (eDel.Onext == eDel) {
             KillVertex(eDel.Org, null)
         } else {
+
             /* Make sure that eDel.Org and eDel.Sym.Lface point to valid half-edges */
+
             eDel.Sym!!.Lface!!.anEdge = eDel.Sym!!.Lnext
             eDel.Org!!.anEdge = eDel.Onext
             Splice(eDel, eDel.Sym!!.Lnext)
             if (!joiningLoops) {
                 val newFace = GLUface()
 
-                /* We are splitting one loop into two -- create a new loop for eDel. */MakeFace(newFace, eDel, eDel.Lface)
+                /* We are splitting one loop into two -- create a new loop for eDel. */
+
+                MakeFace(newFace, eDel, eDel.Lface)
             }
         }
 
         /* Claim: the mesh is now in a consistent state, except that eDel.Org
          * may have been deleted.  Now we disconnect eDel.Dst.
-         */if (eDelSym!!.Onext == eDelSym) {
+         */
+
+        if (eDelSym!!.Onext == eDelSym) {
             KillVertex(eDelSym.Org, null)
             KillFace(eDelSym.Lface, null)
         } else {
+
             /* Make sure that eDel.Dst and eDel.Lface point to valid half-edges */
+
             eDel.Lface!!.anEdge = eDelSym.Sym!!.Lnext
             eDelSym.Org!!.anEdge = eDelSym.Onext
             Splice(eDelSym, eDelSym.Sym!!.Lnext)
         }
 
-        /* Any isolated vertices or faces have already been freed. */KillEdge(eDel)
+        /* Any isolated vertices or faces have already been freed. */
+
+        KillEdge(eDel)
         return true
     }
 
-    /******************** Other Edge Operations  */ /* All these routines can be implemented with the basic edge
+    /******************** Other Edge Operations  */
+
+    /* All these routines can be implemented with the basic edge
  * operations above.  They are provided for convenience and efficiency.
  */
     /* __gl_meshAddEdgeVertex( eOrg ) creates a new edge eNew such that
@@ -452,7 +485,9 @@ internal object Mesh {
         eNewSym.Lface = eOrg.Lface
         eNew.Lface = eNewSym.Lface
 
-        /* Make sure the old face points to a valid half-edge */eOrg.Lface!!.anEdge = eNewSym
+        /* Make sure the old face points to a valid half-edge */
+
+        eOrg.Lface!!.anEdge = eNewSym
         if (!joiningLoops) {
             val newFace = GLUface()
 
@@ -461,7 +496,9 @@ internal object Mesh {
         return eNew
     }
 
-    /******************** Other Operations  */ /* __gl_meshZapFace( fZap ) destroys a face and removes it from the
+    /******************** Other Operations  */
+
+    /* __gl_meshZapFace( fZap ) destroys a face and removes it from the
  * global face list.  All edges of fZap will have a null pointer as their
  * left face.  Any edges which also have a null pointer as their right face
  * are deleted entirely (along with any isolated vertices this produces).
@@ -477,7 +514,9 @@ internal object Mesh {
         val fPrev: GLUface?
         val fNext: GLUface?
 
-        /* walk around face, deleting edges whose right face is also null */eNext = eStart!!.Lnext
+        /* walk around face, deleting edges whose right face is also null */
+
+        eNext = eStart!!.Lnext
         do {
             e = eNext
             eNext = e!!.Lnext
@@ -503,7 +542,9 @@ internal object Mesh {
             }
         } while (e != eStart)
 
-        /* delete from circular doubly-linked list */fPrev = fZap.prev
+        /* delete from circular doubly-linked list */
+
+        fPrev = fZap.prev
         fNext = fZap.next
         fNext!!.prev = fPrev
         fPrev!!.next = fNext

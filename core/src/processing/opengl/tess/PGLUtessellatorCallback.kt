@@ -62,6 +62,7 @@ package processing.opengl.tess
  * @author Java Port: Pepijn Van Eeckhoudt, July 2003
  * @author Java Port: Nathan Parker Burg, August 2003
  * @author Processing integration: Andres Colubri, February 2012
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
  */
 interface PGLUtessellatorCallback {
     /**

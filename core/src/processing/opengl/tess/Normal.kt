@@ -50,10 +50,14 @@
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal object Normal {
     var SLANTED_SWEEP = false
     var S_UNIT_X = 0.0 /* Pre-normalized */

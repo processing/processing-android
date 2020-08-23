@@ -50,6 +50,7 @@
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
@@ -61,6 +62,9 @@ import processing.opengl.tess.Mesh.__gl_meshNewMesh
 import processing.opengl.tess.Mesh.__gl_meshSplice
 import processing.opengl.tess.Mesh.__gl_meshSplitEdge
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal open class GLUtessellatorImpl private constructor() : PGLUtessellator {
 
     private var state: Int /* what begin/end calls have we seen? */
@@ -221,6 +225,7 @@ internal open class GLUtessellatorImpl private constructor() : PGLUtessellator {
     }
 
     /* Returns tessellator property */
+
     fun gluGetTessProperty(which: Int, value: DoubleArray, value_offset: Int) {
         when (which) {
             PGLU.GLU_TESS_TOLERANCE -> {
@@ -241,7 +246,9 @@ internal open class GLUtessellatorImpl private constructor() : PGLUtessellator {
                 callErrorOrErrorData(PGLU.GLU_INVALID_ENUM)
             }
         }
-    } /* gluGetTessProperty() */
+    }
+
+    /* gluGetTessProperty() */
 
     fun gluTessNormal(x: Double, y: Double, z: Double) {
         normal[0] = x
@@ -273,8 +280,9 @@ internal open class GLUtessellatorImpl private constructor() : PGLUtessellator {
                     callEdgeFlagData = callBegin
                 }
 
-                /* If the client wants boundary edges to be flagged,
-* we render everything as separate triangles (no strips or fans).
+
+/* If the client wants boundary edges to be flagged,
+ * we render everything as separate triangles (no strips or fans).
  */
                 flagBoundary = aCallback != null
                 return

@@ -50,28 +50,41 @@
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal class ActiveRegion {
+
+    /* upper edge, directed right to left */
     @JvmField
-    var eUp /* upper edge, directed right to left */: GLUhalfEdge? = null
+    var eUp: GLUhalfEdge? = null
+
+    /* dictionary node corresponding to eUp */
     @JvmField
-    var nodeUp /* dictionary node corresponding to eUp */: DictNode? = null
+    var nodeUp: DictNode? = null
+
+    /* used to determine which regions are inside the polygon */
     @JvmField
-    var windingNumber /* used to determine which regions are
-                                 * inside the polygon */ = 0
+    var windingNumber = 0
+
+    /* is this region inside the polygon? */
     @JvmField
-    var inside /* is this region inside the polygon? */ = false
+    var inside = false
+
+    /* marks fake edges at t = +/-infinity */
     @JvmField
-    var sentinel /* marks fake edges at t = +/-infinity */ = false
+    var sentinel = false
+
+    /* marks regions where the upper or lower edge has changed, but we haven't checked whether they intersect yet */
     @JvmField
-    var dirty /* marks regions where the upper or lower
-                                 * edge has changed, but we haven't checked
-                                 * whether they intersect yet */ = false
+    var dirty = false
+
+    /* marks temporary edges introduced when we process a "right vertex" (one without any edges leaving to the right) */
     @JvmField
-    var fixUpperEdge /* marks temporary edges introduced when
-                                 * we process a "right vertex" (one without
-                                 * any edges leaving to the right) */ = false
+    var fixUpperEdge = false
 }

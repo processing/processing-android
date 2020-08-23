@@ -50,10 +50,14 @@
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal object Geom {
     /* Given three vertices u,v,w such that VertLeq(u,v) && VertLeq(v,w),
      * evaluates the t-coord of the edge uw at the s-coord of the vertex v.
@@ -171,10 +175,13 @@ internal object Geom {
     @JvmStatic
     fun EdgeIntersect(o1: GLUvertex, d1: GLUvertex,
                       o2: GLUvertex, d2: GLUvertex,
-                      v: GLUvertex) /* Given edges (o1,d1) and (o2,d2), compute their point of intersection.
- * The computed point is guaranteed to lie in the intersection of the
- * bounding rectangles defined by each edge.
- */ {
+                      v: GLUvertex)
+
+ /* Given edges (o1,d1) and (o2,d2), compute their point of intersection.
+  * The computed point is guaranteed to lie in the intersection of the
+  * bounding rectangles defined by each edge.
+  */
+    {
         var o1 = o1
         var d1 = d1
         var o2 = o2
@@ -188,7 +195,9 @@ internal object Geom {
          * Strategy: find the two middle vertices in the VertLeq ordering,
          * and interpolate the intersection s-value from these.  Then repeat
          * using the TransLeq ordering to find the intersection t-value.
-         */if (!VertLeq(o1, d1)) {
+         */
+
+        if (!VertLeq(o1, d1)) {
             val temp = o1
             o1 = d1
             d1 = temp
@@ -229,7 +238,9 @@ internal object Geom {
             v.s = Interpolate(z1, o2.s, z2, d2.s)
         }
 
-        /* Now repeat the process for t */if (!TransLeq(o1, d1)) {
+        /* Now repeat the process for t */
+
+        if (!TransLeq(o1, d1)) {
             val temp = o1
             o1 = d1
             d1 = temp

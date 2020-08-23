@@ -49,7 +49,7 @@
 ** Author: Eric Veach, July 1994
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
-** Processing integration: Andres Colubri, February 2012
+** Processing integration: Andres Colubri, February 2012 and Aditya Rana, July 2020
 */
 
 package processing.opengl.tess

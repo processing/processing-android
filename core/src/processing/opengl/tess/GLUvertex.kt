@@ -50,13 +50,18 @@
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Java Port: Nathan Parker Burg, August 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal class GLUvertex {
     @JvmField
     var next: GLUvertex? = null /* next vertex (never NULL) */
+
     @JvmField
     var prev: GLUvertex? = null /* previous vertex (never NULL) */
 
@@ -69,10 +74,13 @@ internal class GLUvertex {
     /* Internal data (keep hidden) */
     @JvmField
     var coords = DoubleArray(3) /* vertex location in 3D */
+
     @JvmField
     var s = 0.0
+
     @JvmField
     var t = 0.0 /* projection onto the sweep plane */
+
     @JvmField
     var pqHandle = 0 /* to allow deletion from priority queue */
 }

@@ -49,27 +49,38 @@
 ** Author: Eric Veach, July 1994
 ** Java Port: Pepijn Van Eeckhoudt, July 2003
 ** Processing integration: Andres Colubri, February 2012
+** Processing migration to kotlin: Aditya Rana, July 2020
 */
 
 package processing.opengl.tess
 
+/**
+ * @author Processing migration to kotlin: Aditya Rana, July 2020
+ */
 internal class GLUhalfEdge( @JvmField var first: Boolean) {
+
     @JvmField
     var next: GLUhalfEdge? = null /* doubly-linked list (prev==Sym->next) */
+
     @JvmField
     var Sym: GLUhalfEdge? = null /* same edge, opposite direction */
+
     @JvmField
     var Onext: GLUhalfEdge? = null /* next edge CCW around origin */
+
     @JvmField
     var Lnext: GLUhalfEdge? = null /* next edge CCW around left face */
+
     @JvmField
     var Org: GLUvertex? = null /* origin vertex (Overtex too long) */
+
     @JvmField
     var Lface: GLUface? = null /* left face */
 
     /* Internal data (keep hidden) */
     @JvmField
     var activeRegion: ActiveRegion? = null /* a region with this upper edge (sweep.c) */
+
     @JvmField
     var winding = 0 /* change in winding number when crossing */
 
