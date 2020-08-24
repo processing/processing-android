@@ -1,4 +1,6 @@
-/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */ /*
+/* -*- mode: java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+
+/*
  Part of the Processing project - http://processing.org
 
  Copyright (c) 2017 The Processing Foundation
@@ -16,6 +18,7 @@
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package processing.mode.android.tools
 
 import com.android.repository.api.*
@@ -49,9 +52,12 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.table.DefaultTableModel
 
+/**
+ * @author Aditya Rana
+ */
 class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
-    private val columns = Vector(Arrays.asList(
-            "Package name", "Installed version", "Available update"))
+    private val columns = Vector(listOf("Package name", "Installed version", "Available update"))
+
     private var sdkFolder: File? = null
     private var queryTask: QueryTask? = null
     private var downloadTask: DownloadTask? = null
@@ -63,6 +69,7 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
     private var status: JLabel? = null
     private var actionButton: JButton? = null
     private var table: JTable? = null
+
     override fun init(base: Base) {
         createLayout(base.activeEditor == null)
     }
@@ -110,32 +117,42 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
 
             /* Following code is from listPackages() of com.android.sdklib.tool.SdkManagerCli
                with some changes
-       */
+             */
             val mHandler = AndroidSdkHandler.getInstance(sdkFolder)
             val fop = FileOpUtils.create() as FileSystemFileOp
             val mRepoManager = mHandler.getSdkManager(progress)
+
             mRepoManager.loadSynchronously(0, progress, LegacyDownloader(fop, object : SettingsController {
+
                 override fun getForceHttp(): Boolean {
                     return false
                 }
 
                 override fun setForceHttp(b: Boolean) {}
+
                 override fun getChannel(): Channel? {
                     return null
                 }
             }), null)
+
             val packages = mRepoManager.packages
+
             val installed = HashMap<String, List<String>>()
+
             for (local in packages.localPackages.values) {
                 val path = local.path
                 var name = local.displayName
                 val ver = local.version.toString()
+
                 // Remove version from the display name
                 val rev = name.indexOf(", rev")
+
                 if (-1 < rev) {
                     name = name.substring(0, rev)
                 }
+
                 val maj = ver.indexOf(".")
+
                 if (-1 < maj) {
                     val major = ver.substring(0, maj)
                     val pos = name.indexOf(major)
@@ -145,18 +162,23 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
                 }
                 installed[path] = Arrays.asList(name, ver)
             }
+
             val updated = HashMap<String, List<String>>()
+
             for (update in packages.updatedPkgs) {
                 val path = update.path
                 val loc = update.local.version.toString()
                 val rem = update.remote.version.toString()
                 updated[path] = Arrays.asList(loc, rem)
             }
+
             for (path in installed.keys) {
                 val info = Vector<String>()
                 val locInfo = installed[path]!!
+
                 info.add(locInfo[0])
                 info.add(locInfo[1])
+
                 if (updated.containsKey(path)) {
                     val upVer = updated[path]!![1]
                     info.add(upVer)
@@ -164,6 +186,7 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
                 } else {
                     info.add("")
                 }
+
                 packageList!!.add(info)
             }
             return null
@@ -174,10 +197,12 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
             try {
                 get()
                 firePropertyChange(PROPERTY_CHANGE_QUERY, "query", "SUCCESS")
+
                 if (packageList != null) {
                     packageTable!!.setDataVector(packageList, columns)
                     packageTable!!.fireTableDataChanged()
                 }
+
             } catch (e: InterruptedException) {
                 cancel(false)
             } catch (e: CancellationException) {
@@ -204,14 +229,17 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
 
             /* Following code is from installPackages() of com.android.sdklib.tool.SdkManagerCli
                with some changes
-       */
+             */
             val mHandler = AndroidSdkHandler.getInstance(sdkFolder)
             val fop = FileOpUtils.create() as FileSystemFileOp
             val settings = CustomSettings()
             val downloader: Downloader = LegacyDownloader(fop, settings)
             val mRepoManager = mHandler.getSdkManager(progress)
+
             mRepoManager.loadSynchronously(0, progress, downloader, settings)
+
             var remotes: MutableList<RemotePackage?>? = ArrayList()
+
             for (path in settings.getPaths(mRepoManager)) {
                 val p = mRepoManager.packages.remotePackages[path]
                 if (p == null) {
@@ -220,12 +248,14 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
                 }
                 remotes!!.add(p)
             }
-            remotes = InstallerUtil.computeRequiredPackages(
-                    remotes, mRepoManager.packages, progress)
+
+            remotes = InstallerUtil.computeRequiredPackages(remotes, mRepoManager.packages, progress)
+
             if (remotes != null) {
                 for (p in remotes) {
-                    val installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
-                            .createInstaller(p, mRepoManager, downloader, mHandler.fileOp)
+
+                    val installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler).createInstaller(p, mRepoManager, downloader, mHandler.fileOp)
+
                     if (!(installer.prepare(progress) && installer.complete(progress))) {
                         // there was an error, abort.
                         throw SdkManagerCli.CommandFailedException()
@@ -240,6 +270,7 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
 
         override fun done() {
             super.done()
+
             try {
                 get()
                 actionButton!!.isEnabled = false
@@ -265,12 +296,15 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
         internal inner class CustomSettings : SettingsController {
             /* Dummy implementation with some necessary methods from the original
                implementation in com.android.sdklib.tool.SdkManagerCli
-       */
+             */
             override fun getForceHttp(): Boolean {
                 return false
             }
 
-            override fun setForceHttp(b: Boolean) {}
+            override fun setForceHttp(b: Boolean) {
+
+            }
+
             override fun getChannel(): Channel? {
                 return null
             }
@@ -293,19 +327,26 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
 
     private fun createLayout(standalone: Boolean) {
         title = menuTitle
+
         val outer = contentPane
+
         outer.removeAll()
+
         val verticalBox = Box.createVerticalBox()
+
         verticalBox.border = EmptyBorder(BORDER, BORDER, BORDER, BORDER)
+
         outer.add(verticalBox)
 
         /* Packages panel */
         val packagesPanel = JPanel()
+
         val boxLayout = BoxLayout(packagesPanel, BoxLayout.Y_AXIS)
         packagesPanel.layout = boxLayout
 
         // Packages table
         packageTable = object : DefaultTableModel(NUM_ROWS, columns.size) {
+
             override fun isCellEditable(row: Int, column: Int): Boolean {
                 return false
             }
@@ -314,25 +355,32 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
                 return String::class.java
             }
         }
+
         table = object : JTable(packageTable) {
             override fun getColumnName(column: Int): String {
                 return columns[column]
             }
         }
+
         (table as JTable).fillsViewportHeight = true
         (table as JTable).autoResizeMode = JTable.AUTO_RESIZE_ALL_COLUMNS
         (table as JTable).rowHeight = Toolkit.zoom((table as JTable).rowHeight)
-        val dim = Dimension((table as JTable).columnCount * COL_WIDTH,
-                (table as JTable).rowHeight * NUM_ROWS)
+
+        val dim = Dimension((table as JTable).columnCount * COL_WIDTH,(table as JTable).rowHeight * NUM_ROWS)
+
         (table as JTable).preferredScrollableViewportSize = dim
+
         packagesPanel.add(JScrollPane(table))
+
         val controlPanel = JPanel()
         val gridBagLayout = GridBagLayout()
         controlPanel.layout = gridBagLayout
         val gbc = GridBagConstraints()
+
         gbc.insets = Insets(INSET, INSET, INSET, INSET)
         status = JLabel()
         status!!.text = "Starting up..."
+
         gbc.gridx = 0
         gbc.gridy = 0
         controlPanel.add(status, gbc)
@@ -342,11 +390,14 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
         // https://github.com/processing/processing-android/issues/362
         progressBar = JProgressBar()
         progressBar!!.isIndeterminate = true
+
         gbc.gridx = 0
         gbc.gridy = 1
         gbc.weightx = 1.0
+
         gbc.fill = GridBagConstraints.HORIZONTAL
         controlPanel.add(progressBar, gbc)
+
         actionButton = JButton("Update") // handles Update/Cancel
         actionButton!!.addActionListener {
             if (downloadTaskRunning) { // i.e button state is Cancel
@@ -373,13 +424,17 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
                 actionButton!!.text = "Cancel"
             }
         }
+
         actionButton!!.isEnabled = false
         actionButton!!.preferredSize = Dimension(BUTTON_WIDTH, BUTTON_HEIGHT)
+
         gbc.gridx = 1
         gbc.gridy = 0
         gbc.weightx = 0.0
+
         gbc.fill = GridBagConstraints.HORIZONTAL
         controlPanel.add(actionButton, gbc)
+
         val disposer = ActionListener {
             cancelTasks()
             if (standalone) {
@@ -388,29 +443,36 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
                 isVisible = false
             }
         }
+
         val closeButton = JButton("Close")
         closeButton.preferredSize = Dimension(BUTTON_WIDTH, BUTTON_HEIGHT)
         closeButton.addActionListener(disposer)
         closeButton.isEnabled = true
+
         gbc.gridx = 1
         gbc.gridy = 1
         gbc.weightx = 0.0
+
         gbc.fill = GridBagConstraints.HORIZONTAL
         controlPanel.add(closeButton, gbc)
         verticalBox.add(packagesPanel)
+
         verticalBox.add(Box.createVerticalStrut(GAP))
         verticalBox.add(controlPanel)
         pack()
+
         val root = getRootPane()
         root.defaultButton = closeButton
         Toolkit.registerWindowCloseKeys(root, disposer)
         Toolkit.setIcon(this)
+
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
                 cancelTasks()
                 super.windowClosing(e)
             }
         })
+
         registerWindowCloseKeys(getRootPane(), disposer)
         setLocationRelativeTo(null)
         isResizable = false
@@ -442,13 +504,14 @@ class SDKUpdater : JFrame(), PropertyChangeListener, Tool {
          * Registers key events for a Ctrl-W and ESC with an ActionListener
          * that will take care of disposing the window.
          */
-        fun registerWindowCloseKeys(root: JRootPane,
-                                    disposer: ActionListener?) {
+        fun registerWindowCloseKeys(root: JRootPane, disposer: ActionListener?) {
             var stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
-            root.registerKeyboardAction(disposer, stroke,
-                    JComponent.WHEN_IN_FOCUSED_WINDOW)
+
+            root.registerKeyboardAction(disposer, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW)
+
             val modifiers = java.awt.Toolkit.getDefaultToolkit().menuShortcutKeyMask
             stroke = KeyStroke.getKeyStroke('W'.toInt(), modifiers)
+
             root.registerKeyboardAction(disposer, stroke,
                     JComponent.WHEN_IN_FOCUSED_WINDOW)
         }
