@@ -59,12 +59,18 @@ import javax.xml.xpath.XPathException
 import javax.xml.xpath.XPathExpression
 import javax.xml.xpath.XPathFactory
 
+/**
+ * @author Aditya Rana
+ */
 internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTextString("sdk_downloader.download_title"), true), PropertyChangeListener {
+
     private var progressBar: JProgressBar? = null
     private var downloadedTextArea: JLabel? = null
     private var downloadTask: SDKDownloadTask? = null
     var sDK: AndroidSDK? = null
+
     private var cancelled = false
+
     private var totalSize = 0
 
     internal inner class SDKUrlHolder {
@@ -95,6 +101,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
         override fun doInBackground(): Any? {
             val sketchbookFolder = Base.getSketchbookFolder()
             val androidFolder = File(sketchbookFolder, "android")
+
             if (!androidFolder.exists()) androidFolder.mkdir()
             val sdkFolder = createSubFolder(androidFolder, "sdk")
 
@@ -164,14 +171,18 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
                     val downloadedFolder = File(tempFolder, downloadUrls.haxmFilename)
                     downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true)
                 }
+
                 if (Platform.isLinux() || Platform.isMacOS()) {
                     Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder!!.absolutePath)
                 }
+
                 for (f in tempFolder.listFiles()) f.delete()
+
                 tempFolder.delete()
 
                 // Normalize built-tools and platform folders to android-<API LEVEL>
                 var actualName = platformsFolder.listFiles()[0].name
+
                 renameFolder(platformsFolder, "android-" + AndroidBuild.TARGET_SDK, actualName)
                 actualName = buildToolsFolder.listFiles()[0].name
                 renameFolder(buildToolsFolder, downloadUrls.buildToolsVersion, actualName)
@@ -179,6 +190,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
                 // Done, let's set the environment and load the new SDK!
                 Platform.setenv("ANDROID_SDK", sdkFolder!!.absolutePath)
                 Preferences.set("android.sdk.path", sdkFolder.absolutePath)
+
                 sDK = load(false, null)
             } catch (e: ParserConfigurationException) {
                 // TODO Handle exceptions here somehow (ie show error message)
@@ -219,6 +231,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
             val outputStream = FileOutputStream(saveTo)
             val b = ByteArray(BUFFER_SIZE)
             var count: Int
+
             while (inputStream.read(b).also { count = it } >= 0) {
                 outputStream.write(b, 0, count)
                 downloadedSize += count
@@ -235,8 +248,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
         }
 
         @Throws(ParserConfigurationException::class, IOException::class, SAXException::class, XPathException::class)
-        private fun getMainDownloadUrls(urlHolder: SDKUrlHolder,
-                                        repositoryUrl: String, requiredHostOs: String) {
+        private fun getMainDownloadUrls(urlHolder: SDKUrlHolder, repositoryUrl: String, requiredHostOs: String) {
             val dbf = DocumentBuilderFactory.newInstance()
             val db = dbf.newDocumentBuilder()
             val doc = db.parse(URL(repositoryUrl).openStream())
@@ -247,7 +259,9 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
             var found: Boolean
 
             // -----------------------------------------------------------------------
+
             // platform
+
             expr = xpath.compile("//remotePackage[starts-with(@path, \"platforms;\")" +
                     "and contains(@path, '" + AndroidBuild.TARGET_SDK + "')]") // Skip latest platform; download only the targeted
 
@@ -277,7 +291,9 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
             // Always get the latest!
 
             // -----------------------------------------------------------------------
+
             // platform-tools
+
             expr = xpath.compile("//remotePackage[@path=\"platform-tools\"]")
             remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
 
@@ -288,7 +304,9 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
             }
 
             // -----------------------------------------------------------------------
+
             // build-tools
+
             expr = xpath.compile("//remotePackage[starts-with(@path, \"build-tools;\")]")
             remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
             found = false
@@ -333,7 +351,9 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
             }
 
             // -----------------------------------------------------------------------
+
             // tools
+
             expr = xpath.compile("//remotePackage[@path=\"tools\"]") // Matches two items according to xml file
             remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
             found = false
@@ -363,7 +383,9 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
             }
 
             // -----------------------------------------------------------------------
+
             // emulator
+
             expr = xpath.compile("//remotePackage[@path=\"emulator\"]") // Matches two items according to xml file
             remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
             found = false
@@ -400,8 +422,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
     }
 
     @Throws(ParserConfigurationException::class, IOException::class, SAXException::class, XPathException::class)
-    private fun getExtrasDownloadUrls(urlHolder: SDKUrlHolder,
-                                      repositoryUrl: String, requiredHostOs: String) {
+    private fun getExtrasDownloadUrls(urlHolder: SDKUrlHolder, repositoryUrl: String, requiredHostOs: String) {
         val dbf = DocumentBuilderFactory.newInstance()
         val db = dbf.newDocumentBuilder()
         val doc = db.parse(URL(repositoryUrl).openStream())
@@ -411,19 +432,25 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
         var remotePackages: NodeList
 
         // ---------------------------------------------------------------------
+
         // Android Support repository
+
         expr = xpath.compile("//remotePackage[@path=\"extras;android;m2repository\"]")
         remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
         remotePackages?.let { parseAndSet(urlHolder, it, requiredHostOs, ANDROID_REPO) }
 
         // ---------------------------------------------------------------------
+
         // Google repository
+
         expr = xpath.compile("//remotePackage[@path=\"extras;google;m2repository\"]")
         remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
         remotePackages?.let { parseAndSet(urlHolder, it, requiredHostOs, GOOGLE_REPO) }
 
         // ---------------------------------------------------------------------
+
         // USB driver
+
         expr = xpath.compile("//remotePackage[@path=\"extras;google;usb_driver\"]")
         remotePackages = expr.evaluate(doc, XPathConstants.NODESET) as NodeList
         if (remotePackages != null && Platform.isWindows()) {
@@ -569,6 +596,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
 
         // buttons
         val buttons = JPanel()
+
         //    buttons.setPreferredSize(new Dimension(400, 35));
 //    JPanel buttons = new JPanel() {
 //      public Dimension getPreferredSize() {
@@ -583,6 +611,7 @@ internal class SDKDownloader(private val editor: Frame) : JDialog(editor, getTex
 //    };
 
 //    Box buttons = Box.createHorizontalBox();
+
         buttons.alignmentX = Component.LEFT_ALIGNMENT
         val cancelButton = JButton(getTextString("download_prompt.cancel"))
         val dim = Dimension(Toolkit.getButtonWidth() * 2,

@@ -177,6 +177,7 @@ internal class AndroidSDK(val folder: File) {
         }
 
         val adbCmd: Array<String>
+
         if (!cmd[0].contains("adb")) {
             val abdPath = if (Platform.isWindows()) File(platformToolsFolder, "adb.exe") else File(platformToolsFolder, "adb")
             adbCmd = PApplet.splice(cmd, abdPath.canonicalPath, 0)
@@ -269,15 +270,18 @@ internal class AndroidSDK(val folder: File) {
     companion object {
         @JvmField
         var adbDisabled = false
+
         private val FONT_SIZE = Toolkit.zoom(11)
         private val TEXT_MARGIN = Toolkit.zoom(8)
         private val TEXT_WIDTH = Toolkit.zoom(300)
+
         private const val SDK_DOWNLOAD_URL = "https://developer.android.com/studio/index.html#downloads"
         private const val PROCESSING_FOR_ANDROID_URL = "http://android.processing.org/"
         private const val WHATS_NEW_URL = "http://android.processing.org/whatsnew.html"
         private const val DRIVER_INSTALL_URL = "https://developer.android.com/studio/run/oem-usb.html#InstallingDriver"
         private const val SYSTEM_32BIT_URL = "https://askubuntu.com/questions/710426/android-sdk-on-ubuntu-32bit"
         private const val SDK_LICENSE_URL = "https://developer.android.com/studio/terms.html"
+
         private const val NO_ERROR = 0
         private const val SKIP_ENV_SDK = 1
         private const val MISSING_SDK = 2
@@ -369,6 +373,7 @@ internal class AndroidSDK(val folder: File) {
                         // the option to not to use it. After this, we should go straight to 
                         // download a new SDK.
                         val result = showEnvSDKDialog(editor)
+
                         if (result != JOptionPane.YES_OPTION) {
                             loadError = SKIP_ENV_SDK
                             return null
@@ -420,6 +425,7 @@ internal class AndroidSDK(val folder: File) {
             } else if (result == JOptionPane.NO_OPTION) {
                 // User will manually select folder containing SDK folder
                 val folder = selectFolder(getTextString("android_sdk.dialog.select_sdk_folder"), null, window)
+
                 if (folder == null) {
                     throw CancelException(getTextString("android_sdk.error.cancel_sdk_selection"))
                 } else {

@@ -37,6 +37,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 /**
+ * @author Aditya Rana
  * Created by ibziy_000 on 17.08.2014.
  */
 internal object JarSigner {
@@ -88,12 +89,14 @@ internal object JarSigner {
 
         val base64Encoder = Base64.getEncoder()
         val messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM)
+
         buffer = ByteArray(4096)
         val zis = ZipInputStream(input)
 
         try {
             // loop on the entries of the intermediary package and put them in the final package.
             var entry: ZipEntry
+
             while (zis.nextEntry.also { entry = it } != null) {
                 val name = entry.name
 
@@ -121,6 +124,7 @@ internal object JarSigner {
     @Throws(IOException::class)
     private fun writeEntry(output: JarOutputStream, input: InputStream, entry: JarEntry,
                            digest: MessageDigest?, manifest: Manifest?, encoder: Base64.Encoder) {
+
         output.putNextEntry(entry)
 
         // Write input stream to the jar output.
@@ -249,13 +253,16 @@ internal object JarSigner {
 
         @Throws(IOException::class)
         override fun write(b: Int) {
+
             try {
                 signature.update(b.toByte())
                 contents.add(b.toByte())
             } catch (e: SignatureException) {
                 throw IOException("SignatureException: $e")
             }
+
             super.write(b)
+
             count++
         }
 
@@ -270,7 +277,9 @@ internal object JarSigner {
             } catch (e: SignatureException) {
                 throw IOException("SignatureException: $e")
             }
+
             super.write(b, off, len)
+
             count += len
         }
 

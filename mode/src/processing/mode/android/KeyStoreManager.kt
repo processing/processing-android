@@ -40,6 +40,9 @@ import javax.swing.border.EmptyBorder
 import javax.swing.border.MatteBorder
 import javax.swing.border.TitledBorder
 
+/**
+ * @author Aditya Rana
+ */
 internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keystore manager") {
     var keyStore: File? = null
     var passwordField: JPasswordField? = null
@@ -55,8 +58,10 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
 
         val outer = contentPane
         outer.removeAll()
+
         val vbox = Box.createVerticalBox()
         vbox.border = EmptyBorder(BOX_BORDER, BOX_BORDER, BOX_BORDER, BOX_BORDER)
+
         outer.add(vbox)
         keyStore = AndroidKeyStore.keyStore
 
@@ -98,7 +103,9 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
         }
 
         okButton.isEnabled = true
+
         val cancelButton = JButton(Language.text("prompt.cancel"))
+
         cancelButton.preferredSize = dim
         cancelButton.addActionListener { isVisible = false }
         cancelButton.isEnabled = true
@@ -148,7 +155,9 @@ internal class KeyStoreManager(var editor: AndroidEditor) : JFrame("Android keys
         val root = getRootPane()
 
         root.defaultButton = okButton
+
         val disposer = ActionListener { isVisible = false }
+
         Toolkit.registerWindowCloseKeys(root, disposer)
         Toolkit.setIcon(this)
 

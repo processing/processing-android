@@ -33,6 +33,9 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.CountDownLatch
 
+/**
+ * @author Aditya Rana
+ */
 internal class EmulatorController {
     enum class State {
         NOT_RUNNING, WAITING_FOR_BOOT, RUNNING
@@ -42,10 +45,12 @@ internal class EmulatorController {
     var state = State.NOT_RUNNING
 
     fun setstate(state: State) {
+
         if (Base.DEBUG) {
             //System.out.println("Emulator state: " + state);
             Exception("setState($state) called").printStackTrace(System.out)
         }
+
         this.state = state
     }
 
@@ -81,9 +86,12 @@ internal class EmulatorController {
         if (Base.DEBUG) {
             println(PApplet.join(cmd, " "))
         }
+
         //ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
         val p = Runtime.getRuntime().exec(cmd)
+
         ProcessRegistry.watch(p)
+
         //    new StreamPump(p.getInputStream(), "emulator: ").addTarget(System.out).start();
 
         // if we've gotten this far, then we've at least succeeded in finding and
@@ -104,6 +112,7 @@ internal class EmulatorController {
                 println("$title: $line")
             }
         }
+
         //new StreamPump(p.getInputStream(), "out: " + title).addTarget(System.out).start();
 
         // suppress this warning on OS X, otherwise we're gonna get a lot of reports:
@@ -120,6 +129,7 @@ internal class EmulatorController {
                 System.err.println("$title: $line")
             }
         }
+
         //new StreamPump(p.getErrorStream(), "err: " + title).addTarget(System.err).start();
         val latch = CountDownLatch(1)
 
@@ -152,6 +162,7 @@ internal class EmulatorController {
         Thread(Runnable {
             try {
                 val result = p.waitFor()
+
                 // On Windows (as of SDK tools 15), emulator.exe process will terminate
                 // immediately, even though the emulator itself is launching correctly.
                 // However on OS X and Linux the process will stay open.

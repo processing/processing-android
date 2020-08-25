@@ -31,6 +31,7 @@ import processing.mode.android.AndroidMode.Companion.getTextString
 import java.io.File
 
 /**
+ * @author Aditya Rana
  * Class handling the keystore where the users can store the credentials for
  * their apps.
  */
@@ -48,8 +49,11 @@ import java.io.File
 
     fun getKeyStoreLocation(name: String?): File? {
         val sketchbookFolder = Base.getSketchbookFolder()
+
         val androidFolder = File(sketchbookFolder, "android")
+
         val keyStoreFolder = File(androidFolder, "keystore")
+
         if (!keyStoreFolder.exists()) {
             val result = keyStoreFolder.mkdirs()
             if (!result) {
@@ -106,7 +110,9 @@ import java.io.File
 
     fun resetKeyStore(): Boolean {
         val keyStore = keyStore ?: return true
+
         val keyStoreBackup = getKeyStoreLocation("$KEYSTORE_FILE_NAME-$dateStamp")
+
         return if (!keyStore.renameTo(keyStoreBackup)) false else true
     }
 

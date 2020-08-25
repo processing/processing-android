@@ -39,6 +39,7 @@ import javax.swing.JOptionPane
 import javax.swing.event.HyperlinkEvent
 
 /**
+ * @author Aditya Rana
  * Some utilities.
  */
 internal object AndroidUtil {
@@ -151,11 +152,8 @@ internal object AndroidUtil {
 
                 if (!pr.succeeded()) {
                     System.err.println(pr.stderr)
-                    Messages.showWarning("Failed to rename",
-                            """Could not rename the old "$name" folder.
-Please delete, close, or rename the folder
-${newFolder.absolutePath}
-and try again.""", null)
+                    Messages.showWarning("Failed to rename", """Could not rename the old "$name" folder. Please delete, close,
+|                                        or rename the folder ${newFolder.absolutePath}and try again.""".trimMargin(), null)
                     Platform.openFolder(newFolder)
                     return null
                 }
@@ -220,6 +218,7 @@ and try again.""", null)
                 // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
                 val `is` = BufferedInputStream(zip.getInputStream(entry))
                 var currentByte: Int
+
                 // establish buffer for writing file
                 val data = ByteArray(BUFFER)
 
@@ -244,11 +243,13 @@ and try again.""", null)
     @JvmStatic
     @JvmOverloads
     @Throws(IOException::class)
-    fun extractClassesJarFromAar(wearFile: File?, explodeDir: File?,
-                                 jarFile: File?, removeDir: Boolean = true) {
+    fun extractClassesJarFromAar(wearFile: File?, explodeDir: File?, jarFile: File?, removeDir: Boolean = true) {
         extractFolder(wearFile, explodeDir, false)
+
         val classFile = File(explodeDir, "classes.jar")
+
         Util.copyFile(classFile, jarFile)
+
         Util.removeDir(explodeDir)
     }
 
@@ -273,9 +274,11 @@ and try again.""", null)
     @JvmStatic
     fun getFileList(mode: Mode, prefix: String?, names: Array<String?>?): Array<File?> {
         val icons = arrayOfNulls<File>(names!!.size)
+
         for (i in names!!.indices) {
             icons[i] = mode.getContentFile(prefix + names[i])
         }
+
         return icons
     }
 

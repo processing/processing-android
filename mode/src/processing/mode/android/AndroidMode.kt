@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * Programming mode to create and run Processing sketches on Android devices.
  */
 internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) {
@@ -64,11 +65,13 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
       }
       */
 
+
     // otherwise do the usual
     //    return new File(base.getSketchbookFolder(), ANDROID_CORE_FILENAME);
     var coreZipLocation: File? = null
         get() {
             if (field == null) {
+
                 /*
           // for debugging only, check to see if this is an svn checkout
           File debugFile = new File("../../../android/core.zip");
@@ -92,6 +95,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
         private set
 
     private var runner: AndroidRunner? = null
+
     private var showWatchFaceDebugMessage = true
     private var showWatchFaceSelectMessage = true
     private var showWallpaperSelectMessage = true
@@ -166,6 +170,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
                 tr = other
             }
         }
+
         if (sdk == null) {
             Messages.showWarning(getTextString("android_mode.warn.cannot_load_sdk_title"),
                     getTextString("android_mode.warn.cannot_load_sdk_body"), tr)
@@ -186,6 +191,7 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
             return ""
         }
         val coreJarPath = File(getFolder(), "processing-core.zip").absolutePath
+
         return sdk!!.androidJarPath.absolutePath + File.pathSeparatorChar + coreJarPath
     }
 
@@ -224,14 +230,18 @@ internal class AndroidMode(base: Base?, folder: File?) : JavaMode(base, folder) 
         if (deviceList.size == 0) {
             Messages.showWarning(getTextString("android_mode.dialog.no_devices_found_title"),
                     getTextString("android_mode.dialog.no_devices_found_body"))
+
             listener.statusError(getTextString("android_mode.status.no_devices_found"))
+
             return
         }
 
         listener.startIndeterminate()
+
         listener.statusNotice(getTextString("android_mode.status.starting_project_build"))
 
         val build = AndroidBuild(sketch, this, editor.appComponent)
+
         listener.statusNotice(getTextString("android_mode.status.building_project"))
 
         val projectFolder = build.build("debug")

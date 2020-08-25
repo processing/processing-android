@@ -35,6 +35,7 @@ import java.util.*
 import kotlin.collections.HashMap
 
 /**
+ * @author Aditya Rana
  * Class with all the infrastructure needed to build a sketch in the Android
  * mode and run it either on the device or in the emulator, using Gradle as the
  * build system. It also exports the sketch as a Gradle project file to build
@@ -197,6 +198,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     // ---------------------------------------------------------------------------
+
     // Gradle modules
 
     @Throws(IOException::class)
@@ -300,6 +302,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     // ---------------------------------------------------------------------------
+
     // Templates
 
     private fun writeMainClass(srcDirectory: File,
@@ -510,6 +513,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     // ---------------------------------------------------------------------------
+
     // Icons
 
     private fun writeLauncherIconFiles(sketchFolder: File, resFolder: File) {
@@ -558,6 +562,7 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     // ---------------------------------------------------------------------------
+
     // Export project
 
     @Throws(IOException::class, SketchException::class)
@@ -576,7 +581,9 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
     }
 
     // ---------------------------------------------------------------------------
+
     // Export package
+
     @Throws(Exception::class)
     fun exportPackage(keyStorePassword: String): File? {
         val projectFolder = build("release") ?: return null
@@ -639,7 +646,9 @@ internal class AndroidBuild(sketch: Sketch?, mode: AndroidMode, comp: Int) : Jav
         return if (alignedPackage.exists()) alignedPackage else null
     }
     //---------------------------------------------------------------------------
+
     // Build utils
+
     /**
      * Tell the PDE to not complain about android.* packages and others that are
      * part of the OS library set as if they're missing.

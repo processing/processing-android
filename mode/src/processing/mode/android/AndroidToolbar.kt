@@ -35,6 +35,9 @@ import java.util.*
 import javax.swing.Box
 import javax.swing.JLabel
 
+/**
+ * @author Aditya Rana
+ */
 internal class AndroidToolbar(editor: Editor, base: Base?) : EditorToolbar(editor) {
     private val aEditor: AndroidEditor = editor as AndroidEditor
     var stepButton: EditorButton? = null
@@ -224,6 +227,7 @@ internal class AndroidToolbar(editor: Editor, base: Base?) : EditorToolbar(edito
         //      addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
         //    }
         //  }
+
         fun getTitle(index: Int, shift: Boolean): String? {
 
             when (index) {

@@ -22,10 +22,17 @@ package processing.mode.android
 
 import java.util.regex.Pattern
 
+/**
+ * @author Aditya Rana
+ */
 internal class LogEntry(line: String) {
     enum class Severity(val useErrorStream: Boolean) {
-        Verbose(false), Debug(false), Info(false), Warning(true), Error(true), Fatal(
-                true);
+        Verbose(false),
+        Debug(false),
+        Info(false),
+        Warning(true),
+        Error(true),
+        Fatal(true);
 
         companion object {
             fun fromChar(c: Char): Severity {

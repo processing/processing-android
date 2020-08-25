@@ -33,6 +33,7 @@ import java.net.URL
 import java.net.URLClassLoader
 
 /**
+ * @author Aditya Rana
  * Specialized local contribution for Android tools. Cannot use ToolContribution
  * from processing-app since Android tools may need SDK jars in the classpath.
  */

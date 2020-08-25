@@ -35,11 +35,13 @@ import kotlin.system.exitProcess
  * Class to handle running Android mode of Processing from the command line.
  *
  * @author ostap.andrusiv
+ * @author Aditya Rana
  */
 internal class Commander(args: Array<String>) : RunnerListener {
 
     private var androidMode: AndroidMode? = null
     private var task = HELP
+
     private var sketch: Sketch? = null
     private var systemOut: PrintStream? = null
     private var systemErr: PrintStream? = null
@@ -48,6 +50,7 @@ internal class Commander(args: Array<String>) : RunnerListener {
     private var pdePath: String? = null // path to the .pde file
     private var outputPath: String? = null
     private var outputFolder: File? = null
+
     private var appComponent = AndroidBuild.APP
     private var force = false // replace that no good output folder
     private var device = runArg_DEVICE
@@ -127,7 +130,9 @@ internal class Commander(args: Array<String>) : RunnerListener {
 
     private fun initValues() {
         checkOrQuit(outputPath != null, "An output path must be specified.", true)
+
         outputFolder = File(outputPath)
+
         if (outputFolder!!.exists()) {
             if (force) {
                 Util.removeDir(outputFolder)
@@ -224,6 +229,7 @@ internal class Commander(args: Array<String>) : RunnerListener {
             val re = exception
 
             val codeIndex = re.codeIndex
+
             if (codeIndex != -1) {
                 // format the runner exception like emacs
                 // blah.java:2:10:2:13: Syntax Error: This is a big error message
@@ -251,9 +257,11 @@ internal class Commander(args: Array<String>) : RunnerListener {
     }
 
     private fun complainAndQuit(lastWords: String?, schoolEmFirst: Boolean) {
+
         if (schoolEmFirst) {
             printCommandLine(systemErr)
         }
+
         systemErr!!.println(lastWords)
         exitProcess(1)
     }
@@ -278,6 +286,7 @@ internal class Commander(args: Array<String>) : RunnerListener {
         const val forceArg = "--force"
         const val outputArg = "--output="
         const val exportApplicationArg = "--export"
+
         const val HELP = -1
         const val BUILD = 1
         const val RUN = 2

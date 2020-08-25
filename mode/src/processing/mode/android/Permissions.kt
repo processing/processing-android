@@ -40,6 +40,9 @@ import javax.swing.*
 import javax.swing.border.Border
 import javax.swing.border.EmptyBorder
 
+/**
+ * @author Aditya Rana
+ */
 internal class Permissions(var sketch: Sketch, var appComp: Int, var modeFolder: File) : JFrame("Android Permissions Selector") {
 
     // System.out.println(map.containsKey(box.getText()) + " " + box.getText());
@@ -107,6 +110,7 @@ internal class Permissions(var sketch: Sketch, var appComp: Int, var modeFolder:
 
         val model = DefaultListModel<JCheckBox?>()
         permissionList.model = model
+
         for (item in Companion.title) {
             model.addElement(JCheckBox(item))
         }
@@ -114,6 +118,7 @@ internal class Permissions(var sketch: Sketch, var appComp: Int, var modeFolder:
         permissionScroller = JScrollPane(permissionList,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER)
+
         permissionList.visibleRowCount = 12
 
         permissionList.addKeyListener(object : KeyAdapter() {
@@ -475,14 +480,19 @@ public class CheckBoxList : JList<JCheckBox?>() {
         addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
                 if (isEnabled) {
+
 //          System.out.println("cbw = " + checkboxWidth);
+
                     val index = locationToIndex(e.point)
-                    //          descriptionLabel.setText(description[index]);
+
+                    //descriptionLabel.setText(description[index]);
                     if (index != -1) {
                         val checkbox = model.getElementAt(index)!!
+
                         //System.out.println("mouse event in list: " + e);
 //            System.out.println(checkbox.getSize() + " ... " + checkbox);
 //            if (e.getX() < checkbox.getSize().height) {
+
                         if (e.x < checkboxWidth) {
                             checkbox.isSelected = !checkbox.isSelected
                             repaint()

@@ -40,14 +40,20 @@ import javax.swing.JMenuItem
 import javax.swing.event.MenuEvent
 import javax.swing.event.MenuListener
 
-internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
-                                          mode: Mode?) : JavaEditor(base, path, state, mode) {
+/**
+ * @author Aditya Rana
+ */
+internal class AndroidEditor (base: Base?, path: String?, state: EditorState?, mode: Mode?) : JavaEditor(base, path, state, mode) {
+
     private var androidMenu: JMenu? = null
     var appComponent = 0
+
     val androiddebugger: AndroidDebugger
     private var settings: Settings? = null
+
     private val androidMode: AndroidMode?
     private val androidTools: List<AndroidTool>
+
     private var fragmentItem: JCheckBoxMenuItem? = null
     private var wallpaperItem: JCheckBoxMenuItem? = null
     private var watchfaceItem: JCheckBoxMenuItem? = null
@@ -81,10 +87,14 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
     override fun buildFileMenu(): JMenu {
         val exportPkgTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, false)
         val exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'E'.toInt())
+
         exportPackage.addActionListener { handleExportPackage() }
+
         val exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, true)
         val exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'E'.toInt())
+
         exportProject.addActionListener { handleExportProject() }
+
         return buildFileMenu(arrayOf(exportPackage, exportProject))
     }
 
@@ -453,10 +463,13 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
 
     private fun loadModeSettings() {
         val sketchProps = File(sketch.codeFolder, "sketch.properties")
+
         try {
             settings = Settings(sketchProps)
+
             var save = false
             var component: String?
+
             if (!sketchProps.exists()) {
                 component = DEFAULT_COMPONENT
                 settings!!["component"] = component
@@ -469,7 +482,9 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
                     save = true
                 }
             }
+
             if (save) settings!!.save()
+
             if (component == "app") {
                 appComponent = AndroidBuild.APP
                 fragmentItem!!.state = true
@@ -497,6 +512,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
         val outgoing = ArrayList<AndroidTool>()
         val toolPath = File(androidMode!!.folder, "tools/SDKUpdater")
         var tool: AndroidTool? = null
+
         try {
             tool = AndroidTool(toolPath, androidMode.getSdk()!!)
             tool.init(base)
@@ -504,12 +520,15 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
         } catch (e: Throwable) {
             e.printStackTrace()
         }
+
         outgoing.sort()
+
         return outgoing
     }
 
     private fun addToolsToMenu() {
         var item: JMenuItem
+
         for (tool in androidTools) {
             item = JMenuItem(getTextString(tool.menuTitle))
             item.addActionListener { tool.run() }
@@ -524,6 +543,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
 //      }
 //    });
 //    menu.add(item);
+
         item = JMenuItem(getTextString("menu.android.reset_adb"))
         item.addActionListener { //        editor.statusNotice("Resetting the Android Debug Bridge server.");
             val devices = Devices.instance
@@ -540,12 +560,17 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
 
         override fun run() {
             if (androidMode == null || androidMode.getSdk() == null) return
+
             val devices = Devices.instance
+
             if (appComponent == AndroidBuild.WATCHFACE) {
                 devices.enableBluetoothDebugging()
             }
+
             val deviceList = devices.findMultiple(false)
+
             var selectedDevice = devices.selectedDevice
+
             if (deviceList.size == 0) {
                 if (0 < deviceMenu.itemCount) {
                     deviceMenu.removeAll()
@@ -606,6 +631,7 @@ internal class AndroidEditor (base: Base?, path: String?, state: EditorState?,
         androidMode.checkSDK(this)
 
         androiddebugger = AndroidDebugger(this, androidMode)
+
         // Set saved breakpoints when sketch is opened for the first time
         for (lineID in stripBreakpointComments()) {
             androiddebugger.setBreakpoint(lineID)

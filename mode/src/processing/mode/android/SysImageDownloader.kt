@@ -62,13 +62,20 @@ import javax.xml.xpath.XPathException
 import javax.xml.xpath.XPathExpression
 import javax.xml.xpath.XPathFactory
 
+/**
+ * @author Aditya Rana
+ */
 internal class SysImageDownloader(private val editor: Frame?, private val wear: Boolean, private val askABI: Boolean) : JDialog(editor, getTextString("sys_image_downloader.download_title"), true), PropertyChangeListener {
     private var progressBar: JProgressBar? = null
     private var downloadedTextArea: JLabel? = null
     private var downloadTask: DownloadTask? = null
+
     var result = false
+
     private var abi: String? = null
+
     private var cancelled = false
+
     private var totalSize = 0
 
     internal inner class UrlHolder {
@@ -121,29 +128,42 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
                 } else {
                     SYS_IMAGES_PHONE_URL + SYS_IMAGES_PHONE_LIST
                 }
+
                 val downloadUrls = UrlHolder()
+
                 getDownloadUrls(downloadUrls, repo, Platform.getName())
                 firePropertyChange(getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize)
+
                 totalSize = downloadUrls.totalSize
 
                 if (wear) {
                     // wear system images
                     val downloadedSysImgWear = File(tempFolder, downloadUrls.sysImgWearFilename)
                     val tmp = File(sysImgFolder, "android-" + AndroidBuild.TARGET_SDK)
+
                     if (!tmp.exists()) tmp.mkdir()
+
                     val sysImgWearFinalFolder = File(tmp, downloadUrls.sysImgWearTag)
+
                     if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir()
+
                     downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false)
+
                     fixSourceProperties(sysImgWearFinalFolder)
                 } else {
                     // mobile system images
                     val downloadedSysImg = File(tempFolder, downloadUrls.sysImgFilename)
                     val level = (if (abi == "arm") AVD.TARGET_SDK_ARM else AndroidBuild.TARGET_SDK)!!
                     val tmp = File(sysImgFolder, "android-$level")
+
                     if (!tmp.exists()) tmp.mkdir()
+
                     val sysImgFinalFolder = File(tmp, downloadUrls.sysImgTag)
+
                     if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir()
+
                     downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false)
+
                     fixSourceProperties(sysImgFinalFolder)
                 }
 
@@ -188,6 +208,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
                 e.printStackTrace()
                 return
             }
+
             val conn = url.openConnection()
             val inputStream = conn.getInputStream()
             val outputStream = FileOutputStream(saveTo)
@@ -234,8 +255,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
         }
 
         @Throws(ParserConfigurationException::class, IOException::class, SAXException::class, XPathException::class)
-        private fun getDownloadUrls(urlHolder: UrlHolder,
-                                    repositoryUrl: String, requiredHostOs: String) {
+        private fun getDownloadUrls(urlHolder: UrlHolder, repositoryUrl: String, requiredHostOs: String) {
             val dbf = DocumentBuilderFactory.newInstance()
             val db = dbf.newDocumentBuilder()
             val xPathfactory = XPathFactory.newInstance()
@@ -250,6 +270,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
             if (wear) {
                 val docSysImgWear = db.parse(URL(repositoryUrl).openStream())
                 remotePackages = expr.evaluate(docSysImgWear, XPathConstants.NODESET) as NodeList
+
                 val childNodes = remotePackages.item(0).childNodes
                 val typeDetails = (childNodes as Element).getElementsByTagName("type-details")
                 val tag = (typeDetails.item(0) as Element).getElementsByTagName("tag")
@@ -270,8 +291,10 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
             } else {
                 val docSysImg = db.parse(URL(repositoryUrl).openStream())
                 remotePackages = expr.evaluate(docSysImg, XPathConstants.NODESET) as NodeList
+
                 val childNodes = remotePackages.item(0).childNodes // Index 1 contains x86_64
                 val typeDetails = (childNodes as Element).getElementsByTagName("type-details")
+
                 //NodeList abi = ((Element) typeDetails.item(0)).getElementsByTagName("abi");
                 //NodeList api = ((Element) typeDetails.item(0)).getElementsByTagName("api-level");
                 //System.out.println(api.item(0).getTextContent());          
@@ -310,6 +333,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
     fun run() {
         cancelled = false
         abi = Preferences.get("android.emulator.image.abi")
+
         if (abi == null || askABI) {
             // Either there was no image architecture selected, or the default was set.
             // In this case, we give the user the option to choose between ARM and x86
@@ -339,6 +363,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
             }
             Preferences.set("android.emulator.image.abi", abi)
         }
+
         downloadTask = DownloadTask()
         downloadTask!!.addPropertyChangeListener(this)
         downloadTask!!.execute()
@@ -360,6 +385,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
 
         val labelText = if (wear) getTextString("sys_image_downloader.download_watch_label") else getTextString("sys_image_downloader.download_phone_label")
         val textarea = JLabel(labelText)
+
         textarea.alignmentX = Component.LEFT_ALIGNMENT
         pain.add(textarea)
 
@@ -376,6 +402,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
 
         // buttons
         val buttons = JPanel()
+
         //    buttons.setPreferredSize(new Dimension(400, 35));
 //    JPanel buttons = new JPanel() {
 //      public Dimension getPreferredSize() {
@@ -390,7 +417,9 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
 //    };
 
 //    Box buttons = Box.createHorizontalBox();
+
         buttons.alignmentX = Component.LEFT_ALIGNMENT
+
         val cancelButton = JButton(getTextString("download_prompt.cancel"))
         val dim = Dimension(Toolkit.getButtonWidth() * 2,
                 cancelButton.preferredSize.height)
@@ -466,6 +495,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
             }
 
             pane.isEditable = false
+
             val label = JLabel()
 
             pane.background = label.background
@@ -490,6 +520,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
 
         fun installHAXM() {
             val haxmFolder = hAXMInstallerFolder
+
             if (Platform.isLinux()) {
                 showMessage(getTextString("sys_image_downloader.dialog.accel_images_title"),
                         getTextString("sys_image_downloader.dialog.kvm_config_body", KVM_LINUX_GUIDE_URL))
@@ -508,6 +539,7 @@ internal class SysImageDownloader(private val editor: Frame?, private val wear: 
 
                 pb.directory(haxmFolder)
                 pb.redirectErrorStream(true)
+
                 var process: Process? = null
 
                 try {

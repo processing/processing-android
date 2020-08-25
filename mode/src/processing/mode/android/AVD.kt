@@ -36,6 +36,7 @@ import java.io.*
 import java.util.*
 
 /**
+ * @author Aditya Rana
  * @constructor
  * @param name Name of this AVD
  * @param skin skin of the virtual device

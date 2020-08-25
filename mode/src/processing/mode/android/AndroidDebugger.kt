@@ -36,13 +36,18 @@ import processing.mode.java.debug.LineID
 import java.io.IOException
 import javax.swing.SwingUtilities
 
+/**
+ * @author Aditya Rana
+ */
 internal class AndroidDebugger (editor: AndroidEditor, androidMode: AndroidMode) : Debugger(editor) {
 
     /// editor window, acting as main view
     var androideditor: AndroidEditor? = null
     var androidruntime: AndroidRunner? = null
+
     private var androidMode: AndroidMode
     var isEnabled = false
+
     var packageName = ""
     private var sketchClassName = ""
 
@@ -234,8 +239,10 @@ internal class AndroidDebugger (editor: AndroidEditor, androidMode: AndroidMode)
 
             // use global to mark that there is a step request pending
             requestedStep = androidruntime!!.vm()!!.eventRequestManager().createStepRequest(currentThread, StepRequest.STEP_LINE, stepDepth)
+
             requestedStep.addCountFilter(1) // valid for one step only
             requestedStep.enable()
+
             paused = false
             androidruntime!!.vm()!!.resume()
             androideditor!!.statusBusy()

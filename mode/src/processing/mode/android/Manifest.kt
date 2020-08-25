@@ -40,6 +40,7 @@ import java.util.*
 import javax.xml.parsers.ParserConfigurationException
 
 /**
+ * @author Aditya Rana
  * Class encapsulating the manifest file associated with a Processing sketch
  * in the Android mode.
  *
@@ -200,32 +201,40 @@ internal class Manifest(private val sketch: Sketch?, private val appComp: Int, p
 
         for (kid in mf.getChildren("uses-permission")) {
             val name = kid.getString("android:name")
+
             if (appComp == AndroidBuild.WATCHFACE && name == PERMISSION_PREFIX + "WAKE_LOCK") {
                 hasWakeLock = true
                 continue
             }
+
             if (appComp == AndroidBuild.VR && name == PERMISSION_PREFIX + "VIBRATE") {
                 hasVibrate = true
                 continue
             }
+
             if (appComp == AndroidBuild.VR && name == PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE") {
                 hasReadExtStorage = true
                 continue
             }
+
             if (appComp == AndroidBuild.AR && name == PERMISSION_PREFIX + "CAMERA") {
                 hasCameraAccess = true
                 continue
             }
+
             if (appComp == AndroidBuild.AR && !hasCameraAccess) {
                 mf.addChild("uses-permission").setString("android:name", PERMISSION_PREFIX + "CAMERA")
             }
         }
+
         if (appComp == AndroidBuild.WATCHFACE && !hasWakeLock) {
             mf.addChild("uses-permission").setString("android:name", PERMISSION_PREFIX + "WAKE_LOCK")
         }
+
         if (appComp == AndroidBuild.VR && !hasVibrate) {
             mf.addChild("uses-permission").setString("android:name", PERMISSION_PREFIX + "VIBRATE")
         }
+
         if (appComp == AndroidBuild.VR && !hasReadExtStorage) {
             mf.addChild("uses-permission").setString("android:name", PERMISSION_PREFIX + "READ_EXTERNAL_STORAGE")
         }
@@ -347,6 +356,7 @@ internal class Manifest(private val sketch: Sketch?, private val appComp: Int, p
             versionName = versionName
             xml = null
         }
+
         if (xml == null) {
             writeBlankManifest(manifestFile, appComp)
 
@@ -399,10 +409,12 @@ internal class Manifest(private val sketch: Sketch?, private val appComp: Int, p
     companion object {
         const val MANIFEST_XML = "AndroidManifest.xml"
         const val MANIFEST_ERROR_TITLE = "Error handling $MANIFEST_XML"
+
         const val MANIFEST_ERROR_MESSAGE = "Errors occurred while reading or writing " + MANIFEST_XML + ",\n" +
                 "which means lots of things are likely to stop working properly.\n" +
                 "To prevent losing any data, it's recommended that you use “Save As”\n" +
                 "to save a separate copy of your sketch, and then restart Processing."
+
         private val MANIFEST_TEMPLATE = arrayOf(
                 "AppManifest.xml.tmpl",
                 "WallpaperManifest.xml.tmpl",

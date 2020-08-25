@@ -31,6 +31,7 @@ import processing.mode.java.preproc.SurfaceInfo
 import java.io.PrintWriter
 
 /**
+ * @author Aditya Rana
  * Processing preprocessor, supporting the Android specifics.
  */
 internal class AndroidPreprocessor : PdePreprocessor {
@@ -44,6 +45,7 @@ internal class AndroidPreprocessor : PdePreprocessor {
     constructor(sketchName: String?) : super(sketchName) {
 
     }
+
     constructor(sketch: Sketch,
                 packageName: String?) : super(sketch.name) {
         this.sketch = sketch
@@ -63,12 +65,15 @@ internal class AndroidPreprocessor : PdePreprocessor {
     @Throws(SketchException::class)
     fun initSketchSmooth(code: String?): Array<String?> {
         val info = parseSketchSmooth(code, true)
+
         if (info == null) {
             System.err.println(getTextString("android_preprocessor.error.cannot_smooth_size"))
             throw SketchException(getTextString("android_preprocessor.error.cannot_parse_smooth_exception"))
         }
+
         smoothStatement = info[0]
         sketchQuality = info[1]
+
         return info
     }
 
