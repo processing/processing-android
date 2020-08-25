@@ -40,6 +40,7 @@ import java.util.regex.Pattern
  * @author Aditya Rana
  */
 internal class Device(val env: Devices, val id: String) {
+
     private val features: String
     private val activeProcesses: MutableSet<Int> = HashSet()
     private val listeners = Collections.synchronizedSet(HashSet<DeviceListener>())
@@ -68,7 +69,9 @@ internal class Device(val env: Devices, val id: String) {
     //    if (hasFeature("watch")) {
 //      name += " (watch)";
 //    }
+
     val name: String
+
         get() {
             var name = ""
             try {
@@ -120,6 +123,7 @@ internal class Device(val env: Devices, val id: String) {
 
         try {
             val installResult = adb("install", "-r", apkPath)
+
             if (!installResult.succeeded()) {
                 status.statusError("Could not install the sketch.")
                 System.err.println(installResult)
@@ -150,6 +154,7 @@ internal class Device(val env: Devices, val id: String) {
             status.statusError(e)
         } catch (e: InterruptedException) {
         }
+
         return false
     }
 
@@ -215,10 +220,10 @@ internal class Device(val env: Devices, val id: String) {
         // Get Process ID from ADB command `adb jdwp`
         val pIDProcessor = JDWPProcessor()
 
-        StreamPump(deviceId.inputStream, "jdwp: ").addTarget(
-                pIDProcessor).start()
-        StreamPump(deviceId.errorStream, "jdwperr: ").addTarget(
-                System.err).start()
+        StreamPump(deviceId.inputStream, "jdwp: ").addTarget(pIDProcessor).start()
+
+        StreamPump(deviceId.errorStream, "jdwperr: ").addTarget(System.err).start()
+
         Thread.sleep(1000)
 
         // forward to tcp port
@@ -327,6 +332,7 @@ internal class Device(val env: Devices, val id: String) {
                 val pid = m.group(1).toInt()
                 val signal = m.group(2).toInt()
                 if (activeProcesses.contains(pid)) { // only report crashes of *our* sketches, por favor
+
                     /*
            * A crashed sketch first gets a signal 3, which causes the
            * "you've crashed" dialog to appear on the device. After
@@ -343,6 +349,7 @@ internal class Device(val env: Devices, val id: String) {
 
         private fun handleConsole(entry: LogEntry) {
             val isStackTrace = entry.source == "AndroidRuntime" && entry.severity == LogEntry.Severity.Error
+
             if (isStackTrace) {
                 if (!entry.message.startsWith("Uncaught handler")) {
                     stackTrace.add(entry.message)
@@ -363,25 +370,30 @@ internal class Device(val env: Devices, val id: String) {
             System.err.println("That's weird. Proc " + entry.pid
                     + " got signal 3, but there's no stack trace.")
         }
-        val stackCopy = Collections
-                .unmodifiableList(ArrayList(stackTrace))
+        val stackCopy = Collections.unmodifiableList(ArrayList(stackTrace))
+
         for (listener in listeners) {
             listener.stackTrace(stackCopy)
         }
+
         stackTrace.clear()
     }
 
     @Throws(IOException::class, InterruptedException::class)
     fun initialize() {
         adb("logcat", "-c")
+
         val cmd = generateAdbCommand("logcat", "-v", "brief")
         val title = PApplet.join(cmd, ' ')
+
         logcat = Runtime.getRuntime().exec(cmd)
+
         ProcessRegistry.watch(logcat)
-        StreamPump(logcat!!.inputStream, "log: $title").addTarget(
-                LogLineProcessor()).start()
-        StreamPump(logcat!!.errorStream, "err: $title").addTarget(
-                System.err).start()
+
+        StreamPump(logcat!!.inputStream, "log: $title").addTarget(LogLineProcessor()).start()
+
+        StreamPump(logcat!!.errorStream, "err: $title").addTarget(System.err).start()
+
         Thread(Runnable {
             try {
                 logcat!!.waitFor()
@@ -406,12 +418,15 @@ internal class Device(val env: Devices, val id: String) {
             logcat = null
             ProcessRegistry.unwatch(logcat)
         }
+
         env.deviceRemoved(this)
+
         if (activeProcesses.size > 0) {
             for (listener in listeners) {
                 listener.sketchStopped()
             }
         }
+
         listeners.clear()
     }
 
@@ -427,6 +442,7 @@ internal class Device(val env: Devices, val id: String) {
     private fun endProc(pid: Int) {
         //    System.err.println("Process " + pid + " stopped.");
         activeProcesses.remove(pid)
+
         for (listener in listeners) {
             listener.sketchStopped()
         }

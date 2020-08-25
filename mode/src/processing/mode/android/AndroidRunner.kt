@@ -19,6 +19,7 @@
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 package processing.mode.android
 
 import com.sun.jdi.VMDisconnectedException
@@ -45,6 +46,7 @@ import java.util.regex.Pattern
  * Launches an app on the device or in the emulator.
  */
 internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListener) : DeviceListener {
+
     private var sketchErr: PrintStream? = null
     private var sketchOut: PrintStream? = null
     private var vm: VirtualMachine? = null
@@ -53,7 +55,9 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
     fun launch(deviceFuture: Future<Device?>, comp: Int, emu: Boolean): Boolean {
         val devStr = if (emu) "emulator" else "device"
         listener.statusNotice(getTextString("android_runner.status.waiting_for_device", devStr))
+
         val device = waitForDevice(deviceFuture, listener)
+
         if (device == null || !device.isAlive) {
             listener.statusError(getTextString("android_runner.status.lost_connection_with_device", devStr))
             // Reset the server, in case that's the problem. Sometimes when
@@ -62,21 +66,26 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
             devices.killAdbServer()
             return false
         }
+
         if (comp == AndroidBuild.WATCHFACE && !device.hasFeature("watch")) {
             listener.statusError(getTextString("android_runner.status.cannot_install_sketch"))
             Messages.showWarning(getTextString("android_runner.warn.non_watch_device_title"),
                     getTextString("android_runner.warn.non_watch_device_body"))
             return false
         }
+
         if (comp != AndroidBuild.WATCHFACE && device.hasFeature("watch")) {
             listener.statusError(getTextString("android_runner.status.cannot_install_sketch"))
             Messages.showWarning(getTextString("android_runner.warn.watch_device_title"),
                     getTextString("android_runner.warn.watch_device_body"))
             return false
         }
+
         device.addListener(this)
         device.setPackageName(build.packageName)
+
         listener.statusNotice(getTextString("android_runner.status.installing_sketch", device.id))
+
         // this stopped working with Android SDK tools revision 17
         if (!device.installApp(build, listener)) {
             listener.statusError(getTextString("android_runner.status.lost_connection", devStr))
@@ -84,7 +93,9 @@ internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListen
             devices.killAdbServer() // see above
             return false
         }
+
         var status = false
+
         if (comp == AndroidBuild.WATCHFACE || comp == AndroidBuild.WALLPAPER) {
             if (startSketch(build, device)) {
                 listener.statusNotice(getTextString("android_runner.status.sketch_installed")
