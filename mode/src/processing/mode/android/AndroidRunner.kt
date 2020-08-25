@@ -41,6 +41,7 @@ import java.util.concurrent.*
 import java.util.regex.Pattern
 
 /**
+ * @author Aditya Rana
  * Launches an app on the device or in the emulator.
  */
 internal class AndroidRunner(var build: AndroidBuild, var listener: RunnerListener) : DeviceListener {

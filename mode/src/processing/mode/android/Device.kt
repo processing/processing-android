@@ -36,6 +36,9 @@ import java.io.IOException
 import java.util.*
 import java.util.regex.Pattern
 
+/**
+ * @author Aditya Rana
+ */
 internal class Device(val env: Devices, val id: String) {
     private val features: String
     private val activeProcesses: MutableSet<Int> = HashSet()

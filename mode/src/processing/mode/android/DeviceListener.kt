@@ -18,6 +18,9 @@
  */
 package processing.mode.android
 
+/**
+ * @author Aditya Rana
+ */
 internal interface DeviceListener {
 
     fun stackTrace(trace: List<String?>?)
