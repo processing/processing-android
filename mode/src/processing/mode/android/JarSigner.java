@@ -36,11 +36,21 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.Base64;
+
+// PKCS7 encoding classes appear to be available only for internal use
+// https://github.com/processing/processing-android/issues/496#issuecomment-449693146
 import sun.security.pkcs.SignerInfo;
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.X500Name;
 import sun.security.pkcs.PKCS7;
 import sun.security.pkcs.ContentInfo;
+
+// Possible replacement using Bouncy Castle
+//import org.spongycastle.asn1.x509.X509Name;
+//import org.spongycastle.jce.X509Principal;
+//import org.spongycastle.jce.provider.BouncyCastleProvider;
+//import org.spongycastle.x509.X509V3CertificateGenerator;
+
 
 /**
  * Created by ibziy_000 on 17.08.2014.
@@ -287,4 +297,54 @@ public class JarSigner {
       return count;
     }
   }
+  
+  /*
+    // key generation using Bouncy Castle from APDE
+	protected void writeKey(File keystoreFile, char[] keystorePassword, String alias, char[] password, int validity, String name, String orgUnit, String org, String city, String state, String country) {
+		try {
+			Security.addProvider(new BouncyCastleProvider());
+			
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+			keyGen.initialize(1024, random);
+			KeyPair pair = keyGen.generateKeyPair();
+			
+			X509V3CertificateGenerator v3CertGen = new X509V3CertificateGenerator();
+			
+			X509Principal principal = new X509Principal("CN=" + formatDN(name) + ", OU=" + formatDN(orgUnit) + ", O=" + formatDN(org)
+					+ ", L=" + formatDN(city) + ", ST=" + formatDN(state) + ", C=" + formatDN(country));
+			
+			int serial = new SecureRandom().nextInt();
+			
+			v3CertGen.setSerialNumber(BigInteger.valueOf(serial < 0 ? -1 * serial : serial));
+			v3CertGen.setIssuerDN(principal);
+			v3CertGen.setNotBefore(new Date(System.currentTimeMillis()));
+			v3CertGen.setNotAfter(new Date(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 365 * validity))); //TODO Doesn't take leap days / years into account...
+			v3CertGen.setSubjectDN(principal);
+			v3CertGen.setPublicKey(pair.getPublic());
+			v3CertGen.setSignatureAlgorithm("MD5WithRSAEncryption");
+			
+			X509Certificate pkCertificate = v3CertGen.generateX509Certificate(pair.getPrivate());
+			
+			keystore.setKeyEntry(alias, pair.getPrivate(), password, new Certificate[] {pkCertificate});
+			
+			//Write the new key to the keystore
+			writeKeystore(keystoreFile, keystorePassword);
+			
+			//Reload the keystore so that the new key will appear
+			loadAliases((ArrayList<String>) loadKeystore(keystoreFile, keystorePassword).extra());
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (SignatureException e) {
+			e.printStackTrace();
+		}
+	}  
+	*/
+  
 }
