@@ -24,6 +24,7 @@ package processing.mode.android;
 
 import org.xml.sax.SAXException;
 import processing.app.Messages;
+import processing.app.Language;
 import processing.app.Sketch;
 import processing.core.PApplet;
 import processing.data.XML;
@@ -402,8 +403,8 @@ public class Manifest {
       }
     }
     if (xml == null) {
-      Messages.showWarning(AndroidMode.getTextString("manifest.warn.cannot_handle_file_title", MANIFEST_XML), 
-                           AndroidMode.getTextString("manifest.warn.cannot_handle_file_body", MANIFEST_XML));
+      Messages.showWarning(Language.interpolate("manifest.warn.cannot_handle_file_title", MANIFEST_XML), 
+                           Language.interpolate("manifest.warn.cannot_handle_file_body", MANIFEST_XML));
     }
   }
 

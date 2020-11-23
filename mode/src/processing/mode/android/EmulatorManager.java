@@ -2,6 +2,7 @@ package processing.mode.android;
 
 import processing.app.*;
 import processing.app.ui.Toolkit;
+import processing.app.Language;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -107,8 +108,8 @@ public class EmulatorManager extends JFrame {
       Device selectedDevice = devices.getSelectedDevice();
 
       if (deviceList.size() == 0) {
-        Messages.showWarning(AndroidMode.getTextString("android_mode.dialog.no_devices_found_title"),
-                AndroidMode.getTextString("android_mode.dialog.no_devices_found_body"));
+        Messages.showWarning(Language.text("android_mode.dialog.no_devices_found_title"),
+                             Language.text("android_mode.dialog.no_devices_found_body"));
         emuRB.setSelected(true);
         devices.setSelectedDevice(null);
         deleteButton.setEnabled(true);
@@ -295,8 +296,8 @@ public class EmulatorManager extends JFrame {
       public void actionPerformed(ActionEvent e) {
         CreateAVD createAVD = new CreateAVD(sdk,editor,mode);
         if (createAVD.isCancelled()) {
-          Messages.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
-                  AndroidMode.getTextString("android_avd.error.create_avd_cancel"));
+          Messages.showMessage(Language.text("android_avd.error.cannot_create_avd_title"),
+                  Language.text("android_avd.error.create_avd_cancel"));
         } else if (createAVD.getNewAvd() != null) {
           remove(mainPanel);
           createBaseLayout();
@@ -316,8 +317,8 @@ public class EmulatorManager extends JFrame {
           remove(mainPanel);
           createBaseLayout();
         } else {
-          Messages.showMessage(AndroidMode.getTextString("android_avd.error.delete_failed_title"),
-                  AndroidMode.getTextString("android_avd.error.delete_failed_body"));
+          Messages.showMessage(Language.text("android_avd.error.delete_failed_title"),
+                  Language.text("android_avd.error.delete_failed_body"));
         }
       }
     });

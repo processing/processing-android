@@ -31,6 +31,7 @@ import processing.app.Preferences;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.StreamPump;
 import processing.app.ui.Toolkit;
+import processing.app.Language;
 import processing.core.PApplet;
 
 import javax.swing.*;
@@ -149,7 +150,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           continue;
         }
       }
-      firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
+      firePropertyChange(Language.text("download_property.change_event_total"), 0, downloadUrls.totalSize);
       totalSize = downloadUrls.totalSize;
 
       if (wear) {
@@ -182,7 +183,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       tempFolder.delete();
 
       if (Platform.isLinux() && Platform.getVariant().equals("64")) {
-        AndroidUtil.showMessage(AndroidMode.getTextString("sys_image_downloader.dialog.ia32libs_title"), AndroidMode.getTextString("sys_image_downloader.dialog.ia32libs_body"));
+        AndroidUtil.showMessage(Language.text("sys_image_downloader.dialog.ia32libs_title"), Language.text("sys_image_downloader.dialog.ia32libs_body"));
       }
 
       result = true;
@@ -215,7 +216,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       while ((count = inputStream.read(b)) >= 0) {
         outputStream.write(b, 0, count);
         downloadedSize += count;
-        firePropertyChange(AndroidMode.getTextString("download_property.change_event_downloaded"), 0, downloadedSize);
+        firePropertyChange(Language.text("download_property.change_event_downloaded"), 0, downloadedSize);
       }
       outputStream.flush();
       outputStream.close();
@@ -315,11 +316,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    if (evt.getPropertyName().equals(AndroidMode.getTextString("download_property.change_event_total"))) {
+    if (evt.getPropertyName().equals(Language.text("download_property.change_event_total"))) {
       progressBar.setIndeterminate(false);
       totalSize = (Integer) evt.getNewValue();
       progressBar.setMaximum(totalSize);
-    } else if (evt.getPropertyName().equals(AndroidMode.getTextString("download_property.change_event_downloaded"))) {
+    } else if (evt.getPropertyName().equals(Language.text("download_property.change_event_downloaded"))) {
       downloadedTextArea.setText(humanReadableByteCount((Integer) evt.getNewValue(), true)
               + " / " + humanReadableByteCount(totalSize, true));
       progressBar.setValue((Integer) evt.getNewValue());
@@ -342,8 +343,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
             "margin: " + TEXT_MARGIN + "px; " +
             "width: " + TEXT_WIDTH + "px }" +
             "</style> </head>";
-    htmlString += "<body> <p> " + AndroidMode.getTextString("sys_image_downloader.dialog.select_image_body", EMULATOR_GUIDE_URL) + " </p> </body> </html>";
-    String title = AndroidMode.getTextString("sys_image_downloader.dialog.select_image_title");
+    htmlString += "<body> <p> " + Language.interpolate("sys_image_downloader.dialog.select_image_body", EMULATOR_GUIDE_URL) + " </p> </body> </html>";
+    String title = Language.text("sys_image_downloader.dialog.select_image_title");
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
       @Override
@@ -358,8 +359,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pane.setBackground(label.getBackground());
 
     String[] options = new String[]{
-            AndroidMode.getTextString("sys_image_downloader.option.x86_image"),
-            AndroidMode.getTextString("sys_image_downloader.option.arm_image")
+            Language.text("sys_image_downloader.option.x86_image"),
+            Language.text("sys_image_downloader.option.arm_image")
     };
     int result = JOptionPane.showOptionDialog(null, pane, title,
             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -374,7 +375,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   }
 
   public SysImageDownloader(Frame editor, boolean wear, String ABI, String API, String TAG) {
-    super(editor, AndroidMode.getTextString("sys_image_downloader.download_title"), true);
+    super(editor, Language.text("sys_image_downloader.download_title"), true);
     this.editor = editor;
     this.wear = wear;
     this.abi = ABI;
@@ -405,11 +406,11 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   static public void installHAXM() {
     File haxmFolder = AndroidSDK.getHAXMInstallerFolder();
     if (Platform.isLinux()) {
-      AndroidUtil.showMessage(AndroidMode.getTextString("sys_image_downloader.dialog.accel_images_title"),
-              AndroidMode.getTextString("sys_image_downloader.dialog.kvm_config_body", KVM_LINUX_GUIDE_URL));
+      AndroidUtil.showMessage(Language.text("sys_image_downloader.dialog.accel_images_title"),
+                              Language.interpolate("sys_image_downloader.dialog.kvm_config_body", KVM_LINUX_GUIDE_URL));
     } else if (haxmFolder.exists()) {
-      AndroidUtil.showMessage(AndroidMode.getTextString("sys_image_downloader.dialog.accel_images_title"),
-              AndroidMode.getTextString("sys_image_downloader.dialog.haxm_install_body"));
+      AndroidUtil.showMessage(Language.text("sys_image_downloader.dialog.accel_images_title"),
+                              Language.text("sys_image_downloader.dialog.haxm_install_body"));
 
       ProcessBuilder pb;
       if (Platform.isWindows()) {
@@ -457,8 +458,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     pain.setBorder(new EmptyBorder(13, 13, 13, 13));
     outer.add(pain);
 
-    String labelText = wear ? AndroidMode.getTextString("sys_image_downloader.download_watch_label") :
-            AndroidMode.getTextString("sys_image_downloader.download_phone_label");
+    String labelText = wear ? Language.text("sys_image_downloader.download_watch_label") :
+            Language.text("sys_image_downloader.download_phone_label");
     JLabel textarea = new JLabel(labelText);
     textarea.setAlignmentX(LEFT_ALIGNMENT);
     pain.add(textarea);
@@ -491,7 +492,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
 
 //    Box buttons = Box.createHorizontalBox();
     buttons.setAlignmentX(LEFT_ALIGNMENT);
-    JButton cancelButton = new JButton(AndroidMode.getTextString("download_prompt.cancel"));
+    JButton cancelButton = new JButton(Language.text("download_prompt.cancel"));
     Dimension dim = new Dimension(Toolkit.getButtonWidth() * 2,
             cancelButton.getPreferredSize().height);
 

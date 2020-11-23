@@ -24,6 +24,7 @@ package processing.mode.android;
 import processing.app.exec.ProcessResult;
 import processing.mode.android.EmulatorController.State;
 
+import processing.app.Language;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -375,7 +376,7 @@ class Devices {
     // might read "List of devices attached"
     final String stdout = result.getStdout();
     if (!(stdout.contains("List of devices") || stdout.trim().length() == 0)) {
-      System.err.println(AndroidMode.getTextString("android_devices.error.cannot_get_device_list"));
+      System.err.println(Language.text("android_devices.error.cannot_get_device_list"));
       System.err.println(stdout);
       return Collections.emptyList();
     }
@@ -388,8 +389,8 @@ class Devices {
         if (fields[1].equals("device")) {
           devices.add(fields[0]);
         } else if (fields[1].contains("no permissions") && showPermissionsErrorMessage) {
-          AndroidUtil.showMessage(AndroidMode.getTextString("android_devices.error.no_permissions_title"),
-                                  AndroidMode.getTextString("android_devices.error.no_permissions_body", DEVICE_PERMISSIONS_URL));
+          AndroidUtil.showMessage(Language.text("android_devices.error.no_permissions_title"),
+                                  Language.interpolate("android_devices.error.no_permissions_body", DEVICE_PERMISSIONS_URL));
           showPermissionsErrorMessage = false;
         }
       }

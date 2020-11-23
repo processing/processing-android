@@ -26,7 +26,7 @@ import processing.app.*;
 import processing.app.ui.Editor;
 import processing.app.ui.EditorException;
 import processing.app.ui.EditorState;
-import processing.core.PApplet;
+import processing.app.Language;
 import processing.mode.android.AndroidSDK.CancelException;
 import processing.mode.java.JavaMode;
 
@@ -35,8 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Future;
 
@@ -55,9 +53,6 @@ public class AndroidMode extends JavaMode {
   private boolean checkingSDK = false;
   private boolean userCancelledSDKSearch = false;
   
-  // Using this temporarily until support for mode translations is finalized in the Processing app
-  private static Map<String, String> textStrings = null;
-
   private static final String BLUETOOTH_DEBUG_URL = 
       "https://developer.android.com/training/wearables/apps/debugging.html";
     
@@ -66,7 +61,6 @@ public class AndroidMode extends JavaMode {
   
   public AndroidMode(Base base, File folder) {
     super(base, folder);
-    loadTextStrings();
   }
 
 
@@ -156,10 +150,10 @@ public class AndroidMode extends JavaMode {
     Boolean broken = false;
     if (sdk != null) { //when mode changes, sdk object is not recreated, this ensures that
       try {
-        sdk = new AndroidSDK(sdk.getSdkFolder());
+        sdk = new AndroidSDK(sdk.getSdkFolder(), getFolder());
       } catch (AndroidSDK.BadSDKException | IOException e) {
-        Messages.showWarning(AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_title"),
-                AndroidMode.getTextString("android_mode.warn.broken_sdk_folder",e.getMessage()));
+        Messages.showWarning(Language.text("android_mode.warn.cannot_load_sdk_title"),
+                Language.interpolate("android_mode.warn.broken_sdk_folder",e.getMessage()));
         broken = true;
       }
     }
@@ -177,8 +171,8 @@ public class AndroidMode extends JavaMode {
       }
     }
     if (sdk == null) {
-      Messages.showWarning(AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_title"),
-              AndroidMode.getTextString("android_mode.warn.cannot_load_sdk_body",tr.getMessage()), tr);
+      Messages.showWarning(Language.text("android_mode.warn.cannot_load_sdk_title"),
+              Language.interpolate("android_mode.warn.cannot_load_sdk_body",tr.getMessage()), tr);
     } else {
       Devices devices = Devices.getInstance();
       devices.setSDK(sdk);
@@ -199,7 +193,7 @@ public class AndroidMode extends JavaMode {
     }
 
     if (sdk == null) {
-      Messages.log(AndroidMode.getTextString("android_mode.info.cannot_open_sdk_path"));
+      Messages.log(Language.text("android_mode.info.cannot_open_sdk_path"));
       return "";
     }
     
@@ -236,23 +230,23 @@ public class AndroidMode extends JavaMode {
     boolean checkEmulator = EmulatorController.getInstance(false).emulatorExists(sdk);
     if (!checkEmulator) {
       String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
-      String message = AndroidMode.getTextString("android_sdk.dialog.install_emu_body");
-      String title = AndroidMode.getTextString("android_sdk.dialog.install_emu_title");
+      String message = Language.text("android_sdk.dialog.install_emu_body");
+      String title = Language.text("android_sdk.dialog.install_emu_title");
       int result = JOptionPane.showOptionDialog(null, message, title,
               JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
               null, options, options[0]);
       if (result == JOptionPane.YES_OPTION) {
         SDKDownloader downloader = new SDKDownloader(editor, SDKDownloader.DOWNLOAD_EMU);
         if (downloader.cancelled()) {
-          throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
+          throw new CancelException(Language.text("android_sdk.error.emulator_download_canceled"));
         }
         try {
           AVD.downloadDefaultImage(sdk, editor, this);
         } catch (Exception e){
-          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+          throw new CancelException(Language.text("sys_image_downloader.download_failed_message"));
         }
       } else {
-        throw new CancelException(AndroidMode.getTextString("android_sdk.error.emulator_download_canceled"));
+        throw new CancelException(Language.text("android_sdk.error.emulator_download_canceled"));
       }
     }
 
@@ -264,15 +258,15 @@ public class AndroidMode extends JavaMode {
     try {
       if (existingImages.isEmpty()) {
         String[] options = new String[] { Language.text("prompt.yes"), Language.text("prompt.no") };
-        String message = AndroidMode.getTextString("sys_image_downloader.missing_image_body");
-        String title = AndroidMode.getTextString("sys_image_downloader.missing_image_title");
+        String message = Language.text("sys_image_downloader.missing_image_body");
+        String title = Language.text("sys_image_downloader.missing_image_title");
         int result = JOptionPane.showOptionDialog(null, message, title,
                 JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                 null, options, options[0]);
         if(result == JOptionPane.YES_OPTION) {
           imageName = AVD.downloadDefaultImage(sdk, editor, this);
         } else {
-          throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+          throw new CancelException(Language.text("sys_image_downloader.download_failed_message"));
         }
       }
       else{
@@ -280,7 +274,7 @@ public class AndroidMode extends JavaMode {
         imageName = "system-images;"+target.get(0)+";"+target.get(1)+";"+target.get(2);
       }
     } catch (AndroidSDK.BadSDKException e){
-      throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+      throw new CancelException(Language.text("sys_image_downloader.download_failed_message"));
     }
 
     //Check if atleast one AVD already exists :
@@ -295,7 +289,7 @@ public class AndroidMode extends JavaMode {
       if (result == JOptionPane.YES_OPTION) {
         firstAVD = true;
       } else {
-        throw new CancelException(AndroidMode.getTextString("android_avd.error.selected_emu_not_found_title"));
+        throw new CancelException(Language.text("android_avd.error.selected_emu_not_found_title"));
       }
     }
 
@@ -306,17 +300,17 @@ public class AndroidMode extends JavaMode {
       AVD newAvd = new AVD(avdName,"Nexus One",imageName);
       boolean result = newAvd.create(sdk);
       if(!result){
-        throw new CancelException(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"));
+        throw new CancelException(Language.text("android_avd.error.cannot_create_avd_title"));
       }
     }
 
     Preferences.set("android.emulator.avd.name",avdName);
 
     listener.startIndeterminate();
-    listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
+    listener.statusNotice(Language.text("android_mode.status.starting_project_build"));
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
-    listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
+    listener.statusNotice(Language.text("android_mode.status.building_project"));
     build.build("debug");
 
     int comp = build.getAppComponent();
@@ -339,20 +333,20 @@ public class AndroidMode extends JavaMode {
     final Devices devices = Devices.getInstance();
     java.util.List<Device> deviceList = devices.findMultiple(false);
     if (deviceList.size() == 0) {
-      Messages.showWarning(AndroidMode.getTextString("android_mode.dialog.no_devices_found_title"), 
-                           AndroidMode.getTextString("android_mode.dialog.no_devices_found_body"));
-      listener.statusError(AndroidMode.getTextString("android_mode.status.no_devices_found"));
+      Messages.showWarning(Language.text("android_mode.dialog.no_devices_found_title"), 
+                           Language.text("android_mode.dialog.no_devices_found_body"));
+      listener.statusError(Language.text("android_mode.status.no_devices_found"));
       return;
     }
     
     listener.startIndeterminate();
-    listener.statusNotice(AndroidMode.getTextString("android_mode.status.starting_project_build"));
+    listener.statusNotice(Language.text("android_mode.status.starting_project_build"));
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
-    listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
+    listener.statusNotice(Language.text("android_mode.status.building_project"));
     File projectFolder = build.build("debug");
     if (projectFolder == null) {
-      listener.statusError(AndroidMode.getTextString("android_mode.status.project_build_failed"));
+      listener.statusError(Language.text("android_mode.status.project_build_failed"));
       return;
     }
     
@@ -367,8 +361,8 @@ public class AndroidMode extends JavaMode {
   
   public void showSelectComponentMessage(int appComp) {
     if (showWatchFaceDebugMessage && appComp == AndroidBuild.WATCHFACE) {
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.watchface_debug_title"),
-                              AndroidMode.getTextString("android_mode.dialog.watchface_debug_body", BLUETOOTH_DEBUG_URL));
+      AndroidUtil.showMessage(Language.text("android_mode.dialog.watchface_debug_title"),
+                              Language.interpolate("android_mode.dialog.watchface_debug_body", BLUETOOTH_DEBUG_URL));
       showWatchFaceDebugMessage = false;
     } 
   }
@@ -376,13 +370,13 @@ public class AndroidMode extends JavaMode {
   
   public void showPostBuildMessage(int appComp) {
     if (showWallpaperSelectMessage && appComp == AndroidBuild.WALLPAPER) {
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.wallpaper_installed_title"),
-                              AndroidMode.getTextString("android_mode.dialog.wallpaper_installed_body"));
+      AndroidUtil.showMessage(Language.text("android_mode.dialog.wallpaper_installed_title"),
+                              Language.text("android_mode.dialog.wallpaper_installed_body"));
       showWallpaperSelectMessage = false;
     }
     if (showWatchFaceSelectMessage && appComp == AndroidBuild.WATCHFACE) {
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.watchface_installed_title"),
-                              AndroidMode.getTextString("android_mode.dialog.watchface_installed_body"));  
+      AndroidUtil.showMessage(Language.text("android_mode.dialog.watchface_installed_title"),
+                              Language.text("android_mode.dialog.watchface_installed_body"));  
       showWatchFaceSelectMessage = false;
     } 
   }
@@ -409,8 +403,8 @@ public class AndroidMode extends JavaMode {
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_package_title"),
-                              AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
+      AndroidUtil.showMessage(Language.text("android_mode.dialog.cannot_export_package_title"),
+                              Language.interpolate("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
       return false;
     }
     return true;
@@ -432,8 +426,8 @@ public class AndroidMode extends JavaMode {
     
     if (!allFilesExist) {
       // The user did not set custom icons, show error and stop
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title"),
-                              AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
+      AndroidUtil.showMessage(Language.text("android_mode.dialog.cannot_use_default_icons_title"),
+                              Language.interpolate("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
       return false;      
     }
     return true;
@@ -447,48 +441,5 @@ public class AndroidMode extends JavaMode {
   
   public void resetManifest(Sketch sketch, int comp) {
     new Manifest(sketch, comp, getFolder(), true);
-  }
-  
-  private void loadTextStrings() {
-    String baseFilename = "languages/mode.properties";
-    File modeBaseFile = new File(getFolder(), baseFilename);
-    if (textStrings == null) {
-      textStrings = new HashMap<String, String>();
-      String[] lines = PApplet.loadStrings(modeBaseFile);
-      if (lines == null) {
-        throw new NullPointerException("File not found:\n" + modeBaseFile.getAbsolutePath());
-      }
-      //for (String line : lines) {
-      for (int i = 0; i < lines.length; i++) {
-        String line = lines[i];
-        if ((line.length() == 0) ||
-            (line.charAt(0) == '#')) continue;
-
-        // this won't properly handle = signs inside in the text
-        int equals = line.indexOf('=');
-        if (equals != -1) {
-          String key = line.substring(0, equals).trim();
-          String value = line.substring(equals + 1).trim();
-
-          value = value.replaceAll("\\\\n", "\n");
-          value = value.replaceAll("\\\\'", "'");
-
-          textStrings.put(key, value);
-        }
-      }      
-    }
-  }
-  
-  static public String getTextString(String key) {
-    return textStrings.get(key);
-//    return Language.text(key);
-  }
-  
-  static public String getTextString(String key, Object... arguments) {
-    String value = textStrings.get(key);
-    if (value == null) {
-      return key;
-    }
-    return String.format(value, arguments);
-  }  
+  } 
 }

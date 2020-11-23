@@ -29,22 +29,30 @@ import processing.app.exec.ProcessHelper;
 import processing.app.exec.ProcessResult;
 import processing.app.ui.Toolkit;
 import processing.core.PApplet;
+import processing.app.ui.Editor;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
+import java.awt.*;
 
 /** 
  * Class holding all needed references (path, tools, etc) to the SDK used by 
@@ -67,6 +75,8 @@ class AndroidSDK {
   private final File avdManager;
   private final File sdkManager;
   
+  private final File modeFolder;
+  
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
 
@@ -85,6 +95,10 @@ class AndroidSDK {
   private static final String SDK_LICENSE_URL = 
       "https://developer.android.com/studio/terms.html";
 
+  // Additional jars needed in the classpath 
+  private static final String[] JAVA_EE_JARS = {"javax.activation-api.jar", "jaxb-api.jar", "jaxb-jxc.jar", 
+                                                "jaxb-runtime.jar", "jaxb-xjc.jar", "istack-commons-runtime.jar"};   
+  
   private static final int NO_ERROR     = 0;
   private static final int SKIP_ENV_SDK = 1;
   private static final int MISSING_SDK  = 2;
@@ -93,30 +107,33 @@ class AndroidSDK {
 
   private static boolean backOptionSelected;
 
-  public AndroidSDK(File folder) throws BadSDKException, IOException {
-    this.folder = folder;
+  public AndroidSDK(File sdkFolder, File modeFolder) throws BadSDKException, IOException {
+    this.folder = sdkFolder;
+    this.modeFolder = modeFolder;
+    
+    
     if (!folder.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_sdk_folder", folder));
     }
     
     tools = new File(folder, "tools");
     if (!tools.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder));
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_tools_folder", folder));
     }
 
     platformTools = new File(folder, "platform-tools");
     if (!platformTools.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_platform_tools_folder", folder));
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_platform_tools_folder", folder));
     }
 
     buildTools = new File(folder, "build-tools");
     if (!buildTools.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_build_tools_folder", folder));
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_build_tools_folder", folder));
     }
     
     platforms = new File(folder, "platforms");
     if (!platforms.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_platforms_folder", folder));
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_platforms_folder", folder));
     }
 
     String[] availPlatforms = platforms.list();
@@ -127,13 +144,13 @@ class AndroidSDK {
     }
     targetPlatform = new File(platforms, "android-"+maxVersion);
     if (!targetPlatform.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_target_platform", 
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_target_platform", 
                                                           maxVersion, platforms.getAbsolutePath()));
     }
 
     androidJar = new File(targetPlatform, "android.jar");
     if (!androidJar.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_android_jar", 
+      throw new BadSDKException(Language.interpolate("android_sdk.error.missing_android_jar", 
                                                           AndroidBuild.TARGET_SDK, targetPlatform.getAbsolutePath()));
     }
 
@@ -190,17 +207,17 @@ class AndroidSDK {
                 Date date = df.parse(timestamp);
                 long expireMillis = date.getTime();
                 if (expireMillis < System.currentTimeMillis()) {
-                  System.out.println(AndroidMode.getTextString("android_debugger.info.removing_expired_keystore"));
+                  System.out.println(Language.text("android_debugger.info.removing_expired_keystore"));
                   String hidingName = "debug.keystore." + AndroidMode.getDateStamp(expireMillis);
                   File hidingFile = new File(keystoreFile.getParent(), hidingName);
                   if (!keystoreFile.renameTo(hidingFile)) {
-                    System.err.println(AndroidMode.getTextString("android_debugger.error.cannot_remove_expired_keystore"));
-                    System.err.println(AndroidMode.getTextString("android_debugger.error.request_removing_keystore", keystoreFile.getAbsolutePath()));
+                    System.err.println(Language.text("android_debugger.error.cannot_remove_expired_keystore"));
+                    System.err.println(Language.interpolate("android_debugger.error.request_removing_keystore", keystoreFile.getAbsolutePath()));
                   }
                 }
               } catch (ParseException pe) {
-                System.err.println(AndroidMode.getTextString("android_debugger.error.invalid_keystore_timestamp", timestamp));
-                System.err.println(AndroidMode.getTextString("android_debugger.error.request_bug_report"));
+                System.err.println(Language.interpolate("android_debugger.error.invalid_keystore_timestamp", timestamp));
+                System.err.println(Language.text("android_debugger.error.request_bug_report"));
               }
             }
           }
@@ -327,6 +344,47 @@ class AndroidSDK {
   }
   
   
+  private void fixToolsClasspath() {
+    fixClasspath(modeFolder, sdkManager);
+    fixClasspath(modeFolder, avdManager);
+  }
+
+  
+  static private void fixClasspath(File modePath, File toolFile) {
+    File jarPath = new File(modePath.toString(), "mode");
+    String envVar = "MODE_HOME=" + jarPath.getAbsolutePath();
+    Path toolPath = toolFile.toPath();
+    
+    String extraJars = "";
+    for (String jar: JAVA_EE_JARS) {
+      extraJars += ":$MODE_HOME/" + jar;
+    }
+    
+    try {
+      List<String> lines = Files.readAllLines(toolPath, StandardCharsets.UTF_8);
+      int pos = -1;
+      String classpath = "";
+      for (int i = 0; i < lines.size(); i++) {
+        String line = lines.get(i);
+        if (line.contains("CLASSPATH=") && !line.contains("$MODE_HOME") && !line.contains("cygpath")) {
+          classpath = line;
+          pos = i;
+          break;
+        }
+      }
+      if (-1 < pos) {
+        lines.set(pos, classpath + extraJars);
+        lines.add(pos, envVar);
+        System.out.println("Adding classpath");
+        Files.write(toolPath, lines, StandardCharsets.UTF_8);
+      }      
+    } catch (IOException e) {
+      System.err.println("Cannot fix classpath in " + toolFile.getAbsolutePath());
+      e.printStackTrace();
+    } 
+  }
+  
+  
   static public File getHAXMInstallerFolder() {
     String sdkPrefsPath = Preferences.get("android.sdk.path");    
     File sdkPath = new File(sdkPrefsPath);
@@ -372,7 +430,7 @@ class AndroidSDK {
    * @throws BadSDKException
    * @throws IOException
    */
-  public static AndroidSDK load(boolean checkEnvSDK, Frame editor) throws IOException {
+  public static AndroidSDK load(boolean checkEnvSDK, Editor editor) throws IOException {
     loadError = NO_ERROR;
     
     // Give priority to preferences:
@@ -380,7 +438,7 @@ class AndroidSDK {
     final String sdkPrefsPath = Preferences.get("android.sdk.path");
     if (sdkPrefsPath != null && !sdkPrefsPath.equals("")) {
       try {
-        final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath));
+        final AndroidSDK androidSDK = new AndroidSDK(new File(sdkPrefsPath), editor.getMode().getFolder());
         Preferences.set("android.sdk.path", sdkPrefsPath);
         return androidSDK;
       } catch (final BadSDKException badPref) {
@@ -392,7 +450,7 @@ class AndroidSDK {
     final String sdkEnvPath = Platform.getenv("ANDROID_SDK");
     if (sdkEnvPath != null && !sdkEnvPath.equals("")) {
       try {
-        final AndroidSDK androidSDK = new AndroidSDK(new File(sdkEnvPath));
+        final AndroidSDK androidSDK = new AndroidSDK(new File(sdkEnvPath), editor.getMode().getFolder());
         
         if (checkEnvSDK && editor != null) {
           // There is a valid SDK in the environment, but let's give the user
@@ -414,8 +472,8 @@ class AndroidSDK {
         // and the user wants to use the SDK found in the environment. This
         // means we just installed the mode for the first time, so we show a 
         // welcome message with some useful info.
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.using_existing_sdk_title"),
-                                AndroidMode.getTextString("android_sdk.dialog.using_existing_sdk_body", 
+        AndroidUtil.showMessage(Language.text("android_sdk.dialog.using_existing_sdk_title"),
+                                Language.interpolate("android_sdk.dialog.using_existing_sdk_body", 
                                                           PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL));
 
         return androidSDK;
@@ -431,16 +489,16 @@ class AndroidSDK {
   }
 
 
-  static public AndroidSDK locate(final Frame window, final AndroidMode androidMode)
+  static public AndroidSDK locate(final Frame window, final AndroidMode mode)
       throws BadSDKException, CancelException, IOException {
     backOptionSelected = false;
 
     if (loadError == SKIP_ENV_SDK) {
       // The user does not want to use the environment SDK, so let's simply
       // download a new one to the sketchbook folder.
-      AndroidSDK sdk = download(window, androidMode);
+      AndroidSDK sdk = download(window, mode);
       if(sdk==null && backOptionSelected){
-        return locate(window,androidMode);
+        return locate(window, mode);
       } else {
         return sdk;
       }
@@ -452,23 +510,25 @@ class AndroidSDK {
     int result = showLocateDialog(window);
     
     if (result == JOptionPane.YES_OPTION) {
-      AndroidSDK sdk = download(window, androidMode);
-      if(sdk==null && backOptionSelected){
-        return locate(window,androidMode);
+      AndroidSDK sdk = download(window, mode);
+      if(sdk == null && backOptionSelected){
+        return locate(window, mode);
       }
       return sdk;
     } else if (result == JOptionPane.NO_OPTION) {
       // User will manually select folder containing SDK folder
-      File folder = selectFolder(AndroidMode.getTextString("android_sdk.dialog.select_sdk_folder"), null, window);
+      File folder = selectFolder(Language.text("android_sdk.dialog.select_sdk_folder"), null, window);
       if (folder == null) {
-        throw new CancelException(AndroidMode.getTextString("android_sdk.error.cancel_sdk_selection")); 
+        throw new CancelException(Language.text("android_sdk.error.cancel_sdk_selection")); 
       } else {
-        final AndroidSDK androidSDK = new AndroidSDK(folder);
+        final AndroidSDK androidSDK = new AndroidSDK(folder, mode.getFolder());
         Preferences.set("android.sdk.path", folder.getAbsolutePath());
+        AndroidUtil.showMessage(Language.text("android_sdk.dialog.sdk_jdk11_title"), 
+                                Language.text("android_sdk.dialog.sdk_jdk11_body"));
         return androidSDK;
       }
     } else {
-      throw new CancelException(AndroidMode.getTextString("android_sdk.error.sdk_selection_canceled")); 
+      throw new CancelException(Language.text("android_sdk.error.sdk_selection_canceled")); 
     }
   }
 
@@ -480,32 +540,33 @@ class AndroidSDK {
     if (downloader.isGoBack()){
       backOptionSelected = true;
       return null;
-    }
-    else if (downloader.cancelled()) {
-      throw new CancelException(AndroidMode.getTextString("android_sdk.error.sdk_download_canceled"));  
+    } else if (downloader.cancelled()) {
+      throw new CancelException(Language.text("android_sdk.error.sdk_download_canceled"));  
     } 
+    
     AndroidSDK sdk = downloader.getSDK();
     if (sdk == null) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.sdk_download_failed"));
+      throw new BadSDKException(Language.text("android_sdk.error.sdk_download_failed"));
     }
     
     final int result = showSDKLicenseDialog(editor);
     if (result == JOptionPane.YES_OPTION) {
       sdk.acceptLicenses();   
-      String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
+      String msg = Language.interpolate("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
       File driver = AndroidSDK.getGoogleDriverFolder();
       if (Platform.isWindows() && driver.exists()) {
-        msg += AndroidMode.getTextString("android_sdk.dialog.install_usb_driver", DRIVER_INSTALL_URL, driver.getAbsolutePath()); 
+        msg += Language.interpolate("android_sdk.dialog.install_usb_driver", DRIVER_INSTALL_URL, driver.getAbsolutePath()); 
       }
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_installed_title"), msg);      
+      AndroidUtil.showMessage(Language.text("android_sdk.dialog.sdk_installed_title"), msg);
+      sdk.fixToolsClasspath();
     } else {
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_title"), 
-                              AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_body"));
+      AndroidUtil.showMessage(Language.text("android_sdk.dialog.sdk_license_rejected_title"), 
+                              Language.text("android_sdk.dialog.sdk_license_rejected_body"));
     }
     
     if (Platform.isLinux() && Platform.getNativeBits() == 32) {      
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.32bit_system_title"),
-                              AndroidMode.getTextString("android_sdk.dialog.32bit_system_body", SYSTEM_32BIT_URL));
+      AndroidUtil.showMessage(Language.text("android_sdk.dialog.32bit_system_title"),
+                              Language.interpolate("android_sdk.dialog.32bit_system_body", SYSTEM_32BIT_URL));
     }
     
     return sdk;
@@ -519,25 +580,25 @@ class AndroidSDK {
     downloader.run(); // This call blocks until the SDK download complete, or user cancels.
     
     if (downloader.cancelled()) {
-      throw new CancelException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+      throw new CancelException(Language.text("sys_image_downloader.download_failed_message"));
     } 
     boolean res = downloader.getResult();
     if (!res) {
-      throw new BadSDKException(AndroidMode.getTextString("sys_image_downloader.download_failed_message"));
+      throw new BadSDKException(Language.text("sys_image_downloader.download_failed_message"));
     }
     return res;
   }
   
 
   static public int showEnvSDKDialog(Frame editor) {
-    String title = AndroidMode.getTextString("android_sdk.dialog.found_installed_sdk_title");
+    String title = Language.text("android_sdk.dialog.found_installed_sdk_title");
     String htmlString = "<html> " +
         "<head> <style type=\"text/css\">" +
         "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
             "margin: " + TEXT_MARGIN + "px; " + 
             "width: " + TEXT_WIDTH + "px }" +
         "</style> </head>" +
-        "<body> <p>" + AndroidMode.getTextString("android_sdk.dialog.found_installed_sdk_body") + "</p> </body> </html>";    
+        "<body> <p>" + Language.text("android_sdk.dialog.found_installed_sdk_body") + "</p> </body> </html>";    
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
       @Override
@@ -551,8 +612,8 @@ class AndroidSDK {
     JLabel label = new JLabel();
     pane.setBackground(label.getBackground());
     
-    String[] options = new String[] { AndroidMode.getTextString("android_sdk.option.use_existing_sdk"), 
-                                      AndroidMode.getTextString("android_sdk.option.download_new_sdk") };
+    String[] options = new String[] { Language.text("android_sdk.option.use_existing_sdk"), 
+                                      Language.text("android_sdk.option.download_new_sdk") };
     int result = JOptionPane.showOptionDialog(null, pane, title, 
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
         null, options, options[0]);
@@ -577,11 +638,11 @@ class AndroidSDK {
         "</style> </head>";
     String title = "";
     if (loadError == MISSING_SDK) {
-      htmlString += "<body> <p>" + AndroidMode.getTextString("android_sdk.dialog.cannot_find_sdk_body", SDK_DOWNLOAD_URL, AndroidBuild.TARGET_SDK) + "</p> </body> </html>";
-      title = AndroidMode.getTextString("android_sdk.dialog.cannot_find_sdk_title");
+      htmlString += "<body> <p>" + Language.interpolate("android_sdk.dialog.cannot_find_sdk_body", SDK_DOWNLOAD_URL, AndroidBuild.TARGET_SDK) + "</p> </body> </html>";
+      title = Language.text("android_sdk.dialog.cannot_find_sdk_title");
     } else if (loadError == INVALID_SDK) {
-      htmlString += "<body> <p>" + AndroidMode.getTextString("android_sdk.dialog.invalid_sdk_body", AndroidBuild.TARGET_SDK, SDK_DOWNLOAD_URL, AndroidBuild.TARGET_SDK) + "</p> </body> </html>";
-      title = AndroidMode.getTextString("android_sdk.dialog.invalid_sdk_title");
+      htmlString += "<body> <p>" + Language.interpolate("android_sdk.dialog.invalid_sdk_body", AndroidBuild.TARGET_SDK, SDK_DOWNLOAD_URL, AndroidBuild.TARGET_SDK) + "</p> </body> </html>";
+      title = Language.text("android_sdk.dialog.invalid_sdk_title");
     }    
     JEditorPane pane = new JEditorPane("text/html", htmlString);
     pane.addHyperlinkListener(new HyperlinkListener() {
@@ -596,8 +657,8 @@ class AndroidSDK {
     JLabel label = new JLabel();
     pane.setBackground(label.getBackground());
     
-    String[] options = new String[] { AndroidMode.getTextString("android_sdk.option.download_sdk"), 
-                                      AndroidMode.getTextString("android_sdk.option.locate_sdk") };
+    String[] options = new String[] { Language.text("android_sdk.option.download_sdk"), 
+                                      Language.text("android_sdk.option.locate_sdk") };
     int result = JOptionPane.showOptionDialog(null, pane, title, 
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, 
         null, options, options[0]);
@@ -612,10 +673,10 @@ class AndroidSDK {
   
   
   static public int showDownloadSysImageDialog(Frame editor, boolean wear) {
-    String title = wear ? AndroidMode.getTextString("android_sdk.dialog.download_watch_image_title") : 
-                          AndroidMode.getTextString("android_sdk.dialog.download_phone_image_title");    
-    String msg = wear ? AndroidMode.getTextString("android_sdk.dialog.download_watch_image_body") : 
-                        AndroidMode.getTextString("android_sdk.dialog.download_phone_image_body");
+    String title = wear ? Language.text("android_sdk.dialog.download_watch_image_title") : 
+                          Language.text("android_sdk.dialog.download_phone_image_title");    
+    String msg = wear ? Language.text("android_sdk.dialog.download_watch_image_body") : 
+                        Language.text("android_sdk.dialog.download_phone_image_body");
     String htmlString = "<html> " +
         "<head> <style type=\"text/css\">"+
         "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
@@ -651,8 +712,8 @@ class AndroidSDK {
   
   
   static public int showSDKLicenseDialog(Frame editor) {
-    String title = AndroidMode.getTextString("android_sdk.dialog.accept_sdk_license_title");    
-    String msg = AndroidMode.getTextString("android_sdk.dialog.accept_sdk_license_body", SDK_LICENSE_URL);
+    String title = Language.text("android_sdk.dialog.accept_sdk_license_title");    
+    String msg = Language.interpolate("android_sdk.dialog.accept_sdk_license_body", SDK_LICENSE_URL);
     String htmlString = "<html> " +
         "<head> <style type=\"text/css\">"+
         "p { font: " + FONT_SIZE + "pt \"Lucida Grande\"; " + 
@@ -766,8 +827,8 @@ class AndroidSDK {
       return adbResult;
     } catch (IOException ioe) {
       if (-1 < ioe.getMessage().indexOf("Permission denied")) {
-        Messages.showWarning(AndroidMode.getTextString("android_sdk.warn.cannot_run_adb_title"), 
-                             AndroidMode.getTextString("android_sdk.warn.cannot_run_adb_body"));
+        Messages.showWarning(Language.text("android_sdk.warn.cannot_run_adb_title"), 
+                             Language.text("android_sdk.warn.cannot_run_adb_body"));
         adbDisabled = true;
       }
       throw ioe;

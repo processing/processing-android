@@ -24,6 +24,7 @@ package processing.mode.android;
 import processing.app.Base;
 import processing.app.Platform;
 import processing.app.Preferences;
+import processing.app.Language;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.StreamPump;
 import processing.app.ui.Toolkit;
@@ -394,9 +395,9 @@ public class AVD {
             "width: " + TEXT_WIDTH + "px }" +
             "</style> </head>";
     String message = htmlString + "<body><p>"
-            +AndroidMode.getTextString("android_avd.error.selected_emu_not_found_body")
+            +Language.text("android_avd.error.selected_emu_not_found_body")
             +"</p></body></html>";
-    String title = AndroidMode.getTextString("android_avd.error.selected_emu_not_found_title");
+    String title = Language.text("android_avd.error.selected_emu_not_found_title");
     String options[] = new String[] {"Continue", "Cancel"};
     int result = JOptionPane.showOptionDialog(null, message, title,
             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -481,12 +482,12 @@ public class AVD {
 
       if (outWriter.toString().contains("Package path is not valid")) {
         // They didn't install the Google APIs
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_avd.error.sdk_wrong_install_title"),
-                AndroidMode.getTextString("android_avd.error.sdk_wrong_install_body", GETTING_START_TUT_URL));
+        AndroidUtil.showMessage(Language.text("android_avd.error.sdk_wrong_install_title"),
+                                Language.interpolate("android_avd.error.sdk_wrong_install_body", GETTING_START_TUT_URL));
       } else {
         // Just generally not working
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_avd.error.cannot_create_avd_title"),
-                AndroidMode.getTextString("android_avd.error.cannot_create_avd_body", AndroidBuild.TARGET_SDK));
+        AndroidUtil.showMessage(Language.text("android_avd.error.cannot_create_avd_title"),
+                                Language.interpolate("android_avd.error.cannot_create_avd_body", AndroidBuild.TARGET_SDK));
       }
       System.err.println(outWriter.toString());
       //System.err.println(createAvdResult);
