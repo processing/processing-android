@@ -23,7 +23,7 @@ public class SketchShapeBenchmark extends PApplet {
   public void setup() {
     strokeCap(cap);
     strokeJoin(join);
-    PGraphics2DX.premultiplyMatrices = premultiply;
+//    PGraphics2DX.premultiplyMatrices = premultiply;
 
     textFont(createFont("SansSerif", 15 * displayDensity));
   }
