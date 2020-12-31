@@ -543,9 +543,9 @@ public class Sketch extends PApplet {
     } else if (key == 'f') {
       mode = CLOSE;
     } else if (key == 't') {
-      PGraphics2DX.premultiplyMatrices = true;
+//      PGraphics2DX.premultiplyMatrices = true;
     } else if (key == 'g') {
-      PGraphics2DX.premultiplyMatrices = false;
+//      PGraphics2DX.premultiplyMatrices = false;
     } else if (key == ' ') {
 //      PJOGL pgl = (PJOGL)((PGraphics2D)this.g).pgl;
 //      if (wireframe)
