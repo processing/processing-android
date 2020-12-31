@@ -86,7 +86,9 @@ class AndroidBuild extends JavaBuild {
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
   
   // Gradle build files
-  static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";  
+  static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
+  static private final String GRADLE_PROPERTIES_TEMPLATE = "Properties.gradle.tmpl";
+  static private final String LOCAL_PROPERTIES_TEMPLATE = "Properties.local.tmpl";
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_ECJ_TEMPLATE = "AppBuildECJ.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_TEMPLATE = "AppBuild.gradle.tmpl";
@@ -288,16 +290,30 @@ class AndroidBuild extends JavaBuild {
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
     Util.copyFile(buildTemplate, buildlFile);
+
+    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+    File gradlePropsFile = new File(tmpFolder, "gradle.properties");
+    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
     
-    writeLocalProps(new File(tmpFolder, "local.properties"));
-    AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
-        new String[]{"org.gradle.jvmargs=-Xmx1536m"});
-    
-    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
+    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@project_modules@@", projectModules);    
-    AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
+    replaceMap.put("@@project_modules@@", projectModules);
+    AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
+    
+    File localPropsTemplate = mode.getContentFile("templates/" + LOCAL_PROPERTIES_TEMPLATE);
+    File localPropsFile = new File(tmpFolder, "local.properties");
+    replaceMap.clear();
+    final String sdkPath = sdk.getFolder().getAbsolutePath();
+    if (Platform.isWindows()) {
+      // Windows needs backslashes escaped, or it will also accept forward
+      // slashes in the build file. We're using the forward slashes since this
+      // path gets concatenated with a lot of others that use forwards anyway.
+      replaceMap.put("@@sdk_path@@", sdkPath.replace('\\', '/'));
+    } else {
+      replaceMap.put("@@sdk_path@@", sdkPath);
+    }
+    AndroidUtil.createFileFromTemplate(localPropsTemplate, localPropsFile, replaceMap);
   }
   
   
@@ -549,22 +565,6 @@ class AndroidBuild extends JavaBuild {
     File xmlFile = new File(xmlFolder, "watch_face.xml");
     AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
   } 
-  
-  
-  private void writeLocalProps(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    final String sdkPath = sdk.getFolder().getAbsolutePath();
-    if (Platform.isWindows()) {
-      // Windows needs backslashes escaped, or it will also accept forward
-      // slashes in the build file. We're using the forward slashes since this
-      // path gets concatenated with a lot of others that use forwards anyway.
-      writer.println("sdk.dir=" + sdkPath.replace('\\', '/'));
-    } else {
-      writer.println("sdk.dir=" + sdkPath);
-    }
-    writer.flush();
-    writer.close();
-  }  
   
   
   private void writeRes(File resFolder) throws SketchException {
