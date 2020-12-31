@@ -24,7 +24,7 @@ package processing.android;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.core.app.ActivityCompat;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.os.ResultReceiver;
 
 // A simple utility activity to request permissions in a service.

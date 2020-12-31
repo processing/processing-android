@@ -25,10 +25,10 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.12'
     implementation project(':libs:processing-core')
     implementation project(':libs:processing-vr')
-//    implementation 'com.android.support:appcompat-v7:28.0.0'
-//    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
     implementation 'com.google.vr:sdk-base:1.180.0'
 }
