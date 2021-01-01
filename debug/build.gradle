@@ -20,7 +20,7 @@ allprojects {
         // https://stackoverflow.com/questions/50563338/could-not-find-runtime-jar-android-arch-lifecycleruntime1-0-0/50564224
         maven { url "https://maven.google.com" }
 
-        //
+        // Apparently needed by AndroidX dependencies
         maven { url "https://jitpack.io" }
 
         jcenter()
