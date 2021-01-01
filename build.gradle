@@ -9,7 +9,7 @@ apply plugin: 'java'
 buildscript {
     repositories {
         google()
-        jcenter()        
+        jcenter()
     }
     dependencies {        
         classpath 'com.android.tools.build:gradle:3.5.1'
@@ -79,13 +79,19 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            // mavenCentral() does not work to download the Gradle releases of gradle-tooling-api, one needs
-            // to set the artifact url as below to get the latest packages.
-            // https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api?repo=gradle-libs-releases-local
-            url "https://repo1.maven.org/maven2"
-            artifactUrls "https://repo.gradle.org/gradle/libs-releases-local"
-        }
+
+        maven { url "https://maven.google.com" }
+        maven { url "https://jitpack.io" }
+
+        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+
+        // maven {
+        //     // mavenCentral() does not work to download the Gradle releases of gradle-tooling-api, one needs
+        //     // to set the artifact url as below to get the latest packages.
+        //     // https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api?repo=gradle-libs-releases-local
+        //     url "https://repo1.maven.org/maven2"
+        //     artifactUrls "https://repo.gradle.org/gradle/libs-releases-local"
+        // }
         flatDir dirs: androidPlatformPath
         flatDir dirs: androidToolsLibPath
         flatDir dirs: "${rootDir}/core/dist"

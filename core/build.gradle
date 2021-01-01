@@ -80,14 +80,15 @@ clean.doFirst {
 }
 
 compileJava.doFirst {
-    String[] deps = ["percent.jar",
-                     "recyclerview-v7.jar",
-                     "support-compat.jar",
-                     "support-core-ui.jar",
-                     "support-core-utils.jar",
-                     "support-fragment.jar",
-                     "support-media-compat.jar",
-                     "support-v4.jar",
+    String[] deps = [
+                     // "percent.jar",
+                     // "recyclerview-v7.jar",
+                     // "support-compat.jar",
+                     // "support-core-ui.jar",
+                     // "support-core-utils.jar",
+                     // "support-fragment.jar",
+                     // "support-media-compat.jar",
+                     // "support-v4.jar",
                      "wearable.jar"]                    
     for (String fn : deps) {
         Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
