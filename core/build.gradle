@@ -7,7 +7,7 @@ apply plugin: 'aar'
 dependencies {
     implementation name: "android"
 
-    implementationAar "com.android.support:support-v4:${supportLibsVersion}"
+    implementationAar 'androidx.legacy:legacy-support-v4:1.0.0'
     implementationAar "com.google.android.support:wearable:${wearVersion}"  
 }
 

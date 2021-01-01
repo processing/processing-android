@@ -1,2 +1,2 @@
-include ':core', ':core-androidx', ':mode:libraries:vr', ':mode:libraries:ar', 'mode:tools:SDKUpdater', ':mode'
+include ':core', ':mode:libraries:vr', ':mode:libraries:ar', 'mode:tools:SDKUpdater', ':mode'
 
