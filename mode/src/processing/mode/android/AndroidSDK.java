@@ -58,13 +58,13 @@ class AndroidSDK {
   final static private int TEXT_MARGIN = Toolkit.zoom(8);
   final static private int TEXT_WIDTH = Toolkit.zoom(300);
   
-  private final File folder;
-  private final File tools;
+  private final File folder;  
   private final File platforms;
   private final File highestPlatform;  
   private final File androidJar;
   private final File platformTools;
   private final File buildTools;
+  private final File cmdlineTools;
   private final File avdManager;
   private final File sdkManager;
   private final File emulator;
@@ -99,8 +99,8 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
     }
     
-    tools = new File(folder, "tools");
-    if (!tools.exists()) {
+    cmdlineTools = new File(folder, "cmdline-tools");
+    if (!cmdlineTools.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder));
     }
 
@@ -141,8 +141,8 @@ class AndroidSDK {
                                                           AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
     }
 
-    avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
-    sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
+    avdManager = findCliTool(new File(cmdlineTools, "bin"), "avdmanager");
+    sdkManager = findCliTool(new File(cmdlineTools, "bin"), "sdkmanager");
     
     File emuFolder = new File(folder, "emulator");
     if (emuFolder.exists()) {
@@ -150,14 +150,14 @@ class AndroidSDK {
       emulator = findCliTool(emuFolder, "emulator");   
     } else {
       // If not found, use old location inside tools
-      emulator = findCliTool(tools, "emulator");
+      emulator = findCliTool(cmdlineTools, "emulator");
     }
     
     String path = Platform.getenv("PATH");
 
     Platform.setenv("ANDROID_SDK", folder.getCanonicalPath());
     path = platformTools.getCanonicalPath() + File.pathSeparator +
-      tools.getCanonicalPath() + File.pathSeparator + path;
+      cmdlineTools.getCanonicalPath() + File.pathSeparator + path;
 
     String javaHomeProp = System.getProperty("java.home");
     File javaHome = new File(javaHomeProp).getCanonicalFile();
@@ -243,8 +243,8 @@ class AndroidSDK {
   }  
   
   
-  public File getToolsFolder() {
-    return tools;
+  public File getCommandLineToolsFolder() {
+    return cmdlineTools;
   }
 
   
