@@ -10,7 +10,8 @@ mode/mode/wearable.jar
 
 mode/libraries/vr/library
 mode/libraries/ar/library
-mode/tools/SDKUpdated/tool
+mode/tools/SDKUpdater/tool
+mode/tools/SDKUpdater/lib
 
 debug/.gradle
 debug/.idea
