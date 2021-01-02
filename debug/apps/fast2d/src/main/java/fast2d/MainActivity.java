@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   public void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
     if (sketch != null) {
       sketch.onNewIntent(intent);
     }
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
     if (sketch != null) {
       sketch.onActivityResult(requestCode, resultCode, data);
     }

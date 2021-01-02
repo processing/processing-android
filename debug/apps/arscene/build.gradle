@@ -28,7 +28,7 @@ dependencies {
     testImplementation 'junit:junit:4.13'
     implementation project(':libs:processing-core')
     implementation project(':libs:processing-ar')
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-//    implementation 'com.android.support:design:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
     implementation 'com.google.ar:core:1.22.0'
 }

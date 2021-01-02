@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012-21 The Processing Foundation
   Copyright (c) 2008-12 Ben Fry and Casey Reas
   Copyright (c) 2008 Dan Shiffman
 

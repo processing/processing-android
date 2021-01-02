@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-17 The Processing Foundation
+  Copyright (c) 2012-21 The Processing Foundation
   Copyright (c) 2004-12 Ben Fry and Casey Reas
   Copyright (c) 2001-04 Massachusetts Institute of Technology
 
@@ -24,29 +24,23 @@
 
 package processing.core;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.net.*;
-import java.text.NumberFormat;
-import java.util.*;
-import java.util.regex.*;
-import java.util.zip.*;
-
-import android.app.FragmentManager;
-import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.app.Activity;
-import android.content.*;
+import android.app.FragmentManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.LayoutRes;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -55,14 +49,63 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
+
+import androidx.annotation.LayoutRes;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import processing.a2d.PGraphicsAndroid2D;
 import processing.android.ActivityAPI;
 import processing.android.AppComponent;
 import processing.android.CompatUtils;
-import processing.data.*;
-import processing.event.*;
-import processing.opengl.*;
+import processing.data.JSONArray;
+import processing.data.JSONObject;
+import processing.data.StringList;
+import processing.data.Table;
+import processing.data.XML;
+import processing.event.Event;
+import processing.event.KeyEvent;
+import processing.event.MouseEvent;
+import processing.event.TouchEvent;
+import processing.opengl.PGL;
+import processing.opengl.PGraphics2D;
+import processing.opengl.PGraphics3D;
+import processing.opengl.PShader;
 
 public class PApplet extends Object implements ActivityAPI, PConstants {
 

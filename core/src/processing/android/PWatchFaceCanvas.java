@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016-17 The Processing Foundation
+  Copyright (c) 2016-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 import android.view.WindowManager;
+
 import processing.a2d.PGraphicsAndroid2D;
 import processing.core.PApplet;
 

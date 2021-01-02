@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2017 The Processing Foundation
+  Copyright (c) 2017-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,15 +22,16 @@
 
 package processing.android;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicInteger;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
 import android.graphics.Point;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Compatibility utilities that work across versions of Android. Even though
