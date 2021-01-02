@@ -6,8 +6,7 @@ configurations {
 }
 
 dependencies {
-    implementation group: "org.processing", name: "pde", version: "${processingVersion}"
-
+    // implementation group: "org.processing", name: "pde", version: "${processingVersion}"
     implementation group: "org.processing", name: "java-mode", version: "${processingVersion}"
     implementation fileTree(include: ["AndroidMode.jar"], dir: '../../mode')
 

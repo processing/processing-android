@@ -82,13 +82,7 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
 
-    debugger = new AndroidDebugger(this, androidMode);
-    // Set saved breakpoints when sketch is opened for the first time
-    for (LineID lineID : stripBreakpointComments()) {
-      debugger.setBreakpoint(lineID);
-    }
-
-    super.debugger = debugger;
+    initDebugger();
 
     androidTools = loadAndroidTools();
     addToolsToMenu();
@@ -597,8 +591,13 @@ public class AndroidEditor extends JavaEditor {
     ArrayList<AndroidTool> outgoing = new ArrayList<AndroidTool>();
     File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
     AndroidTool tool = null;
+    
+//    List<Mode> modes = base.getModeList();
+//    Mode defMode = modes.get(0);
+    
     try {
-      tool = new AndroidTool(toolPath, androidMode.getSDK());
+      
+      tool = new AndroidTool(toolPath, androidMode);
       tool.init(base);
       outgoing.add(tool);
     } catch (Throwable e) {
@@ -612,7 +611,8 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem item;
     
     for (final Tool tool : androidTools) {
-      item = new JMenuItem(AndroidMode.getTextString(tool.getMenuTitle()));
+//      item = new JMenuItem(AndroidMode.getTextString(tool.getMenuTitle()));
+      item = new JMenuItem(tool.getMenuTitle());
       item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           tool.run();
@@ -642,6 +642,15 @@ public class AndroidEditor extends JavaEditor {
     androidMenu.add(item);
   }
   
+  private void initDebugger() {
+    debugger = new AndroidDebugger(this, androidMode);
+    // Set saved breakpoints when sketch is opened for the first time
+    for (LineID lineID : stripBreakpointComments()) {
+      debugger.setBreakpoint(lineID);
+    }
+    super.debugger = debugger;
+    
+  }  
   
   class UpdateDeviceListTask extends TimerTask {
 

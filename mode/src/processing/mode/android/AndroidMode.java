@@ -189,6 +189,12 @@ public class AndroidMode extends JavaMode {
     return sdk;
   }
   
+
+  public String getModeJar() {
+    String modePath = new File(getFolder(), "mode").getAbsolutePath();
+    return modePath + File.separator + "AndroidMode.jar";
+  }  
+  
   
   @Override
   public String getSearchPath() {
@@ -397,7 +403,12 @@ public class AndroidMode extends JavaMode {
   }
   
   static public String getTextString(String key) {
-    return textStrings.get(key);
+    if (textStrings.containsKey(key)) {
+      return textStrings.get(key);  
+    } else {
+      return key;
+    }
+    
 //    return Language.text(key);
   }
   
