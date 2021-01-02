@@ -302,7 +302,6 @@ class AndroidSDK {
       }, "AndroidSDK: reading licenses").start();
       Thread.sleep(1000);
       os.write(response.getBytes());
-      os.flush();
       os.close();
     } catch (IOException e) {
       e.printStackTrace();
