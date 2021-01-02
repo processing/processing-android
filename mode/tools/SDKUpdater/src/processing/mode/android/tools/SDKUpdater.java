@@ -183,8 +183,6 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 
         @Override
         public void setDisableSdkPatches(boolean arg0) {
-          // TODO Auto-generated method stub
-          
         }
       }), null);
 
