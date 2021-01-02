@@ -47,7 +47,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -589,21 +589,34 @@ public class AndroidEditor extends JavaEditor {
   private List<AndroidTool> loadAndroidTools() {
     // This gets called before assigning mode to androidMode...
     ArrayList<AndroidTool> outgoing = new ArrayList<AndroidTool>();
-    File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
-    AndroidTool tool = null;
     
-//    List<Mode> modes = base.getModeList();
-//    Mode defMode = modes.get(0);
-    
-    try {
-      
-      tool = new AndroidTool(toolPath, androidMode);
-      tool.init(base);
-      outgoing.add(tool);
-    } catch (Throwable e) {
-      e.printStackTrace();
-    }     
-    Collections.sort(outgoing);
+    File folder = new File(androidMode.getFolder(), "tools");
+    String[] list = folder.list();
+    if (list == null) {
+      return outgoing;
+    }
+
+    Arrays.sort(list, String.CASE_INSENSITIVE_ORDER);
+    for (String name : list) {
+      if (name.charAt(0) == '.') {
+        continue;
+      }
+
+      File toolPath = new File(folder, name);
+      if (toolPath.isDirectory()) {        
+        File jarPath = new File(toolPath, "tool" + File.separator + name + ".jar");
+        if (jarPath.exists()) {
+          try {     
+            AndroidTool tool = new AndroidTool(toolPath, androidMode);
+            tool.init(base);
+            outgoing.add(tool);
+          } catch (Throwable e) {
+            e.printStackTrace();
+          }        
+        }
+      }
+    }
+
     return outgoing;
   }
   
@@ -611,8 +624,7 @@ public class AndroidEditor extends JavaEditor {
     JMenuItem item;
     
     for (final Tool tool : androidTools) {
-//      item = new JMenuItem(AndroidMode.getTextString(tool.getMenuTitle()));
-      item = new JMenuItem(tool.getMenuTitle());
+      item = new JMenuItem(AndroidMode.getTextString(tool.getMenuTitle()));
       item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           tool.run();
