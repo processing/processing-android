@@ -291,7 +291,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        for(int buildTool=0; buildTool < remotePackages.getLength(); buildTool++) {
+        for (int buildTool = 0; buildTool < remotePackages.getLength(); buildTool++) {
           NodeList childNodes = remotePackages.item(buildTool).getChildNodes();
 
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
@@ -337,25 +337,50 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        NodeList childNodes = remotePackages.item(1).getChildNodes(); // Second item is the latest tools for now
-        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+        for (int tool = 0; tool < remotePackages.getLength(); tool++) {
+          NodeList childNodes = remotePackages.item(tool).getChildNodes();
+          
+          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+          for (int i = 0; i < archives.getLength(); ++i) {
+            NodeList archive = archives.item(i).getChildNodes();
+            NodeList complete = ((Element) archive).getElementsByTagName("complete");
 
-        for (int i = 0; i < archives.getLength(); ++i) {
-          NodeList archive = archives.item(i).getChildNodes();
-          NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-          NodeList os = ((Element) archive).getElementsByTagName("host-os");
-          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-          if (os.item(0).getTextContent().equals(requiredHostOs)) {
-            urlHolder.toolsFilename =  url.item(0).getTextContent();
-            urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
-            urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-            found = true;
-            break;
+            NodeList os = ((Element) archive).getElementsByTagName("host-os");
+            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+            
+            if (os.item(0).getTextContent().equals(requiredHostOs)) {
+              urlHolder.toolsFilename =  url.item(0).getTextContent();
+              urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
+              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+              found = true;
+              break;
+            }            
           }
+          if (found) break;          
         }
+        
+//        NodeList childNodes = remotePackages.item(1).getChildNodes(); // Second item is the latest tools for now
+//        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+//
+//        for (int i = 0; i < archives.getLength(); ++i) {
+//          NodeList archive = archives.item(i).getChildNodes();
+//          NodeList complete = ((Element) archive).getElementsByTagName("complete");
+//
+//          NodeList os = ((Element) archive).getElementsByTagName("host-os");
+//          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+//          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+//
+//          if (os.item(0).getTextContent().equals(requiredHostOs)) {
+//            urlHolder.toolsFilename =  url.item(0).getTextContent();
+//            urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
+//            urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+//            found = true;
+//            break;
+//          }
+//        }
+        
+        
       } 
       if (!found) {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_tools"));
@@ -367,7 +392,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        for(int i = 0; i < remotePackages.getLength(); ++i) {
+        for (int i = 0; i < remotePackages.getLength(); ++i) {
           NodeList childNodes = remotePackages.item(i).getChildNodes();
           
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
@@ -456,7 +481,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     expr = xpath.compile("//remotePackage[@path=\"extras;intel;Hardware_Accelerated_Execution_Manager\"]");
     remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     if (remotePackages != null) {
-      for (int i=0; i < remotePackages.getLength(); ++i) {
+      for (int i = 0; i < remotePackages.getLength(); ++i) {
         NodeList childNodes = remotePackages.item(i).getChildNodes();
         NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
 

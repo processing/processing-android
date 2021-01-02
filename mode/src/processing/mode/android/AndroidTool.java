@@ -89,7 +89,9 @@ public class AndroidTool extends LocalContribution implements Tool, Comparable<A
       
       // Add .jar and .zip files from the "tool" and the SDK/tools/lib 
       // folder into the classpath
-      File libDir = new File(sdk.getToolsFolder(), "lib");
+//      File d = sdk.getToolsFolder();
+      File libDir = new File(folder, "lib");      
+//      File libDir = new File(d, "lib");
       File[] toolArchives = Util.listJarFiles(toolDir);      
       File[] libArchives = Util.listJarFiles(libDir);
       

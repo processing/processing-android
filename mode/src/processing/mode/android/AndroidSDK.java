@@ -275,7 +275,7 @@ class AndroidSDK {
   
   
   // Write to the process input, so the licenses will be accepted. In 
-  // principle, We only need 7 'y', one for the 'yes' to the first 
+  // principle, we only need 7 'y', one for the 'yes' to the first 
   // 'review licenses?' question, the rest for the 6 licenses, but adding
   // 10 just in case, having more does not cause any trouble.  
   private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
