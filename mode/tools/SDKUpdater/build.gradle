@@ -1,12 +1,26 @@
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+configurations {
+    compile.extendsFrom compileAndCopy
+}
+
 dependencies {
     compile group: "org.processing", name: "pde", version: "${processingVersion}"
 
-    compile name: "sdklib-${toolsLibVersion}"
-    compile name: "repository-${toolsLibVersion}"
+    compileAndCopy group: "com.android.tools", name: "sdklib", version: "${toolsLibVersion}"
+    compileAndCopy group: "com.android.tools", name: "repository", version: "${toolsLibVersion}"
 }
+
+// This task copies the gradle tooling jar into the mode folder
+task copyToLib(type: Copy) {
+  from configurations.compileAndCopy.files {
+    include '**/sdklib*'
+    include '**/repository*'
+  }
+  into "lib"
+}
+build.dependsOn(copyToLib)
 
 sourceSets {
     main {
@@ -18,6 +32,7 @@ sourceSets {
 
 clean.doFirst {
     delete "tool"
+    delete "lib"
 }
 
 build.doLast {

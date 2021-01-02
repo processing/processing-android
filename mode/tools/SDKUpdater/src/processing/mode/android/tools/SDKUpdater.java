@@ -165,6 +165,17 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         public Channel getChannel() {
           return null;
         }
+
+        @Override
+        public boolean getDisableSdkPatches() {
+          return false;
+        }
+
+        @Override
+        public void setDisableSdkPatches(boolean arg0) {
+          // TODO Auto-generated method stub
+          
+        }
       }), null);
 
       RepositoryPackages packages = mRepoManager.getPackages();      
@@ -339,6 +350,17 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           }
         }
         return updates;
+      }
+
+      @Override
+      public boolean getDisableSdkPatches() {
+        return false;
+      }
+
+      @Override
+      public void setDisableSdkPatches(boolean arg0) {
+        // TODO Auto-generated method stub
+        
       }
     }
   }

@@ -72,28 +72,15 @@ allprojects {
     localProperties.load(project.rootProject.file("local.properties").newDataInputStream())
     def sdkDir = localProperties.getProperty("sdk.dir")
     ext.androidPlatformPath = "${sdkDir}/platforms/android-${targetSdkVersion}"
-    ext.androidToolsLibPath = "${sdkDir}/tools/lib"
-
     ext.coreZipPath = "${rootDir}/mode/processing-core.zip"
 
     repositories {
         google()
         jcenter()
-
         maven { url "https://maven.google.com" }
         maven { url "https://jitpack.io" }
-
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
-
-        // maven {
-        //     // mavenCentral() does not work to download the Gradle releases of gradle-tooling-api, one needs
-        //     // to set the artifact url as below to get the latest packages.
-        //     // https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api?repo=gradle-libs-releases-local
-        //     url "https://repo1.maven.org/maven2"
-        //     artifactUrls "https://repo.gradle.org/gradle/libs-releases-local"
-        // }
         flatDir dirs: androidPlatformPath
-        flatDir dirs: androidToolsLibPath
         flatDir dirs: "${rootDir}/core/dist"
     }
 
