@@ -296,7 +296,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
           if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; //Stable channel only, skip others
+            continue; // Stable channel only, skip others
 
           NodeList revision = ((Element) childNodes).getElementsByTagName("revision");
           String major = (((Element) revision.item(0)).getElementsByTagName("major")).item(0).getTextContent();
@@ -333,7 +333,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       
       // -----------------------------------------------------------------------
       // Command-line tools
-//      expr = xpath.compile("//remotePackage[@path=\"cmdline-tools;\"]");
       expr = xpath.compile("//remotePackage[starts-with(@path, \"cmdline-tools;\")]");      
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;

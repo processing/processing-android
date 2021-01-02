@@ -35,6 +35,7 @@ import processing.app.Base;
 import processing.app.Preferences;
 import processing.app.tools.Tool;
 import processing.app.ui.Toolkit;
+import processing.mode.android.AndroidMode;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -69,7 +70,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   final static private int BUTTON_HEIGHT = Toolkit.zoom(25);
   
   private final Vector<String> columns = new Vector<>(Arrays.asList(
-      "Package name", "Installed version", "Available update"));
+      AndroidMode.getTextString("sdk_updater.name_column"), 
+      AndroidMode.getTextString("sdk_updater.version_column"),
+      AndroidMode.getTextString("sdk_updater.available_column")));
   private static final String PROPERTY_CHANGE_QUERY = "query";
 
   private File sdkFolder;
@@ -102,13 +105,13 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     queryTask = new QueryTask();
     queryTask.addPropertyChangeListener(this);
     queryTask.execute();
-    status.setText("Querying packages...");    
+    status.setText(AndroidMode.getTextString("sdk_updater.query_message"));    
   }
-
+  
   
   @Override
-  public String getMenuTitle() {   
-    return "menu.android.sdk_updater";
+  public String getMenuTitle() {    
+    return AndroidMode.getTextString("menu.android.sdk_updater");
   }
   
   
@@ -119,13 +122,13 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       progressBar.setIndeterminate(false);
       if (numUpdates == 0) {
         actionButton.setEnabled(false);
-        status.setText("No updates available");
+        status.setText(AndroidMode.getTextString("sdk_updater.no_updates_message"));
       } else {
         actionButton.setEnabled(true);
         if (numUpdates == 1) {
-          status.setText("1 update found!");
+          status.setText(AndroidMode.getTextString("sdk_updater.one_updates_message"));
         } else { 
-          status.setText(numUpdates + " updates found!");                    
+          status.setText(AndroidMode.getTextString("sdk_updater.many_updates_message", numUpdates));
         }                    
       }
       break;
@@ -277,7 +280,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       for (String path : settings.getPaths(mRepoManager)) {
         RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
         if (p == null) {
-          progress.logWarning("Failed to find package " + path);
+          progress.logWarning(AndroidMode.getTextString("sdk_updater.warning_failed_finding_package", path));
           throw new SdkManagerCli.CommandFailedException();
         }
         remotes.add(p);
@@ -294,7 +297,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           }
         }
       } else {
-        progress.logWarning("Unable to compute a complete list of dependencies.");
+        progress.logWarning(AndroidMode.getTextString("sdk_updater.warning_failed_computing_dependency_list"));
         throw new SdkManagerCli.CommandFailedException();
       }
 
@@ -308,7 +311,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       try {
         get();
         actionButton.setEnabled(false);
-        status.setText("Refreshing packages...");
+        status.setText(AndroidMode.getTextString("sdk_updater.refresh_package_message"));
         queryTask = new QueryTask();
         queryTask.addPropertyChangeListener(SDKUpdater.this);
         queryTask.execute();
@@ -457,8 +460,8 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 //          };
 //          update.start();    
           
-          status.setText("Downloading available updates...");
-          actionButton.setText("Cancel");
+          status.setText(AndroidMode.getTextString("sdk_updater.download_package_message"));
+          actionButton.setText(AndroidMode.getTextString("sdk_updater.cancel_button_label"));
         }
       }
     });
@@ -481,7 +484,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       }
     };
     
-    JButton closeButton = new JButton("Close");
+    JButton closeButton = new JButton(AndroidMode.getTextString("sdk_updater.close_button_label"));
     closeButton.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
     closeButton.addActionListener(disposer);
     closeButton.setEnabled(true);
@@ -520,10 +523,10 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     queryTask.cancel(true);
     if (downloadTaskRunning) {
       downloadTask.cancel(true);
-      status.setText("Download canceled");
+      status.setText(AndroidMode.getTextString("sdk_updater.download_canceled_message"));
       JOptionPane.showMessageDialog(null,
-          "Download canceled", "Warning", JOptionPane.WARNING_MESSAGE);
-      actionButton.setText("Update");
+          AndroidMode.getTextString("sdk_updater.download_canceled_message"), "Warning", JOptionPane.WARNING_MESSAGE);
+      actionButton.setText(AndroidMode.getTextString("sdk_updater.update_button_label"));
     }
   }
   

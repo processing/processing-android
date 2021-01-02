@@ -8,6 +8,9 @@ configurations {
 dependencies {
     compile group: "org.processing", name: "pde", version: "${processingVersion}"
 
+    compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
+    compile fileTree(include: ["AndroidMode.jar"], dir: '../../mode')
+
     compileAndCopy group: "com.android.tools", name: "sdklib", version: "${toolsLibVersion}"
     compileAndCopy group: "com.android.tools", name: "repository", version: "${toolsLibVersion}"
 }
@@ -15,10 +18,18 @@ dependencies {
 // This task copies the gradle tooling jar into the mode folder
 task copyToLib(type: Copy) {
   from configurations.compileAndCopy.files {
-    include '**/sdklib*'
-    include '**/repository*'
+    include '**/annotations-*'
+    include '**/common-*'
+    include '**/dvlib-*'
+    include '**/gson-*'
+    include '**/guava-*'
+    include '**/httpcore-*'
+    include '**/kotlin-stdlib-*'
+    include '**/layoutlib-api-*'
+    include '**/repository-*'
+    include '**/sdklib-*'
   }
-  into "lib"
+  into "tool"
 }
 build.dependsOn(copyToLib)
 
@@ -32,7 +43,6 @@ sourceSets {
 
 clean.doFirst {
     delete "tool"
-    delete "lib"
 }
 
 build.doLast {
