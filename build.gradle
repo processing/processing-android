@@ -121,9 +121,11 @@ task dist {
         FileUtils.copyDirectory(file("mode/languages"), 
                                 file("${root}/languages"))
 
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"), 
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"),
                                 file("${root}/tools/SDKUpdater/tool"))
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"), 
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/lib"),
+                                file("${root}/tools/SDKUpdater/lib"))
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"),
                                 file("${root}/tools/SDKUpdater/src"))
         
         FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 
