@@ -85,8 +85,14 @@ allprojects {
         flatDir dirs: "${rootDir}/core/dist"
     }
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8    
+    compileJava {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+
+        // Uncomment this option when building with Java 11+ 
+        // https://github.com/processing/processing-android/issues/625
+        // options.release = 8
+    }
 }
 
 clean.doFirst {
