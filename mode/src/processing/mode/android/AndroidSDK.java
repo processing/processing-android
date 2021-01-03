@@ -298,7 +298,7 @@ class AndroidSDK {
   // 10 just in case, having more does not cause any trouble.  
   private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
   
-  public void acceptLicenses() {
+  private void acceptLicenses() {
     final String[] cmd = new String[] {
         sdkManager.getAbsolutePath(),
         "--licenses"
