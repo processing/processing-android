@@ -36,16 +36,16 @@ android {
     // https://github.com/bytedeco/javacpp/wiki/Gradle
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.compile.JavaCompile.html
     applicationVariants.all { variant ->
-        variant.javaCompile.doFirst {
+        variant.javaCompileProvider.get().doFirst {
             // The main class that runs the Eclipse batch compiler
             String ecjMain = 'org.eclipse.jdt.internal.compiler.batch.Main'
             
             // We construct the list of arguments needed by the batch compiler 
             // https://help.eclipse.org/neon/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_batch_compiler.htm            
             List<String> ecjArgs = ['-nowarn',
-                                    '-source', variant.javaCompile.sourceCompatibility, 
-                                    '-target', variant.javaCompile.targetCompatibility, 
-                                    '-d', variant.javaCompile.destinationDir] as String[]
+                                    '-source', variant.javaCompileProvider.get().sourceCompatibility, 
+                                    '-target', variant.javaCompileProvider.get().targetCompatibility, 
+                                    '-d', variant.javaCompileProvider.get().destinationDir] as String[]
 
             // Set the debug attributes level according to the build target
             if (variant.name == 'debug') {
@@ -57,11 +57,11 @@ android {
             }
 
             // Adding all the source files to the list of arguments
-            ecjArgs += variant.javaCompile.source
+            ecjArgs += variant.javaCompileProvider.get().source
              
             // Add the Android jar to the classpath inherited from the task
             FileCollection ecjClasspath = files('@@target_platform@@/android.jar', 
-                                                 variant.javaCompile.classpath)
+                                                 variant.javaCompileProvider.get().classpath)
             
             // Running the JavaExec task, which requires the main class to run,
             // the classpath, and the list of arguments
