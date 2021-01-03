@@ -99,7 +99,7 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
     }
     
-    cmdlineTools = new File(folder, "cmdline-tools/latest");
+    cmdlineTools = new File(folder, "cmdline-tools");
     if (!cmdlineTools.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder));
     }
@@ -262,6 +262,10 @@ class AndroidSDK {
     return highestPlatform;
   }
 
+  public File getTargetPlatform(String target) {
+    return new File(platforms, "android-" + target);
+  }  
+  
   
   public File getZipAlignTool() {    
     File[] files = buildTools.listFiles();
@@ -281,7 +285,13 @@ class AndroidSDK {
   private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
   
   private void acceptLicenses() {
-    ProcessBuilder pb = new ProcessBuilder(sdkManager.getAbsolutePath(), "--licenses");
+    final String[] cmd = new String[] {
+        sdkManager.getAbsolutePath(),
+        "--sdk_root=", folder.getAbsolutePath(),
+        "--licenses"
+    };
+       
+    ProcessBuilder pb = new ProcessBuilder(cmd);
     pb.redirectErrorStream(true);
     try {
       Process process = pb.start();
