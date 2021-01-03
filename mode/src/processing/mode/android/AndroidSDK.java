@@ -323,7 +323,7 @@ class AndroidSDK {
           }
         }
       }, "AndroidSDK: reading licenses").start();
-      Thread.sleep(1000);
+      Thread.sleep(3000);
       os.write(response.getBytes());
       os.flush();
       os.close();
@@ -501,7 +501,7 @@ class AndroidSDK {
     
     final int result = showSDKLicenseDialog(editor);
     if (result == JOptionPane.YES_OPTION) {
-//      sdk.acceptLicenses();   
+      sdk.acceptLicenses();
       String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
       File driver = AndroidSDK.getGoogleDriverFolder();
       if (Platform.isWindows() && driver.exists()) {
