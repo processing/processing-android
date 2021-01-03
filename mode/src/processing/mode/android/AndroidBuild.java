@@ -63,6 +63,7 @@ class AndroidBuild extends JavaBuild {
   // Versions of all required dependencies
   static public String TARGET_SDK;  
   static public String TARGET_PLATFORM;
+  static public String GRADLE_VER;
   static public String APPCOMPAT_VER;
   static public String V4LEGACY_VER;
   static public String PLAY_SERVICES_VER;
@@ -287,10 +288,13 @@ class AndroidBuild extends JavaBuild {
   
   
   private void createTopModule(String projectModules) 
-      throws IOException {
+      throws IOException {    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
-    Util.copyFile(buildTemplate, buildlFile);
+    replaceMap.put("@@gradle_version@@", GRADLE_VER);
+    AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);
 
     File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
     File gradlePropsFile = new File(tmpFolder, "gradle.properties");
@@ -298,7 +302,7 @@ class AndroidBuild extends JavaBuild {
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
-    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.clear();
     replaceMap.put("@@project_modules@@", projectModules);
     AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
     
@@ -903,9 +907,15 @@ class AndroidBuild extends JavaBuild {
       MIN_SDK_AR = props.getProperty("android-min-ar");
       MIN_SDK_WATCHFACE = props.getProperty("android-min-wear");
 
-      // Versions of the target sdk, support, play services, wear, VR, and AR are stored in
-      // preferences file so they can be changed by the user without having to rebuilt/reinstall
-      // the mode.
+      // Versions strings of all dependencies are stored in a preferences file so they can be changed by the 
+      // user without having to rebuild/reinstall the mode.
+
+      GRADLE_VER = Preferences.get("android.gradle");
+      String defGradleVersion = props.getProperty("gradle");
+      if (GRADLE_VER == null || PApplet.parseInt(GRADLE_VER) != PApplet.parseInt(defGradleVersion)) {
+        GRADLE_VER = defGradleVersion;
+        Preferences.set("android.gradle", GRADLE_VER);
+      }
       
       TARGET_SDK = Preferences.get("android.sdk.target");
       String defTargetSDK = props.getProperty("android-platform");
