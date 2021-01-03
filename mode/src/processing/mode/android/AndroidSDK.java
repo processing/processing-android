@@ -99,7 +99,7 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
     }
     
-    cmdlineTools = new File(folder, "cmdline-tools");
+    cmdlineTools = new File(folder, "cmdline-tools/latest");
     if (!cmdlineTools.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder));
     }
@@ -302,6 +302,7 @@ class AndroidSDK {
       }, "AndroidSDK: reading licenses").start();
       Thread.sleep(1000);
       os.write(response.getBytes());
+      os.flush();
       os.close();
     } catch (IOException e) {
       e.printStackTrace();

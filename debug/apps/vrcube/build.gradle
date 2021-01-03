@@ -29,6 +29,5 @@ dependencies {
     implementation project(':libs:processing-core')
     implementation project(':libs:processing-vr')
     implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.android.material:material:1.2.1'
     implementation 'com.google.vr:sdk-base:1.180.0'
 }

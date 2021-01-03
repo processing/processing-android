@@ -67,7 +67,7 @@ android {
             
             // Running the JavaExec task, which requires the main class to run,
             // the classpath, and the list of arguments
-            // https://docs.gradle.org/4.4/dsl/org.gradle.api.tasks.JavaExec.html#org.gradle.api.tasks.JavaExec:main            
+            // https://docs.gradle.org/4.4/dsl/org.gradle.api.tasks.JavaExec.html#org.gradle.api.tasks.JavaExec:main
             javaexec {
                 main ecjMain
                 classpath ecjClasspath
@@ -84,9 +84,6 @@ android {
 dependencies {
     compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:@@support_version@@'
-    implementation 'com.android.support:design:@@support_version@@'
-    implementation 'com.google.android.support:wearable:@@wear_version@@'
-    compileOnly 'com.google.android.wearable:wearable:@@wear_version@@' 
+    implementation 'androidx.appcompat:appcompat:@@appcompat_version@@'
     implementation files('libs/processing-core.jar')
 }

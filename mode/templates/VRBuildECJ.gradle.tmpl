@@ -82,10 +82,7 @@ android {
 dependencies {
     compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:@@support_version@@'
-    implementation 'com.android.support:design:@@support_version@@'
-    implementation 'com.google.android.support:wearable:@@wear_version@@'
-    compileOnly 'com.google.android.wearable:wearable:@@wear_version@@'
+    implementation 'androidx.appcompat:appcompat:@@appcompat_version@@'
     implementation 'com.google.vr:sdk-audio:@@gvr_version@@'
     implementation 'com.google.vr:sdk-base:@@gvr_version@@'
     implementation files('libs/processing-core.jar')

@@ -7,7 +7,7 @@ apply plugin: 'aar'
 dependencies {
     implementation name: "android"
 
-    implementationAar 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementationAar "androidx.legacy:legacy-support-v4:${v4legacyVersion}"
     implementationAar "com.google.android.support:wearable:${wearVersion}"  
 }
 
@@ -27,9 +27,9 @@ task createPom {
            }
            dependencies {
                dependency {
-                   groupId "com.android.support"
-                   artifactId "support-v4"
-                   version "${supportLibsVersion}"
+                   groupId "androidx.legacy"
+                   artifactId "legacy-support-v4"
+                   version "${v4legacyVersion}"
                    scope "implementation"
                }
                dependency {

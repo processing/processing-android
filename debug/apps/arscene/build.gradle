@@ -29,6 +29,5 @@ dependencies {
     implementation project(':libs:processing-core')
     implementation project(':libs:processing-ar')
     implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.android.material:material:1.2.1'
     implementation 'com.google.ar:core:1.22.0'
 }

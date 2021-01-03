@@ -33,12 +33,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:palette-v7:@@support_version@@'
-    implementation 'com.android.support:support-v4:@@support_version@@'
     implementation 'com.google.android.gms:play-services-wearable:@@play_services_version@@'
-    implementation 'com.android.support:percent:@@support_version@@'
-    implementation 'com.android.support:recyclerview-v7:@@support_version@@'
     implementation 'com.google.android.support:wearable:@@wear_version@@'
-    compileOnly 'com.google.android.wearable:wearable:@@wear_version@@'       
+    compileOnly 'com.google.android.wearable:wearable:@@wear_version@@'
     implementation files('libs/processing-core.jar')
 }

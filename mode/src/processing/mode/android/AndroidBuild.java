@@ -63,7 +63,8 @@ class AndroidBuild extends JavaBuild {
   // Versions of all required dependencies
   static public String TARGET_SDK;  
   static public String TARGET_PLATFORM;
-  static public String SUPPORT_VER;
+  static public String APPCOMPAT_VER;
+  static public String V4LEGACY_VER;
   static public String PLAY_SERVICES_VER;
   static public String WEAR_VER;
   static public String GVR_VER;
@@ -345,7 +346,8 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", TARGET_SDK);
-    replaceMap.put("@@support_version@@", SUPPORT_VER);  
+    replaceMap.put("@@appcompat_version@@", APPCOMPAT_VER);    
+    replaceMap.put("@@v4legacy_version@@", V4LEGACY_VER);
     replaceMap.put("@@play_services_version@@", PLAY_SERVICES_VER);
     replaceMap.put("@@wear_version@@", WEAR_VER);        
     replaceMap.put("@@gvr_version@@", GVR_VER);
@@ -910,12 +912,19 @@ class AndroidBuild extends JavaBuild {
       }
       TARGET_PLATFORM = "android-" + TARGET_SDK;
       
-      SUPPORT_VER = Preferences.get("android.sdk.support");
-      String defSupportVer = props.getProperty("com.android.support%support-v4");
-      if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, defSupportVer)) {
-        SUPPORT_VER = defSupportVer;
-        Preferences.set("android.sdk.support", SUPPORT_VER);
-      }        
+      APPCOMPAT_VER = Preferences.get("android.sdk.appcompat");
+      String defAppCompatVer = props.getProperty("androidx.appcompat%appcompat");
+      if (APPCOMPAT_VER == null || !versionCheck(APPCOMPAT_VER, defAppCompatVer)) {
+        APPCOMPAT_VER = defAppCompatVer;
+        Preferences.set("android.sdk.appcompat", APPCOMPAT_VER);
+      }
+      
+      V4LEGACY_VER = Preferences.get("android.sdk.v4legacy");
+      String defV4LegacyVer = props.getProperty("androidx.legacy%legacy-support-v4");
+      if (V4LEGACY_VER == null || !versionCheck(V4LEGACY_VER, defV4LegacyVer)) {
+        V4LEGACY_VER = defV4LegacyVer;
+        Preferences.set("android.sdk.v4legacy", V4LEGACY_VER);
+      }
       
       PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
       String defPlayServicesVer = props.getProperty("com.google.android.gms%play-services-wearable");

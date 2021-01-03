@@ -30,13 +30,11 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:@@appcompat_version@@'
     implementation 'com.google.ar:core:@@gar_version@@'
-    implementation 'de.javagl:obj:0.2.1'
-    implementation 'com.android.support:appcompat-v7:@@support_version@@'
-    implementation 'com.android.support:design:@@support_version@@'
     implementation files('libs/processing-core.jar')
-    implementation files('libs/ar.jar')
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    implementation files('libs/ar.jar')    
+    androidTestImplementation 'com.android.support.test:runner:1.3.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    testImplementation 'junit:junit:4.13'
 }
