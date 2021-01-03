@@ -652,6 +652,14 @@ public class AndroidEditor extends JavaEditor {
       }
     });
     androidMenu.add(item);
+    
+    item = new JMenuItem(AndroidMode.getTextString("menu.android.accept_licenses"));
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        androidMode.getSDK().acceptLicenses();
+      }
+    });
+    androidMenu.add(item);    
   }
   
   private void initDebugger() {

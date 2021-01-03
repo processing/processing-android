@@ -66,7 +66,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String REPOSITORY_LIST = "repository2-1.xml";
   private static final String ADDON_LIST = "addon2-1.xml";
   
-  private static final boolean DOWNLOAD_EMU = false;
+  public static final boolean DOWNLOAD_EMU = false;
 
   private JProgressBar progressBar;
   private JLabel downloadedTextArea;
@@ -133,23 +133,29 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
         firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
 
-        // command-line tools
+        // Command-line tools
         File downloadedCmdLineTools = new File(tempFolder, downloadUrls.cmdlineToolsFilename);
         downloadAndUnpack(downloadUrls.cmdlineToolsUrl, downloadedCmdLineTools, sdkFolder, true);
+        File tmpFrom = new File(sdkFolder, "cmdline-tools");
+        File tmpTo = new File(sdkFolder, "cmdline-tmp");
+        AndroidUtil.moveDir(tmpFrom, tmpTo);
+        File cmdlineToolsFolder = new File(sdkFolder, "cmdline-tools/latest");
+        if (!cmdlineToolsFolder.exists()) cmdlineToolsFolder.mkdirs();        
+        AndroidUtil.moveDir(tmpTo, cmdlineToolsFolder);
 
-        // platform-tools
+        // Platform tools
         File downloadedPlatformTools = new File(tempFolder, downloadUrls.platformToolsFilename);
         downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder, true);
 
-        // build-tools
+        // Build tools
         File downloadedBuildTools = new File(tempFolder, downloadUrls.buildToolsFilename);
         downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder, true);
 
-        // platform
+        // Platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
       
-        // usb driver
+        // USB driver
         if (Platform.isWindows()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
           downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
@@ -162,7 +168,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         }
 
         if (DOWNLOAD_EMU) {
-          // emulator, unpacks directly to sdk folder 
+          // Emulator, unpacks directly to sdk folder 
           File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
           downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);          
         }        

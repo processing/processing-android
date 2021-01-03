@@ -31,7 +31,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+ 
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -295,5 +297,13 @@ public class AndroidUtil {
       if (f.exists()) return false;  
     }
     return true;
-  } 
+  }
+  
+  static public void moveDir(File from, File to) {
+    try {
+      Files.move(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING);      
+    } catch (IOException ex) {
+      ex.printStackTrace();
+    }  
+  }
 }

@@ -99,10 +99,13 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
     }
     
-    cmdlineTools = new File(folder, "cmdline-tools");
-    if (!cmdlineTools.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder));
-    }
+    File tmp = new File(folder, "cmdline-tools/latest");
+    if (!tmp.exists()) {
+      tmp = new File(folder, "tools");
+    } else if (!tmp.exists()) {
+      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder)); 
+    }    
+    cmdlineTools = tmp;
 
     platformTools = new File(folder, "platform-tools");
     if (!platformTools.exists()) {
@@ -149,8 +152,18 @@ class AndroidSDK {
       // First try the new location of the emulator inside its own folder
       emulator = findCliTool(emuFolder, "emulator");   
     } else {
-      // If not found, use old location inside tools
-      emulator = findCliTool(cmdlineTools, "emulator");
+      // If not found, use old location inside tools as fallback
+      emuFolder = new File(cmdlineTools, "emulator");
+      if (emuFolder.exists()) {
+        emulator = findCliTool(cmdlineTools, "emulator");  
+      } else {
+        emulator = null;
+        if (SDKDownloader.DOWNLOAD_EMU) {
+        // Only throw an exception if the downloader was supposed to download the emulator 
+        throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_emulator", 
+            AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
+        }
+      }      
     }
     
     String path = Platform.getenv("PATH");
@@ -285,10 +298,9 @@ class AndroidSDK {
   // 10 just in case, having more does not cause any trouble.  
   private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
   
-  private void acceptLicenses() {
+  public void acceptLicenses() {
     final String[] cmd = new String[] {
         sdkManager.getAbsolutePath(),
-        "--sdk_root=", folder.getAbsolutePath(),
         "--licenses"
     };
        
@@ -489,7 +501,7 @@ class AndroidSDK {
     
     final int result = showSDKLicenseDialog(editor);
     if (result == JOptionPane.YES_OPTION) {
-      sdk.acceptLicenses();   
+//      sdk.acceptLicenses();   
       String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
       File driver = AndroidSDK.getGoogleDriverFolder();
       if (Platform.isWindows() && driver.exists()) {

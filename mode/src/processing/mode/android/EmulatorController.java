@@ -75,6 +75,11 @@ class EmulatorController {
     String gpuFlag = "auto";
     
     final File emulator = sdk.getEmulatorTool();
+    if (emulator == null || emulator.exists()) {
+      System.err.println("EmulatorController: Emulator is not available.");
+      return;      
+    }
+    
     final String[] cmd = new String[] {
       emulator.getCanonicalPath(),
       "-avd", avdName,
