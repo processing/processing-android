@@ -65,6 +65,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String HAXM_URL = "https://dl.google.com/android/repository/extras/intel/";
   private static final String REPOSITORY_LIST = "repository2-1.xml";
   private static final String ADDON_LIST = "addon2-1.xml";
+  
+  private static final boolean DOWNLOAD_EMU = false;
 
   private JProgressBar progressBar;
   private JLabel downloadedTextArea;
@@ -105,14 +107,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
-      File emulatorFolder = new File(sdkFolder, "emulator");
-      if (!emulatorFolder.exists()) emulatorFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
       if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();
       File haxmFolder = new File(extrasFolder, "intel/HAXM");
       if (!haxmFolder.exists()) haxmFolder.mkdirs();      
+
+      if (DOWNLOAD_EMU) {
+        File emulatorFolder = new File(sdkFolder, "emulator");
+        if (!emulatorFolder.exists()) emulatorFolder.mkdir();        
+      }
       
       // creating temp folder for downloaded zip packages
       File tempFolder = new File(androidFolder, "temp");
@@ -143,10 +148,6 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         // platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
-
-        // emulator, unpacks directly to sdk folder 
-        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
-        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
       
         // usb driver
         if (Platform.isWindows()) {
@@ -160,6 +161,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
         }
 
+        if (DOWNLOAD_EMU) {
+          // emulator, unpacks directly to sdk folder 
+          File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
+          downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);          
+        }        
+        
         if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
@@ -367,41 +374,43 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!found) {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_tools"));
       }
-
-      // -----------------------------------------------------------------------
-      // Emulator
-      expr = xpath.compile("//remotePackage[@path=\"emulator\"]");
-      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-      found = false;
-      if (remotePackages != null) {
-        for (int i = 0; i < remotePackages.getLength(); ++i) {
-          NodeList childNodes = remotePackages.item(i).getChildNodes();
-          
-          NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
-          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; //Stable channel only, skip others
-
-          NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
-
-          for (int j = 0; j < archives.getLength(); ++j) {
-            NodeList archive = archives.item(j).getChildNodes();
-            NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-            NodeList os = ((Element) archive).getElementsByTagName("host-os");
-            NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-            NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+      
+      if (DOWNLOAD_EMU) {
+        // -----------------------------------------------------------------------
+        // Emulator
+        expr = xpath.compile("//remotePackage[@path=\"emulator\"]");
+        remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+        found = false;
+        if (remotePackages != null) {
+          for (int i = 0; i < remotePackages.getLength(); ++i) {
+            NodeList childNodes = remotePackages.item(i).getChildNodes();
             
-            if (os.item(0).getTextContent().equals(requiredHostOs)) {
-              urlHolder.emulatorFilename = url.item(0).getTextContent();
-              urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
-              urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-              found = true;
-              break;
+            NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+            if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+              continue; //Stable channel only, skip others
+
+            NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+            for (int j = 0; j < archives.getLength(); ++j) {
+              NodeList archive = archives.item(j).getChildNodes();
+              NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+              NodeList os = ((Element) archive).getElementsByTagName("host-os");
+              NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+              NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+              
+              if (os.item(0).getTextContent().equals(requiredHostOs)) {
+                urlHolder.emulatorFilename = url.item(0).getTextContent();
+                urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
+                urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+                found = true;
+                break;
+              }
             }
+            if (found) break;
           }
-          if (found) break;
-        }
-      } 
+        }         
+      }
       if (!found) {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
       }
