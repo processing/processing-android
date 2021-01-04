@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 28
+        targetSdkVersion 29
     }
     sourceSets {
         main {
@@ -23,5 +23,5 @@ android {
 
 dependencies {
     implementation project(':libs:processing-core')
-    implementation 'com.google.ar:core:1.12.0'
+    implementation 'com.google.ar:core:1.22.0'
 }

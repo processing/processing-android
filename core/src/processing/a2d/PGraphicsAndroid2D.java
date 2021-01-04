@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-16 The Processing Foundation
+  Copyright (c) 2012-21 The Processing Foundation
   Copyright (c) 2005-12 Ben Fry and Casey Reas
 
   This library is free software; you can redistribute it and/or
@@ -22,6 +22,19 @@
 */
 
 package processing.a2d;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.MemoryInfo;
+import android.content.Context;
+import android.graphics.*;
+import android.graphics.Bitmap.Config;
+import android.graphics.Paint.Style;
+import android.os.Build;
+import android.os.Environment;
+import android.view.SurfaceHolder;
+import static android.os.Environment.isExternalStorageRemovable;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,21 +57,6 @@ import processing.core.PShape;
 import processing.core.PShapeSVG;
 import processing.core.PSurface;
 import processing.data.XML;
-
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.ActivityManager.MemoryInfo;
-import android.content.Context;
-import android.graphics.*;
-import android.graphics.Bitmap.Config;
-import android.graphics.Paint.Style;
-import android.os.Build;
-import android.os.Environment;
-import android.view.SurfaceHolder;
-
-import static android.os.Environment.isExternalStorageRemovable;
-
 
 /**
  * Subclass for PGraphics that implements the graphics API using

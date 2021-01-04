@@ -1,12 +1,36 @@
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-dependencies {
-    compile group: "org.processing", name: "pde", version: "${processingVersion}"
-
-    compile name: "sdklib-${toolsLibVersion}"
-    compile name: "repository-${toolsLibVersion}"
+configurations {
+    implementation.extendsFrom implementationCopy
 }
+
+dependencies {
+    // implementation group: "org.processing", name: "pde", version: "${processingVersion}"
+    implementation group: "org.processing", name: "java-mode", version: "${processingVersion}"
+    implementation fileTree(include: ["AndroidMode.jar"], dir: '../../mode')
+
+    implementationCopy group: "com.android.tools", name: "sdklib", version: "${toolsLibVersion}"
+    implementationCopy group: "com.android.tools", name: "repository", version: "${toolsLibVersion}"
+}
+
+// This task copies the gradle tooling jar into the mode folder
+task copyToLib(type: Copy) {
+  from configurations.implementationCopy.files {
+    include '**/annotations-*'
+    include '**/common-*'
+    include '**/dvlib-*'
+    include '**/gson-*'
+    include '**/guava-*'
+    include '**/httpcore-*'
+    include '**/kotlin-stdlib-*'
+    include '**/layoutlib-api-*'
+    include '**/repository-*'
+    include '**/sdklib-*'
+  }
+  into "lib"
+}
+build.dependsOn(copyToLib)
 
 sourceSets {
     main {
@@ -18,6 +42,7 @@ sourceSets {
 
 clean.doFirst {
     delete "tool"
+    delete "lib"
 }
 
 build.doLast {

@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2014-17 The Processing Foundation
+ Copyright (c) 2014-21 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -65,6 +65,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String HAXM_URL = "https://dl.google.com/android/repository/extras/intel/";
   private static final String REPOSITORY_LIST = "repository2-1.xml";
   private static final String ADDON_LIST = "addon2-1.xml";
+  
+  public static final boolean DOWNLOAD_EMU = false;
 
   private JProgressBar progressBar;
   private JLabel downloadedTextArea;
@@ -79,8 +81,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   class SDKUrlHolder {
     public String platformVersion, buildToolsVersion;
-    public String platformToolsUrl, buildToolsUrl, platformUrl, toolsUrl, emulatorUrl;
-    public String platformToolsFilename, buildToolsFilename, platformFilename, toolsFilename, emulatorFilename;
+    public String platformToolsUrl, buildToolsUrl, platformUrl, cmdlineToolsUrl, emulatorUrl;
+    public String platformToolsFilename, buildToolsFilename, platformFilename, cmdlineToolsFilename, emulatorFilename;
     public String usbDriverUrl;
     public String usbDriverFilename;
     public String haxmFilename, haxmUrl;
@@ -105,14 +107,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       if (!platformsFolder.exists()) platformsFolder.mkdir();
       File buildToolsFolder = new File(sdkFolder, "build-tools");
       if (!buildToolsFolder.exists()) buildToolsFolder.mkdir();
-      File emulatorFolder = new File(sdkFolder, "emulator");
-      if (!emulatorFolder.exists()) emulatorFolder.mkdir();
       File extrasFolder = new File(sdkFolder, "extras");
       if (!extrasFolder.exists()) extrasFolder.mkdir();
       File googleRepoFolder = new File(extrasFolder, "google");
       if (!googleRepoFolder.exists()) googleRepoFolder.mkdir();
       File haxmFolder = new File(extrasFolder, "intel/HAXM");
       if (!haxmFolder.exists()) haxmFolder.mkdirs();      
+
+      if (DOWNLOAD_EMU) {
+        File emulatorFolder = new File(sdkFolder, "emulator");
+        if (!emulatorFolder.exists()) emulatorFolder.mkdir();        
+      }
       
       // creating temp folder for downloaded zip packages
       File tempFolder = new File(androidFolder, "temp");
@@ -128,27 +133,29 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
         firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
 
-        // tools
-        File downloadedTools = new File(tempFolder, downloadUrls.toolsFilename);
-        downloadAndUnpack(downloadUrls.toolsUrl, downloadedTools, sdkFolder, true);
+        // Command-line tools
+        File downloadedCmdLineTools = new File(tempFolder, downloadUrls.cmdlineToolsFilename);
+        downloadAndUnpack(downloadUrls.cmdlineToolsUrl, downloadedCmdLineTools, sdkFolder, true);
+        File tmpFrom = new File(sdkFolder, "cmdline-tools");
+        File tmpTo = new File(sdkFolder, "cmdline-tmp");
+        AndroidUtil.moveDir(tmpFrom, tmpTo);
+        File cmdlineToolsFolder = new File(sdkFolder, "cmdline-tools/latest");
+        if (!cmdlineToolsFolder.exists()) cmdlineToolsFolder.mkdirs();        
+        AndroidUtil.moveDir(tmpTo, cmdlineToolsFolder);
 
-        // platform-tools
+        // Platform tools
         File downloadedPlatformTools = new File(tempFolder, downloadUrls.platformToolsFilename);
         downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder, true);
 
-        // build-tools
+        // Build tools
         File downloadedBuildTools = new File(tempFolder, downloadUrls.buildToolsFilename);
         downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder, true);
 
-        // platform
+        // Platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
-
-        // emulator, unpacks directly to sdk folder 
-        File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
-        downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);
       
-        // usb driver
+        // USB driver
         if (Platform.isWindows()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
           downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
@@ -160,6 +167,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
         }
 
+        if (DOWNLOAD_EMU) {
+          // Emulator, unpacks directly to sdk folder 
+          File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
+          downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);          
+        }        
+        
         if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
         }
@@ -246,7 +259,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       boolean found;
       
       // -----------------------------------------------------------------------
-      // platform
+      // Platform
       expr = xpath.compile("//remotePackage[starts-with(@path, \"platforms;\")" +
               "and contains(@path, '" + AndroidBuild.TARGET_SDK + "')]"); // Skip latest platform; download only the targeted
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
@@ -271,12 +284,12 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_platform_files"));
       }
 
-      // Difference between platform tools, build tools, and SDK tools: 
+      // Difference between platform tools, build tools, and SDK (now command-line) tools: 
       // http://stackoverflow.com/questions/19911762/what-is-android-sdk-build-tools-and-which-version-should-be-used
       // Always get the latest!
       
       // -----------------------------------------------------------------------
-      // platform-tools
+      // Platform tools
       expr = xpath.compile("//remotePackage[@path=\"platform-tools\"]");
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       if (remotePackages != null) {
@@ -286,17 +299,17 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       }
 
       // -----------------------------------------------------------------------
-      // build-tools
+      // Build tools
       expr = xpath.compile("//remotePackage[starts-with(@path, \"build-tools;\")]");
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        for(int buildTool=0; buildTool < remotePackages.getLength(); buildTool++) {
+        for (int buildTool = 0; buildTool < remotePackages.getLength(); buildTool++) {
           NodeList childNodes = remotePackages.item(buildTool).getChildNodes();
 
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
           if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; //Stable channel only, skip others
+            continue; // Stable channel only, skip others
 
           NodeList revision = ((Element) childNodes).getElementsByTagName("revision");
           String major = (((Element) revision.item(0)).getElementsByTagName("major")).item(0).getTextContent();
@@ -332,52 +345,21 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       }
       
       // -----------------------------------------------------------------------
-      // tools
-      expr = xpath.compile("//remotePackage[@path=\"tools\"]"); // Matches two items according to xml file
+      // Command-line tools
+      expr = xpath.compile("//remotePackage[starts-with(@path, \"cmdline-tools;\")]");      
       remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
       found = false;
       if (remotePackages != null) {
-        NodeList childNodes = remotePackages.item(1).getChildNodes(); // Second item is the latest tools for now
-        NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
-
-        for (int i = 0; i < archives.getLength(); ++i) {
-          NodeList archive = archives.item(i).getChildNodes();
-          NodeList complete = ((Element) archive).getElementsByTagName("complete");
-
-          NodeList os = ((Element) archive).getElementsByTagName("host-os");
-          NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
-          NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
-
-          if (os.item(0).getTextContent().equals(requiredHostOs)) {
-            urlHolder.toolsFilename =  url.item(0).getTextContent();
-            urlHolder.toolsUrl = REPOSITORY_URL + urlHolder.toolsFilename;
-            urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
-            found = true;
-            break;
-          }
-        }
-      } 
-      if (!found) {
-        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_tools"));
-      }
-
-      // -----------------------------------------------------------------------
-      // emulator
-      expr = xpath.compile("//remotePackage[@path=\"emulator\"]"); // Matches two items according to xml file
-      remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-      found = false;
-      if (remotePackages != null) {
-        for(int i = 0; i < remotePackages.getLength(); ++i) {
-          NodeList childNodes = remotePackages.item(i).getChildNodes();
+        for (int tool = 0; tool < remotePackages.getLength(); tool++) {
+          NodeList childNodes = remotePackages.item(tool).getChildNodes();
           
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
           if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; //Stable channel only, skip others
-
+            continue; // Stable channel only, skip others          
+          
           NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
-
-          for (int j = 0; j < archives.getLength(); ++j) {
-            NodeList archive = archives.item(j).getChildNodes();
+          for (int i = 0; i < archives.getLength(); ++i) {
+            NodeList archive = archives.item(i).getChildNodes();
             NodeList complete = ((Element) archive).getElementsByTagName("complete");
 
             NodeList os = ((Element) archive).getElementsByTagName("host-os");
@@ -385,16 +367,56 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
             
             if (os.item(0).getTextContent().equals(requiredHostOs)) {
-              urlHolder.emulatorFilename = url.item(0).getTextContent();
-              urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
+              urlHolder.cmdlineToolsFilename =  url.item(0).getTextContent();
+              urlHolder.cmdlineToolsUrl = REPOSITORY_URL + urlHolder.cmdlineToolsFilename;
               urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
               found = true;
               break;
-            }
+            }            
           }
-          if (found) break;
+          if (found) break;          
         }
       } 
+      if (!found) {
+        throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_tools"));
+      }
+      
+      if (DOWNLOAD_EMU) {
+        // -----------------------------------------------------------------------
+        // Emulator
+        expr = xpath.compile("//remotePackage[@path=\"emulator\"]");
+        remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+        found = false;
+        if (remotePackages != null) {
+          for (int i = 0; i < remotePackages.getLength(); ++i) {
+            NodeList childNodes = remotePackages.item(i).getChildNodes();
+            
+            NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
+            if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+              continue; //Stable channel only, skip others
+
+            NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
+
+            for (int j = 0; j < archives.getLength(); ++j) {
+              NodeList archive = archives.item(j).getChildNodes();
+              NodeList complete = ((Element) archive).getElementsByTagName("complete");
+
+              NodeList os = ((Element) archive).getElementsByTagName("host-os");
+              NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
+              NodeList size = ((Element) complete.item(0)).getElementsByTagName("size");
+              
+              if (os.item(0).getTextContent().equals(requiredHostOs)) {
+                urlHolder.emulatorFilename = url.item(0).getTextContent();
+                urlHolder.emulatorUrl = REPOSITORY_URL + urlHolder.emulatorFilename;
+                urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());
+                found = true;
+                break;
+              }
+            }
+            if (found) break;
+          }
+        }         
+      }
       if (!found) {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_emulator"));
       }
@@ -456,7 +478,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     expr = xpath.compile("//remotePackage[@path=\"extras;intel;Hardware_Accelerated_Execution_Manager\"]");
     remotePackages = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     if (remotePackages != null) {
-      for (int i=0; i < remotePackages.getLength(); ++i) {
+      for (int i = 0; i < remotePackages.getLength(); ++i) {
         NodeList childNodes = remotePackages.item(i).getChildNodes();
         NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
 

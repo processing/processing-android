@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -33,8 +33,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.service.wallpaper.WallpaperService;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -45,6 +43,9 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.support.v4.os.ResultReceiver;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -89,14 +90,15 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public Context getContext() {
-    if (component.getKind() == AppComponent.FRAGMENT) {
+		return activity;
+    /*if (component.getKind() == AppComponent.FRAGMENT) {
       return activity;
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       return wallpaper;
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       return watchface;
     }
-    return null;
+		*/
   }
 
 

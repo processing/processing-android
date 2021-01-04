@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016 The Processing Foundation
+  Copyright (c) 2016-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,6 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
-
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
@@ -40,6 +39,7 @@ import android.support.wearable.watchface.Gles2WatchFaceService;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
+
 import processing.android.AppComponent;
 import processing.android.PFragment;
 import processing.core.PApplet;

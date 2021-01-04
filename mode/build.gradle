@@ -6,27 +6,27 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 // Extend compile to copy the jars from gradle-tooling and slf4j:
 // https://stackoverflow.com/a/43602463
 configurations {
-    compile.extendsFrom compileAndCopy
-    compile.extendsFrom compileAndExtract
+    implementation.extendsFrom implementationCopy
+    implementation.extendsFrom implementationExtract
 }
 
 dependencies {
-    compile group: "org.processing", name: "core", version: "${processingVersion}"
-    compile group: "org.processing", name: "pde", version: "${processingVersion}"
-    compile group: "org.processing", name: "java-mode", version: "${processingVersion}"
+    implementation group: "org.processing", name: "core", version: "${processingVersion}"
+    implementation group: "org.processing", name: "pde", version: "${processingVersion}"
+    implementation group: "org.processing", name: "java-mode", version: "${processingVersion}"
 
-    compileAndExtract "org.eclipse.jdt:org.eclipse.jdt.debug:${jdtVersion}"
+    implementationExtract "org.eclipse.jdt:org.eclipse.jdt.debug:${jdtVersion}"
 
-    compileAndCopy "org.gradle:gradle-tooling-api:${toolingVersion}"
-    compileAndCopy "org.slf4j:slf4j-api:${slf4jVersion}"
-    compileAndCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
+    implementationCopy "org.gradle:gradle-tooling-api:${toolingVersion}"
+    implementationCopy "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementationCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
 
-    compile fileTree(include: ["jdi.jar", "jdimodel.jar"], dir: 'mode')
+    implementation fileTree(include: ["jdi.jar", "jdimodel.jar"], dir: 'mode')
 }
 
 // This task copies the gradle tooling jar into the mode folder
 task copyToLib(type: Copy) {
-  from configurations.compileAndCopy.files
+  from configurations.implementationCopy.files
   into "mode"
 }
 build.dependsOn(copyToLib)
@@ -42,7 +42,7 @@ sourceSets {
 task getjdi(type: Copy) {
   // This task extracts the jar files inside org.eclipse.jdt.debug, which are
   // jdi.jar and jdimodel.jar and needed to build the debugger.
-  from(zipTree(configurations.compileAndExtract.files[0])) {
+  from(zipTree(configurations.implementationExtract.files[0])) {
     include '**/*.jar'
     exclude 'META-INF'
   }

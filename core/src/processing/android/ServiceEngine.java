@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2017 The Processing Foundation
+  Copyright (c) 2017-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 package processing.android;
 
 import android.graphics.Rect;
+
 import processing.core.PConstants;
 
 public interface ServiceEngine extends PConstants {

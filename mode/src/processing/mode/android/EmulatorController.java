@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2013-16 The Processing Foundation
+ Copyright (c) 2013-21 The Processing Foundation
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -75,6 +75,11 @@ class EmulatorController {
     String gpuFlag = "auto";
     
     final File emulator = sdk.getEmulatorTool();
+    if (emulator == null || emulator.exists()) {
+      System.err.println("EmulatorController: Emulator is not available.");
+      return;      
+    }
+    
     final String[] cmd = new String[] {
       emulator.getCanonicalPath(),
       "-avd", avdName,

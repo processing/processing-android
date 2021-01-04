@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2013-17 The Processing Foundation
+ Copyright (c) 2013-21 The Processing Foundation
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -58,13 +58,13 @@ class AndroidSDK {
   final static private int TEXT_MARGIN = Toolkit.zoom(8);
   final static private int TEXT_WIDTH = Toolkit.zoom(300);
   
-  private final File folder;
-  private final File tools;
+  private final File folder;  
   private final File platforms;
   private final File highestPlatform;  
   private final File androidJar;
   private final File platformTools;
   private final File buildTools;
+  private final File cmdlineTools;
   private final File avdManager;
   private final File sdkManager;
   private final File emulator;
@@ -99,10 +99,13 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
     }
     
-    tools = new File(folder, "tools");
-    if (!tools.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder));
-    }
+    File tmp = new File(folder, "cmdline-tools/latest");
+    if (!tmp.exists()) {
+      tmp = new File(folder, "tools");
+    } else if (!tmp.exists()) {
+      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder)); 
+    }    
+    cmdlineTools = tmp;
 
     platformTools = new File(folder, "platform-tools");
     if (!platformTools.exists()) {
@@ -141,23 +144,33 @@ class AndroidSDK {
                                                           AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
     }
 
-    avdManager = findCliTool(new File(tools, "bin"), "avdmanager");
-    sdkManager = findCliTool(new File(tools, "bin"), "sdkmanager");
+    avdManager = findCliTool(new File(cmdlineTools, "bin"), "avdmanager");
+    sdkManager = findCliTool(new File(cmdlineTools, "bin"), "sdkmanager");
     
     File emuFolder = new File(folder, "emulator");
     if (emuFolder.exists()) {
       // First try the new location of the emulator inside its own folder
       emulator = findCliTool(emuFolder, "emulator");   
     } else {
-      // If not found, use old location inside tools
-      emulator = findCliTool(tools, "emulator");
+      // If not found, use old location inside tools as fallback
+      emuFolder = new File(cmdlineTools, "emulator");
+      if (emuFolder.exists()) {
+        emulator = findCliTool(cmdlineTools, "emulator");  
+      } else {
+        emulator = null;
+        if (SDKDownloader.DOWNLOAD_EMU) {
+        // Only throw an exception if the downloader was supposed to download the emulator 
+        throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_emulator", 
+            AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
+        }
+      }      
     }
     
     String path = Platform.getenv("PATH");
 
     Platform.setenv("ANDROID_SDK", folder.getCanonicalPath());
     path = platformTools.getCanonicalPath() + File.pathSeparator +
-      tools.getCanonicalPath() + File.pathSeparator + path;
+      cmdlineTools.getCanonicalPath() + File.pathSeparator + path;
 
     String javaHomeProp = System.getProperty("java.home");
     File javaHome = new File(javaHomeProp).getCanonicalFile();
@@ -243,8 +256,8 @@ class AndroidSDK {
   }  
   
   
-  public File getToolsFolder() {
-    return tools;
+  public File getCommandLineToolsFolder() {
+    return cmdlineTools;
   }
 
   
@@ -263,6 +276,11 @@ class AndroidSDK {
   }
 
   
+  public File getTargetPlatform(String target) {
+    return new File(platforms, "android-" + target);
+  }  
+  
+  
   public File getZipAlignTool() {    
     File[] files = buildTools.listFiles();
     String name = Platform.isWindows() ? "zipalign.exe" : "zipalign";
@@ -275,13 +293,18 @@ class AndroidSDK {
   
   
   // Write to the process input, so the licenses will be accepted. In 
-  // principle, We only need 7 'y', one for the 'yes' to the first 
+  // principle, we only need 7 'y', one for the 'yes' to the first 
   // 'review licenses?' question, the rest for the 6 licenses, but adding
   // 10 just in case, having more does not cause any trouble.  
   private static final String response = "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n";
   
   private void acceptLicenses() {
-    ProcessBuilder pb = new ProcessBuilder(sdkManager.getAbsolutePath(), "--licenses");
+    final String[] cmd = new String[] {
+        sdkManager.getAbsolutePath(),
+        "--licenses"
+    };
+       
+    ProcessBuilder pb = new ProcessBuilder(cmd);
     pb.redirectErrorStream(true);
     try {
       Process process = pb.start();
@@ -300,7 +323,7 @@ class AndroidSDK {
           }
         }
       }, "AndroidSDK: reading licenses").start();
-      Thread.sleep(1000);
+      Thread.sleep(3000);
       os.write(response.getBytes());
       os.flush();
       os.close();
@@ -478,7 +501,7 @@ class AndroidSDK {
     
     final int result = showSDKLicenseDialog(editor);
     if (result == JOptionPane.YES_OPTION) {
-      sdk.acceptLicenses();   
+      sdk.acceptLicenses();
       String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
       File driver = AndroidSDK.getGoogleDriverFolder();
       if (Platform.isWindows() && driver.exists()) {

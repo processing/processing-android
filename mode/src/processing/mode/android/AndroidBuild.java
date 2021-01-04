@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-17 The Processing Foundation
+ Copyright (c) 2012-21 The Processing Foundation
  Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,9 @@ class AndroidBuild extends JavaBuild {
   // Versions of all required dependencies
   static public String TARGET_SDK;  
   static public String TARGET_PLATFORM;
-  static public String SUPPORT_VER;
+  static public String GRADLE_VER;
+  static public String APPCOMPAT_VER;
+  static public String V4LEGACY_VER;
   static public String PLAY_SERVICES_VER;
   static public String WEAR_VER;
   static public String GVR_VER;
@@ -86,7 +88,9 @@ class AndroidBuild extends JavaBuild {
   static private final String XML_WATCHFACE_TEMPLATE = "XMLWatchFace.xml.tmpl";
   
   // Gradle build files
-  static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";  
+  static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
+  static private final String GRADLE_PROPERTIES_TEMPLATE = "Properties.gradle.tmpl";
+  static private final String LOCAL_PROPERTIES_TEMPLATE = "Properties.local.tmpl";
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_ECJ_TEMPLATE = "AppBuildECJ.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_TEMPLATE = "AppBuild.gradle.tmpl";
@@ -284,20 +288,37 @@ class AndroidBuild extends JavaBuild {
   
   
   private void createTopModule(String projectModules) 
-      throws IOException {
+      throws IOException {    
+    HashMap<String, String> replaceMap = new HashMap<String, String>();
+    
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
-    Util.copyFile(buildTemplate, buildlFile);
+    replaceMap.put("@@gradle_version@@", GRADLE_VER);
+    AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);
+
+    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+    File gradlePropsFile = new File(tmpFolder, "gradle.properties");
+    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
     
-    writeLocalProps(new File(tmpFolder, "local.properties"));
-    AndroidUtil.writeFile(new File(tmpFolder, "gradle.properties"),
-        new String[]{"org.gradle.jvmargs=-Xmx1536m"});
-    
-    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);    
+    File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
-    HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@project_modules@@", projectModules);    
-    AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap); 
+    replaceMap.clear();
+    replaceMap.put("@@project_modules@@", projectModules);
+    AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
+    
+    File localPropsTemplate = mode.getContentFile("templates/" + LOCAL_PROPERTIES_TEMPLATE);
+    File localPropsFile = new File(tmpFolder, "local.properties");
+    replaceMap.clear();
+    final String sdkPath = sdk.getFolder().getAbsolutePath();
+    if (Platform.isWindows()) {
+      // Windows needs backslashes escaped, or it will also accept forward
+      // slashes in the build file. We're using the forward slashes since this
+      // path gets concatenated with a lot of others that use forwards anyway.
+      replaceMap.put("@@sdk_path@@", sdkPath.replace('\\', '/'));
+    } else {
+      replaceMap.put("@@sdk_path@@", sdkPath);
+    }
+    AndroidUtil.createFileFromTemplate(localPropsTemplate, localPropsFile, replaceMap);
   }
   
   
@@ -321,15 +342,19 @@ class AndroidBuild extends JavaBuild {
       tmplFile = exportProject ? APP_GRADLE_BUILD_TEMPLATE : APP_GRADLE_BUILD_ECJ_TEMPLATE;
     }
     
+    String toolPath = Base.getToolsFolder().getPath().replace('\\', '/');
+    String platformPath = sdk.getTargetPlatform(TARGET_SDK).getPath().replace('\\', '/');
+    
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
-    replaceMap.put("@@tools_folder@@", Base.getToolsFolder().getPath().replace('\\', '/'));
-    replaceMap.put("@@target_platform@@", TARGET_SDK);
+    replaceMap.put("@@tools_folder@@", toolPath);
+    replaceMap.put("@@target_platform@@", platformPath);
     replaceMap.put("@@package_name@@", getPackageName());    
     replaceMap.put("@@min_sdk@@", minSdk);  
     replaceMap.put("@@target_sdk@@", TARGET_SDK);
-    replaceMap.put("@@support_version@@", SUPPORT_VER);  
+    replaceMap.put("@@appcompat_version@@", APPCOMPAT_VER);    
+    replaceMap.put("@@v4legacy_version@@", V4LEGACY_VER);
     replaceMap.put("@@play_services_version@@", PLAY_SERVICES_VER);
     replaceMap.put("@@wear_version@@", WEAR_VER);        
     replaceMap.put("@@gvr_version@@", GVR_VER);
@@ -549,22 +574,6 @@ class AndroidBuild extends JavaBuild {
     File xmlFile = new File(xmlFolder, "watch_face.xml");
     AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile);
   } 
-  
-  
-  private void writeLocalProps(final File file) {
-    final PrintWriter writer = PApplet.createWriter(file);
-    final String sdkPath = sdk.getFolder().getAbsolutePath();
-    if (Platform.isWindows()) {
-      // Windows needs backslashes escaped, or it will also accept forward
-      // slashes in the build file. We're using the forward slashes since this
-      // path gets concatenated with a lot of others that use forwards anyway.
-      writer.println("sdk.dir=" + sdkPath.replace('\\', '/'));
-    } else {
-      writer.println("sdk.dir=" + sdkPath);
-    }
-    writer.flush();
-    writer.close();
-  }  
   
   
   private void writeRes(File resFolder) throws SketchException {
@@ -898,9 +907,15 @@ class AndroidBuild extends JavaBuild {
       MIN_SDK_AR = props.getProperty("android-min-ar");
       MIN_SDK_WATCHFACE = props.getProperty("android-min-wear");
 
-      // Versions of the target sdk, support, play services, wear, VR, and AR are stored in
-      // preferences file so they can be changed by the user without having to rebuilt/reinstall
-      // the mode.
+      // Versions strings of all dependencies are stored in a preferences file so they can be changed by the 
+      // user without having to rebuild/reinstall the mode.
+
+      GRADLE_VER = Preferences.get("android.gradle");
+      String defGradleVersion = props.getProperty("gradle");
+      if (GRADLE_VER == null || PApplet.parseInt(GRADLE_VER) != PApplet.parseInt(defGradleVersion)) {
+        GRADLE_VER = defGradleVersion;
+        Preferences.set("android.gradle", GRADLE_VER);
+      }
       
       TARGET_SDK = Preferences.get("android.sdk.target");
       String defTargetSDK = props.getProperty("android-platform");
@@ -910,12 +925,19 @@ class AndroidBuild extends JavaBuild {
       }
       TARGET_PLATFORM = "android-" + TARGET_SDK;
       
-      SUPPORT_VER = Preferences.get("android.sdk.support");
-      String defSupportVer = props.getProperty("com.android.support%support-v4");
-      if (SUPPORT_VER == null || !versionCheck(SUPPORT_VER, defSupportVer)) {
-        SUPPORT_VER = defSupportVer;
-        Preferences.set("android.sdk.support", SUPPORT_VER);
-      }        
+      APPCOMPAT_VER = Preferences.get("android.sdk.appcompat");
+      String defAppCompatVer = props.getProperty("androidx.appcompat%appcompat");
+      if (APPCOMPAT_VER == null || !versionCheck(APPCOMPAT_VER, defAppCompatVer)) {
+        APPCOMPAT_VER = defAppCompatVer;
+        Preferences.set("android.sdk.appcompat", APPCOMPAT_VER);
+      }
+      
+      V4LEGACY_VER = Preferences.get("android.sdk.v4legacy");
+      String defV4LegacyVer = props.getProperty("androidx.legacy%legacy-support-v4");
+      if (V4LEGACY_VER == null || !versionCheck(V4LEGACY_VER, defV4LegacyVer)) {
+        V4LEGACY_VER = defV4LegacyVer;
+        Preferences.set("android.sdk.v4legacy", V4LEGACY_VER);
+      }
       
       PLAY_SERVICES_VER = Preferences.get("android.sdk.play_services");
       String defPlayServicesVer = props.getProperty("com.google.android.gms%play-services-wearable");

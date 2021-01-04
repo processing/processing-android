@@ -9,12 +9,12 @@ apply plugin: 'java'
 buildscript {
     repositories {
         google()
-        jcenter()        
+        jcenter()
     }
     dependencies {        
-        classpath 'com.android.tools.build:gradle:3.5.1'
-        classpath group: 'commons-io', name: 'commons-io', version: '2.6'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.13'
+        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath group: 'commons-io', name: 'commons-io', version: '2.8.0'
+        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.14'
     }
 }
 
@@ -25,7 +25,8 @@ allprojects {
     Properties versions = new Properties()
     versions.load(project.rootProject.file("mode/version.properties").newDataInputStream())
     ext.targetSdkVersion = versions.getProperty("android-platform")
-    ext.supportLibsVersion = versions.getProperty("com.android.support%support-v4")
+    ext.appcompatVersion = versions.getProperty("androidx.appcompat%appcompat")
+    ext.v4legacyVersion = versions.getProperty("androidx.legacy%legacy-support-v4")
     ext.wearVersion = versions.getProperty("com.google.android.support%wearable")
     ext.gvrVersion = versions.getProperty("com.google.vr")
     ext.garVersion = versions.getProperty("com.google.ar")
@@ -72,27 +73,26 @@ allprojects {
     localProperties.load(project.rootProject.file("local.properties").newDataInputStream())
     def sdkDir = localProperties.getProperty("sdk.dir")
     ext.androidPlatformPath = "${sdkDir}/platforms/android-${targetSdkVersion}"
-    ext.androidToolsLibPath = "${sdkDir}/tools/lib"
-
     ext.coreZipPath = "${rootDir}/mode/processing-core.zip"
 
     repositories {
         google()
         jcenter()
-        maven {
-            // mavenCentral() does not work to download the Gradle releases of gradle-tooling-api, one needs
-            // to set the artifact url as below to get the latest packages.
-            // https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api?repo=gradle-libs-releases-local
-            url "https://repo1.maven.org/maven2"
-            artifactUrls "https://repo.gradle.org/gradle/libs-releases-local"
-        }
+        maven { url "https://maven.google.com" }
+        maven { url "https://jitpack.io" }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
         flatDir dirs: androidPlatformPath
-        flatDir dirs: androidToolsLibPath
         flatDir dirs: "${rootDir}/core/dist"
     }
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8    
+    compileJava {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+
+        // Uncomment this option when building with Java 11+ 
+        // https://github.com/processing/processing-android/issues/625
+        // options.release = 8
+    }
 }
 
 clean.doFirst {
@@ -128,9 +128,11 @@ task dist {
         FileUtils.copyDirectory(file("mode/languages"), 
                                 file("${root}/languages"))
 
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"), 
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"),
                                 file("${root}/tools/SDKUpdater/tool"))
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"), 
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/lib"),
+                                file("${root}/tools/SDKUpdater/lib"))
+        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"),
                                 file("${root}/tools/SDKUpdater/src"))
         
         FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 

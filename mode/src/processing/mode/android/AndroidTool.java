@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2017 The Processing Foundation
+ Copyright (c) 2017-21 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
@@ -37,13 +37,13 @@ import processing.app.tools.Tool;
  * Specialized local contribution for Android tools. Cannot use ToolContribution
  * from processing-app since Android tools may need SDK jars in the classpath.
  */
-public class AndroidTool extends LocalContribution implements Tool, Comparable<AndroidTool> {
-  private AndroidSDK sdk;
+public class AndroidTool extends LocalContribution implements Tool, Comparable<AndroidTool> {  
   private Tool tool;
+  private AndroidMode mode;
   
-  AndroidTool(File toolFolder, AndroidSDK sdk) throws Throwable {
+  AndroidTool(File toolFolder, AndroidMode androidMode) throws Throwable {
     super(toolFolder);
-    this.sdk = sdk;
+    this.mode = androidMode;
     
     String className = initLoader(null);
     if (className != null) {
@@ -86,16 +86,16 @@ public class AndroidTool extends LocalContribution implements Tool, Comparable<A
                                        " class inside " + mainJar.getAbsolutePath());
         }
       }
-      
-      // Add .jar and .zip files from the "tool" and the SDK/tools/lib 
+
+      // Add .jar and .zip files from the "tool" and the tools/lib 
       // folder into the classpath
-      File libDir = new File(sdk.getToolsFolder(), "lib");
+      File libDir = new File(folder, "lib");      
       File[] toolArchives = Util.listJarFiles(toolDir);      
       File[] libArchives = Util.listJarFiles(libDir);
       
       if (toolArchives != null && toolArchives.length > 0 &&
           libArchives != null && libArchives.length > 0) {
-        URL[] urlList = new URL[toolArchives.length + libArchives.length];
+        URL[] urlList = new URL[toolArchives.length + libArchives.length + 1];
         
         int j;
         for (j = 0; j < toolArchives.length; j++) {
@@ -106,6 +106,11 @@ public class AndroidTool extends LocalContribution implements Tool, Comparable<A
           Messages.log("Found archive " + libArchives[k] + " for " + getName());
           urlList[j] = libArchives[k].toURI().toURL();
         }
+        urlList[urlList.length - 1] = new File(mode.getModeJar()).toURI().toURL();
+
+        
+//        String modePath = new File(dmode.getFolder(), "mode").getAbsolutePath();
+//        urlList[urlList.length - 1] = new File(modePath + File.separator + "JavaMode.jar").toURI().toURL();
         
         loader = new URLClassLoader(urlList);
         Messages.log("loading above JARs with loader " + loader);

@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016-17 The Processing Foundation
+  Copyright (c) 2016-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -26,12 +26,12 @@ import android.service.wallpaper.WallpaperService;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
-import processing.core.PApplet;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.graphics.Point;
 import android.graphics.Rect;
 
+import processing.core.PApplet;
 
 public class PWallpaper extends WallpaperService implements AppComponent {
   private Point size;

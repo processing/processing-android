@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2012-19 The Processing Foundation
+  Copyright (c) 2012-21 The Processing Foundation
   Copyright (c) 2006-12 Ben Fry and Casey Reas
 
   This library is free software; you can redistribute it and/or
@@ -28,8 +28,6 @@ import android.graphics.BitmapFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import processing.core.PApplet;
 
 
 /**

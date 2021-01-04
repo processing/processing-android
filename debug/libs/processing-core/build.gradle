@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         minSdkVersion 17
-        targetSdkVersion 28
+        targetSdkVersion 29
     }
     sourceSets {
         main {
@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:support-v4:28.0.0"
-    implementation 'com.google.android.support:wearable:2.4.0'
-    compileOnly 'com.google.android.wearable:wearable:2.4.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.support:wearable:2.8.1'
+    compileOnly 'com.google.android.wearable:wearable:2.8.1'
 }

@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2017 The Processing Foundation
+  Copyright (c) 2017-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,9 @@ package processing.android;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+
 import android.support.v4.os.ResultReceiver;
+import androidx.core.app.ActivityCompat;
 
 // A simple utility activity to request permissions in a service.
 public class PermissionRequestor extends Activity {

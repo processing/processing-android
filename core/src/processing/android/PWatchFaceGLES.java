@@ -3,7 +3,7 @@
 /*
   Part of the Processing project - http://processing.org
 
-  Copyright (c) 2016-17 The Processing Foundation
+  Copyright (c) 2016-21 The Processing Foundation
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -37,10 +37,11 @@ import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
-import processing.core.PApplet;
+import android.graphics.Rect;
+
 import java.lang.reflect.Method;
 
-import android.graphics.Rect;
+import processing.core.PApplet;
 
 @TargetApi(21)
 public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponent {

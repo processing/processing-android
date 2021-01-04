@@ -3,7 +3,7 @@
 /*
  Part of the Processing project - http://processing.org
 
- Copyright (c) 2012-17 The Processing Foundation
+ Copyright (c) 2012-21 The Processing Foundation
  Copyright (c) 2009-12 Ben Fry and Casey Reas
 
  This program is free software; you can redistribute it and/or modify
@@ -47,7 +47,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -82,13 +82,7 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
 
-    debugger = new AndroidDebugger(this, androidMode);
-    // Set saved breakpoints when sketch is opened for the first time
-    for (LineID lineID : stripBreakpointComments()) {
-      debugger.setBreakpoint(lineID);
-    }
-
-    super.debugger = debugger;
+    initDebugger();
 
     androidTools = loadAndroidTools();
     addToolsToMenu();
@@ -595,16 +589,34 @@ public class AndroidEditor extends JavaEditor {
   private List<AndroidTool> loadAndroidTools() {
     // This gets called before assigning mode to androidMode...
     ArrayList<AndroidTool> outgoing = new ArrayList<AndroidTool>();
-    File toolPath = new File(androidMode.getFolder(), "tools/SDKUpdater");
-    AndroidTool tool = null;
-    try {
-      tool = new AndroidTool(toolPath, androidMode.getSDK());
-      tool.init(base);
-      outgoing.add(tool);
-    } catch (Throwable e) {
-      e.printStackTrace();
-    }     
-    Collections.sort(outgoing);
+    
+    File folder = new File(androidMode.getFolder(), "tools");
+    String[] list = folder.list();
+    if (list == null) {
+      return outgoing;
+    }
+
+    Arrays.sort(list, String.CASE_INSENSITIVE_ORDER);
+    for (String name : list) {
+      if (name.charAt(0) == '.') {
+        continue;
+      }
+
+      File toolPath = new File(folder, name);
+      if (toolPath.isDirectory()) {        
+        File jarPath = new File(toolPath, "tool" + File.separator + name + ".jar");
+        if (jarPath.exists()) {
+          try {     
+            AndroidTool tool = new AndroidTool(toolPath, androidMode);
+            tool.init(base);
+            outgoing.add(tool);
+          } catch (Throwable e) {
+            e.printStackTrace();
+          }        
+        }
+      }
+    }
+
     return outgoing;
   }
   
@@ -642,6 +654,15 @@ public class AndroidEditor extends JavaEditor {
     androidMenu.add(item);
   }
   
+  private void initDebugger() {
+    debugger = new AndroidDebugger(this, androidMode);
+    // Set saved breakpoints when sketch is opened for the first time
+    for (LineID lineID : stripBreakpointComments()) {
+      debugger.setBreakpoint(lineID);
+    }
+    super.debugger = debugger;
+    
+  }  
   
   class UpdateDeviceListTask extends TimerTask {
 
