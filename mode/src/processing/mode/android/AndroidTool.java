@@ -27,7 +27,6 @@ import java.net.URLClassLoader;
 
 import processing.app.Base;
 import processing.app.Messages;
-import processing.app.Mode;
 import processing.app.Util;
 import processing.app.contrib.ContributionType;
 import processing.app.contrib.IgnorableException;
