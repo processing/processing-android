@@ -2,7 +2,7 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'aar'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 dependencies {
     compileOnly name: "android"
@@ -13,6 +13,7 @@ dependencies {
     implementationAar "com.google.vr:sdk-base:${gvrVersion}" 
 }
 
+/*
 task createPom {
     pom {
        project {
@@ -52,6 +53,59 @@ task createPom {
     }.writeTo("dist/processing-vr-${vrLibVersion}.pom")
 }
 
+
+ */
+
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier = "sources"
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        vrPublication(MavenPublication) {
+            from components.java
+            artifact sourceJar
+            pom {
+                groupId = "org.p5android"
+                artifactId = "processing-vr"
+                version = "${vrLibVersion}"
+                packaging = "jar"
+                licenses {
+                    license {
+                        name = "GNU Lesser General Public License, version 2.1"
+                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
+                        distribution = "repo"
+                    }
+                }
+            }
+
+            pom.withXml {
+                // inserting the dependencies node
+                def dependenciesNode = asNode().appendNode('dependencies')
+                // start adding dependency nodes inside dependencies node
+                def dependencyNode = dependenciesNode.appendNode('dependency')
+                dependencyNode.appendNode('groupId', 'org.p5android')
+                dependencyNode.appendNode('artifactId', 'processing-core')
+                dependencyNode.appendNode('version', '4.2.0')
+                dependencyNode.appendNode('scope', 'implementation')
+
+                def dependencyNode2 = dependenciesNode.appendNode('dependency')
+                dependencyNode2.appendNode('groupId', 'com.google.vr')
+                dependencyNode2.appendNode('artifactId', 'sdk-base')
+                dependencyNode2.appendNode('version', '1.180.0')
+                dependencyNode2.appendNode('scope', 'implementation')
+
+                def dependencyNode3 = dependenciesNode.appendNode('dependency')
+                dependencyNode3.appendNode('groupId', 'com.google.vr')
+                dependencyNode3.appendNode('artifactId', 'sdk-audio')
+                dependencyNode3.appendNode('version', '1.180.0')
+                dependencyNode3.appendNode('scope', 'implementation')
+            }
+        }
+    }
+}
+
 sourceSets {
     main {
         java {
@@ -60,10 +114,6 @@ sourceSets {
     }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
-}
 
 // Does not work because of Processing-specific tags in source code, such as @webref
 task javadocJar(type: Jar, dependsOn: javadoc) {
@@ -73,7 +123,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 artifacts {
 //     archives javadocJar
-    archives sourcesJar
+    archives sourceJar
 }
 
 jar.doLast { task ->
@@ -100,6 +150,18 @@ compileJava.doFirst {
 
 
 build.doLast {
+    // If xml doesn't exist
+    def pomfile = file("${buildDir}/publications/corePublication/pom-default.xml")
+    if (!pomfile.exists()) {
+        println("************************************************************************************************\n" +
+                "*                                                                                              *\n" +
+                "*   File not found: root/mode/libraries/vr/build/publications/corePublication/pom-default.xml  *\n" +
+                "*   First execute the following command to generate the file:                                  *\n" +
+                "*   gradle generatePomFileForvrPublicationPublication                                          *\n" +
+                "*                                                                                              *\n" +
+                "************************************************************************************************"
+        )
+    }
     // // Copying vr jar to library folder
     File vrJar = file("library/vr.jar")
     vrJar.mkdirs();
@@ -115,4 +177,6 @@ build.doLast {
                file("dist/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/vr.jar.MD5").toPath(),
                file("dist/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    Files.copy(file("$buildDir/publications/corePublication/pom-default.xml").toPath(),
+            file("dist/processing-vr-${vrLibVersion}.pom").toPath(), REPLACE_EXISTING);
 }
