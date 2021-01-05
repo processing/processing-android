@@ -1,46 +1,64 @@
+import org.apache.tools.ant.Project
 import java.nio.file.Files
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'aar'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 dependencies {
     implementation name: "android"
-
     implementationAar "androidx.legacy:legacy-support-v4:${v4legacyVersion}"
-    implementationAar "com.google.android.support:wearable:${wearVersion}"  
+    implementationAar "com.google.android.support:wearable:${wearVersion}"
 }
 
-task createPom {
-    pom {
-       project {
-           groupId "org.p5android"
-           artifactId "processing-core"
-           version "${modeVersion}"
-           packaging "jar"
-           licenses {
-               license {
-                   name "GNU Lesser General Public License, version 2.1"
-                   url "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
-                   distribution "repo"
-               }
-           }
-           dependencies {
-               dependency {
-                   groupId "androidx.legacy"
-                   artifactId "legacy-support-v4"
-                   version "${v4legacyVersion}"
-                   scope "implementation"
-               }
-               dependency {
-                   groupId "com.google.android.support"
-                   artifactId "wearable"
-                   version "${wearVersion}"
-                   scope "implementation"
-               }               
-           }
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+publishing {
+    publications {
+        corePublication(MavenPublication) {
+            from components.java
+            artifact sourceJar
+            pom {
+                groupId = "org.p5android"
+                artifactId = "processing-core"
+                version = "${modeVersion}"
+                packaging = "jar"
+                // description = "Processing Android Core"
+                // url = "http://www.example.com/project"
+                licenses {
+                    license {
+                        name = "GNU Lesser General Public License, version 2.1"
+                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
+                        distribution = "repo"
+                    }
+                }
+            }
+            pom.withXml {   // Only one dependency is added under dependancies node
+                asNode().remove(asNode().get("dependencies")) //removing dependencies node
+                // inserting the dependencies node
+                def dependenciesNode = asNode().appendNode('dependencies')
+                // start adding dependency nodes inside dependencies node
+                def dependencyNode = dependenciesNode.appendNode('dependency')
+                dependencyNode.appendNode('groupId', 'androidx.legacy')
+                dependencyNode.appendNode('artifactId', 'legacy-support-v4')
+                dependencyNode.appendNode('version', '1.0.0')
+                dependencyNode.appendNode('scope', 'implementation')
+
+                def dependencyNode2 = dependenciesNode.appendNode('dependency')
+                dependencyNode2.appendNode('groupId', 'com.google.android.support')
+                dependencyNode2.appendNode('artifactId', 'wearable')
+                dependencyNode2.appendNode('version', '2.8.1')
+                dependencyNode2.appendNode('scope', 'implementation')
+
+                def dependencyNode3 = dependenciesNode.appendNode('dependency')
+                dependencyNode3.appendNode('artifactId', 'android')
+                dependencyNode3.appendNode('scope', 'runtime')
+            }
         }
-    }.writeTo("dist/processing-core-${modeVersion}.pom")
+    }
 }
 
 sourceSets {
@@ -80,25 +98,38 @@ clean.doFirst {
 }
 
 compileJava.doFirst {
-    String[] deps = ["wearable.jar"]                    
+    String[] deps = ["wearable.jar"]
     for (String fn : deps) {
         Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
-                   file("${rootDir}/mode/mode/" + fn).toPath(), REPLACE_EXISTING)
+                file("${rootDir}/mode/mode/" + fn).toPath(), REPLACE_EXISTING)
     }
 }
 
 build.doLast {
-    // Copying core jar as zip inside the mode folder
+    // If xml doesn't exist
+    def pomfile = file("${buildDir}/publications/corePublication/pom-default.xml")
+    if (!pomfile.exists()) {
+        println("***************************************************************************************\n" +
+                "*                                                                                     *\n" +
+                "*   File not found: root/core/build/publications/corePublication/pom-default.xml      *\n" +
+                "*   First execute the following command to generate the file:                         *\n" +
+                "*   gradle generatePomFileForcorePublicationPublication                               *\n" +
+                "*                                                                                     *\n" +
+                "***************************************************************************************"
+        )
+    }
+    // // Copying core jar as zip inside the mode folder
     Files.copy(file("${buildDir}/libs/core.jar").toPath(),
-               file("${coreZipPath}").toPath(), REPLACE_EXISTING)
-
-    // Copying the files for release on JCentral
+            file("${coreZipPath}").toPath(), REPLACE_EXISTING)
+    // // Copying the files for release on JCentral
     File distFolder = file("dist")
     distFolder.mkdirs()
     Files.copy(file("${buildDir}/libs/core.jar").toPath(),
-               file("dist/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING)
+            file("dist/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING)
     Files.copy(file("${buildDir}/libs/core-sources.jar").toPath(),
-               file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING)
+            file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING)
     Files.copy(file("${buildDir}/libs/core.jar.MD5").toPath(),
-               file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
+            file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
+    Files.copy(file("${buildDir}/publications/corePublication/pom-default.xml").toPath(),
+           file("dist/processing-core-${modeVersion}.pom").toPath(), REPLACE_EXISTING)
 }
