@@ -43,13 +43,13 @@ publishing {
                 def dependencyNode = dependenciesNode.appendNode('dependency')
                 dependencyNode.appendNode('groupId', 'org.p5android')
                 dependencyNode.appendNode('artifactId', 'processing-core')
-                dependencyNode.appendNode('version', '4.2.0')
+                dependencyNode.appendNode('version', "${modeVersion}")
                 dependencyNode.appendNode('scope', 'implementation')
 
                 def dependencyNode2 = dependenciesNode.appendNode('dependency')
                 dependencyNode2.appendNode('groupId', 'com.google.ar')
                 dependencyNode2.appendNode('artifactId', 'core')
-                dependencyNode2.appendNode('version', '1.22.0')
+                dependencyNode2.appendNode('version', "${garVersion}")
                 dependencyNode2.appendNode('scope', 'implementation')
             }
 
