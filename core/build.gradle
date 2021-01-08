@@ -11,16 +11,27 @@ dependencies {
     implementationAar "com.google.android.support:wearable:${wearVersion}"
 }
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    archiveClassifier = "sources"
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/"]
+        }
+        resources {
+            srcDirs = ["src/"]
+        }
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = "sources"
+    from sourceSets.main.allSource
 }
 
 publishing {
     publications {
         corePublication(MavenPublication) {
             from components.java
-            artifact sourceJar
+            artifact sourcesJar
             pom {
                 groupId = "org.p5android"
                 artifactId = "processing-core"
@@ -59,22 +70,6 @@ publishing {
             }
         }
     }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ["src/"]
-        }
-        resources {
-            srcDirs = ["src/"]
-        }
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
 }
 
 // Does not work because of Processing-specific tags in source code, such as @webref
