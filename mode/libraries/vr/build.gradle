@@ -13,49 +13,6 @@ dependencies {
     implementationAar "com.google.vr:sdk-base:${gvrVersion}" 
 }
 
-/*
-task createPom {
-    pom {
-       project {
-           groupId "org.p5android"
-           artifactId "processing-vr"
-           version "${vrLibVersion}"
-           packaging "jar"
-           licenses {
-               license {
-                   name "GNU Lesser General Public License, version 2.1"
-                   url "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
-                   distribution "repo"
-               }
-           }
-           dependencies {
-               dependency {
-                   groupId "org.p5android"
-                   artifactId "processing-core"
-                   version "${modeVersion}"
-                   scope "implementation"
-               }
-
-               dependency {
-                   groupId "com.google.vr"
-                   artifactId "sdk-base"
-                   version "${gvrVersion}"
-                   scope "implementation"
-               }
-               dependency {
-                   groupId "com.google.vr"
-                   artifactId "sdk-audio"
-                   version "${gvrVersion}"
-                   scope "implementation"
-               }               
-           }
-        }
-    }.writeTo("dist/processing-vr-${vrLibVersion}.pom")
-}
-
-
- */
-
 task sourceJar(type: Jar, dependsOn: classes) {
     classifier = "sources"
     from sourceSets.main.allSource
@@ -151,7 +108,7 @@ compileJava.doFirst {
 
 build.doLast {
     // If xml doesn't exist
-    def pomfile = file("${buildDir}/publications/corePublication/pom-default.xml")
+    def pomfile = file("${buildDir}/publications/vrPublication/pom-default.xml")
     if (!pomfile.exists()) {
         println("************************************************************************************************\n" +
                 "*                                                                                              *\n" +
