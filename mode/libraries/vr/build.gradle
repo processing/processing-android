@@ -44,19 +44,19 @@ publishing {
                 def dependencyNode = dependenciesNode.appendNode('dependency')
                 dependencyNode.appendNode('groupId', 'org.p5android')
                 dependencyNode.appendNode('artifactId', 'processing-core')
-                dependencyNode.appendNode('version', '4.2.0')
+                dependencyNode.appendNode('version', "${modeVersion}")
                 dependencyNode.appendNode('scope', 'implementation')
 
                 def dependencyNode2 = dependenciesNode.appendNode('dependency')
                 dependencyNode2.appendNode('groupId', 'com.google.vr')
                 dependencyNode2.appendNode('artifactId', 'sdk-base')
-                dependencyNode2.appendNode('version', '1.180.0')
+                dependencyNode2.appendNode('version', "${gvrVersion}")
                 dependencyNode2.appendNode('scope', 'implementation')
 
                 def dependencyNode3 = dependenciesNode.appendNode('dependency')
                 dependencyNode3.appendNode('groupId', 'com.google.vr')
                 dependencyNode3.appendNode('artifactId', 'sdk-audio')
-                dependencyNode3.appendNode('version', '1.180.0')
+                dependencyNode3.appendNode('version', "${gvrVersion}")
                 dependencyNode3.appendNode('scope', 'implementation')
             }
         }
