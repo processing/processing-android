@@ -1,5 +1,5 @@
 import java.nio.file.Files
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 apply plugin: 'aar'
 apply plugin: 'maven-publish'
@@ -177,6 +177,6 @@ build.doLast {
                file("dist/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/vr.jar.MD5").toPath(),
                file("dist/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
-    Files.copy(file("$buildDir/publications/corePublication/pom-default.xml").toPath(),
+    Files.copy(file("$buildDir/publications/vrPublication/pom-default.xml").toPath(),
             file("dist/processing-vr-${vrLibVersion}.pom").toPath(), REPLACE_EXISTING);
 }
