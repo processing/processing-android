@@ -41,23 +41,23 @@ publishing {
                 // inserting the dependencies node
                 def dependenciesNode = asNode().appendNode('dependencies')
                 // start adding dependency nodes inside dependencies node
-                def dependencyNode = dependenciesNode.appendNode('dependency')
-                dependencyNode.appendNode('groupId', 'org.p5android')
-                dependencyNode.appendNode('artifactId', 'processing-core')
-                dependencyNode.appendNode('version', "${modeVersion}")
-                dependencyNode.appendNode('scope', 'implementation')
+                def processingCoreDependencyNode = dependenciesNode.appendNode('dependency')
+                processingCoreDependencyNode.appendNode('groupId', 'org.p5android')
+                processingCoreDependencyNode.appendNode('artifactId', 'processing-core')
+                processingCoreDependencyNode.appendNode('version', "${modeVersion}")
+                processingCoreDependencyNode.appendNode('scope', 'implementation')
 
-                def dependencyNode2 = dependenciesNode.appendNode('dependency')
-                dependencyNode2.appendNode('groupId', 'com.google.vr')
-                dependencyNode2.appendNode('artifactId', 'sdk-base')
-                dependencyNode2.appendNode('version', "${gvrVersion}")
-                dependencyNode2.appendNode('scope', 'implementation')
+                def googleVRDependencyNode = dependenciesNode.appendNode('dependency')
+                googleVRDependencyNode.appendNode('groupId', 'com.google.vr')
+                googleVRDependencyNode.appendNode('artifactId', 'sdk-base')
+                googleVRDependencyNode.appendNode('version', "${gvrVersion}")
+                googleVRDependencyNode.appendNode('scope', 'implementation')
 
-                def dependencyNode3 = dependenciesNode.appendNode('dependency')
-                dependencyNode3.appendNode('groupId', 'com.google.vr')
-                dependencyNode3.appendNode('artifactId', 'sdk-audio')
-                dependencyNode3.appendNode('version', "${gvrVersion}")
-                dependencyNode3.appendNode('scope', 'implementation')
+                def googleVRAudioDependencyNode = dependenciesNode.appendNode('dependency')
+                googleVRAudioDependencyNode.appendNode('groupId', 'com.google.vr')
+                googleVRAudioDependencyNode.appendNode('artifactId', 'sdk-audio')
+                googleVRAudioDependencyNode.appendNode('version', "${gvrVersion}")
+                googleVRAudioDependencyNode.appendNode('scope', 'implementation')
             }
         }
     }
