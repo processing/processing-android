@@ -40,20 +40,18 @@ publishing {
                 // inserting the dependencies node
                 def dependenciesNode = asNode().appendNode('dependencies')
                 // start adding dependency nodes inside dependencies node
-                def dependencyNode = dependenciesNode.appendNode('dependency')
-                dependencyNode.appendNode('groupId', 'org.p5android')
-                dependencyNode.appendNode('artifactId', 'processing-core')
-                dependencyNode.appendNode('version', "${modeVersion}")
-                dependencyNode.appendNode('scope', 'implementation')
+                def processingCoreDependencyNode = dependenciesNode.appendNode('dependency')
+                processingCoreDependencyNode.appendNode('groupId', 'org.p5android')
+                processingCoreDependencyNode.appendNode('artifactId', 'processing-core')
+                processingCoreDependencyNode.appendNode('version', "${modeVersion}")
+                processingCoreDependencyNode.appendNode('scope', 'implementation')
 
-                def dependencyNode2 = dependenciesNode.appendNode('dependency')
-                dependencyNode2.appendNode('groupId', 'com.google.ar')
-                dependencyNode2.appendNode('artifactId', 'core')
-                dependencyNode2.appendNode('version', "${garVersion}")
-                dependencyNode2.appendNode('scope', 'implementation')
+                def googleARDependencyNode = dependenciesNode.appendNode('dependency')
+                googleARDependencyNode.appendNode('groupId', 'com.google.ar')
+                googleARDependencyNode.appendNode('artifactId', 'core')
+                googleARDependencyNode.appendNode('version', "${garVersion}")
+                googleARDependencyNode.appendNode('scope', 'implementation')
             }
-
-
         }
     }
 }
