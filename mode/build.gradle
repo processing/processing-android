@@ -65,7 +65,6 @@ wrapper.doLast {
   file("gradle").renameTo(file("mode/gradlew/gradle"))
   file("gradlew").renameTo(file("mode/gradlew/gradlew"))
   file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
-  ZipUtil.pack(file("mode/gradlew"), new File("mode/gradlew.zip"));
   delete "mode/gradlew"
 }
 
