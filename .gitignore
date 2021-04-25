@@ -15,8 +15,6 @@ mode/tools/SDKUpdater/lib
 
 debug/.gradle
 debug/.idea
-debug/gradle
-debug/gradlew*
 
 **/examples/**/AndroidManifest.xml
 

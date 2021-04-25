@@ -1,5 +1,6 @@
 import java.nio.file.Files
 import org.zeroturnaround.zip.ZipUtil
+import org.apache.commons.io.FileUtils
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 
@@ -58,7 +59,7 @@ task permissions(type:Exec) {
 } 
 
 task wrapper(type: Wrapper) {
-   gradleVersion = "${gradlewVersion}" //version required for gradle wrapper
+   gradleVersion = "${gradlewVersion}" // version required for gradle wrapper
 }
 wrapper.doLast {
   File wrapperFolder = file("mode/gradlew");
@@ -66,7 +67,11 @@ wrapper.doLast {
   file("gradle").renameTo(file("mode/gradlew/gradle"))
   file("gradlew").renameTo(file("mode/gradlew/gradlew"))
   file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
+  FileUtils.copyDirectory(file("gradle"), file("../debug/gradle"))
+  delete "gradle"
+  ZipUtil.pack(file("mode/gradlew"), new File("mode/mode/gradlew.zip"));    
   delete "mode/gradlew"
+    
 }
 
 clean.doFirst {
