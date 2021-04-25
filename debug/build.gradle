@@ -3,7 +3,7 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.1'
@@ -15,15 +15,14 @@ buildscript {
 
 allprojects {
     repositories {
-        // There is a problem in JCenter with some Android packages, using the following maven repo
-        // fixes the issue:
-        // https://stackoverflow.com/questions/50563338/could-not-find-runtime-jar-android-arch-lifecycleruntime1-0-0/50564224
+        // This was was added to address an issue in JCenter with some Android packages (https://stackoverflow.com/questions/50563338/could-not-find-runtime-jar-android-arch-lifecycleruntime1-0-0/50564224).
+        // JCenter is no longer used but keep it just in case.
         maven { url "https://maven.google.com" }
 
         // Apparently needed by AndroidX dependencies
         maven { url "https://jitpack.io" }
 
-        jcenter()
+        mavenCentral()
         google()
     }
 }
