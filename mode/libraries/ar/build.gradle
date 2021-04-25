@@ -2,47 +2,58 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 apply plugin: 'aar'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 dependencies {
     compileOnly name: "android"
-
     compileOnly "org.p5android:processing-core:${modeVersion}"
-
     implementationAar "com.google.ar:core:${garVersion}"
 }
 
-task createPom {
-    pom {
-       project {
-           groupId "org.p5android"
-           artifactId "processing-ar"
-           version "${arLibVersion}"
-           packaging "jar"
-           licenses {
-               license {
-                   name "GNU Lesser General Public License, version 2.1"
-                   url "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
-                   distribution "repo"
-               }
-           }
-           dependencies {
-               dependency {
-                   groupId "org.p5android"
-                   artifactId "processing-core"
-                   version "${modeVersion}"
-                   scope "implementation"
-               }
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
 
-               dependency {
-                   groupId "com.google.ar"
-                   artifactId "core"
-                   version "${garVersion}"
-                   scope "implementation"
-               }            
-           }
+publishing {
+    publications {
+        arPublication(MavenPublication) {
+            from components.java
+            artifact sourceJar
+            pom {
+                groupId = "org.p5android"
+                artifactId = "processing-ar"
+                version = "${arLibVersion}"
+                packaging = "jar"
+                // description = "Processing Android Core"
+                // url = "http://www.example.com/project"
+                licenses {
+                    license {
+                        name = "GNU Lesser General Public License, version 2.1"
+                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
+                        distribution = "repo"
+                    }
+                }
+            }
+
+            pom.withXml {
+                // inserting the dependencies node
+                def dependenciesNode = asNode().appendNode('dependencies')
+                // start adding dependency nodes inside dependencies node
+                def processingCoreDependencyNode = dependenciesNode.appendNode('dependency')
+                processingCoreDependencyNode.appendNode('groupId', 'org.p5android')
+                processingCoreDependencyNode.appendNode('artifactId', 'processing-core')
+                processingCoreDependencyNode.appendNode('version', "${modeVersion}")
+                processingCoreDependencyNode.appendNode('scope', 'implementation')
+
+                def googleARDependencyNode = dependenciesNode.appendNode('dependency')
+                googleARDependencyNode.appendNode('groupId', 'com.google.ar')
+                googleARDependencyNode.appendNode('artifactId', 'core')
+                googleARDependencyNode.appendNode('version', "${garVersion}")
+                googleARDependencyNode.appendNode('scope', 'implementation')
+            }
         }
-    }.writeTo("dist/processing-ar-${arLibVersion}.pom")
+    }
 }
 
 sourceSets {
@@ -56,11 +67,6 @@ sourceSets {
     }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
-}
-
 // Does not work because of Processing-specific tags in source code, such as @webref
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = "javadoc"
@@ -69,7 +75,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 artifacts {
 //     archives javadocJar
-    archives sourcesJar
+    archives sourceJar
 }
 
 jar.doLast { task ->
@@ -92,13 +98,24 @@ compileJava.doFirst {
 }
 
 build.doLast {
+    // If xml doesn't exist
+    def pomfile = file("${buildDir}/publications/arPublication/pom-default.xml")
+    if (!pomfile.exists()) {
+        println("**********************************************************************************************\n" +
+                "*                                                                                            *\n" +
+                "*   File not found: root/mode/libraries/ar/build/publications/arPublication/pom-default.xml  *\n" +
+                "*   First execute the following command to generate the file:                                *\n" +
+                "*   gradle generatePomFileForarPublicationPublication                                        *\n" +
+                "*                                                                                            *\n" +
+                "**********************************************************************************************"
+        )
+    }
     // Copying ar jar to library folder
     File arJar = file("library/ar.jar")
     arJar.mkdirs();
     Files.copy(file("$buildDir/libs/ar.jar").toPath(),
-               arJar.toPath(), REPLACE_EXISTING);   
-
-    // // Copying the files for release on JCentral
+               arJar.toPath(), REPLACE_EXISTING);
+    // Copying the files for release on JCentral
     File distFolder = file("dist");
     distFolder.mkdirs();
     Files.copy(file("$buildDir/libs/ar.jar").toPath(),
@@ -107,4 +124,6 @@ build.doLast {
                file("dist/processing-ar-${arLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/ar.jar.MD5").toPath(),
                file("dist/processing-ar-${arLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    Files.copy(file("${buildDir}/publications/arPublication/pom-default.xml").toPath(),
+            file("dist/processing-ar-${arLibVersion}.pom").toPath(), REPLACE_EXISTING)
 }
