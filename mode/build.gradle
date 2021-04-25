@@ -30,6 +30,7 @@ task copyToLib(type: Copy) {
   into "mode"
 }
 build.dependsOn(copyToLib)
+compileJava.dependsOn(copyToLib)
 
 sourceSets {
     main {

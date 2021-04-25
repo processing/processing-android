@@ -1,2 +1,2 @@
-include ':core', ':mode', ':mode:libraries:vr', ':mode:libraries:ar', 'mode:tools:SDKUpdater'
+include ':mode', ':core', ':mode:libraries:vr', ':mode:libraries:ar', 'mode:tools:SDKUpdater'
 
