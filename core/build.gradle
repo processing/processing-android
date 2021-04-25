@@ -23,6 +23,7 @@ sourceSets {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     classifier = "sources"
     from sourceSets.main.allSource
 }
