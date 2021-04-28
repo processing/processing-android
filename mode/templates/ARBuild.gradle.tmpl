@@ -1,10 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
+    sourceSets {
+       main.jni.srcDirs = []
+       main.jniLibs.srcDirs = ['libs']
+    }
     compileSdkVersion @@target_sdk@@
     defaultConfig {
         applicationId "@@target_sdk@@"
-        // 24 is the minimum since ARCore only works with 24 and higher.
         minSdkVersion @@min_sdk@@
         targetSdkVersion @@target_sdk@@
         versionCode @@version_code@@
