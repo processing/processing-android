@@ -1,8 +1,10 @@
 import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
-apply plugin: 'aar'
-apply plugin: 'maven-publish'
+plugins {
+    id 'aar'
+    id 'maven-publish'
+}
 
 dependencies {
     compileOnly name: "android"

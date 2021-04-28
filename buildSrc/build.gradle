@@ -1,4 +1,7 @@
-apply plugin: 'groovy'
+// apply plugin: 'groovy'
+plugins {
+    id 'groovy'
+}
 
 repositories {
     google()
