@@ -5702,13 +5702,16 @@ public class PGraphics extends PImage implements PConstants {
 
   static float[] lerpColorHSB1;
   static float[] lerpColorHSB2;
-  static float[] lerpColorHSB3;
+  static float[] lerpColorHSB3;  
 
   /**
    * Interpolate between two colors. Like lerp(), but for the
    * individual color components of a color supplied as an int value.
    */
   static public int lerpColor(int c1, int c2, float amt, int mode) {
+    if (amt < 0) amt = 0;
+    if (amt > 1) amt = 1;
+
     if (mode == RGB) {
       float a1 = ((c1 >> 24) & 0xff);
       float r1 = (c1 >> 16) & 0xff;
@@ -5719,10 +5722,10 @@ public class PGraphics extends PImage implements PConstants {
       float g2 = (c2 >> 8) & 0xff;
       float b2 = c2 & 0xff;
 
-      return (((int) (a1 + (a2-a1)*amt) << 24) |
-              ((int) (r1 + (r2-r1)*amt) << 16) |
-              ((int) (g1 + (g2-g1)*amt) << 8) |
-              ((int) (b1 + (b2-b1)*amt)));
+      return ((PApplet.round(a1 + (a2-a1)*amt) << 24) |
+              (PApplet.round(r1 + (r2-r1)*amt) << 16) |
+              (PApplet.round(g1 + (g2-g1)*amt) << 8) |
+              (PApplet.round(b1 + (b2-b1)*amt)));
 
     } else if (mode == HSB) {
       if (lerpColorHSB1 == null) {
@@ -5733,7 +5736,7 @@ public class PGraphics extends PImage implements PConstants {
 
       float a1 = (c1 >> 24) & 0xff;
       float a2 = (c2 >> 24) & 0xff;
-      int alfa = ((int) (a1 + (a2-a1)*amt)) << 24;
+      int alfa = (PApplet.round(a1 + (a2-a1)*amt)) << 24;
 
       Color.RGBToHSV((c1 >> 16) & 0xff, (c1 >> 8) & 0xff, c1 & 0xff,
                      lerpColorHSB1);
@@ -5765,21 +5768,19 @@ public class PGraphics extends PImage implements PConstants {
       }
       float ho = (PApplet.lerp(lerpColorHSB1[0], lerpColorHSB2[0], amt)) % 1.0f;
       */
+      // float ho = PApplet.lerp(lerpColorHSB1[0], lerpColorHSB2[0], amt);
+      // float so = PApplet.lerp(lerpColorHSB1[1], lerpColorHSB2[1], amt);
+      // float bo = PApplet.lerp(lerpColorHSB1[2], lerpColorHSB2[2], amt);
 
-//      float ho = PActivity.lerp(lerpColorHSB1[0], lerpColorHSB2[0], amt);
-//      float so = PActivity.lerp(lerpColorHSB1[1], lerpColorHSB2[1], amt);
-//      float bo = PActivity.lerp(lerpColorHSB1[2], lerpColorHSB2[2], amt);
-//    return alfa | (Color.HSVtoRGB(ho, so, bo) & 0xFFFFFF);
-//    return Color.HSVToColor(alfa, new float[] { ho, so, bo });
+      // return alfa | (Color.RGBToHSV(ho, so, bo) & 0xFFFFFF);
 
       lerpColorHSB3[0] = PApplet.lerp(lerpColorHSB1[0], lerpColorHSB2[0], amt);
       lerpColorHSB3[1] = PApplet.lerp(lerpColorHSB1[1], lerpColorHSB2[1], amt);
       lerpColorHSB3[2] = PApplet.lerp(lerpColorHSB1[2], lerpColorHSB2[2], amt);
-      return Color.HSVToColor(alfa, lerpColorHSB3);
+      return Color.HSVToColor(alfa, lerpColorHSB3);      
     }
     return 0;
   }
-
 
 
   //////////////////////////////////////////////////////////////

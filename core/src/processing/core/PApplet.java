@@ -7471,10 +7471,18 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   }
 
 
+  public int lerpColor(int c1, int c2, float amt) {
+    if (g != null) {
+      return g.lerpColor(c1, c2, amt);
+    }
+    // use the default mode (RGB) if lerpColor is called before setup()
+    return PGraphics.lerpColor(c1, c2, amt, RGB);
+  }
+
+
   static public int blendColor(int c1, int c2, int mode) {
     return PImage.blendColor(c1, c2, mode);
   }
-
 
 
   //////////////////////////////////////////////////////////////
