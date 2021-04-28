@@ -792,9 +792,12 @@ class AndroidBuild extends JavaBuild {
           System.err.println(AndroidMode.getTextString("android_build.error.export_file_does_not_exist", exportFile.getName()));
         } else if (exportFile.isDirectory()) {
           // Copy native library folders to the correct location
-          if (exportName.equals("armeabi") ||
+          if (exportName.equals("armeabi")     ||
               exportName.equals("armeabi-v7a") ||
-              exportName.equals("x86")) {
+              exportName.equals("x86")         ||
+              exportName.equals("arm64-v8a")   ||
+              exportName.equals("x86_64")) 
+          {
             Util.copyDir(exportFile, new File(libsFolder, exportName));
           }
           // Copy jni libraries (.so files) to the correct location
