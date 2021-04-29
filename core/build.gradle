@@ -4,7 +4,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 plugins {
     id 'aar'
-    id 'maven-publish'    
 }
 
 dependencies {
@@ -24,55 +23,10 @@ sourceSets {
     }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+task sourceJar(type: Jar, dependsOn: classes) {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     classifier = "sources"
     from sourceSets.main.allSource
-}
-
-publishing {
-    publications {
-        corePublication(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            pom {
-                groupId = "org.p5android"
-                artifactId = "processing-core"
-                version = "${modeVersion}"
-                packaging = "jar"
-                // description = "Processing Android Core"
-                // url = "http://www.example.com/project"
-                licenses {
-                    license {
-                        name = "GNU Lesser General Public License, version 2.1"
-                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
-                        distribution = "repo"
-                    }
-                }
-            }
-            pom.withXml {   // Only one dependency is added under dependancies node
-                asNode().remove(asNode().get("dependencies")) // removing dependencies node
-                // inserting the dependencies node
-                def dependenciesNode = asNode().appendNode('dependencies')
-                // start adding dependency nodes inside dependencies node
-                def androidLegacyDependancyNode = dependenciesNode.appendNode('dependency')
-                androidLegacyDependancyNode.appendNode('groupId', 'androidx.legacy')
-                androidLegacyDependancyNode.appendNode('artifactId', 'legacy-support-v4')
-                androidLegacyDependancyNode.appendNode('version', "${v4legacyVersion}")
-                androidLegacyDependancyNode.appendNode('scope', 'implementation')
-
-                def wearableDependencyNode = dependenciesNode.appendNode('dependency')
-                wearableDependencyNode.appendNode('groupId', 'com.google.android.support')
-                wearableDependencyNode.appendNode('artifactId', 'wearable')
-                wearableDependencyNode.appendNode('version', "${wearVersion}")
-                wearableDependencyNode.appendNode('scope', 'implementation')
-
-                def androidRuntimeDependencyNode = dependenciesNode.appendNode('dependency')
-                androidRuntimeDependencyNode.appendNode('artifactId', 'android')
-                androidRuntimeDependencyNode.appendNode('scope', 'runtime')
-            }
-        }
-    }
 }
 
 // Does not work because of Processing-specific tags in source code, such as @webref
@@ -83,7 +37,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 artifacts {
 //     archives javadocJar
-    archives sourcesJar
+    archives sourceJar
 }
 
 jar.doLast { task ->
@@ -104,30 +58,26 @@ compileJava.doFirst {
 }
 
 build.doLast {
-    // If xml doesn't exist
-    def pomfile = file("${buildDir}/publications/corePublication/pom-default.xml")
-    if (!pomfile.exists()) {
-        println("***************************************************************************************\n" +
-                "*                                                                                     *\n" +
-                "*   File not found: root/core/build/publications/corePublication/pom-default.xml      *\n" +
-                "*   First execute the following command to generate the file:                         *\n" +
-                "*   gradle generatePomFileForcorePublicationPublication                               *\n" +
-                "*                                                                                     *\n" +
-                "***************************************************************************************"
-        )
-    }
-    // // Copying core jar as zip inside the mode folder
+    // Copying core jar as zip inside the mode folder
     Files.copy(file("${buildDir}/libs/core.jar").toPath(),
             file("${coreZipPath}").toPath(), REPLACE_EXISTING)
-    // // Copying the files for release on JCentral
-    File distFolder = file("dist")
-    distFolder.mkdirs()
+    // Renaming artifacts for maven publishing
     Files.copy(file("${buildDir}/libs/core.jar").toPath(),
-            file("dist/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING)
+               file("$buildDir/libs/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("${buildDir}/libs/core-sources.jar").toPath(),
-            file("dist/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING)
+               file("$buildDir/libs/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("${buildDir}/libs/core.jar.MD5").toPath(),
-            file("dist/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
-    Files.copy(file("${buildDir}/publications/corePublication/pom-default.xml").toPath(),
-           file("dist/processing-core-${modeVersion}.pom").toPath(), REPLACE_EXISTING)
+               file("$buildDir/libs/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
 }
+
+ext {
+    libName = 'processing-core'
+    libVersion = modeVersion
+    libJar = "${buildDir}/libs/${libName}-${libVersion}.jar"
+    libSrc = "${buildDir}/libs/${libName}-${libVersion}-sources.jar"
+    libMd5 = "${buildDir}/libs/${libName}-${libVersion}-sources.jar.md5"
+    libDependencies = [[name: 'legacy-support-v4', group: 'androidx.legacy', version: v4legacyVersion],
+                       [name: 'wearable', group: 'com.google.android.support', version: wearVersion],
+                       [name: 'android']]
+}
+apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"

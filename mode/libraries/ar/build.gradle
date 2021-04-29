@@ -2,8 +2,7 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 plugins {
-    id 'aar'
-    id 'maven-publish'    
+    id 'aar'    
 }
 
 dependencies {
@@ -15,47 +14,6 @@ dependencies {
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
     archiveClassifier = "sources"
-}
-
-publishing {
-    publications {
-        arPublication(MavenPublication) {
-            from components.java
-            artifact sourceJar
-            pom {
-                groupId = "org.p5android"
-                artifactId = "processing-ar"
-                version = "${arLibVersion}"
-                packaging = "jar"
-                // description = "Processing Android Core"
-                // url = "http://www.example.com/project"
-                licenses {
-                    license {
-                        name = "GNU Lesser General Public License, version 2.1"
-                        url = "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt"
-                        distribution = "repo"
-                    }
-                }
-            }
-
-            pom.withXml {
-                // inserting the dependencies node
-                def dependenciesNode = asNode().appendNode('dependencies')
-                // start adding dependency nodes inside dependencies node
-                def processingCoreDependencyNode = dependenciesNode.appendNode('dependency')
-                processingCoreDependencyNode.appendNode('groupId', 'org.p5android')
-                processingCoreDependencyNode.appendNode('artifactId', 'processing-core')
-                processingCoreDependencyNode.appendNode('version', "${modeVersion}")
-                processingCoreDependencyNode.appendNode('scope', 'implementation')
-
-                def googleARDependencyNode = dependenciesNode.appendNode('dependency')
-                googleARDependencyNode.appendNode('groupId', 'com.google.ar')
-                googleARDependencyNode.appendNode('artifactId', 'core')
-                googleARDependencyNode.appendNode('version', "${garVersion}")
-                googleARDependencyNode.appendNode('scope', 'implementation')
-            }
-        }
-    }
 }
 
 sourceSets {
@@ -100,32 +58,27 @@ compileJava.doFirst {
 }
 
 build.doLast {
-    // If xml doesn't exist
-    def pomfile = file("${buildDir}/publications/arPublication/pom-default.xml")
-    if (!pomfile.exists()) {
-        println("**********************************************************************************************\n" +
-                "*                                                                                            *\n" +
-                "*   File not found: root/mode/libraries/ar/build/publications/arPublication/pom-default.xml  *\n" +
-                "*   First execute the following command to generate the file:                                *\n" +
-                "*   gradle generatePomFileForarPublicationPublication                                        *\n" +
-                "*                                                                                            *\n" +
-                "**********************************************************************************************"
-        )
-    }
     // Copying ar jar to library folder
     File arJar = file("library/ar.jar")
     arJar.mkdirs();
     Files.copy(file("$buildDir/libs/ar.jar").toPath(),
                arJar.toPath(), REPLACE_EXISTING);
-    // Copying the files for release on JCentral
-    File distFolder = file("dist");
-    distFolder.mkdirs();
+    // Renaming artifacts for maven publishing
     Files.copy(file("$buildDir/libs/ar.jar").toPath(),
-               file("dist/processing-ar-${arLibVersion}.jar").toPath(), REPLACE_EXISTING);
+               file("$buildDir/libs/processing-ar-${arLibVersion}.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/ar-sources.jar").toPath(),
-               file("dist/processing-ar-${arLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+               file("$buildDir/libs/processing-ar-${arLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
     Files.copy(file("$buildDir/libs/ar.jar.MD5").toPath(),
-               file("dist/processing-ar-${arLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
-    Files.copy(file("${buildDir}/publications/arPublication/pom-default.xml").toPath(),
-            file("dist/processing-ar-${arLibVersion}.pom").toPath(), REPLACE_EXISTING)
+               file("$buildDir/libs/processing-ar-${arLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
 }
+
+ext {
+    libName = 'processing-ar'
+    libVersion = arLibVersion
+    libJar = "${buildDir}/libs/${libName}-${libVersion}.jar"
+    libSrc = "${buildDir}/libs/${libName}-${libVersion}-sources.jar"
+    libMd5 = "${buildDir}/libs/${libName}-${libVersion}-sources.jar.md5"
+    libDependencies = [[group: 'org.p5android', name: 'processing-core', version: modeVersion],
+                       [group: 'com.google.ar', name: 'core', version: garVersion]]
+}
+apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"

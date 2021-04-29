@@ -87,7 +87,7 @@ allprojects {
         maven { url "https://jitpack.io" }
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
         flatDir dirs: androidPlatformPath
-        flatDir dirs: "${rootDir}/core/dist"
+        flatDir dirs: "${rootDir}/core/build/libs"
     }
 
     compileJava {
