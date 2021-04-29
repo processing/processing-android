@@ -62,11 +62,11 @@ build.doLast {
     Files.copy(file("${buildDir}/libs/core.jar").toPath(),
             file("${coreZipPath}").toPath(), REPLACE_EXISTING)
     // Renaming artifacts for maven publishing
-    Files.copy(file("${buildDir}/libs/core.jar").toPath(),
+    Files.move(file("${buildDir}/libs/core.jar").toPath(),
                file("$buildDir/libs/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
-    Files.copy(file("${buildDir}/libs/core-sources.jar").toPath(),
+    Files.move(file("${buildDir}/libs/core-sources.jar").toPath(),
                file("$buildDir/libs/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    Files.copy(file("${buildDir}/libs/core.jar.MD5").toPath(),
+    Files.move(file("${buildDir}/libs/core.jar.MD5").toPath(),
                file("$buildDir/libs/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
 }
 

@@ -4,7 +4,7 @@ apply plugin: 'signing'
 afterEvaluate {
     publishing {
         publications {
-            arPublication(MavenPublication) {
+            release(MavenPublication) {
                 artifact(libJar)
                 artifact(libSrc)
                 artifact(libMd5)
