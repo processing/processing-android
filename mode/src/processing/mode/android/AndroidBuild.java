@@ -63,7 +63,7 @@ class AndroidBuild extends JavaBuild {
   // Versions of all required dependencies
   static public String TARGET_SDK;  
   static public String TARGET_PLATFORM;
-  static public String GRADLE_VER;
+  static public String GRADLE_PLUGIN_VER;
   static public String APPCOMPAT_VER;
   static public String V4LEGACY_VER;
   static public String PLAY_SERVICES_VER;
@@ -293,7 +293,7 @@ class AndroidBuild extends JavaBuild {
     
     File buildTemplate = mode.getContentFile("templates/" + TOP_GRADLE_BUILD_TEMPLATE);
     File buildlFile = new File(tmpFolder, "build.gradle");
-    replaceMap.put("@@gradle_version@@", GRADLE_VER);
+    replaceMap.put("@@gradle_plugin_version@@", GRADLE_PLUGIN_VER);
     AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);
 
     File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
@@ -913,11 +913,11 @@ class AndroidBuild extends JavaBuild {
       // Versions strings of all dependencies are stored in a preferences file so they can be changed by the 
       // user without having to rebuild/reinstall the mode.
 
-      GRADLE_VER = Preferences.get("android.gradle");
-      String defGradleVersion = props.getProperty("gradle");
-      if (GRADLE_VER == null || PApplet.parseInt(GRADLE_VER) != PApplet.parseInt(defGradleVersion)) {
-        GRADLE_VER = defGradleVersion;
-        Preferences.set("android.gradle", GRADLE_VER);
+      GRADLE_PLUGIN_VER = Preferences.get("android.gradle_plugin");
+      String defGradlePluginVersion = props.getProperty("android-gradle-plugin");
+      if (GRADLE_PLUGIN_VER == null || PApplet.parseInt(GRADLE_PLUGIN_VER) != PApplet.parseInt(defGradlePluginVersion)) {
+        GRADLE_PLUGIN_VER = defGradlePluginVersion;
+        Preferences.set("android.gradle_plugin", GRADLE_PLUGIN_VER);
       }
       
       TARGET_SDK = Preferences.get("android.sdk.target");

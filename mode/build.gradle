@@ -61,6 +61,7 @@ task permissions(type:Exec) {
 task wrapper(type: Wrapper) {
    gradleVersion = "${gradlewVersion}" // version required for gradle wrapper
 }
+
 wrapper.doLast {
   File wrapperFolder = file("mode/gradlew");
   wrapperFolder.mkdirs();
@@ -70,8 +71,7 @@ wrapper.doLast {
   FileUtils.copyDirectory(file("gradle"), file("../debug/gradle"))
   delete "gradle"
   ZipUtil.pack(file("mode/gradlew"), new File("mode/mode/gradlew.zip"));    
-  delete "mode/gradlew"
-    
+  delete "mode/gradlew"    
 }
 
 clean.doFirst {
