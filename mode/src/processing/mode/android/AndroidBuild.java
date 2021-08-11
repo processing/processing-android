@@ -261,7 +261,7 @@ class AndroidBuild extends JavaBuild {
     if (sketchClassName != null) {
 //      renderer = info.getSketchRenderer();
       renderer = "P2D";
-      writeMainClass(srcFolder, renderer, external);
+      writeMainClass(srcFolder, external);
       createTopModule("':" + module +"'");
       createAppModule(module);
     }
@@ -438,8 +438,7 @@ class AndroidBuild extends JavaBuild {
   // Templates
   
 
-  private void writeMainClass(final File srcDirectory, 
-      final String renderer, final boolean external) {
+  private void writeMainClass(final File srcDirectory, final boolean external) {
     int comp = getAppComponent();
     String[] permissions = manifest.getPermissions();
     if (comp == APP) {
