@@ -24,6 +24,7 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Mode;
+import processing.app.Language;
 import processing.app.Platform;
 import processing.app.Settings;
 import processing.app.SketchException;
@@ -33,6 +34,7 @@ import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.debug.Debugger;
 import processing.mode.java.debug.LineID;
 import processing.mode.java.preproc.PdePreprocessor;
 
@@ -61,6 +63,7 @@ public class AndroidEditor extends JavaEditor {
   
   private int appComponent;
 
+  protected JMenu debugMenu;
   private AndroidDebugger debugger;
   
   private Settings settings;
@@ -90,10 +93,10 @@ public class AndroidEditor extends JavaEditor {
     loadModeSettings();    
   }
 
-  @Override
-  public PdePreprocessor createPreprocessor(final String sketchName) {
-    return new AndroidPreprocessor(sketchName);  
-  }
+//  @Override
+//  public PdePreprocessor createPreprocessor(final String sketchName) {
+//    return new AndroidPreprocessor(sketchName);  
+//  }
 
 
   public EditorToolbar createToolbar() {
@@ -290,6 +293,12 @@ public class AndroidEditor extends JavaEditor {
     return androidMenu;
   }
 
+  private JMenu buildDebugMenu() {
+    debugMenu = new JMenu(Language.text("menu.debug"));
+    debugger.populateMenu(debugMenu);
+    return debugMenu;
+  }
+  
 
   private void setAppComponent(int comp) {
     if (appComponent != comp) {
@@ -428,25 +437,28 @@ public class AndroidEditor extends JavaEditor {
     return debugger;
   }
 
-  @Override protected void deactivateDebug() {
-    super.deactivateDebug();
-  }
+  
+//  @Override protected void deactivateDebug() {
+//    super.deactivateDebug();
+//  }
 
-  @Override protected void activateContinue() {
+  @Override public void activateContinue() {
     ((AndroidToolbar) toolbar).activateContinue();
   }
 
-  @Override protected void deactivateContinue() {
+  @Override public void deactivateContinue() {
     ((AndroidToolbar) toolbar).deactivateContinue();
   }
 
-  @Override protected void activateStep() {
+  @Override public void activateStep() {
     ((AndroidToolbar) toolbar).activateStep();
   }
 
-  @Override protected void deactivateStep() {
+  @Override public void deactivateStep() {
     ((AndroidToolbar) toolbar).deactivateStep();
   }
+  
+  
 
   @Override
   public void toggleDebug() {
@@ -460,7 +472,7 @@ public class AndroidEditor extends JavaEditor {
   }
 
   @Override
-  protected LineID getCurrentLineID() {
+  public LineID getCurrentLineID() {
     return super.getCurrentLineID();
   }
 

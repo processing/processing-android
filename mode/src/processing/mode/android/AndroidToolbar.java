@@ -156,7 +156,7 @@ public class AndroidToolbar extends EditorToolbar {
         @Override
         public void actionPerformed(ActionEvent e) {
           final int mask = ActionEvent.SHIFT_MASK | ActionEvent.ALT_MASK;
-          aEditor.handleStep(e.getModifiers() & mask);
+          handleStep(e.getModifiers() & mask);
         }
       };
       toReturn.add(stepButton);
@@ -166,7 +166,7 @@ public class AndroidToolbar extends EditorToolbar {
               Language.text("menu.debug.continue")) {
         @Override
         public void actionPerformed(ActionEvent e) {
-          aEditor.handleContinue();
+          aEditor.getDebugger().continueDebug();
         }
       };
       toReturn.add(continueButton);
@@ -185,6 +185,16 @@ public class AndroidToolbar extends EditorToolbar {
     return toReturn;
   }
 
+  private void handleStep(int modifiers) {
+    if (modifiers == 0) {
+      aEditor.getDebugger().stepOver();
+    } else if ((modifiers & ActionEvent.SHIFT_MASK) != 0) {
+      aEditor.getDebugger().stepInto();
+    } else if ((modifiers & ActionEvent.ALT_MASK) != 0) {
+      aEditor.getDebugger().stepOut();
+    }
+  }  
+  
   @Override
   public void addModeButtons(Box box, JLabel label) {
     EditorButton debugButton =

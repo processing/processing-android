@@ -246,18 +246,21 @@ class AndroidBuild extends JavaBuild {
     return tmpFolder;
     */
     
+    
     // build the preproc and get to work
-    PdePreprocessor preproc = AndroidPreprocessorFactory.build(sketch.getName(), getPackageName());
+//    PdePreprocessor preproc = AndroidPreprocessorFactory.build(sketch.getName(), getPackageName());
     
     // On Android, this init will throw a SketchException if there's a problem with size()
-    PreprocessorResult info = preproc.initSketchSize(sketch.getMainProgram());
+//    PreprocessorResult info = preproc.initSketchSize(sketch.getMainProgram());
     
 //    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());        
 //    preproc.initSketchSmooth(sketch.getMainProgram());
-
-    sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
+    
+    PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).build();
+    sketchClassName = preprocess(srcFolder, getPackageName(), preprocessor, false);
     if (sketchClassName != null) {
-      renderer = info.getSketchRenderer();
+//      renderer = info.getSketchRenderer();
+      renderer = "P2D";
       writeMainClass(srcFolder, renderer, external);
       createTopModule("':" + module +"'");
       createAppModule(module);

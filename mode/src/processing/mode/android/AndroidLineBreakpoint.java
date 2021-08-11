@@ -22,7 +22,7 @@
 package processing.mode.android;
 
 import com.sun.jdi.ReferenceType;
-import processing.mode.java.Debugger;
+import processing.mode.java.debug.Debugger;
 import processing.mode.java.debug.LineBreakpoint;
 import processing.mode.java.debug.LineID;
 
