@@ -85,7 +85,7 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
 
-    initDebugger();
+//    initDebugger();
 
     androidTools = loadAndroidTools();
     addToolsToMenu();
@@ -164,11 +164,14 @@ public class AndroidEditor extends JavaEditor {
           handleStop();
         }
       });
-    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
+//    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
+    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
   }
 
 
   public JMenu buildModeMenu() {
+    super.buildModeMenu();
+    
     androidMenu = new JMenu(AndroidMode.getTextString("menu.android"));
     JMenuItem item;
 
@@ -289,7 +292,7 @@ public class AndroidEditor extends JavaEditor {
     });    
     
     androidMenu.addSeparator();
-
+    
     return androidMenu;
   }
 
@@ -418,6 +421,7 @@ public class AndroidEditor extends JavaEditor {
 
 
   public void handleStop() {
+    /*
     if (debugger.isStarted()) {
       debugger.stopDebug();
 
@@ -430,6 +434,14 @@ public class AndroidEditor extends JavaEditor {
       // focus the PDE again after quitting presentation mode [toxi 030903]
       toFront();
     }
+    */
+    toolbar.activateStop();
+    androidMode.handleStop(this);
+    toolbar.deactivateStop();
+    toolbar.deactivateRun();
+
+    // focus the PDE again after quitting presentation mode [toxi 030903]
+    toFront();    
   }
 
   @Override

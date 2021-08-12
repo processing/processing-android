@@ -131,7 +131,9 @@ public class AndroidToolbar extends EditorToolbar {
   @Override
   public List<EditorButton> createButtons() {
     // aEditor not ready yet because this is called by super()
-    final boolean debug = ((AndroidEditor) editor).isDebuggerEnabled();
+//    final boolean debug = ((AndroidEditor) editor).isDebuggerEnabled();
+    final boolean debug = false;
+    
 
     ArrayList<EditorButton> toReturn = new ArrayList<EditorButton>();
     final String runText = debug ?
@@ -197,6 +199,7 @@ public class AndroidToolbar extends EditorToolbar {
   
   @Override
   public void addModeButtons(Box box, JLabel label) {
+    /*
     EditorButton debugButton =
             new EditorButton(this, "/lib/toolbar/debug",
                     Language.text("toolbar.debug")) {
@@ -212,6 +215,7 @@ public class AndroidToolbar extends EditorToolbar {
 //    debugButton.setRolloverLabel(label);
     box.add(debugButton);
     addGap(box);
+    */
   }
 
   @Override

@@ -92,6 +92,7 @@ class AndroidBuild extends JavaBuild {
   // Gradle build files
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
   static private final String GRADLE_PROPERTIES_TEMPLATE = "Properties.gradle.tmpl";
+  static private final String EXPORTED_GRADLE_PROPERTIES_TEMPLATE = "ExpProperties.gradle.tmpl";
   static private final String LOCAL_PROPERTIES_TEMPLATE = "Properties.local.tmpl";
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_ECJ_TEMPLATE = "AppBuildECJ.gradle.tmpl";
@@ -322,9 +323,19 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@gradle_plugin_version@@", GRADLE_PLUGIN_VER);
     AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);
 
-    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+//    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+//    File gradlePropsFile = new File(tmpFolder, "gradle.properties");
+//    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+    File gradlePropsTemplate;
+    if (exportProject) {
+      gradlePropsTemplate = mode.getContentFile("templates/" + EXPORTED_GRADLE_PROPERTIES_TEMPLATE);
+    } else {
+      gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+    }
     File gradlePropsFile = new File(tmpFolder, "gradle.properties");
-    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+    String javaHome = Platform.getJavaHome().getAbsolutePath();
+    replaceMap.put("@@java_home@@", javaHome);
+    AndroidUtil.createFileFromTemplate(gradlePropsTemplate, gradlePropsFile, replaceMap);
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
