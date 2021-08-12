@@ -379,12 +379,14 @@ class AndroidBuild extends JavaBuild {
       tmplFile = exportProject ? APP_GRADLE_BUILD_TEMPLATE : APP_GRADLE_BUILD_ECJ_TEMPLATE;
     }
     
+    String modePath = new File(mode.getFolder(), "mode").getAbsolutePath();
     String toolPath = Base.getToolsFolder().getPath().replace('\\', '/');
     String platformPath = sdk.getTargetPlatform(TARGET_SDK).getPath().replace('\\', '/');
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@mode_folder@@", modePath);
     replaceMap.put("@@tools_folder@@", toolPath);
     replaceMap.put("@@target_platform@@", platformPath);
     replaceMap.put("@@package_name@@", getPackageName());    
