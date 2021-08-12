@@ -87,7 +87,16 @@ clean.doFirst {
         exclude "jaxb-xjc.jar"
         exclude "core.jar"
         exclude "pde.jar"
-        exclude "JavaMode.jar"        
+        exclude "JavaMode.jar"
+        exclude "org.eclipse.core.contenttype.jar"
+        exclude "org.eclipse.core.jobs.jar"
+        exclude "org.eclipse.core.resources.jar"
+        exclude "org.eclipse.core.runtime.jar"
+        exclude "org.eclipse.equinox.common.jar"
+        exclude "org.eclipse.equinox.preferences.jar"
+        exclude "org.eclipse.jdt.core.jar"
+        exclude "org.eclipse.osgi.jar"
+        exclude "org.eclipse.text.jar"
     }
 }
 
