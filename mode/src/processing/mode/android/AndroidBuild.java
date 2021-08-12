@@ -257,8 +257,9 @@ class AndroidBuild extends JavaBuild {
 //    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());        
 //    preproc.initSketchSmooth(sketch.getMainProgram());
     
-    PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).build();
-    sketchClassName = preprocess(srcFolder, getPackageName(), preprocessor, false);
+    String pckgName = getPackageName();
+    PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).setDestinationPackage(pckgName).build();        
+    sketchClassName = preprocess(srcFolder, pckgName, preprocessor, false);
     if (sketchClassName != null) {
 //      renderer = info.getSketchRenderer();
       renderer = "P2D";
