@@ -115,9 +115,12 @@ task dist {
         FileUtils.copyDirectory(file("mode/icons"), file("${root}/icons"))        
         FileUtils.copyDirectory(file("mode/theme"), file("${root}/theme"))
         FileUtils.copyDirectory(file("mode/mode"), file("${root}/mode"))
+        delete "${root}/mode/core.jar"
+        delete "${root}/mode/pde.jar"
+        delete "${root}/mode/JavaMode.jar"
         delete "${root}/mode/jdi.jar"
         delete "${root}/mode/jdimodel.jar"
-                   
+
         Files.copy(file("mode/processing-core.zip").toPath(),
                    file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING)
 
