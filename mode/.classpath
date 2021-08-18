@@ -17,7 +17,6 @@
 	<classpathentry kind="lib" path="mode/jaxb-jxc.jar"/>
 	<classpathentry kind="lib" path="mode/jaxb-runtime.jar"/>
 	<classpathentry kind="lib" path="mode/jaxb-xjc.jar"/>
-	<classpathentry kind="lib" path="mode/antlr.jar"/>
 	<classpathentry kind="lib" path="mode/gradle-tooling-api-6.8.3.jar"/>
 	<classpathentry kind="var" path="ANDROID_JAR"/>
 	<classpathentry kind="var" path="ANDROID_SDK"/>
