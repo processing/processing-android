@@ -556,7 +556,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     root.registerKeyboardAction(disposer, stroke,
                                 JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-    int modifiers = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+    int modifiers = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
     stroke = KeyStroke.getKeyStroke('W', modifiers);
     root.registerKeyboardAction(disposer, stroke,
                                 JComponent.WHEN_IN_FOCUSED_WINDOW);
