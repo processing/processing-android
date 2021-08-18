@@ -34,8 +34,6 @@ import processing.app.Util;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
 import processing.mode.java.preproc.PdePreprocessor;
-//import processing.mode.java.preproc.SurfaceInfo;
-import processing.mode.java.preproc.PreprocessorResult;
 
 import java.io.*;
 import java.util.HashMap;
@@ -380,7 +378,7 @@ class AndroidBuild extends JavaBuild {
       tmplFile = exportProject ? APP_GRADLE_BUILD_TEMPLATE : APP_GRADLE_BUILD_ECJ_TEMPLATE;
     }
     
-    String modePath = new File(mode.getFolder(), "mode").getAbsolutePath();
+    String modePath = new File(mode.getFolder(), "mode").getPath().replace('\\', '/');
     String toolPath = Base.getToolsFolder().getPath().replace('\\', '/');
     String platformPath = sdk.getTargetPlatform(TARGET_SDK).getPath().replace('\\', '/');
     
