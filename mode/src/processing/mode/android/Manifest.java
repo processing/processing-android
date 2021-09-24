@@ -48,7 +48,7 @@ public class Manifest {
   static final String MANIFEST_ERROR_MESSAGE =
     "Errors occurred while reading or writing " + MANIFEST_XML + ",\n" +
     "which means lots of things are likely to stop working properly.\n" +
-    "To prevent losing any data, it's recommended that you use Save As\n" +
+    "To prevent losing any data, it's recommended that you use “Save As”\n" +
     "to save a separate copy of your sketch, and then restart Processing.";
   
   static private final String[] MANIFEST_TEMPLATE = {
