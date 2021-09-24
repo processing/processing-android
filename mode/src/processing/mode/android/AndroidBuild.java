@@ -188,7 +188,21 @@ class AndroidBuild extends JavaBuild {
       return null;
     }
     return apkFile.getAbsolutePath();
-  }  
+  }
+
+  /**
+   * Build into temporary folders  for building bundles (needed for the Windows 8.3 bugs in the Android SDK)
+   * @param target "debug" or "release"
+   * @throws SketchException
+   * @throws IOException
+   */
+  public File buildBundle(String target) throws IOException, SketchException {
+    this.target = target;
+    File folder = createProject(true);
+    if (folder == null) return null;
+    if (!gradleBuildBundle()) return null;
+    return folder;
+  }
 
 
   /**
@@ -241,6 +255,44 @@ class AndroidBuild extends JavaBuild {
     }
     
     return tmpFolder;
+  }
+
+  protected boolean gradleBuildBundle() throws SketchException {
+    ProjectConnection connection = GradleConnector.newConnector()
+            .forProjectDirectory(tmpFolder)
+            .connect();
+
+    boolean success = false;
+    BuildLauncher build = connection.newBuild();
+    build.setStandardOutput(System.out);
+    build.setStandardError(System.err);
+
+    try {
+      if (target.equals("debug")) build.forTasks("bundleDebug");
+      else build.forTasks("bundleRelease");
+      build.run();
+      renameAAB();
+      success = true;
+    } catch (org.gradle.tooling.UnsupportedVersionException e) {
+      e.printStackTrace();
+      success = false;
+    } catch (org.gradle.tooling.BuildException e) {
+      e.printStackTrace();
+      success = false;
+    } catch (org.gradle.tooling.BuildCancelledException e) {
+      e.printStackTrace();
+      success = false;
+    } catch (org.gradle.tooling.GradleConnectionException e) {
+      e.printStackTrace();
+      success = false;
+    } catch (Exception e) {
+      e.printStackTrace();
+      success = false;
+    } finally {
+      connection.close();
+    }
+
+    return success;
   }
     
   
@@ -676,7 +728,25 @@ class AndroidBuild extends JavaBuild {
     Util.copyDir(projectFolder, exportFolder);
     installGradlew(exportFolder);
     return exportFolder;    
-  }  
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Export bundle
+
+
+  public File exportBundle(String keyStorePassword) throws Exception {
+    File projectFolder = buildBundle("release");
+    if (projectFolder == null) return null;
+
+    File signedPackage = signPackage(projectFolder, keyStorePassword, "aab");
+    if (signedPackage == null) return null;
+
+    // Final export folder
+    File exportFolder = createExportFolder("buildBundle");
+    Util.copyDir(new File(projectFolder, getPathToAAB()), exportFolder);
+    return exportFolder;
+  }
   
   
   // ---------------------------------------------------------------------------
@@ -687,7 +757,7 @@ class AndroidBuild extends JavaBuild {
     File projectFolder = build("release");
     if (projectFolder == null) return null;
 
-    File signedPackage = signPackage(projectFolder, keyStorePassword);
+    File signedPackage = signPackage(projectFolder, keyStorePassword, "apk");
     if (signedPackage == null) return null;
 
     // Final export folder
@@ -697,26 +767,34 @@ class AndroidBuild extends JavaBuild {
   }
 
   
-  private File signPackage(File projectFolder, String keyStorePassword) throws Exception {
+  private File signPackage(File projectFolder, String keyStorePassword, String fileExt) throws Exception {
     File keyStore = AndroidKeyStore.getKeyStore();
     if (keyStore == null) return null;
-    
-    File unsignedPackage = new File(projectFolder, 
-        getPathToAPK() + sketch.getName().toLowerCase() + "_release_unsigned.apk");
-    if (!unsignedPackage.exists()) return null;
-    File signedPackage = new File(projectFolder, 
-        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed.apk");
+
+    String path=getPathToAPK();
+    if(fileExt.equals("aab")){
+      path = getPathToAAB();
+    }
+      File unsignedPackage = new File(projectFolder,
+              path + sketch.getName().toLowerCase() + "_release_unsigned." + fileExt);
+      if (!unsignedPackage.exists()) return null;
+      File signedPackage = new File(projectFolder,
+              path + sketch.getName().toLowerCase() + "_release_signed." + fileExt);
+
 
     JarSigner.signJar(unsignedPackage, signedPackage, 
         AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
         keyStore.getAbsolutePath(), keyStorePassword);
 
-    File alignedPackage = zipalignPackage(signedPackage, projectFolder);
+    if(fileExt.equals("aab")){
+      return signedPackage;
+    }
+    File alignedPackage = zipalignPackage(signedPackage, projectFolder, fileExt);
     return alignedPackage;
   }
 
   
-  private File zipalignPackage(File signedPackage, File projectFolder) 
+  private File zipalignPackage(File signedPackage, File projectFolder, String fileExt)
       throws IOException, InterruptedException {
     File zipAlign = sdk.getZipAlignTool();
     if (zipAlign == null || !zipAlign.exists()) {
@@ -724,9 +802,10 @@ class AndroidBuild extends JavaBuild {
                            AndroidMode.getTextString("android_build.warn.cannot_find_zipalign.body"));
       return null;
     }
+
     
     File alignedPackage = new File(projectFolder, 
-        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned.apk");
+        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned."+fileExt);
 
     String[] args = {
         zipAlign.getAbsolutePath(), "-v", "-f", "4",
@@ -841,7 +920,24 @@ class AndroidBuild extends JavaBuild {
         }
       }
     }
-  }  
+  }
+
+  private void renameAAB() {
+    String suffix = target.equals("release") ? "release" : "debug";
+    String aabName = getPathToAAB() + module + "-" + suffix + ".aab";
+    final File aabFile = new File(tmpFolder, aabName);
+    if (aabFile.exists()) {
+      String suffixNew = target.equals("release") ? "release_unsigned" : "debug";
+      String aabNameNew = getPathToAAB() +
+              sketch.getName().toLowerCase() + "_" + suffixNew + ".aab";
+      final File aabFileNew = new File(tmpFolder, aabNameNew);
+      aabFile.renameTo(aabFileNew);
+    }
+  }
+
+  private String getPathToAAB() {
+    return module + "/build/outputs/bundle/" + target + "/";
+  }
 
 
   private void renameAPK() {
