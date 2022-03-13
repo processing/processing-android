@@ -238,7 +238,6 @@ class AndroidBuild extends JavaBuild {
     }
 
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), false);    
-    manifest.setSdkTarget(TARGET_SDK);
 
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
