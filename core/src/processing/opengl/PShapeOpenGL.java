@@ -1251,7 +1251,11 @@ public class PShapeOpenGL extends PShape {
 
   @Override
   public void rotate(float angle) {
-    transform(ROTATE, angle);
+    if (is3D) {
+      transform(ROTATE, angle, 0, 0, 1);
+    } else {
+      transform(ROTATE, angle);
+    }
   }
 
 
