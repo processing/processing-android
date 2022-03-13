@@ -129,7 +129,7 @@ public class AndroidEditor extends JavaEditor {
     });
 
     String exportPkgTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, false);
-    JMenuItem exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'E');
+    JMenuItem exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'K');
     exportPackage.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportPackage();
@@ -137,7 +137,7 @@ public class AndroidEditor extends JavaEditor {
     });
 
     String exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, true);
-    JMenuItem exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'E');
+    JMenuItem exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'P');
     exportProject.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportProject();
@@ -149,14 +149,14 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildSketchMenu() {
-    JMenuItem runItem = Toolkit.newJMenuItem(AndroidToolbar.getTitle(AndroidToolbar.RUN, false), 'R');
+    JMenuItem runItem = Toolkit.newJMenuItem(AndroidToolbar.getTitle(AndroidToolbar.RUN, false), 'D');
     runItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           handleRunDevice();
         }
       });
 
-    JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN, true), 'R');
+    JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN, true), 'E');
     presentItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           handleRunEmulator();
