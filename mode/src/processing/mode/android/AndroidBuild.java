@@ -760,7 +760,7 @@ class AndroidBuild extends JavaBuild {
     if (signedPackage == null) return null;
 
     // Final export folder
-    File exportFolder = createExportFolder("build");
+    File exportFolder = createExportFolder("buildPackage");
     Util.copyDir(new File(projectFolder, getPathToAPK()), exportFolder);    
     return exportFolder;
   }

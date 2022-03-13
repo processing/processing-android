@@ -120,6 +120,14 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildFileMenu() {
+    String exportBundleTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_BUNDLE, false);
+    JMenuItem exportBundle = Toolkit.newJMenuItem(exportBundleTitle, 'B');
+    exportBundle.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        handleExportBundle();
+      }
+    });
+
     String exportPkgTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, false);
     JMenuItem exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'E');
     exportPackage.addActionListener(new ActionListener() {
@@ -136,15 +144,7 @@ public class AndroidEditor extends JavaEditor {
       }
     });
 
-    String exportBundleTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_BUNDLE, false);
-    JMenuItem exportBundle = Toolkit.newJMenuItem(exportBundleTitle, 'B');
-    exportBundle.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        handleExportBundle();
-      }
-    });
-
-    return buildFileMenu(new JMenuItem[] { exportPackage, exportProject, exportBundle});
+    return buildFileMenu(new JMenuItem[] { exportBundle, exportPackage, exportProject});
   }
 
 
