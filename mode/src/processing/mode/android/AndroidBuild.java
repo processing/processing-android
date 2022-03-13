@@ -770,28 +770,31 @@ class AndroidBuild extends JavaBuild {
     File keyStore = AndroidKeyStore.getKeyStore();
     if (keyStore == null) return null;
 
-    String path=getPathToAPK();
-    if (fileExt.equals("aab")) {
+    String path;
+    boolean isAAB = fileExt.equals("aab");
+    if (isAAB) {
       path = getPathToAAB();
+    } else {
+      path = getPathToAPK();
     }
-      File unsignedPackage = new File(projectFolder,
-              path + sketch.getName().toLowerCase() + "_release_unsigned." + fileExt);
-      if (!unsignedPackage.exists()) return null;
-      File signedPackage = new File(projectFolder,
-              path + sketch.getName().toLowerCase() + "_release_signed." + fileExt);
 
+    File unsignedPackage = new File(projectFolder,
+                                    path + sketch.getName().toLowerCase() + "_release_unsigned." + fileExt);
+    if (!unsignedPackage.exists()) return null;
+    File signedPackage = new File(projectFolder,
+                                  path + sketch.getName().toLowerCase() + "_release_signed." + fileExt);
 
-    JarSigner.signJar(unsignedPackage, signedPackage, 
+    JarSigner.signJarV1(unsignedPackage, signedPackage, 
         AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
         keyStore.getAbsolutePath(), keyStorePassword);
 
-    if (fileExt.equals("aab")) {
+    if (isAAB) {
       return signedPackage;
+    } else {
+      File alignedPackage = zipalignPackage(signedPackage, projectFolder, fileExt);
+      return alignedPackage;  
     }
-    File alignedPackage = zipalignPackage(signedPackage, projectFolder, fileExt);
-    return alignedPackage;
   }
-
   
   private File zipalignPackage(File signedPackage, File projectFolder, String fileExt)
       throws IOException, InterruptedException {
@@ -801,7 +804,6 @@ class AndroidBuild extends JavaBuild {
                            AndroidMode.getTextString("android_build.warn.cannot_find_zipalign.body"));
       return null;
     }
-
     
     File alignedPackage = new File(projectFolder, 
         getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned."+fileExt);

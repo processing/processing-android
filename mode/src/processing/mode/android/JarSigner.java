@@ -52,7 +52,7 @@ public class JarSigner {
   private static SignatureOutputStream certFileContents = null;
   private static byte[] buffer;
   
-  public static void signJar(File jarToSign, File outputJar, String alias, 
+  public static void signJarV1(File jarToSign, File outputJar, String alias, 
       String keypass, String keystore, String storepass)
       throws GeneralSecurityException, IOException, NoSuchAlgorithmException {
 
