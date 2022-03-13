@@ -79,8 +79,9 @@ public class JarSigner {
     if (privateKey != null && x509Cert != null) {
       manifest = new Manifest();
       Attributes main = manifest.getMainAttributes();
-      main.putValue("Manifest-Version", "1.0");
+      main.putValue("Manifest-Version", "1.0");      
       main.putValue("Created-By", "1.0 (Android)");      
+      main.putValue("X-Android-APK-Signed", "true");
     } 
     
     writeZip(new FileInputStream(jarToSign), signedJar, manifest);

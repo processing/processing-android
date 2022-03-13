@@ -781,17 +781,22 @@ class AndroidBuild extends JavaBuild {
     File unsignedPackage = new File(projectFolder,
                                     path + sketch.getName().toLowerCase() + "_release_unsigned." + fileExt);
     if (!unsignedPackage.exists()) return null;
-    File signedPackage = new File(projectFolder,
-                                  path + sketch.getName().toLowerCase() + "_release_signed." + fileExt);
+    File signedPackageV1 = new File(projectFolder,
+                                    path + sketch.getName().toLowerCase() + "_release_signed_v1." + fileExt);
 
-    JarSigner.signJarV1(unsignedPackage, signedPackage, 
+    JarSigner.signJarV1(unsignedPackage, signedPackageV1, 
         AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
         keyStore.getAbsolutePath(), keyStorePassword);
 
     if (isAAB) {
-      return signedPackage;
+      File signedPackageV2 = new File(projectFolder,
+                                      path + sketch.getName().toLowerCase() + "_release_signed_v2." + fileExt);
+      ApkSignerV2.signJarV2(signedPackageV1, signedPackageV2,
+      AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
+      keyStore.getAbsolutePath(), keyStorePassword);
+      return signedPackageV2;
     } else {
-      File alignedPackage = zipalignPackage(signedPackage, projectFolder, fileExt);
+      File alignedPackage = zipalignPackage(signedPackageV1, projectFolder, fileExt);
       return alignedPackage;  
     }
   }
