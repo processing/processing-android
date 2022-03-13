@@ -308,15 +308,18 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           NodeList childNodes = remotePackages.item(buildTool).getChildNodes();
 
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
-          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+          if (!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0")) {
             continue; // Stable channel only, skip others
+          }
 
           NodeList revision = ((Element) childNodes).getElementsByTagName("revision");
           String major = (((Element) revision.item(0)).getElementsByTagName("major")).item(0).getTextContent();
           String minor = (((Element) revision.item(0)).getElementsByTagName("minor")).item(0).getTextContent();
           String micro = (((Element) revision.item(0)).getElementsByTagName("micro")).item(0).getTextContent();
-          if(!major.equals(AndroidBuild.TARGET_SDK)) // Allows only the latest build tools for the target platform
-            continue;
+          if (!major.equals(AndroidBuild.TARGET_SDK))  {
+            continue; // Allows only the latest build tools for the target platform
+          }
+            
           urlHolder.buildToolsVersion = major + "." + minor + "." + micro;
 
           NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
@@ -354,8 +357,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           NodeList childNodes = remotePackages.item(tool).getChildNodes();
           
           NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
-          if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
-            continue; // Stable channel only, skip others          
+          if (!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0")) {
+            continue; // Stable channel only, skip others
+          }
           
           NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
           for (int i = 0; i < archives.getLength(); ++i) {
@@ -392,8 +396,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
             NodeList childNodes = remotePackages.item(i).getChildNodes();
             
             NodeList channel = ((Element) childNodes).getElementsByTagName("channelRef");
-            if(!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0"))
+            if (!channel.item(0).getAttributes().item(0).getNodeValue().equals("channel-0")) {
               continue; //Stable channel only, skip others
+            }
 
             NodeList archives = ((Element) childNodes).getElementsByTagName("archive");
 
@@ -485,8 +490,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         NodeList archive = archives.item(0).getChildNodes();
         NodeList os = ((Element) archive).getElementsByTagName("host-os");
 
-        if (!os.item(0).getTextContent().equals(requiredHostOs))
+        if (!os.item(0).getTextContent().equals(requiredHostOs)) {
           continue;
+        }
 
         NodeList complete = ((Element) archive).getElementsByTagName("complete");
         NodeList url = ((Element) complete.item(0)).getElementsByTagName("url");
@@ -514,8 +520,9 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       switch (packageN) {
         case PLATFORM_TOOLS:
           NodeList os = ((Element) archive).getElementsByTagName("host-os");
-          if (!os.item(0).getTextContent().equals(requiredHostOs))
+          if (!os.item(0).getTextContent().equals(requiredHostOs)) {
             continue;
+          }            
           urlHolder.platformToolsFilename = url.item(0).getTextContent();
           urlHolder.platformToolsUrl = REPOSITORY_URL + urlHolder.platformToolsFilename;
           urlHolder.totalSize += Integer.parseInt(size.item(0).getTextContent());

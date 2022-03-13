@@ -105,7 +105,7 @@ public class KeyStoreManager extends JFrame {
                   localityName.getText(), stateName.getText(), country.getText());
 
               setVisible(false);
-              if(forBundleExport){
+              if (forBundleExport) {
                 editor.startExportBundle(new String(passwordField.getPassword()));
               }else {
                 editor.startExportPackage(new String(passwordField.getPassword()));
@@ -115,7 +115,7 @@ public class KeyStoreManager extends JFrame {
             }
           } else {
             setVisible(false);
-            if(forBundleExport){
+            if (forBundleExport) {
               editor.startExportBundle(new String(passwordField.getPassword()));
             }else {
               editor.startExportPackage(new String(passwordField.getPassword()));

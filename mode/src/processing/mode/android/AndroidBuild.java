@@ -771,7 +771,7 @@ class AndroidBuild extends JavaBuild {
     if (keyStore == null) return null;
 
     String path=getPathToAPK();
-    if(fileExt.equals("aab")){
+    if (fileExt.equals("aab")) {
       path = getPathToAAB();
     }
       File unsignedPackage = new File(projectFolder,
@@ -785,7 +785,7 @@ class AndroidBuild extends JavaBuild {
         AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
         keyStore.getAbsolutePath(), keyStorePassword);
 
-    if(fileExt.equals("aab")){
+    if (fileExt.equals("aab")) {
       return signedPackage;
     }
     File alignedPackage = zipalignPackage(signedPackage, projectFolder, fileExt);

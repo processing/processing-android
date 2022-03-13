@@ -164,7 +164,7 @@ public class Manifest {
         hasReadExtStorage = true;
         continue;
       }
-      if(appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")){
+      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")) {
         hasCameraAccess = true;
         continue;
       }
@@ -235,7 +235,7 @@ public class Manifest {
         hasReadExtStorage = true;
         continue;
       }
-      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")){
+      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")) {
         hasCameraAccess = true;
         continue;
       }

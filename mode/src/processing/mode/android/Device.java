@@ -189,7 +189,7 @@ class Device {
       return false;
     }
     ProcessResult pr;
-    if (isDebuggerEnabled){
+    if (isDebuggerEnabled) {
       String[] cmd = {
         "shell", "am", "start",
         "-e", "debug", "true",
@@ -245,7 +245,7 @@ class Device {
     public void processLine(final String line) {
       pId = Integer.parseInt(line);
     }
-    public int getId(){
+    public int getId() {
       return pId;
     }
   }

@@ -62,7 +62,7 @@ public class AndroidRunner implements DeviceListener {
     this.build = build;
     this.listener = listener;
 
-    if (listener instanceof AndroidEditor){
+    if (listener instanceof AndroidEditor) {
       isDebugEnabled = ((AndroidEditor) listener).isDebuggerEnabled();
     }
 
@@ -139,7 +139,7 @@ public class AndroidRunner implements DeviceListener {
     }
 
     // Start Debug if Debugger is enabled
-    if (isDebugEnabled){
+    if (isDebugEnabled) {
       ((AndroidEditor) listener).getDebugger()
         .startDebug(this, device);
     }
@@ -183,7 +183,7 @@ public class AndroidRunner implements DeviceListener {
     return connector.attach(args);
   }
 
-  public VirtualMachine vm(){
+  public VirtualMachine vm() {
     return vm;
   }
 
