@@ -49,6 +49,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.jar.Manifest;
+import java.util.jar.Attributes;
+import java.util.jar.JarOutputStream;
+
 /**
  * APK Signature Scheme v2 signer.
  *
@@ -121,6 +125,10 @@ public class ApkSignerV2 {
     }
 
 
+    private static final String DIGEST_ALGORITHM = "SHA1";
+    private static final String DIGEST_ATTR = "SHA1-Digest";
+
+
     public static void signJarV2(File jarToSign, File outputJar, String alias, 
                                  String keypass, String keystore, String storepass) 
                                  throws GeneralSecurityException, IOException, 
@@ -162,7 +170,9 @@ public class ApkSignerV2 {
       inputBuffer.rewind();
       ByteBuffer[] output = sign(inputBuffer, signerConfigs);
 
-      FileOutputStream outputStream = new FileOutputStream(outputJar);
+      // Save byte buffer with V2 signed jar into temp file
+      File tempJar = new File(outputJar.getAbsolutePath() + ".tmp");
+      FileOutputStream outputStream = new FileOutputStream(tempJar);
       for (ByteBuffer buf: output) {        
         if (buf.hasArray()) {
           outputStream.write(buf.array());
@@ -173,6 +183,16 @@ public class ApkSignerV2 {
         }
       }
       outputStream.close();
+
+      // Create zipped package
+      Manifest manifest = new Manifest();
+      Attributes main = manifest.getMainAttributes();
+      main.putValue("Manifest-Version", "1.0");
+      main.putValue("Created-By", "1.0 (Android)");      
+      main.putValue("X-Android-APK-Signed", "true");
+
+      JarOutputStream signedJar = new JarOutputStream(new FileOutputStream(outputJar, false));
+      ZipUtils.writeZip(new FileInputStream(tempJar), signedJar, manifest, DIGEST_ALGORITHM, DIGEST_ATTR);
 
       System.out.println("DONE!");
     }

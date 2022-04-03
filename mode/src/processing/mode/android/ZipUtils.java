@@ -18,6 +18,18 @@ package processing.mode.android;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.jar.JarEntry;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+import java.util.jar.JarOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.Base64;
+
 /**
  * Assorted ZIP format helpers.
  *
@@ -25,6 +37,8 @@ import java.nio.ByteOrder;
  * order of these buffers is little-endian.
  */
 public abstract class ZipUtils {
+    private static byte[] buffer;
+
     private ZipUtils() {}
     private static final int ZIP_EOCD_REC_MIN_SIZE = 22;
     private static final int ZIP_EOCD_REC_SIG = 0x06054b50;
@@ -142,4 +156,66 @@ public abstract class ZipUtils {
         }
         buffer.putInt(buffer.position() + offset, (int) value);
     }
+
+    public static void writeZip(InputStream input, JarOutputStream output, Manifest manifest, 
+        String digestAlgorithm, String digestAttr)
+        throws IOException, NoSuchAlgorithmException {    
+        Base64.Encoder base64Encoder = Base64.getEncoder();
+        MessageDigest messageDigest = MessageDigest.getInstance(digestAlgorithm);
+        buffer = new byte[4096];
+  
+        ZipInputStream zis = new ZipInputStream(input);
+
+        try {
+            // loop on the entries of the intermediary package and put them in the final package.
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                String name = entry.getName();
+
+                // do not take directories or anything inside a potential META-INF folder.
+                if (entry.isDirectory() || name.startsWith("META-INF/")) {
+                    continue;
+                }
+
+                JarEntry newEntry;
+
+                // Preserve the STORED method of the input entry.
+                if (entry.getMethod() == JarEntry.STORED) {
+                    newEntry = new JarEntry(entry);
+                } else {
+                    // Create a new entry so that the compressed len is recomputed.
+                    newEntry = new JarEntry(name);
+                }
+
+                writeEntry(output, zis, newEntry, messageDigest, manifest, base64Encoder, digestAttr);
+
+                zis.closeEntry();
+           }
+        } finally {
+            zis.close();
+        }
+    }
+
+    private static void writeEntry(JarOutputStream output, InputStream input, JarEntry entry, 
+        MessageDigest digest, Manifest manifest, Base64.Encoder encoder, String digestAttr) throws IOException {
+        output.putNextEntry(entry);
+
+        // Write input stream to the jar output.
+        int count;
+        while ((count = input.read(buffer)) != -1) {
+            output.write(buffer, 0, count);
+            if (digest != null) digest.update(buffer, 0, count);
+        }
+
+        output.closeEntry();
+
+        if (manifest != null) {
+            Attributes attr = manifest.getAttributes(entry.getName());
+            if (attr == null) {
+                attr = new Attributes();
+                manifest.getEntries().put(entry.getName(), attr);
+            }
+            attr.putValue(digestAttr, encoder.encodeToString(digest.digest()));
+        }
+    }  
 }

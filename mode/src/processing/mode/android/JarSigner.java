@@ -33,8 +33,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.Base64;
 import sun.security.pkcs.SignerInfo;
 import sun.security.x509.AlgorithmId;
@@ -49,8 +47,7 @@ public class JarSigner {
   private static final String DIGEST_ALGORITHM = "SHA1";
   private static final String DIGEST_ATTR = "SHA1-Digest";
   private static final String DIGEST_MANIFEST_ATTR = "SHA1-Digest-Manifest";
-  private static SignatureOutputStream certFileContents = null;
-  private static byte[] buffer;
+  private static SignatureOutputStream certFileContents = null;  
   
   public static void signJarV1(File jarToSign, File outputJar, String alias, 
       String keypass, String keystore, String storepass)
@@ -84,71 +81,9 @@ public class JarSigner {
       main.putValue("X-Android-APK-Signed", "true");
     } 
     
-    writeZip(new FileInputStream(jarToSign), signedJar, manifest);
+    ZipUtils.writeZip(new FileInputStream(jarToSign), signedJar, manifest, DIGEST_ALGORITHM, DIGEST_ATTR);
     
     closeJar(signedJar, manifest, privateKey, x509Cert);
-  }
-  
-  private static void writeZip(InputStream input, JarOutputStream output, Manifest manifest)
-      throws IOException, NoSuchAlgorithmException {    
-    Base64.Encoder base64Encoder = Base64.getEncoder();
-    MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGORITHM);
-    buffer = new byte[4096];
-    
-    ZipInputStream zis = new ZipInputStream(input);
-
-    try {
-      // loop on the entries of the intermediary package and put them in the final package.
-      ZipEntry entry;
-      while ((entry = zis.getNextEntry()) != null) {
-        String name = entry.getName();
-
-        // do not take directories or anything inside a potential META-INF folder.
-        if (entry.isDirectory() || name.startsWith("META-INF/")) {
-          continue;
-        }
-
-        JarEntry newEntry;
-
-        // Preserve the STORED method of the input entry.
-        if (entry.getMethod() == JarEntry.STORED) {
-          newEntry = new JarEntry(entry);
-        } else {
-          // Create a new entry so that the compressed len is recomputed.
-          newEntry = new JarEntry(name);
-        }
-
-        writeEntry(output, zis, newEntry, messageDigest, manifest, base64Encoder);
-
-        zis.closeEntry();
-      }
-    } finally {
-      zis.close();
-    }
-  }
-
-  private static void writeEntry(JarOutputStream output, InputStream input, JarEntry entry, 
-      MessageDigest digest, Manifest manifest, Base64.Encoder encoder) throws IOException {
-    output.putNextEntry(entry);
-
-    // Write input stream to the jar output.
-    int count;
-    while ((count = input.read(buffer)) != -1) {
-      output.write(buffer, 0, count);
-
-      if (digest != null) digest.update(buffer, 0, count);
-    }
-
-    output.closeEntry();
-
-    if (manifest != null) {
-      Attributes attr = manifest.getAttributes(entry.getName());
-      if (attr == null) {
-        attr = new Attributes();
-        manifest.getEntries().put(entry.getName(), attr);
-      }
-      attr.putValue(DIGEST_ATTR, encoder.encodeToString(digest.digest()));
-    }
   }
   
   private static void closeJar(JarOutputStream jar, Manifest manifest, 
