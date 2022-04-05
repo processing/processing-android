@@ -789,19 +789,27 @@ class AndroidBuild extends JavaBuild {
         keyStore.getAbsolutePath(), keyStorePassword);
 
     if (isAAB) {
-      File signedPackageV2 = new File(projectFolder,
-                                      path + sketch.getName().toLowerCase() + "_release_signed_v2." + fileExt);
-      ApkSignerV2.signJarV2(signedPackageV1, signedPackageV2,
-          AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
-          keyStore.getAbsolutePath(), keyStorePassword);
-      return signedPackageV2;
+      return signedPackageV1;
     } else {
-      File alignedPackage = zipalignPackage(signedPackageV1, projectFolder, fileExt);
+    	
+    	// To Do: The following Currently showing "Error with package export" on V2 signed APK generation
+    	// So for now keeping it as it is and continuing with V1 signing on APKs
+    	
+    	// File signedPackageV2 = new File(projectFolder,
+        //         path + sketch.getName().toLowerCase() + "_release_signed_v2." + fileExt);
+        //         ApkSignerV2.signJarV2(signedPackageV1, signedPackageV2,
+        //         AndroidKeyStore.ALIAS_STRING, keyStorePassword, 
+        //         keyStore.getAbsolutePath(), keyStorePassword);
+        // File alignedPackage = zipalignPackage(signedPackageV2, projectFolder, fileExt, "v2");
+    	
+    	
+    	File alignedPackage = zipalignPackage(signedPackageV1, projectFolder, fileExt, "v1");
+    	
       return alignedPackage;  
     }
   }
   
-  private File zipalignPackage(File signedPackage, File projectFolder, String fileExt)
+  private File zipalignPackage(File signedPackage, File projectFolder, String fileExt, String signingType)
       throws IOException, InterruptedException {
     File zipAlign = sdk.getZipAlignTool();
     if (zipAlign == null || !zipAlign.exists()) {
@@ -811,7 +819,7 @@ class AndroidBuild extends JavaBuild {
     }
     
     File alignedPackage = new File(projectFolder, 
-        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned."+fileExt);
+        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned"+signingType+"."+fileExt);
 
     String[] args = {
         zipAlign.getAbsolutePath(), "-v", "-f", "4",
