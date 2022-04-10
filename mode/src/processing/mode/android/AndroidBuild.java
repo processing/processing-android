@@ -819,7 +819,7 @@ class AndroidBuild extends JavaBuild {
     }
     
     File alignedPackage = new File(projectFolder, 
-        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned"+signingType+"."+fileExt);
+        getPathToAPK() + sketch.getName().toLowerCase() + "_release_signed_aligned_" + signingType + "." + fileExt);
 
     String[] args = {
         zipAlign.getAbsolutePath(), "-v", "-f", "4",
