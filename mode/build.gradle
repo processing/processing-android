@@ -12,9 +12,9 @@ configurations {
 }
 
 dependencies {
-    implementation group: "org.processing", name: "core", version: "${processingVersion}"
-    implementation group: "org.processing", name: "pde", version: "${processingVersion}"
-    implementation group: "org.processing", name: "java-mode", version: "${processingVersion}"
+    // implementation group: "org.processing", name: "core", version: "${processingVersion}"
+    // implementation group: "org.processing", name: "pde", version: "${processingVersion}"
+    // implementation group: "org.processing", name: "java-mode", version: "${processingVersion}"
 
     implementationExtract "org.eclipse.jdt:org.eclipse.jdt.debug:${jdtVersion}"
 
@@ -22,7 +22,7 @@ dependencies {
     implementationCopy "org.slf4j:slf4j-api:${slf4jVersion}"
     implementationCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
 
-    implementation fileTree(include: ["jdi.jar", "jdimodel.jar"], dir: 'mode')
+    implementation fileTree(include: ["jdi.jar", "jdimodel.jar", "core.jar", "pde.jar", "JavaMode.jar"], dir: 'mode')
 }
 
 // This task copies the gradle tooling jar into the mode folder
@@ -85,6 +85,18 @@ clean.doFirst {
         exclude "jaxb-jxc.jar"
         exclude "jaxb-runtime.jar"
         exclude "jaxb-xjc.jar"
+        exclude "core.jar"
+        exclude "pde.jar"
+        exclude "JavaMode.jar"
+        exclude "org.eclipse.core.contenttype.jar"
+        exclude "org.eclipse.core.jobs.jar"
+        exclude "org.eclipse.core.resources.jar"
+        exclude "org.eclipse.core.runtime.jar"
+        exclude "org.eclipse.equinox.common.jar"
+        exclude "org.eclipse.equinox.preferences.jar"
+        exclude "org.eclipse.jdt.core.jar"
+        exclude "org.eclipse.osgi.jar"
+        exclude "org.eclipse.text.jar"
     }
 }
 

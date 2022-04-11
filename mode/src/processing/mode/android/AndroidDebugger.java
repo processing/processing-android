@@ -27,7 +27,7 @@ import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
 import processing.app.Messages;
-import processing.mode.java.Debugger;
+import processing.mode.java.debug.Debugger;
 import processing.mode.java.debug.ClassLoadListener;
 import processing.mode.java.debug.LineBreakpoint;
 import processing.mode.java.debug.LineID;
@@ -222,6 +222,7 @@ public class AndroidDebugger extends Debugger {
     }
   }
 
+  /*
   @Override public synchronized void continueDebug() {
     editor.activateContinue();
     editor.variableInspector().lock();
@@ -234,9 +235,11 @@ public class AndroidDebugger extends Debugger {
       runtime.vm().resume();
       paused = false;
       editor.statusBusy();
-    }
+    }    
   }
+  */
 
+  /*
   @Override protected void step(int stepDepth) {
     if (!isStarted()) {
       startDebug();
@@ -253,7 +256,9 @@ public class AndroidDebugger extends Debugger {
       editor.statusBusy();
     }
   }
+  */
 
+  /*
   @Override public synchronized void stopDebug() {
     editor.variableInspector().lock();
     if (runtime != null) {
@@ -278,6 +283,7 @@ public class AndroidDebugger extends Debugger {
 
     editor.statusEmpty();
   }
+  */
 
   /**
    * Watch all classes ({@value sketchClassName}) variable
@@ -317,7 +323,7 @@ public class AndroidDebugger extends Debugger {
     return null;
   }
 
-  synchronized void toggleBreakpoint(int lineIdx) {
+  synchronized public void toggleBreakpoint(int lineIdx) {
     LineID line = editor.getLineIDInCurrentTab(lineIdx);
     int index = line.lineIdx();
     if (hasBreakpoint(line)) {
@@ -341,7 +347,7 @@ public class AndroidDebugger extends Debugger {
     setBreakpoint(editor.getLineIDInCurrentTab(lineIdx));
   }
 
-  synchronized void setBreakpoint(LineID line) {
+  synchronized public void setBreakpoint(LineID line) {
     // do nothing if we are kinda busy
     if (isStarted() && !isPaused()) {
       return;

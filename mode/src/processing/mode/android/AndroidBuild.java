@@ -33,7 +33,7 @@ import processing.app.SketchException;
 import processing.app.Util;
 import processing.core.PApplet;
 import processing.mode.java.JavaBuild;
-import processing.mode.java.preproc.SurfaceInfo;
+import processing.mode.java.preproc.PdePreprocessor;
 
 import java.io.*;
 import java.util.HashMap;
@@ -90,6 +90,7 @@ class AndroidBuild extends JavaBuild {
   // Gradle build files
   static private final String GRADLE_SETTINGS_TEMPLATE = "Settings.gradle.tmpl";
   static private final String GRADLE_PROPERTIES_TEMPLATE = "Properties.gradle.tmpl";
+  static private final String EXPORTED_GRADLE_PROPERTIES_TEMPLATE = "ExpProperties.gradle.tmpl";
   static private final String LOCAL_PROPERTIES_TEMPLATE = "Properties.local.tmpl";
   static private final String TOP_GRADLE_BUILD_TEMPLATE = "TopBuild.gradle.tmpl";
   static private final String APP_GRADLE_BUILD_ECJ_TEMPLATE = "AppBuildECJ.gradle.tmpl";
@@ -239,6 +240,7 @@ class AndroidBuild extends JavaBuild {
 
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), false);    
 
+    /*
     // build the preproc and get to work
     AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
     // On Android, this init will throw a SketchException if there's a problem with size()
@@ -254,6 +256,30 @@ class AndroidBuild extends JavaBuild {
     }
     
     return tmpFolder;
+    */
+    
+    
+    // build the preproc and get to work
+//    PdePreprocessor preproc = AndroidPreprocessorFactory.build(sketch.getName(), getPackageName());
+    
+    // On Android, this init will throw a SketchException if there's a problem with size()
+//    PreprocessorResult info = preproc.initSketchSize(sketch.getMainProgram());
+    
+//    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());        
+//    preproc.initSketchSmooth(sketch.getMainProgram());
+    
+    String pckgName = getPackageName();
+    PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).setDestinationPackage(pckgName).build();        
+    sketchClassName = preprocess(srcFolder, pckgName, preprocessor, false);
+    if (sketchClassName != null) {
+//      renderer = info.getSketchRenderer();
+      renderer = "P2D";
+      writeMainClass(srcFolder, external);
+      createTopModule("':" + module +"'");
+      createAppModule(module);
+    }
+    
+    return tmpFolder;    
   }
 
   protected boolean gradleBuildBundle() throws SketchException {
@@ -347,9 +373,19 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@gradle_plugin_version@@", GRADLE_PLUGIN_VER);
     AndroidUtil.createFileFromTemplate(buildTemplate, buildlFile, replaceMap);
 
-    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+//    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+//    File gradlePropsFile = new File(tmpFolder, "gradle.properties");
+//    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+    File gradlePropsTemplate;
+    if (exportProject) {
+      gradlePropsTemplate = mode.getContentFile("templates/" + EXPORTED_GRADLE_PROPERTIES_TEMPLATE);
+    } else {
+      gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+    }
     File gradlePropsFile = new File(tmpFolder, "gradle.properties");
-    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+    String javaHome = Platform.getJavaHome().getAbsolutePath();
+    replaceMap.put("@@java_home@@", javaHome);
+    AndroidUtil.createFileFromTemplate(gradlePropsTemplate, gradlePropsFile, replaceMap);
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
@@ -393,12 +429,14 @@ class AndroidBuild extends JavaBuild {
       tmplFile = exportProject ? APP_GRADLE_BUILD_TEMPLATE : APP_GRADLE_BUILD_ECJ_TEMPLATE;
     }
     
+    String modePath = new File(mode.getFolder(), "mode").getPath().replace('\\', '/');
     String toolPath = Base.getToolsFolder().getPath().replace('\\', '/');
     String platformPath = sdk.getTargetPlatform(TARGET_SDK).getPath().replace('\\', '/');
     
     File appBuildTemplate = mode.getContentFile("templates/" + tmplFile);    
     File appBuildFile = new File(moduleFolder, "build.gradle");    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
+    replaceMap.put("@@mode_folder@@", modePath);
     replaceMap.put("@@tools_folder@@", toolPath);
     replaceMap.put("@@target_platform@@", platformPath);
     replaceMap.put("@@package_name@@", getPackageName());    
@@ -463,8 +501,7 @@ class AndroidBuild extends JavaBuild {
   // Templates
   
 
-  private void writeMainClass(final File srcDirectory, 
-      final String renderer, final boolean external) {
+  private void writeMainClass(final File srcDirectory, final boolean external) {
     int comp = getAppComponent();
     String[] permissions = manifest.getPermissions();
     if (comp == APP) {

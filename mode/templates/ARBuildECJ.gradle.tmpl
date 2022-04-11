@@ -80,7 +80,7 @@ android {
 }
 
 dependencies {
-    compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
+    compileOnly files('@@mode_folder@@/org.eclipse.jdt.core.jar')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:@@appcompat_version@@'
     implementation 'com.google.ar:core:@@gar_version@@'
