@@ -239,48 +239,21 @@ class AndroidBuild extends JavaBuild {
     }
 
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), false);    
-
-    /*
-    // build the preproc and get to work
-    AndroidPreprocessor preproc = new AndroidPreprocessor(sketch, getPackageName());
-    // On Android, this init will throw a SketchException if there's a problem with size()
-    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());
-    preproc.initSketchSmooth(sketch.getMainProgram());
-    
-    sketchClassName = preprocess(srcFolder, getPackageName(), preproc, false);
-    if (sketchClassName != null) {
-      renderer = info.getRenderer();
-      writeMainClass(srcFolder, renderer, external);
-      createTopModule("':" + module +"'", password);
-      createAppModule(module);
-    }
-    
-    return tmpFolder;
-    */
-    
     
     // build the preproc and get to work
-//    PdePreprocessor preproc = AndroidPreprocessorFactory.build(sketch.getName(), getPackageName());
-    
-    // On Android, this init will throw a SketchException if there's a problem with size()
-//    PreprocessorResult info = preproc.initSketchSize(sketch.getMainProgram());
-    
-//    SurfaceInfo info = preproc.initSketchSize(sketch.getMainProgram());        
-//    preproc.initSketchSmooth(sketch.getMainProgram());
-    
     String pckgName = getPackageName();
     PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).setDestinationPackage(pckgName).build();        
     sketchClassName = preprocess(srcFolder, pckgName, preprocessor, false);
     if (sketchClassName != null) {
-//      renderer = info.getSketchRenderer();
       renderer = "P2D";
       writeMainClass(srcFolder, external);
-      createTopModule("':" + module +"'");
+      createTopModule("':" + module + "'", password);
       createAppModule(module);
     }
     
-    return tmpFolder;    
+    return tmpFolder;
   }
+
 
   protected boolean gradleBuildBundle() throws SketchException {
     ProjectConnection connection = GradleConnector.newConnector()
