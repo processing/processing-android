@@ -523,7 +523,6 @@ public class AndroidEditor extends JavaEditor {
         try {
           File projectFolder = build.exportBundle(keyStorePassword);
           if (projectFolder != null) {
-
             statusNotice(AndroidMode.getTextString("android_editor.status.bundle_export_completed"));
             Platform.openFolder(projectFolder);
           } else {

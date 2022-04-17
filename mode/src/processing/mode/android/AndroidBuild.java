@@ -215,7 +215,7 @@ class AndroidBuild extends JavaBuild {
     this.target = target;        
     File folder = createProject(true, password);
     if (folder == null) return null;
-    if (!gradleBuild()) return null;
+    if (!gradleBuildPackage()) return null;
     return folder;      
   }
 
@@ -291,11 +291,17 @@ class AndroidBuild extends JavaBuild {
       connection.close();
     }
 
+    try {
+      removeKeyPassword();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     return success;
   }
     
   
-  protected boolean gradleBuild() throws SketchException {
+  protected boolean gradleBuildPackage() throws SketchException {
     ProjectConnection connection = GradleConnector.newConnector()
             .forProjectDirectory(tmpFolder)
             .connect();
@@ -330,6 +336,12 @@ class AndroidBuild extends JavaBuild {
       connection.close();
     }
     
+    try {
+      removeKeyPassword();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     return success;
   }
   
@@ -353,9 +365,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.put("@@keystore_file@@", AndroidKeyStore.getKeyStore().getAbsolutePath());
     replaceMap.put("@@key_alias@@", AndroidKeyStore.ALIAS_STRING);
     replaceMap.put("@@key_password@@", keyPassword);
-
-    AndroidUtil.createFileFromTemplate(gradlePropsTemplate, gradlePropsFile, replaceMap);
-    // Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+    AndroidUtil.createFileFromTemplate(gradlePropsTemplate, gradlePropsFile, replaceMap);    
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
@@ -744,9 +754,6 @@ class AndroidBuild extends JavaBuild {
     File projectFolder = buildBundle("release", keyStorePassword);
     if (projectFolder == null) return null;
 
-    // File signedPackage = signPackage(projectFolder, keyStorePassword, "aab");
-    // if (signedPackage == null) return null;
-
     // Final export folder
     File exportFolder = createExportFolder("buildBundle");
     Util.copyDir(new File(projectFolder, getPathToAAB()), exportFolder);
@@ -761,9 +768,6 @@ class AndroidBuild extends JavaBuild {
   public File exportPackage(String keyStorePassword) throws Exception {
     File projectFolder = build("release", keyStorePassword);
     if (projectFolder == null) return null;
-
-    // File signedPackage = signPackage(projectFolder, keyStorePassword, "apk");
-    // if (signedPackage == null) return null;
 
     // Final export folder
     File exportFolder = createExportFolder("buildPackage");
@@ -975,6 +979,13 @@ class AndroidBuild extends JavaBuild {
     }
   }  
   
+
+  private void removeKeyPassword() throws IOException {
+    File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
+    File gradlePropsFile = new File(tmpFolder, "gradle.properties");
+    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+  }
+
   
   private String getPathToAPK() {
     return module + "/build/outputs/apk/" + target + "/";
