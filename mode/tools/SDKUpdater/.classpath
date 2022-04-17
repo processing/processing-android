@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/android-mode"/>
 	<classpathentry kind="lib" path="lib/sdklib-27.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/repository-27.1.1.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/processing-app"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/processing4-app"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

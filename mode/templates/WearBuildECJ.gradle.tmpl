@@ -91,7 +91,7 @@ android {
 }
 
 dependencies {
-    compileOnly files('@@tools_folder@@/../modes/java/mode/org.eclipse.jdt.core.jar')
+    compileOnly files('@@mode_folder@@/org.eclipse.jdt.core.jar')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.android.gms:play-services-wearable:@@play_services_version@@'
     implementation 'com.google.android.support:wearable:@@wear_version@@'

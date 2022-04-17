@@ -24,6 +24,7 @@ package processing.mode.android;
 
 import processing.app.Base;
 import processing.app.Mode;
+import processing.app.Language;
 import processing.app.Platform;
 import processing.app.Settings;
 import processing.app.SketchException;
@@ -33,6 +34,7 @@ import processing.app.ui.EditorState;
 import processing.app.ui.EditorToolbar;
 import processing.app.ui.Toolkit;
 import processing.mode.java.JavaEditor;
+import processing.mode.java.debug.Debugger;
 import processing.mode.java.debug.LineID;
 import processing.mode.java.preproc.PdePreprocessor;
 
@@ -61,6 +63,7 @@ public class AndroidEditor extends JavaEditor {
   
   private int appComponent;
 
+  protected JMenu debugMenu;
   private AndroidDebugger debugger;
   
   private Settings settings;
@@ -82,7 +85,7 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
 
-    initDebugger();
+//    initDebugger();
 
     androidTools = loadAndroidTools();
     addToolsToMenu();
@@ -90,10 +93,10 @@ public class AndroidEditor extends JavaEditor {
     loadModeSettings();    
   }
 
-  @Override
-  public PdePreprocessor createPreprocessor(final String sketchName) {
-    return new AndroidPreprocessor(sketchName);  
-  }
+//  @Override
+//  public PdePreprocessor createPreprocessor(final String sketchName) {
+//    return new AndroidPreprocessor(sketchName);  
+//  }
 
 
   public EditorToolbar createToolbar() {
@@ -169,11 +172,14 @@ public class AndroidEditor extends JavaEditor {
           handleStop();
         }
       });
-    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
+//    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
+    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
   }
 
 
   public JMenu buildModeMenu() {
+    super.buildModeMenu();
+    
     androidMenu = new JMenu(AndroidMode.getTextString("menu.android"));
     JMenuItem item;
 
@@ -294,10 +300,16 @@ public class AndroidEditor extends JavaEditor {
     });    
     
     androidMenu.addSeparator();
-
+    
     return androidMenu;
   }
 
+  private JMenu buildDebugMenu() {
+    debugMenu = new JMenu(Language.text("menu.debug"));
+    debugger.populateMenu(debugMenu);
+    return debugMenu;
+  }
+  
 
   private void setAppComponent(int comp) {
     if (appComponent != comp) {
@@ -417,6 +429,7 @@ public class AndroidEditor extends JavaEditor {
 
 
   public void handleStop() {
+    /*
     if (debugger.isStarted()) {
       debugger.stopDebug();
 
@@ -429,6 +442,14 @@ public class AndroidEditor extends JavaEditor {
       // focus the PDE again after quitting presentation mode [toxi 030903]
       toFront();
     }
+    */
+    toolbar.activateStop();
+    androidMode.handleStop(this);
+    toolbar.deactivateStop();
+    toolbar.deactivateRun();
+
+    // focus the PDE again after quitting presentation mode [toxi 030903]
+    toFront();    
   }
 
   @Override
@@ -436,25 +457,28 @@ public class AndroidEditor extends JavaEditor {
     return debugger;
   }
 
-  @Override protected void deactivateDebug() {
-    super.deactivateDebug();
-  }
+  
+//  @Override protected void deactivateDebug() {
+//    super.deactivateDebug();
+//  }
 
-  @Override protected void activateContinue() {
+  @Override public void activateContinue() {
     ((AndroidToolbar) toolbar).activateContinue();
   }
 
-  @Override protected void deactivateContinue() {
+  @Override public void deactivateContinue() {
     ((AndroidToolbar) toolbar).deactivateContinue();
   }
 
-  @Override protected void activateStep() {
+  @Override public void activateStep() {
     ((AndroidToolbar) toolbar).activateStep();
   }
 
-  @Override protected void deactivateStep() {
+  @Override public void deactivateStep() {
     ((AndroidToolbar) toolbar).deactivateStep();
   }
+  
+  
 
   @Override
   public void toggleDebug() {
@@ -468,7 +492,7 @@ public class AndroidEditor extends JavaEditor {
   }
 
   @Override
-  protected LineID getCurrentLineID() {
+  public LineID getCurrentLineID() {
     return super.getCurrentLineID();
   }
 
