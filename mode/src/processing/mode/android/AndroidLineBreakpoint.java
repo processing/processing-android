@@ -51,7 +51,7 @@ public class AndroidLineBreakpoint extends LineBreakpoint {
    * the logical class name to the VM (Physical) class name
    */
   private void addPackageName() {
-    if (!alreadyAdded){
+    if (!alreadyAdded) {
       className = ((AndroidDebugger) dbg).getPackageName() + "." + className;
       alreadyAdded = !alreadyAdded;
     }

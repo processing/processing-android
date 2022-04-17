@@ -32,8 +32,9 @@ import java.io.File;
  * their apps.
  */
 public class AndroidKeyStore {
-  public static final String ALIAS_STRING = "processing-keystore";
-  public static final String KEYSTORE_FILE_NAME = "android-release-key.keystore";
+  public static final String ALIAS_STRING = "p5android-key";
+  public static final int KEY_VALIDITY_YEARS = 25;
+  public static final String KEYSTORE_FILE_NAME = "processing-upload-keystore.jks";
 
   public static File getKeyStore() {
     return getKeyStore(KEYSTORE_FILE_NAME);  
@@ -78,7 +79,7 @@ public class AndroidKeyStore {
         "-alias", ALIAS_STRING,
         "-keyalg", "RSA",
         "-keysize", "2048",
-        "-validity", "10000",
+        "-validity", Integer.toString(KEY_VALIDITY_YEARS * 365),
         "-keypass", password,
         "-storepass", password,
         "-dname", dname

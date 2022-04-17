@@ -64,14 +64,14 @@ public class KeyStoreManager extends JFrame {
   JTextField country;
   JTextField stateName;
 
-  public KeyStoreManager(final AndroidEditor editor) {
+  public KeyStoreManager(final AndroidEditor editor, boolean forBundle) {
     super("Android keystore manager");
     this.editor = editor;
 
-    createLayout();
+    createLayout(forBundle);
   }
 
-  private void createLayout() {
+  private void createLayout( boolean forBundleExport) {
     Container outer = getContentPane();
     outer.removeAll();
 
@@ -105,13 +105,21 @@ public class KeyStoreManager extends JFrame {
                   localityName.getText(), stateName.getText(), country.getText());
 
               setVisible(false);
-              editor.startExportPackage(new String(passwordField.getPassword()));
+              if (forBundleExport) {
+                editor.startExportBundle(new String(passwordField.getPassword()));
+              }else {
+                editor.startExportPackage(new String(passwordField.getPassword()));
+              }
             } catch (Exception e1) {
               e1.printStackTrace();
             }
           } else {
             setVisible(false);
-            editor.startExportPackage(new String(passwordField.getPassword()));
+            if (forBundleExport) {
+              editor.startExportBundle(new String(passwordField.getPassword()));
+            }else {
+              editor.startExportPackage(new String(passwordField.getPassword()));
+            }
           }
         }
       }
@@ -147,7 +155,7 @@ public class KeyStoreManager extends JFrame {
             setVisible(true);
           } else {
             keyStore = null;
-            createLayout();
+            createLayout(forBundleExport);
           }
         }
       }

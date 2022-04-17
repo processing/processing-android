@@ -173,9 +173,9 @@ public class PWatchFaceGLES extends Gles2WatchFaceService implements AppComponen
     public EGLConfig chooseEglConfig(EGLDisplay eglDisplay) {
       int[] numEglConfigs = new int[1];
       EGLConfig[] eglConfigs = new EGLConfig[1];
-      if(!EGL14.eglChooseConfig(eglDisplay, CONFIG_ATTRIB_LIST, 0, eglConfigs, 0, eglConfigs.length, numEglConfigs, 0)) {
+      if (!EGL14.eglChooseConfig(eglDisplay, CONFIG_ATTRIB_LIST, 0, eglConfigs, 0, eglConfigs.length, numEglConfigs, 0)) {
         throw new RuntimeException("eglChooseConfig failed");
-      } else if(numEglConfigs[0] == 0) {
+      } else if (numEglConfigs[0] == 0) {
         throw new RuntimeException("no matching EGL configs");
       } else {
         return eglConfigs[0];

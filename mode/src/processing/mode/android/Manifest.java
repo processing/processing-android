@@ -120,15 +120,6 @@ public class Manifest {
     save();
   }
 
-  
-  public void setSdkTarget(String version) {
-    XML usesSdk = xml.getChild("uses-sdk");
-    if (usesSdk != null) { 
-      usesSdk.setString("android:targetSdkVersion", version);
-      save();
-    }    
-  }
-
 
   public String[] getPermissions() {
     XML[] elements = xml.getChildren("uses-permission");
@@ -173,7 +164,7 @@ public class Manifest {
         hasReadExtStorage = true;
         continue;
       }
-      if(appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")){
+      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")) {
         hasCameraAccess = true;
         continue;
       }
@@ -244,7 +235,7 @@ public class Manifest {
         hasReadExtStorage = true;
         continue;
       }
-      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")){
+      if (appComp == AndroidBuild.AR && name.equals(PERMISSION_PREFIX + "CAMERA")) {
         hasCameraAccess = true;
         continue;
       }
@@ -270,22 +261,9 @@ public class Manifest {
   
 
   private void writeBlankManifest(final File xmlFile, final int appComp) {
-    File xmlTemplate = new File(modeFolder, "templates/" + MANIFEST_TEMPLATE[appComp]);
-    
+    File xmlTemplate = new File(modeFolder, "templates/" + MANIFEST_TEMPLATE[appComp]);    
     HashMap<String, String> replaceMap = new HashMap<String, String>();    
-    if (appComp == AndroidBuild.APP) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_APP);
-    } else if (appComp == AndroidBuild.WALLPAPER) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WALLPAPER);
-    } else if (appComp == AndroidBuild.WATCHFACE) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_WATCHFACE);
-    } else if (appComp == AndroidBuild.VR) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_VR);
-    } else if (appComp == AndroidBuild.AR) {
-      replaceMap.put("@@min_sdk@@", AndroidBuild.MIN_SDK_AR);
-    }
-        
-    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);     
+    AndroidUtil.createFileFromTemplate(xmlTemplate, xmlFile, replaceMap);
   }
 
 

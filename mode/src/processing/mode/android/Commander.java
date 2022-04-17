@@ -237,7 +237,7 @@ public class Commander implements RunnerListener {
       sketch = new Sketch(pdePath, androidMode);
       if (task == BUILD || task == RUN) {
         AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
-        build.build(target);
+        build.build(target, "");
 
         if (task == RUN) {
           AndroidRunner runner = new AndroidRunner(build, this);

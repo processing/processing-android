@@ -123,8 +123,16 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildFileMenu() {
+    String exportBundleTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_BUNDLE, false);
+    JMenuItem exportBundle = Toolkit.newJMenuItem(exportBundleTitle, 'B');
+    exportBundle.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        handleExportBundle();
+      }
+    });
+
     String exportPkgTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, false);
-    JMenuItem exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'E');
+    JMenuItem exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'X');
     exportPackage.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportPackage();
@@ -132,26 +140,26 @@ public class AndroidEditor extends JavaEditor {
     });
 
     String exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, true);
-    JMenuItem exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'E');
+    JMenuItem exportProject = Toolkit.newJMenuItem(exportProjectTitle, 'J');
     exportProject.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportProject();
       }
     });
 
-    return buildFileMenu(new JMenuItem[] { exportPackage, exportProject});
+    return buildFileMenu(new JMenuItem[] { exportBundle, exportPackage, exportProject});
   }
 
 
   public JMenu buildSketchMenu() {
-    JMenuItem runItem = Toolkit.newJMenuItem(AndroidToolbar.getTitle(AndroidToolbar.RUN, false), 'R');
+    JMenuItem runItem = Toolkit.newJMenuItem(AndroidToolbar.getTitle(AndroidToolbar.RUN, false), 'D');
     runItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           handleRunDevice();
         }
       });
 
-    JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN, true), 'R');
+    JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN, true), 'E');
     presentItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           handleRunEmulator();
@@ -520,15 +528,52 @@ public class AndroidEditor extends JavaEditor {
     }
   }
 
+  /**
+   * Create a release bundle of the sketch
+   */
+  public void handleExportBundle() {
+    if (androidMode.checkPackageName(sketch, appComponent, true) &&
+            androidMode.checkAppIcons(sketch, appComponent, true) && handleExportCheckModified()) {
+      new KeyStoreManager(this, true);
+    }
+  }
+
+  public void startExportBundle(final String keyStorePassword) {
+    new Thread() {
+      public void run() {
+        startIndeterminate();
+        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_bundle"));
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
+        try {
+          File projectFolder = build.exportBundle(keyStorePassword);
+          if (projectFolder != null) {
+            statusNotice(AndroidMode.getTextString("android_editor.status.bundle_export_completed"));
+            Platform.openFolder(projectFolder);
+          } else {
+            statusError(AndroidMode.getTextString("android_editor.status.bundle_export_failed"));
+          }
+        } catch (IOException e) {
+          statusError(e);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        stopIndeterminate();
+      }
+    }.start();
+  }
 
   /**
    * Create a release build of the sketch and install its apk files on the
    * attached device.
    */
   public void handleExportPackage() {
-    if (androidMode.checkPackageName(sketch, appComponent) &&
-        androidMode.checkAppIcons(sketch, appComponent) && handleExportCheckModified()) {
-      new KeyStoreManager(this);
+    if (androidMode.checkPackageName(sketch, appComponent, false) &&
+        androidMode.checkAppIcons(sketch, appComponent, false) && handleExportCheckModified()) {
+      new KeyStoreManager(this, false);
     }
   }
 

@@ -219,7 +219,7 @@ public class PFragment extends Fragment implements AppComponent {
   }
 
   @Override
-  public boolean onOptionsItemSelected(MenuItem item){
+  public boolean onOptionsItemSelected(MenuItem item) {
     if (sketch != null) return sketch.onOptionsItemSelected(item);
     return super.onOptionsItemSelected(item);
   }

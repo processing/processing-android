@@ -356,7 +356,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       public java.util.List<String> getPaths(RepoManager mgr) {
         List<String> updates = new ArrayList<>();
         for(UpdatablePackage upd : mgr.getPackages().getUpdatedPkgs()) {
-          if(!upd.getRemote().obsolete()) {
+          if (!upd.getRemote().obsolete()) {
             updates.add(upd.getRepresentative().getPath());
           }
         }

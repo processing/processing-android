@@ -46,6 +46,8 @@ public class AndroidToolbar extends EditorToolbar {
   static protected final int OPEN   = 3;
   static protected final int SAVE   = 4;
   static protected final int EXPORT = 5;
+  static protected final int EXPORT_BUNDLE = 6;
+
 
   private AndroidEditor aEditor;
 
@@ -77,6 +79,7 @@ public class AndroidToolbar extends EditorToolbar {
     case SAVE:   return "Save";
     case EXPORT: return !shift ? AndroidMode.getTextString("menu.file.export_signed_package") : 
                                  AndroidMode.getTextString("menu.file.export_android_project");
+    case EXPORT_BUNDLE: return AndroidMode.getTextString("menu.file.export_signed_bundle");
     }
     return null;
   }
@@ -265,3 +268,4 @@ public class AndroidToolbar extends EditorToolbar {
     repaint();
   }
 }
+

@@ -238,7 +238,7 @@ public class AndroidMode extends JavaMode {
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
-    build.build("debug");
+    build.build("debug", "");
         
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
@@ -273,7 +273,7 @@ public class AndroidMode extends JavaMode {
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
-    File projectFolder = build.build("debug");
+    File projectFolder = build.build("debug", "");
     if (projectFolder == null) {
       listener.statusError(AndroidMode.getTextString("android_mode.status.project_build_failed"));
       return;
@@ -326,21 +326,26 @@ public class AndroidMode extends JavaMode {
   }
 
   
-  public boolean checkPackageName(Sketch sketch, int comp) {
+  public boolean checkPackageName(Sketch sketch, int comp, boolean forBundle) {
     Manifest manifest = new Manifest(sketch, comp, getFolder(), false);
     String defName = Manifest.BASE_PACKAGE + "." + sketch.getName().toLowerCase();    
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_package_title"),
-                              AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
+      if (forBundle) {
+        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_bundle_title"),
+                AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
+      }else {
+        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_package_title"),
+                AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
+      }
       return false;
     }
     return true;
   }
   
   
-  public boolean checkAppIcons(Sketch sketch, int comp) {
+  public boolean checkAppIcons(Sketch sketch, int comp, boolean forBundle) {
     File sketchFolder = sketch.getFolder();
 
     File[] launcherIcons = AndroidUtil.getFileList(sketchFolder, AndroidBuild.SKETCH_LAUNCHER_ICONS, 
@@ -355,9 +360,14 @@ public class AndroidMode extends JavaMode {
     
     if (!allFilesExist) {
       // The user did not set custom icons, show error and stop
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title"),
-                              AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
-      return false;      
+      if (forBundle) {
+        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title_bundle"),
+                AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
+      }else {
+        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title"),
+                AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
+      }
+      return false;
     }
     return true;
   }  
@@ -420,3 +430,4 @@ public class AndroidMode extends JavaMode {
     return String.format(value, arguments);
   }  
 }
+
