@@ -6585,7 +6585,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
    * @return true if 'what' is "true" or "TRUE", false otherwise
    */
   static final public boolean parseBoolean(String what) {
-    return new Boolean(what).booleanValue();
+    return Boolean.valueOf(what);
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -6643,7 +6643,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
   static final public boolean[] parseBoolean(String what[]) {
     boolean outgoing[] = new boolean[what.length];
     for (int i = 0; i < what.length; i++) {
-      outgoing[i] = new Boolean(what[i]).booleanValue();
+      outgoing[i] = Boolean.valueOf(what[i]);
     }
     return outgoing;
   }
@@ -6932,7 +6932,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
   static final public float parseFloat(String what, float otherwise) {
     try {
-      return new Float(what).floatValue();
+      return Float.valueOf(what);
     } catch (NumberFormatException e) { }
 
     return otherwise;
@@ -6982,7 +6982,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
     float output[] = new float[what.length];
     for (int i = 0; i < what.length; i++) {
       try {
-        output[i] = new Float(what[i]).floatValue();
+        output[i] = Float.valueOf(what[i]);
       } catch (NumberFormatException e) {
         output[i] = missing;
       }
