@@ -181,7 +181,7 @@ class AndroidBuild extends JavaBuild {
   
   
   public String getPathForAPK() {
-    String suffix = target.equals("release") ? "release_unsigned" : "debug";
+    String suffix = target.equals("release") ? "release" : "debug";
     String apkName = getPathToAPK() + sketch.getName().toLowerCase() + "_" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (!apkFile.exists()) {
@@ -196,9 +196,9 @@ class AndroidBuild extends JavaBuild {
    * @throws SketchException
    * @throws IOException
    */
-  public File buildBundle(String target) throws IOException, SketchException {
+  public File buildBundle(String target, String password) throws IOException, SketchException {
     this.target = target;
-    File folder = createProject(true);
+    File folder = createProject(true, password);
     if (folder == null) return null;
     if (!gradleBuildBundle()) return null;
     return folder;
@@ -211,9 +211,9 @@ class AndroidBuild extends JavaBuild {
    * @throws SketchException
    * @throws IOException
    */
-  public File build(String target) throws IOException, SketchException {
+  public File build(String target, String password) throws IOException, SketchException {
     this.target = target;        
-    File folder = createProject(true);
+    File folder = createProject(true, password);
     if (folder == null) return null;
     if (!gradleBuild()) return null;
     return folder;      
@@ -225,7 +225,7 @@ class AndroidBuild extends JavaBuild {
    * sketch. Creates the top and app modules in the case of regular, VR, AR and
    * wallpapers, and top, mobile and wear modules in the case of watch faces.
    */
-  protected File createProject(boolean external) 
+  protected File createProject(boolean external, String password) 
       throws IOException, SketchException {
     tmpFolder = createTempBuildFolder(sketch);
     System.out.println(AndroidMode.getTextString("android_build.error.build_folder", tmpFolder.getAbsolutePath()));
@@ -249,7 +249,7 @@ class AndroidBuild extends JavaBuild {
     if (sketchClassName != null) {
       renderer = info.getRenderer();
       writeMainClass(srcFolder, renderer, external);
-      createTopModule("':" + module +"'");
+      createTopModule("':" + module +"'", password);
       createAppModule(module);
     }
     
@@ -338,7 +338,7 @@ class AndroidBuild extends JavaBuild {
   // Gradle modules  
   
   
-  private void createTopModule(String projectModules) 
+  private void createTopModule(String projectModules, String keyPassword) 
       throws IOException {    
     HashMap<String, String> replaceMap = new HashMap<String, String>();
     
@@ -349,7 +349,13 @@ class AndroidBuild extends JavaBuild {
 
     File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
     File gradlePropsFile = new File(tmpFolder, "gradle.properties");
-    Util.copyFile(gradlePropsTemplate, gradlePropsFile);
+    replaceMap.clear();
+    replaceMap.put("@@keystore_file@@", AndroidKeyStore.getKeyStore().getAbsolutePath());
+    replaceMap.put("@@key_alias@@", AndroidKeyStore.ALIAS_STRING);
+    replaceMap.put("@@key_password@@", keyPassword);
+
+    AndroidUtil.createFileFromTemplate(gradlePropsTemplate, gradlePropsFile, replaceMap);
+    // Util.copyFile(gradlePropsTemplate, gradlePropsFile);
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
@@ -720,7 +726,7 @@ class AndroidBuild extends JavaBuild {
     target = "debug";
     
     exportProject = true;
-    File projectFolder = createProject(false);
+    File projectFolder = createProject(false, "");
     exportProject = false;
     
     File exportFolder = createExportFolder("android");      
@@ -735,11 +741,11 @@ class AndroidBuild extends JavaBuild {
 
 
   public File exportBundle(String keyStorePassword) throws Exception {
-    File projectFolder = buildBundle("release");
+    File projectFolder = buildBundle("release", keyStorePassword);
     if (projectFolder == null) return null;
 
-    File signedPackage = signPackage(projectFolder, keyStorePassword, "aab");
-    if (signedPackage == null) return null;
+    // File signedPackage = signPackage(projectFolder, keyStorePassword, "aab");
+    // if (signedPackage == null) return null;
 
     // Final export folder
     File exportFolder = createExportFolder("buildBundle");
@@ -753,11 +759,11 @@ class AndroidBuild extends JavaBuild {
   
   
   public File exportPackage(String keyStorePassword) throws Exception {
-    File projectFolder = build("release");
+    File projectFolder = build("release", keyStorePassword);
     if (projectFolder == null) return null;
 
-    File signedPackage = signPackage(projectFolder, keyStorePassword, "apk");
-    if (signedPackage == null) return null;
+    // File signedPackage = signPackage(projectFolder, keyStorePassword, "apk");
+    // if (signedPackage == null) return null;
 
     // Final export folder
     File exportFolder = createExportFolder("buildPackage");
@@ -766,6 +772,7 @@ class AndroidBuild extends JavaBuild {
   }
 
   
+  /*
   private File signPackage(File projectFolder, String keyStorePassword, String fileExt) throws Exception {
     File keyStore = AndroidKeyStore.getKeyStore();
     if (keyStore == null) return null;
@@ -836,7 +843,8 @@ class AndroidBuild extends JavaBuild {
 
     if (alignedPackage.exists()) return alignedPackage;
     return null;
-  }   
+  }
+  */
   
   
   //---------------------------------------------------------------------------
@@ -941,7 +949,7 @@ class AndroidBuild extends JavaBuild {
     String aabName = getPathToAAB() + module + "-" + suffix + ".aab";
     final File aabFile = new File(tmpFolder, aabName);
     if (aabFile.exists()) {
-      String suffixNew = target.equals("release") ? "release_unsigned" : "debug";
+      String suffixNew = target.equals("release") ? "release" : "debug";
       String aabNameNew = getPathToAAB() +
               sketch.getName().toLowerCase() + "_" + suffixNew + ".aab";
       final File aabFileNew = new File(tmpFolder, aabNameNew);
@@ -955,11 +963,11 @@ class AndroidBuild extends JavaBuild {
 
 
   private void renameAPK() {
-    String suffix = target.equals("release") ? "release-unsigned" : "debug";
+    String suffix = target.equals("release") ? "release" : "debug";
     String apkName = getPathToAPK() + module + "-" + suffix + ".apk";
     final File apkFile = new File(tmpFolder, apkName);
     if (apkFile.exists()) {
-      String suffixNew = target.equals("release") ? "release_unsigned" : "debug";
+      String suffixNew = target.equals("release") ? "release" : "debug";
       String apkNameNew = getPathToAPK() + 
         sketch.getName().toLowerCase() + "_" + suffixNew + ".apk";
       final File apkFileNew = new File(tmpFolder, apkNameNew);

@@ -238,7 +238,7 @@ public class AndroidMode extends JavaMode {
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
-    build.build("debug");
+    build.build("debug", "");
         
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
@@ -273,7 +273,7 @@ public class AndroidMode extends JavaMode {
     AndroidBuild build = new AndroidBuild(sketch, this, editor.getAppComponent());
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
-    File projectFolder = build.build("debug");
+    File projectFolder = build.build("debug", "");
     if (projectFolder == null) {
       listener.statusError(AndroidMode.getTextString("android_mode.status.project_build_failed"));
       return;
