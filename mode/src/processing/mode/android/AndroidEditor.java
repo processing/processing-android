@@ -131,23 +131,16 @@ public class AndroidEditor extends JavaEditor {
       }
     });
 
-    String exportPkgTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, false);
-    JMenuItem exportPackage = Toolkit.newJMenuItem(exportPkgTitle, 'X');
-    exportPackage.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        handleExportPackage();
-      }
-    });
 
-    String exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT, true);
-    JMenuItem exportProject = Toolkit.newJMenuItem(exportProjectTitle, 'J');
+    String exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_PROJECT, true);
+    JMenuItem exportProject = Toolkit.newJMenuItem(exportProjectTitle, 'P');
     exportProject.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportProject();
       }
     });
 
-    return buildFileMenu(new JMenuItem[] { exportBundle, exportPackage, exportProject});
+    return buildFileMenu(new JMenuItem[] { exportBundle, exportProject});
   }
 
 
@@ -532,9 +525,9 @@ public class AndroidEditor extends JavaEditor {
    * Create a release bundle of the sketch
    */
   public void handleExportBundle() {
-    if (androidMode.checkPackageName(sketch, appComponent, true) &&
-            androidMode.checkAppIcons(sketch, appComponent, true) && handleExportCheckModified()) {
-      new KeyStoreManager(this, true);
+    if (androidMode.checkPackageName(sketch, appComponent) &&
+        androidMode.checkAppIcons(sketch, appComponent) && handleExportCheckModified()) {
+      new KeyStoreManager(this);
     }
   }
 
@@ -566,46 +559,6 @@ public class AndroidEditor extends JavaEditor {
     }.start();
   }
 
-  /**
-   * Create a release build of the sketch and install its apk files on the
-   * attached device.
-   */
-  public void handleExportPackage() {
-    if (androidMode.checkPackageName(sketch, appComponent, false) &&
-        androidMode.checkAppIcons(sketch, appComponent, false) && handleExportCheckModified()) {
-      new KeyStoreManager(this, false);
-    }
-  }
-
-  
-  public void startExportPackage(final String keyStorePassword) {
-    new Thread() {
-      public void run() {
-        startIndeterminate();
-        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_package"));
-        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
-        try {
-          File projectFolder = build.exportPackage(keyStorePassword);
-          if (projectFolder != null) {
-            statusNotice(AndroidMode.getTextString("android_editor.status.package_export_completed"));
-            Platform.openFolder(projectFolder);
-          } else {
-            statusError(AndroidMode.getTextString("android_editor.status.package_export_failed"));
-          }
-        } catch (IOException e) {
-          statusError(e);
-        } catch (SketchException e) {
-          statusError(e);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-        stopIndeterminate();
-      }
-    }.start();
-  }
-  
   
   public int getAppComponent() {
     return appComponent;

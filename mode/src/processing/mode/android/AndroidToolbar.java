@@ -39,14 +39,14 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class AndroidToolbar extends EditorToolbar {
-  static protected final int RUN    = 0;
-  static protected final int STOP   = 1;
+  static protected final int RUN            = 0;
+  static protected final int STOP           = 1;
 
-  static protected final int NEW    = 2;
-  static protected final int OPEN   = 3;
-  static protected final int SAVE   = 4;
-  static protected final int EXPORT = 5;
-  static protected final int EXPORT_BUNDLE = 6;
+  static protected final int NEW            = 2;
+  static protected final int OPEN           = 3;
+  static protected final int SAVE           = 4;
+  static protected final int EXPORT_BUNDLE  = 5;
+  static protected final int EXPORT_PROJECT = 6;
 
 
   private AndroidEditor aEditor;
@@ -77,9 +77,8 @@ public class AndroidToolbar extends EditorToolbar {
     case NEW:    return "New";
     case OPEN:   return "Open";
     case SAVE:   return "Save";
-    case EXPORT: return !shift ? AndroidMode.getTextString("menu.file.export_signed_package") : 
-                                 AndroidMode.getTextString("menu.file.export_android_project");
-    case EXPORT_BUNDLE: return AndroidMode.getTextString("menu.file.export_signed_bundle");
+    case EXPORT_BUNDLE:  return AndroidMode.getTextString("menu.file.export_signed_bundle");                                 
+    case EXPORT_PROJECT: return AndroidMode.getTextString("menu.file.export_android_project");
     }
     return null;
   }

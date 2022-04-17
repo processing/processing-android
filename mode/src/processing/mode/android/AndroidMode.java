@@ -326,26 +326,21 @@ public class AndroidMode extends JavaMode {
   }
 
   
-  public boolean checkPackageName(Sketch sketch, int comp, boolean forBundle) {
+  public boolean checkPackageName(Sketch sketch, int comp) {
     Manifest manifest = new Manifest(sketch, comp, getFolder(), false);
     String defName = Manifest.BASE_PACKAGE + "." + sketch.getName().toLowerCase();    
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
-      if (forBundle) {
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_bundle_title"),
-                AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
-      }else {
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_package_title"),
-                AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
-      }
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_bundle_title"),
+                              AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
       return false;
     }
     return true;
   }
   
   
-  public boolean checkAppIcons(Sketch sketch, int comp, boolean forBundle) {
+  public boolean checkAppIcons(Sketch sketch, int comp) {
     File sketchFolder = sketch.getFolder();
 
     File[] launcherIcons = AndroidUtil.getFileList(sketchFolder, AndroidBuild.SKETCH_LAUNCHER_ICONS, 
@@ -360,13 +355,8 @@ public class AndroidMode extends JavaMode {
     
     if (!allFilesExist) {
       // The user did not set custom icons, show error and stop
-      if (forBundle) {
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title_bundle"),
-                AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
-      }else {
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title"),
-                AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
-      }
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_title"),
+                              AndroidMode.getTextString("android_mode.dialog.cannot_use_default_icons_body", DISTRIBUTING_APPS_TUT_URL));
       return false;
     }
     return true;
