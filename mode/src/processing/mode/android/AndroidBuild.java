@@ -362,9 +362,11 @@ class AndroidBuild extends JavaBuild {
     File gradlePropsTemplate = mode.getContentFile("templates/" + GRADLE_PROPERTIES_TEMPLATE);
     File gradlePropsFile = new File(tmpFolder, "gradle.properties");
     replaceMap.clear();
-    replaceMap.put("@@keystore_file@@", AndroidKeyStore.getKeyStore().getAbsolutePath());
-    replaceMap.put("@@key_alias@@", AndroidKeyStore.ALIAS_STRING);
-    replaceMap.put("@@key_password@@", keyPassword);
+    if (!keyPassword.equals("") && AndroidKeyStore.getKeyStore() != null) {
+      replaceMap.put("@@keystore_file@@", AndroidKeyStore.getKeyStore().getAbsolutePath());
+      replaceMap.put("@@key_alias@@", AndroidKeyStore.ALIAS_STRING);  
+      replaceMap.put("@@key_password@@", keyPassword);
+    }
     AndroidUtil.createFileFromTemplate(gradlePropsTemplate, gradlePropsFile, replaceMap);    
     
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
