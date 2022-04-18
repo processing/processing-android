@@ -128,9 +128,15 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         String repositoryUrl = REPOSITORY_URL + REPOSITORY_LIST;
         String addonUrl = REPOSITORY_URL + ADDON_LIST;
         String haxmUrl = HAXM_URL + ADDON_LIST;
-        getMainDownloadUrls(downloadUrls, repositoryUrl, Platform.getName());
-        getExtrasDownloadUrls(downloadUrls, addonUrl, Platform.getName());        
-        getHaxmDownloadUrl(downloadUrls, haxmUrl, Platform.getName());
+
+        String platformName = Platform.getName();
+        System.out.println("PLATFORM NAME " + platformName);
+        if (platformName.equals("macos")) {
+          platformName = "macosx";
+        }
+        getMainDownloadUrls(downloadUrls, repositoryUrl, platformName);
+        getExtrasDownloadUrls(downloadUrls, addonUrl, platformName);
+        getHaxmDownloadUrl(downloadUrls, haxmUrl, platformName);
         firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
 
         // Command-line tools
@@ -246,7 +252,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     }
 
     private void getMainDownloadUrls(SDKUrlHolder urlHolder, 
-        String repositoryUrl, String requiredHostOs) 
+        String repositoryUrl, String requiredHostOs)
         throws ParserConfigurationException, IOException, SAXException, XPathException {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       DocumentBuilder db = dbf.newDocumentBuilder();
@@ -429,7 +435,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   }
 
   private void getExtrasDownloadUrls(SDKUrlHolder urlHolder, 
-      String repositoryUrl, String requiredHostOs) 
+      String repositoryUrl, String requiredHostOs)
       throws ParserConfigurationException, IOException, SAXException, XPathException {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     DocumentBuilder db = dbf.newDocumentBuilder();
