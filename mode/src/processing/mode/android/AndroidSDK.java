@@ -513,10 +513,10 @@ class AndroidSDK {
                               AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_body"));
     }
     
-    if (Platform.isLinux() && Platform.getNativeBits() == 32) {      
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.32bit_system_title"),
-                              AndroidMode.getTextString("android_sdk.dialog.32bit_system_body", SYSTEM_32BIT_URL));
-    }
+    // if (Platform.isLinux() && Platform.getNativeBits() == 32) {      
+    //   AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.32bit_system_title"),
+    //                           AndroidMode.getTextString("android_sdk.dialog.32bit_system_body", SYSTEM_32BIT_URL));
+    // }
     
     return sdk;
   }

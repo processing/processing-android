@@ -133,7 +133,7 @@ public class AndroidEditor extends JavaEditor {
 
 
     String exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_PROJECT, true);
-    JMenuItem exportProject = Toolkit.newJMenuItem(exportProjectTitle, 'P');
+    JMenuItem exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'X');
     exportProject.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportProject();

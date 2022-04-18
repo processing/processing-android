@@ -1,24 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+	<classpathentry kind="src" output="bin/main" path="src">
 		<attributes>
-			<attribute name="module" value="true"/>
+			<attribute name="gradle_scope" value="main"/>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="mode/jdi.jar"/>
-	<classpathentry kind="lib" path="mode/jdimodel.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17/"/>
+	<classpathentry kind="con" path="org.eclipse.buildship.core.gradleclasspathcontainer"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing4-app"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing4-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/processing4-java"/>
-	<classpathentry kind="lib" path="mode/istack-commons-runtime.jar"/>
-	<classpathentry kind="lib" path="mode/javax.activation-api.jar"/>
-	<classpathentry kind="lib" path="mode/jaxb-api.jar"/>
-	<classpathentry kind="lib" path="mode/jaxb-jxc.jar"/>
-	<classpathentry kind="lib" path="mode/jaxb-runtime.jar"/>
-	<classpathentry kind="lib" path="mode/jaxb-xjc.jar"/>
-	<classpathentry kind="lib" path="mode/gradle-tooling-api-6.8.3.jar"/>
 	<classpathentry kind="var" path="ANDROID_JAR"/>
 	<classpathentry kind="var" path="ANDROID_SDK"/>
-	<classpathentry kind="output" path="core/bin"/>
+	<classpathentry kind="output" path="bin/default"/>
 </classpath>
