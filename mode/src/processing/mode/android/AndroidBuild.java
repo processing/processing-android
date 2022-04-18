@@ -861,47 +861,67 @@ class AndroidBuild extends JavaBuild {
                                 final File assetsFolder) throws IOException {
     for (Library library : getImportedLibraries()) {
       // Add each item from the library folder / export list to the output
-      for (File exportFile : library.getAndroidExports()) {
-        String exportName = exportFile.getName();
-        
-        // Skip the GVR and ARCore jars, because gradle will resolve the dependencies
-        if (appComponent == VR && exportName.toLowerCase().startsWith("sdk")) continue;
-        if (appComponent == AR && exportName.toLowerCase().startsWith("core")) continue;
-
-        if (!exportFile.exists()) {
-          System.err.println(AndroidMode.getTextString("android_build.error.export_file_does_not_exist", exportFile.getName()));
-        } else if (exportFile.isDirectory()) {
-          // Copy native library folders to the correct location
-          if (exportName.equals("armeabi")     ||
-              exportName.equals("armeabi-v7a") ||
-              exportName.equals("x86")         ||
-              exportName.equals("arm64-v8a")   ||
-              exportName.equals("x86_64")) 
-          {
-            Util.copyDir(exportFile, new File(libsFolder, exportName));
-          }
-          // Copy jni libraries (.so files) to the correct location
-          else if (exportName.equals("jniLibs")) {
-            Util.copyDir(exportFile, new File(mainFolder, exportName));
-          }
-          else {
-            // Copy any other directory to the assets folder
-            Util.copyDir(exportFile, new File(assetsFolder, exportName));
-          }
-        } else if (exportName.toLowerCase().endsWith(".zip")) {
-          // As of r4 of the Android SDK, it looks like .zip files
-          // are ignored in the libs folder, so rename to .jar
-          System.err.println(AndroidMode.getTextString("android_build.error.zip_files_not_allowed", exportFile.getName()));
-          String jarName = exportName.substring(0, exportName.length() - 4) + ".jar";
-          Util.copyFile(exportFile, new File(libsFolder, jarName));
-
-        } else if (exportName.toLowerCase().endsWith(".jar")) {
-          Util.copyFile(exportFile, new File(libsFolder, exportName));
-
-        } else {
-          Util.copyFile(exportFile, new File(assetsFolder, exportName));
-        }
+      for (File exportFile : library.getApplicationExports("armeabi")) {
+        copyImportedLib(libsFolder, mainFolder, assetsFolder, exportFile);
       }
+      for (File exportFile : library.getApplicationExports("armeabi-v7a")) {
+        copyImportedLib(libsFolder, mainFolder, assetsFolder, exportFile);
+      }
+      for (File exportFile : library.getApplicationExports("x86")) {
+        copyImportedLib(libsFolder, mainFolder, assetsFolder, exportFile);
+      }
+      for (File exportFile : library.getApplicationExports("arm64-v8a")) {
+        copyImportedLib(libsFolder, mainFolder, assetsFolder, exportFile);
+      }
+      for (File exportFile : library.getApplicationExports("x86_64")) {
+        copyImportedLib(libsFolder, mainFolder, assetsFolder, exportFile);
+      }
+    }
+  }
+  
+
+  private void copyImportedLib(final File libsFolder, 
+                               final File mainFolder,
+                               final File assetsFolder,
+                               final File exportFile) throws IOException {
+    String exportName = exportFile.getName();
+        
+    // Skip the GVR and ARCore jars, because gradle will resolve the dependencies
+    if (appComponent == VR && exportName.toLowerCase().startsWith("sdk")) return;
+    if (appComponent == AR && exportName.toLowerCase().startsWith("core")) return;
+
+    if (!exportFile.exists()) {
+      System.err.println(AndroidMode.getTextString("android_build.error.export_file_does_not_exist", exportFile.getName()));
+    } else if (exportFile.isDirectory()) {
+      // Copy native library folders to the correct location
+      if (exportName.equals("armeabi")     ||
+          exportName.equals("armeabi-v7a") ||
+          exportName.equals("x86")         ||
+          exportName.equals("arm64-v8a")   ||
+          exportName.equals("x86_64")) 
+      {
+        Util.copyDir(exportFile, new File(libsFolder, exportName));
+      }
+      // Copy jni libraries (.so files) to the correct location
+      else if (exportName.equals("jniLibs")) {
+        Util.copyDir(exportFile, new File(mainFolder, exportName));
+      }
+      else {
+        // Copy any other directory to the assets folder
+        Util.copyDir(exportFile, new File(assetsFolder, exportName));
+      }
+    } else if (exportName.toLowerCase().endsWith(".zip")) {
+      // As of r4 of the Android SDK, it looks like .zip files
+      // are ignored in the libs folder, so rename to .jar
+      System.err.println(AndroidMode.getTextString("android_build.error.zip_files_not_allowed", exportFile.getName()));
+      String jarName = exportName.substring(0, exportName.length() - 4) + ".jar";
+      Util.copyFile(exportFile, new File(libsFolder, jarName));
+
+    } else if (exportName.toLowerCase().endsWith(".jar")) {
+      Util.copyFile(exportFile, new File(libsFolder, exportName));
+
+    } else {
+      Util.copyFile(exportFile, new File(assetsFolder, exportName));
     }
   }
 
