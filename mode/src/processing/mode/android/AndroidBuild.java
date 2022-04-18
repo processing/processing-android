@@ -23,6 +23,7 @@
 package processing.mode.android;
 
 import org.gradle.tooling.*;
+
 import processing.app.Base;
 import processing.app.Library;
 import processing.app.Messages;
@@ -38,6 +39,11 @@ import processing.mode.java.preproc.PdePreprocessor;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Properties;
+
+import java.util.*;
+import processing.app.SketchCode;
+import processing.mode.java.preproc.PreprocessorResult;
+
 
 /** 
  * Class with all the infrastructure needed to build a sketch in the Android 
@@ -245,7 +251,7 @@ class AndroidBuild extends JavaBuild {
     PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).setDestinationPackage(pckgName).build();        
     sketchClassName = preprocess(srcFolder, pckgName, preprocessor, false);
     if (sketchClassName != null) {
-      renderer = "P2D";
+      renderer = getRenderer(srcFolder, pckgName, preprocessor);
       writeMainClass(srcFolder, external);
       createTopModule("':" + module + "'", password);
       createAppModule(module);
@@ -254,6 +260,38 @@ class AndroidBuild extends JavaBuild {
     return tmpFolder;
   }
 
+  protected String getRenderer(File srcFolder,
+                               String packageName,
+                               PdePreprocessor preprocessor) throws SketchException {    
+    StringBuilder bigCode = new StringBuilder();
+    int bigCount = 0;
+    List<Integer> linesPerTab = new ArrayList<>();
+    for (SketchCode sc : sketch.getCode()) {
+      if (sc.isExtension("pde")) {
+        sc.setPreprocOffset(bigCount);
+        bigCode.append(sc.getProgram());
+        bigCode.append('\n');
+        linesPerTab.add(bigCount);
+        bigCount += sc.getLineCount();
+      }
+    }
+    linesPerTab.add(bigCount);
+    
+    PreprocessorResult result;
+    try {
+      File outputFolder = (packageName == null) ?
+      srcFolder : new File(srcFolder, packageName.replace('.', '/'));
+      outputFolder.mkdirs();
+      final File tmp = new File(outputFolder, sketch.getMainName() + "_tmp.java");
+      try (PrintWriter stream = PApplet.createWriter(tmp)) {
+        result = preprocessor.write(stream, bigCode.toString(), null);
+      }
+      tmp.delete();
+      return result.getSketchRenderer();
+    } catch (Exception ex) {
+      return "P2D";
+    }
+  }
 
   protected boolean gradleBuildBundle() throws SketchException {
     ProjectConnection connection = GradleConnector.newConnector()
@@ -822,7 +860,7 @@ class AndroidBuild extends JavaBuild {
                                 final File mainFolder,
                                 final File assetsFolder) throws IOException {
     for (Library library : getImportedLibraries()) {
-      // add each item from the library folder / export list to the output
+      // Add each item from the library folder / export list to the output
       for (File exportFile : library.getAndroidExports()) {
         String exportName = exportFile.getName();
         
