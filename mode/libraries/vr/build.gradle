@@ -61,15 +61,28 @@ build.doLast {
     // Copying vr jar to library folder
     File vrJar = file("library/vr.jar")
     vrJar.mkdirs();
-    Files.copy(file("$buildDir/libs/vr.jar").toPath(),
-               vrJar.toPath(), REPLACE_EXISTING);
+    
+    // Need to check the existance of the files before using as the files 
+    // will get generated only if Task ':mode:libraries:vr:jar' is not being skipped
+    // Task ':mode:libraries:vr:jar' will be skipped if source files are unchanged or jar task is UP-TO-DATE
+    
+    if(file("$buildDir/libs/vr.jar").exists()){
+        Files.copy(file("$buildDir/libs/vr.jar").toPath(),
+                   vrJar.toPath(), REPLACE_EXISTING);
+    }
     // Renaming artifacts for maven publishing
-    Files.move(file("$buildDir/libs/vr.jar").toPath(),
-               file("$buildDir/libs/processing-vr-${vrLibVersion}.jar").toPath(), REPLACE_EXISTING);
-    Files.move(file("$buildDir/libs/vr-sources.jar").toPath(),
-               file("$buildDir/libs/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    Files.move(file("$buildDir/libs/vr.jar.MD5").toPath(),
-               file("$buildDir/libs/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    if(file("$buildDir/libs/vr.jar").exists()){
+        Files.move(file("$buildDir/libs/vr.jar").toPath(),
+                   file("$buildDir/libs/processing-vr-${vrLibVersion}.jar").toPath(), REPLACE_EXISTING);
+    }
+    if(file("$buildDir/libs/vr-sources.jar").exists()){
+        Files.move(file("$buildDir/libs/vr-sources.jar").toPath(),
+                   file("$buildDir/libs/processing-vr-${vrLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+    }
+    if(file("$buildDir/libs/vr.jar.MD5").exists()){
+        Files.move(file("$buildDir/libs/vr.jar.MD5").toPath(),
+                   file("$buildDir/libs/processing-vr-${vrLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    }
 }
 
 ext {
