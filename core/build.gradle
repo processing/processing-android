@@ -58,16 +58,29 @@ compileJava.doFirst {
 }
 
 build.doLast {
-    // Copying core jar as zip inside the mode folder
-    Files.copy(file("${buildDir}/libs/core.jar").toPath(),
+
+    // Need to check the existance of the files before using as the files 
+    // will get generated only if  Task :core:jar is not being skipped
+    // Task :core:jar will be skipped if source files are unchanged or jar task is UP-TO-DATE
+    
+    if(file("${buildDir}/libs/core.jar").exists()){
+        // Copying core jar as zip inside the mode folder
+        Files.copy(file("${buildDir}/libs/core.jar").toPath(), 
             file("${coreZipPath}").toPath(), REPLACE_EXISTING)
+    }
     // Renaming artifacts for maven publishing
-    Files.move(file("${buildDir}/libs/core.jar").toPath(),
-               file("$buildDir/libs/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
-    Files.move(file("${buildDir}/libs/core-sources.jar").toPath(),
-               file("$buildDir/libs/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    Files.move(file("${buildDir}/libs/core.jar.MD5").toPath(),
-               file("$buildDir/libs/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    if(file("${buildDir}/libs/core.jar").exists()){
+        Files.move(file("${buildDir}/libs/core.jar").toPath(),
+            file("$buildDir/libs/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
+    }
+    if(file("${buildDir}/libs/core-sources.jar").exists()){
+        Files.move(file("${buildDir}/libs/core-sources.jar").toPath(),
+            file("$buildDir/libs/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+    }
+    if(file("${buildDir}/libs/core.jar.MD5").exists()){
+        Files.move(file("${buildDir}/libs/core.jar.MD5").toPath(),
+            file("$buildDir/libs/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    }
 }
 
 ext {
