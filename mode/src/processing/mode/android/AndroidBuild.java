@@ -249,50 +249,24 @@ class AndroidBuild extends JavaBuild {
     // build the preproc and get to work
     String pckgName = getPackageName();
     PdePreprocessor preprocessor = PdePreprocessor.builderFor(sketch.getName()).setDestinationPackage(pckgName).build();        
-    sketchClassName = preprocess(srcFolder, pckgName, preprocessor, false);
-    if (sketchClassName != null) {
-      renderer = getRenderer(srcFolder, pckgName, preprocessor);
-      writeMainClass(srcFolder, external);
-      createTopModule("':" + module + "'", password);
-      createAppModule(module);
+    PreprocessorResult result = preprocess(srcFolder, pckgName, preprocessor, false);    
+    if (result != null) {
+      sketchClassName = result.getClassName();
+      if (sketchClassName != null) {
+        renderer = result.getSketchRenderer();
+        if (renderer == null) {
+          renderer = "JAVA2D";
+        }
+        writeMainClass(srcFolder, external);
+        createTopModule("':" + module + "'", password);
+        createAppModule(module);  
+      }
     }
     
     return tmpFolder;
   }
 
-  protected String getRenderer(File srcFolder,
-                               String packageName,
-                               PdePreprocessor preprocessor) throws SketchException {    
-    StringBuilder bigCode = new StringBuilder();
-    int bigCount = 0;
-    List<Integer> linesPerTab = new ArrayList<>();
-    for (SketchCode sc : sketch.getCode()) {
-      if (sc.isExtension("pde")) {
-        sc.setPreprocOffset(bigCount);
-        bigCode.append(sc.getProgram());
-        bigCode.append('\n');
-        linesPerTab.add(bigCount);
-        bigCount += sc.getLineCount();
-      }
-    }
-    linesPerTab.add(bigCount);
-    
-    PreprocessorResult result;
-    try {
-      File outputFolder = (packageName == null) ?
-      srcFolder : new File(srcFolder, packageName.replace('.', '/'));
-      outputFolder.mkdirs();
-      final File tmp = new File(outputFolder, sketch.getMainName() + "_tmp.java");
-      try (PrintWriter stream = PApplet.createWriter(tmp)) {
-        result = preprocessor.write(stream, bigCode.toString(), null);
-      }
-      tmp.delete();
-      return result.getSketchRenderer();
-    } catch (Exception ex) {
-      return "P2D";
-    }
-  }
-
+  
   protected boolean gradleBuildBundle() throws SketchException {
     ProjectConnection connection = GradleConnector.newConnector()
             .forProjectDirectory(tmpFolder)
