@@ -61,15 +61,28 @@ build.doLast {
     // Copying ar jar to library folder
     File arJar = file("library/ar.jar")
     arJar.mkdirs();
-    Files.copy(file("$buildDir/libs/ar.jar").toPath(),
-               arJar.toPath(), REPLACE_EXISTING);
+    
+    // Need to check the existance of the files before using as the files 
+    // will get generated only if Task ':mode:libraries:ar:jar' is not being skipped
+    // Task ':mode:libraries:ar:jar' will be skipped if source files are unchanged or jar task is UP-TO-DATE
+    
+    if(file("$buildDir/libs/ar.jar").exists()){
+        Files.copy(file("$buildDir/libs/ar.jar").toPath(),
+                   arJar.toPath(), REPLACE_EXISTING);
+    }
     // Renaming artifacts for maven publishing
-    Files.move(file("$buildDir/libs/ar.jar").toPath(),
-               file("$buildDir/libs/processing-ar-${arLibVersion}.jar").toPath(), REPLACE_EXISTING);
-    Files.move(file("$buildDir/libs/ar-sources.jar").toPath(),
-               file("$buildDir/libs/processing-ar-${arLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    Files.move(file("$buildDir/libs/ar.jar.MD5").toPath(),
-               file("$buildDir/libs/processing-ar-${arLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    if(file("$buildDir/libs/ar.jar").exists()){
+        Files.move(file("$buildDir/libs/ar.jar").toPath(),
+                   file("$buildDir/libs/processing-ar-${arLibVersion}.jar").toPath(), REPLACE_EXISTING);
+    }
+    if(file("$buildDir/libs/ar-sources.jar").exists()){
+        Files.move(file("$buildDir/libs/ar-sources.jar").toPath(),
+                   file("$buildDir/libs/processing-ar-${arLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
+    }
+    if(file("$buildDir/libs/ar.jar.MD5").exists()){
+        Files.move(file("$buildDir/libs/ar.jar.MD5").toPath(),
+                   file("$buildDir/libs/processing-ar-${arLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+    }
 }
 
 ext {
