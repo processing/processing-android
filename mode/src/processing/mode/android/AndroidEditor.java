@@ -149,7 +149,7 @@ public class AndroidEditor extends JavaEditor {
       }
     });
 
-    return buildFileMenu(new JMenuItem[] { exportBundle, exportProject});
+    return buildFileMenu(new JMenuItem[] {exportPackage, exportBundle, exportProject});
   }
 
 
@@ -544,7 +544,7 @@ public class AndroidEditor extends JavaEditor {
     new Thread() {
       public void run() {
         startIndeterminate();
-        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_bundle"));
+        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_package"));
         AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
         try {
           File projectFolder = build.exportPackage(keyStorePassword);
