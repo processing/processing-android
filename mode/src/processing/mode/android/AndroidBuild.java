@@ -384,7 +384,7 @@ class AndroidBuild extends JavaBuild {
     replaceMap.clear();
     replaceMap.put("@@java_home@@", javaHome);
     if (!keyPassword.equals("") && AndroidKeyStore.getKeyStore() != null) {
-      replaceMap.put("@@keystore_file@@", AndroidKeyStore.getKeyStore().getAbsolutePath());
+      replaceMap.put("@@keystore_file@@", AndroidKeyStore.getKeyStore().getAbsolutePath().replace('\\', '/'));
       replaceMap.put("@@key_alias@@", AndroidKeyStore.ALIAS_STRING);  
       replaceMap.put("@@key_password@@", keyPassword);
     }    
