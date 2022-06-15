@@ -332,7 +332,7 @@ public class AndroidMode extends JavaMode {
     String name = manifest.getPackageName();
     if (name.toLowerCase().equals(defName.toLowerCase())) {
       // The user did not set the package name, show error and stop
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_bundle_title"),
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.cannot_export_package_title"),
                               AndroidMode.getTextString("android_mode.dialog.cannot_export_package_body", DISTRIBUTING_APPS_TUT_URL));
       return false;
     }

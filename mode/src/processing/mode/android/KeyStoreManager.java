@@ -42,6 +42,9 @@ import java.util.Arrays;
 
 @SuppressWarnings("serial")
 public class KeyStoreManager extends JFrame {
+  final static protected int PACKAGE = 0;
+  final static protected int BUNDLE  = 1;
+
   final static private int BOX_BORDER = Toolkit.zoom(13);
   final static private int PASS_BORDER = Toolkit.zoom(15);
   final static private int LABEL_WIDTH = Toolkit.zoom(400);
@@ -64,14 +67,14 @@ public class KeyStoreManager extends JFrame {
   JTextField country;
   JTextField stateName;
 
-  public KeyStoreManager(final AndroidEditor editor) {
+  public KeyStoreManager(final AndroidEditor editor, final int kind) {
     super("Android keystore manager");
     this.editor = editor;
 
-    createLayout();
+    createLayout(kind);
   }
 
-  private void createLayout() {
+  private void createLayout(int kind) {
     Container outer = getContentPane();
     outer.removeAll();
 
@@ -104,14 +107,22 @@ public class KeyStoreManager extends JFrame {
                   commonName.getText(), organizationalUnit.getText(), organizationName.getText(),
                   localityName.getText(), stateName.getText(), country.getText());
 
-              setVisible(false);              
-              editor.startExportBundle(new String(passwordField.getPassword()));
+              setVisible(false);
+              if (kind == KeyStoreManager.BUNDLE) {
+                editor.startExportBundle(new String(passwordField.getPassword()));
+              } else {
+                editor.startExportPackage(new String(passwordField.getPassword()));
+              }              
             } catch (Exception e1) {
               e1.printStackTrace();
             }
           } else {
             setVisible(false);
-            editor.startExportBundle(new String(passwordField.getPassword()));
+            if (kind == KeyStoreManager.BUNDLE) {
+              editor.startExportBundle(new String(passwordField.getPassword()));
+            } else {
+              editor.startExportPackage(new String(passwordField.getPassword()));
+            }
           }
         }
       }
@@ -147,7 +158,7 @@ public class KeyStoreManager extends JFrame {
             setVisible(true);
           } else {
             keyStore = null;
-            createLayout();
+            createLayout(kind);
           }
         }
       }

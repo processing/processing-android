@@ -45,8 +45,9 @@ public class AndroidToolbar extends EditorToolbar {
   static protected final int NEW            = 2;
   static protected final int OPEN           = 3;
   static protected final int SAVE           = 4;
-  static protected final int EXPORT_BUNDLE  = 5;
-  static protected final int EXPORT_PROJECT = 6;
+  static protected final int EXPORT_PACKAGE = 5;  
+  static protected final int EXPORT_BUNDLE  = 6;
+  static protected final int EXPORT_PROJECT = 7;
 
 
   private AndroidEditor aEditor;
@@ -77,58 +78,15 @@ public class AndroidToolbar extends EditorToolbar {
     case NEW:    return "New";
     case OPEN:   return "Open";
     case SAVE:   return "Save";
-    case EXPORT_BUNDLE:  return AndroidMode.getTextString("menu.file.export_signed_bundle");                                 
+    
+
+    case EXPORT_PACKAGE:  return AndroidMode.getTextString("menu.file.export_signed_package");
+    case EXPORT_BUNDLE:  return AndroidMode.getTextString("menu.file.export_signed_bundle");
     case EXPORT_PROJECT: return AndroidMode.getTextString("menu.file.export_android_project");
     }
     return null;
   }
 
-/*
-  public void handlePressed(MouseEvent e, int sel) {
-    boolean shift = e.isShiftDown();
-    AndroidEditor aeditor = (AndroidEditor) editor;
-
-    switch (sel) {
-    case RUN:
-      if (!shift) {
-        aeditor.handleRunDevice();
-      } else {
-        aeditor.handleRunEmulator();
-      }
-      break;
-
-    case STOP:
-      aeditor.handleStop();
-      break;
-
-    case OPEN:
-      // TODO I think we need a longer chain of accessors here.
-      JPopupMenu popup = editor.getMode().getToolbarMenu().getPopupMenu();
-      popup.show(this, e.getX(), e.getY());
-      break;
-
-    case NEW:
-//      if (shift) {
-      base.handleNew();
-//      } else {
-//        base.handleNewReplace();
-//      }
-      break;
-
-    case SAVE:
-      aeditor.handleSave(false);
-      break;
-
-    case EXPORT:
-      if (!shift) {
-        aeditor.handleExportPackage();
-      } else {
-        aeditor.handleExportProject();
-      }
-      break;
-    }
-  }
-*/
 
   @Override
   public List<EditorButton> createButtons() {

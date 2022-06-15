@@ -123,6 +123,15 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildFileMenu() {
+    String exportPackageTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_PACKAGE, true);
+    JMenuItem exportPackage = Toolkit.newJMenuItem(exportPackageTitle, 'K');
+    exportPackage.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        handleExportPackage();
+      }
+    });
+
+
     String exportBundleTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_BUNDLE, false);
     JMenuItem exportBundle = Toolkit.newJMenuItem(exportBundleTitle, 'B');
     exportBundle.addActionListener(new ActionListener() {
@@ -522,12 +531,51 @@ public class AndroidEditor extends JavaEditor {
   }
 
   /**
+   * Create a release package of the sketch
+   */
+  public void handleExportPackage() {
+    if (androidMode.checkPackageName(sketch, appComponent) &&
+        androidMode.checkAppIcons(sketch, appComponent) && handleExportCheckModified()) {
+      new KeyStoreManager(this, KeyStoreManager.PACKAGE);
+    }
+  }
+
+  public void startExportPackage(final String keyStorePassword) {
+    new Thread() {
+      public void run() {
+        startIndeterminate();
+        statusNotice(AndroidMode.getTextString("android_editor.status.exporting_bundle"));
+        AndroidBuild build = new AndroidBuild(sketch, androidMode, appComponent);
+        try {
+          File projectFolder = build.exportPackage(keyStorePassword);
+          if (projectFolder != null) {
+            statusNotice(AndroidMode.getTextString("android_editor.status.package_export_completed"));
+            Platform.openFolder(projectFolder);
+          } else {
+            statusError(AndroidMode.getTextString("android_editor.status.package_export_failed"));
+          }
+        } catch (IOException e) {
+          statusError(e);
+        } catch (SketchException e) {
+          statusError(e);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        stopIndeterminate();
+      }
+    }.start();
+  }
+
+
+  /**
    * Create a release bundle of the sketch
    */
   public void handleExportBundle() {
     if (androidMode.checkPackageName(sketch, appComponent) &&
         androidMode.checkAppIcons(sketch, appComponent) && handleExportCheckModified()) {
-      new KeyStoreManager(this);
+      new KeyStoreManager(this, KeyStoreManager.BUNDLE);
     }
   }
 
