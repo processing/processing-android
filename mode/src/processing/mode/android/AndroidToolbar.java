@@ -39,15 +39,17 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class AndroidToolbar extends EditorToolbar {
-  static protected final int RUN            = 0;
-  static protected final int STOP           = 1;
+  static protected final int RUN_ON_DEVICE   = 0;
+  static protected final int RUN_IN_EMULATOR = 1;
+  static protected final int STOP            = 2;
 
-  static protected final int NEW            = 2;
-  static protected final int OPEN           = 3;
-  static protected final int SAVE           = 4;
-  static protected final int EXPORT_PACKAGE = 5;  
-  static protected final int EXPORT_BUNDLE  = 6;
-  static protected final int EXPORT_PROJECT = 7;
+  static protected final int NEW             = 3;
+  static protected final int OPEN            = 4;
+  static protected final int SAVE            = 5;
+
+  static protected final int EXPORT_PACKAGE = 6;  
+  static protected final int EXPORT_BUNDLE  = 7;
+  static protected final int EXPORT_PROJECT = 8;
 
 
   private AndroidEditor aEditor;
@@ -61,25 +63,14 @@ public class AndroidToolbar extends EditorToolbar {
   }
 
 
-  // TODO:
-  // Buttons are initialized in createButtons, see code of EditorToolbar.rebuild()
-//  public void init() {
-//    Image[][] images = loadImages();
-//    for (int i = 0; i < 6; i++) {
-//      addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
-//    }
-//  }
-
-
-  static public String getTitle(int index, boolean shift) {
+  static public String getTitle(int index) {
     switch (index) {
-    case RUN:    return !shift ? "Run on Device" : "Run in Emulator";
-    case STOP:   return "Stop";
-    case NEW:    return "New";
-    case OPEN:   return "Open";
-    case SAVE:   return "Save";
-    
-
+    case RUN_ON_DEVICE: return AndroidMode.getTextString("menu.sketch.run_on_device");
+    case RUN_IN_EMULATOR: return AndroidMode.getTextString("menu.sketch.run_in_emulator");
+    case STOP:   return AndroidMode.getTextString("menu.sketch.stop");
+    case NEW:    return AndroidMode.getTextString("menu.file.new");
+    case OPEN:   return AndroidMode.getTextString("menu.file.open");
+    case SAVE:   return AndroidMode.getTextString("menu.file.save");
     case EXPORT_PACKAGE:  return AndroidMode.getTextString("menu.file.export_signed_package");
     case EXPORT_BUNDLE:  return AndroidMode.getTextString("menu.file.export_signed_bundle");
     case EXPORT_PROJECT: return AndroidMode.getTextString("menu.file.export_android_project");
