@@ -41,6 +41,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -501,15 +502,26 @@ class AndroidSDK {
     
     final int result = showSDKLicenseDialog(editor);
     if (result == JOptionPane.YES_OPTION) {
-      sdk.acceptLicenses();
-      String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
-      File driver = AndroidSDK.getGoogleDriverFolder();
-      if (Platform.isWindows() && driver.exists()) {
-        msg += AndroidMode.getTextString("android_sdk.dialog.install_usb_driver", DRIVER_INSTALL_URL, driver.getAbsolutePath()); 
-      }
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_installed_title"), msg);      
+     sdk.acceptLicenses();
+     File sdkManager = findCliTool(new File(sdk.getCommandLineToolsFolder(), "bin"), "sdkmanager");
+     try {
+    	 String[] cmdToDownloadEmu = {sdkManager.getCanonicalPath(),"emulator"};
+      Process process = Runtime.getRuntime().exec(cmdToDownloadEmu, null, sdk.getFolder());
+      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getInputStream());
+      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getErrorStream());
+      int emulatorDownloadResultCode = process.waitFor();
+      System.out.println("*-*-*-*itsmylog:EmulatorResultCode:"+emulatorDownloadResultCode);
+     } catch (Exception e) {
+      System.out.println("*-*-*-*itsmylog:Level.WARNING, ____Execution failure: "+ e.toString());
+     }
+     String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
+     File driver = AndroidSDK.getGoogleDriverFolder();
+     if (Platform.isWindows() && driver.exists()) {
+       msg += AndroidMode.getTextString("android_sdk.dialog.install_usb_driver", DRIVER_INSTALL_URL, driver.getAbsolutePath()); 
+     }
+     AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_installed_title"), msg);      
     } else {
-      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_title"), 
+     AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_title"), 
                               AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_body"));
     }
     
