@@ -239,6 +239,11 @@ public class AndroidMode extends JavaMode {
 
     listener.statusNotice(AndroidMode.getTextString("android_mode.status.building_project"));
     build.build("debug", "");
+    
+    if (sdk.getEmulatorTool() == null) {
+      System.out.println("Try to download the emulator using the SDK Manager...");
+      sdk.downloadEmuOnDemand();
+    }
         
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
     if (!avd) {
