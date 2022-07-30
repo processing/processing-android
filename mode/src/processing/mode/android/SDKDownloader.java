@@ -66,7 +66,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
   private static final String REPOSITORY_LIST = "repository2-1.xml";
   private static final String ADDON_LIST = "addon2-1.xml";
   
-  public static final boolean DOWNLOAD_EMU = false;
+  public static final boolean DOWNLOAD_EMU_WITH_SDK = false;
 
   private JProgressBar progressBar;
   private JLabel downloadedTextArea;
@@ -114,7 +114,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       File haxmFolder = new File(extrasFolder, "intel/HAXM");
       if (!haxmFolder.exists()) haxmFolder.mkdirs();      
 
-      if (DOWNLOAD_EMU) {
+      if (DOWNLOAD_EMU_WITH_SDK) {
         File emulatorFolder = new File(sdkFolder, "emulator");
         if (!emulatorFolder.exists()) emulatorFolder.mkdir();        
       }
@@ -173,7 +173,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
           downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
         }
 
-        if (DOWNLOAD_EMU) {
+        if (DOWNLOAD_EMU_WITH_SDK) {
           // Emulator, unpacks directly to sdk folder 
           File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
           downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);          
@@ -391,7 +391,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         throw new IOException(AndroidMode.getTextString("sdk_downloader.error_cannot_find_tools"));
       }
       
-      if (DOWNLOAD_EMU) {
+      if (DOWNLOAD_EMU_WITH_SDK) {
         // -----------------------------------------------------------------------
         // Emulator
         expr = xpath.compile("//remotePackage[@path=\"emulator\"]");
