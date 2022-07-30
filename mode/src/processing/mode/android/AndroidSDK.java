@@ -41,12 +41,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import java.io.PrintWriter;
 
 /** 
  * Class holding all needed references (path, tools, etc) to the SDK used by 
@@ -68,7 +69,8 @@ class AndroidSDK {
   private final File cmdlineTools;
   private final File avdManager;
   private final File sdkManager;
-  private final File emulator;
+
+  private File emulator;
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
@@ -148,24 +150,7 @@ class AndroidSDK {
     avdManager = findCliTool(new File(cmdlineTools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(cmdlineTools, "bin"), "sdkmanager");
     
-    File emuFolder = new File(folder, "emulator");
-    if (emuFolder.exists()) {
-      // First try the new location of the emulator inside its own folder
-      emulator = findCliTool(emuFolder, "emulator");   
-    } else {
-      // If not found, use old location inside tools as fallback
-      emuFolder = new File(cmdlineTools, "emulator");
-      if (emuFolder.exists()) {
-        emulator = findCliTool(cmdlineTools, "emulator");  
-      } else {
-        emulator = null;
-        if (SDKDownloader.DOWNLOAD_EMU) {
-        // Only throw an exception if the downloader was supposed to download the emulator 
-        throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_emulator", 
-            AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
-        }
-      }      
-    }
+    initEmu();
     
     String path = Platform.getenv("PATH");
 
@@ -181,6 +166,63 @@ class AndroidSDK {
     Platform.setenv("PATH", path);
     
     checkDebugCertificate();
+  }
+  
+  private void initEmu() throws BadSDKException, IOException {
+    File emuFolder = new File(folder, "emulator");
+    if (emuFolder.exists()) {
+      // First try the new location of the emulator inside its own folder
+      emulator = findCliTool(emuFolder, "emulator");   
+    } else {
+      // If not found, use old location inside tools as fallback
+      emuFolder = new File(cmdlineTools, "emulator");
+      if (emuFolder.exists()) {
+        emulator = findCliTool(cmdlineTools, "emulator");  
+      } else {
+        emulator = null;
+        if (SDKDownloader.DOWNLOAD_EMU_WITH_SDK) {
+        // Only throw an exception if the downloader was supposed to download the emulator 
+        throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_emulator", 
+            AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
+        }
+      }      
+    }
+  }
+  public boolean downloadEmuOnDemand() {
+    final String[] cmd = new String[] {
+      sdkManager.getAbsolutePath(),
+      "emulator"
+    };
+     
+    ProcessBuilder pb = new ProcessBuilder(cmd);
+    Process process = null;  
+    try {
+      process = pb.start();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    try {
+      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getInputStream());
+      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getErrorStream());
+
+      int emulatorDownloadResultCode = process.waitFor();
+      System.out.println("Output from emulator download " + emulatorDownloadResultCode);
+      if (emulatorDownloadResultCode == 0) {
+        initEmu();
+        return true;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (BadSDKException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      process.destroy();
+    } 
+    
+    return false;
   }
 
 
@@ -502,26 +544,15 @@ class AndroidSDK {
     
     final int result = showSDKLicenseDialog(editor);
     if (result == JOptionPane.YES_OPTION) {
-     sdk.acceptLicenses();
-     File sdkManager = findCliTool(new File(sdk.getCommandLineToolsFolder(), "bin"), "sdkmanager");
-     try {
-    	 String[] cmdToDownloadEmu = {sdkManager.getCanonicalPath(),"emulator"};
-      Process process = Runtime.getRuntime().exec(cmdToDownloadEmu, null, sdk.getFolder());
-      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getInputStream());
-      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getErrorStream());
-      int emulatorDownloadResultCode = process.waitFor();
-      System.out.println("*-*-*-*itsmylog:EmulatorResultCode:"+emulatorDownloadResultCode);
-     } catch (Exception e) {
-      System.out.println("*-*-*-*itsmylog:Level.WARNING, ____Execution failure: "+ e.toString());
-     }
-     String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
-     File driver = AndroidSDK.getGoogleDriverFolder();
-     if (Platform.isWindows() && driver.exists()) {
-       msg += AndroidMode.getTextString("android_sdk.dialog.install_usb_driver", DRIVER_INSTALL_URL, driver.getAbsolutePath()); 
-     }
-     AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_installed_title"), msg);      
+      sdk.acceptLicenses();
+      String msg = AndroidMode.getTextString("android_sdk.dialog.sdk_installed_body", PROCESSING_FOR_ANDROID_URL, WHATS_NEW_URL);
+      File driver = AndroidSDK.getGoogleDriverFolder();
+      if (Platform.isWindows() && driver.exists()) {
+        msg += AndroidMode.getTextString("android_sdk.dialog.install_usb_driver", DRIVER_INSTALL_URL, driver.getAbsolutePath()); 
+      }
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_installed_title"), msg);      
     } else {
-     AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_title"), 
+      AndroidUtil.showMessage(AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_title"), 
                               AndroidMode.getTextString("android_sdk.dialog.sdk_license_rejected_body"));
     }
     
