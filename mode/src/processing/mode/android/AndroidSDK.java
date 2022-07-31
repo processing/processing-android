@@ -47,6 +47,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import java.io.PrintWriter;
+
 /** 
  * Class holding all needed references (path, tools, etc) to the SDK used by 
  * the mode.
@@ -67,7 +69,8 @@ class AndroidSDK {
   private final File cmdlineTools;
   private final File avdManager;
   private final File sdkManager;
-  private final File emulator;
+
+  private File emulator;
   
   private static final String SDK_DOWNLOAD_URL = 
       "https://developer.android.com/studio/index.html#downloads";
@@ -147,24 +150,7 @@ class AndroidSDK {
     avdManager = findCliTool(new File(cmdlineTools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(cmdlineTools, "bin"), "sdkmanager");
     
-    File emuFolder = new File(folder, "emulator");
-    if (emuFolder.exists()) {
-      // First try the new location of the emulator inside its own folder
-      emulator = findCliTool(emuFolder, "emulator");   
-    } else {
-      // If not found, use old location inside tools as fallback
-      emuFolder = new File(cmdlineTools, "emulator");
-      if (emuFolder.exists()) {
-        emulator = findCliTool(cmdlineTools, "emulator");  
-      } else {
-        emulator = null;
-        if (SDKDownloader.DOWNLOAD_EMU) {
-        // Only throw an exception if the downloader was supposed to download the emulator 
-        throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_emulator", 
-            AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
-        }
-      }      
-    }
+    initEmu();
     
     String path = Platform.getenv("PATH");
 
@@ -180,6 +166,63 @@ class AndroidSDK {
     Platform.setenv("PATH", path);
     
     checkDebugCertificate();
+  }
+  
+  private void initEmu() throws BadSDKException, IOException {
+    File emuFolder = new File(folder, "emulator");
+    if (emuFolder.exists()) {
+      // First try the new location of the emulator inside its own folder
+      emulator = findCliTool(emuFolder, "emulator");   
+    } else {
+      // If not found, use old location inside tools as fallback
+      emuFolder = new File(cmdlineTools, "emulator");
+      if (emuFolder.exists()) {
+        emulator = findCliTool(cmdlineTools, "emulator");  
+      } else {
+        emulator = null;
+        if (SDKDownloader.DOWNLOAD_EMU_WITH_SDK) {
+        // Only throw an exception if the downloader was supposed to download the emulator 
+        throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_emulator", 
+            AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
+        }
+      }      
+    }
+  }
+  public boolean downloadEmuOnDemand() {
+    final String[] cmd = new String[] {
+      sdkManager.getAbsolutePath(),
+      "emulator"
+    };
+     
+    ProcessBuilder pb = new ProcessBuilder(cmd);
+    Process process = null;  
+    try {
+      process = pb.start();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    try {
+      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getInputStream());
+      new RedirectStreamHandler(new PrintWriter(System.out, true), process.getErrorStream());
+
+      int emulatorDownloadResultCode = process.waitFor();
+      System.out.println("Output from emulator download " + emulatorDownloadResultCode);
+      if (emulatorDownloadResultCode == 0) {
+        initEmu();
+        return true;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (BadSDKException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      process.destroy();
+    } 
+    
+    return false;
   }
 
 
