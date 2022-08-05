@@ -241,8 +241,16 @@ public class AndroidMode extends JavaMode {
     build.build("debug", "");
     
     if (sdk.getEmulatorTool() == null) {
-      System.out.println("Try to download the emulator using the SDK Manager...");
-      sdk.downloadEmuOnDemand();
+      // System.out.println("Try to download the emulator using the SDK Manager...");
+      listener.statusNotice(AndroidMode.getTextString("android_mode.status.downloading_emulator"));
+      boolean emulatorInstallationSucceded = sdk.downloadEmuOnDemand();
+      if (!emulatorInstallationSucceded) {
+    	  SketchException emulatorInstallationErrorException = new SketchException(AndroidMode.getTextString("android_mode.error.emulator_installation_failed"));
+    	  emulatorInstallationErrorException.hideStackTrace();
+          throw emulatorInstallationErrorException;  
+      } else {
+    	  System.out.println(AndroidMode.getTextString("android_mode.status.downloading_emulator_successful"));
+      }
     }
         
     boolean avd = AVD.ensureProperAVD(editor, this, sdk, build.isWear());
