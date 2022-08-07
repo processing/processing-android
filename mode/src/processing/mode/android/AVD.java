@@ -101,15 +101,18 @@ public class AVD {
   
   
   static public String getPreferredPlatform(boolean wear, String abi) {
-    if (wear) {
-      return AndroidBuild.TARGET_PLATFORM;
-    } else if (abi.equals("arm")) {
-      // The ARM images using Google APIs are too slow, so use the 
-      // older Android (AOSP) images.      
-      return "android-" + TARGET_SDK_ARM;
-    } else {
-      return AndroidBuild.TARGET_PLATFORM;
-    }
+//    if (wear) {
+//      return AndroidBuild.TARGET_PLATFORM;
+//    } else if (abi.equals("arm")) {
+//      // The ARM images using Google APIs are too slow, so use the
+//      // older Android (AOSP) images.
+//      return "android-" + TARGET_SDK_ARM;
+//    } else if (abi.equals("arm64-v8a")) {
+//      return AndroidBuild.TARGET_PLATFORM;
+//    } else {
+//      return AndroidBuild.TARGET_PLATFORM;
+//    }
+    return AndroidBuild.TARGET_PLATFORM;
   }
   
   static public String getPreferredPort(boolean wear) {
@@ -134,9 +137,8 @@ public class AVD {
   static protected String getPreferredTag(boolean wear, String abi) {
     if (wear) {
       return "android-wear";
-    } else if (abi.equals("arm")) {
-      // The ARM images using Google APIs are too slow, so use the 
-      // older Android (AOSP) images.      
+    } else if (abi.contains("arm")) {
+      // The ARM images are located in the default folder.
       return "default";
     } else {
       return "google_apis";
