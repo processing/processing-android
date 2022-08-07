@@ -2,18 +2,15 @@
 
 /*
  Part of the Processing project - http://processing.org
-
  Copyright (c) 2016-21 The Processing Foundation
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
  as published by the Free Software Foundation.
-
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software Foundation,
  Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -253,12 +250,16 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       XPathExpression expr;
       NodeList remotePackages;
 
-      if (abi.equals("arm"))
+      if (abi.equals("arm")) {
         expr = xpath.compile("//remotePackage[contains(@path, '" + AVD.TARGET_SDK_ARM + "')" +
               "and contains(@path, \"armeabi-v7a\")]");
-      else
+      } else if (abi.equals("arm64-v8a")) {
+    	expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
+                  "and contains(@path, \"arm64-v8a\")]");  
+      } else {
         expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
               "and contains(@path, \"x86\")]");
+      }
       
       if (wear) {
         Document docSysImgWear = db.parse(new URL(repositoryUrl).openStream());
