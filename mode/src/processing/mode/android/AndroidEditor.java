@@ -124,7 +124,7 @@ public class AndroidEditor extends JavaEditor {
 
   public JMenu buildFileMenu() {
     String exportPackageTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_PACKAGE);
-    JMenuItem exportPackage = Toolkit.newJMenuItemExt(exportPackageTitle);
+    JMenuItem exportPackage = Toolkit.newJMenuItemShift(exportPackageTitle,'T');
     exportPackage.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportPackage();

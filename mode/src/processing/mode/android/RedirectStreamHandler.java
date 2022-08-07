@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 
 
 public class RedirectStreamHandler extends Thread {
-    // Streams to redirect from and to
+    // Streams Redirection- from and to
     private final InputStream input;
     private final PrintWriter output;
 
@@ -24,11 +24,11 @@ public class RedirectStreamHandler extends Thread {
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
         String line;
         while ((line = reader.readLine()) != null) {
+        	// print to output line by line
             output.println(line);
         }
-      } catch (IOException ioe) {
-        // OK to ignore...
-        System.out.println("Level.WARNING____I/O Redirection failure: "+ ioe.toString());
+      } catch (IOException ioException) {
+        System.out.println("I/O Redirection failure: "+ ioException.toString());
       }
     }
   }
