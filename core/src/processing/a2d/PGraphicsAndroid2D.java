@@ -454,6 +454,12 @@ public class PGraphicsAndroid2D extends PGraphics {
 
 
   @Override
+  public void vertex(float[] v) {
+    vertex(v[X], v[Y]);
+  }
+
+
+  @Override
   public void vertex(float x, float y, float u, float v) {
     showVariationWarning("vertex(x, y, u, v)");
   }
