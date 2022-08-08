@@ -102,13 +102,19 @@ class AndroidSDK {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_sdk_folder", folder));
     }
     
-    File tmp = new File(folder, "cmdline-tools/latest");
-    if (!tmp.exists()) {
-      tmp = new File(folder, "tools");
-    } else if (!tmp.exists()) {
-      throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_tools_folder", folder)); 
-    }    
-    cmdlineTools = tmp;
+    File cmdlineTools = new File(folder, "cmdline-tools/latest");
+    // we need only command line tools, as sdk/tools got deprecated and can't be used with java 17
+    if (!cmdlineTools.exists) {
+      // lets be more specific to show the error
+      File sdkTools = new File(folder, "tools");
+      if (sdkTools.exists) {
+    	  throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_cmdtools_folder_found_sdktools", folder));
+      } else {
+    	  throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_cmdtools_folder", folder));
+      }
+    }
+    // if we reached here, that means command line tools exists
+    // ok to go with the command line tools
 
     platformTools = new File(folder, "platform-tools");
     if (!platformTools.exists()) {
