@@ -101,18 +101,18 @@ public class AVD {
   
   
   static public String getPreferredPlatform(boolean wear, String abi) {
-//    if (wear) {
-//      return AndroidBuild.TARGET_PLATFORM;
-//    } else if (abi.equals("arm")) {
-//      // The ARM images using Google APIs are too slow, so use the
-//      // older Android (AOSP) images.
-//      return "android-" + TARGET_SDK_ARM;
-//    } else if (abi.equals("arm64-v8a")) {
-//      return AndroidBuild.TARGET_PLATFORM;
-//    } else {
-//      return AndroidBuild.TARGET_PLATFORM;
-//    }
-    return AndroidBuild.TARGET_PLATFORM;
+    if (wear) {
+      return AndroidBuild.TARGET_PLATFORM;
+    } else if (abi.equals("arm")) {
+      // The ARM images using Google APIs are too slow, so use the
+      // older Android (AOSP) images.
+      // TODO check if we can move to the regular ARM images...
+      return "android-" + TARGET_SDK_ARM;
+    } else if (abi.equals("arm64-v8a")) {
+      return AndroidBuild.TARGET_PLATFORM;
+    } else {
+      return AndroidBuild.TARGET_PLATFORM;
+    }
   }
   
   static public String getPreferredPort(boolean wear) {
