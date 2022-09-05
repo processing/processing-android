@@ -23,15 +23,16 @@ package processing.mode.android;
 
 import com.sun.jdi.*;
 import com.sun.jdi.event.*;
+import com.sun.jdi.event.Event;
 import com.sun.jdi.request.ClassPrepareRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.StepRequest;
+import processing.app.Language;
 import processing.app.Messages;
-import processing.mode.java.debug.Debugger;
-import processing.mode.java.debug.ClassLoadListener;
-import processing.mode.java.debug.LineBreakpoint;
-import processing.mode.java.debug.LineID;
+import processing.mode.java.debug.*;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 
 // Developed by Manav Jain as part of GSoC 2018
@@ -42,6 +43,7 @@ public class AndroidDebugger extends Debugger {
   protected AndroidMode androidMode;
 
   protected boolean isEnabled;
+
 
   private String pkgName = "";
   private String sketchClassName = "";
@@ -58,6 +60,19 @@ public class AndroidDebugger extends Debugger {
 
   public void toggleDebug() {
     isEnabled = !isEnabled;
+    inspector.setVisible(enabled);
+    if (isEnabled) {
+      debugItem.setText(Language.text("menu.debug.disable"));
+    } else {
+      debugItem.setText(Language.text("menu.debug.enable"));
+    }
+
+    for (Component item : debugMenu.getMenuComponents()) {
+      if (item instanceof JMenuItem && item != debugItem) {
+        item.setEnabled(isEnabled);
+      }
+    }
+
   }
 
   @Override
@@ -70,6 +85,8 @@ public class AndroidDebugger extends Debugger {
     if (isStarted()) {
       return; // do nothing
     }
+
+    inspector.reset();
 
     runtime = runner;
     pkgName = runner.build.getPackageName();
@@ -222,10 +239,10 @@ public class AndroidDebugger extends Debugger {
     }
   }
 
-  /*
+
   @Override public synchronized void continueDebug() {
     editor.activateContinue();
-    editor.variableInspector().lock();
+    inspector.lock();
     //editor.clearSelection();
     //clearHighlight();
     editor.clearCurrentLine();
@@ -237,14 +254,14 @@ public class AndroidDebugger extends Debugger {
       editor.statusBusy();
     }    
   }
-  */
 
-  /*
+
+
   @Override protected void step(int stepDepth) {
     if (!isStarted()) {
       startDebug();
     } else if (isPaused()) {
-      editor.variableInspector().lock();
+      inspector.lock();
       editor.activateStep();
 
       // use global to mark that there is a step request pending
@@ -256,11 +273,11 @@ public class AndroidDebugger extends Debugger {
       editor.statusBusy();
     }
   }
-  */
 
-  /*
+
+
   @Override public synchronized void stopDebug() {
-    editor.variableInspector().lock();
+    inspector.lock();
     if (runtime != null) {
 
       for (LineBreakpoint bp : breakpoints) {
@@ -277,13 +294,13 @@ public class AndroidDebugger extends Debugger {
     stopTrackingLineChanges();
     started = false;
 
-    editor.deactivateDebug();
+    // editor.deactivateDebug();
     editor.deactivateContinue();
     editor.deactivateStep();
 
     editor.statusEmpty();
   }
-  */
+
 
   /**
    * Watch all classes ({@value sketchClassName}) variable
