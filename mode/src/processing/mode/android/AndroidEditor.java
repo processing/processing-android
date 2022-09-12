@@ -85,7 +85,6 @@ public class AndroidEditor extends JavaEditor {
     androidMode.resetUserSelection();
     androidMode.checkSDK(this);
 
-//    initDebugger();
 
     androidTools = loadAndroidTools();
     addToolsToMenu();
@@ -174,8 +173,8 @@ public class AndroidEditor extends JavaEditor {
           handleStop();
         }
       });
-//    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
-    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
+    return buildSketchMenu(new JMenuItem[] { buildDebugMenu(), runItem, presentItem, stopItem });
+//    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
   }
 
 
@@ -307,6 +306,7 @@ public class AndroidEditor extends JavaEditor {
   }
 
   private JMenu buildDebugMenu() {
+    initDebugger();
     debugMenu = new JMenu(Language.text("menu.debug"));
     debugger.populateMenu(debugMenu);
     return debugMenu;
@@ -727,9 +727,9 @@ public class AndroidEditor extends JavaEditor {
   private void initDebugger() {
     debugger = new AndroidDebugger(this, androidMode);
     // Set saved breakpoints when sketch is opened for the first time
-    for (LineID lineID : stripBreakpointComments()) {
-      debugger.setBreakpoint(lineID);
-    }
+//    for (LineID lineID : stripBreakpointComments()) {
+//      debugger.setBreakpoint(lineID);
+//    }
     super.debugger = debugger;
     
   }  
