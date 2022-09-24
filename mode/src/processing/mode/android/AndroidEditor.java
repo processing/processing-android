@@ -485,6 +485,8 @@ public class AndroidEditor extends JavaEditor {
   @Override
   public void toggleDebug() {
     super.toggleDebug();
+    // make the unused inspector invisible
+    super.debugger.dispose();
     debugger.toggleDebug();
   }
 
