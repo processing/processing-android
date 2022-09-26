@@ -88,6 +88,9 @@ public class AndroidDebugger extends Debugger {
 
     inspector.reset();
 
+    // make the inspector instance visible on which tree nodes would be reflected
+    inspector.setVisible(true);
+
     runtime = runner;
     pkgName = runner.build.getPackageName();
     sketchClassName = runner.build.getSketchClassName();
