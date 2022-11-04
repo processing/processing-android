@@ -12,21 +12,57 @@ dependencies {
 
     implementationCopy group: "com.android.tools", name: "sdklib", version: "${toolsLibVersion}"
     implementationCopy group: "com.android.tools", name: "repository", version: "${toolsLibVersion}"
+    implementationCopy group: "com.android.tools", name: "common", version: "${toolsLibVersion}"
 }
 
 // This task copies the gradle tooling jar into the mode folder
 task copyToLib(type: Copy) {
   from configurations.implementationCopy.files {
-    include '**/annotations-*'
-    include '**/common-*'
-    include '**/dvlib-*'
-    include '**/gson-*'
-    include '**/guava-*'
-    include '**/httpcore-*'
-    include '**/kotlin-stdlib-*'
-    include '**/layoutlib-api-*'
-    include '**/repository-*'
-    include '**/sdklib-*'
+        include '**/*.jar'
+        exclude '**/annotations-*'
+        exclude '**/checker-qual-*.jar'
+        exclude '**/httpclient-*.jar'
+        exclude '**/layoutlib-api-*.jar'
+        exclude '**/commons-codec*.jar'
+        exclude '**/commons-logging*.jar'
+        exclude '**/dvlib-*.jar'
+        exclude '**/error_prone_annotations-*.jar'
+        exclude '**/failureaccess-*.jar'
+        exclude '**/FastInfoset-*.jar'
+        exclude '**/gson-*.jar'
+        exclude '**/httpmime-*.jar'
+        exclude '**/j2objc-*.jar'
+        exclude '**/javax.activation-*.jar'
+        exclude '**/jimfs-*.jar'
+        exclude '**/jna-*.jar'
+        exclude 'jsr305*jar'
+        exclude '**/kotlin-stdlib-c*.jar'
+        exclude '**/kotlin-stdlib-jdk7*.jar'
+        exclude '**/kotlin-stdlib-jdk8*.jar'
+        exclude '**/kxml2-*jar'
+        exclude '**/listenablefuture-*jar'
+        exclude '**/stax-*jar'
+        exclude '**/txw2*jar'
+
+      // uncommenting the following and commenting out the above statements work the same way
+      // better to mention both the included and excluded jars to keep a track
+
+//          include '**/common-*jar'
+//          include '**/commons-compress-*jar'
+//          include '**/guava-*jar'
+//          include '**/httpcore-*jar'
+//          include '**/istack-*jar'
+//          include '**/jakarta.activation-api-*jar'
+//          include '**/jakarta.xml.bind-api-*jar'
+//          include '**/jaxb-runtime-*jar'
+//          include '**/kotlin-stdlib-1*jar'
+//          include '**/shared-*jar'
+//          include '**/protos-*jar'
+//          include '**/protob*jar'
+//          include '**/sdklib-*jar'
+//          include '**/repository-*jar'
+
+
   }
   into "lib"
 }
