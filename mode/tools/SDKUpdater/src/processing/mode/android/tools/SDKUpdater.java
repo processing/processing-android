@@ -4,7 +4,7 @@
  Part of the Processing project - http://processing.org
 
  Copyright (c) 2017 The Processing Foundation
- 
+
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 2
  as published by the Free Software Foundation.
@@ -23,13 +23,12 @@ package processing.mode.android.tools;
 
 import com.android.repository.api.*;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOpUtils;
-import com.android.repository.io.impl.FileSystemFileOp;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.sdklib.tool.sdkmanager.SdkManagerCli;
+import com.android.prefs.AndroidLocationsSingleton;
 
 import processing.app.Base;
 import processing.app.Preferences;
@@ -59,22 +58,22 @@ import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("serial")
 public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
-  final static private int NUM_ROWS = 10; 
+  final static private int NUM_ROWS = 10;
   final static private int COL_WIDTH = Toolkit.zoom(220);
-  
+
   final static private int BORDER = Toolkit.zoom(13);
   final static private int GAP = Toolkit.zoom(13);
   final static private int INSET = Toolkit.zoom(1);
-  final static private int BUTTON_WIDTH = Toolkit.zoom(75);
+  final static private int BUTTON_WIDTH = Toolkit.zoom(85);
   final static private int BUTTON_HEIGHT = Toolkit.zoom(25);
-  
-//  private final Vector<String> columns = new Vector<>(Arrays.asList(
-//      AndroidMode.getTextString("sdk_updater.name_column"), 
+
+  //  private final Vector<String> columns = new Vector<>(Arrays.asList(
+//      AndroidMode.getTextString("sdk_updater.name_column"),
 //      AndroidMode.getTextString("sdk_updater.version_column"),
-//      AndroidMode.getTextString("sdk_updater.available_column")));  
+//      AndroidMode.getTextString("sdk_updater.available_column")));
   private final Vector<String> columns = new Vector<>(Arrays.asList(
-    "Package name", "Installed version", "Available update" ));
-  
+          "Package name", "Installed version", "Available update" ));
+
   private static final String PROPERTY_CHANGE_QUERY = "query";
 
   private File sdkFolder;
@@ -84,72 +83,77 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
   private boolean downloadTaskRunning;
 
   private Vector<Vector<String>> packageList;
-  private DefaultTableModel packageTable;  
+  private DefaultTableModel packageTable;
   private int numUpdates;
 
   private JProgressBar progressBar;
   private JLabel status;
+  private JLabel  statusSecondary;
   private JButton actionButton;
   private JTable table;
 
-  
+
   @Override
   public void init(Base base) {
     createLayout(base.getActiveEditor() == null);
   }
 
-  
+
   @Override
   public void run() {
     setVisible(true);
     String path = Preferences.get("android.sdk.path");
-    sdkFolder = new File(path);    
+    sdkFolder = new File(path);
     queryTask = new QueryTask();
     queryTask.addPropertyChangeListener(this);
     queryTask.execute();
 //    status.setText(AndroidMode.getTextString("sdk_updater.query_message"));
-    status.setText("Querying packages...");    
+    status.setText("Querying packages...");
+    statusSecondary.setText("");
   }
-  
-  
+
+
   @Override
-  public String getMenuTitle() {    
+  public String getMenuTitle() {
 //    return AndroidMode.getTextString("menu.android.sdk_updater");
     return "SDK Updater";
   }
-  
-  
+
+
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
     switch (evt.getPropertyName()) {
-    case PROPERTY_CHANGE_QUERY:
-      progressBar.setIndeterminate(false);
-      if (numUpdates == 0) {
-        actionButton.setEnabled(false);
-//        status.setText(AndroidMode.getTextString("sdk_updater.no_updates_message"));        
-        status.setText("No updates available");        
-      } else {
-        actionButton.setEnabled(true);
-        if (numUpdates == 1) {
+      case PROPERTY_CHANGE_QUERY:
+        progressBar.setIndeterminate(false);
+        if (numUpdates == 0) {
+          actionButton.setEnabled(false);
+//        status.setText(AndroidMode.getTextString("sdk_updater.no_updates_message"));
+          status.setText("No updates available");
+          statusSecondary.setText("");
+        } else {
+          actionButton.setEnabled(true);
+          if (numUpdates == 1) {
 //          status.setText(AndroidMode.getTextString("sdk_updater.one_updates_message"));
-          status.setText("1 update found!");
-        } else { 
+            status.setText("1 update found!");
+            statusSecondary.setText("");
+          } else {
 //          status.setText(AndroidMode.getTextString("sdk_updater.many_updates_message", numUpdates));
-          status.setText(numUpdates + " updates found!");
-        }                    
-      }
-      break;
+            status.setText(numUpdates + " updates found!");
+            statusSecondary.setText("");
+          }
+        }
+        break;
     }
   }
 
   class QueryTask extends SwingWorker<Object, Object> {
     ProgressIndicator progress;
-    
+
     QueryTask() {
       super();
-      progress = new ConsoleProgressIndicator();
+      progress = new CustomProgressIndicatorToMonitor();
     }
-    
+
     @Override
     protected Object doInBackground() throws Exception {
       numUpdates = 0;
@@ -158,11 +162,10 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       /* Following code is from listPackages() of com.android.sdklib.tool.SdkManagerCli
                with some changes
        */
-      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(sdkFolder);
-      
-      FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
+      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, sdkFolder.toPath());
+
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
-      mRepoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, new SettingsController() {
+      mRepoManager.loadSynchronously(0, progress, new LegacyDownloader(new SettingsController() {
         @Override
         public boolean getForceHttp() {
           return false;
@@ -186,7 +189,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         }
       }), null);
 
-      RepositoryPackages packages = mRepoManager.getPackages();      
+      RepositoryPackages packages = mRepoManager.getPackages();
       HashMap<String, List<String>> installed = new HashMap<String, List<String>>();
       for (LocalPackage local : packages.getLocalPackages().values()) {
         String path = local.getPath();
@@ -202,17 +205,17 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           String major = ver.substring(0, maj);
           int pos = name.indexOf(major);
           if (-1 < pos) {
-            name = name.substring(0, pos).trim();  
+            name = name.substring(0, pos).trim();
           }
         }
         installed.put(path, Arrays.asList(name, ver));
       }
 
       HashMap<String, List<String>> updated = new HashMap<String, List<String>>();
-      for (UpdatablePackage update : packages.getUpdatedPkgs()) {              
+      for (UpdatablePackage update : packages.getUpdatedPkgs()) {
         String path = update.getPath();
         String loc = update.getLocal().getVersion().toString();
-        String rem = update.getRemote().getVersion().toString();              
+        String rem = update.getRemote().getVersion().toString();
         updated.put(path, Arrays.asList(loc, rem));
       }
 
@@ -223,12 +226,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         info.add(locInfo.get(1));
         if (updated.containsKey(path)) {
           String upVer = updated.get(path).get(1);
-          info.add(upVer);  
+          info.add(upVer);
           numUpdates++;
         } else {
           info.add("");
         }
-        packageList.add(info);  
+        packageList.add(info);
       }
 
       return null;
@@ -241,7 +244,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       try {
         get();
         firePropertyChange(PROPERTY_CHANGE_QUERY, "query", "SUCCESS");
-        
+
         if (packageList != null) {
           packageTable.setDataVector(packageList, columns);
           packageTable.fireTableDataChanged();
@@ -251,7 +254,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       } catch (ExecutionException e) {
         this.cancel(true);
         JOptionPane.showMessageDialog(null,
-            e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
       }
     }
@@ -261,10 +264,10 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     ProgressIndicator progress;
 
     DownloadTask() {
-      super();   
-      progress = new ConsoleProgressIndicator();
+      super();
+      progress = new CustomProgressIndicatorToMonitor();
     }
-    
+
     @Override
     protected Object doInBackground() throws Exception {
       downloadTaskRunning = true;
@@ -272,15 +275,14 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       /* Following code is from installPackages() of com.android.sdklib.tool.SdkManagerCli
                with some changes
        */
-      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(sdkFolder);
+      AndroidSdkHandler mHandler = AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, sdkFolder.toPath());
 
-      FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
       CustomSettings settings = new CustomSettings();
-      Downloader downloader = new LegacyDownloader(fop, settings);
+      Downloader downloader = new LegacyDownloader(settings);
 
       RepoManager mRepoManager = mHandler.getSdkManager(progress);
       mRepoManager.loadSynchronously(0, progress, downloader, settings);
-      
+
       List<RemotePackage> remotes = new ArrayList<>();
       for (String path : settings.getPaths(mRepoManager)) {
         RemotePackage p = mRepoManager.getPackages().getRemotePackages().get(path);
@@ -292,18 +294,18 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         remotes.add(p);
       }
       remotes = InstallerUtil.computeRequiredPackages(
-          remotes, mRepoManager.getPackages(), progress);
+              remotes, mRepoManager.getPackages(), progress);
       if (remotes != null) {
         for (RemotePackage p : remotes) {
           Installer installer = SdkInstallerUtil.findBestInstallerFactory(p, mHandler)
-              .createInstaller(p, mRepoManager, downloader, mHandler.getFileOp());
+                  .createInstaller(p, mRepoManager, downloader);
           if (!(installer.prepare(progress) && installer.complete(progress))) {
             // there was an error, abort.
             throw new SdkManagerCli.CommandFailedException();
           }
         }
       } else {
-//        progress.logWarning(AndroidMode.getTextString("sdk_updater.warning_failed_computing_dependency_list"));        
+//        progress.logWarning(AndroidMode.getTextString("sdk_updater.warning_failed_computing_dependency_list"));
         progress.logWarning("Unable to compute a complete list of dependencies.");
         throw new SdkManagerCli.CommandFailedException();
       }
@@ -320,6 +322,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         actionButton.setEnabled(false);
 //        status.setText(AndroidMode.getTextString("sdk_updater.refresh_package_message"));
         status.setText("Refreshing packages...");
+        statusSecondary.setText("");
         queryTask = new QueryTask();
         queryTask.addPropertyChangeListener(SDKUpdater.this);
         queryTask.execute();
@@ -328,7 +331,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       } catch (ExecutionException e) {
         this.cancel(true);
         JOptionPane.showMessageDialog(null,
-            e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                e.getCause().toString(), "Error", JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
       } finally {
         downloadTaskRunning = false;
@@ -371,14 +374,14 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
       @Override
       public void setDisableSdkPatches(boolean arg0) {
         // TODO Auto-generated method stub
-        
+
       }
     }
   }
 
   private void createLayout(final boolean standalone) {
     setTitle(getMenuTitle());
-    
+
     Container outer = getContentPane();
     outer.removeAll();
 
@@ -404,20 +407,20 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         return String.class;
       }
     };
-    
+
     table = new JTable(packageTable) {
       @Override
       public String getColumnName(int column) {
         return columns.get(column);
       }
-    };    
+    };
     table.setFillsViewportHeight(true);
     table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
     table.setRowHeight(Toolkit.zoom(table.getRowHeight()));
-    Dimension dim = new Dimension(table.getColumnCount() * COL_WIDTH, 
-                                  table.getRowHeight() * NUM_ROWS);
+    Dimension dim = new Dimension(table.getColumnCount() * COL_WIDTH,
+            table.getRowHeight() * NUM_ROWS);
     table.setPreferredScrollableViewportSize(dim);
-    
+
     packagesPanel.add(new JScrollPane(table));
 
     JPanel controlPanel = new JPanel();
@@ -426,20 +429,26 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
 
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.insets = new Insets(INSET, INSET, INSET, INSET);
-    
+
     status = new JLabel();
     status.setText("Starting up...");
     gbc.gridx = 0;
     gbc.gridy = 0;
     controlPanel.add(status, gbc);
 
-    // Using an indeterminate progress bar from now until we learn 
+    statusSecondary = new JLabel();
+    statusSecondary.setText("Getting Detailed Information Here...");
+    statusSecondary.setFont(new Font("Calibri", Font.PLAIN, 12));
+    gbc.gridx = 0;
+    gbc.gridy = 1;
+    controlPanel.add(statusSecondary, gbc);
+
+    // Using an indeterminate progress bar from now until we learn
     // how to update the fraction of the query/download process:
     // https://github.com/processing/processing-android/issues/362
     progressBar = new JProgressBar();
-    progressBar.setIndeterminate(true);
     gbc.gridx = 0;
-    gbc.gridy = 1;
+    gbc.gridy = 2;
     gbc.weightx = 1.0;
     gbc.fill = GridBagConstraints.HORIZONTAL;
     controlPanel.add(progressBar, gbc);
@@ -451,25 +460,12 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
           cancelTasks();
         } else { // i.e button state is Update
           downloadTask = new DownloadTask();
-          progressBar.setIndeterminate(true);
           downloadTask.execute();
 
-          // getFraction() always returns 0.0, needs to be set somewhere (??) 
-//          Thread update = new Thread() {
-//            @Override
-//            public void run() {
-//              while (downloadTaskRunning) {
-//                try {
-//                  Thread.sleep(100);
-//                } catch (InterruptedException e) { }              
-//                System.out.println("Updating: " + downloadTask.progress.getFraction());                  
-//              }
-//            }
-//          };
-//          update.start();    
-          
+
 //          status.setText(AndroidMode.getTextString("sdk_updater.download_package_message"));
           status.setText("Downloading available updates...");
+          statusSecondary.setText("");
 //          actionButton.setText(AndroidMode.getTextString("sdk_updater.cancel_button_label"));
           actionButton.setText("Cancel");
         }
@@ -478,9 +474,9 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
     actionButton.setEnabled(false);
     actionButton.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
     gbc.gridx = 1;
-    gbc.gridy = 0; 
+    gbc.gridy = 0;
     gbc.weightx = 0.0;
-    gbc.fill = GridBagConstraints.HORIZONTAL;   
+    gbc.fill = GridBagConstraints.HORIZONTAL;
     controlPanel.add(actionButton, gbc);
 
     ActionListener disposer = new ActionListener() {
@@ -493,7 +489,7 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         }
       }
     };
-    
+
 //    JButton closeButton = new JButton(AndroidMode.getTextString("sdk_updater.close_button_label"));
     JButton closeButton = new JButton("Close");
     closeButton.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
@@ -522,30 +518,31 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
         super.windowClosing(e);
       }
     });
-    
-    registerWindowCloseKeys(getRootPane(), disposer);    
-    
+
+    registerWindowCloseKeys(getRootPane(), disposer);
+
     setLocationRelativeTo(null);
     setResizable(false);
     setVisible(false);
   }
-  
+
   public void cancelTasks() {
     queryTask.cancel(true);
     if (downloadTaskRunning) {
       downloadTask.cancel(true);
 //      status.setText(AndroidMode.getTextString("sdk_updater.download_canceled_message"));
       status.setText("Download canceled");
+      statusSecondary.setText("");
       JOptionPane.showMessageDialog(null,
 //          AndroidMode.getTextString("sdk_updater.download_canceled_message"),
-          "Download canceled",          
-          "Warning", JOptionPane.WARNING_MESSAGE);
+              "Download canceled",
+              "Warning", JOptionPane.WARNING_MESSAGE);
 //      actionButton.setText(AndroidMode.getTextString("sdk_updater.update_button_label"));
-      actionButton.setText("Update");      
+      actionButton.setText("Update");
     }
   }
-  
-  
+
+
   /**
    * Registers key events for a Ctrl-W and ESC with an ActionListener
    * that will take care of disposing the window.
@@ -554,11 +551,104 @@ public class SDKUpdater extends JFrame implements PropertyChangeListener, Tool {
                                              ActionListener disposer) {
     KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
     root.registerKeyboardAction(disposer, stroke,
-                                JComponent.WHEN_IN_FOCUSED_WINDOW);
+            JComponent.WHEN_IN_FOCUSED_WINDOW);
 
     int modifiers = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
     stroke = KeyStroke.getKeyStroke('W', modifiers);
     root.registerKeyboardAction(disposer, stroke,
-                                JComponent.WHEN_IN_FOCUSED_WINDOW);
-  } 
+            JComponent.WHEN_IN_FOCUSED_WINDOW);
+  }
+
+  class CustomProgressIndicatorToMonitor implements com.android.repository.api.ProgressIndicator{
+
+    int percentage = 0;
+    String progressTextData = "";
+    String progressTextDataDetailed = "";
+
+    @Override
+    public void setText(String progressText) {
+      progressTextData = progressText;
+    }
+
+    @Override
+    public boolean isCanceled() {
+      return false;
+    }
+
+    @Override
+    public void cancel() {
+
+    }
+
+    @Override
+    public void setCancellable(boolean cancellable) {
+
+    }
+
+    @Override
+    public boolean isCancellable() {
+      return false;
+    }
+
+    @Override
+    public void setIndeterminate(boolean indeterminate) {
+
+    }
+
+    @Override
+    public boolean isIndeterminate() {
+      return false;
+    }
+
+    @Override
+    public void setFraction(double progress) {
+      if(progress<=1 && progress>=0) {
+        percentage = ((int)(progress*100));
+        // System.out.println("CustomProgressIndicatorToMonitor:Progress Bar Percentage:"+percentage);
+        progressBar.setValue(percentage);
+        status.setText(progressTextData+"   "+percentage+" %  ");
+        statusSecondary.setText(progressTextDataDetailed);
+      }
+    }
+
+    @Override
+    public double getFraction() {
+      return 0;
+    }
+
+    @Override
+    public void setSecondaryText(String s) {
+      progressTextDataDetailed = s;
+      // System.out.println("CustomProgressIndicatorToMonitor:SecondaryText:"+s);
+    }
+
+    @Override
+    public void logWarning(String s) {
+      progressTextDataDetailed = s;
+      // System.out.println("CustomProgressIndicatorToMonitor:WarningText:"+s);
+    }
+
+    @Override
+    public void logWarning(String s, Throwable e) {
+
+    }
+
+    @Override
+    public void logError(String s) {
+      progressTextDataDetailed = s;
+      // System.out.println("CustomProgressIndicatorToMonitor:ErrorText:"+s);
+    }
+
+    @Override
+    public void logError(String s, Throwable e) {
+
+    }
+
+    @Override
+    public void logInfo(String s) {
+      progressTextDataDetailed = s;
+      // System.out.println("CustomProgressIndicatorToMonitor:LogInfoText:"+s);
+    }
+  }
+
 }
