@@ -461,7 +461,7 @@ public class AVD {
         // ABI again.
         AVD other = wear ? phoneAVD : watchAVD;
         boolean ask = !other.hasImages(sdk);        
-        boolean res = AndroidSDK.locateSysImage(window, mode, wear, ask);
+        boolean res = AndroidSDK.requestSysImage(window, mode, wear, ask);
         if (!res) {
           return false;
         } else {

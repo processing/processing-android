@@ -522,8 +522,8 @@ class AndroidSDK {
     }
   }
   
-  static public boolean locateSysImage(final Frame window, 
-      final AndroidMode androidMode, final boolean wear, final boolean ask)
+  static public boolean requestSysImage(final Frame window,
+                                        final AndroidMode androidMode, final boolean wear, final boolean ask)
       throws BadSDKException, CancelException, IOException {
     final int result = showDownloadSysImageDialog(window, wear);
     if (result == JOptionPane.YES_OPTION) {
