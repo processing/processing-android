@@ -138,9 +138,9 @@ public class AVD {
   static protected String getPreferredTag(boolean wear, String abi) {
     if (wear) {
       return "android-wear";
-    } else if (abi.contains("arm")) {
-      // The ARM images are located in the default folder.
-      return "default";
+//    } else if (abi.contains("arm")) {
+//      // The ARM images are located in the default folder. No, apparently ARM images are in google_apis too
+//      return "default";
     } else {
       return "google_apis";
     }
@@ -299,10 +299,10 @@ public class AVD {
         "create", "avd",
         "-n", "dummy",
         "-k", "dummy"
-      };      
-    
-    // Dummy avdmanager creation command to get the list of installed images
-    // TODO : Find a better way to get the list of installed images
+      };
+
+    // Dummy avdmanager creation command to get the list of installed images,
+    // so far this is the only method available get that list.
     ProcessBuilder pb = new ProcessBuilder(cmd);
     
     if (Base.DEBUG) {
@@ -316,23 +316,21 @@ public class AVD {
     
     try {
       process = pb.start();
-
-      StreamPump output = new StreamPump(process.getInputStream(), "out: ");
-      output.addTarget(new LineProcessor() {
-        @Override
-        public void processLine(String line) {
-//          System.out.println("dummy output ---> " + line);
-          if (images != null && 
-              line.contains(";" + imagePlatform) &&
-              line.contains(";" + imageTag) &&
-              line.contains(";" + imageAbi)) {
-//            System.out.println("  added image!");
-            images.add(line);
-          }
-        }
-      }).start();
-
+      StringWriter outWriter = new StringWriter();
+      new StreamPump(process.getInputStream(), "out: ").addTarget(outWriter).start();
       process.waitFor();
+
+      String[] lines = PApplet.split(outWriter.toString(), '\n');
+      for (String line : lines) {
+        if (images != null &&
+                line.contains(";" + imagePlatform) &&
+                line.contains(";" + imageTag) &&
+                line.contains(";" + imageAbi)) {
+//            System.out.println("  added image!");
+          images.add(line);
+        }
+      }
+
     } catch (final InterruptedException ie) {
       ie.printStackTrace();
     } finally {
@@ -370,7 +368,7 @@ public class AVD {
         avdManager.getCanonicalPath(),
         "create", "avd",
         "-n", name,      
-        "-k", getSdkId(),
+        "-k", "\"" + getSdkId() + "\"",
         "-c", DEFAULT_SDCARD_SIZE,
         "-d", device,
         "-p", avdPath.getAbsolutePath(),
