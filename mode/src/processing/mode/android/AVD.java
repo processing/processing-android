@@ -374,7 +374,8 @@ public class AVD {
         "-c", DEFAULT_SDCARD_SIZE,
         "-d", device,
         "-p", avdPath.getAbsolutePath(),
-        "-f"
+        "--skin", skin,
+        "--force"
     };
     
     ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -412,13 +413,13 @@ public class AVD {
 
       if (process.exitValue() == 0) {
         // Add skin to AVD's config file
-        File configFile = new File(avdPath, "config.ini");
-        if (configFile.exists()) {
-          try (PrintWriter output = new PrintWriter(new FileWriter(configFile.getAbsolutePath(), true))) {
-            output.printf("%s\r\n", "skin.name=" + skin);
-          } 
-          catch (Exception e) {}
-        }
+//        File configFile = new File(avdPath, "config.ini");
+//        if (configFile.exists()) {
+//          try (PrintWriter output = new PrintWriter(new FileWriter(configFile.getAbsolutePath(), true))) {
+//            output.printf("%s\r\n", "skin.name=" + skin);
+//          }
+//          catch (Exception e) {}
+//        }
         return true;
       }
 
