@@ -46,16 +46,17 @@ public class AVD {
   public final static String DEFAULT_WEAR_PORT  = "5576";  
 
   private static final String GETTING_START_TUT_URL = 
-      "http://android.processing.org/tutorials/getting_started/index.html";  
-  
-  static final String DEFAULT_SDCARD_SIZE = "64M";
-  
-  static final String DEVICE_DEFINITION = "Nexus One";
-  static final String DEVICE_SKIN = "480x800";
-  
-  static final String DEVICE_WEAR_DEFINITION = "wear_square_280_280dpi";
-  static final String DEVICE_WEAR_SKIN = "280x280";  
-  
+      "http://android.processing.org/tutorials/getting_started/index.html";
+
+
+  static final String DEFAULT_SDCARD_SIZE = "512M";
+
+  static final String DEVICE_DEFINITION = "pixel_6";
+  static final String DEVICE_SKIN = "pixel_6";
+
+  static final String DEVICE_WEAR_DEFINITION = "wearos_square";
+  static final String DEVICE_WEAR_SKIN = "wearos_square";
+
   /** Name of this avd. */
   protected String name;
 
