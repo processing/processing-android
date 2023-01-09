@@ -188,7 +188,12 @@ public class AndroidMode extends JavaMode {
   public AndroidSDK getSDK() {
     return sdk;
   }
-  
+
+
+  public File getResourcesFolder() {
+    return new File(getFolder(), "resources");
+  }
+
 
   public String getModeJar() {
     String modePath = new File(getFolder(), "mode").getAbsolutePath();
