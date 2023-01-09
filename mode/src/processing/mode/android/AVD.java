@@ -48,9 +48,6 @@ public class AVD {
   private static final String GETTING_START_TUT_URL = 
       "http://android.processing.org/tutorials/getting_started/index.html";
 
-
-  static final String DEFAULT_SDCARD_SIZE = "512M";
-
   static final String DEVICE_DEFINITION = "pixel_6";
   static final String DEVICE_SKIN = "pixel_6";
 
@@ -368,10 +365,9 @@ public class AVD {
         avdManager.getCanonicalPath(),
         "create", "avd",
         "-n", name,      
-        "-k", "\"" + getSdkId() + "\"",
-        "-c", DEFAULT_SDCARD_SIZE,
-        "-d", device,
+        "-k", getSdkId(),
         "-p", avdPath.getAbsolutePath(),
+        "-d", device,
         "--skin", skin,
         "--force"
     };
