@@ -24,7 +24,6 @@ package processing.mode.android;
 import processing.app.Base;
 import processing.app.Platform;
 import processing.app.Preferences;
-import processing.app.exec.LineProcessor;
 import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 
@@ -46,16 +45,14 @@ public class AVD {
   public final static String DEFAULT_WEAR_PORT  = "5576";  
 
   private static final String GETTING_START_TUT_URL = 
-      "http://android.processing.org/tutorials/getting_started/index.html";  
-  
-  static final String DEFAULT_SDCARD_SIZE = "64M";
-  
-  static final String DEVICE_DEFINITION = "Nexus One";
-  static final String DEVICE_SKIN = "480x800";
-  
-  static final String DEVICE_WEAR_DEFINITION = "wear_square_280_280dpi";
-  static final String DEVICE_WEAR_SKIN = "280x280";  
-  
+      "http://android.processing.org/tutorials/getting_started/index.html";
+
+  static final String DEVICE_DEFINITION = "pixel_6";
+  static final String DEVICE_SKIN = "pixel_6";
+
+  static final String DEVICE_WEAR_DEFINITION = "wearos_square";
+  static final String DEVICE_WEAR_SKIN = "wearos_square";
+
   /** Name of this avd. */
   protected String name;
 
@@ -137,9 +134,9 @@ public class AVD {
   static protected String getPreferredTag(boolean wear, String abi) {
     if (wear) {
       return "android-wear";
-    } else if (abi.contains("arm")) {
-      // The ARM images are located in the default folder.
-      return "default";
+//    } else if (abi.contains("arm")) {
+//      // The ARM images are located in the default folder. No, apparently ARM images are in google_apis too
+//      return "default";
     } else {
       return "google_apis";
     }
@@ -298,10 +295,10 @@ public class AVD {
         "create", "avd",
         "-n", "dummy",
         "-k", "dummy"
-      };      
-    
-    // Dummy avdmanager creation command to get the list of installed images
-    // TODO : Find a better way to get the list of installed images
+      };
+
+    // Dummy avdmanager creation command to get the list of installed images,
+    // so far this is the only method available get that list.
     ProcessBuilder pb = new ProcessBuilder(cmd);
     
     if (Base.DEBUG) {
@@ -315,23 +312,21 @@ public class AVD {
     
     try {
       process = pb.start();
-
-      StreamPump output = new StreamPump(process.getInputStream(), "out: ");
-      output.addTarget(new LineProcessor() {
-        @Override
-        public void processLine(String line) {
-//          System.out.println("dummy output ---> " + line);
-          if (images != null && 
-              line.contains(";" + imagePlatform) &&
-              line.contains(";" + imageTag) &&
-              line.contains(";" + imageAbi)) {
-//            System.out.println("  added image!");
-            images.add(line);
-          }
-        }
-      }).start();
-
+      StringWriter outWriter = new StringWriter();
+      new StreamPump(process.getInputStream(), "out: ").addTarget(outWriter).start();
       process.waitFor();
+
+      String[] lines = PApplet.split(outWriter.toString(), '\n');
+      for (String line : lines) {
+        if (images != null &&
+                line.contains(";" + imagePlatform) &&
+                line.contains(";" + imageTag) &&
+                line.contains(";" + imageAbi)) {
+//            System.out.println("  added image!");
+          images.add(line);
+        }
+      }
+
     } catch (final InterruptedException ie) {
       ie.printStackTrace();
     } finally {
@@ -357,6 +352,16 @@ public class AVD {
     return "null";
   }
 
+  protected void copyDeviceSkins(final AndroidSDK sdk, final AndroidMode mode) {
+    File skinsFolder = new File(sdk.getFolder(), "skins");
+    if (!skinsFolder.exists()) {
+      // The skins in this folder come from Android Studio, on Mac they are in the folder:
+      // /Applications/Android Studio.app/Contents/plugins/android/resources/device-art-resources
+      // Apparently the skins are not available as a SDK download.
+      File artFolder = new File(mode.getResourcesFolder(), "device-art-resources");
+      AndroidUtil.copyDir(artFolder, skinsFolder);
+    }
+  }
 
   protected boolean create(final AndroidSDK sdk) throws IOException {
     File sketchbookFolder = processing.app.Base.getSketchbookFolder();
@@ -370,10 +375,10 @@ public class AVD {
         "create", "avd",
         "-n", name,      
         "-k", getSdkId(),
-        "-c", DEFAULT_SDCARD_SIZE,
-        "-d", device,
         "-p", avdPath.getAbsolutePath(),
-        "-f"
+        "-d", device,
+        "--skin", skin,
+        "--force"
     };
     
     ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -383,9 +388,8 @@ public class AVD {
     }
     
     // avdmanager create avd -n "Wear-Processing-0254" -k "system-images;android-25;google_apis;x86" -c 64M
-
     // Set the list to null so that exists() will check again
-    avdList = null;
+//    avdList = null;
 
     Map<String, String> env = pb.environment();
     env.clear();
@@ -396,13 +400,13 @@ public class AVD {
       process = pb.start();
 
       // Passes 'no' to "Do you wish to create a custom hardware profile [no]"
-      OutputStream os = process.getOutputStream();
-      PrintWriter pw = new PrintWriter(new OutputStreamWriter(os));
-      pw.println("no");
-      pw.flush();
-      pw.close();
-      os.flush();
-      os.close();
+//      OutputStream os = process.getOutputStream();
+//      PrintWriter pw = new PrintWriter(new OutputStreamWriter(os));
+//      pw.println("no");
+//      pw.flush();
+//      pw.close();
+//      os.flush();
+//      os.close();
 
       StringWriter outWriter = new StringWriter();
       new StreamPump(process.getInputStream(), "out: ").addTarget(outWriter).start();
@@ -411,13 +415,13 @@ public class AVD {
 
       if (process.exitValue() == 0) {
         // Add skin to AVD's config file
-        File configFile = new File(avdPath, "config.ini");
-        if (configFile.exists()) {
-          try (PrintWriter output = new PrintWriter(new FileWriter(configFile.getAbsolutePath(), true))) {
-            output.printf("%s\r\n", "skin.name=" + skin);
-          } 
-          catch (Exception e) {}
-        }
+//        File configFile = new File(avdPath, "config.ini");
+//        if (configFile.exists()) {
+//          try (PrintWriter output = new PrintWriter(new FileWriter(configFile.getAbsolutePath(), true))) {
+//            output.printf("%s\r\n", "skin.name=" + skin);
+//          }
+//          catch (Exception e) {}
+//        }
         return true;
       }
 
@@ -431,7 +435,6 @@ public class AVD {
                                 AndroidMode.getTextString("android_avd.error.cannot_create_avd_body", AndroidBuild.TARGET_SDK));
       }
       System.err.println(outWriter.toString());
-      //System.err.println(createAvdResult);
     } catch (final InterruptedException ie) { 
       ie.printStackTrace(); 
     } finally {
@@ -460,13 +463,14 @@ public class AVD {
         // ABI again.
         AVD other = wear ? phoneAVD : watchAVD;
         boolean ask = !other.hasImages(sdk);        
-        boolean res = AndroidSDK.locateSysImage(window, mode, wear, ask);
+        boolean res = AndroidSDK.requestSysImage(window, mode, wear, ask);
         if (!res) {
           return false;
         } else {
           avd.refreshImages(sdk);
         }
       }
+      avd.copyDeviceSkins(sdk, mode);
       if (avd.create(sdk)) {
         return true;
       }

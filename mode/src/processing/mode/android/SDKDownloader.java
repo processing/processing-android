@@ -63,8 +63,8 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
   private static final String REPOSITORY_URL = "https://dl.google.com/android/repository/";
   private static final String HAXM_URL = "https://dl.google.com/android/repository/extras/intel/";
-  private static final String REPOSITORY_LIST = "repository2-1.xml";
-  private static final String ADDON_LIST = "addon2-1.xml";
+  private static final String REPOSITORY_LIST = "repository2-3.xml";
+  private static final String ADDON_LIST = "addon2-3.xml";
   
   public static final boolean DOWNLOAD_EMU_WITH_SDK = false;
 

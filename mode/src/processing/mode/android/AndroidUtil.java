@@ -33,7 +33,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
- 
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.FileVisitResult;
+import java.nio.file.attribute.BasicFileAttributes;
+
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -305,5 +310,38 @@ public class AndroidUtil {
     } catch (IOException ex) {
       ex.printStackTrace();
     }  
+  }
+
+  static public void copyDir(File from, File to) {
+    final Path source = Paths.get(from.toURI());
+    final Path target = Paths.get(to.toURI());
+
+    SimpleFileVisitor copyVisitor = new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        Path resolve = target.resolve(source.relativize(dir));
+        if (Files.notExists(resolve)) Files.createDirectories(resolve);
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        Path resolve = target.resolve(source.relativize(file));
+        Files.copy(file, resolve, StandardCopyOption.REPLACE_EXISTING);
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult visitFileFailed(Path file, IOException exc) {
+        System.err.format("Unable to copy: %s: %s%n", file, exc);
+        return FileVisitResult.CONTINUE;
+      }
+    };
+
+    try {
+      Files.walkFileTree(source, copyVisitor);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

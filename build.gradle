@@ -136,6 +136,9 @@ task dist {
         FileUtils.copyDirectory(file("mode/languages"), 
                                 file("${root}/languages"))
 
+        FileUtils.copyDirectory(file("mode/resources"), 
+                                file("${root}/resources"))
+
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"),
                                 file("${root}/tools/SDKUpdater/tool"))
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/lib"),

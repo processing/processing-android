@@ -12,21 +12,28 @@ dependencies {
 
     implementationCopy group: "com.android.tools", name: "sdklib", version: "${toolsLibVersion}"
     implementationCopy group: "com.android.tools", name: "repository", version: "${toolsLibVersion}"
+    implementationCopy group: "com.android.tools", name: "common", version: "${toolsLibVersion}"
 }
 
 // This task copies the gradle tooling jar into the mode folder
 task copyToLib(type: Copy) {
   from configurations.implementationCopy.files {
-    include '**/annotations-*'
-    include '**/common-*'
-    include '**/dvlib-*'
-    include '**/gson-*'
-    include '**/guava-*'
-    include '**/httpcore-*'
-    include '**/kotlin-stdlib-*'
-    include '**/layoutlib-api-*'
-    include '**/repository-*'
-    include '**/sdklib-*'
+
+          include '**/common-*jar'
+          include '**/commons-compress-*jar'
+          include '**/guava-*jar'
+          include '**/httpcore-*jar'
+          include '**/istack-*jar'
+          include '**/jakarta.activation-api-*jar'
+          include '**/jakarta.xml.bind-api-*jar'
+          include '**/jaxb-runtime-*jar'
+          include '**/kotlin-stdlib-1*jar'
+          include '**/shared-*jar'
+          include '**/protos-*jar'
+          include '**/protob*jar'
+          include '**/sdklib-*jar'
+          include '**/repository-*jar'
+
   }
   into "lib"
 }
