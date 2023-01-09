@@ -61,10 +61,10 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
   private static final String SYS_IMAGES_ARM_URL = "https://dl.google.com/android/repository/sys-img/android/";
   
   private static final String SYS_IMAGES_PHONE_URL = "https://dl.google.com/android/repository/sys-img/google_apis/";  
-  private static final String SYS_IMAGES_PHONE_LIST = "sys-img2-1.xml";
+  private static final String SYS_IMAGES_PHONE_LIST = "sys-img2-3.xml";
   
   private static final String SYS_IMAGES_WEAR_URL = "https://dl.google.com/android/repository/sys-img/android-wear/";
-  private static final String SYS_IMAGES_WEAR_LIST = "sys-img2-1.xml";
+  private static final String SYS_IMAGES_WEAR_LIST = "sys-img2-3.xml";
   
   private static final String EMULATOR_GUIDE_URL =
       "https://developer.android.com/studio/run/emulator-acceleration.html";
