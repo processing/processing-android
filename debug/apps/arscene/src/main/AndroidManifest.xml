@@ -2,8 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
           xmlns:tools="http://schemas.android.com/tools" 
           android:versionCode="1" 
-          android:versionName="1.0" 
-          package="arscene">
+          android:versionName="1.0">
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
     <uses-feature android:glEsVersion="0x00020000" android:required="true"/>

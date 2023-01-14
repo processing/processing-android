@@ -72,9 +72,10 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (sketch != null) {
       sketch.onRequestPermissionsResult(
-      requestCode, permissions, grantResults);
+              requestCode, permissions, grantResults);
     }
   }
 

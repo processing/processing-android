@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (!hasCameraPermission()) {
       Toast.makeText(this, CAMERA_PERMISSION_MESSAGE, Toast.LENGTH_LONG).show();
       if (!shouldShowRequestPermissionRationale()) {

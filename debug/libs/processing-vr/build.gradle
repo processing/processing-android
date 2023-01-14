@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 33
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 33
     }
     sourceSets {
         main {
@@ -22,6 +22,5 @@ android {
 
 dependencies {
     implementation project(':libs:processing-core')
-    implementation 'com.google.vr:sdk-audio:1.180.0'
-    implementation 'com.google.vr:sdk-base:1.180.0'
+    implementation project(':libs:google-vr')
 }

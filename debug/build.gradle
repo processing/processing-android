@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.1'
+        classpath 'com.android.tools.build:gradle:7.3.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -24,6 +24,12 @@ allprojects {
 
         // Needed to get google-vr dependencies
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+
+        // Using the legacy Google VR libs included in the mode's VR library, since they are no
+        // longer available online
+//        flatDir {
+//            dirs '../mode/libraries/vr/libs'
+//        }
 
         mavenCentral()
         google()
