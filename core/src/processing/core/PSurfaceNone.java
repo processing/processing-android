@@ -32,8 +32,6 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.service.wallpaper.WallpaperService;
-import android.support.wearable.watchface.WatchFaceService;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -43,6 +41,9 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.support.v4.os.ResultReceiver;
+
+import android.service.wallpaper.WallpaperService;
+import android.support.wearable.watchface.WatchFaceService;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -90,15 +91,14 @@ public class PSurfaceNone implements PSurface, PConstants {
 
   @Override
   public Context getContext() {
-		return activity;
-    /*if (component.getKind() == AppComponent.FRAGMENT) {
+    if (component.getKind() == AppComponent.FRAGMENT) {
       return activity;
     } else if (component.getKind() == AppComponent.WALLPAPER) {
       return wallpaper;
     } else if (component.getKind() == AppComponent.WATCHFACE) {
       return watchface;
     }
-		*/
+    return null;
   }
 
 
