@@ -8,13 +8,14 @@
                  android:icon="@mipmap/ic_launcher">
         <service android:name=".MainService"
                    android:label=""
-                   android:permission="android.permission.BIND_WALLPAPER">
+                   android:permission="android.permission.BIND_WALLPAPER"
+                   android:exported="true">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
             </intent-filter>
             <meta-data android:name="android.service.wallpaper" 
                        android:resource="@xml/wallpaper" />
-        </service>        
+        </service>
         <activity android:name="processing.android.PermissionRequestor" ></activity>
     </application>
 </manifest>

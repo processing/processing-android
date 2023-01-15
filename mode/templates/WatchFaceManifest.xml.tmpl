@@ -12,7 +12,8 @@
         <meta-data android:name="com.google.android.wearable.standalone" android:value="true" />
         <service android:name=".MainService"
                  android:label=""
-                 android:permission="android.permission.BIND_WALLPAPER">
+                 android:permission="android.permission.BIND_WALLPAPER"
+                 android:exported="true">
             <meta-data android:name="android.service.wallpaper"
                        android:resource="@xml/watch_face" />
             <meta-data android:name="com.google.android.wearable.watchface.preview"
