@@ -323,15 +323,33 @@ public class Manifest {
     if (manifestFile.exists()) {
       try {
         xml = new XML(manifestFile);
-        
+
         XML app = xml.getChild("application");
         String icon = app.getString("android:icon");
         if (icon.equals("@drawable/icon")) {
           // Manifest file generated with older version of the mode, replace icon and save
           app.setString("android:icon", "@mipmap/ic_launcher");
           if (!forceNew) save();
-        }        
-        
+        }
+
+        XML activity = app.getChild("activity");
+        XML service = app.getChild("service");
+        if (activity.getString("android:name").equals(".MainActivity")) {
+          addExportedAttrib(activity);
+          if (!forceNew) save();
+        }
+        if (service.getString("android:name").equals(".MainService")) {
+          addExportedAttrib(service);
+          if (!forceNew) save();
+        }
+
+        XML usesSDK = xml.getChild("uses-sdk");
+        if (usesSDK != null) {
+          // Manifest file generated with older version of the mode, uses-sdk is no longer needed in manifest
+          xml.removeChild(usesSDK);
+          if (!forceNew) save();
+        }
+
       } catch (Exception e) {
         e.printStackTrace();
         System.err.println("Problem reading AndroidManifest.xml, creating a new version");
@@ -391,6 +409,13 @@ public class Manifest {
     if (xml == null) {
       Messages.showWarning(AndroidMode.getTextString("manifest.warn.cannot_handle_file_title", MANIFEST_XML), 
                            AndroidMode.getTextString("manifest.warn.cannot_handle_file_body", MANIFEST_XML));
+    }
+  }
+
+  protected void addExportedAttrib(XML child) {
+    if (!child.hasAttribute("android:exported")) {
+      // Manifest file generated with older version of the mode, missing android:exported attributed
+      child.setString("android:exported", "true");
     }
   }
 
