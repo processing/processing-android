@@ -324,31 +324,35 @@ public class Manifest {
       try {
         xml = new XML(manifestFile);
 
+        boolean saveOld = false;
+
         XML app = xml.getChild("application");
         String icon = app.getString("android:icon");
         if (icon.equals("@drawable/icon")) {
           // Manifest file generated with older version of the mode, replace icon and save
           app.setString("android:icon", "@mipmap/ic_launcher");
-          if (!forceNew) save();
+          saveOld = true;
         }
 
         XML activity = app.getChild("activity");
         XML service = app.getChild("service");
         if (activity != null && activity.getString("android:name").equals(".MainActivity")) {
           addExportedAttrib(activity);
-          if (!forceNew) save();
+          saveOld = true;
         }
         if (service != null && service.getString("android:name").equals(".MainService")) {
           addExportedAttrib(service);
-          if (!forceNew) save();
+          saveOld = true;
         }
 
         XML usesSDK = xml.getChild("uses-sdk");
         if (usesSDK != null) {
           // Manifest file generated with older version of the mode, uses-sdk is no longer needed in manifest
           xml.removeChild(usesSDK);
-          if (!forceNew) save();
+          saveOld = true;
         }
+
+        if (saveOld && !forceNew) save();
 
       } catch (Exception e) {
         e.printStackTrace();
