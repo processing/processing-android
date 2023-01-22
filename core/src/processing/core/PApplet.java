@@ -916,7 +916,7 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   /**
-   * If you override this function without calling super.onTouchEvent(),
+   * If you override this function without calling super.surfaceTouchEvent(),
    * then motionX, motionY, motionPressed, and motionEvent will not be set.
    */
   public boolean surfaceTouchEvent(MotionEvent event) {
@@ -2283,47 +2283,56 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   protected void enqueueTouchEvents(MotionEvent event, int button, int modifiers) {
-    int action = event.getAction();
-    int actionMasked = action & MotionEvent.ACTION_MASK;
-    int paction = 0;
+    int actionMasked = event.getActionMasked();
+    int pAction = 0;
+    int pointerUp = 0;
+    int pointerUpIdx = -1;
     switch (actionMasked) {
     case MotionEvent.ACTION_DOWN:
-      paction = TouchEvent.START;
+      pAction = TouchEvent.START;
       break;
     case MotionEvent.ACTION_POINTER_DOWN:
-      paction = TouchEvent.START;
+      pAction = TouchEvent.START;
       break;
     case MotionEvent.ACTION_MOVE:
-      paction = TouchEvent.MOVE;
+      pAction = TouchEvent.MOVE;
       break;
     case MotionEvent.ACTION_UP:
-      paction = TouchEvent.END;
+      pAction = TouchEvent.END;
       break;
     case MotionEvent.ACTION_POINTER_UP:
-      paction = TouchEvent.END;
+      pAction = TouchEvent.END;
+      pointerUp = 1;
+      // We get the index of the pointer that is being released:
+      // https://developer.android.com/reference/android/view/MotionEvent#getActionIndex()
+      pointerUpIdx = event.getActionIndex();
       break;
     default:
       // Covers any other action value, including ACTION_CANCEL
-      paction = TouchEvent.CANCEL;
+      pAction = TouchEvent.CANCEL;
       break;
     }
 
-    if (paction == TouchEvent.START || paction == TouchEvent.END) {
+    if (pAction == TouchEvent.START || pAction == TouchEvent.END || pAction == TouchEvent.CANCEL) {
       touchPointerId = event.getPointerId(0);
     }
 
-    int pointerCount = event.getPointerCount();
+    // getPointerCount() will return the count including the pointer that is being released, so
+    // we substract 1 if if this current event is a pointer up
+    int activePointerCount = event.getPointerCount() - pointerUp;
 
     if (actionMasked == MotionEvent.ACTION_MOVE) {
       // Post historical movement events, if any.
       int historySize = event.getHistorySize();
       for (int h = 0; h < historySize; h++) {
         TouchEvent touchEvent = new TouchEvent(event, event.getHistoricalEventTime(h),
-                                               paction, modifiers, button);
-        touchEvent.setNumPointers(pointerCount);
-        for (int p = 0; p < pointerCount; p++) {
-          touchEvent.setPointer(p, event.getPointerId(p), event.getHistoricalX(p, h), event.getHistoricalY(p, h),
-                                event.getHistoricalSize(p, h), event.getHistoricalPressure(p, h));
+                                               pAction, modifiers, button);
+        touchEvent.setNumPointers(activePointerCount);
+        int p = 0;
+        for (int idx = 0; idx < event.getPointerCount(); idx++) {
+          if (idx == pointerUpIdx) continue; // Skip the released pointer
+          touchEvent.setPointer(p++, event.getPointerId(idx), event.getHistoricalX(idx, h), event.getHistoricalY(idx, h),
+                                     event.getHistoricalSize(idx, h), event.getHistoricalPressure(idx, h));
         }
         postEvent(touchEvent);
       }
@@ -2331,16 +2340,18 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
     // Current event
     TouchEvent touchEvent = new TouchEvent(event, event.getEventTime(),
-                                           paction, modifiers, button);
-    if (actionMasked == MotionEvent.ACTION_UP) {
+                                           pAction, modifiers, button);
+    if (actionMasked == MotionEvent.ACTION_UP || actionMasked == MotionEvent.ACTION_CANCEL) {
       // Last pointer up
       touchEvent.setNumPointers(0);
     } else {
       // We still have some pointers left
-      touchEvent.setNumPointers(pointerCount);
-      for (int p = 0; p < event.getPointerCount(); p++) {
-        touchEvent.setPointer(p, event.getPointerId(p), event.getX(p), event.getY(p),
-                                 event.getSize(p), event.getPressure(p));
+      touchEvent.setNumPointers(activePointerCount);
+      int p = 0;
+      for (int idx = 0; idx < event.getPointerCount(); idx++) {
+        if (idx == pointerUpIdx) continue; // Skip the released pointer
+        touchEvent.setPointer(p++, event.getPointerId(idx), event.getX(idx), event.getY(idx),
+                                   event.getSize(idx), event.getPressure(idx));
       }
     }
     postEvent(touchEvent);
@@ -2348,12 +2359,12 @@ public class PApplet extends Object implements ActivityAPI, PConstants {
 
 
   protected void enqueueMouseEvents(MotionEvent event, int button, int modifiers) {
-    int action = event.getAction();
+    int actionMasked = event.getActionMasked();
 
     int clickCount = 1;  // not really set... (i.e. not catching double taps)
     int index;
 
-    switch (action & MotionEvent.ACTION_MASK) {
+    switch (actionMasked) {
     case MotionEvent.ACTION_DOWN:
       mousePointerId = event.getPointerId(0);
       postEvent(new MouseEvent(event, event.getEventTime(),
