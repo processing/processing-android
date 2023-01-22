@@ -334,11 +334,11 @@ public class Manifest {
 
         XML activity = app.getChild("activity");
         XML service = app.getChild("service");
-        if (activity.getString("android:name").equals(".MainActivity")) {
+        if (activity != null && activity.getString("android:name").equals(".MainActivity")) {
           addExportedAttrib(activity);
           if (!forceNew) save();
         }
-        if (service.getString("android:name").equals(".MainService")) {
+        if (service != null && service.getString("android:name").equals(".MainService")) {
           addExportedAttrib(service);
           if (!forceNew) save();
         }
