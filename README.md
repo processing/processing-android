@@ -13,3 +13,34 @@ Place the processing-core-x.y.z.jar from building the core library into ../pkgs 
 ```
 ./release.sh x.y.z
 ```
+
+## Importing into Gradle projects
+
+In the settings.gradle file of the project, add https://raw.github.com/processing/processing-android/repository/ as a maven repository, under the  dependencyResolutionManagement block:
+
+```
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://raw.github.com/processing/processing-android/repository/"
+        }
+    }
+}
+```
+
+Then you should able to incorporarte processing-core as a dependency in the build.gradle file:
+
+```
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.navigation:navigation-fragment:2.4.1'
+    implementation 'androidx.navigation:navigation-ui:2.4.1'
+
+    implementation 'org.processing.android:processing-core:4.5.0b5'
+}
+```
