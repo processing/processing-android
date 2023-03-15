@@ -31,7 +31,7 @@ dependencyResolutionManagement {
 }
 ```
 
-Then you should able to incorporarte processing-core as a dependency in the build.gradle file:
+Then you should able to incorporate processing-core as a dependency in the build.gradle file:
 
 ```
 dependencies {
@@ -44,3 +44,7 @@ dependencies {
     implementation 'org.processing.android:processing-core:4.5.0b5'
 }
 ```
+
+More information below about declaring respositories in Gradle:
+
+https://docs.gradle.org/current/userguide/declaring_repositories.html
