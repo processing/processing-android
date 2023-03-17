@@ -139,10 +139,12 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
         firePropertyChange(AndroidMode.getTextString("download_property.change_event_total"), 0, downloadUrls.totalSize);
         totalSize = downloadUrls.totalSize;
 
+        String level = AVD.getTargetSDK(wear, abi);
+
         if (wear) {
           // wear system images
           File downloadedSysImgWear = new File(tempFolder, downloadUrls.sysImgWearFilename);
-          File tmp = new File(sysImgFolder, "android-" + AndroidBuild.TARGET_SDK);
+          File tmp = new File(sysImgFolder, "android-" + level);
           if (!tmp.exists()) tmp.mkdir();
           File sysImgWearFinalFolder = new File(tmp, downloadUrls.sysImgWearTag);
           if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir();
@@ -150,11 +152,8 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           fixSourceProperties(sysImgWearFinalFolder);
         } else {
           // mobile system images
-          File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);
-          
-          String level = abi.equals("arm") ? AVD.TARGET_SDK_ARM : AndroidBuild.TARGET_SDK;
-          File tmp = new File(sysImgFolder, "android-" + level);
-          
+          File downloadedSysImg = new File(tempFolder, downloadUrls.sysImgFilename);          
+          File tmp = new File(sysImgFolder, "android-" + level);          
           if (!tmp.exists()) tmp.mkdir();
           File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
           if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
@@ -253,22 +252,23 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       XPathExpression expr;
       NodeList remotePackages;
 
+      String targetSDK = AVD.getTargetSDK(wear, abi);
       if (abi.equals("arm")) {
-        expr = xpath.compile("//remotePackage[contains(@path, '" + AVD.TARGET_SDK_ARM + "')" +
-              "and contains(@path, \"armeabi-v7a\")]");
-      } else if (abi.equals("arm64-v8a")) {
-    	expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
-                  "and contains(@path, \"arm64-v8a\")]");  
+        expr = xpath.compile("//remotePackage[contains(@path, '" + targetSDK + "')" +
+                             "and contains(@path, \"armeabi-v7a\")]");
+      } if (abi.equals("arm64-v8a")) {
+    	  expr = xpath.compile("//remotePackage[contains(@path, '" + targetSDK + "')" +
+                             "and contains(@path, \"arm64-v8a\")]");  
       } else {
-        expr = xpath.compile("//remotePackage[contains(@path, '" + AndroidBuild.TARGET_SDK + "')" +
-              "and contains(@path, \"x86\")]");
+        expr = xpath.compile("//remotePackage[contains(@path, '" + targetSDK + "')" +
+                             "and contains(@path, \"x86\")]");
       }
       
       if (wear) {
         Document docSysImgWear = db.parse(new URL(repositoryUrl).openStream());
+
         remotePackages = (NodeList) expr.evaluate(docSysImgWear, XPathConstants.NODESET);
         NodeList childNodes = remotePackages.item(0).getChildNodes();
-
         NodeList typeDetails = ((Element) childNodes).getElementsByTagName("type-details");
         NodeList tag = ((Element) typeDetails.item(0)).getElementsByTagName("tag");
         NodeList id = ((Element) tag.item(0)).getElementsByTagName("id");
@@ -481,6 +481,9 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           process.waitFor();
         } catch (final InterruptedException ie) {
           ie.printStackTrace();
+          System.out.println("Processing was not able to install HAXM automatically, " +
+                             "but the installation package was downloaded into android/sdk/extras/intel/HAXM. " + 
+                             "You can try install to install it manually from there.");
         } finally {
           process.destroy();
         }              

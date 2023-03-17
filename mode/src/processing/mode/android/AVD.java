@@ -39,7 +39,8 @@ public class AVD {
 
   final static public String DEFAULT_ABI = "x86";
   
-  public static final String TARGET_SDK_ARM = "24";   
+  public static final String TARGET_SDK_ARM = "24";
+  public static final String TARGET_SDK_WEAR = "30";
 
   public final static String DEFAULT_PHONE_PORT = "5566";
   public final static String DEFAULT_WEAR_PORT  = "5576";  
@@ -95,21 +96,22 @@ public class AVD {
       return AVD.phoneAVD.name;
     }
   }
-  
-  
-  static public String getPreferredPlatform(boolean wear, String abi) {
-    if (wear) {
-      return AndroidBuild.TARGET_PLATFORM;
-    } else if (abi.equals("arm")) {
+
+  static public String getTargetSDK(boolean wear, String abi) {
+    if (abi.equals("arm")) {
       // The ARM images using Google APIs are too slow, so use the
       // older Android (AOSP) images.
       // TODO check if we can move to the regular ARM images...
-      return "android-" + TARGET_SDK_ARM;
+      return TARGET_SDK_ARM;
     } else if (abi.equals("arm64-v8a")) {
-      return AndroidBuild.TARGET_PLATFORM;
-    } else {
-      return AndroidBuild.TARGET_PLATFORM;
+      return wear ? TARGET_SDK_WEAR : AndroidBuild.TARGET_PLATFORM;
+    } else { // x86
+      return wear ? TARGET_SDK_WEAR : AndroidBuild.TARGET_PLATFORM;
     }
+  }
+  
+  static public String getPreferredPlatform(boolean wear, String abi) {
+    return "android-" + getTargetSDK(wear, abi);
   }
   
   static public String getPreferredPort(boolean wear) {
@@ -322,7 +324,6 @@ public class AVD {
                 line.contains(";" + imagePlatform) &&
                 line.contains(";" + imageTag) &&
                 line.contains(";" + imageAbi)) {
-//            System.out.println("  added image!");
           images.add(line);
         }
       }
