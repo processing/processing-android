@@ -38,9 +38,6 @@ public class AVD {
   final static private int WEAR  = 1;
 
   final static public String DEFAULT_ABI = "x86";
-  
-  public static final String TARGET_SDK_ARM = "24";
-  public static final String TARGET_SDK_WEAR = "30";
 
   public final static String DEFAULT_PHONE_PORT = "5566";
   public final static String DEFAULT_WEAR_PORT  = "5576";  
@@ -102,11 +99,11 @@ public class AVD {
       // The ARM images using Google APIs are too slow, so use the
       // older Android (AOSP) images.
       // TODO check if we can move to the regular ARM images...
-      return TARGET_SDK_ARM;
+      return AndroidBuild.TARGET_WEAR_SDK_ARM;
     } else if (abi.equals("arm64-v8a")) {
-      return wear ? TARGET_SDK_WEAR : AndroidBuild.TARGET_PLATFORM;
+      return wear ? AndroidBuild.TARGET_WEAR_SDK : AndroidBuild.TARGET_SDK;
     } else { // x86
-      return wear ? TARGET_SDK_WEAR : AndroidBuild.TARGET_PLATFORM;
+      return wear ? AndroidBuild.TARGET_WEAR_SDK : AndroidBuild.TARGET_SDK;
     }
   }
   

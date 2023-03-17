@@ -67,8 +67,9 @@ class AndroidBuild extends JavaBuild {
   static public String MIN_SDK_WATCHFACE;
   
   // Versions of all required dependencies
-  static public String TARGET_SDK;  
-  static public String TARGET_PLATFORM;
+  static public String TARGET_SDK;
+  static public String TARGET_WEAR_SDK_ARM;
+  static public String TARGET_WEAR_SDK;  
   static public String GRADLE_PLUGIN_VER;
   static public String APPCOMPAT_VER;
   static public String V4LEGACY_VER;
@@ -1024,8 +1025,21 @@ class AndroidBuild extends JavaBuild {
         TARGET_SDK = defTargetSDK;
         Preferences.set("android.sdk.target", TARGET_SDK);
       }
-      TARGET_PLATFORM = "android-" + TARGET_SDK;
-      
+
+      TARGET_WEAR_SDK_ARM = Preferences.get("android.sdk.target.wear_arm");
+      String defTargetWearSDKArm = props.getProperty("android-platform-wear-arm");
+      if (TARGET_WEAR_SDK_ARM == null || PApplet.parseInt(TARGET_WEAR_SDK_ARM) != PApplet.parseInt(defTargetWearSDKArm)) {
+        TARGET_WEAR_SDK_ARM = defTargetWearSDKArm;
+        Preferences.set("android.sdk.target.wear_arm", TARGET_WEAR_SDK_ARM);
+      }
+
+      TARGET_WEAR_SDK = Preferences.get("android.sdk.target.wear");
+      String defTargetWearSDK = props.getProperty("android-platform-wear");
+      if (TARGET_WEAR_SDK == null || PApplet.parseInt(TARGET_WEAR_SDK) != PApplet.parseInt(defTargetWearSDK)) {
+        TARGET_WEAR_SDK = defTargetWearSDK;
+        Preferences.set("android.sdk.target.wear", TARGET_WEAR_SDK);
+      }
+
       APPCOMPAT_VER = Preferences.get("android.sdk.appcompat");
       String defAppCompatVer = props.getProperty("androidx.appcompat%appcompat");
       if (APPCOMPAT_VER == null || !versionCheck(APPCOMPAT_VER, defAppCompatVer)) {
