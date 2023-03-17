@@ -348,10 +348,7 @@ public class AndroidEditor extends JavaEditor {
     item = new JMenuItem(AndroidMode.getTextString("menu.help.processing_for_android_site"));
     item.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        // Platform.openURL("https://android.processing.org/");
-        String BLUETOOTH_DEBUG_URL = "https://android.processing.org/";
-        AndroidUtil.showMessage(AndroidMode.getTextString("android_mode.dialog.watchface_debug_title"),
-                                AndroidMode.getTextString("android_mode.dialog.watchface_debug_body", BLUETOOTH_DEBUG_URL));
+        Platform.openURL("https://android.processing.org/");
       }
     });
     menu.add(item);

@@ -91,7 +91,7 @@ public class AndroidUtil {
               Platform.openURL(e.getURL().toString());
             } else {
               String description = e.getDescription();
-              System.err.println("Cannot open this URL " + description);
+              System.err.println("Cannot open this URL: " + description);
             }
           }
         }
