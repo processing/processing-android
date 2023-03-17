@@ -45,7 +45,7 @@ public class AVD {
   public final static String DEFAULT_WEAR_PORT  = "5576";  
 
   private static final String GETTING_START_TUT_URL = 
-      "http://android.processing.org/tutorials/getting_started/index.html";
+      "https://android.processing.org/tutorials/getting_started/index.html";
 
   static final String DEVICE_DEFINITION = "pixel_6";
   static final String DEVICE_SKIN = "pixel_6";

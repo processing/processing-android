@@ -73,13 +73,13 @@ class AndroidSDK {
   private File emulator;
   
   private static final String SDK_DOWNLOAD_URL = 
-      "https://developer.android.com/studio/index.html#downloads";
+      "https://developer.android.com/studio/index.html#android-studio-downloads";
 
   private static final String PROCESSING_FOR_ANDROID_URL = 
-      "http://android.processing.org/";    
+      "https://android.processing.org/";    
   
   private static final String WHATS_NEW_URL =
-      "http://android.processing.org/whatsnew.html";
+      "https://developer.android.com/studio/index.html";
   
   private static final String DRIVER_INSTALL_URL = 
       "https://developer.android.com/studio/run/oem-usb.html#InstallingDriver";

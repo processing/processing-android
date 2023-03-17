@@ -65,10 +65,10 @@ public class AndroidMode extends JavaMode {
   private static final String VERSIONS_FILE = "version.properties";
   
   private static final String BLUETOOTH_DEBUG_URL = 
-      "https://developer.android.com/training/wearables/apps/debugging.html";
+      "https://developer.android.com/training/wearables/get-started/debugging";
     
   private static final String DISTRIBUTING_APPS_TUT_URL = 
-      "http://android.processing.org/tutorials/distributing/index.html";  
+      "https://android.processing.org/tutorials/distributing/index.html";  
   
   public AndroidMode(Base base, File folder) {
     super(base, folder);

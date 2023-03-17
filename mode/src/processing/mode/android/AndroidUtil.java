@@ -66,6 +66,7 @@ public class AndroidUtil {
   
   // Creates a message dialog, where the text can contain clickable links.
   static public void showMessage(String title, String text) {
+    System.out.println(text);
     if (title == null) title = "Message";
     if (Base.isCommandLine()) {      
       System.out.println(title + ": " + text);
@@ -76,17 +77,26 @@ public class AndroidUtil {
               "margin: " + TEXT_MARGIN + "px; " + 
               "width: " + TEXT_WIDTH + "px }" +
           "</style> </head>" +
-          "<body> <p>" + text + "</p> </body> </html>";      
-      JEditorPane pane = new JEditorPane("text/html", htmlString);
+          "<body> <p>" + text + "</p> </body> </html>";
+      JEditorPane pane = new JEditorPane();
+      pane.setContentType("text/html");
+      pane.setText(htmlString);
+      pane.setEditable(false);
+
       pane.addHyperlinkListener(new HyperlinkListener() {
         @Override
         public void hyperlinkUpdate(HyperlinkEvent e) {
           if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
-            Platform.openURL(e.getURL().toString());
+            if (e.getURL() != null) {
+              Platform.openURL(e.getURL().toString());
+            } else {
+              String description = e.getDescription();
+              System.err.println("Cannot open this URL " + description);
+            }
           }
         }
       });
-      pane.setEditable(false);
+      
       JLabel label = new JLabel();
       pane.setBackground(label.getBackground());      
       JOptionPane.showMessageDialog(null, pane, title, 
