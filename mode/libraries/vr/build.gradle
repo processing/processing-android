@@ -1,5 +1,4 @@
 import java.nio.file.Files
-// import org.apache.commons.io.FileUtils
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 plugins {
@@ -76,9 +75,6 @@ build.doLast {
         Files.copy(file("$buildDir/libs/vr.jar").toPath(),
                    vrJar.toPath(), REPLACE_EXISTING);
     }
-
-    // FileUtils.copyDirectory(file("libs/google-vr"), 
-    //                         file("$buildDir/libs/google-vr"))
 
     // Renaming artifacts for maven publishing
     if (file("$buildDir/libs/vr.jar").exists()) {
