@@ -128,7 +128,7 @@ public class Manifest {
     for (int i = 0; i < count; i++) {
       String tmp = elements[i].getString("android:name");
       if (tmp.indexOf("android.permission") == 0) {
-        // Standard permission, remove perfix
+        // Standard permission, remove prefix
         int idx = tmp.lastIndexOf(".");
         names[i] = tmp.substring(idx + 1);        
       } else {
