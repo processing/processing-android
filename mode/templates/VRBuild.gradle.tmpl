@@ -49,10 +49,10 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:@@appcompat_version@@'
-    implementation 'com.google.vr:sdk-audio:@@gvr_version@@'
-    implementation 'com.google.vr:sdk-base:@@gvr_version@@'
+    implementation project('libs:google-vr')
     implementation files('libs/processing-core.jar')
     implementation files('libs/vr.jar')
+    implementation 'com.google.protobuf.nano:protobuf-javanano:3.1.0'
     androidTestImplementation 'com.android.support.test:runner:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     testImplementation 'junit:junit:4.13'

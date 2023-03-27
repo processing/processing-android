@@ -25,17 +25,8 @@ allprojects {
         // Needed to get google-vr dependencies
         maven { url 'https://repo.gradle.org/gradle/libs-releases' }
 
-        // Using the legacy Google VR libs included in the mode's VR library, since they are no
-        // longer available online
-//        flatDir {
-//            dirs '../mode/libraries/vr/libs'
-//        }
-
         mavenCentral()
         google()
-
-        google()
-        mavenCentral()
     }
 }
 

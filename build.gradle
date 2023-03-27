@@ -150,6 +150,8 @@ task dist {
                                 file("${root}/libraries/vr/examples"))
         FileUtils.copyDirectory(file("mode/libraries/vr/library"), 
                                 file("${root}/libraries/vr/library"))
+        FileUtils.copyDirectory(file("mode/libraries/vr/libs"), 
+                                file("${root}/libraries/vr/libs"))
         FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
                                 file("${root}/libraries/vr/src"))
         Files.copy(file("mode/libraries/vr/library.properties").toPath(),

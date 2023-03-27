@@ -26,7 +26,6 @@ import org.gradle.tooling.*;
 
 import processing.app.Base;
 import processing.app.Library;
-import processing.app.Messages;
 import processing.app.Platform;
 import processing.app.Preferences;
 import processing.app.Sketch;
@@ -394,7 +393,13 @@ class AndroidBuild extends JavaBuild {
     File settingsTemplate = mode.getContentFile("templates/" + GRADLE_SETTINGS_TEMPLATE);
     File settingsFile = new File(tmpFolder, "settings.gradle");
     replaceMap.clear();
-    replaceMap.put("@@project_modules@@", projectModules);
+    if (getAppComponent() == VR) {
+      // The local google-vr has to be added to the settings to fix Issue #718
+      replaceMap.put("@@project_modules@@", projectModules + ", ':app:libs:google-vr'");      
+    } else {
+      replaceMap.put("@@project_modules@@", projectModules);
+    }
+    
     AndroidUtil.createFileFromTemplate(settingsTemplate, settingsFile, replaceMap);
     
     File localPropsTemplate = mode.getContentFile("templates/" + LOCAL_PROPERTIES_TEMPLATE);
@@ -476,15 +481,10 @@ class AndroidBuild extends JavaBuild {
     copyImportedLibs(libsFolder, mainFolder, assetsFolder);
     copyCodeFolder(libsFolder);
 
-    // Copy any system libraries needed by the project
-//    copyWearLib(libsFolder);
-//    copySupportLibs(libsFolder);
-//    if (getAppComponent() == APP) {
-//      copyAppCompatLib(libsFolder);
-//    }
-//    if (getAppComponent() == VR) {
-//      copyGVRLibs(libsFolder);
-//    }
+    if (getAppComponent() == VR) {
+      // Need to call this to fix Issue #718
+      copyGVRLibs(libsFolder);
+    }
 
     // Copy the data folder (if one exists) to the project's 'assets' folder
     final File sketchDataFolder = sketch.getDataFolder();
@@ -853,7 +853,6 @@ class AndroidBuild extends JavaBuild {
       }
     }
   }
-  
 
   private void copyImportedLib(final File libsFolder, 
                                final File mainFolder,
@@ -900,6 +899,15 @@ class AndroidBuild extends JavaBuild {
     }
   }
 
+  /**
+   * Copy the dummy Gradle project containing aar files from Google VR,
+   * so they can be imported locally from the project
+   */  
+  private void copyGVRLibs(final File libsFolder) throws IOException {
+    File srcFolder = new File(mode.getFolder(), "libraries/vr/libs/google-vr");
+    File dstFolder = new File(libsFolder, "google-vr");
+    Util.copyDir(srcFolder, dstFolder);
+  }
   
   private void copyCodeFolder(final File libsFolder) throws IOException {
     // Copy files from the 'code' directory into the 'libs' folder

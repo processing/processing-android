@@ -1,4 +1,5 @@
 import java.nio.file.Files
+// import org.apache.commons.io.FileUtils
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 plugins {
@@ -14,7 +15,7 @@ dependencies {
 //    implementationAar "com.google.vr:sdk-base:${gvrVersion}"
 
 // fix for Issue #718
-    implementationAar fileTree(dir: "libs", include: ["*.aar"])
+    implementationAar fileTree(dir: "libs/google-vr", include: ["*.aar"])
 }
 
 task sourceJar(type: Jar, dependsOn: classes) {
@@ -73,8 +74,12 @@ build.doLast {
 
     if (file("$buildDir/libs/vr.jar").exists()) {
         Files.copy(file("$buildDir/libs/vr.jar").toPath(),
-                vrJar.toPath(), REPLACE_EXISTING);
+                   vrJar.toPath(), REPLACE_EXISTING);
     }
+
+    // FileUtils.copyDirectory(file("libs/google-vr"), 
+    //                         file("$buildDir/libs/google-vr"))
+
     // Renaming artifacts for maven publishing
     if (file("$buildDir/libs/vr.jar").exists()) {
         Files.move(file("$buildDir/libs/vr.jar").toPath(),
