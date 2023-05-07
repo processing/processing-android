@@ -121,6 +121,14 @@ public class ARGraphics extends PGraphics3D {
 
 
   @Override
+  public void eye() {
+    super.ortho(0, width, -height, 0, -1, +1);
+
+    eyeDist = 1;
+    resetMatrix();
+  }
+
+  @Override
   public void beginDraw() {
     super.beginDraw();
     updateView();
