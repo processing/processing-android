@@ -93,27 +93,34 @@ public class AndroidTool extends LocalContribution implements Tool, Comparable<A
       File[] toolArchives = Util.listJarFiles(toolDir);      
       File[] libArchives = Util.listJarFiles(libDir);
       
-      if (toolArchives != null && toolArchives.length > 0 &&
-          libArchives != null && libArchives.length > 0) {
-        URL[] urlList = new URL[toolArchives.length + libArchives.length + 1];
+      if (toolArchives != null && toolArchives.length > 0) {
+
+        int nArchives = toolArchives.length + 1;
+        if (libArchives != null && libArchives.length > 0) {
+          nArchives += libArchives.length;
+        }
+        URL[] urlList = new URL[nArchives];
         
         int j;
         for (j = 0; j < toolArchives.length; j++) {
           Messages.log("Found archive " + toolArchives[j] + " for " + getName());
           urlList[j] = toolArchives[j].toURI().toURL();
         }
-        for (int k = 0; k < libArchives.length; k++, j++) {
-          Messages.log("Found archive " + libArchives[k] + " for " + getName());
-          urlList[j] = libArchives[k].toURI().toURL();
+        if (libArchives != null) {
+          for (int k = 0; k < libArchives.length; k++, j++) {
+            Messages.log("Found archive " + libArchives[k] + " for " + getName());
+            urlList[j] = libArchives[k].toURI().toURL();
+          }
         }
         urlList[urlList.length - 1] = new File(mode.getModeJar()).toURI().toURL();
 
-        
 //        String modePath = new File(dmode.getFolder(), "mode").getAbsolutePath();
 //        urlList[urlList.length - 1] = new File(modePath + File.separator + "JavaMode.jar").toURI().toURL();
         
         loader = new URLClassLoader(urlList);
         Messages.log("loading above JARs with loader " + loader);
+      } else {
+        throw new IgnorableException("Could not find any files inside " + toolDir.getAbsolutePath());
       }
     }
 
