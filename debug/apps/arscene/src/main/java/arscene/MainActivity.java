@@ -20,6 +20,7 @@ import processing.core.PApplet;
 
 public class MainActivity extends AppCompatActivity {
   private static final int CAMERA_PERMISSION_CODE = 0;
+  private static boolean CAMERA_PERMISSION_REQUESTED = false;
   private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
   private static final String CAMERA_PERMISSION_MESSAGE = "Camera permission is needed to use AR";
 
@@ -58,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
     if (sketch != null) {
       sketch.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+
+    CAMERA_PERMISSION_REQUESTED = false;
   }
 
   @Override
@@ -89,7 +92,10 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void requestCameraPermission() {
-    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
+    if (!CAMERA_PERMISSION_REQUESTED) {
+      CAMERA_PERMISSION_REQUESTED = true;
+      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);
+    }
   }
 
   private boolean shouldShowRequestPermissionRationale() {
