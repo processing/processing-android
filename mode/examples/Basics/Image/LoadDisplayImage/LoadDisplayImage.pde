@@ -12,7 +12,6 @@ void setup() {
   // The file "jelly.jpg" must be in the data folder
   // of the current sketch to load successfully
   a = loadImage("jelly.jpg");  // Load the image into the program  
-  noLoop();  // Makes draw() only run once
 }
 
 void draw() {
