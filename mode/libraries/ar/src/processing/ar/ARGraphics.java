@@ -57,6 +57,7 @@ public class ARGraphics extends PGraphics3D {
   static protected final int PLANE_CEILING = 1;
   static protected final int PLANE_WALL    = 2;
   static protected final int POINT         = 3;
+  static protected final int IMAGE         = 4;
 
   static protected final int TRACKING  = 0;
   static protected final int PAUSED    = 1;

@@ -40,7 +40,7 @@ import processing.core.PImage;
 
 public class ARTracker {
   protected PApplet p;
-  protected ARGraphics g;
+  protected ARGraphics g,arg;
   protected AugmentedImageDatabase imgDB;
 
   private HashMap<String, ARTrackable> trackables = new HashMap<String, ARTrackable>();
@@ -52,8 +52,8 @@ public class ARTracker {
     this.p = parent;
     this.g = (ARGraphics) p.g;
     setEventHandler();
-    ARGraphics arg = (ARGraphics)parent.g;
-    imgDB = new AugmentedImageDatabase(arg.surfar.session); //A new Database has been created.
+    this.arg = (ARGraphics)parent.g;
+    this.imgDB = new AugmentedImageDatabase(arg.surfar.session); //A new Database has been created.
   }
 
   public void addImage(String name, PImage img) {
