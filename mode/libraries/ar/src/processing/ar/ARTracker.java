@@ -28,17 +28,20 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Config;
 import com.google.ar.core.Session;
+import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
+import java.io.*;
 
 import processing.core.PApplet;
 import processing.core.PImage;
 
 public class ARTracker {
+  private static final String TAG = ARTracker.class.getSimpleName();
   protected PApplet p;
   protected ARGraphics g,arg;
   protected AugmentedImageDatabase imgDB;
@@ -52,18 +55,55 @@ public class ARTracker {
     this.p = parent;
     this.g = (ARGraphics) p.g;
     setEventHandler();
-    this.arg = (ARGraphics)parent.g;
-    this.imgDB = new AugmentedImageDatabase(arg.surfar.session); //A new Database has been created.
+    this.arg = (ARGraphics)parent.g;//A new Database has been created.
+
+    session = arg.surfar.session;
+
+    this.imgDB = new AugmentedImageDatabase(session);
   }
 
   public void addImage(String name, PImage img) {
-    Bitmap bitmap = (Bitmap)img.getNative();
-    int imgIndex = imgDB.addImage(name,bitmap); // User-provided or auto-generated name here, physical size argument seems optional
+    System.out.println("code started");
+    Log.d(TAG, "Function Started.");
+          // Check if PImage is null
+    if (img == null) {
+      System.err.println("PImage is null. Failed to load the image.");
+      return;
+    }
+          // Convert PImage to Bitmap
+    Bitmap bitmap = (Bitmap) img.getNative();
+          // Check if Bitmap is null
+    if (bitmap == null) {
+      System.err.println("Bitmap is null. Failed to load the image.");
+      return;
+    }
+          // Check if Bitmap dimensions are within ARCore's requirements
+    int width = bitmap.getWidth();
+    int height = bitmap.getHeight();
+          // Set a safe maximum image resolution for augmented image tracking
+    int maxImageDimension = 1024;
 
-    // Re-set the session config with the updated image database
-    Config config = new Config(session);
+    if (width > maxImageDimension || height > maxImageDimension) {
+      System.err.println("Image dimensions exceed the maximum supported resolution for ARCore.");
+      return;
+    }
+          // Check if Bitmap format is ARGB_8888
+    if (bitmap.getConfig() != Bitmap.Config.ARGB_8888) {
+      System.err.println("Bitmap format is not ARGB_8888. Required format for ARCore image tracking.");
+      return;
+    }
+
+    int imgIndex = imgDB.addImage(name, bitmap);
+    System.out.println("imgIndex has been serialized");
+    System.out.println("ChatGPT-1 code");
+
+    Config config= new Config(session);
+        // Re-set the session config with the updated image database
+     System.out.println("session reset and configured");
     config.setAugmentedImageDatabase(imgDB);
+    System.out.println("augmentedImageDatabase set");
     session.configure(config);
+        // System.out.println("code complete");
   }
 
   public void start() {

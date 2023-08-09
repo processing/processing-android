@@ -116,6 +116,7 @@ public class ARTrackable {
   }
 
   public boolean isImage(){
+    System.out.println("isImage works fine.");
     int idx = g.trackableIndex(id);
     return g.trackableType(idx)== ARGraphics.IMAGE;
   }

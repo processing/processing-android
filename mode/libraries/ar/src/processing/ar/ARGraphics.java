@@ -76,7 +76,7 @@ public class ARGraphics extends PGraphics3D {
   protected ArrayList<ARTracker> trackers = new ArrayList<ARTracker>();
   protected ArrayList<Trackable> trackObjects = new ArrayList<Trackable>();
   protected HashMap<Plane, float[]> trackMatrices = new HashMap<Plane, float[]>();
-//  protected HashMap<Plane, Integer> trackIds = new HashMap<Plane, Integer>();
+  //  protected HashMap<Plane, Integer> trackIds = new HashMap<Plane, Integer>();
   protected HashMap<Integer, Integer> trackIdx = new HashMap<Integer, Integer>();
 
   protected ArrayList<Plane> newPlanes = new ArrayList<Plane>();
@@ -202,15 +202,15 @@ public class ARGraphics extends PGraphics3D {
 
       // Apply the projection matrix
       applyProjection(projMatrix[0], projMatrix[4], projMatrix[8], projMatrix[12],
-                      projMatrix[1], projMatrix[5], projMatrix[9], projMatrix[13],
-                      projMatrix[2], projMatrix[6], projMatrix[10], projMatrix[14],
-                      projMatrix[3], projMatrix[7], projMatrix[11], projMatrix[15]);
+              projMatrix[1], projMatrix[5], projMatrix[9], projMatrix[13],
+              projMatrix[2], projMatrix[6], projMatrix[10], projMatrix[14],
+              projMatrix[3], projMatrix[7], projMatrix[11], projMatrix[15]);
 
       // make modelview = view
       applyMatrix(viewMatrix[0], viewMatrix[4], viewMatrix[8], viewMatrix[12],
-                  viewMatrix[1], viewMatrix[5], viewMatrix[9], viewMatrix[13],
-                  viewMatrix[2], viewMatrix[6], viewMatrix[10], viewMatrix[14],
-                  viewMatrix[3], viewMatrix[7], viewMatrix[11], viewMatrix[15]);
+              viewMatrix[1], viewMatrix[5], viewMatrix[9], viewMatrix[13],
+              viewMatrix[2], viewMatrix[6], viewMatrix[10], viewMatrix[14],
+              viewMatrix[3], viewMatrix[7], viewMatrix[11], viewMatrix[15]);
     }
   }
 
@@ -249,9 +249,27 @@ public class ARGraphics extends PGraphics3D {
     return UNKNOWN;
   }
 
+//
+//  public int trackableType(int i) {
+//    Object trackedObject = trackObjects.get(i);
+//    if (trackedObject instanceof Plane) {
+//      Plane plane = (Plane) trackedObject;
+//      if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
+//        return PLANE_FLOOR;
+//      } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
+//        return PLANE_CEILING;
+//      } else if (plane.getType() == Plane.Type.VERTICAL) {
+//        return PLANE_WALL;
+//      }
+//    } else if (trackedObject instanceof AugmentedImage) {
+//      return IMAGE;
+//    }
+//    return UNKNOWN;
+//  }
+
   public int trackableStatus(int i) {
     Plane plane = (Plane)trackObjects.get(i);
-     if (plane.getTrackingState() == TrackingState.PAUSED) {
+    if (plane.getTrackingState() == TrackingState.PAUSED) {
       return PAUSED;
     } else if (plane.getTrackingState() == TrackingState.TRACKING) {
       return TRACKING;
@@ -340,9 +358,9 @@ public class ARGraphics extends PGraphics3D {
     Plane plane = (Plane)trackObjects.get(i);
     float[] mat = trackMatrices.get(plane);
     target.set(mat[0], mat[4], mat[8], mat[12],
-               mat[1], mat[5], mat[9], mat[13],
-               mat[2], mat[6], mat[10], mat[14],
-               mat[3], mat[7], mat[11], mat[15]);
+            mat[1], mat[5], mat[9], mat[13],
+            mat[2], mat[6], mat[10], mat[14],
+            mat[3], mat[7], mat[11], mat[15]);
 
     return target;
   }
@@ -418,9 +436,9 @@ public class ARGraphics extends PGraphics3D {
     Anchor anchor = anchors.get(id);
     anchor.getPose().toMatrix(anchorMatrix, 0);
     target.set(anchorMatrix[0], anchorMatrix[4], anchorMatrix[8], anchorMatrix[12],
-               anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
-               anchorMatrix[2], anchorMatrix[6], anchorMatrix[10], anchorMatrix[14],
-               anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
+            anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
+            anchorMatrix[2], anchorMatrix[6], anchorMatrix[10], anchorMatrix[14],
+            anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
     return target;
   }
 
@@ -431,9 +449,9 @@ public class ARGraphics extends PGraphics3D {
 
     // now, modelview = view * anchor
     applyMatrix(anchorMatrix[0], anchorMatrix[4], anchorMatrix[8], anchorMatrix[12],
-                anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
-                anchorMatrix[2], anchorMatrix[6], anchorMatrix[10], anchorMatrix[14],
-                anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
+            anchorMatrix[1], anchorMatrix[5], anchorMatrix[9], anchorMatrix[13],
+            anchorMatrix[2], anchorMatrix[6], anchorMatrix[10], anchorMatrix[14],
+            anchorMatrix[3], anchorMatrix[7], anchorMatrix[11], anchorMatrix[15]);
   }
 
 
@@ -470,7 +488,6 @@ public class ARGraphics extends PGraphics3D {
       Pose pose = plane.getCenterPose();
       pose.toMatrix(mat, 0);
     }
-
     // Remove stopped and subsummed trackables
     for (int i = trackObjects.size() - 1; i >= 0; i--) {
       Plane plane = (Plane)trackObjects.get(i);
