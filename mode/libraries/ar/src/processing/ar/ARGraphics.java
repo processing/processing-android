@@ -237,35 +237,35 @@ public class ARGraphics extends PGraphics3D {
     return trackIdx.get(id);
   }
 
-  public int trackableType(int i) {
-    Plane plane = (Plane)trackObjects.get(i);
-    if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
-      return PLANE_FLOOR;
-    } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
-      return PLANE_CEILING;
-    } else if (plane.getType() == Plane.Type.VERTICAL) {
-      return PLANE_WALL;
-    }
-    return UNKNOWN;
-  }
-
-//
 //  public int trackableType(int i) {
-//    Object trackedObject = trackObjects.get(i);
-//    if (trackedObject instanceof Plane) {
-//      Plane plane = (Plane) trackedObject;
-//      if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
-//        return PLANE_FLOOR;
-//      } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
-//        return PLANE_CEILING;
-//      } else if (plane.getType() == Plane.Type.VERTICAL) {
-//        return PLANE_WALL;
-//      }
-//    } else if (trackedObject instanceof AugmentedImage) {
-//      return IMAGE;
+//    Plane plane = (Plane)trackObjects.get(i);
+//    if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
+//      return PLANE_FLOOR;
+//    } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
+//      return PLANE_CEILING;
+//    } else if (plane.getType() == Plane.Type.VERTICAL) {
+//      return PLANE_WALL;
 //    }
 //    return UNKNOWN;
 //  }
+
+
+  public int trackableType(int i) {
+    Object trackedObject = trackObjects.get(i);
+    if (trackedObject instanceof AugmentedImage) {
+      return IMAGE;
+    }else if (trackedObject instanceof Plane) {
+      Plane plane = (Plane) trackedObject;
+      if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING) {
+        return PLANE_FLOOR;
+      } else if (plane.getType() == Plane.Type.HORIZONTAL_DOWNWARD_FACING) {
+        return PLANE_CEILING;
+      } else if (plane.getType() == Plane.Type.VERTICAL) {
+        return PLANE_WALL;
+      }
+    }
+    return UNKNOWN;
+  }
 
   public int trackableStatus(int i) {
     Plane plane = (Plane)trackObjects.get(i);
@@ -284,17 +284,55 @@ public class ARGraphics extends PGraphics3D {
     return newPlanes.contains(plane);
   }
 
+//  public boolean trackableSelected(int i, int mx, int my) {
+//    Trackable trackable = trackObjects.get(i);
+//    Plane planei = (Plane)trackObjects.get(i);
+//    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+//      Trackable trackable = hit.getTrackable();
+//      if (trackable instanceof Plane) {
+//        Plane plane = (Plane)trackable;
+//        if (planei.equals(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+//          return true;
+//        }
+//      }
+//    }
+//    return false;
+//  }
+
+
   public boolean trackableSelected(int i, int mx, int my) {
-    Plane planei = (Plane)trackObjects.get(i);
-    for (HitResult hit : surfar.frame.hitTest(mx, my)) {
-      Trackable trackable = hit.getTrackable();
-      if (trackable instanceof Plane) {
-        Plane plane = (Plane)trackable;
-        if (planei.equals(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
-          return true;
+    Trackable trackable = trackObjects.get(i);
+
+    if (trackable instanceof Plane) {
+      Plane plane = (Plane) trackable;
+      for (HitResult hit : surfar.frame.hitTest(mx, my)) {
+        Trackable hitTrackable = hit.getTrackable();
+        if (hitTrackable instanceof Plane) {
+          Plane hitPlane = (Plane) hitTrackable;
+          if (plane.equals(hitPlane) && hitPlane.isPoseInPolygon(hit.getHitPose())) {
+            return true;
+          }
         }
       }
+    } else if (trackable instanceof AugmentedImage) {
+      System.out.println("TrackableSelected method with AugmentedImages");
+      AugmentedImage image = (AugmentedImage) trackable;
+      Pose pose = image.getCenterPose();
+      Pose hitPose = surfar.frame.hitTest(mx, my).get(0).getHitPose();
+
+      // Calculate the distance between the two poses
+      float dx = pose.tx() - hitPose.tx();
+      float dy = pose.ty() - hitPose.ty();
+      float dz = pose.tz() - hitPose.tz();
+      float distance = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      float distanceThreshold = 0.1f; // Adjust this threshold as needed
+
+      if (distance <= distanceThreshold) {
+        return true;
+      }
     }
+
     return false;
   }
 
@@ -312,26 +350,69 @@ public class ARGraphics extends PGraphics3D {
     return null;
   }
 
-  protected int getTrackable(HitResult hit) {
-    Plane plane = (Plane) hit.getTrackable();
-    return trackObjects.indexOf(plane);
+//  protected int getTrackable(HitResult hit) {
+//    Plane plane = (Plane) hit.getTrackable();
+//    return trackObjects.indexOf(plane);
+//  }
+public int getTrackable(HitResult hit) {
+  Trackable hitTrackable = hit.getTrackable();
+
+  if (hitTrackable instanceof Plane) {
+    Plane hitPlane = (Plane) hitTrackable;
+    return trackObjects.indexOf(hitPlane);
+  } else if (hitTrackable instanceof AugmentedImage) {
+    AugmentedImage image = (AugmentedImage) hitTrackable;
+    return trackObjects.indexOf(image);
   }
+
+  return -1;
+}
 
   public float[] getTrackablePolygon(int i) {
     return getTrackablePolygon(i, null);
   }
 
 
+//  public float[] getTrackablePolygon(int i, float[] points) {
+//    Plane plane = (Plane)trackObjects.get(i);
+//    FloatBuffer buffer = plane.getPolygon();
+//    buffer.rewind();
+//    if (points == null || points.length < buffer.capacity()) {
+//      points = new float[buffer.capacity()];
+//    }
+//    buffer.get(points, 0, buffer.capacity());
+//    return points;
+//  }
+//
   public float[] getTrackablePolygon(int i, float[] points) {
-    Plane plane = (Plane)trackObjects.get(i);
-    FloatBuffer buffer = plane.getPolygon();
-    buffer.rewind();
-    if (points == null || points.length < buffer.capacity()) {
-      points = new float[buffer.capacity()];
+    Trackable trackable = trackObjects.get(i);
+
+    if (trackable instanceof Plane) {
+      Plane plane = (Plane) trackable;
+      FloatBuffer buffer = plane.getPolygon();
+      buffer.rewind();
+      if (points == null || points.length < buffer.capacity()) {
+        points = new float[buffer.capacity()];
+      }
+      buffer.get(points, 0, buffer.capacity());
+    } else if (trackable instanceof AugmentedImage) {
+      AugmentedImage image = (AugmentedImage) trackable;
+      System.out.println("getTrackablePolygon method with AugmentedImages");
+      // Handle AugmentedImage case here if needed
+      // For example, retrieve the polygon points for the AugmentedImage
+      // and populate the 'points' array accordingly
+
+      // Sample code (assuming you have a method to get the polygon points):
+      // float[] augmentedImagePoints = getAugmentedImagePolygon(image);
+      // if (points == null || points.length < augmentedImagePoints.length) {
+      //     points = new float[augmentedImagePoints.length];
+      // }
+      // System.arraycopy(augmentedImagePoints, 0, points, 0, augmentedImagePoints.length);
     }
-    buffer.get(points, 0, buffer.capacity());
+
     return points;
   }
+
 
 
   public float getTrackableExtentX(int i) {
@@ -501,14 +582,35 @@ public class ARGraphics extends PGraphics3D {
     }
 
     // Update indices
+//    for (int i = 0; i < trackObjects.size(); i++) {
+//      Plane plane = (Plane)trackObjects.get(i);
+//      int pid = trackIds.get(plane);
+//      trackIdx.put(pid, i);
+//      if (newPlanes.contains(plane)) {
+//        for (ARTracker t: trackers) t.create(i);
+//      }
+//    }
     for (int i = 0; i < trackObjects.size(); i++) {
-      Plane plane = (Plane)trackObjects.get(i);
-      int pid = trackIds.get(plane);
-      trackIdx.put(pid, i);
-      if (newPlanes.contains(plane)) {
-        for (ARTracker t: trackers) t.create(i);
+      Trackable trackable = trackObjects.get(i);
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane) trackable;
+        int pid = trackIds.get(plane);
+        trackIdx.put(pid, i);
+        if (newPlanes.contains(plane)) {
+          for (ARTracker t : trackers) {
+            t.create(i);
+          }
+        }
+      } else if (trackable instanceof AugmentedImage) {
+        AugmentedImage augmentedImage = (AugmentedImage) trackable;
+        int aid = trackIds.get(augmentedImage);
+        trackIdx.put(aid, i);
+        for (ARTracker t : trackers) {
+          t.create(i); // Handle Augmented Image creation in the ARTracker
+        }
       }
     }
+
     //Augmented Images
     Collection<AugmentedImage> images = surfar.frame.getUpdatedTrackables(AugmentedImage.class);
     for (AugmentedImage image: images) {

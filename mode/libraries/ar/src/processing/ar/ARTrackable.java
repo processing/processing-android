@@ -115,11 +115,32 @@ public class ARTrackable {
     return g.trackableType(idx) == ARGraphics.PLANE_FLOOR;
   }
 
-  public boolean isImage(){
-    System.out.println("isImage works fine.");
-    int idx = g.trackableIndex(id);
-    return g.trackableType(idx)== ARGraphics.IMAGE;
+//  public boolean isImage(){
+//    System.out.println("crosschecking values");
+//    int idx = g.trackableIndex(id);
+//    System.out.println(g.trackableType(idx)+" "+ARGraphics.IMAGE);
+//    return g.trackableType(idx)== ARGraphics.IMAGE;
+//  }
+
+  public boolean isImage() {
+    System.out.println("crosschecking values");
+    int idx = -1;
+    idx= g.trackableIndex(id);
+    System.out.println("idx value is:" + idx);
+    int trackableType = g.trackableType(idx);
+
+    System.out.println("TrackableType is:"+ trackableType);
+
+    System.out.println("Argraphics is:"+ ARGraphics.IMAGE);
+    // Check if trackableType is null before invoking intValue()
+
+      //THis IS CAUSING THE ERROR!
+    if (ARGraphics.IMAGE== trackableType)
+        return true;
+
+    return false;
   }
+
 
   public boolean isCeilingPlane() {
     int idx = g.trackableIndex(id);
