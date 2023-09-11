@@ -1,2 +1,1 @@
-include ':mode', ':core', ':mode:libraries:vr', ':mode:libraries:ar', 'mode:tools:SDKUpdater'
-
+include ':apps:simple', ':app:wallpaper', ':app:vrcube', ':app:arscene', ':app:watchface', ':app:fast2d', ':library:processing-core', 'library:google-vr',':library:processing-vr', ':library:processing-ar'

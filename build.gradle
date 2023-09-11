@@ -1,175 +1,63 @@
-import java.nio.file.Files
-import org.zeroturnaround.zip.ZipUtil
-import org.apache.commons.io.FileUtils
-import java.util.regex.Pattern
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
-    dependencies {        
+    dependencies {
         classpath 'com.android.tools.build:gradle:7.3.1'
-        classpath group: 'commons-io', name: 'commons-io', version: '2.12.0'
-        classpath group: 'org.zeroturnaround', name: 'zt-zip', version: '1.15'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
     }
 }
-
-plugins {
-    id 'java'
-    id('io.github.gradle-nexus.publish-plugin') version '1.1.0'
-}
-
-apply from: "${rootDir}/scripts/publish-root.gradle"
 
 allprojects {
-    apply plugin: 'java'
-    apply plugin: 'java-library'    
+    repositories {
+        // This was was added to address an issue in JCenter with some Android packages (https://stackoverflow.com/questions/50563338/could-not-find-runtime-jar-android-arch-lifecycleruntime1-0-0/50564224).
+        // JCenter is no longer used but keep it just in case.
+        maven { url "https://maven.google.com" }
 
-    Properties versions = new Properties()
-    versions.load(project.rootProject.file("mode/version.properties").newDataInputStream())
-    ext.targetSdkVersion = versions.getProperty("android-platform")
-    ext.appcompatVersion = versions.getProperty("androidx.appcompat%appcompat")
-    ext.v4legacyVersion = versions.getProperty("androidx.legacy%legacy-support-v4")
-    ext.wearVersion = versions.getProperty("com.google.android.support%wearable")
-    ext.gvrVersion = versions.getProperty("com.google.vr")
-    ext.garVersion = versions.getProperty("com.google.ar")
-    ext.processingVersion = versions.getProperty("org.processing")
-    ext.toolingVersion = versions.getProperty("org.gradle%gradle-tooling-api")
-    ext.slf4jVersion = versions.getProperty("org.slf4j")
-    ext.gradlewVersion = versions.getProperty("gradle-wrapper")
-    ext.toolsLibVersion = versions.getProperty("android-toolslib")
-    ext.jdtVersion = versions.getProperty("org.eclipse.jdt")
+        // Apparently needed by AndroidX dependencies
+        maven { url "https://jitpack.io" }
 
-    Properties modeProperties = new Properties()
-    modeProperties.load(project.rootProject.file("mode/mode.properties").newDataInputStream())
-    ext.modeVersion = modeProperties.getProperty("prettyVersion")
+        // Needed to get google-vr dependencies
+        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
 
-    Properties vrProperties = new Properties()
-    vrProperties.load(project.rootProject.file("mode/libraries/vr/library.properties").newDataInputStream())
-    ext.vrLibVersion = vrProperties.getProperty("prettyVersion")
-
-    Properties arProperties = new Properties()
-    arProperties.load(project.rootProject.file("mode/libraries/ar/library.properties").newDataInputStream())
-    ext.arLibVersion = arProperties.getProperty("prettyVersion")
-
-
-    def fn = project.rootProject.file("local.properties")
-    if (!fn.exists()) {
-        if (System.env["ANDROID_SDK"] != null) {
-            def syspath = System.env["ANDROID_SDK"]
-            def parts = syspath.split(Pattern.quote(File.separator))
-            def path = String.join("/", parts)
-            fn.withWriterAppend { w ->
-                w << "sdk.dir=${path}\n"
-            }
-        } else {
-            throw new GradleException(
-                "The file local.properties does not exist, and there is no ANDROID_SDK environmental variable defined in the system.\n" +
-                "Define ANDROID_SDK so it points to the location of the Android SDK, or create the local.properties file manually\n" +
-                "and add the following line to it:\n" +
-                "sdk.dir=<path to Android SDK>")
-        }
+        mavenCentral()
+        google()
     }
+}
 
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-    Properties localProperties = new Properties()
-    localProperties.load(project.rootProject.file("local.properties").newDataInputStream())
-    def sdkDir = localProperties.getProperty("sdk.dir")
-    ext.androidPlatformPath = "${sdkDir}/platforms/android-${targetSdkVersion}"
-    ext.coreZipPath = "${rootDir}/mode/processing-core.zip"
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.1'
+        
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
 
+allprojects {
     repositories {
         google()
         mavenCentral()
-        maven { url "https://maven.google.com" }
-        maven { url "https://jitpack.io" }
-        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
-        flatDir dirs: androidPlatformPath
-        flatDir dirs: "${rootDir}/core/build/libs"
-    }
-
-    compileJava {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-
-        // Uncomment this option when building with Java 11+ 
-        // https://github.com/processing/processing-android/issues/625
-        // options.release = 8
+        maven {
+            url "https://raw.github.com/processing/processing-android/repository/"
+        }
     }
 }
 
-clean.doFirst {
-    delete "dist"
-}
-
-task dist {
-  dependsOn subprojects.build
-  doLast {
-        def root = "${buildDir}/zip/AndroidMode"
-        
-        // Copy assets to build dir
-        FileUtils.copyDirectory(file("mode/templates"), file("${root}/templates"))
-        FileUtils.copyDirectory(file("mode/examples"), file("${root}/examples"))
-        FileUtils.copyDirectory(file("mode/icons"), file("${root}/icons"))        
-        FileUtils.copyDirectory(file("mode/theme"), file("${root}/theme"))
-        FileUtils.copyDirectory(file("mode/mode"), file("${root}/mode"))
-        delete "${root}/mode/core.jar"
-        delete "${root}/mode/pde.jar"
-        delete "${root}/mode/JavaMode.jar"
-        // delete "${root}/mode/jdi.jar"
-        // delete "${root}/mode/jdimodel.jar"
-
-        Files.copy(file("mode/processing-core.zip").toPath(),
-                   file("${root}/processing-core.zip").toPath(), REPLACE_EXISTING)
-
-        Files.copy(file("mode/keywords.txt").toPath(),
-                   file("${root}/keywords.txt").toPath(), REPLACE_EXISTING)
-
-        Files.copy(file("mode/version.properties").toPath(),
-                   file("${root}/version.properties").toPath(), REPLACE_EXISTING)
-
-        Files.copy(file("mode/mode.properties").toPath(),
-                   file("${root}/mode.properties").toPath(), REPLACE_EXISTING)
-
-        FileUtils.copyDirectory(file("mode/languages"), 
-                                file("${root}/languages"))
-
-        FileUtils.copyDirectory(file("mode/resources"), 
-                                file("${root}/resources"))
-
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/tool"),
-                                file("${root}/tools/SDKUpdater/tool"))
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/lib"),
-                                file("${root}/tools/SDKUpdater/lib"))
-        FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"),
-                                file("${root}/tools/SDKUpdater/src"))
-        
-        FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 
-                                file("${root}/libraries/vr/examples"))
-        FileUtils.copyDirectory(file("mode/libraries/vr/library"), 
-                                file("${root}/libraries/vr/library"))
-        FileUtils.copyDirectory(file("mode/libraries/vr/libs"), 
-                                file("${root}/libraries/vr/libs"))
-        FileUtils.copyDirectory(file("mode/libraries/vr/src"), 
-                                file("${root}/libraries/vr/src"))
-        Files.copy(file("mode/libraries/vr/library.properties").toPath(),
-                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING)
-
-        FileUtils.copyDirectory(file("mode/libraries/ar/examples"), 
-                                file("${root}/libraries/ar/examples"))
-        FileUtils.copyDirectory(file("mode/libraries/ar/library"), 
-                                file("${root}/libraries/ar/library"))
-        FileUtils.copyDirectory(file("mode/libraries/ar/src"), 
-                                file("${root}/libraries/ar/src"))
-        Files.copy(file("mode/libraries/ar/library.properties").toPath(),
-                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING) 
-
-        File distFolder = file("dist")
-        distFolder.mkdirs()
-        ZipUtil.pack(file("${buildDir}/zip"), new File("dist/AndroidMode.zip"))
-        Files.copy(file("mode/mode.properties").toPath(),
-                   file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING)
-    }
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
