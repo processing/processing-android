@@ -991,7 +991,7 @@ class AndroidBuild extends JavaBuild {
   
   private void installGradlew(File exportFolder) throws IOException {
     File gradlewFile = mode.getContentFile("mode/gradlew.zip");
-    AndroidUtil.extractFolder(gradlewFile, exportFolder, false, true);
+    AndroidUtil.extractFolder(gradlewFile, exportFolder, false, false);
     if (Platform.isMacOS() || Platform.isLinux()) {
       File execFile = new File(exportFolder, "gradlew");    
       execFile.setExecutable(true);      
