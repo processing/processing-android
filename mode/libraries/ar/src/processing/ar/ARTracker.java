@@ -22,7 +22,12 @@
 
 package processing.ar;
 
+import android.graphics.Bitmap;
+
 import com.google.ar.core.HitResult;
+import com.google.ar.core.AugmentedImageDatabase;
+import com.google.ar.core.Config;
+import com.google.ar.core.Session;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -31,19 +36,34 @@ import java.util.HashMap;
 import java.util.Set;
 
 import processing.core.PApplet;
+import processing.core.PImage;
 
 public class ARTracker {
   protected PApplet p;
-  protected ARGraphics g;
+  protected ARGraphics g,arg;
+  protected AugmentedImageDatabase imgDB;
 
   private HashMap<String, ARTrackable> trackables = new HashMap<String, ARTrackable>();
   private ArrayList<ARAnchor> toRemove = new ArrayList<ARAnchor>();
   private Method trackableEventMethod;
+  private Session session;
 
   public ARTracker(PApplet parent) {
     this.p = parent;
     this.g = (ARGraphics) p.g;
     setEventHandler();
+    this.arg = (ARGraphics)parent.g;
+    this.imgDB = new AugmentedImageDatabase(arg.surfar.session); //A new Database has been created.
+  }
+
+  public void addImage(String name, PImage img) {
+    Bitmap bitmap = (Bitmap)img.getNative();
+    int imgIndex = imgDB.addImage(name,bitmap); // User-provided or auto-generated name here, physical size argument seems optional
+
+    // Re-set the session config with the updated image database
+    Config config = new Config(session);
+    config.setAugmentedImageDatabase(imgDB);
+    session.configure(config);
   }
 
   public void start() {

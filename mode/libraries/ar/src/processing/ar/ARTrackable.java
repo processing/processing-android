@@ -115,6 +115,11 @@ public class ARTrackable {
     return g.trackableType(idx) == ARGraphics.PLANE_FLOOR;
   }
 
+  public boolean isImage(){
+    int idx = g.trackableIndex(id);
+    return g.trackableType(idx)== ARGraphics.IMAGE;
+  }
+
   public boolean isCeilingPlane() {
     int idx = g.trackableIndex(id);
     return g.trackableType(idx) == ARGraphics.PLANE_CEILING;
