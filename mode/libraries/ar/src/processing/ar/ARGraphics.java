@@ -277,8 +277,11 @@ public class ARGraphics extends PGraphics3D {
     Trackable tracki = trackObjects.get(i);
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
       Trackable trackable = hit.getTrackable();
-      if (tracki.equals(trackable) && trackable.isPoseInPolygon(hit.getHitPose())) {
-        return true;
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (tracki.equals(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          return true;
+        }
       }
     }
     return false;
@@ -288,8 +291,11 @@ public class ARGraphics extends PGraphics3D {
   protected HitResult getHitResult(int mx, int my) {
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
       Trackable trackable = hit.getTrackable();
-      if (trackObjects.contains(trackable) && trackable.isPoseInPolygon(hit.getHitPose())) {
-        return hit;
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (trackObjects.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          return hit;
+        }
       }
     }
     return null;
@@ -309,26 +315,40 @@ public class ARGraphics extends PGraphics3D {
 
   public float[] getTrackablePolygon(int i, float[] points) {
     Trackable track = trackObjects.get(i);
-    FloatBuffer buffer = track.getPolygon();
-    buffer.rewind();
-    if (points == null || points.length < buffer.capacity()) {
-      points = new float[buffer.capacity()];
+    if (track instanceof Plane) {
+      Plane plane = (Plane)track;
+      FloatBuffer buffer = plane.getPolygon();
+      buffer.rewind();
+      if (points == null || points.length < buffer.capacity()) {
+        points = new float[buffer.capacity()];
+      }
+      buffer.get(points, 0, buffer.capacity());      
     }
-    buffer.get(points, 0, buffer.capacity());
     return points;
   }
 
 
   public float getTrackableExtentX(int i) {
     Trackable track = trackObjects.get(i);
-    return track.getExtentX();
+    if (track instanceof Plane) {
+      return ((Plane)track).getExtentX();
+    } else if (track instanceof AugmentedImage) {
+      return ((AugmentedImage)track).getExtentX();
+    }
+    return -1;
   }
 
 
   public float getTrackableExtentZ(int i) {
     Trackable track = trackObjects.get(i);
-    return track.getExtentZ();
+    if (track instanceof Plane) {
+      return ((Plane)track).getExtentZ();
+    } else if (track instanceof AugmentedImage) {
+      return ((AugmentedImage)track).getExtentZ();
+    }
+    return -1;
   }
+
 
   public PMatrix3D getTrackableMatrix(int i) {
     return getTrackableMatrix(i, null);
@@ -353,24 +373,31 @@ public class ARGraphics extends PGraphics3D {
 
   public int createAnchor(int i, float x, float y, float z) {
     Trackable track = trackObjects.get(i);
-    Pose trackPose = track.getCenterPose();
-    pointIn[0] = x;
-    pointIn[1] = y;
-    pointIn[2] = z;
-    trackPose.transformPoint(pointIn, 0, pointOut, 0);
-    Pose anchorPose = Pose.makeTranslation(pointOut);
-    Anchor anchor = track.createAnchor(anchorPose);
-    anchors.put(++lastAnchorId, anchor);
-    return lastAnchorId;
+    if (track instanceof Plane) {
+      Plane plane = (Plane)track;
+      Pose trackPose = plane.getCenterPose();
+      pointIn[0] = x;
+      pointIn[1] = y;
+      pointIn[2] = z;
+      trackPose.transformPoint(pointIn, 0, pointOut, 0);
+      Pose anchorPose = Pose.makeTranslation(pointOut);
+      Anchor anchor = plane.createAnchor(anchorPose);
+      anchors.put(++lastAnchorId, anchor);
+      return lastAnchorId;      
+    }
+    return -1;
   }
 
 
   public int createAnchor(int mx, int my) {
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
       Trackable trackable = hit.getTrackable();
-      if (trackObjects.contains(trackable) && trackable.isPoseInPolygon(hit.getHitPose())) {
-        return createAnchor(hit);
-      }
+      if (trackable instanceof Plane) {
+        Plane plane = (Plane)trackable;
+        if (trackObjects.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+          return createAnchor(hit);
+        }
+      }      
     }
     return 0;
   }
@@ -466,16 +493,18 @@ public class ARGraphics extends PGraphics3D {
       addNewObject(image);
     }
 
-
     // Remove stopped and subsummed trackables
     for (int i = trackObjects.size() - 1; i >= 0; i--) {
       Trackable track = trackObjects.get(i);
-      if (track.getTrackingState() == TrackingState.STOPPED || track.getSubsumedBy() != null) {
-        trackObjects.remove(i);
-        trackMatrices.remove(track);
-        int pid = trackIds.remove(track);
-        trackIdx.remove(pid);
-        for (ARTracker t: trackers) t.remove(pid);
+      if (track instanceof Plane) {
+        Plane plane = (Plane)track;
+        if (plane.getTrackingState() == TrackingState.STOPPED || plane.getSubsumedBy() != null) {
+          trackObjects.remove(i);
+          trackMatrices.remove(plane);
+          int pid = trackIds.remove(plane);
+          trackIdx.remove(pid);
+          for (ARTracker t: trackers) t.remove(pid);
+        }
       }
     }
 
@@ -491,7 +520,8 @@ public class ARGraphics extends PGraphics3D {
   }
 
   protected void addNewObject(Trackable track) {
-    if (track.getSubsumedBy() != null) return;
+    boolean isPlane = track instanceof Plane;
+    if (isPlane && ((Plane)track).getSubsumedBy() != null) return;
     float[] mat;
     if (trackMatrices.containsKey(track)) {
       mat = trackMatrices.get(track);
@@ -502,8 +532,10 @@ public class ARGraphics extends PGraphics3D {
       trackIds.put(track, ++lastTrackableId);
       newObjects.add(track);
     }
-    Pose pose = track.getCenterPose();
-    pose.toMatrix(mat, 0);
+    if (isPlane) {
+      Pose pose = ((Plane)track).getCenterPose();
+      pose.toMatrix(mat, 0);
+    }    
   }
 
 
