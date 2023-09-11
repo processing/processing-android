@@ -9,7 +9,6 @@ dependencies {
     compileOnly name: "android"
     compileOnly "org.p5android:processing-core:${modeVersion}"
     implementationAar "com.google.ar:core:${garVersion}"
-    implementation 'com.google.ar:core:1.37.0'
 }
 
 task sourceJar(type: Jar) {
