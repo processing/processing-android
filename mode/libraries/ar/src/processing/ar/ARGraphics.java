@@ -102,6 +102,7 @@ public class ARGraphics extends PGraphics3D {
   protected PShader arLightShader;
   protected PShader arTexlightShader;
 
+
   public ARGraphics() {
   }
 
@@ -233,6 +234,16 @@ public class ARGraphics extends PGraphics3D {
 
   public int trackableIndex(int id) {
     return trackIdx.get(id);
+  }
+
+
+  public String trackableName(int i) {
+    Trackable track = trackObjects.get(i);
+    if (track instanceof AugmentedImage) {
+      AugmentedImage img = ((AugmentedImage)track);
+      return img.getName();
+    }
+    return null;
   }
 
 
@@ -558,13 +569,12 @@ public class ARGraphics extends PGraphics3D {
   protected void updateTrackables() {
     Collection<Plane> planes = surfar.frame.getUpdatedTrackables(Plane.class);
     for (Plane plane: planes) {
-      addNewObject(plane);
+      addNewPlane(plane);
     }
-
 
     Collection<AugmentedImage> images = surfar.frame.getUpdatedTrackables(AugmentedImage.class);
     for (AugmentedImage image: images) {
-      addNewObject(image);
+      addNewImage(image);
     }
 
     // Remove stopped and subsummed trackables
@@ -593,23 +603,34 @@ public class ARGraphics extends PGraphics3D {
     }
   }
 
-  protected void addNewObject(Trackable track) {
-    boolean isPlane = track instanceof Plane;
-    if (isPlane && ((Plane)track).getSubsumedBy() != null) return;
-    float[] mat;
-    if (trackMatrices.containsKey(track)) {
-      mat = trackMatrices.get(track);
+
+  protected void addNewPlane(Plane plane) {
+    if (plane.getSubsumedBy() != null) return;
+    float[] mat = addNewMatrix(plane);
+    Pose pose = plane.getCenterPose();
+    if (pose != null) pose.toMatrix(mat, 0);
+  }
+
+
+  protected void addNewImage(AugmentedImage image) {
+    float[] mat = addNewMatrix(image);
+    Pose pose = image.getCenterPose();
+    if (pose != null) pose.toMatrix(mat, 0);    
+  }
+
+
+  protected float[] addNewMatrix(Trackable obj) {
+    float[] mat;    
+    if (trackMatrices.containsKey(obj)) {
+      mat = trackMatrices.get(obj);
     } else {
       mat = new float[16];
-      trackMatrices.put(track, mat);
-      trackObjects.add(track);
-      trackIds.put(track, ++lastTrackableId);
-      newObjects.add(track);
+      trackMatrices.put(obj, mat);
+      trackObjects.add(obj);
+      trackIds.put(obj, ++lastTrackableId);
+      newObjects.add(obj);      
     }
-    if (isPlane) {
-      Pose pose = ((Plane)track).getCenterPose();
-      pose.toMatrix(mat, 0);
-    }    
+    return mat;
   }
 
 

@@ -41,7 +41,7 @@ import processing.core.PImage;
 public class ARTracker {
   protected PApplet p;
   protected ARGraphics g;
-  protected AugmentedImageDatabase imgDB;
+  protected AugmentedImageDatabase db;
 
   private HashMap<String, ARTrackable> trackables = new HashMap<String, ARTrackable>();
   private ArrayList<ARAnchor> toRemove = new ArrayList<ARAnchor>();
@@ -50,20 +50,22 @@ public class ARTracker {
 
   public ARTracker(PApplet parent) {
     this.p = parent;
-    this.g = (ARGraphics) p.g;
+    this.g = (ARGraphics)p.g;
     setEventHandler();
-    ARGraphics arg = (ARGraphics)parent.g;
-    this.imgDB = new AugmentedImageDatabase(arg.surfar.session); //A new Database has been created.
   }
 
   public void addImage(String name, PImage img) {
-    Bitmap bitmap = (Bitmap)img.getNative();
-    
-    imgDB.addImage(name, bitmap); // User-provided or auto-generated name here, physical size argument seems optional
+    if (db == null) {
+      // Creating a new database of augmented images.
+      db = new AugmentedImageDatabase(g.surfar.session); 
+    }    
 
-    // Re-set the session config with the updated image database
+    Bitmap bitmap = (Bitmap)img.getNative();
+    db.addImage(name, bitmap);
+
+    // Reset the session config with the updated image database
     Config config = new Config(session);
-    config.setAugmentedImageDatabase(imgDB);
+    config.setAugmentedImageDatabase(db);
     session.configure(config);
   }
 
@@ -82,9 +84,10 @@ public class ARTracker {
 
   public ARTrackable get(int idx) {
     int id = g.trackableId(idx);
+    String name = g.trackableName(idx);
     String sid = String.valueOf(id);
     if (!trackables.containsKey(sid)) {
-      ARTrackable t = new ARTrackable(g, id);
+      ARTrackable t = new ARTrackable(g, id, name);
       trackables.put(sid, t);
     }
     return get(sid);
@@ -148,7 +151,6 @@ public class ARTracker {
   protected void remove(String id) {
     trackables.remove(id);
   }
-
 
   protected void setEventHandler() {
     try {
