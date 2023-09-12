@@ -331,9 +331,7 @@ public class ARGraphics extends PGraphics3D {
 
   private boolean isPoseInsideAugmentedImage(Pose pose, AugmentedImage image) {
     // Get the four corners of the AugmentedImage's defining rectangle
-    float[] corners = new float[8];
-    image.getExtentX();
-    image.getExtentZ();
+    float[] corners = new float[16];
     image.getCenterPose().toMatrix(corners, 0);
 
     // Define the vertices of the rectangle in 2D (assuming the image is flat on the XZ plane)
