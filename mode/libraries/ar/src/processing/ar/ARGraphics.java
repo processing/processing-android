@@ -346,24 +346,23 @@ public class ARGraphics extends PGraphics3D {
         float cornerZ = corners[i + 2];
 
         if (cornerX < imageMinX) {
-            imageMinX = cornerX;
+          imageMinX = cornerX;
         }
         if (cornerX > imageMaxX) {
-            imageMaxX = cornerX;
+          imageMaxX = cornerX;
         }
         if (cornerZ < imageMinZ) {
-            imageMinZ = cornerZ;
+          imageMinZ = cornerZ;
         }
         if (cornerZ > imageMaxZ) {
-            imageMaxZ = cornerZ;
+          imageMaxZ = cornerZ;
         }
     }
 
     // Check if the Pose's position (X, Z) is within the bounds of the AugmentedImage's rectangle
     float poseX = pose.tx();
     float poseZ = pose.tz();
-
-    return (poseX >= imageMinX && poseX <= imageMaxX && poseZ >= imageMinZ && poseZ <= imageMaxZ);
+    return (imageMinX <= poseX && poseX <= imageMaxX && imageMinZ <= poseZ && poseZ <= imageMaxZ);
   }
 
 
