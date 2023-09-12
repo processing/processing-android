@@ -277,12 +277,20 @@ public class ARGraphics extends PGraphics3D {
     Trackable tracki = trackObjects.get(i);
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
       Trackable trackable = hit.getTrackable();
+      Pose hitPose = hit.getHitPose();
       if (trackable instanceof Plane) {
         Plane plane = (Plane)trackable;
-        if (tracki.equals(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+        if (tracki.equals(plane) && plane.isPoseInPolygon(hitPose)) {
           return true;
         }
-      }
+      } else if (trackable instanceof AugmentedImage) {
+        AugmentedImage image = (AugmentedImage)trackable;
+        Pose anchorPose = image.getCenterPose();
+        Pose localHitPose = anchorPose.compose(hitPose);        
+        if (tracki.equals(image) && isPoseInsideAugmentedImage(localHitPose, image)) {
+          return true;
+        }
+      } 
     }
     return false;
   }
@@ -291,14 +299,62 @@ public class ARGraphics extends PGraphics3D {
   protected HitResult getHitResult(int mx, int my) {
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
       Trackable trackable = hit.getTrackable();
+      Pose hitPose = hit.getHitPose();
       if (trackable instanceof Plane) {
         Plane plane = (Plane)trackable;
-        if (trackObjects.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+        if (trackObjects.contains(plane) && plane.isPoseInPolygon(hitPose)) {
           return hit;
         }
+      } else if (trackable instanceof AugmentedImage) {
+        AugmentedImage image = (AugmentedImage)trackable;
+        Pose anchorPose = image.getCenterPose();
+        Pose localHitPose = anchorPose.compose(hitPose);
+        if (trackObjects.contains(image) && isPoseInsideAugmentedImage(localHitPose, image)) {
+          return hit;
+        }        
       }
     }
     return null;
+  }
+
+
+  private boolean isPoseInsideAugmentedImage(Pose pose, AugmentedImage image) {
+    // Get the four corners of the AugmentedImage's defining rectangle
+    float[] corners = new float[8];
+    image.getExtentX();
+    image.getExtentZ();
+    image.getCenterPose().toMatrix(corners, 0);
+
+    // Define the vertices of the rectangle in 2D (assuming the image is flat on the XZ plane)
+    float imageMinX = Float.POSITIVE_INFINITY;
+    float imageMaxX = Float.NEGATIVE_INFINITY;
+    float imageMinZ = Float.POSITIVE_INFINITY;
+    float imageMaxZ = Float.NEGATIVE_INFINITY;
+
+    // Extract the X and Z coordinates of the corners
+    for (int i = 0; i < 8; i += 2) {
+        float cornerX = corners[i];
+        float cornerZ = corners[i + 2];
+
+        if (cornerX < imageMinX) {
+            imageMinX = cornerX;
+        }
+        if (cornerX > imageMaxX) {
+            imageMaxX = cornerX;
+        }
+        if (cornerZ < imageMinZ) {
+            imageMinZ = cornerZ;
+        }
+        if (cornerZ > imageMaxZ) {
+            imageMaxZ = cornerZ;
+        }
+    }
+
+    // Check if the Pose's position (X, Z) is within the bounds of the AugmentedImage's rectangle
+    float poseX = pose.tx();
+    float poseZ = pose.tz();
+
+    return (poseX >= imageMinX && poseX <= imageMaxX && poseZ >= imageMinZ && poseZ <= imageMaxZ);
   }
 
 
@@ -323,6 +379,10 @@ public class ARGraphics extends PGraphics3D {
         points = new float[buffer.capacity()];
       }
       buffer.get(points, 0, buffer.capacity());      
+    } else if (track instanceof AugmentedImage) {
+      AugmentedImage image = (AugmentedImage)track;
+      points = new float[8];      
+      image.getCenterPose().toMatrix(points, 0);
     }
     return points;
   }
@@ -373,17 +433,23 @@ public class ARGraphics extends PGraphics3D {
 
   public int createAnchor(int i, float x, float y, float z) {
     Trackable track = trackObjects.get(i);
+    Pose centerPose = null;
     if (track instanceof Plane) {
       Plane plane = (Plane)track;
-      Pose trackPose = plane.getCenterPose();
+      centerPose = plane.getCenterPose();
+    } else if (track instanceof AugmentedImage) {
+      AugmentedImage img = (AugmentedImage)track;
+      centerPose = img.getCenterPose();
+    }
+    if (centerPose != null) {
       pointIn[0] = x;
       pointIn[1] = y;
-      pointIn[2] = z;
-      trackPose.transformPoint(pointIn, 0, pointOut, 0);
+      pointIn[2] = z;      
+      centerPose.transformPoint(pointIn, 0, pointOut, 0);
       Pose anchorPose = Pose.makeTranslation(pointOut);
-      Anchor anchor = plane.createAnchor(anchorPose);
+      Anchor anchor = track.createAnchor(anchorPose);
       anchors.put(++lastAnchorId, anchor);
-      return lastAnchorId;      
+      return lastAnchorId;  
     }
     return -1;
   }
@@ -392,12 +458,20 @@ public class ARGraphics extends PGraphics3D {
   public int createAnchor(int mx, int my) {
     for (HitResult hit : surfar.frame.hitTest(mx, my)) {
       Trackable trackable = hit.getTrackable();
+      Pose hitPose = hit.getHitPose();
       if (trackable instanceof Plane) {
         Plane plane = (Plane)trackable;
-        if (trackObjects.contains(plane) && plane.isPoseInPolygon(hit.getHitPose())) {
+        if (trackObjects.contains(plane) && plane.isPoseInPolygon(hitPose)) {
           return createAnchor(hit);
         }
-      }      
+      } else if (trackable instanceof AugmentedImage) {
+        AugmentedImage image = (AugmentedImage)trackable;
+        Pose anchorPose = image.getCenterPose();
+        Pose localHitPose = anchorPose.compose(hitPose);
+        if (trackObjects.contains(image) && isPoseInsideAugmentedImage(localHitPose, image)) {
+          return createAnchor(hit);
+        }    
+      }
     }
     return 0;
   }
