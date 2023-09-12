@@ -46,7 +46,6 @@ public class ARTracker {
   private HashMap<String, ARTrackable> trackables = new HashMap<String, ARTrackable>();
   private ArrayList<ARAnchor> toRemove = new ArrayList<ARAnchor>();
   private Method trackableEventMethod;
-  private Session session;
 
   public ARTracker(PApplet parent) {
     this.p = parent;
@@ -64,9 +63,9 @@ public class ARTracker {
     db.addImage(name, bitmap);
 
     // Reset the session config with the updated image database
-    Config config = new Config(session);
+    Config config = new Config(g.surfar.session);
     config.setAugmentedImageDatabase(db);
-    session.configure(config);
+    g.surfar.session.configure(config);
   }
 
   public void start() {
