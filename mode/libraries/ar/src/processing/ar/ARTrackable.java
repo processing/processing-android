@@ -30,15 +30,17 @@ public class ARTrackable {
   protected ARGraphics g;
   protected HitResult hit;
 
+  private String name;
   private int id;
   private PMatrix3D m;
   private float[] points;
 
-  public ARTrackable(ARGraphics g, int id) {
+  public ARTrackable(ARGraphics g, int id, String name) {
     this.g = g;
     this.id = id;
+    this.name = name;
   }
-
+  
   public String id() {
     return String.valueOf(id);
   }
@@ -48,7 +50,7 @@ public class ARTrackable {
     m = g.getTrackableMatrix(idx, m);
     return m;
   }
-
+  
   public void transform() {
     g.applyMatrix(matrix());
   }
@@ -59,23 +61,23 @@ public class ARTrackable {
     return points;
   }
 
-
   public float lengthX() {
     int idx = g.trackableIndex(id);
     return g.getTrackableExtentX(idx);
   }
 
-
   public float lengthY() {
     return 0;
   }
-
 
   public float lengthZ() {
     int idx = g.trackableIndex(id);
     return g.getTrackableExtentZ(idx);
   }
 
+  public String getName() {
+    return name;
+  }  
 
   public boolean isSelected(int mx, int my) {
     int idx = g.trackableIndex(id);
@@ -113,6 +115,11 @@ public class ARTrackable {
   public boolean isFloorPlane() {
     int idx = g.trackableIndex(id);
     return g.trackableType(idx) == ARGraphics.PLANE_FLOOR;
+  }
+
+  public boolean isImage(){
+    int idx = g.trackableIndex(id);
+    return g.trackableType(idx)== ARGraphics.IMAGE;
   }
 
   public boolean isCeilingPlane() {

@@ -22,7 +22,12 @@
 
 package processing.ar;
 
+import android.graphics.Bitmap;
+
 import com.google.ar.core.HitResult;
+import com.google.ar.core.AugmentedImageDatabase;
+import com.google.ar.core.Config;
+import com.google.ar.core.Session;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -31,10 +36,12 @@ import java.util.HashMap;
 import java.util.Set;
 
 import processing.core.PApplet;
+import processing.core.PImage;
 
 public class ARTracker {
   protected PApplet p;
   protected ARGraphics g;
+  protected AugmentedImageDatabase db;
 
   private HashMap<String, ARTrackable> trackables = new HashMap<String, ARTrackable>();
   private ArrayList<ARAnchor> toRemove = new ArrayList<ARAnchor>();
@@ -42,8 +49,23 @@ public class ARTracker {
 
   public ARTracker(PApplet parent) {
     this.p = parent;
-    this.g = (ARGraphics) p.g;
+    this.g = (ARGraphics)p.g;
     setEventHandler();
+  }
+
+  public void addImage(String name, PImage img) {
+    if (db == null) {
+      // Creating a new database of augmented images.
+      db = new AugmentedImageDatabase(g.surfar.session); 
+    }    
+
+    Bitmap bitmap = (Bitmap)img.getNative();
+    db.addImage(name, bitmap);
+
+    // Reset the session config with the updated image database
+    Config config = new Config(g.surfar.session);
+    config.setAugmentedImageDatabase(db);
+    g.surfar.session.configure(config);
   }
 
   public void start() {
@@ -61,9 +83,10 @@ public class ARTracker {
 
   public ARTrackable get(int idx) {
     int id = g.trackableId(idx);
+    String name = g.trackableName(idx);
     String sid = String.valueOf(id);
     if (!trackables.containsKey(sid)) {
-      ARTrackable t = new ARTrackable(g, id);
+      ARTrackable t = new ARTrackable(g, id, name);
       trackables.put(sid, t);
     }
     return get(sid);
@@ -127,7 +150,6 @@ public class ARTracker {
   protected void remove(String id) {
     trackables.remove(id);
   }
-
 
   protected void setEventHandler() {
     try {
