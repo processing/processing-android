@@ -12,6 +12,13 @@ android {
         targetSdkVersion @@target_sdk@@
         versionCode @@version_code@@
         versionName "@@version_name@@"
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+        externalNativeBuild.cmake {
+            arguments "-DANDROID_STL=c++_shared"
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -43,13 +50,20 @@ android {
     aaptOptions {
         noCompress "tflite"
         noCompress "lite"
-    }    
+    }
+    externalNativeBuild.cmake {
+        path "CMakeLists.txt"
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:@@appcompat_version@@'
     implementation project('libs:google-vr')
+    implementation project('libs:sdk')
+    implementation 'com.google.android.gms:play-services-vision:20.1.3'
+    implementation 'com.google.protobuf:protobuf-javalite:3.19.4'
+    implementation 'com.google.android.material:material:1.6.1'
     implementation files('libs/processing-core.jar')
     implementation files('libs/vr.jar')
     implementation 'com.google.protobuf.nano:protobuf-javanano:3.1.0'
@@ -57,3 +71,28 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     testImplementation 'junit:junit:4.13'
 }
+
+// The dependencies for NDK builds live inside the .aar files so they need to
+// be extracted before NDK targets can link against.
+task extractNdk(type: Copy)  {
+    if (file("${project.rootDir}/mode/libraries/vr/libs/sdk/build/outputs/aar/sdk-release.aar").exists()) {
+        copy {
+            from zipTree("${project.rootDir}/mode/libraries/vr/libs/sdk/build/outputs/aar/sdk-release.aar")
+            into "libraries/"
+            include "jni/**/libGfxPluginCardboard.so"
+        }
+        copy {
+            from "${project.rootDir}/sdk/include/cardboard.h"
+            into "libraries/"
+        }
+    }
+}
+
+task deleteNdk(type: Delete) {
+    delete "libraries/jni"
+    delete "libraries/cardboard.h"
+}
+tasks.register("prepareKotlinBuildScriptModel"){}
+
+build.dependsOn(extractNdk)
+clean.dependsOn(deleteNdk)
