@@ -1,0 +1,3 @@
+/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a/CMakeFiles/GfxPluginCardboard.dir
+/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a/CMakeFiles/edit_cache.dir
+/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,1 @@
+/media/gaurav/HDD/cardboard/sdk/build/intermediates/cxx/Debug/6x721f4n/obj/armeabi-v7a

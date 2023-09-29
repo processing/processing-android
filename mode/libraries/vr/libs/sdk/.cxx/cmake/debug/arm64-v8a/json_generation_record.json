@@ -1,0 +1,23 @@
+[
+  {
+    "level": "INFO",
+    "message": "Start JSON generation. Platform version: 24 min SDK version: arm64-v8a",
+    "file": "/media/gaurav/HDD/cardboard/sdk/CMakeLists.txt",
+    "tag": "debug|arm64-v8a",
+    "diagnosticCode": "UNKNOWN"
+  },
+  {
+    "level": "INFO",
+    "message": "JSON \u0027/media/gaurav/HDD/cardboard/sdk/.cxx/cmake/debug/arm64-v8a/android_gradle_build.json\u0027 was up-to-date",
+    "file": "/media/gaurav/HDD/cardboard/sdk/CMakeLists.txt",
+    "tag": "debug|arm64-v8a",
+    "diagnosticCode": "UNKNOWN"
+  },
+  {
+    "level": "INFO",
+    "message": "JSON generation completed without problems",
+    "file": "/media/gaurav/HDD/cardboard/sdk/CMakeLists.txt",
+    "tag": "debug|arm64-v8a",
+    "diagnosticCode": "UNKNOWN"
+  }
+]

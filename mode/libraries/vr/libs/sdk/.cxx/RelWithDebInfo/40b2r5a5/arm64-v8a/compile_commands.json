@@ -1,0 +1,202 @@
+[
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/qrcode/cardboard_v1/cardboard_v1.cc.o -c /media/gaurav/HDD/cardboard/sdk/qrcode/cardboard_v1/cardboard_v1.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/qrcode/cardboard_v1/cardboard_v1.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/cardboard.cc.o -c /media/gaurav/HDD/cardboard/sdk/cardboard.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/cardboard.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/distortion_mesh.cc.o -c /media/gaurav/HDD/cardboard/sdk/distortion_mesh.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/distortion_mesh.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/head_tracker.cc.o -c /media/gaurav/HDD/cardboard/sdk/head_tracker.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/head_tracker.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/lens_distortion.cc.o -c /media/gaurav/HDD/cardboard/sdk/lens_distortion.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/lens_distortion.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/polynomial_radial_distortion.cc.o -c /media/gaurav/HDD/cardboard/sdk/polynomial_radial_distortion.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/polynomial_radial_distortion.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/gyroscope_bias_estimator.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/gyroscope_bias_estimator.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/gyroscope_bias_estimator.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/lowpass_filter.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/lowpass_filter.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/lowpass_filter.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/mean_filter.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/mean_filter.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/mean_filter.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/median_filter.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/median_filter.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/median_filter.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/neck_model.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/neck_model.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/neck_model.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/sensor_fusion_ekf.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/sensor_fusion_ekf.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/sensor_fusion_ekf.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/android/device_accelerometer_sensor.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/android/device_accelerometer_sensor.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/android/device_accelerometer_sensor.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/android/device_gyroscope_sensor.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/android/device_gyroscope_sensor.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/android/device_gyroscope_sensor.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/sensors/android/sensor_event_producer.cc.o -c /media/gaurav/HDD/cardboard/sdk/sensors/android/sensor_event_producer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/sensors/android/sensor_event_producer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/jni_utils/android/jni_utils.cc.o -c /media/gaurav/HDD/cardboard/sdk/jni_utils/android/jni_utils.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/jni_utils/android/jni_utils.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/util/is_initialized.cc.o -c /media/gaurav/HDD/cardboard/sdk/util/is_initialized.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/util/is_initialized.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/util/matrix_3x3.cc.o -c /media/gaurav/HDD/cardboard/sdk/util/matrix_3x3.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/util/matrix_3x3.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/util/matrix_4x4.cc.o -c /media/gaurav/HDD/cardboard/sdk/util/matrix_4x4.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/util/matrix_4x4.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/util/matrixutils.cc.o -c /media/gaurav/HDD/cardboard/sdk/util/matrixutils.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/util/matrixutils.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/util/rotation.cc.o -c /media/gaurav/HDD/cardboard/sdk/util/rotation.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/util/rotation.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/util/vectorutils.cc.o -c /media/gaurav/HDD/cardboard/sdk/util/vectorutils.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/util/vectorutils.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/qrcode/android/qr_code.cc.o -c /media/gaurav/HDD/cardboard/sdk/qrcode/android/qr_code.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/qrcode/android/qr_code.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/screen_params/android/screen_params.cc.o -c /media/gaurav/HDD/cardboard/sdk/screen_params/android/screen_params.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/screen_params/android/screen_params.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/device_params/android/device_params.cc.o -c /media/gaurav/HDD/cardboard/sdk/device_params/android/device_params.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/device_params/android/device_params.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/rendering/opengl_es2_distortion_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/rendering/opengl_es2_distortion_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/rendering/opengl_es2_distortion_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/rendering/opengl_es3_distortion_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/rendering/opengl_es3_distortion_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/rendering/opengl_es3_distortion_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/rendering/android/vulkan_distortion_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/rendering/android/vulkan_distortion_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/rendering/android/vulkan_distortion_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/rendering/android/vulkan/android_vulkan_loader.cc.o -c /media/gaurav/HDD/cardboard/sdk/rendering/android/vulkan/android_vulkan_loader.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/rendering/android/vulkan/android_vulkan_loader.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/android/unity_jni.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/android/unity_jni.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/android/unity_jni.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_unity_plugin/cardboard_display_api.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/cardboard_display_api.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/cardboard_display_api.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_unity_plugin/cardboard_input_api.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/cardboard_input_api.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/cardboard_input_api.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_unity_plugin/opengl_es2_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/opengl_es2_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/opengl_es2_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_unity_plugin/opengl_es3_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/opengl_es3_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/opengl_es3_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_unity_plugin/vulkan/vulkan_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/vulkan/vulkan_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/vulkan/vulkan_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_unity_plugin/vulkan/vulkan_widgets_renderer.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/vulkan/vulkan_widgets_renderer.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_unity_plugin/vulkan/vulkan_widgets_renderer.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_provider/display.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_provider/display.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_provider/display.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_provider/input.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_provider/input.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_provider/input.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_provider/main.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_provider/main.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_provider/main.cc"
+},
+{
+  "directory": "/media/gaurav/HDD/cardboard/sdk/.cxx/RelWithDebInfo/40b2r5a5/arm64-v8a",
+  "command": "/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/gaurav/Android/Sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DGfxPluginCardboard_EXPORTS -DVK_USE_PLATFORM_ANDROID_KHR=1 -I/media/gaurav/HDD/cardboard/sdk/. -I/media/gaurav/HDD/cardboard/sdk/../third_party/unity_plugin_api -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fexceptions -frtti -stdlib=libc++ -O2 -g -DNDEBUG -fPIC -Wall -Wextra -std=gnu++17 -o CMakeFiles/GfxPluginCardboard.dir/unity/xr_provider/math_tools.cc.o -c /media/gaurav/HDD/cardboard/sdk/unity/xr_provider/math_tools.cc",
+  "file": "/media/gaurav/HDD/cardboard/sdk/unity/xr_provider/math_tools.cc"
+}
+]

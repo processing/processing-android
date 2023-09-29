@@ -1,0 +1,27 @@
+{
+  "buildFiles": [
+    "/media/gaurav/HDD/cardboard/sdk/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/gaurav/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/media/gaurav/HDD/cardboard/sdk/.cxx/Debug/6x721f4n/armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/gaurav/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/media/gaurav/HDD/cardboard/sdk/.cxx/Debug/6x721f4n/armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "GfxPluginCardboard::@6890427a1f51a3e7e1df": {
+      "artifactName": "GfxPluginCardboard",
+      "abi": "armeabi-v7a",
+      "output": "/media/gaurav/HDD/cardboard/sdk/build/intermediates/cxx/Debug/6x721f4n/obj/armeabi-v7a/libGfxPluginCardboard.so",
+      "runtimeFiles": []
+    }
+  }
+}
