@@ -239,10 +239,14 @@ class AndroidBuild extends JavaBuild {
 
     // Create the 'src' folder with the preprocessed code.
     srcFolder = new File(tmpFolder, module + "/src/main/java");
-    binFolder = srcFolder; // Needed in the the parent JavaBuild class
+    binFolder = srcFolder; // Needed in the parent JavaBuild class
     if (processing.app.Base.DEBUG) {
       Platform.openFolder(tmpFolder);
     }
+
+    // Create the 'cpp' folder within 'src/main'
+    File cppFolder = new File(srcFolder.getParentFile(), "cpp");
+    cppFolder.mkdirs(); // Create the folder if it doesn't exist
 
     manifest = new Manifest(sketch, appComponent, mode.getFolder(), false);    
     
@@ -262,7 +266,9 @@ class AndroidBuild extends JavaBuild {
         createAppModule(module);  
       }
     }
-    
+    //check if cpp folders exist:
+    if(cppFolder.exists()) System.out.println("Cpp Directory created successfully.");
+    else  System.out.println("Error while creating Cpp Dir.");
     return tmpFolder;
   }
 
