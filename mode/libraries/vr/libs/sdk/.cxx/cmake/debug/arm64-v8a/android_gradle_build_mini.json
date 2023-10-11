@@ -1,0 +1,33 @@
+{
+  "buildFiles": [
+    "/media/gaurav/HDD/cardboard/sdk/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/gaurav/Android/Sdk/cmake/3.10.2.4988404/bin/ninja",
+      "-C",
+      "/media/gaurav/HDD/cardboard/sdk/.cxx/cmake/debug/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/gaurav/Android/Sdk/cmake/3.10.2.4988404/bin/ninja",
+    "-C",
+    "/media/gaurav/HDD/cardboard/sdk/.cxx/cmake/debug/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "GfxPluginCardboard-Debug-arm64-v8a": {
+      "artifactName": "GfxPluginCardboard",
+      "buildCommandComponents": [
+        "/home/gaurav/Android/Sdk/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/media/gaurav/HDD/cardboard/sdk/.cxx/cmake/debug/arm64-v8a",
+        "GfxPluginCardboard"
+      ],
+      "abi": "arm64-v8a",
+      "output": "/media/gaurav/HDD/cardboard/sdk/build/intermediates/cmake/debug/obj/arm64-v8a/libGfxPluginCardboard.so",
+      "runtimeFiles": []
+    }
+  }
+}

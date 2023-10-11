@@ -1,0 +1,1 @@
+/media/gaurav/HDD/cardboard/sdk/build/intermediates/cxx/RelWithDebInfo/40b2r5a5/obj/arm64-v8a
