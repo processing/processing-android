@@ -21,7 +21,7 @@ void setup() {
   // marker beforehand
   // tracker.addImage("earth", earthImg, 0.25);
   
-  earth = createShape(SPHERE, 0.5);
+  earth = createShape(SPHERE, 0.15);
 }
 
 void draw() {

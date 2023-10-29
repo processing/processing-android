@@ -25,7 +25,7 @@ public class Sketch extends PApplet {
     tracker.start();
     tracker.addImage("earth", earthImg);
 
-    earth = createShape(SPHERE, 0.25f);
+    earth = createShape(SPHERE, 0.15f);
   }
 
   public void draw() {
