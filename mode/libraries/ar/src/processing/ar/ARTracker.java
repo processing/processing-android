@@ -54,13 +54,25 @@ public class ARTracker {
   }
 
   public void addImage(String name, PImage img) {
+    addImageImp(name, img, null);
+  }
+
+  public void addImage(String name, PImage img, float size) {
+    addImageImp(name, img, size);
+  }
+
+  private void addImageImp(String name, PImage img, Float size) {
     if (db == null) {
       // Creating a new database of augmented images.
       db = new AugmentedImageDatabase(g.surfar.session); 
     }    
 
     Bitmap bitmap = (Bitmap)img.getNative();
-    db.addImage(name, bitmap);
+    if (size != null) {
+      db.addImage(name, bitmap, size);      
+    } else {
+      db.addImage(name, bitmap);
+    }
 
     // Reset the session config with the updated image database
     Config config = new Config(g.surfar.session);
