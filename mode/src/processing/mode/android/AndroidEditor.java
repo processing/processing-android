@@ -123,7 +123,7 @@ public class AndroidEditor extends JavaEditor {
 
   public JMenu buildFileMenu() {
     String exportPackageTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_PACKAGE);
-    JMenuItem exportPackage = Toolkit.newJMenuItemShift(exportPackageTitle,'T');
+    JMenuItem exportPackage = Toolkit.newJMenuItemShift(exportPackageTitle, 'X');
     exportPackage.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportPackage();
@@ -132,7 +132,7 @@ public class AndroidEditor extends JavaEditor {
 
 
     String exportBundleTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_BUNDLE);
-    JMenuItem exportBundle = Toolkit.newJMenuItem(exportBundleTitle, 'B');
+    JMenuItem exportBundle = Toolkit.newJMenuItemShift(exportBundleTitle, 'B');
     exportBundle.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportBundle();
@@ -141,7 +141,7 @@ public class AndroidEditor extends JavaEditor {
 
 
     String exportProjectTitle = AndroidToolbar.getTitle(AndroidToolbar.EXPORT_PROJECT);
-    JMenuItem exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'X');
+    JMenuItem exportProject = Toolkit.newJMenuItemShift(exportProjectTitle, 'E');
     exportProject.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         handleExportProject();
@@ -153,14 +153,14 @@ public class AndroidEditor extends JavaEditor {
 
 
   public JMenu buildSketchMenu() {
-    JMenuItem runItem = Toolkit.newJMenuItem(AndroidToolbar.getTitle(AndroidToolbar.RUN_ON_DEVICE), 'D');
+    JMenuItem runItem = Toolkit.newJMenuItem(AndroidToolbar.getTitle(AndroidToolbar.RUN_ON_DEVICE), 'R');
     runItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           handleRunDevice();
         }
       });
 
-    JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN_IN_EMULATOR), 'E');
+    JMenuItem presentItem = Toolkit.newJMenuItemShift(AndroidToolbar.getTitle(AndroidToolbar.RUN_IN_EMULATOR), 'R');
     presentItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           handleRunEmulator();
