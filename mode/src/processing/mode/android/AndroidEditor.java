@@ -367,10 +367,9 @@ public class AndroidEditor extends JavaEditor {
 
 
   /** override the standard grab reference to just show the java reference */
+  @Override
   public void showReference(String filename) {
-    File javaReferenceFolder = Platform.getContentFile("modes/java/reference");
-    File file = new File(javaReferenceFolder, filename);
-    Platform.openURL(file.toURI().toString());
+    super.showReference(filename);
   }
   
   
