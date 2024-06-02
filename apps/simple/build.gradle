@@ -31,5 +31,5 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'    
     implementation 'androidx.appcompat:appcompat:1.6.0'
 
-    implementation project(':library:processing-core')
+    implementation project(':libs:processing-core')
 }

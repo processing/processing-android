@@ -3,8 +3,8 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId "processing.tests.wallpaper"
-        minSdkVersion 17
+        applicationId "processing.tests.arscene"
+        minSdkVersion 23
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
@@ -21,12 +21,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'wallpaper'
+    namespace 'arscene'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
-    implementation project(':library:processing-core')
+    implementation project(':libs:processing-core')
+    implementation project(':libs:processing-ar')
     implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'com.google.ar:core:1.35.0'
 }

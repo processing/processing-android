@@ -9,8 +9,7 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['../../../mode/libraries/ar/src']
-            assets.srcDirs = ['../../../mode/libraries/ar/src/assets']
+            java.srcDirs = ['../../../mode/libraries/vr/src']
         }
     }
     compileOptions {
@@ -22,6 +21,6 @@ android {
 }
 
 dependencies {
-    implementation project(':library:processing-core')
-    implementation 'com.google.ar:core:1.35.0'
+    implementation project(':libs:processing-core')
+    implementation project(':libs:google-vr')
 }

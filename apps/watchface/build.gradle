@@ -28,7 +28,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
-    implementation project(':library:processing-core')
+    implementation project(':libs:processing-core')
     implementation 'com.google.android.gms:play-services-wearable:18.0.0'
     implementation 'com.google.android.support:wearable:2.9.0'
     compileOnly 'com.google.android.wearable:wearable:2.9.0'

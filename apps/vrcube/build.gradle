@@ -3,8 +3,8 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId "processing.tests.armarkers"
-        minSdkVersion 23
+        applicationId "processing.tests.vrcube"
+        minSdkVersion 19
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
@@ -21,14 +21,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'armarkers'
+    namespace 'vrcube'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
-    implementation project(':library:processing-core')
-    implementation project(':library:processing-ar')
+    implementation project(':libs:processing-core')
+    implementation project(':libs:google-vr')
+    implementation project(':libs:processing-vr')
+    implementation 'com.google.protobuf.nano:protobuf-javanano:3.1.0'
     implementation 'androidx.appcompat:appcompat:1.6.0'
-    implementation 'com.google.ar:core:1.35.0'
 }
