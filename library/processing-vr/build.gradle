@@ -21,6 +21,6 @@ android {
 }
 
 dependencies {
-    implementation project(':libs:processing-core')
-    implementation project(':libs:google-vr')
+    implementation project(':library:processing-core')
+    implementation project(':library:google-vr')
 }

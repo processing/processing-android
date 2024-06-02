@@ -27,9 +27,9 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
-    implementation project(':libs:processing-core')
-    implementation project(':libs:google-vr')
-    implementation project(':libs:processing-vr')
+    implementation project(':library:processing-core')
+    implementation project(':library:google-vr')
+    implementation project(':library:processing-vr')
     implementation 'com.google.protobuf.nano:protobuf-javanano:3.1.0'
     implementation 'androidx.appcompat:appcompat:1.6.0'
 }

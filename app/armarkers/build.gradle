@@ -3,12 +3,11 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId "processing.tests.watchface"
-        minSdkVersion 25
+        applicationId "processing.tests.armarkers"
+        minSdkVersion 23
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
-        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -22,14 +21,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'watchface'
+    namespace 'armarkers'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
     implementation project(':library:processing-core')
-    implementation 'com.google.android.gms:play-services-wearable:18.0.0'
-    implementation 'com.google.android.support:wearable:2.9.0'
-    compileOnly 'com.google.android.wearable:wearable:2.9.0'
+    implementation project(':library:processing-ar')
+    implementation 'androidx.appcompat:appcompat:1.6.0'
+    implementation 'com.google.ar:core:1.35.0'
 }

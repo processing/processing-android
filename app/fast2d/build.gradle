@@ -27,6 +27,6 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.13.2'
-    implementation project(':libs:processing-core')
+    implementation project(':library:processing-core')
     implementation 'androidx.appcompat:appcompat:1.6.0'
 }

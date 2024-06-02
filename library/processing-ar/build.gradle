@@ -22,6 +22,6 @@ android {
 }
 
 dependencies {
-    implementation project(':libs:processing-core')
+    implementation project(':library:processing-core')
     implementation 'com.google.ar:core:1.35.0'
 }
