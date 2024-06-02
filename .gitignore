@@ -13,8 +13,8 @@ mode/libraries/ar/library
 mode/tools/SDKUpdater/tool
 mode/tools/SDKUpdater/lib
 
-debug/.gradle
-debug/.idea
+.gradle
+.idea
 
 **/examples/**/AndroidManifest.xml
 
