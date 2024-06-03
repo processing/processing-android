@@ -1,18 +1,3 @@
-mode/processing-core.zip
-mode/mode/AndroidMode.jar
-mode/mode/gradle-tooling-api*
-mode/mode/slf4j*
-
-mode/mode/percent.jar
-mode/mode/recyclerview-v7.jar
-mode/mode/support-*
-mode/mode/wearable.jar
-
-mode/libraries/vr/library
-mode/libraries/ar/library
-mode/tools/SDKUpdater/tool
-mode/tools/SDKUpdater/lib
-
 .gradle
 .idea
 
