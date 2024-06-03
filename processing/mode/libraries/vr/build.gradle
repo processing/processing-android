@@ -14,7 +14,7 @@ dependencies {
 //    implementationAar "com.google.vr:sdk-base:${gvrVersion}"
 
 // fix for Issue #718
-    implementationAar fileTree(dir: "libs/google-vr", include: ["*.aar"])
+    implementationAar fileTree(dir: "../../../../libs/google-vr/", include: ["*.aar"])
 }
 
 task sourceJar(type: Jar, dependsOn: classes) {

@@ -1,7 +1,0 @@
-// Dummy Gradle project to be able to import local aar files:
-// https://stackoverflow.com/a/60888941
-
-configurations.maybeCreate("default")
-artifacts.add("default", file('sdk-audio-1.180.0.aar'))
-artifacts.add("default", file('sdk-base-1.180.0.aar'))
-artifacts.add("default", file('sdk-common-1.180.0.aar'))
