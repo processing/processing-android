@@ -25,6 +25,8 @@ package processing.vr;
 import android.content.Intent;
 import android.util.DisplayMetrics;
 
+// This will give a "Cannot resolve symbol 'base'" error in Android Studio because it cannot get
+// the classes from inside the local .aar files for google-vr. But any VR app runs and can also be debugged.
 import com.google.vr.sdk.base.GvrActivity;
 
 import processing.android.AppComponent;
