@@ -25,7 +25,7 @@ task sourceJar(type: Jar, dependsOn: classes) {
 sourceSets {
     main {
         java {
-            srcDirs = ["src/"]
+            srcDirs = ["../../../../libs/processing-vr/src/main/java/"]
         }
     }
 }

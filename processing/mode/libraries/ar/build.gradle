@@ -19,10 +19,10 @@ task sourceJar(type: Jar) {
 sourceSets {
     main {
         java {
-            srcDirs = ["src/"]
+            srcDirs = ["../../../../libs/processing-ar/src/main/java/"]
         }
         resources {
-            srcDirs = ["src/"]
+            srcDirs = ["../../../../libs/processing-ar/src/main/"]
         }        
     }
 }

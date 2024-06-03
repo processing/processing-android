@@ -15,10 +15,10 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDirs = ["src/"]
+            srcDirs = ["../../libs/processing-core/src/main/java/"]
         }
         resources {
-            srcDirs = ["src/"]
+            srcDirs = ["../../libs/processing-core/src/main/"]
         }
     }
 }
