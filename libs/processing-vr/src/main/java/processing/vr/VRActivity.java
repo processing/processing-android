@@ -22,10 +22,11 @@
 
 package processing.vr;
 
-import com.google.vr.sdk.base.GvrActivity;
-
 import android.content.Intent;
 import android.util.DisplayMetrics;
+
+import com.google.vr.sdk.base.GvrActivity;
+
 import processing.android.AppComponent;
 import processing.android.ServiceEngine;
 import processing.core.PApplet;

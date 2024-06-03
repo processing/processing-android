@@ -1,5 +1,2 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="processing_core">
-
-    <application />
-</manifest>
+    package="processing_ar" />

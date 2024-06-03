@@ -1,7 +1,10 @@
 // Dummy Gradle project to be able to import local aar files:
 // https://stackoverflow.com/a/60888941
 
+//import com.android.build.api.attributes.*
+//.attributes { attribute(BuildTypeAttr.ATTRIBUTE, project.objects.named(BuildTypeAttr.class,"default")) }
+
 configurations.maybeCreate("default")
-artifacts.add("default", file('sdk-audio-1.180.0.aar'))
 artifacts.add("default", file('sdk-base-1.180.0.aar'))
 artifacts.add("default", file('sdk-common-1.180.0.aar'))
+artifacts.add("default", file('sdk-audio-1.180.0.aar'))
