@@ -1,1 +1,1 @@
-include ':app:simple', ':app:wallpaper', ':app:vrcube', ':app:arscene', ':app:watchface', ':app:fast2d', ':app:armarkers', ':library:processing-core', 'library:google-vr',':library:processing-vr', ':library:processing-ar'
+include ':libs:processing-core', 'libs:google-vr',':libs:processing-vr', ':libs:processing-ar', ':apps:simple', ':apps:wallpaper', ':apps:vrcube', ':apps:arscene', ':apps:watchface', ':apps:fast2d', ':apps:armarkers'
