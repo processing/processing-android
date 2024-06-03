@@ -19,6 +19,8 @@ sourceSets {
         }
         resources {
             srcDirs = ["../../libs/processing-core/src/main/"]
+            exclude "AndroidManifest.xml"
+            exclude '**/java/**'
         }
     }
 }
@@ -26,8 +28,9 @@ sourceSets {
 task sourceJar(type: Jar, dependsOn: classes) {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     classifier = "sources"
-    from sourceSets.main.allSource
+    from sourceSets.main.allSource 
 }
+
 
 // Does not work because of Processing-specific tags in source code, such as @webref
 task javadocJar(type: Jar, dependsOn: javadoc) {

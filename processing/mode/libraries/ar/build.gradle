@@ -11,11 +11,6 @@ dependencies {
     implementationAar "com.google.ar:core:${garVersion}"
 }
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    archiveClassifier = "sources"
-}
-
 sourceSets {
     main {
         java {
@@ -23,8 +18,15 @@ sourceSets {
         }
         resources {
             srcDirs = ["../../../../libs/processing-ar/src/main/"]
+            exclude "AndroidManifest.xml"
+            exclude '**/java/**'            
         }        
     }
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
 }
 
 // Does not work because of Processing-specific tags in source code, such as @webref
