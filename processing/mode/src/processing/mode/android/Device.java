@@ -22,7 +22,6 @@
 package processing.mode.android;
 
 import processing.app.Base;
-import processing.app.Platform;
 import processing.app.RunnerListener;
 import processing.app.exec.LineProcessor;
 import processing.app.exec.ProcessRegistry;
@@ -31,7 +30,6 @@ import processing.app.exec.StreamPump;
 import processing.core.PApplet;
 import processing.mode.android.LogEntry.Severity;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -73,8 +71,8 @@ class Device {
   public void bringLauncherToFront() {
     try {
       adb("shell", "am", "start",
-          "-a", "android.intent.action.MAIN",
-          "-c", "android.intent.category.HOME");
+                 "-a", "android.intent.action.MAIN",
+                 "-c", "android.intent.category.HOME");
     } catch (final Exception e) {
       e.printStackTrace(System.err);
     }
@@ -88,12 +86,12 @@ class Device {
     String name = "";
 
     try {
-      ProcessResult result = env.getSDK().runADB("-s", id, "shell", "getprop", "ro.product.brand");
+      ProcessResult result = adb("shell", "getprop", "ro.product.brand");
       if (result.succeeded()) {
         name += result.getStdout() + " ";
       }
 
-      result = env.getSDK().runADB("-s", id, "shell", "getprop", "ro.product.model");
+      result = adb("shell", "getprop", "ro.product.model");
       if (result.succeeded()) {
         name += result.getStdout();
       }
@@ -208,7 +206,6 @@ class Device {
       };
       pr = adb(cmd);
     }
-//    PApplet.println(cmd);
 
     if (Base.DEBUG) {
       System.out.println(pr.toString());
@@ -226,8 +223,9 @@ class Device {
   public void forwardPort(int tcpPort) throws IOException, InterruptedException {
     // Start ADB Server
     adb("start-server");
-    final String[] jdwpcmd = generateAdbCommand("jdwp");
-    Process deviceId = Runtime.getRuntime().exec(jdwpcmd);
+
+    Process deviceId = adbProc("jdwp");
+
     // Get Process ID from ADB command `adb jdwp`
     JDWPProcessor pIDProcessor = new JDWPProcessor();
     new StreamPump(deviceId.getInputStream(), "jdwp: ").addTarget(
@@ -236,7 +234,8 @@ class Device {
         System.err).start();
 
     Thread.sleep(1000);
-    // forward to tcp port
+
+    // Forward to tcp port
     adb("forward", "tcp:" + tcpPort, "jdwp:" + pIDProcessor.getId());
   }
 
@@ -389,9 +388,11 @@ class Device {
 
   void initialize() throws IOException, InterruptedException {
     adb("logcat", "-c");
-    final String[] cmd = generateAdbCommand("logcat", "-v", "brief");
+
+    final String[] cmd = {"-s", id, "logcat", "-v", "brief"};
     final String title = PApplet.join(cmd, ' ');
-    logcat = Runtime.getRuntime().exec(cmd);
+    logcat = adbProc(cmd);
+
     ProcessRegistry.watch(logcat);
     new StreamPump(logcat.getInputStream(), "log: " + title).addTarget(
       new LogLineProcessor()).start();
@@ -465,15 +466,17 @@ class Device {
   }
 
   private ProcessResult adb(final String... cmd) throws InterruptedException, IOException {
-    final String[] adbCmd = generateAdbCommand(cmd);
-    return env.getSDK().runADB(adbCmd);
+    final String[] adbCmd = genAdbCommand(cmd);
+    return env.getSDK().runAdb(adbCmd);
   }
 
-  private String[] generateAdbCommand(final String... cmd) throws IOException {
-    File toolsPath = env.getSDK().getPlatformToolsFolder();
-    File abdPath = Platform.isWindows() ? new File(toolsPath, "adb.exe") :
-                                          new File(toolsPath, "adb");
-    return PApplet.concat(new String[] { abdPath.getCanonicalPath(), "-s", getId() }, cmd);
+  private Process adbProc(final String... cmd) throws IOException {
+    final String[] adbCmd = genAdbCommand(cmd);
+    return env.getSDK().getAdbProcess(adbCmd);
+  }
+
+  private String[] genAdbCommand(final String... cmd) {
+    return PApplet.concat(new String[] { "-s", getId() }, cmd);
   }
 
   @Override
