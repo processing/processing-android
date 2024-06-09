@@ -41,13 +41,20 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.nio.file.attribute.PosixFilePermission;
 
 import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.Set;
 
 /** 
  * Class holding all needed references (path, tools, etc) to the SDK used by 
@@ -69,6 +76,7 @@ class AndroidSDK {
   private final File cmdlineTools;
   private final File avdManager;
   private final File sdkManager;
+  private final File adb;
 
   private File emulator;
 
@@ -133,19 +141,38 @@ class AndroidSDK {
     
     // Retrieve the highest platform from the available targets
     ArrayList<SDKTarget> targets = getAvailableSdkTargets();
-    int highest = 1;
+    int highestIncremental = 1;
+    int highestTarget = 1;
+    String highestName = "";
     for (SDKTarget targ: targets) {
-      if (highest < targ.version) {
-        highest = targ.version;
+      if (highestIncremental < targ.version_incremental) {
+        highestIncremental = targ.version_incremental;
+        highestTarget = targ.version_sdk;
+        highestName = targ.name;
       }
     }
     
-    if (highest < PApplet.parseInt(AndroidBuild.TARGET_SDK)) {
+    if (highestTarget < PApplet.parseInt(AndroidBuild.TARGET_SDK)) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_target_platform", 
           AndroidBuild.TARGET_SDK, platforms.getAbsolutePath()));      
     }
-        
-    highestPlatform = new File(platforms, "android-" + highest);
+
+    // Find the platform folder with the correct android.jar file.
+//    Path platformPath = Paths.get(platforms.getAbsolutePath());
+//    String highestPrefix = "android-" + highest;
+//    File tmpFile;
+//    try (DirectoryStream<Path> stream = Files.newDirectoryStream(platformPath, highestPrefix + "*")) {
+//      for (Path entry: stream) {
+//        if (Files.isDirectory(entry) && entry.getFileName().toString().startsWith(highestPrefix)) {
+//            tmpFile = new File(entry.toString(), "android.jar");
+//            if (tmpFile.exists()) {
+//              System.out.println(tmpFile);
+//            }
+//        }
+//      }
+//    }
+
+    highestPlatform = new File(platforms, highestName);
 
     androidJar = new File(highestPlatform, "android.jar");
     if (!androidJar.exists()) {
@@ -153,9 +180,11 @@ class AndroidSDK {
                                                           AndroidBuild.TARGET_SDK, highestPlatform.getAbsolutePath()));
     }
 
+    // Collecting the tools needed by the mode
+    adb = findCliTool(platformTools, "adb");
     avdManager = findCliTool(new File(cmdlineTools, "bin"), "avdmanager");
     sdkManager = findCliTool(new File(cmdlineTools, "bin"), "sdkmanager");
-    
+
     initEmu();
     
     String path = Platform.getenv("PATH");
@@ -392,18 +421,44 @@ class AndroidSDK {
    * for the SDK installation. Also figures out the name of android/android.bat/android.exe
    * so that it can be called explicitly.
    */
-  private static File findCliTool(final File tools, String name) 
+  private static File findCliTool(final File toolDir, String toolName)
       throws BadSDKException {
-    if (new File(tools, name + ".bat").exists()) {
-      return new File(tools, name + ".bat");
+    File toolFile = Platform.isWindows() ? new File(toolDir, toolName + ".exe") : new File(toolDir, toolName);
+    if (!toolFile.exists()) {
+      throw new BadSDKException("Cannot find " + toolName + " in " + toolDir);
     }
-    if (new File(tools, name + ".exe").exists()) {
-      return new File(tools, name + ".exe");
-    }    
-    if (new File(tools, name).exists()) {
-      return new File(tools, name);
+
+    if (!Platform.isWindows()) {
+      try {
+        // Get the POSIX file permissions
+        Path toolPath = Paths.get(toolFile.getAbsolutePath());
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(toolPath);
+
+        // Print the file permissions
+        System.out.println("File permissions for " + toolPath + ":");
+        for (PosixFilePermission permission : permissions) {
+          System.out.println(permission);
+        }
+
+        boolean addedPerm = false;
+        if (!permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
+          permissions.add(PosixFilePermission.OWNER_EXECUTE);
+          addedPerm = true;
+        }
+        if (!permissions.contains(PosixFilePermission.GROUP_EXECUTE)) {
+          permissions.add(PosixFilePermission.GROUP_EXECUTE);
+          addedPerm = true;
+        }
+
+        if (addedPerm) {
+          Files.setPosixFilePermissions(toolPath, permissions);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
-    throw new BadSDKException("Cannot find " + name + " in " + tools);
+
+    return toolFile;
   }
   
 
@@ -773,25 +828,20 @@ class AndroidSDK {
   private static final String ADB_DAEMON_MSG_1 = "daemon not running";
   private static final String ADB_DAEMON_MSG_2 = "daemon started successfully";
     
-  public ProcessResult runADB(final String... cmd)
+  public ProcessResult runAdb(final String... cmd)
     throws InterruptedException, IOException {
     
     if (adbDisabled) {
       throw new IOException("adb is currently disabled");
     }
-        
-    final String[] adbCmd;
-    if (!cmd[0].contains("adb")) {      
-      File abdPath = Platform.isWindows() ? new File(platformTools, "adb.exe") :
-                                            new File(platformTools, "adb");
-      adbCmd = PApplet.splice(cmd, abdPath.getCanonicalPath(), 0);
-    } else {
-      adbCmd = cmd;
-    }
-    // printing this here to see if anyone else is killing the adb server
+
+    final String[] adbCmd = PApplet.splice(cmd, adb.getCanonicalPath(), 0);
+
     if (processing.app.Base.DEBUG) {
+      // printing this here to see if anyone else is killing the adb server
       PApplet.printArray(adbCmd);
     }
+
     try {
       ProcessResult adbResult = new ProcessHelper(adbCmd).execute();
       // Ignore messages about starting up an adb daemon
@@ -821,12 +871,41 @@ class AndroidSDK {
     }
   }
 
-  static class SDKTarget {
-    public int version = 0;
-    public String name;
+  public Process getAdbProcess(final String... cmd)
+    throws IOException {
+
+    if (adbDisabled) {
+      throw new IOException("adb is currently disabled");
+    }
+
+    final String[] adbCmd = PApplet.splice(cmd, adb.getCanonicalPath(), 0);
+
+    if (processing.app.Base.DEBUG) {
+      // printing this here to see if anyone else is killing the adb server
+      PApplet.printArray(adbCmd);
+    }
+
+    try {
+      Process process = Runtime.getRuntime().exec(adbCmd);
+      return process;
+    } catch (IOException ioe) {
+      if (-1 < ioe.getMessage().indexOf("Permission denied")) {
+          Messages.showWarning(AndroidMode.getTextString("android_sdk.warn.cannot_run_adb_title"),
+          AndroidMode.getTextString("android_sdk.warn.cannot_run_adb_body"));
+        adbDisabled = true;
+      }
+      throw ioe;
+    }
   }
 
-  public ArrayList<SDKTarget> getAvailableSdkTargets() throws IOException {
+  static private class SDKTarget {
+    public int version_sdk = 0;
+    public String version_release = "";
+    public int version_incremental = 0;
+    public String name = "";
+  }
+
+  private ArrayList<SDKTarget> getAvailableSdkTargets() throws IOException {
     ArrayList<SDKTarget> targets = new ArrayList<SDKTarget>();
 
     for (File platform : platforms.listFiles()) {
@@ -839,18 +918,24 @@ class AndroidSDK {
       String line;
       while ((line = br.readLine()) != null) {
         String[] lineData = line.split("=");
-        if (lineData[0].equals("ro.build.version.sdk")) {
-          target.version = Integer.valueOf(lineData[1]);
+
+        if (lineData[0].equals("ro.system.build.version.incremental")) {
+          target.version_incremental = Integer.valueOf(lineData[1]);
         }
 
         if (lineData[0].equals("ro.build.version.release")) {
-          target.name = lineData[1];
-          break;
+          target.version_release = lineData[1];
         }
+
+        if (lineData[0].equals("ro.build.version.sdk")) {
+          target.version_sdk = Integer.valueOf(lineData[1]);
+        }
+
+        target.name = platform.getName();
       }
       br.close();
 
-      if (target.version != 0 && target.name != null) targets.add(target);
+      if (target.version_sdk != 0 && target.version_incremental != 0 && target.name != "") targets.add(target);
     }
 
     return targets;

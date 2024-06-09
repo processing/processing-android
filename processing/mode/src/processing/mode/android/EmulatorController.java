@@ -146,7 +146,7 @@ class EmulatorController {
             }
             Thread.sleep(2000);
             //System.out.println("done sleeping");
-            ProcessResult result = sdk.runADB("-s", "emulator-" + portString,
+            ProcessResult result = sdk.runAdb("-s", "emulator-" + portString,
               "shell", "getprop", "dev.bootcomplete");
             if (result.getStdout().trim().equals("1")) {
               setState(State.RUNNING);
