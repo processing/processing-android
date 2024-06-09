@@ -328,18 +328,7 @@ class AndroidSDK {
   public File getTargetPlatform(String target) {
     return new File(platforms, "android-" + target);
   }  
-  
-  
-  public File getZipAlignTool() {    
-    File[] files = buildTools.listFiles();
-    String name = Platform.isWindows() ? "zipalign.exe" : "zipalign";
-    for (File f: files) {
-      File z = new File(f, name);
-      if (z.exists()) return z;
-    }
-    return null;
-  }
-  
+
   
   // Write to the process input, so the licenses will be accepted. In 
   // principle, we only need 7 'y', one for the 'yes' to the first 
