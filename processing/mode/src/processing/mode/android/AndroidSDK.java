@@ -41,7 +41,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +52,6 @@ import java.util.Date;
 import java.nio.file.attribute.PosixFilePermission;
 
 import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.Set;
 
 /** 
@@ -140,14 +138,14 @@ class AndroidSDK {
     }
     
     // Retrieve the highest platform from the available targets
-    ArrayList<SDKTarget> targets = getAvailableSdkTargets();
-    int highestIncremental = 1;
+    ArrayList<Target> targets = getAvailableSdkTargets();
+    int highestBuild = 1;
     int highestTarget = 1;
     String highestName = "";
-    for (SDKTarget targ: targets) {
-      if (highestIncremental < targ.version_incremental) {
-        highestIncremental = targ.version_incremental;
-        highestTarget = targ.version_sdk;
+    for (Target targ: targets) {
+      if (highestBuild < targ.build) {
+        highestBuild = targ.build;
+        highestTarget = targ.sdk;
         highestName = targ.name;
       }
     }
@@ -157,23 +155,7 @@ class AndroidSDK {
           AndroidBuild.TARGET_SDK, platforms.getAbsolutePath()));      
     }
 
-    // Find the platform folder with the correct android.jar file.
-//    Path platformPath = Paths.get(platforms.getAbsolutePath());
-//    String highestPrefix = "android-" + highest;
-//    File tmpFile;
-//    try (DirectoryStream<Path> stream = Files.newDirectoryStream(platformPath, highestPrefix + "*")) {
-//      for (Path entry: stream) {
-//        if (Files.isDirectory(entry) && entry.getFileName().toString().startsWith(highestPrefix)) {
-//            tmpFile = new File(entry.toString(), "android.jar");
-//            if (tmpFile.exists()) {
-//              System.out.println(tmpFile);
-//            }
-//        }
-//      }
-//    }
-
     highestPlatform = new File(platforms, highestName);
-
     androidJar = new File(highestPlatform, "android.jar");
     if (!androidJar.exists()) {
       throw new BadSDKException(AndroidMode.getTextString("android_sdk.error.missing_android_jar", 
@@ -893,21 +875,21 @@ class AndroidSDK {
     }
   }
 
-  static private class SDKTarget {
-    public int version_sdk = 0;
-    public String version_release = "";
-    public int version_incremental = 0;
+  static private class Target {
+    public int sdk = 0;
+    public String release = "";
+    public int build = 0;
     public String name = "";
   }
 
-  private ArrayList<SDKTarget> getAvailableSdkTargets() throws IOException {
-    ArrayList<SDKTarget> targets = new ArrayList<SDKTarget>();
+  private ArrayList<Target> getAvailableSdkTargets() throws IOException {
+    ArrayList<Target> targets = new ArrayList<Target>();
 
     for (File platform : platforms.listFiles()) {
       File propFile = new File(platform, "build.prop");
       if (!propFile.exists()) continue;
 
-      SDKTarget target = new SDKTarget();
+      Target target = new Target();
 
       BufferedReader br = new BufferedReader(new FileReader(propFile));
       String line;
@@ -915,22 +897,22 @@ class AndroidSDK {
         String[] lineData = line.split("=");
 
         if (lineData[0].equals("ro.system.build.version.incremental")) {
-          target.version_incremental = Integer.valueOf(lineData[1]);
+          target.build = Integer.valueOf(lineData[1]);
         }
 
         if (lineData[0].equals("ro.build.version.release")) {
-          target.version_release = lineData[1];
+          target.release = lineData[1];
         }
 
         if (lineData[0].equals("ro.build.version.sdk")) {
-          target.version_sdk = Integer.valueOf(lineData[1]);
+          target.sdk = Integer.valueOf(lineData[1]);
         }
 
         target.name = platform.getName();
       }
       br.close();
 
-      if (target.version_sdk != 0 && target.version_incremental != 0 && target.name != "") targets.add(target);
+      if (target.sdk != 0 && target.build != 0 && target.name != "") targets.add(target);
     }
 
     return targets;

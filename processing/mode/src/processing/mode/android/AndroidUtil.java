@@ -199,7 +199,7 @@ public class AndroidUtil {
       // grab a zip file entry
       ZipEntry entry = zipFileEntries.nextElement();
       String currentEntry = entry.getName();
-      
+
       File destFile = new File(newPath, currentEntry);
       //destFile = new File(newPath, destFile.getName());
       File destinationParent = destFile.getParentFile();
