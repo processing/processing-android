@@ -40,7 +40,7 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.support.v4.os.ResultReceiver;
+import android.os.ResultReceiver;
 
 import android.service.wallpaper.WallpaperService;
 import android.support.wearable.watchface.WatchFaceService;
@@ -77,7 +77,7 @@ public class PSurfaceNone implements PSurface, PConstants {
   protected boolean requestedThreadStart = false;
   protected Thread thread;
   protected boolean paused;
-  protected Object pauseObject = new Object();
+  protected final Object pauseObject = new Object();
 
   protected float frameRateTarget = 60;
   protected long frameRatePeriod = 1000000000L / 60L;
@@ -332,8 +332,7 @@ public class PSurfaceNone implements PSurface, PConstants {
       try {
         return activity.openFileInput(filename);
       } catch (FileNotFoundException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        System.err.println("Cannot open file " + filename);
       }
     }
     return null;
@@ -531,7 +530,9 @@ public class PSurfaceNone implements PSurface, PConstants {
           try {
             Thread.sleep(sleepTime / 1000000L, (int) (sleepTime % 1000000L));
             noDelays = 0;  // Got some sleep, not delaying anymore
-          } catch (InterruptedException ex) { }
+          } catch (InterruptedException ex) {
+            System.err.println("Cannot properly set the timing for the draw animation.");
+          }
 
           overSleepTime = (System.nanoTime() - afterTime) - sleepTime;
 
