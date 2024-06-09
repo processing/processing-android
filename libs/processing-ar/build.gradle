@@ -3,18 +3,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
+    namespace "processing.ar"
+
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 33
     }
-//    sourceSets {
-//        main {
-//            manifest.srcFile 'AndroidManifest.xml'
-//            java.srcDirs = ['../../../mode/libraries/ar/src']
-//            assets.srcDirs = ['../../../mode/libraries/ar/src/assets']
-//        }
-//    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

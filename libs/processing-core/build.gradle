@@ -4,24 +4,12 @@ plugins {
 
 android {
     namespace "processing"
-    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 17
         targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
-    // sourceSets {
-    //     main {
-    //         manifest.srcFile 'AndroidManifest.xml'
-    //         java.srcDirs = ['../../../core/src']
-    //         assets.srcDirs = ['../../../core/src/assets']
-    //     }
-    // }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
