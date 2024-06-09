@@ -71,8 +71,8 @@ class Device {
   public void bringLauncherToFront() {
     try {
       adb("shell", "am", "start",
-                 "-a", "android.intent.action.MAIN",
-                 "-c", "android.intent.category.HOME");
+              "-a", "android.intent.action.MAIN",
+              "-c", "android.intent.category.HOME");
     } catch (final Exception e) {
       e.printStackTrace(System.err);
     }
@@ -389,9 +389,9 @@ class Device {
   void initialize() throws IOException, InterruptedException {
     adb("logcat", "-c");
 
-    final String[] cmd = {"-s", id, "logcat", "-v", "brief"};
+    final String[] cmd = genAdbCommand("logcat", "-v", "brief");
     final String title = PApplet.join(cmd, ' ');
-    logcat = adbProc(cmd);
+    logcat = env.getSDK().getAdbProcess(cmd);
 
     ProcessRegistry.watch(logcat);
     new StreamPump(logcat.getInputStream(), "log: " + title).addTarget(

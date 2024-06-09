@@ -110,8 +110,7 @@ public class AndroidUtil {
     writer.flush();
     writer.close();
   }
-  
-  
+
   static public File createPath(final File parent, final String name) 
       throws SketchException {
     final File result = new File(parent, name);
@@ -120,12 +119,10 @@ public class AndroidUtil {
     }
     return result;
   }
-  
-  
+
   static public void createFileFromTemplate(final File tmplFile, final File destFile) {
     createFileFromTemplate(tmplFile, destFile, null);
-  } 
-  
+  }
 
   static public void createFileFromTemplate(final File tmplFile, final File destFile, 
       final HashMap<String, String> replaceMap) {
@@ -149,8 +146,7 @@ public class AndroidUtil {
     pw.flush();
     pw.close();    
   }
-  
-  
+
   static public File createSubFolder(File parent, String name) throws IOException {
     File newFolder = new File(parent, name);
     if (newFolder.exists()) {
@@ -190,15 +186,9 @@ public class AndroidUtil {
     }
     return newFolder;
   }
-  
-  
-  static public void extractFolder(File file, File newPath, boolean setExec) 
+
+  static public void extractFolder(File file, File newPath)
     throws IOException {
-    extractFolder(file, newPath, setExec, false);
-  }
-  
-  static public void extractFolder(File file, File newPath, boolean setExec, 
-    boolean remRoot) throws IOException {
     int BUFFER = 2048;
     
     ZipFile zip = new ZipFile(file);
@@ -209,18 +199,7 @@ public class AndroidUtil {
       // grab a zip file entry
       ZipEntry entry = zipFileEntries.nextElement();
       String currentEntry = entry.getName();
-        
-      if (remRoot) {
-        // Remove root folder from path
-        int idx = currentEntry.indexOf("/");
-        if (idx == -1) {
-          // Let's try the system file separator
-          // https://stackoverflow.com/a/16485210
-          idx = currentEntry.indexOf(File.separator);
-        }
-        currentEntry = currentEntry.substring(idx + 1);
-      }
-        
+      
       File destFile = new File(newPath, currentEntry);
       //destFile = new File(newPath, destFile.getName());
       File destinationParent = destFile.getParentFile();
@@ -228,13 +207,6 @@ public class AndroidUtil {
       // create the parent directory structure if needed
       destinationParent.mkdirs();
 
-      String ext = PApplet.getExtension(currentEntry);
-      if (setExec && ext.equals("unknown")) {        
-        // On some OS X machines the android binaries lose their executable
-        // attribute, rendering the mode unusable
-        destFile.setExecutable(true);
-      }
-        
       if (!entry.isDirectory()) {
         // should preserve permissions
         // https://bitbucket.org/atlassian/amps/pull-requests/21/amps-904-preserve-executable-file-status/diff
@@ -263,16 +235,14 @@ public class AndroidUtil {
     File jarFile) throws IOException {
     extractClassesJarFromAar(wearFile, explodeDir, jarFile, true);
   }
-  
-  
+
   static public void extractClassesJarFromAar(File wearFile, File explodeDir, 
     File jarFile, boolean removeDir) throws IOException {
-    extractFolder(wearFile, explodeDir, false);
+    extractFolder(wearFile, explodeDir);
     File classFile = new File(explodeDir, "classes.jar");
     Util.copyFile(classFile, jarFile);
     Util.removeDir(explodeDir);
   }
-  
   
   static public File[] getFileList(File folder, String[] names) {
     return getFileList(folder, names, null);
@@ -289,8 +259,7 @@ public class AndroidUtil {
     }
     return icons;
   }
-  
-  
+
   static public File[] getFileList(Mode mode, String prefix, String[] names) {
     File[] icons = new File[names.length];
     for (int i = 0; i < names.length; i++) {
@@ -305,8 +274,7 @@ public class AndroidUtil {
     }
     return true;
   }
-  
-  
+
   static public boolean noFileExists(File[] files) {
     for (File f: files) {
       if (f.exists()) return false;  

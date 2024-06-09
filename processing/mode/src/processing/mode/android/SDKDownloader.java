@@ -141,7 +141,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
         // Command-line tools
         File downloadedCmdLineTools = new File(tempFolder, downloadUrls.cmdlineToolsFilename);
-        downloadAndUnpack(downloadUrls.cmdlineToolsUrl, downloadedCmdLineTools, sdkFolder, true);
+        downloadAndUnpack(downloadUrls.cmdlineToolsUrl, downloadedCmdLineTools, sdkFolder);
         File tmpFrom = new File(sdkFolder, "cmdline-tools");
         File tmpTo = new File(sdkFolder, "cmdline-tmp");
         AndroidUtil.moveDir(tmpFrom, tmpTo);
@@ -151,32 +151,32 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
 
         // Platform tools
         File downloadedPlatformTools = new File(tempFolder, downloadUrls.platformToolsFilename);
-        downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder, true);
+        downloadAndUnpack(downloadUrls.platformToolsUrl, downloadedPlatformTools, sdkFolder);
 
         // Build tools
         File downloadedBuildTools = new File(tempFolder, downloadUrls.buildToolsFilename);
-        downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder, true);
+        downloadAndUnpack(downloadUrls.buildToolsUrl, downloadedBuildTools, buildToolsFolder);
 
         // Platform
         File downloadedPlatform = new File(tempFolder, downloadUrls.platformFilename);
-        downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder, false);
+        downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
       
         // USB driver
         if (Platform.isWindows()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
-          downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder, false);
+          downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder);
         }
 
         // HAXM
         if (!Platform.isLinux()) {
           File downloadedFolder = new File(tempFolder, downloadUrls.haxmFilename);
-          downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder, true);
+          downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder);
         }
 
         if (DOWNLOAD_EMU_WITH_SDK) {
           // Emulator, unpacks directly to sdk folder 
           File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
-          downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder, true);          
+          downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder);
         }        
         
         if (Platform.isLinux() || Platform.isMacOS()) {
@@ -216,7 +216,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
     }
 
     private void downloadAndUnpack(String urlString, File saveTo,
-                                   File unpackTo, boolean setExec) throws IOException {
+                                   File unpackTo) throws IOException {
       URL url = null;
       try {
         url = new URL(urlString);
@@ -248,7 +248,7 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
       inputStream.close();
       outputStream.close();
 
-      AndroidUtil.extractFolder(saveTo, unpackTo, setExec);
+      AndroidUtil.extractFolder(saveTo, unpackTo);
     }
 
     private void getMainDownloadUrls(SDKUrlHolder urlHolder, 

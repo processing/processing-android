@@ -434,12 +434,6 @@ class AndroidSDK {
         Path toolPath = Paths.get(toolFile.getAbsolutePath());
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(toolPath);
 
-        // Print the file permissions
-        System.out.println("File permissions for " + toolPath + ":");
-        for (PosixFilePermission permission : permissions) {
-          System.out.println(permission);
-        }
-
         boolean addedPerm = false;
         if (!permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
           permissions.add(PosixFilePermission.OWNER_EXECUTE);
@@ -451,6 +445,7 @@ class AndroidSDK {
         }
 
         if (addedPerm) {
+          // Set the missing POSIX execute (group and owner) permissions
           Files.setPosixFilePermissions(toolPath, permissions);
         }
       } catch (Exception e) {

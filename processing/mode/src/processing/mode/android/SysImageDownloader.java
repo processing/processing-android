@@ -148,7 +148,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           if (!tmp.exists()) tmp.mkdir();
           File sysImgWearFinalFolder = new File(tmp, downloadUrls.sysImgWearTag);
           if (!sysImgWearFinalFolder.exists()) sysImgWearFinalFolder.mkdir();
-          downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder, false);
+          downloadAndUnpack(downloadUrls.sysImgWearUrl, downloadedSysImgWear, sysImgWearFinalFolder);
           fixSourceProperties(sysImgWearFinalFolder);
         } else {
           // mobile system images
@@ -157,7 +157,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
           if (!tmp.exists()) tmp.mkdir();
           File sysImgFinalFolder = new File(tmp, downloadUrls.sysImgTag);
           if (!sysImgFinalFolder.exists()) sysImgFinalFolder.mkdir();
-          downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder, false);
+          downloadAndUnpack(downloadUrls.sysImgUrl, downloadedSysImg, sysImgFinalFolder);
           fixSourceProperties(sysImgFinalFolder);
         }
 
@@ -193,7 +193,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
     }
 
     private void downloadAndUnpack(String urlString, File saveTo,
-                                   File unpackTo, boolean setExec) throws IOException {
+                                   File unpackTo) throws IOException {
       URL url = null;
       try {
         url = new URL(urlString);
@@ -218,7 +218,7 @@ public class SysImageDownloader extends JDialog implements PropertyChangeListene
       inputStream.close();
       outputStream.close();
 
-      AndroidUtil.extractFolder(saveTo, unpackTo, setExec);
+      AndroidUtil.extractFolder(saveTo, unpackTo);
     }
 
     // For some reason the source.properties file includes Addon entries, 
