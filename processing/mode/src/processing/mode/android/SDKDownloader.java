@@ -162,22 +162,22 @@ public class SDKDownloader extends JDialog implements PropertyChangeListener {
         downloadAndUnpack(downloadUrls.platformUrl, downloadedPlatform, platformsFolder);
       
         // USB driver
-        if (Platform.isWindows()) {
+        if (Platform.isWindows() && downloadUrls.usbDriverFilename != null) {
           File downloadedFolder = new File(tempFolder, downloadUrls.usbDriverFilename);
           downloadAndUnpack(downloadUrls.usbDriverUrl, downloadedFolder, googleRepoFolder);
         }
 
         // HAXM
-        if (!Platform.isLinux()) {
+        if (!Platform.isLinux() && downloadUrls.haxmFilename != null) {
           File downloadedFolder = new File(tempFolder, downloadUrls.haxmFilename);
           downloadAndUnpack(downloadUrls.haxmUrl, downloadedFolder, haxmFolder);
         }
 
-        if (DOWNLOAD_EMU_WITH_SDK) {
+        if (DOWNLOAD_EMU_WITH_SDK && downloadUrls.emulatorFilename != null) {
           // Emulator, unpacks directly to sdk folder 
           File downloadedEmulator = new File(tempFolder, downloadUrls.emulatorFilename);
           downloadAndUnpack(downloadUrls.emulatorUrl, downloadedEmulator, sdkFolder);
-        }        
+        }
         
         if (Platform.isLinux() || Platform.isMacOS()) {
           Runtime.getRuntime().exec("chmod -R 755 " + sdkFolder.getAbsolutePath());
