@@ -3,9 +3,6 @@ plugins {
 }
 
 android {
-    namespace 'simple'
-    compileSdkVersion 33
-
     defaultConfig {
         applicationId "processing.tests.simple"
         minSdkVersion 17
