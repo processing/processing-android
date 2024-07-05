@@ -405,10 +405,19 @@ class AndroidSDK {
    */
   private static File findCliTool(final File toolDir, String toolName)
       throws BadSDKException {
-    File toolFile = Platform.isWindows() ? new File(toolDir, toolName + ".exe") : new File(toolDir, toolName);
-    if (!toolFile.exists()) {
-      throw new BadSDKException("Cannot find " + toolName + " in " + toolDir);
-    }
+        File toolFile;
+        if (Platform.isWindows()) {
+            toolFile = new File(toolDir, toolName + ".exe");
+            if (!toolFile.exists()) {
+                toolFile = new File(toolDir, toolName + ".bat");
+            }
+        } else {
+            toolFile = new File(toolDir, toolName);
+        }
+        
+        if (!toolFile.exists()) {
+            throw new BadSDKException("Cannot find " + toolName + " in " + toolDir);
+        }
 
     if (!Platform.isWindows()) {
       try {
