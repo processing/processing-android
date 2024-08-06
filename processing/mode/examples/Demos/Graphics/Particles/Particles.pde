@@ -3,8 +3,11 @@
 ParticleSystem ps;
 PImage sprite;  
 
-void setup() {
+void settings() {
   size(displayWidth, displayHeight, P2D);
+}
+
+void setup() {
   orientation(LANDSCAPE);
   sprite = loadImage("sprite.png");
   ps = new ParticleSystem(2000);
