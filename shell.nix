@@ -21,6 +21,7 @@ in
     (with pkgs; [
       androidSdk'
       glibc
+      npins
       nixfmt-rfc-style
     ]);
   runScript = pkgs.writeScript "init.sh" ''
