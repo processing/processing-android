@@ -26,6 +26,7 @@ in
   runScript = pkgs.writeScript "init.sh" ''
     export JAVA_HOME=${jdk}
     export PATH="${jdk}/bin:$PATH"
+    export ANDROID_SDK=${androidSdk'}/libexec/android-sdk
     exec bash
   '';
 }).env
