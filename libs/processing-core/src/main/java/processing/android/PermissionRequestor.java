@@ -27,6 +27,7 @@ import android.os.Bundle;
 
 import android.support.v4.os.ResultReceiver;
 import androidx.core.app.ActivityCompat;
+import androidx.annotation.RestrictTo;
 
 // A simple utility activity to request permissions in a service.
 public class PermissionRequestor extends Activity {
@@ -49,6 +50,7 @@ public class PermissionRequestor extends Activity {
   }
 
   @Override
+  @SuppressWarnings("RestrictedApi")
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
     Bundle resultData = new Bundle();
     resultData.putStringArray(KEY_PERMISSIONS, permissions);

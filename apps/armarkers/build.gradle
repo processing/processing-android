@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    compileSdkVersion 33
     defaultConfig {
         applicationId "processing.tests.armarkers"
         minSdkVersion 23
@@ -19,8 +20,8 @@ android {
     productFlavors {
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     namespace 'armarkers'
 }
