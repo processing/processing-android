@@ -14,20 +14,16 @@ let
       includeNDK = false;
     }).androidsdk;
 in
-(pkgs.buildFHSUserEnv {
-  name = "android-sdk";
-  targetPkgs =
-    pkgs:
-    (with pkgs; [
-      androidSdk'
-      glibc
-      npins
-      nixfmt-rfc-style
-    ]);
-  runScript = pkgs.writeScript "init.sh" ''
+pkgs.mkShellNoCC {
+  packages = with pkgs; [
+    androidSdk'
+    npins
+    nixfmt-rfc-style
+  ];
+  shellHook = ''
     export JAVA_HOME=${jdk}
     export PATH="${jdk}/bin:$PATH"
     export ANDROID_SDK=${androidSdk'}/libexec/android-sdk
     exec bash
   '';
-}).env
+}
