@@ -18,15 +18,16 @@ public class RotationHandler implements DisplayManager.DisplayListener {
 
   public RotationHandler(Context context) {
     this.context = context;
-    display = context.getSystemService(WindowManager.class).getDefaultDisplay();
+    WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+    display = windowManager.getDefaultDisplay();
   }
 
   public void onResume() {
-    context.getSystemService(DisplayManager.class).registerDisplayListener(this, null);
+    ((DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE)).registerDisplayListener(this, null);
   }
 
   public void onPause() {
-    context.getSystemService(DisplayManager.class).unregisterDisplayListener(this);
+    ((DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE)).unregisterDisplayListener(this);
   }
 
   public void onSurfaceChanged(int width, int height) {

@@ -3,7 +3,8 @@ plugins {
 }
 
 android {
-    namespace "processing"
+
+    namespace "processing.core"
 
     defaultConfig {
         minSdkVersion 17

@@ -12,7 +12,7 @@
         android:label="@string/app_name"
         android:theme="@style/VrActivityTheme">
         <activity android:configChanges="orientation|keyboardHidden|screenSize"
-                  android:name=".MainActivity"
+                  android:name="vrcube.MainActivity"
                   android:resizeableActivity="false"
                   android:screenOrientation="landscape"
                   android:exported="true">
