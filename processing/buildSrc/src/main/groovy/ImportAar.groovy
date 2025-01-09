@@ -186,7 +186,8 @@ class ImportAar implements Plugin<Project> {
 class ExtractAarJarsTask extends org.gradle.api.DefaultTask {
     @TaskAction
     void extractJars() {
-        File outputDir = new File(project.buildDir, 'libs')
+        //File outputDir = new File(project.buildDir, 'libs')
+        File outputDir = new File(System.getProperty("user.dir"), "build/libs")
         outputDir.mkdirs()
 
         // Configuration compileClasspath = project.configurations.getByName('implementation')
@@ -202,10 +203,11 @@ class ExtractAarJarsTask extends org.gradle.api.DefaultTask {
                 ZipFile zipFile = new ZipFile(aarFile)
                 zipFile.entries().each { entry ->
                     if (entry.name.endsWith('.jar')) {
-                       println "Classes JAR found: ${entry}"
-                       String aarName = aarFile.name.replace(".aar", "")
-    
-                        File jarOutput = new File(outputDir, "${aarName}.jar")
+                        println "Classes JAR found: ${entry}"
+                        String aarName = aarFile.name.replace(".aar", "")    
+                        String jarName = "${aarName}.jar".replaceFirst(/-\d+(\.\d+)*(?=\.jar$)/, '')
+
+                        File jarOutput = new File(outputDir, jarName)
                         jarOutput.parentFile.mkdirs()
                         
                         // Write the JAR file to the output directory
