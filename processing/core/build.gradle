@@ -34,6 +34,16 @@ tasks.register('javadocJar', Jar) {
     from javadoc.destinationDir
 }
 
+// project.afterEvaluate {
+//     tasks.named('extractAarJars').configure {
+//         dependsOn configurations.runtimeClasspath
+//     }
+// }
+
+// project.tasks.named('build').configure {
+//     finalizedBy('extractAarJars')
+// }
+
 artifacts {
 //     archives javadocJar
     archives sourceJar
