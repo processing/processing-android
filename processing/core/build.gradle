@@ -3,38 +3,34 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 plugins {
-    id 'aar'
+    id 'ImportAar'
+    id 'java-library'
+    id 'maven-publish'
 }
 
 dependencies {
     implementation name: "android"
-    implementationAar "androidx.legacy:legacy-support-v4:${v4legacyVersion}"
-    implementationAar "com.google.android.support:wearable:${wearVersion}"
+    implementation "androidx.legacy:legacy-support-v4:${v4legacyVersion}"
+    implementation "com.google.android.support:wearable:${wearVersion}"
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs = ["../../libs/processing-core/src/main/java/"]
-        }
-        resources {
-            srcDirs = ["../../libs/processing-core/src/main/"]
-            exclude "AndroidManifest.xml"
-            exclude '**/java/**'
-        }
-    }
+sourceSets.main {
+    java.srcDir("../../libs/processing-core/src/main/java/")
+    resources.srcDir("../../libs/processing-core/src/main/")
+    resources.exclude("AndroidManifest.xml", "**/java/**")
 }
 
-task sourceJar(type: Jar, dependsOn: classes) {
+tasks.register('sourceJar', Jar) {
+    dependsOn classes
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    classifier = "sources"
-    from sourceSets.main.allSource 
+    archiveClassifier.set("sources")
+    from sourceSets.main.allSource
 }
-
 
 // Does not work because of Processing-specific tags in source code, such as @webref
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = "javadoc"
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier.set("javadoc")
     from javadoc.destinationDir
 }
 
@@ -44,45 +40,49 @@ artifacts {
 }
 
 jar.doLast { task ->
-    ant.checksum file: task.archivePath
+    ant.checksum file: task.archiveFile.get().asFile
 }
 
-clean.doFirst {
-    delete "dist"
-    delete "${coreZipPath}"
-}
-
-compileJava.doFirst {
-    String[] deps = ["wearable.jar"]
-    for (String fn : deps) {
-        Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
-                file("${rootDir}/mode/mode/" + fn).toPath(), REPLACE_EXISTING)
+tasks.named('clean').configure {
+    doFirst {
+        delete "dist"
+        delete "${coreZipPath}"
     }
 }
 
-build.doLast {
+tasks.named('compileJava').configure {
+    doFirst {
+        String[] deps = ["wearable.jar"]
+        deps.each { fn ->
+            Files.copy(file("${rootDir}/build/libs/${fn}").toPath(),
+                    file("${rootDir}/mode/mode/${fn}").toPath(), REPLACE_EXISTING)
+        }
+    }
+}
 
-    // Need to check the existance of the files before using as the files 
-    // will get generated only if  Task :core:jar is not being skipped
-    // Task :core:jar will be skipped if source files are unchanged or jar task is UP-TO-DATE
-    
-    if (file("${buildDir}/libs/core.jar").exists()) {
-        // Copying core jar as zip inside the mode folder
-        Files.copy(file("${buildDir}/libs/core.jar").toPath(), 
-            file("${coreZipPath}").toPath(), REPLACE_EXISTING)
-    }
-    // Renaming artifacts for maven publishing
-    if (file("${buildDir}/libs/core.jar").exists()) {
-        Files.move(file("${buildDir}/libs/core.jar").toPath(),
-            file("$buildDir/libs/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING);
-    }
-    if (file("${buildDir}/libs/core-sources.jar").exists()) {
-        Files.move(file("${buildDir}/libs/core-sources.jar").toPath(),
-            file("$buildDir/libs/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    }
-    if (file("${buildDir}/libs/core.jar.MD5").exists()) {
-        Files.move(file("${buildDir}/libs/core.jar.MD5").toPath(),
-            file("$buildDir/libs/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+tasks.named('build').configure {
+    doLast {
+        // Need to check the existance of the files before using as the files 
+        // will get generated only if  Task :core:jar is not being skipped
+        // Task :core:jar will be skipped if source files are unchanged or jar task is UP-TO-DATE
+        if (file("${buildDir}/libs/core.jar").exists()) {
+            // Copying core jar as zip inside the mode folder
+            Files.copy(file("${buildDir}/libs/core.jar").toPath(), 
+                file("${coreZipPath}").toPath(), REPLACE_EXISTING)
+        }
+        // Renaming artifacts for maven publishing
+        if (file("${buildDir}/libs/core.jar").exists()) {
+            Files.move(file("${buildDir}/libs/core.jar").toPath(),
+                file("$buildDir/libs/processing-core-${modeVersion}.jar").toPath(), REPLACE_EXISTING)
+        }
+        if (file("${buildDir}/libs/core-sources.jar").exists()) {
+            Files.move(file("${buildDir}/libs/core-sources.jar").toPath(),
+                file("$buildDir/libs/processing-core-${modeVersion}-sources.jar").toPath(), REPLACE_EXISTING)
+        }
+        if (file("${buildDir}/libs/core.jar.MD5").exists()) {
+            Files.move(file("${buildDir}/libs/core.jar.MD5").toPath(),
+                file("$buildDir/libs/processing-core-${modeVersion}.jar.md5").toPath(), REPLACE_EXISTING)
+        }
     }
 }
 
@@ -96,4 +96,5 @@ ext {
                        [name: 'wearable', group: 'com.google.android.support', version: wearVersion],
                        [name: 'android']]
 }
+
 apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"

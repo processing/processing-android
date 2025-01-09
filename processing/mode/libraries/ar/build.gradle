@@ -2,36 +2,44 @@ import java.nio.file.Files
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 plugins {
-    id 'aar'    
+    id 'java-library'
+    id 'maven-publish'
 }
 
 dependencies {
     compileOnly name: "android"
     compileOnly "org.p5android:processing-core:${modeVersion}"
-    implementationAar "com.google.ar:core:${garVersion}"
+    implementation "com.google.ar:core:${garVersion}"
 }
 
 sourceSets {
     main {
-        java {
-            srcDirs = ["../../../../libs/processing-ar/src/main/java/"]
-        }
+        java.srcDir("../../../../libs/processing-ar/src/main/java/")
         resources {
-            srcDirs = ["../../../../libs/processing-ar/src/main/"]
+            srcDir("../../../../libs/processing-ar/src/main/")
             exclude "AndroidManifest.xml"
-            exclude '**/java/**'            
-        }        
+            exclude "**/java/**"
+        }
     }
 }
 
-task sourceJar(type: Jar) {
+java {
+    withSourcesJar()
+}
+
+tasks.named('jar') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.register("sourceJar", Jar) {
     from sourceSets.main.allJava
-    archiveClassifier = "sources"
+    archiveClassifier.set("sources")
 }
 
 // Does not work because of Processing-specific tags in source code, such as @webref
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = "javadoc"
+tasks.register("javadocJar", Jar) {
+    dependsOn javadoc
+    archiveClassifier.set("javadoc")
     from javadoc.destinationDir
 }
 
@@ -40,50 +48,65 @@ artifacts {
     archives sourceJar
 }
 
-jar.doLast { task ->
-    ant.checksum file: task.archivePath
-}
-
-clean.doFirst {
-    delete "dist"
-    delete "library/ar.jar"
-}
-
-compileJava.doFirst {
-    String[] deps = ["core.jar"]
-    File libFolder = file("library")
-    libFolder.mkdirs()
-    for (String fn : deps) {
-        Files.copy(file("${rootDir}/build/libs/" + fn).toPath(),
-                   file("library/" + fn).toPath(), REPLACE_EXISTING);
+tasks.jar {
+    doLast {
+        ant.checksum file: archiveFile.get().asFile
     }
 }
 
-build.doLast {
-    // Copying ar jar to library folder
-    File arJar = file("library/ar.jar")
-    arJar.mkdirs();
-    
-    // Need to check the existance of the files before using as the files 
-    // will get generated only if Task ':mode:libraries:ar:jar' is not being skipped
-    // Task ':mode:libraries:ar:jar' will be skipped if source files are unchanged or jar task is UP-TO-DATE
-    
-    if (file("$buildDir/libs/ar.jar").exists()) {
-        Files.copy(file("$buildDir/libs/ar.jar").toPath(),
-                   arJar.toPath(), REPLACE_EXISTING);
+tasks.clean {
+    doFirst {
+        delete "dist"
+        delete "library/ar.jar"
     }
-    // Renaming artifacts for maven publishing
-    if (file("$buildDir/libs/ar.jar").exists()) {
-        Files.move(file("$buildDir/libs/ar.jar").toPath(),
-                   file("$buildDir/libs/processing-ar-${arLibVersion}.jar").toPath(), REPLACE_EXISTING);
+}
+
+tasks.compileJava {
+    doFirst {
+        String[] deps = ["core.jar"]
+        File libFolder = file("library")
+        libFolder.mkdirs()
+        deps.each { String fn ->
+            Files.copy(
+                file("${rootDir}/build/libs/" + fn).toPath(),
+                file("library/" + fn).toPath(),
+                REPLACE_EXISTING
+            )
+        }
     }
-    if (file("$buildDir/libs/ar-sources.jar").exists()) {
-        Files.move(file("$buildDir/libs/ar-sources.jar").toPath(),
-                   file("$buildDir/libs/processing-ar-${arLibVersion}-sources.jar").toPath(), REPLACE_EXISTING);
-    }
-    if (file("$buildDir/libs/ar.jar.MD5").exists()) {
-        Files.move(file("$buildDir/libs/ar.jar.MD5").toPath(),
-                   file("$buildDir/libs/processing-ar-${arLibVersion}.jar.md5").toPath(), REPLACE_EXISTING);
+}
+
+tasks.build {
+    doLast {
+        // Copying ar jar to library folder
+        File arJar = file("library/ar.jar")
+        arJar.mkdirs()
+
+       // Need to check the existance of the files before using as the files 
+       // will get generated only if Task ':mode:libraries:ar:jar' is not being skipped
+       // Task ':mode:libraries:ar:jar' will be skipped if source files are unchanged or jar task is UP-TO-DATE
+        def arJarFile = file("$buildDir/libs/ar.jar")
+        if (arJarFile.exists()) {
+            Files.copy(arJarFile.toPath(), arJar.toPath(), REPLACE_EXISTING)
+        }
+
+        // Rename artifacts for Maven publishing
+        def processingArJar = file("$buildDir/libs/processing-ar-${arLibVersion}.jar")
+        if (arJarFile.exists()) {
+            Files.move(arJarFile.toPath(), processingArJar.toPath(), REPLACE_EXISTING)
+        }
+
+        def processingArSourcesJar = file("$buildDir/libs/processing-ar-${arLibVersion}-sources.jar")
+        def arSourcesJar = file("$buildDir/libs/ar-sources.jar")
+        if (arSourcesJar.exists()) {
+            Files.move(arSourcesJar.toPath(), processingArSourcesJar.toPath(), REPLACE_EXISTING)
+        }
+
+        def arMd5File = file("$buildDir/libs/ar.jar.MD5")
+        def processingArMd5File = file("$buildDir/libs/processing-ar-${arLibVersion}.jar.md5")
+        if (arMd5File.exists()) {
+            Files.move(arMd5File.toPath(), processingArMd5File.toPath(), REPLACE_EXISTING)
+        }
     }
 }
 
@@ -96,4 +119,5 @@ ext {
     libDependencies = [[group: 'org.p5android', name: 'processing-core', version: modeVersion],
                        [group: 'com.google.ar', name: 'core', version: garVersion]]
 }
+
 apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"

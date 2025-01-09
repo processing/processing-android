@@ -3,12 +3,15 @@ import org.zeroturnaround.zip.ZipUtil
 import org.apache.commons.io.FileUtils
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+plugins {
+    id 'java'
+}
 
 // Extend compile to copy the jars from gradle-tooling and slf4j:
 // https://stackoverflow.com/a/43602463
 configurations {
-    implementation.extendsFrom implementationCopy
-    implementation.extendsFrom implementationExtract
+    implementationCopy
+    implementationExtract
 }
 
 dependencies {
@@ -26,81 +29,74 @@ dependencies {
 }
 
 // This task copies the gradle tooling jar into the mode folder
-task copyToLib(type: Copy) {
-  from configurations.implementationCopy.files
-  into "mode"
+tasks.register("copyToLib", Copy) {
+    from(configurations.implementationCopy)
+    into("mode")
 }
-build.dependsOn(copyToLib)
-compileJava.dependsOn(copyToLib)
 
-sourceSets {
-    main {
-        java {
-            srcDirs = ["src/"]
+tasks.named('build') {
+    dependsOn 'copyToLib'
+}
+
+tasks.named('compileJava') {
+    dependsOn 'copyToLib'
+}
+
+sourceSets.main.java.srcDir("src/")
+
+tasks.register('getjdi', Copy) {
+    // This task extracts the jar files inside org.eclipse.jdt.debug, which are
+    // jdi.jar and jdimodel.jar and needed to build the debugger.
+    from(zipTree(configurations.implementationExtract.singleFile)) {
+        include '**/*.jar'
+        exclude 'META-INF'
+    }
+    into "mode"
+}
+
+tasks.register('permissions', Exec) {
+    // This task retrieves the latest list of Android permissions and adds them
+    // to the Permissions.java file. The python scripts requries BeautifulSoup
+    workingDir "scripts"
+    commandLine "python", "permissions.py"
+}
+
+
+tasks.register("wrapper", Wrapper) {
+    gradleVersion = "${gradlewVersion}" // version required for gradle wrapper
+}
+
+tasks.named("wrapper").configure {
+    doLast {
+        def wrapperFolder = file("mode/gradlew")
+        wrapperFolder.mkdirs()
+        file("gradle").renameTo(file("mode/gradlew/gradle"))
+        file("gradlew").renameTo(file("mode/gradlew/gradlew"))
+        file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
+        FileUtils.copyDirectory(file("gradle"), file("../debug/gradle"))
+        delete("gradle")
+        ZipUtil.pack(file("mode/gradlew"), new File("mode/mode/gradlew.zip"))
+        delete("mode/gradlew")
+    }
+}
+
+tasks.named('clean') {
+    doFirst {
+        delete fileTree("mode") {
+            include "**/*.jar"
+            exclude "jdi.jar", "jdimodel.jar", "istack-commons-runtime.jar", "javax.activation-api.jar",
+                    "jaxb-api.jar", "jaxb-jxc.jar", "jaxb-runtime.jar", "jaxb-xjc.jar", "core.jar",
+                    "pde.jar", "JavaMode.jar", "org.eclipse.core.contenttype.jar", "org.eclipse.core.jobs.jar",
+                    "org.eclipse.core.resources.jar", "org.eclipse.core.runtime.jar", "org.eclipse.equinox.common.jar",
+                    "org.eclipse.equinox.preferences.jar", "org.eclipse.jdt.core.jar", "org.eclipse.osgi.jar",
+                    "org.eclipse.text.jar"
         }
     }
 }
 
-task getjdi(type: Copy) {
-  // This task extracts the jar files inside org.eclipse.jdt.debug, which are
-  // jdi.jar and jdimodel.jar and needed to build the debugger.
-  from(zipTree(configurations.implementationExtract.files[0])) {
-    include '**/*.jar'
-    exclude 'META-INF'
-  }
-  into "mode"  
-}
-
-task permissions(type:Exec) {
-   // This task retrieves the latest list of Android permissions and adds them
-   // to the Permissions.java file. The python scripts requries BeautifulSoup
-   workingDir "scripts"
-   commandLine "python", "permissions.py"
-} 
-
-task wrapper(type: Wrapper) {
-   gradleVersion = "${gradlewVersion}" // version required for gradle wrapper
-}
-
-wrapper.doLast {
-  File wrapperFolder = file("mode/gradlew");
-  wrapperFolder.mkdirs();
-  file("gradle").renameTo(file("mode/gradlew/gradle"))
-  file("gradlew").renameTo(file("mode/gradlew/gradlew"))
-  file("gradlew.bat").renameTo(file("mode/gradlew/gradlew.bat"))
-  FileUtils.copyDirectory(file("gradle"), file("../debug/gradle"))
-  delete "gradle"
-  ZipUtil.pack(file("mode/gradlew"), new File("mode/mode/gradlew.zip"));    
-  delete "mode/gradlew"    
-}
-
-clean.doFirst {
-    delete fileTree("mode") {
-        include "**/*.jar"
-        exclude "jdi.jar"
-        exclude "jdimodel.jar"
-        exclude "istack-commons-runtime.jar"
-        exclude "javax.activation-api.jar"
-        exclude "jaxb-api.jar"
-        exclude "jaxb-jxc.jar"
-        exclude "jaxb-runtime.jar"
-        exclude "jaxb-xjc.jar"
-        exclude "core.jar"
-        exclude "pde.jar"
-        exclude "JavaMode.jar"
-        exclude "org.eclipse.core.contenttype.jar"
-        exclude "org.eclipse.core.jobs.jar"
-        exclude "org.eclipse.core.resources.jar"
-        exclude "org.eclipse.core.runtime.jar"
-        exclude "org.eclipse.equinox.common.jar"
-        exclude "org.eclipse.equinox.preferences.jar"
-        exclude "org.eclipse.jdt.core.jar"
-        exclude "org.eclipse.osgi.jar"
-        exclude "org.eclipse.text.jar"
+tasks.named('build') {
+    doLast {
+        Files.copy(file("$buildDir/libs/mode.jar").toPath(),
+                   file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING)
     }
-}
-
-build.doLast {
-    Files.copy(file("$buildDir/libs/mode.jar").toPath(),
-               file("mode/AndroidMode.jar").toPath(), REPLACE_EXISTING);
 }
