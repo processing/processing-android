@@ -146,25 +146,26 @@ task dist {
         FileUtils.copyDirectory(file("mode/tools/SDKUpdater/src"),
                                 file("${root}/tools/SDKUpdater/src"))
         
-        FileUtils.copyDirectory(file("mode/libraries/vr/examples"), 
-                                file("${root}/libraries/vr/examples"))
-        FileUtils.copyDirectory(file("mode/libraries/vr/library"), 
-                                file("${root}/libraries/vr/library"))
-        FileUtils.copyDirectory(file("mode/libraries/vr/libs"), 
-                                file("${root}/libraries/vr/libs"))
-        FileUtils.copyDirectory(file("../libs/processing-vr/src/main/java/"), 
-                                file("${root}/libraries/vr/src"))
-        Files.copy(file("mode/libraries/vr/library.properties").toPath(),
-                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING)
+//        FileUtils.copyDirectory(file("mode/libraries/vr/examples"),
+//                                file("${root}/libraries/vr/examples"))
+//        FileUtils.copyDirectory(file("mode/libraries/vr/library"),
+//                                file("${root}/libraries/vr/library"))
+//        FileUtils.copyDirectory(file("mode/libraries/vr/libs"),
+//                                file("${root}/libraries/vr/libs"))
+//        FileUtils.copyDirectory(file("../libs/processing-vr/src/main/java/"),
+//                                file("${root}/libraries/vr/src"))
+//        Files.copy(file("mode/libraries/vr/library.properties").toPath(),
+//                   file("${root}/libraries/vr/library.properties").toPath(), REPLACE_EXISTING)
 
-        FileUtils.copyDirectory(file("mode/libraries/ar/examples"), 
-                                file("${root}/libraries/ar/examples"))
-        FileUtils.copyDirectory(file("mode/libraries/ar/library"), 
-                                file("${root}/libraries/ar/library"))
-        FileUtils.copyDirectory(file("../libs/processing-ar/src/main/java/"), 
-                                file("${root}/libraries/ar/src"))
-        Files.copy(file("mode/libraries/ar/library.properties").toPath(),
-                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING) 
+//        FileUtils.copyDirectory(file("mode/libraries/ar/examples"),
+//                                file("${root}/libraries/ar/examples"))
+//        FileUtils.copyDirectory(file("mode/libraries/ar/library"),
+//                                file("${root}/libraries/ar/library"))
+//        FileUtils.copyDirectory(file("../libs/processing-ar/src/main/java/"),
+//                                file("${root}/libraries/ar/src"))
+
+//        Files.copy(file("mode/libraries/ar/library.properties").toPath(),
+//                   file("${root}/libraries/ar/library.properties").toPath(), REPLACE_EXISTING)
 
         File distFolder = file("dist")
         distFolder.mkdirs()
@@ -172,4 +173,8 @@ task dist {
         Files.copy(file("mode/mode.properties").toPath(),
                    file("dist/AndroidMode.txt").toPath(), REPLACE_EXISTING)
     }
+}
+
+tasks.register('develop') {
+    dependsOn tasks.dist
 }

@@ -1,0 +1,25 @@
+name: Branch Builds
+on: 
+  push:
+    paths-ignore:
+      - '**/*.md'
+      - '.all-contributorsrc'
+
+jobs:
+  build: 
+    name: Build Android Mode
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+   
+      - name: Setup and Build Android Mode
+        uses: ./.github/actions/create
+
+      - name: Add artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AndroidMode
+          path:  ./processing/dist/AndroidMode.zip
+          retention-days: 1

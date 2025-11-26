@@ -12,6 +12,9 @@ dependencies {
     implementation name: "android"
     implementation "androidx.legacy:legacy-support-v4:${v4legacyVersion}"
     implementation "com.google.android.support:wearable:${wearVersion}"
+    // all jars in the libs folder
+    implementation fileTree(dir: "${rootDir}/build/libs", include: ['*.jar'])
+
 }
 
 sourceSets.main {
@@ -61,6 +64,7 @@ tasks.named('clean').configure {
 }
 
 tasks.named('compileJava').configure {
+    dependsOn(tasks.named("extractAarJars"))
     doFirst {
         String[] deps = ["wearable.jar"]
         deps.each { fn ->

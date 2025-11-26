@@ -1,0 +1,52 @@
+name: Releases
+on:
+  workflow_dispatch:
+    inputs:
+      version_number:
+        description: "What is the version number?"
+        required: true
+      version_pretty:
+        description: "What is the pretty version name?"
+        required: true
+
+jobs:
+  build: 
+    name: Build Android Mode Release
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+  
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+        # replace the version numbers in ./processing/mode/mode.properties
+      - name: Set Version Number
+        run: |
+          VERSION_NUMBER=${{ github.event.inputs.version_number }}
+          VERSION_PRETTY=${{ github.event.inputs.version_pretty }}
+          echo "Setting version to $VERSION_NUMBER ($VERSION_PRETTY)"
+          sed -i "s/^version=.*$/version=$VERSION_NUMBER/" ./processing/mode/mode.properties
+          sed -i "s/^prettyVersion=.*$/prettyVersion=$VERSION_PRETTY/" ./processing/mode/mode.properties
+          cat ./processing/mode/mode.properties
+   
+      - name: Setup and Build Android Mode
+        uses: ./.github/actions/create
+
+      - name: Add artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AndroidMode
+          path:  ./processing/dist/AndroidMode.zip
+          retention-days: 1
+      
+      - name: Upload release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: Release Android Mode ${{ github.event.inputs.version_number }} (${{ github.event.inputs.version_pretty }})
+          file: ./processing/dist/*
+          file_glob: true
+          make_latest: true
+          tag: android-${{ github.event.inputs.version_number }}

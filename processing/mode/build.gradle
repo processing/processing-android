@@ -25,7 +25,7 @@ dependencies {
     implementationCopy "org.slf4j:slf4j-api:${slf4jVersion}"
     implementationCopy "org.slf4j:slf4j-simple:${slf4jVersion}"
 
-    implementation fileTree(include: ["jdi.jar", "jdimodel.jar", "core.jar", "pde.jar", "JavaMode.jar"], dir: 'mode')
+    implementation fileTree(include: ["jdi.jar", "jdimodel.jar", "core.jar", "pde.jar", "JavaMode.jar", "gradle-tooling-api-7.2.jar"], dir: 'mode')
 }
 
 // This task copies the gradle tooling jar into the mode folder

@@ -1,0 +1,29 @@
+name: "Setup & Build Android Mode"
+description: "Setup and build the Processing Android Mode"
+runs:
+  using: "composite"
+  steps:
+    - name: Install Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Build with Gradle
+      shell: bash
+      run: |
+        echo sdk.dir=/usr/local/lib/android/sdk/ >> local.properties
+        ./gradlew libs:processing-core:build
+
+    - name: Create the mode
+      shell: bash
+      run: |
+        cd processing
+        echo sdk.dir=/usr/local/lib/android/sdk/ >> local.properties
+        ./gradlew dist
